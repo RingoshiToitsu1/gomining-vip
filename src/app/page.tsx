@@ -273,7 +273,7 @@ export default function Look4it() {
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if(!file) return;
-    notify("Analyzing image... AI is identifying the item");
+    notify("Analyzing image... identifying the item");
     try {
       const b64: string = await new Promise((res) => {
         const reader = new FileReader();
@@ -782,14 +782,14 @@ export default function Look4it() {
             priceLow: data.data.priceLow ? String(data.data.priceLow) : prev.priceLow,
             priceHigh: data.data.priceHigh ? String(data.data.priceHigh) : prev.priceHigh,
           }));
-          notify("AI analysis complete!");
+          notify("Analysis complete!");
         } else {
           console.error("[Look4it] AI failed:", data.error || "Unknown error");
-          notify(data.error || "AI analysis failed. You can fill in details manually.");
+          notify(data.error || "Analysis failed. You can fill in details manually.");
         }
       } catch (err) {
         console.error("[Look4it] AI error:", err);
-        notify("Could not reach AI service. Fill in details manually.");
+        notify("Could not reach appraisal service. Fill in details manually.");
       } finally {
         setCreateAnalyzing(false);
       }
@@ -826,7 +826,7 @@ export default function Look4it() {
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
             <CamIco s={44}/>
             <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Drop images here or click to browse"}</span>
-            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Up to 10 images. We analyze and generate the listing details."}</span>
+            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Up to 10 images. We'll handle the listing details for you."}</span>
           </div>
         ) : (
           <div>
@@ -854,7 +854,7 @@ export default function Look4it() {
       {createAnalyzing && (
         <div style={{ textAlign:"center", padding:40 }}>
           <div style={{ width:36, height:36, border:"3px solid " + S.border, borderTopColor:S.accent, borderRadius:"50%", margin:"0 auto 14px", animation:"spin 0.8s linear infinite" }}/>
-          <p style={{ color:S.muted, fontSize:14, fontFamily:S.font }}>{"AI is analyzing your images..."}</p>
+          <p style={{ color:S.muted, fontSize:14, fontFamily:S.font }}>{"Analyzing your images..."}</p>
           <p style={{ color:S.dim, fontSize:12, fontFamily:S.font, marginTop:4 }}>{"Generating title, description, and price estimate"}</p>
         </div>
       )}
@@ -863,7 +863,7 @@ export default function Look4it() {
       {createStep===1 && !createAnalyzing && (
         <div>
           <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:8, padding:14, marginBottom:22, display:"flex", alignItems:"center", gap:8 }}>
-            <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{createData.title ? "AI-generated listing - review and edit below" : "Fill in your listing details below"}</span>
+            <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{createData.title ? "Listing details generated — review and edit below" : "Fill in your listing details below"}</span>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
             <div><label style={lbl}>{"Title"}</label><input value={createData.title} onChange={e=>setCreateData({...createData,title:e.target.value})} placeholder="e.g. Hand-Painted Glass Santa Claus Ornament" style={inp}/></div>
@@ -948,7 +948,7 @@ export default function Look4it() {
       {/* Hint text when no images */}
       {createStep===0 && (
         <div style={{ display:"flex", alignItems:"center", gap:8, color:S.dim, fontSize:12, fontFamily:S.font }}>
-          <SparkIco/>{"Drop your images above. We will auto generate a title, description, condition, and a price appraisal automatically."}
+          <SparkIco/>{"Drop your images above. We'll generate a title, description, condition, and price estimate for you."}
         </div>
       )}
     </div>
@@ -1001,10 +1001,10 @@ export default function Look4it() {
   const Appraise = () => (
     <div style={{ maxWidth:720, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
       <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 8px", letterSpacing:"-0.02em", textAlign:"center" }}>
-        {"AI Appraisal"}
+        {"Expert Appraisal"}
       </h1>
       <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, textAlign:"center", margin:"0 0 28px" }}>
-        {"Upload a photo and our AI estate auctioneer will appraise its value."}
+        {"Upload a photo and get a professional estate appraisal in seconds."}
       </p>
 
       {/* Upload area */}
@@ -1023,7 +1023,7 @@ export default function Look4it() {
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
             <SparkIco s={44}/>
             <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Drop an image here or click to browse"}</span>
-            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Our AI auctioneer will analyze and appraise your item"}</span>
+            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Get a professional appraisal with market value estimate"}</span>
           </div>
         )}
       </div>
@@ -1294,7 +1294,7 @@ export default function Look4it() {
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <Sel label="Reason" value={flagReason} onChange={setFlagReason} options={[{value:"DUPLICATE",label:"Duplicate"},{value:"SCAM",label:"Scam/Fraud"},{value:"INAPPROPRIATE",label:"Inappropriate"},{value:"MISLEADING",label:"Misleading"},{value:"PROHIBITED_ITEM",label:"Prohibited Item"},{value:"OTHER",label:"Other"}]} all="Select reason"/>
         <div><label style={lbl}>{"Details (optional)"}</label><textarea placeholder="Provide additional context..." value={flagDesc} onChange={e=>setFlagDesc(e.target.value)} rows={3} style={{...inp,resize:"vertical"}}/></div>
-        <button onClick={()=>{setModal(null);notify("Report submitted. Our AI will review this listing.");setFlagDesc("");}} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px" }}>
+        <button onClick={()=>{setModal(null);notify("Report submitted. Our team will review this listing.");setFlagDesc("");}} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px" }}>
           {"Submit Report"}
         </button>
       </div>
@@ -1378,7 +1378,7 @@ export default function Look4it() {
       { label: "FAQ" }, { label: "Help Center" }, { label: "Support" }, { label: "Seller Guide" },
     ],
     Resources: [
-      { label: "Talk to our AI" }, { label: "Blog" }, { label: "Pricing" }, { label: "Privacy Policy" }, { label: "Terms of Service" },
+      { label: "Live Chat" }, { label: "Blog" }, { label: "Pricing" }, { label: "Privacy Policy" }, { label: "Terms of Service" },
     ],
   };
 
