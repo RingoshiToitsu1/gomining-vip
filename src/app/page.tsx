@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const CATEGORIES = [
   { value: "FURNITURE", label: "Furniture" }, { value: "ELECTRONICS", label: "Electronics" },
@@ -80,7 +81,8 @@ export default function Look4it() {
   const [results, setResults] = useState(MOCK);
   const [fil, setFil] = useState({cat:"",cond:"",src:"",min:"",max:"",sort:"newest"});
   const [showFil, setShowFil] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const { data: session, status } = useSession();
+  const loggedIn = status === "authenticated";
   const [favs, setFavs] = useState(new Set());
   const [toast, setToast] = useState(null);
   const [modal, setModal] = useState(null);
@@ -89,6 +91,12 @@ export default function Look4it() {
   const [flagReason, setFlagReason] = useState("SCAM");
   const [flagDesc, setFlagDesc] = useState("");
   const [authTab, setAuthTab] = useState("signin");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authZip, setAuthZip] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
   const [createStep, setCreateStep] = useState(0);
   const [createData, setCreateData] = useState({title:"",desc:"",cat:"FURNITURE",cond:"GOOD",price:"",loc:"Detroit Metro, MI"});
   const [wantList, setWantList] = useState([]);
@@ -130,6 +138,49 @@ export default function Look4it() {
     }
   };
 
+  const resetAuthForm = () => { setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthZip(""); setAuthError(""); };
+
+  const handleAuthSubmit = async () => {
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      if (authTab === "signup") {
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: authName, email: authEmail, password: authPassword, zipCode: authZip || undefined }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAuthError(data.error || "Signup failed");
+          setAuthLoading(false);
+          return;
+        }
+        // Auto-login after signup
+        const signInRes = await signIn("credentials", { redirect: false, email: authEmail, password: authPassword });
+        if (signInRes?.error) {
+          setAuthError("Account created but auto-login failed. Please sign in.");
+          setAuthLoading(false);
+          return;
+        }
+      } else {
+        const res = await signIn("credentials", { redirect: false, email: authEmail, password: authPassword });
+        if (res?.error) {
+          setAuthError("Invalid email or password");
+          setAuthLoading(false);
+          return;
+        }
+      }
+      resetAuthForm();
+      setModal(null);
+      notify("Welcome to Look4it!");
+    } catch {
+      setAuthError("Something went wrong. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
   const notify = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3000); };
   const togFav = (id, e) => { e?.stopPropagation(); setFavs(p=>{const n=new Set(p); if(n.has(id)){n.delete(id);notify("Removed from favorites");}else{n.add(id);notify("Added to favorites");} return n;}); };
 
@@ -160,8 +211,8 @@ export default function Look4it() {
         <button style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
           <BellIco/><div style={{ position:"absolute", top:-2, right:-2, width:7, height:7, background:S.accent, borderRadius:"50%", border:"2px solid " + S.bg }}/>
         </button>
-        <button onClick={()=>loggedIn?setLoggedIn(false):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
-          <UserIco s={14}/>{loggedIn?"Ringo":"Sign In"}
+        <button onClick={()=>loggedIn?signOut():setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
+          <UserIco s={14}/>{loggedIn?(session?.user?.name||"Account"):"Sign In"}
         </button>
       </div>
     </header>
@@ -489,7 +540,7 @@ export default function Look4it() {
   );
 
   const AuthModal = () => (
-    <Overlay onClose={()=>setModal(null)}>
+    <Overlay onClose={()=>{setModal(null);resetAuthForm();}}>
       <h2 style={{ fontFamily:S.serif, fontSize:24, fontWeight:700, color:S.textLight, margin:"0 0 6px" }}>
         {authTab==="signin"?"Welcome back":"Create account"}
       </h2>
@@ -498,18 +549,19 @@ export default function Look4it() {
       </p>
       <div style={{ display:"flex", gap:4, marginBottom:22, background:S.cream, borderRadius:8, padding:3 }}>
         {["signin","signup"].map(t=>(
-          <button key={t} onClick={()=>setAuthTab(t)} style={{ flex:1, background:authTab===t?S.accentPale:"transparent", border:"none", color:authTab===t?S.accentLight:S.dim, padding:"9px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600 }}>
+          <button key={t} onClick={()=>{setAuthTab(t);setAuthError("");}} style={{ flex:1, background:authTab===t?S.accentPale:"transparent", border:"none", color:authTab===t?S.accentLight:S.dim, padding:"9px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600 }}>
             {t==="signin"?"Sign In":"Sign Up"}
           </button>
         ))}
       </div>
+      {authError && <div style={{ background:"rgba(200,60,60,0.1)", border:"1px solid rgba(200,60,60,0.3)", color:"#E07070", padding:"10px 14px", borderRadius:8, fontSize:12, fontFamily:S.font, marginBottom:14 }}>{authError}</div>}
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-        {authTab==="signup" && <div><label style={lbl}>{"Name"}</label><input placeholder="Your name" style={inp}/></div>}
-        <div><label style={lbl}>{"Email"}</label><input type="email" placeholder="you@email.com" style={inp}/></div>
-        <div><label style={lbl}>{"Password"}</label><input type="password" placeholder="Min 8 characters" style={inp}/></div>
-        {authTab==="signup" && <div><label style={lbl}>{"ZIP Code (Detroit Metro)"}</label><input placeholder="48XXX" style={inp}/></div>}
-        <button onClick={()=>{setLoggedIn(true);setModal(null);notify("Welcome to Look4it!");}} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px", marginTop:4, fontSize:14 }}>
-          {authTab==="signin"?"Sign In":"Create Account"}
+        {authTab==="signup" && <div><label style={lbl}>{"Name"}</label><input placeholder="Your name" value={authName} onChange={e=>setAuthName(e.target.value)} style={inp}/></div>}
+        <div><label style={lbl}>{"Email"}</label><input type="email" placeholder="you@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} style={inp}/></div>
+        <div><label style={lbl}>{"Password"}</label><input type="password" placeholder="Min 8 characters" value={authPassword} onChange={e=>setAuthPassword(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!authLoading)handleAuthSubmit();}} style={inp}/></div>
+        {authTab==="signup" && <div><label style={lbl}>{"ZIP Code (Detroit Metro)"}</label><input placeholder="48XXX" value={authZip} onChange={e=>setAuthZip(e.target.value)} style={inp}/></div>}
+        <button onClick={handleAuthSubmit} disabled={authLoading} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px", marginTop:4, fontSize:14, opacity:authLoading?0.6:1, cursor:authLoading?"not-allowed":"pointer" }}>
+          {authLoading?"Please wait...":(authTab==="signin"?"Sign In":"Create Account")}
         </button>
       </div>
     </Overlay>
