@@ -3,8 +3,6 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export const maxDuration = 30;
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -17,9 +15,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!ANTHROPIC_KEY) {
+    const apiKey = process.env.ANTHROPIC_API_KEY || "";
+    if (!apiKey) {
+      console.error("ANTHROPIC_API_KEY is not set in environment");
       return NextResponse.json(
-        { success: false, error: "No AI service configured" },
+        { success: false, error: "Image search unavailable" },
         { status: 503 }
       );
     }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
+    const client = new Anthropic({ apiKey });
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-5-20250929",

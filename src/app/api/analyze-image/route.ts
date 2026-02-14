@@ -4,10 +4,6 @@ import Anthropic from "@anthropic-ai/sdk";
 // Allow large image payloads
 export const maxDuration = 30;
 
-const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
-const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
-
 const VALID_CATEGORIES = [
   "FURNITURE","ELECTRONICS","JEWELRY","ART","COLLECTIBLES","ANTIQUES",
   "TOOLS","WATCHES","HOME_DECOR","OTHER",
@@ -25,6 +21,10 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
+    const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
+    const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
 
     // Try AuctionWriter API first
     if (AW_KEY) {
@@ -123,7 +123,7 @@ Be specific and accurate. Price based on current secondhand/auction market value
         const errMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
         console.error("Claude API error:", errMsg);
         return NextResponse.json(
-          { success: false, error: "AI analysis failed: " + errMsg.slice(0, 200) },
+          { success: false, error: "Analysis failed: " + errMsg.slice(0, 200) },
           { status: 502 }
         );
       }
@@ -162,9 +162,9 @@ Be specific and accurate. Price based on current secondhand/auction market value
       }
     }
 
-    // No AI keys configured
+    // No service configured
     return NextResponse.json(
-      { success: false, error: "No AI service configured. Add ANTHROPIC_API_KEY to your .env file." },
+      { success: false, error: "Analysis service unavailable" },
       { status: 503 }
     );
   } catch (error) {
