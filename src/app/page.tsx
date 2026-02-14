@@ -25,14 +25,6 @@ const SOURCES = [
   { value: "EBAY", label: "eBay", color: "#8B4513" },
 ];
 
-const MOCK = [
-  { id:"1", title:"Mid-Century Modern Teak Credenza", desc:"Beautiful 1960s Danish design with dovetail joints, original brass hardware, sliding doors. 72\"W x 18\"D x 32\"H.", category:"FURNITURE", condition:"EXCELLENT", img:"https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600", price:850, appraised:920, low:700, high:1100, source:"DIRECT", loc:"Royal Oak, MI", tags:["mid-century","teak","credenza"], views:47, seller:"DetroitEstateCo", time:"2026-02-10T14:00:00Z" },
-  { id:"2", title:"Vintage Omega Seamaster Automatic 1972", desc:"Cal. 1012 movement, recently serviced. Original silver dial with patina. 34mm case with original bracelet.", category:"WATCHES", condition:"GOOD", img:"https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600", price:1200, appraised:1350, low:1000, high:1600, source:"HIBID", loc:"Ferndale, MI", tags:["omega","seamaster","vintage"], views:92, seller:"TimeCollector", time:"2026-02-11T09:00:00Z", extUrl:"#" },
-  { id:"3", title:"Herman Miller Eames Lounge Chair & Ottoman", desc:"Authentic 2018 production. Walnut shell, black leather. Minor armrest wear. Includes authenticity label.", category:"FURNITURE", condition:"LIKE_NEW", img:"https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=600", price:3200, appraised:3500, low:2800, high:4200, source:"DIRECT", loc:"Birmingham, MI", tags:["eames","herman miller","lounge"], views:156, seller:"ModernLiving", time:"2026-02-09T11:00:00Z" },
-  { id:"4", title:"Sterling Silver Tea Set - Gorham c.1920", desc:"Five-piece Plymouth pattern. Teapot, coffee pot, sugar, creamer, waste bowl. ~78 troy ounces total.", category:"ANTIQUES", condition:"EXCELLENT", img:"https://images.unsplash.com/photo-1563826904577-6b72c5d75e53?w=600", price:2800, appraised:3100, low:2400, high:3800, source:"AUCTION_NINJA", loc:"Grosse Pointe, MI", tags:["sterling","gorham","tea set"], views:34, seller:"SilverSpoon", time:"2026-02-12T16:00:00Z", extUrl:"#" },
-  { id:"5", title:"1978 Fender Stratocaster Olympic White", desc:"All original electronics and hardware. Maple neck, some fret wear. Hard shell case included.", category:"OTHER", condition:"GOOD", img:"https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=600", price:2400, appraised:2600, low:2000, high:3000, source:"ESTATESALES_NET", loc:"Dearborn, MI", tags:["fender","stratocaster","guitar"], views:78, seller:"MotorCityMusic", time:"2026-02-08T08:00:00Z", extUrl:"#" },
-  { id:"6", title:"Tiffany-Style Stained Glass Dragonfly Lamp", desc:"Handcrafted stained glass shade, bronze base. 26\" tall, 16\" shade. Working condition.", category:"HOME_DECOR", condition:"EXCELLENT", img:"https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=600", price:450, appraised:380, low:250, high:500, source:"EBAY", loc:"Troy, MI", tags:["tiffany","lamp","stained glass"], views:23, seller:"VintageFinds", time:"2026-02-13T10:00:00Z", extUrl:"#" },
-];
 
 const fmt = (n) => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n);
 const srcInfo = (s) => SOURCES.find(x=>x.value===s)||SOURCES[0];
@@ -87,7 +79,8 @@ export default function Look4it() {
   const [sel, setSel] = useState(null);
   const [q, setQ] = useState("");
   const [searchQ, setSearchQ] = useState("");
-  const [results, setResults] = useState(MOCK);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [fil, setFil] = useState({cat:"",cond:"",src:"",min:"",max:"",sort:"newest"});
   const [showFil, setShowFil] = useState(false);
   const { data: session, status } = useSession();
@@ -120,9 +113,28 @@ export default function Look4it() {
   const fileInputRef = useRef(null);
   const userMenuRef = useRef(null);
 
+  const [rawResults, setRawResults] = useState<any[]>([]);
+
+  // Fetch results from API when search query changes
   useEffect(() => {
-    let r = [...MOCK];
-    if(searchQ){ const lq=searchQ.toLowerCase(); r=r.filter(l=>l.title.toLowerCase().includes(lq)||l.desc.toLowerCase().includes(lq)||l.tags.some(t=>t.includes(lq))); }
+    if (!searchQ) { setRawResults([]); setResults([]); return; }
+    let cancelled = false;
+    const doSearch = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQ)}`);
+        const data = await res.json();
+        if (!cancelled && data.success) setRawResults(data.data.results);
+      } catch { if (!cancelled) setRawResults([]); }
+      finally { if (!cancelled) setLoading(false); }
+    };
+    doSearch();
+    return () => { cancelled = true; };
+  }, [searchQ]);
+
+  // Apply client-side filters
+  useEffect(() => {
+    let r = [...rawResults];
     if(fil.cat) r=r.filter(l=>l.category===fil.cat);
     if(fil.cond) r=r.filter(l=>l.condition===fil.cond);
     if(fil.src) r=r.filter(l=>l.source===fil.src);
@@ -132,7 +144,7 @@ export default function Look4it() {
     else if(fil.sort==="price_desc") r.sort((a,b)=>b.price-a.price);
     else r.sort((a,b)=>new Date(b.time).getTime()-new Date(a.time).getTime());
     setResults(r);
-  }, [searchQ, fil]);
+  }, [rawResults, fil]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -311,12 +323,12 @@ export default function Look4it() {
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginTop:12 }}>
             <div>
-              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{fmt(l.price)}</div>
+              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{l.price > 0 ? fmt(l.price) : "See listing"}</div>
               {l.appraised && <div style={{ color:S.dim, fontSize:10, fontFamily:S.font, marginTop:2 }}>{"Appraised: "}{fmt(l.appraised)}</div>}
             </div>
             <div style={{ textAlign:"right" }}>
-              <div style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{l.loc}</div>
-              <div style={{ color:S.dim, fontSize:9, display:"flex", alignItems:"center", gap:3, justifyContent:"flex-end", marginTop:3 }}><EyeIco/>{l.views}</div>
+              {l.loc && <div style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{l.loc}</div>}
+              {l.views > 0 && <div style={{ color:S.dim, fontSize:9, display:"flex", alignItems:"center", gap:3, justifyContent:"flex-end", marginTop:3 }}><EyeIco/>{l.views}</div>}
             </div>
           </div>
         </div>
@@ -378,9 +390,15 @@ export default function Look4it() {
             {SOURCES.map(s=><div key={s.value} style={{ display:"flex", alignItems:"center", gap:4 }}><div style={{ width:8, height:8, borderRadius:2, background:s.color }}/><span style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{s.label}</span></div>)}
           </div>
         </div>
-        {results.length===0 ? (
+        {loading ? (
           <div style={{ textAlign:"center", padding:60, color:S.dim, fontFamily:S.font }}>
-            <SearchIco s={40}/><p style={{marginTop:16,fontSize:16}}>{"No items found"}</p><p style={{fontSize:13,color:S.dim}}>{"Try different search terms or adjust your filters"}</p>
+            <div style={{ width:40, height:40, border:"3px solid " + S.border, borderTopColor:S.accent, borderRadius:"50%", margin:"0 auto 16px", animation:"spin 0.8s linear infinite" }}/>
+            <p style={{ fontSize:15, color:S.muted }}>{"Searching eBay, HiBid, Auction Ninja, EstateSales.net..."}</p>
+            <p style={{ fontSize:12, color:S.dim, marginTop:6 }}>{"Fetching real-time results from multiple platforms"}</p>
+          </div>
+        ) : results.length===0 ? (
+          <div style={{ textAlign:"center", padding:60, color:S.dim, fontFamily:S.font }}>
+            <SearchIco s={40}/><p style={{marginTop:16,fontSize:16}}>{searchQ ? "No items found" : "Search to discover items"}</p><p style={{fontSize:13,color:S.dim}}>{searchQ ? "Try different search terms or adjust your filters" : "Enter a search term above to find estate sales, auctions, and secondhand treasures"}</p>
           </div>
         ) : (
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:18 }}>
@@ -406,15 +424,15 @@ export default function Look4it() {
           <div>
             <h1 style={{ fontFamily:S.serif, fontSize:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
             <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
-              <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CATEGORIES.find(c=>c.value===sel.category)?.label}</span>
-              <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===sel.condition)?.label}</span>
-              <span style={{ color:S.dim, fontSize:11, fontFamily:S.font, display:"flex", alignItems:"center", gap:4 }}><EyeIco/>{sel.views}{" views"}</span>
+              {CATEGORIES.find(c=>c.value===sel.category) && <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CATEGORIES.find(c=>c.value===sel.category)?.label}</span>}
+              {CONDITIONS.find(c=>c.value===sel.condition) && <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===sel.condition)?.label}</span>}
+              {sel.views > 0 && <span style={{ color:S.dim, fontSize:11, fontFamily:S.font, display:"flex", alignItems:"center", gap:4 }}><EyeIco/>{sel.views}{" views"}</span>}
             </div>
             <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", borderRadius:10, padding:22, marginBottom:18 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                 <div>
-                  <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{"Asking Price"}</div>
-                  <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{fmt(sel.price)}</div>
+                  <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Asking Price" : "Price"}</div>
+                  <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "See listing"}</div>
                 </div>
                 {sel.appraised && (
                   <div style={{ textAlign:"right" }}>
@@ -451,9 +469,9 @@ export default function Look4it() {
               <h3 style={{ color:S.goldDim, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1.5px", margin:"0 0 8px" }}>{"Description"}</h3>
               <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, lineHeight:1.8, margin:0 }}>{sel.desc}</p>
             </div>
-            <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:18 }}>
+            {sel.tags?.length > 0 && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:18 }}>
               {sel.tags.map(t=><span key={t} style={{ background:"rgba(196,162,101,0.06)", border:"1px solid " + S.border, color:S.dim, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{"#"}{t}</span>)}
-            </div>
+            </div>}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:18, borderTop:"1px solid " + S.border }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}><UserIco s={15}/></div>
@@ -595,16 +613,9 @@ export default function Look4it() {
           </div>
           <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:22 }}>
             <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 14px" }}>{"Your Listings"}</h3>
-            {MOCK.slice(0,2).map(l=>(
-              <div key={l.id} style={{ display:"flex", gap:14, padding:"12px 0", borderBottom:"1px solid " + S.border }}>
-                <img src={l.img} alt={l.title} style={{ width:60, height:60, borderRadius:8, objectFit:"cover" }}/>
-                <div style={{ flex:1 }}>
-                  <div style={{ color:S.text, fontSize:13, fontWeight:500, fontFamily:S.font }}>{l.title}</div>
-                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:3 }}>{fmt(l.price)}{" - "}{l.views}{" views"}</div>
-                </div>
-                <span style={{ color:"#4A7C6F", fontSize:10, fontWeight:600, fontFamily:S.font, padding:"4px 10px", background:"rgba(74,124,111,0.1)", borderRadius:5, alignSelf:"center" }}>{"Active"}</span>
-              </div>
-            ))}
+            <div style={{ textAlign:"center", padding:"24px 0", color:S.dim, fontSize:13, fontFamily:S.font }}>
+              {"No listings yet. "}<button onClick={()=>setView("create")} style={{ background:"none", border:"none", color:S.accentLight, cursor:"pointer", fontFamily:S.font, fontSize:13, textDecoration:"underline" }}>{"Create your first listing"}</button>
+            </div>
           </div>
         </div>
       )}
@@ -804,6 +815,7 @@ export default function Look4it() {
         input::placeholder, textarea::placeholder { color:#6B6052; }
         input:focus, textarea:focus, select:focus { border-color: rgba(123,45,59,0.4) !important; }
         @keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        @keyframes spin { to{transform:rotate(360deg)} }
         footer a:hover { color: #C4A265 !important; }
       `}</style>
       <Header/>
