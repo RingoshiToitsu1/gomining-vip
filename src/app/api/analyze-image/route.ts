@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
 const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
-const OPENAI_KEY = process.env.OPENAI_API_KEY || "";
+const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
 
 const VALID_CATEGORIES = [
   "FURNITURE","ELECTRONICS","JEWELRY","ART","COLLECTIBLES","ANTIQUES",
@@ -52,33 +52,25 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch {
-        // Fall through to OpenAI vision
+        // Fall through to Gemini vision
       }
     }
 
-    // GPT-4o Vision analysis
-    if (OPENAI_KEY) {
-      const openai = new OpenAI({ apiKey: OPENAI_KEY });
+    // Google Gemini Vision analysis (free tier)
+    if (GEMINI_KEY) {
+      const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-      // Build image content blocks (up to 4 images)
-      const imageContent: OpenAI.ChatCompletionContentPart[] = images
-        .slice(0, 4)
-        .map((img: string) => ({
-          type: "image_url" as const,
-          image_url: { url: img, detail: "low" as const },
-        }));
+      // Build image parts (up to 4 images)
+      const imageParts: { inlineData: { mimeType: string; data: string } }[] = [];
+      for (const img of images.slice(0, 4)) {
+        const match = img.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (match) {
+          imageParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+        }
+      }
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        max_tokens: 1024,
-        messages: [
-          {
-            role: "user",
-            content: [
-              ...imageContent,
-              {
-                type: "text",
-                text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
+      const prompt = `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences, no explanation):
 
 {
   "title": "concise auction-ready title",
@@ -91,14 +83,10 @@ export async function POST(req: NextRequest) {
 
 ${additionalContext ? `Additional context from the seller: ${additionalContext}` : ""}
 
-Be specific and accurate. Price based on current secondhand/auction market values.`,
-              },
-            ],
-          },
-        ],
-      });
+Be specific and accurate. Price based on current secondhand/auction market values.`;
 
-      const text = completion.choices[0]?.message?.content || "";
+      const result = await model.generateContent([prompt, ...imageParts]);
+      const text = result.response.text();
 
       try {
         const cleaned = text.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
@@ -134,7 +122,7 @@ Be specific and accurate. Price based on current secondhand/auction market value
 
     // No AI keys configured
     return NextResponse.json(
-      { success: false, error: "No AI service configured. Add OPENAI_API_KEY to your .env file." },
+      { success: false, error: "No AI service configured. Get a free Gemini API key at aistudio.google.com/apikey and add GEMINI_API_KEY to your .env file." },
       { status: 503 }
     );
   } catch (error) {
