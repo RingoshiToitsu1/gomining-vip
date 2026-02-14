@@ -116,6 +116,11 @@ export default function Look4it() {
   const [createImages, setCreateImages] = useState<string[]>([]);
   const [createAnalyzing, setCreateAnalyzing] = useState(false);
   const [createDragOver, setCreateDragOver] = useState(false);
+  const [appraiseImg, setAppraiseImg] = useState<string|null>(null);
+  const [appraiseResult, setAppraiseResult] = useState<any>(null);
+  const [appraiseLoading, setAppraiseLoading] = useState(false);
+  const [appraiseDragOver, setAppraiseDragOver] = useState(false);
+  const appraiseFileRef = useRef<HTMLInputElement>(null);
   const [createData, setCreateData] = useState({title:"",desc:"",cat:"OTHER",cond:"GOOD",priceLow:"",priceHigh:"",quantity:"1",lot:"",cosigner:"",loc:"Detroit Metro, MI"});
   const createFileRef = useRef<HTMLInputElement>(null);
   const [wantList, setWantList] = useState([]);
@@ -400,7 +405,7 @@ export default function Look4it() {
           </button>
           {!isMobile && (
             <nav style={{ display:"flex", gap:2 }}>
-              {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"]].map(([v,l])=>(
+              {[["home","Browse"],["appraise","Appraise"],["create","Sell"],["dashboard","Dashboard"]].map(([v,l])=>(
                 <button key={v} onClick={()=>setView(v)} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"6px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:500, letterSpacing:"0.03em", transition:"all 0.2s" }}>{l}</button>
               ))}
             </nav>
@@ -442,7 +447,7 @@ export default function Look4it() {
       </div>
       {isMobile && mobileMenuOpen && (
         <div style={{ borderTop:"1px solid " + S.border, padding:"8px 16px 12px", display:"flex", flexDirection:"column", gap:2 }}>
-          {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"],["settings","Settings"]].map(([v,l])=>(
+          {[["home","Browse"],["appraise","Appraise"],["create","Sell"],["dashboard","Dashboard"],["settings","Settings"]].map(([v,l])=>(
             <button key={v} onClick={()=>{setView(v);setMobileMenuOpen(false);}} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"10px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, fontWeight:500, letterSpacing:"0.03em", textAlign:"left", transition:"all 0.2s" }}>{l}</button>
           ))}
           {loggedIn && (
@@ -949,6 +954,143 @@ export default function Look4it() {
     </div>
   );
 
+  const handleAppraiseFile = async (files: FileList | File[]) => {
+    const file = Array.from(files).find(f => f.type.startsWith("image/"));
+    if (!file) return;
+    setAppraiseResult(null);
+    const b64: string = await new Promise((res) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result as string);
+      reader.readAsDataURL(file);
+    });
+    setAppraiseImg(b64);
+    // Resize and send to API
+    setAppraiseLoading(true);
+    try {
+      const small: string = await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 800;
+          let w = img.width, h = img.height;
+          if (w > max || h > max) { const r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
+          const c = document.createElement("canvas"); c.width = w; c.height = h;
+          c.getContext("2d")!.drawImage(img, 0, 0, w, h);
+          res(c.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = () => rej(new Error("Failed to load image"));
+        img.src = b64;
+      });
+      const resp = await fetch("/api/appraise", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: small }),
+      });
+      const data = await resp.json();
+      if (data.success && data.data) {
+        setAppraiseResult(data.data);
+      } else {
+        notify(data.error || "Appraisal failed", "error");
+      }
+    } catch {
+      notify("Could not reach appraisal service", "error");
+    } finally {
+      setAppraiseLoading(false);
+    }
+  };
+
+  const Appraise = () => (
+    <div style={{ maxWidth:720, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 8px", letterSpacing:"-0.02em", textAlign:"center" }}>
+        {"AI Appraisal"}
+      </h1>
+      <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, textAlign:"center", margin:"0 0 28px" }}>
+        {"Upload a photo and our AI estate auctioneer will appraise its value."}
+      </p>
+
+      {/* Upload area */}
+      <div
+        onDragOver={e=>{e.preventDefault();setAppraiseDragOver(true);}}
+        onDragLeave={()=>setAppraiseDragOver(false)}
+        onDrop={e=>{e.preventDefault();setAppraiseDragOver(false);handleAppraiseFile(e.dataTransfer.files);}}
+        onClick={()=>appraiseFileRef.current?.click()}
+        style={{ border:appraiseDragOver?"2px solid " + S.accent:"2px dashed rgba(97,41,80,0.25)", borderRadius:12, padding:appraiseImg?16:(isMobile?32:52), textAlign:"center", marginBottom:24, background:appraiseDragOver?"rgba(97,41,80,0.12)":S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
+        <input ref={appraiseFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{if(e.target.files) handleAppraiseFile(e.target.files); e.target.value="";}}/>
+        {appraiseImg ? (
+          <div style={{ display:"flex", justifyContent:"center" }}>
+            <img src={appraiseImg} alt="Item to appraise" style={{ maxWidth:"100%", maxHeight:300, borderRadius:8, objectFit:"contain" }}/>
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+            <SparkIco s={44}/>
+            <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Drop an image here or click to browse"}</span>
+            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Our AI auctioneer will analyze and appraise your item"}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Loading */}
+      {appraiseLoading && (
+        <div style={{ textAlign:"center", padding:40 }}>
+          <div style={{ width:36, height:36, border:"3px solid " + S.border, borderTopColor:S.accent, borderRadius:"50%", margin:"0 auto 14px", animation:"spin 0.8s linear infinite" }}/>
+          <p style={{ color:S.muted, fontSize:14, fontFamily:S.font }}>{"Appraising your item..."}</p>
+          <p style={{ color:S.dim, fontSize:12, fontFamily:S.font, marginTop:4 }}>{"Evaluating condition, age, market demand, and comparable sales"}</p>
+        </div>
+      )}
+
+      {/* Result */}
+      {appraiseResult && !appraiseLoading && (
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:12, padding:isMobile?18:24 }}>
+            <h2 style={{ fontFamily:S.serif, fontSize:isMobile?20:24, fontWeight:700, color:S.textLight, margin:"0 0 6px" }}>{appraiseResult.title}</h2>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>
+              {appraiseResult.category && <span style={{ background:S.accentPale, color:S.accentLight, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font, fontWeight:600 }}>{CATEGORIES.find(c=>c.value===appraiseResult.category)?.label || appraiseResult.category}</span>}
+              {appraiseResult.condition && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===appraiseResult.condition)?.label || appraiseResult.condition}</span>}
+              {appraiseResult.era && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{appraiseResult.era}</span>}
+              {appraiseResult.demandLevel && <span style={{ background:appraiseResult.demandLevel==="HIGH"?"rgba(90,140,120,0.15)":appraiseResult.demandLevel==="LOW"?"rgba(200,60,60,0.1)":"rgba(197,194,200,0.08)", color:appraiseResult.demandLevel==="HIGH"?"#7BBF9B":appraiseResult.demandLevel==="LOW"?"#E07070":S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font, fontWeight:600 }}>{appraiseResult.demandLevel}{" demand"}</span>}
+            </div>
+
+            {/* Price estimate */}
+            <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:10, padding:isMobile?16:22, marginBottom:16 }}>
+              <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:6, textTransform:"uppercase", letterSpacing:"1px" }}>{"Estimated Value"}</div>
+              <div style={{ color:S.gold, fontSize:isMobile?26:32, fontWeight:700, fontFamily:S.mono }}>
+                {fmt(appraiseResult.lowEstimate)}{" — "}{fmt(appraiseResult.highEstimate)}
+              </div>
+            </div>
+
+            {/* Auctioneer reasoning */}
+            <div style={{ background:S.bgLight, border:"1px solid " + S.border, borderLeft:"4px solid " + S.accent, borderRadius:"0 10px 10px 0", padding:isMobile?16:20 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                <SparkIco s={16}/>
+                <span style={{ color:S.goldDim, fontSize:10, fontWeight:700, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1.5px" }}>{"Auctioneer's Assessment"}</span>
+              </div>
+              <p style={{ color:S.text, fontSize:14, fontFamily:S.font, lineHeight:1.8, margin:0, fontStyle:"italic" }}>
+                {"\u201C"}{appraiseResult.reasoning}{"\u201D"}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={()=>{setAppraiseImg(null);setAppraiseResult(null);}} style={{ ...btn(), flex:1, justifyContent:"center" }}>{"Appraise Another"}</button>
+            <button onClick={()=>{
+              setCreateData(prev => ({
+                ...prev,
+                title: appraiseResult.title || prev.title,
+                cat: appraiseResult.category || prev.cat,
+                cond: appraiseResult.condition || prev.cond,
+                priceLow: appraiseResult.lowEstimate ? String(appraiseResult.lowEstimate) : prev.priceLow,
+                priceHigh: appraiseResult.highEstimate ? String(appraiseResult.highEstimate) : prev.priceHigh,
+              }));
+              if (appraiseImg) setCreateImages([appraiseImg]);
+              setCreateStep(1);
+              setView("create");
+            }} style={{ ...btn(true), flex:1, justifyContent:"center" }}>{"List This Item"}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const Dashboard = () => (
     <div style={{ maxWidth:820, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
       <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 28px", letterSpacing:"-0.02em" }}>{"Dashboard"}</h1>
@@ -1294,6 +1436,7 @@ export default function Look4it() {
       <div style={{ flex:1 }}>
         {view==="home" && Home()}
         {view==="listing" && Detail()}
+        {view==="appraise" && Appraise()}
         {view==="create" && Create()}
         {view==="dashboard" && Dashboard()}
         {view==="settings" && Settings()}

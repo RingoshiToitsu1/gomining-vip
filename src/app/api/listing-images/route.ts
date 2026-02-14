@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 export const maxDuration = 15;
 
 const ALLOWED_HOSTS = [
-  "ebay.com", "www.ebay.com", "i.ebayimg.com",
+  "ebay.com", "www.ebay.com",
   "hibid.com", "www.hibid.com",
   "auctionninja.com", "www.auctionninja.com",
   "estatesales.net", "www.estatesales.net",
@@ -22,10 +22,92 @@ function isAllowedUrl(url: string): boolean {
 function dedupe(urls: string[]): string[] {
   const seen = new Set<string>();
   return urls.filter(u => {
-    if (!u || seen.has(u)) return false;
+    if (!u || u.length < 10 || seen.has(u)) return false;
     seen.add(u);
     return true;
   });
+}
+
+// Filter out tiny icons, tracking pixels, logos, etc.
+function isItemImage(url: string): boolean {
+  const lower = url.toLowerCase();
+  if (/logo|icon|avatar|badge|sprite|pixel|tracking|spacer|blank|favicon/i.test(lower)) return false;
+  if (/1x1|\.gif$/i.test(lower)) return false;
+  // Must look like an image URL
+  if (/\.(jpg|jpeg|png|webp)/i.test(lower)) return true;
+  // CDN URLs that serve images without extensions
+  if (/ebayimg\.com|cloudfront\.net|amazonaws\.com|auctionninja\.com.*upload|estatesales\.net.*photo/i.test(lower)) return true;
+  return false;
+}
+
+// Extract image URLs from raw HTML text using regex patterns (catches JS-rendered URLs in script blocks)
+function extractUrlsFromText(html: string, host: string): string[] {
+  const images: string[] = [];
+
+  if (host.includes("ebay.com")) {
+    // eBay embeds high-res image URLs in scripts and JSON
+    const ebayPattern = /https?:\/\/i\.ebayimg\.com\/images\/g\/[^\s"',}]+/g;
+    const matches = html.match(ebayPattern) || [];
+    for (let m of matches) {
+      m = m.replace(/\\u002F/g, "/").replace(/\\/g, "");
+      // Upgrade to large size
+      m = m.replace(/s-l\d+/, "s-l800");
+      if (!m.includes("s-l64") && !m.includes("s-l96") && !m.includes("s-l140")) {
+        images.push(m);
+      }
+    }
+  }
+
+  if (host.includes("hibid.com")) {
+    // HiBid uses cloudfront/S3 for images
+    const hibidPattern = /https?:\/\/[a-z0-9.-]*(?:cloudfront\.net|amazonaws\.com|hibid\.com)[^\s"',}]*?(?:\.jpg|\.jpeg|\.png|\.webp)[^\s"',}]*/gi;
+    const matches = html.match(hibidPattern) || [];
+    for (let m of matches) {
+      m = m.replace(/\\/g, "");
+      if (isItemImage(m)) images.push(m);
+    }
+    // Also look for image URLs in JSON data embedded in page
+    const jsonImgPattern = /"(?:imageUrl|thumbnailUrl|imagePath|photoUrl|src)"\s*:\s*"(https?:\/\/[^"]+)"/g;
+    let match;
+    while ((match = jsonImgPattern.exec(html)) !== null) {
+      const u = match[1].replace(/\\/g, "");
+      if (isItemImage(u)) images.push(u);
+    }
+  }
+
+  if (host.includes("auctionninja.com")) {
+    const anPattern = /https?:\/\/(?:www\.)?auctionninja\.com[^\s"',}]*?(?:\.jpg|\.jpeg|\.png|\.webp)[^\s"',}]*/gi;
+    const matches = html.match(anPattern) || [];
+    for (let m of matches) {
+      m = m.replace(/\\/g, "");
+      if (isItemImage(m)) images.push(m);
+    }
+    // Also look for relative image paths in uploads
+    const relPattern = /(?:\/uploads\/[^\s"',}]*?(?:\.jpg|\.jpeg|\.png|\.webp))/gi;
+    const relMatches = html.match(relPattern) || [];
+    for (const rm of relMatches) {
+      images.push(`https://www.auctionninja.com${rm}`);
+    }
+  }
+
+  if (host.includes("estatesales.net")) {
+    // Extract all image URLs from the raw HTML/JSON
+    const esPattern = /https?:\/\/[^\s"',}]*estatesales[^\s"',}]*?(?:\.jpg|\.jpeg|\.png|\.webp)[^\s"',}]*/gi;
+    const matches = html.match(esPattern) || [];
+    for (let m of matches) {
+      m = m.replace(/\\/g, "").replace(/\\u002F/g, "/");
+      if (isItemImage(m)) images.push(m);
+    }
+    // Also look for any CDN image URLs
+    const cdnPattern = /https?:\/\/[^\s"',}]*(?:cloudfront\.net|amazonaws\.com|cloudinary\.com)[^\s"',}]*?(?:\.jpg|\.jpeg|\.png|\.webp)[^\s"',}]*/gi;
+    const cdnMatches = html.match(cdnPattern) || [];
+    for (let m of cdnMatches) {
+      m = m.replace(/\\/g, "");
+      if (isItemImage(m)) images.push(m);
+    }
+  }
+
+  return images;
 }
 
 export async function GET(req: NextRequest) {
@@ -50,6 +132,7 @@ export async function GET(req: NextRequest) {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Accept: "text/html,application/xhtml+xml,*/*",
+        "Accept-Language": "en-US,en;q=0.9",
       },
       signal: AbortSignal.timeout(10000),
     });
@@ -66,76 +149,69 @@ export async function GET(req: NextRequest) {
     const images: string[] = [];
     const host = new URL(url).hostname;
 
-    if (host.includes("ebay.com")) {
-      // eBay: gallery images in the picture panel
-      $('img[src*="ebayimg.com"]').each((_, el) => {
-        let src = $(el).attr("src") || $(el).attr("data-src") || "";
-        if (src && !src.includes("s-l64") && !src.includes("s-l96")) {
-          src = src.replace(/s-l\d+/, "s-l800");
-          images.push(src);
-        }
-      });
-      // Also check image URLs in JSON-LD or data attributes
-      $('img[data-zoom-src]').each((_, el) => {
-        const src = $(el).attr("data-zoom-src") || "";
-        if (src) images.push(src);
-      });
-    } else if (host.includes("hibid.com")) {
-      $("img").each((_, el) => {
-        const src = $(el).attr("src") || $(el).attr("data-src") || "";
-        if (src && (src.includes("cloudfront") || src.includes("hibid") || src.includes("amazonaws")) && !src.includes("logo") && !src.includes("icon")) {
-          images.push(src);
-        }
-      });
-    } else if (host.includes("auctionninja.com")) {
-      $("img").each((_, el) => {
-        let src = $(el).attr("src") || $(el).attr("data-src") || "";
-        if (src && !src.includes("logo") && !src.includes("icon") && !src.includes("avatar")) {
-          if (!src.startsWith("http")) src = `https://www.auctionninja.com${src}`;
-          images.push(src);
-        }
-      });
-    } else if (host.includes("estatesales.net")) {
-      // Try embedded JSON state first
-      const scriptMatch = html.match(/window\['NGRX_STATE'\]\s*=\s*({[\s\S]*?});?\s*<\/script/);
-      if (scriptMatch) {
-        try {
-          const state = JSON.parse(scriptMatch[1]);
-          const walk = (obj: any) => {
-            if (!obj || typeof obj !== "object") return;
-            if (obj.url && typeof obj.url === "string" && /\.(jpg|jpeg|png|webp)/i.test(obj.url)) {
-              images.push(obj.url);
+    // 1. Extract from JSON-LD structured data (works on most platforms)
+    $('script[type="application/ld+json"]').each((_, el) => {
+      try {
+        const data = JSON.parse($(el).html() || "");
+        const extract = (obj: any) => {
+          if (!obj || typeof obj !== "object") return;
+          if (typeof obj === "string" && isItemImage(obj)) { images.push(obj); return; }
+          if (obj.image) {
+            const imgs = Array.isArray(obj.image) ? obj.image : [obj.image];
+            for (const im of imgs) {
+              const u = typeof im === "string" ? im : im?.url || im?.contentUrl;
+              if (u && isItemImage(u)) images.push(u);
             }
-            if (obj.thumbnailUrl && typeof obj.thumbnailUrl === "string" && /\.(jpg|jpeg|png|webp)/i.test(obj.thumbnailUrl)) {
-              images.push(obj.thumbnailUrl);
-            }
-            for (const val of Object.values(obj)) {
-              if (Array.isArray(val)) val.forEach(walk);
-              else if (typeof val === "object") walk(val);
-            }
-          };
-          walk(state);
-        } catch { /* fall through to img tags */ }
-      }
-      if (images.length === 0) {
-        $("img").each((_, el) => {
-          const src = $(el).attr("src") || $(el).attr("data-src") || "";
-          if (src && /\.(jpg|jpeg|png|webp)/i.test(src) && !src.includes("logo") && !src.includes("icon")) {
-            images.push(src);
           }
-        });
-      }
-    } else {
-      // Generic: grab all reasonable images
-      $("img").each((_, el) => {
-        const src = $(el).attr("src") || $(el).attr("data-src") || "";
-        if (src && /\.(jpg|jpeg|png|webp)/i.test(src) && !src.includes("logo") && !src.includes("icon")) {
-          images.push(src);
-        }
-      });
-    }
+          if (obj.contentUrl && isItemImage(obj.contentUrl)) images.push(obj.contentUrl);
+          if (obj.thumbnailUrl && isItemImage(obj.thumbnailUrl)) images.push(obj.thumbnailUrl);
+          for (const val of Object.values(obj)) {
+            if (Array.isArray(val)) val.forEach(extract);
+            else if (typeof val === "object") extract(val);
+          }
+        };
+        extract(data);
+      } catch { /* ignore */ }
+    });
 
-    const unique = dedupe(images).slice(0, 20);
+    // 2. Extract from OpenGraph / meta tags
+    $('meta[property="og:image"], meta[name="og:image"], meta[property="twitter:image"]').each((_, el) => {
+      const src = $(el).attr("content") || "";
+      if (src && isItemImage(src)) images.push(src);
+    });
+
+    // 3. Extract from img tags (cheerio)
+    $("img").each((_, el) => {
+      for (const attr of ["src", "data-src", "data-zoom-src", "data-large", "data-original"]) {
+        const src = $(el).attr(attr) || "";
+        if (src && isItemImage(src)) {
+          images.push(src.startsWith("http") ? src : src.startsWith("//") ? `https:${src}` : "");
+        }
+      }
+    });
+
+    // 4. Extract from srcset attributes
+    $("img[srcset], source[srcset]").each((_, el) => {
+      const srcset = $(el).attr("srcset") || "";
+      const parts = srcset.split(",").map(s => s.trim().split(/\s+/)[0]);
+      for (const src of parts) {
+        if (src && isItemImage(src)) {
+          images.push(src.startsWith("http") ? src : src.startsWith("//") ? `https:${src}` : "");
+        }
+      }
+    });
+
+    // 5. Regex scan raw HTML for image URLs in scripts/JSON (catches SPA-embedded data)
+    const textImages = extractUrlsFromText(html, host);
+    images.push(...textImages);
+
+    // eBay-specific: upgrade all ebayimg URLs to large
+    const processed = images.map(u => {
+      if (u.includes("ebayimg.com")) return u.replace(/s-l\d+/, "s-l800");
+      return u;
+    }).filter(u => u.startsWith("http"));
+
+    const unique = dedupe(processed).slice(0, 20);
 
     return NextResponse.json({ success: true, images: unique });
   } catch (error) {
