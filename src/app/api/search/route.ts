@@ -16,20 +16,6 @@ const scraperMap: Record<string, (opts: { query: string; maxResults: number; tim
   ESTATESALES_NET: scrapeEstateSales,
 };
 
-// Deterministic hash-based AI appraisal for items without a price
-function aiAppraise(title: string): { appraised: number; low: number; high: number } {
-  let hash = 0;
-  for (let i = 0; i < title.length; i++) {
-    hash = ((hash << 5) - hash + title.charCodeAt(i)) | 0;
-  }
-  // Generate a value between $25 and $2500 from the hash
-  const base = 25 + Math.abs(hash % 2476);
-  // Round to nearest $5
-  const appraised = Math.round(base / 5) * 5;
-  const low = Math.round(appraised * 0.7 / 5) * 5;
-  const high = Math.round(appraised * 1.4 / 5) * 5;
-  return { appraised, low, high };
-}
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
@@ -72,16 +58,6 @@ export async function GET(req: NextRequest) {
 
   // Filter out results without images
   allResults = allResults.filter((r) => r.img && r.img.trim() !== "");
-
-  // AI-appraise items with no price
-  for (const r of allResults) {
-    if (r.price === 0 && !r.appraised) {
-      const est = aiAppraise(r.title);
-      r.appraised = est.appraised;
-      r.low = est.low;
-      r.high = est.high;
-    }
-  }
 
   // Sort: priced items first, then by time descending
   allResults.sort((a, b) => {

@@ -353,7 +353,7 @@ export default function Look4it() {
 
   const Card = ({l}) => {
     const ext = l.source!=="DIRECT";
-    const cardFee = ((l.price > 0 ? l.price : l.appraised) || 0) * 0.1;
+    const cardFee = l.price > 0 ? l.price * 0.1 : 0;
     return (
       <div onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, overflow:"hidden", cursor:"pointer", transition:"all 0.3s ease" }}
         onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,0.3)";}}
@@ -368,14 +368,13 @@ export default function Look4it() {
           <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(26,24,32,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
             <HeartIco s={14} f={favs.has(l.id)}/>
           </button>
-          {ext && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
+          {ext && cardFee > 0 && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
         </div>
         <div style={{ padding:16 }}>
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginTop:12 }}>
             <div>
-              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{l.price > 0 ? fmt(l.price) : "See listing"}</div>
-              {l.appraised && <div style={{ color:S.dim, fontSize:10, fontFamily:S.font, marginTop:2 }}>{"Appraised: "}{fmt(l.appraised)}</div>}
+              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{l.price > 0 ? fmt(l.price) : "Price not listed"}</div>
             </div>
             <div style={{ textAlign:"right" }}>
               {l.loc && <div style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{l.loc}</div>}
@@ -463,7 +462,7 @@ export default function Look4it() {
   const Detail = () => {
     if(!sel) return null;
     const ext = sel.source!=="DIRECT";
-    const fee = ((sel.price > 0 ? sel.price : sel.appraised) || 0) * 0.1;
+    const fee = sel.price > 0 ? sel.price * 0.1 : 0;
     return (
       <div style={{ maxWidth:920, margin:"0 auto", padding:"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
@@ -484,18 +483,10 @@ export default function Look4it() {
               {sel.views > 0 && <span style={{ color:S.dim, fontSize:11, fontFamily:S.font, display:"flex", alignItems:"center", gap:4 }}><EyeIco/>{sel.views}{" views"}</span>}
             </div>
             <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:10, padding:22, marginBottom:18 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-                <div>
-                  <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Asking Price" : "Price"}</div>
-                  <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "See listing"}</div>
-                </div>
-                {sel.appraised && (
-                  <div style={{ textAlign:"right" }}>
-                    <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, display:"flex", alignItems:"center", gap:4, justifyContent:"flex-end", textTransform:"uppercase", letterSpacing:"1px" }}><SparkIco/>{"AI Appraised"}</div>
-                    <div style={{ color:S.textLight, fontSize:22, fontWeight:600, fontFamily:S.mono }}>{fmt(sel.appraised)}</div>
-                    <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:3 }}>{"Range: "}{fmt(sel.low)}{" - "}{fmt(sel.high)}</div>
-                  </div>
-                )}
+              <div>
+                <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Listed Price" : "Price"}</div>
+                <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "Price not listed"}</div>
+                {sel.price > 0 && <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:4 }}>{"Finder's fee: "}{fmt(fee)}{" (10%)"}</div>}
               </div>
             </div>
             {ext ? (
@@ -504,10 +495,10 @@ export default function Look4it() {
                   <LockIco s={14}/><span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.font }}>{"Finder's Fee Required"}</span>
                 </div>
                 <p style={{ color:S.muted, fontSize:12, fontFamily:S.font, margin:"0 0 14px", lineHeight:1.6 }}>
-                  {"We found this listing on an external platform. Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of "}{sel.price > 0 ? "listed price" : "AI appraised value"}{") to reveal where it's listed and get a direct link to purchase."}
+                  {sel.price > 0 ? <>{"We found this listing on an external platform. Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of the listed price) to reveal where it's listed and get a direct link to purchase."}</> : "We found this listing on an external platform. The price is not listed — unlock the source to view full details and purchase directly."}
                 </p>
                 <button onClick={()=>loggedIn?notify("Redirecting to Stripe checkout..."):setModal("auth")} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
-                  <LockIco s={14}/>{"Unlock Source for "}{fmt(fee)}
+                  <LockIco s={14}/>{fee > 0 ? <>{"Unlock Source for "}{fmt(fee)}</> : "Unlock Source"}
                 </button>
               </div>
             ) : (
@@ -817,7 +808,7 @@ export default function Look4it() {
                     </div>
                     <div style={{ padding:10 }}>
                       <div style={{ color:S.textLight, fontSize:12, fontWeight:600, fontFamily:S.font, lineHeight:1.4, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</div>
-                      <div style={{ color:S.gold, fontSize:14, fontWeight:700, fontFamily:S.mono, marginTop:6 }}>{l.price > 0 ? fmt(l.price) : (l.appraised ? "~" + fmt(l.appraised) : "See listing")}</div>
+                      <div style={{ color:S.gold, fontSize:14, fontWeight:700, fontFamily:S.mono, marginTop:6 }}>{l.price > 0 ? fmt(l.price) : "Price not listed"}</div>
                     </div>
                   </div>
                 ))}
@@ -967,9 +958,8 @@ export default function Look4it() {
     <Overlay onClose={()=>setModal(null)}>
       <h2 style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.textLight, margin:"0 0 6px" }}>{"Make an Offer"}</h2>
       <p style={{ color:S.dim, fontSize:12, fontFamily:S.font, margin:"0 0 18px" }}>{"on "}{sel?.title}</p>
-      <div style={{ background:S.cream, borderRadius:8, padding:14, marginBottom:18, display:"flex", justifyContent:"space-between" }}>
-        <div><div style={{ color:S.dim, fontSize:10, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Asking"}</div><div style={{ color:S.textLight, fontFamily:S.mono, fontSize:18 }}>{fmt(sel?.price||0)}</div></div>
-        <div style={{textAlign:"right"}}><div style={{ color:S.dim, fontSize:10, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Appraised"}</div><div style={{ color:S.gold, fontFamily:S.mono, fontSize:18 }}>{fmt(sel?.appraised||0)}</div></div>
+      <div style={{ background:S.cream, borderRadius:8, padding:14, marginBottom:18 }}>
+        <div><div style={{ color:S.dim, fontSize:10, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Listed Price"}</div><div style={{ color:S.textLight, fontFamily:S.mono, fontSize:18 }}>{sel?.price > 0 ? fmt(sel.price) : "Price not listed"}</div></div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <div><label style={lbl}>{"Your Offer"}</label><input type="number" placeholder="$0.00" value={offerAmt} onChange={e=>setOfferAmt(e.target.value)} style={inp}/></div>
