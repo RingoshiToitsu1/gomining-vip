@@ -109,7 +109,16 @@ export default function Look4it() {
   const [createStep, setCreateStep] = useState(0);
   const [createData, setCreateData] = useState({title:"",desc:"",cat:"FURNITURE",cond:"GOOD",price:"",loc:"Detroit Metro, MI"});
   const [wantList, setWantList] = useState([]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [settingsName, setSettingsName] = useState("");
+  const [settingsCurrentPw, setSettingsCurrentPw] = useState("");
+  const [settingsNewPw, setSettingsNewPw] = useState("");
+  const [settingsConfirmPw, setSettingsConfirmPw] = useState("");
+  const [settingsError, setSettingsError] = useState("");
+  const [settingsSuccess, setSettingsSuccess] = useState("");
+  const [settingsLoading, setSettingsLoading] = useState(false);
   const fileInputRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     let r = [...MOCK];
@@ -124,6 +133,20 @@ export default function Look4it() {
     else r.sort((a,b)=>new Date(b.time).getTime()-new Date(a.time).getTime());
     setResults(r);
   }, [searchQ, fil]);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setShowUserMenu(false);
+    };
+    if (showUserMenu) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showUserMenu]);
+
+  // Sync settings name from session
+  useEffect(() => {
+    if (session?.user?.name) setSettingsName(session.user.name);
+  }, [session?.user?.name]);
 
   // Auto-add searches to want list / dashboard
   useEffect(() => {
@@ -220,9 +243,29 @@ export default function Look4it() {
         <button style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
           <BellIco/><div style={{ position:"absolute", top:-2, right:-2, width:7, height:7, background:S.accent, borderRadius:"50%", border:"2px solid " + S.bg }}/>
         </button>
-        <button onClick={()=>loggedIn?signOut({redirect:false}):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
-          <UserIco s={14}/>{loggedIn?(session?.user?.name||"Account"):"Sign In"}
-        </button>
+        <div ref={userMenuRef} style={{ position:"relative" }}>
+          <button onClick={()=>loggedIn?setShowUserMenu(!showUserMenu):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
+            <UserIco s={14}/>{loggedIn?(session?.user?.name||"Account"):"Sign In"}
+          </button>
+          {showUserMenu && loggedIn && (
+            <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, width:240, background:S.bgLight, border:"1px solid " + S.border, borderRadius:10, boxShadow:"0 12px 40px rgba(0,0,0,0.5)", zIndex:60, overflow:"hidden" }}>
+              <div style={{ padding:"16px 16px 12px", borderBottom:"1px solid " + S.border }}>
+                <div style={{ color:S.textLight, fontSize:14, fontWeight:600, fontFamily:S.font }}>{session?.user?.name || "User"}</div>
+                <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:2 }}>{session?.user?.email}</div>
+              </div>
+              <div style={{ padding:6 }}>
+                {[["Dashboard","dashboard"],["Settings","settings"]].map(([label,v])=>(
+                  <button key={v} onClick={()=>{setView(v);setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.text, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{label}</button>
+                ))}
+              </div>
+              <div style={{ borderTop:"1px solid " + S.border, padding:6 }}>
+                <button onClick={()=>{signOut({redirect:false});setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.accent, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
+                  onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{"Sign Out"}</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -539,6 +582,66 @@ export default function Look4it() {
     </div>
   );
 
+  const Settings = () => (
+    <div style={{ maxWidth:660, margin:"0 auto", padding:"36px 24px 48px" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 6px", letterSpacing:"-0.02em" }}>{"Settings"}</h1>
+      <p style={{ color:S.muted, fontSize:14, fontFamily:S.font, margin:"0 0 30px" }}>{"Manage your account and preferences."}</p>
+      {!loggedIn ? (
+        <div style={{ textAlign:"center", padding:52, background:S.card, border:"1px solid " + S.border, borderRadius:12 }}>
+          <UserIco s={40}/><p style={{ color:S.muted, fontFamily:S.font, fontSize:15, margin:"16px 0" }}>{"Sign in to access settings"}</p>
+          <button onClick={()=>setModal("auth")} style={btn(true)}>{"Sign In"}</button>
+        </div>
+      ) : (
+        <div style={{ display:"grid", gap:22 }}>
+          {settingsSuccess && <div style={{ background:"rgba(74,124,111,0.1)", border:"1px solid rgba(74,124,111,0.3)", color:"#6BAF9B", padding:"12px 16px", borderRadius:8, fontSize:13, fontFamily:S.font }}>{settingsSuccess}</div>}
+          {settingsError && <div style={{ background:"rgba(200,60,60,0.1)", border:"1px solid rgba(200,60,60,0.3)", color:"#E07070", padding:"12px 16px", borderRadius:8, fontSize:13, fontFamily:S.font }}>{settingsError}</div>}
+          <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:24 }}>
+            <h3 style={{ color:S.textLight, fontSize:16, fontWeight:600, fontFamily:S.font, margin:"0 0 18px" }}>{"Profile"}</h3>
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <div><label style={lbl}>{"Display Name"}</label><input value={settingsName} onChange={e=>setSettingsName(e.target.value)} style={inp}/></div>
+              <div><label style={lbl}>{"Email"}</label><input value={session?.user?.email||""} disabled style={{...inp, opacity:0.5, cursor:"not-allowed"}}/></div>
+              <button onClick={async ()=>{
+                setSettingsError(""); setSettingsSuccess(""); setSettingsLoading(true);
+                try {
+                  const res = await fetch("/api/auth/update-profile", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name:settingsName}) });
+                  const data = await res.json();
+                  if(!res.ok) { setSettingsError(data.error||"Failed to update profile"); }
+                  else { setSettingsSuccess("Profile updated successfully"); }
+                } catch { setSettingsError("Something went wrong"); }
+                finally { setSettingsLoading(false); }
+              }} disabled={settingsLoading} style={{ ...btn(true), alignSelf:"flex-start", opacity:settingsLoading?0.6:1, cursor:settingsLoading?"not-allowed":"pointer" }}>
+                {settingsLoading?"Saving...":"Save Profile"}
+              </button>
+            </div>
+          </div>
+          <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:24 }}>
+            <h3 style={{ color:S.textLight, fontSize:16, fontWeight:600, fontFamily:S.font, margin:"0 0 18px" }}>{"Change Password"}</h3>
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              <div><label style={lbl}>{"Current Password"}</label><input type="password" placeholder="Enter current password" value={settingsCurrentPw} onChange={e=>setSettingsCurrentPw(e.target.value)} style={inp}/></div>
+              <div><label style={lbl}>{"New Password"}</label><input type="password" placeholder="Min 8 characters" value={settingsNewPw} onChange={e=>setSettingsNewPw(e.target.value)} style={inp}/></div>
+              <div><label style={lbl}>{"Confirm New Password"}</label><input type="password" placeholder="Confirm new password" value={settingsConfirmPw} onChange={e=>setSettingsConfirmPw(e.target.value)} style={inp}/></div>
+              <button onClick={async ()=>{
+                setSettingsError(""); setSettingsSuccess("");
+                if(settingsNewPw !== settingsConfirmPw) { setSettingsError("New passwords do not match"); return; }
+                if(settingsNewPw.length < 8) { setSettingsError("New password must be at least 8 characters"); return; }
+                setSettingsLoading(true);
+                try {
+                  const res = await fetch("/api/auth/change-password", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({currentPassword:settingsCurrentPw, newPassword:settingsNewPw}) });
+                  const data = await res.json();
+                  if(!res.ok) { setSettingsError(data.error||"Failed to change password"); }
+                  else { setSettingsSuccess("Password changed successfully"); setSettingsCurrentPw(""); setSettingsNewPw(""); setSettingsConfirmPw(""); }
+                } catch { setSettingsError("Something went wrong"); }
+                finally { setSettingsLoading(false); }
+              }} disabled={settingsLoading} style={{ ...btn(true), alignSelf:"flex-start", opacity:settingsLoading?0.6:1, cursor:settingsLoading?"not-allowed":"pointer" }}>
+                {settingsLoading?"Saving...":"Change Password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   // Overlay moved outside component to prevent remount/focus loss
 
   const AuthModal = () => (
@@ -680,6 +783,7 @@ export default function Look4it() {
         {view==="listing" && Detail()}
         {view==="create" && Create()}
         {view==="dashboard" && Dashboard()}
+        {view==="settings" && Settings()}
       </div>
       <Footer/>
       {modal==="auth" && AuthModal()}
