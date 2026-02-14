@@ -148,16 +148,39 @@ export default function Look4it() {
     if (session?.user?.name) setSettingsName(session.user.name);
   }, [session?.user?.name]);
 
+  // Load want list from DB on login
+  useEffect(() => {
+    if (loggedIn) {
+      fetch("/api/want-list").then(r => r.json()).then(data => {
+        if (data.success && data.data) {
+          setWantList(data.data.map((w: any) => ({ id: w.id, query: w.query, createdAt: w.createdAt, results: 0 })));
+        }
+      }).catch(() => {});
+    }
+  }, [loggedIn]);
+
   // Auto-add searches to want list / dashboard
   useEffect(() => {
     if(searchQ && searchQ.length >= 3) {
-      setWantList(prev => {
-        const exists = prev.some(w => w.query.toLowerCase() === searchQ.toLowerCase());
-        if(!exists) {
-          return [{query: searchQ, time: new Date().toISOString(), results: results.length}, ...prev].slice(0, 20);
-        }
-        return prev;
-      });
+      const exists = wantList.some(w => w.query.toLowerCase() === searchQ.toLowerCase());
+      if (exists) return;
+      if (loggedIn) {
+        fetch("/api/want-list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: searchQ }) })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.data) {
+              setWantList(prev => {
+                if (prev.some(w => w.query.toLowerCase() === searchQ.toLowerCase())) return prev;
+                return [{ id: data.data.id, query: data.data.query, createdAt: data.data.createdAt, results: results.length }, ...prev].slice(0, 20);
+              });
+            }
+          }).catch(() => {});
+      } else {
+        setWantList(prev => {
+          if (prev.some(w => w.query.toLowerCase() === searchQ.toLowerCase())) return prev;
+          return [{ id: null, query: searchQ, createdAt: new Date().toISOString(), results: results.length }, ...prev].slice(0, 20);
+        });
+      }
     }
   }, [searchQ]);
 
@@ -544,7 +567,13 @@ export default function Look4it() {
                   </div>
                   <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                     <span style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{w.results}{" results"}</span>
-                    <button onClick={()=>setWantList(prev=>prev.filter((_,idx)=>idx!==i))} style={{ background:"none", border:"none", color:S.dim, cursor:"pointer", padding:2 }}><XIco s={12}/></button>
+                    <button onClick={()=>{
+                      const item = wantList[i];
+                      if (item.id) {
+                        fetch("/api/want-list", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: item.id }) }).catch(() => {});
+                      }
+                      setWantList(prev=>prev.filter((_,idx)=>idx!==i));
+                    }} style={{ background:"none", border:"none", color:S.dim, cursor:"pointer", padding:2 }}><XIco s={12}/></button>
                   </div>
                 </div>
               ))}
