@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Allow large image payloads
+export const maxDuration = 30;
+
 const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
 const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
       // Build image content blocks (up to 4 images)
       const imageBlocks: Anthropic.ImageBlockParam[] = [];
       for (const img of images.slice(0, 4)) {
-        const match = img.match(/^data:(image\/\w+);base64,(.+)$/);
+        const match = img.match(/^data:(image\/[\w+.-]+);base64,(.+)/s);
         if (match) {
           imageBlocks.push({
             type: "image",
@@ -77,23 +80,27 @@ export async function POST(req: NextRequest) {
       }
 
       if (imageBlocks.length === 0) {
+        console.error("No valid image blocks extracted from", images.length, "images");
         return NextResponse.json(
           { success: false, error: "Could not process uploaded images" },
           { status: 400 }
         );
       }
+      console.log("Sending", imageBlocks.length, "image(s) to Claude for analysis...");
 
-      const message = await client.messages.create({
-        model: "claude-sonnet-4-5-20250929",
-        max_tokens: 1024,
-        messages: [
-          {
-            role: "user",
-            content: [
-              ...imageBlocks,
-              {
-                type: "text",
-                text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
+      let message;
+      try {
+        message = await client.messages.create({
+          model: "claude-sonnet-4-5-20250929",
+          max_tokens: 1024,
+          messages: [
+            {
+              role: "user",
+              content: [
+                ...imageBlocks,
+                {
+                  type: "text",
+                  text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
 
 {
   "title": "concise auction-ready title",
@@ -107,11 +114,19 @@ export async function POST(req: NextRequest) {
 ${additionalContext ? `Additional context from the seller: ${additionalContext}` : ""}
 
 Be specific and accurate. Price based on current secondhand/auction market values.`,
-              },
-            ],
-          },
-        ],
-      });
+                },
+              ],
+            },
+          ],
+        });
+      } catch (apiErr: unknown) {
+        const errMsg = apiErr instanceof Error ? apiErr.message : String(apiErr);
+        console.error("Claude API error:", errMsg);
+        return NextResponse.json(
+          { success: false, error: "AI analysis failed: " + errMsg.slice(0, 200) },
+          { status: 502 }
+        );
+      }
 
       const text = message.content[0].type === "text" ? message.content[0].text : "";
 

@@ -569,15 +569,32 @@ export default function Look4it() {
     const allImages = [...createImages, ...newImages];
     setCreateImages(allImages);
 
+    // Resize images for AI analysis (max 800px, keeps payload small)
+    const resizeForAI = (dataUrl: string): Promise<string> => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 800;
+        let w = img.width, h = img.height;
+        if (w > max || h > max) { const r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = () => reject(new Error("Failed to load image for resizing"));
+      img.src = dataUrl;
+    });
+
     // Run AI analysis on the first image
     if (createStep === 0) {
       setCreateStep(1);
       setCreateAnalyzing(true);
       try {
+        // Send only the first image, resized for speed
+        const smallImg = await resizeForAI(allImages[0]);
         const res = await fetch("/api/analyze-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ images: allImages }),
+          body: JSON.stringify({ images: [smallImg] }),
         });
         const data = await res.json();
         if (data.success && data.data) {
@@ -591,9 +608,13 @@ export default function Look4it() {
             priceHigh: data.data.priceHigh ? String(data.data.priceHigh) : prev.priceHigh,
           }));
           notify("AI analysis complete!");
+        } else {
+          console.error("AI analysis failed:", data.error || "Unknown error");
+          notify(data.error || "AI analysis failed. You can fill in details manually.");
         }
-      } catch {
-        // Silently proceed — form is ready for manual entry
+      } catch (err) {
+        console.error("AI analysis error:", err);
+        notify("Could not reach AI service. Fill in details manually.");
       } finally {
         setCreateAnalyzing(false);
       }
