@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
 const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
 const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
+const OPENAI_KEY = process.env.OPENAI_API_KEY || "";
 
 const VALID_CATEGORIES = [
   "FURNITURE","ELECTRONICS","JEWELRY","ART","COLLECTIBLES","ANTIQUES",
@@ -52,43 +52,30 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch {
-        // Fall through to Claude vision
+        // Fall through to OpenAI vision
       }
     }
 
-    // Claude Vision analysis
-    if (ANTHROPIC_KEY) {
-      const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
+    // GPT-4o Vision analysis
+    if (OPENAI_KEY) {
+      const openai = new OpenAI({ apiKey: OPENAI_KEY });
 
-      // Build image content blocks (up to 4 images to keep token cost low)
-      const imageBlocks: Anthropic.ImageBlockParam[] = images.slice(0, 4).map((img: string) => {
-        // img is a data URL like "data:image/jpeg;base64,..."
-        const match = img.match(/^data:(image\/\w+);base64,(.+)$/);
-        if (match) {
-          return {
-            type: "image" as const,
-            source: {
-              type: "base64" as const,
-              media_type: match[1] as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-              data: match[2],
-            },
-          };
-        }
-        // If it's a URL, use URL source
-        return {
-          type: "image" as const,
-          source: { type: "url" as const, url: img },
-        };
-      });
+      // Build image content blocks (up to 4 images)
+      const imageContent: OpenAI.ChatCompletionContentPart[] = images
+        .slice(0, 4)
+        .map((img: string) => ({
+          type: "image_url" as const,
+          image_url: { url: img, detail: "low" as const },
+        }));
 
-      const message = await client.messages.create({
-        model: "claude-sonnet-4-5-20250929",
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
         max_tokens: 1024,
         messages: [
           {
             role: "user",
             content: [
-              ...imageBlocks,
+              ...imageContent,
               {
                 type: "text",
                 text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
@@ -111,10 +98,9 @@ Be specific and accurate. Price based on current secondhand/auction market value
         ],
       });
 
-      const text = message.content[0].type === "text" ? message.content[0].text : "";
+      const text = completion.choices[0]?.message?.content || "";
 
       try {
-        // Try to parse the JSON response, stripping any markdown fences
         const cleaned = text.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
         const parsed = JSON.parse(cleaned);
 
@@ -131,7 +117,6 @@ Be specific and accurate. Price based on current secondhand/auction market value
           },
         });
       } catch {
-        // Claude responded but not valid JSON - extract what we can
         return NextResponse.json({
           success: true,
           data: {
@@ -149,7 +134,7 @@ Be specific and accurate. Price based on current secondhand/auction market value
 
     // No AI keys configured
     return NextResponse.json(
-      { success: false, error: "No AI service configured. Add ANTHROPIC_API_KEY to your .env file." },
+      { success: false, error: "No AI service configured. Add OPENAI_API_KEY to your .env file." },
       { status: 503 }
     );
   } catch (error) {

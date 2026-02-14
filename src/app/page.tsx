@@ -698,6 +698,39 @@ export default function Look4it() {
               )}
             </div>
 
+            {/* Seller's Fee Breakdown */}
+            {(createData.priceLow || createData.priceHigh) && (() => {
+              const isPro = (session?.user as any)?.subscriptionTier === "PRO";
+              const feeRate = isPro ? 0.05 : 0.20;
+              const feeLabel = isPro ? "5% Pro" : "20%";
+              const midPrice = createData.priceLow && createData.priceHigh ? (+createData.priceLow + +createData.priceHigh) / 2 : +(createData.priceHigh || createData.priceLow);
+              const feeAmt = midPrice * feeRate;
+              const payout = midPrice - feeAmt;
+              return (
+                <div style={{ background:"rgba(74,124,111,0.06)", border:"1px solid rgba(74,124,111,0.15)", borderRadius:8, padding:16 }}>
+                  <div style={{ color:S.goldDim, fontSize:10, fontFamily:S.font, marginBottom:10, textTransform:"uppercase", letterSpacing:"1.5px" }}>{"Seller's Fee Breakdown"}</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                    <span style={{ color:S.muted, fontSize:13, fontFamily:S.font }}>{"Estimated sale price"}</span>
+                    <span style={{ color:S.textLight, fontSize:13, fontFamily:S.mono, fontWeight:600 }}>{fmt(midPrice)}</span>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                    <span style={{ color:S.muted, fontSize:13, fontFamily:S.font }}>{"Look4it seller's fee ("}{feeLabel}{")"}</span>
+                    <span style={{ color:S.accent, fontSize:13, fontFamily:S.mono, fontWeight:600 }}>{"-"}{fmt(feeAmt)}</span>
+                  </div>
+                  <div style={{ borderTop:"1px solid " + S.border, paddingTop:8, marginTop:4, display:"flex", justifyContent:"space-between" }}>
+                    <span style={{ color:S.textLight, fontSize:14, fontWeight:600, fontFamily:S.font }}>{"Your payout"}</span>
+                    <span style={{ color:S.gold, fontSize:16, fontWeight:700, fontFamily:S.mono }}>{fmt(payout)}</span>
+                  </div>
+                  {!isPro && (
+                    <div style={{ marginTop:10, background:S.accentPale, borderRadius:6, padding:"8px 12px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <span style={{ color:S.muted, fontSize:11, fontFamily:S.font }}>{"Pro subscribers pay only 5% — save "}{fmt(midPrice * 0.15)}{" on this listing"}</span>
+                      <button onClick={()=>notify("Redirecting to subscription checkout...")} style={{ background:"none", border:"1px solid rgba(196,162,101,0.25)", color:S.gold, padding:"4px 12px", borderRadius:5, cursor:"pointer", fontFamily:S.font, fontSize:10, fontWeight:600, whiteSpace:"nowrap" }}>{"Upgrade"}</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Quantity, Lot#, Cosigner */}
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14 }}>
               <div><label style={lbl}>{"Quantity"}</label><input type="number" min="1" value={createData.quantity} onChange={e=>setCreateData({...createData,quantity:e.target.value})} style={inp}/></div>
