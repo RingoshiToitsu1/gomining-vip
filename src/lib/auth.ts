@@ -1,12 +1,10 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import prisma from './db';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
   providers: [
     // Email/Password
     CredentialsProvider({
@@ -93,11 +91,6 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-  },
-
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
   },
 
   secret: process.env.NEXTAUTH_SECRET,
