@@ -76,7 +76,7 @@ export default function Look4it() {
   const [view, setView] = useState("home");
   const [sel, setSel] = useState(null);
   const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const [searchQ, setSearchQ] = useState("");
   const [results, setResults] = useState(MOCK);
   const [fil, setFil] = useState({cat:"",cond:"",src:"",min:"",max:"",sort:"newest"});
   const [showFil, setShowFil] = useState(false);
@@ -95,13 +95,8 @@ export default function Look4it() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedQ(q), 300);
-    return () => clearTimeout(timeout);
-  }, [q]);
-
-  useEffect(() => {
     let r = [...MOCK];
-    if(debouncedQ){ const lq=debouncedQ.toLowerCase(); r=r.filter(l=>l.title.toLowerCase().includes(lq)||l.desc.toLowerCase().includes(lq)||l.tags.some(t=>t.includes(lq))); }
+    if(searchQ){ const lq=searchQ.toLowerCase(); r=r.filter(l=>l.title.toLowerCase().includes(lq)||l.desc.toLowerCase().includes(lq)||l.tags.some(t=>t.includes(lq))); }
     if(fil.cat) r=r.filter(l=>l.category===fil.cat);
     if(fil.cond) r=r.filter(l=>l.condition===fil.cond);
     if(fil.src) r=r.filter(l=>l.source===fil.src);
@@ -111,27 +106,27 @@ export default function Look4it() {
     else if(fil.sort==="price_desc") r.sort((a,b)=>b.price-a.price);
     else r.sort((a,b)=>new Date(b.time).getTime()-new Date(a.time).getTime());
     setResults(r);
-  }, [debouncedQ, fil]);
+  }, [searchQ, fil]);
 
   // Auto-add searches to want list / dashboard
   useEffect(() => {
-    if(debouncedQ && debouncedQ.length >= 3) {
+    if(searchQ && searchQ.length >= 3) {
       setWantList(prev => {
-        const exists = prev.some(w => w.query.toLowerCase() === debouncedQ.toLowerCase());
+        const exists = prev.some(w => w.query.toLowerCase() === searchQ.toLowerCase());
         if(!exists) {
-          return [{query: debouncedQ, time: new Date().toISOString(), results: results.length}, ...prev].slice(0, 20);
+          return [{query: searchQ, time: new Date().toISOString(), results: results.length}, ...prev].slice(0, 20);
         }
         return prev;
       });
     }
-  }, [debouncedQ]);
+  }, [searchQ]);
 
   const handleCameraSearch = () => { fileInputRef.current?.click(); };
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if(file) {
       notify("Analyzing image... AI is identifying the item");
-      setTimeout(() => { setQ("antique brass"); notify("Found: Antique Brass item - showing results"); }, 2000);
+      setTimeout(() => { setQ("antique brass"); setSearchQ("antique brass"); notify("Found: Antique Brass item - showing results"); }, 2000);
     }
   };
 
@@ -226,9 +221,9 @@ export default function Look4it() {
           <div style={{ display:"flex", gap:6, background:S.cream, border:"1px solid " + S.border, borderRadius:10, padding:5, alignItems:"center" }}>
             <div style={{ flex:1, display:"flex", alignItems:"center", gap:8, padding:"0 12px" }}>
               <SearchIco/>
-              <input placeholder="Look4it..." value={q} onChange={e=>setQ(e.target.value)}
+              <input placeholder="Look4it..." value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")setSearchQ(q)}}
                 style={{ background:"transparent", border:"none", outline:"none", color:S.textLight, fontSize:15, fontFamily:S.font, width:"100%", padding:"10px 0", letterSpacing:"0.01em" }}/>
-              {q && <button onClick={()=>setQ("")} style={{ background:"rgba(196,162,101,0.1)", border:"none", width:24, height:24, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted, flexShrink:0 }}><XIco s={12}/></button>}
+              {q && <button onClick={()=>{setQ("");setSearchQ("")}} style={{ background:"rgba(196,162,101,0.1)", border:"none", width:24, height:24, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted, flexShrink:0 }}><XIco s={12}/></button>}
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={handleImageUpload}/>
             <button onClick={handleCameraSearch} title="Search by image" style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", color:S.accentLight, width:40, height:40, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s" }}>
