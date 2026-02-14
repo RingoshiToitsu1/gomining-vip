@@ -28,6 +28,7 @@ model User {
   sales           Transaction[] @relation("SellerTransactions")
   offers          Offer[]
   wantList        WantListItem[]
+  favorites       Favorite[]
   notifications   Notification[]
   flags           Flag[]
   accounts        Account[]
@@ -305,6 +306,19 @@ enum FlagStatus {
   ADMIN_REVIEWED
   RESOLVED
   DISMISSED
+}
+
+model Favorite {
+  id          String   @id @default(cuid())
+  itemId      String   // e.g. "ebay-12345"
+  itemData    Json     // Full scraped result object
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  @@map("favorites")
 }
 
 model ExcludedWord {

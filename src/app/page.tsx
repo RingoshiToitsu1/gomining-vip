@@ -86,6 +86,7 @@ export default function Look4it() {
   const { data: session, status } = useSession();
   const loggedIn = status === "authenticated";
   const [favs, setFavs] = useState(new Set());
+  const [favItems, setFavItems] = useState<any[]>([]);
   const [toast, setToast] = useState(null);
   const [modal, setModal] = useState(null);
   const [offerAmt, setOfferAmt] = useState("");
@@ -100,7 +101,11 @@ export default function Look4it() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [createStep, setCreateStep] = useState(0);
-  const [createData, setCreateData] = useState({title:"",desc:"",cat:"FURNITURE",cond:"GOOD",price:"",loc:"Detroit Metro, MI"});
+  const [createImages, setCreateImages] = useState<string[]>([]);
+  const [createAnalyzing, setCreateAnalyzing] = useState(false);
+  const [createDragOver, setCreateDragOver] = useState(false);
+  const [createData, setCreateData] = useState({title:"",desc:"",cat:"OTHER",cond:"GOOD",priceLow:"",priceHigh:"",quantity:"1",lot:"",cosigner:"",loc:"Detroit Metro, MI"});
+  const createFileRef = useRef<HTMLInputElement>(null);
   const [wantList, setWantList] = useState([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [settingsName, setSettingsName] = useState("");
@@ -168,6 +173,21 @@ export default function Look4it() {
           setWantList(data.data.map((w: any) => ({ id: w.id, query: w.query, createdAt: w.createdAt, results: 0 })));
         }
       }).catch(() => {});
+    }
+  }, [loggedIn]);
+
+  // Load favorites from DB on login
+  useEffect(() => {
+    if (loggedIn) {
+      fetch("/api/favorites").then(r => r.json()).then(data => {
+        if (data.success && data.data) {
+          setFavs(new Set(data.data.map((f: any) => f.itemId)));
+          setFavItems(data.data.map((f: any) => f.item));
+        }
+      }).catch(() => {});
+    } else {
+      setFavs(new Set());
+      setFavItems([]);
     }
   }, [loggedIn]);
 
@@ -249,7 +269,33 @@ export default function Look4it() {
   };
 
   const notify = (msg, type="success") => { setToast({msg,type}); setTimeout(()=>setToast(null),3000); };
-  const togFav = (id, e) => { e?.stopPropagation(); setFavs(p=>{const n=new Set(p); if(n.has(id)){n.delete(id);notify("Removed from favorites");}else{n.add(id);notify("Added to favorites");} return n;}); };
+
+  const togFav = (item, e) => {
+    e?.stopPropagation();
+    const id = typeof item === "string" ? item : item.id;
+    const isFav = favs.has(id);
+
+    // Optimistic update
+    setFavs(p => { const n = new Set(p); if (isFav) n.delete(id); else n.add(id); return n; });
+    if (isFav) {
+      setFavItems(p => p.filter(f => f.id !== id));
+      notify("Removed from favorites");
+    } else {
+      const fullItem = typeof item === "object" ? item : (results.find(r => r.id === id) || sel);
+      if (fullItem) setFavItems(p => [fullItem, ...p]);
+      notify("Added to favorites");
+    }
+
+    // Persist if logged in
+    if (loggedIn) {
+      if (isFav) {
+        fetch("/api/favorites", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ itemId: id }) }).catch(() => {});
+      } else {
+        const fullItem = typeof item === "object" ? item : (results.find(r => r.id === id) || sel);
+        if (fullItem) fetch("/api/favorites", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ itemId: id, item: fullItem }) }).catch(() => {});
+      }
+    }
+  };
 
   const btn = (primary=false) => ({
     background: primary ? "linear-gradient(135deg, #7B2D3B, #5A1F2B)" : "rgba(196,162,101,0.08)",
@@ -306,18 +352,23 @@ export default function Look4it() {
   );
 
   const Card = ({l}) => {
-    const si = srcInfo(l.source); const ext = l.source!=="DIRECT";
+    const ext = l.source!=="DIRECT";
+    const cardFee = ((l.price > 0 ? l.price : l.appraised) || 0) * 0.1;
     return (
       <div onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, overflow:"hidden", cursor:"pointer", transition:"all 0.3s ease" }}
         onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,0.3)";}}
         onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
         <div style={{ position:"relative", paddingTop:"72%", background:S.bgLight }}>
           <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-          <div style={{ position:"absolute", top:8, left:8, background:si.color, color:"#F5EFE5", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{si.label}</div>
-          <button onClick={e=>togFav(l.id,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(28,23,18,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
+          {ext ? (
+            <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5EFE5", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
+          ) : (
+            <div style={{ position:"absolute", top:8, left:8, background:SOURCES[0].color, color:"#F5EFE5", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+          )}
+          <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(28,23,18,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
             <HeartIco s={14} f={favs.has(l.id)}/>
           </button>
-          {ext && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(28,23,18,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{"Finder's Fee"}</div>}
+          {ext && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(28,23,18,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
         </div>
         <div style={{ padding:16 }}>
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
@@ -411,15 +462,19 @@ export default function Look4it() {
 
   const Detail = () => {
     if(!sel) return null;
-    const si = srcInfo(sel.source); const ext = sel.source!=="DIRECT";
-    const fee = (sel.appraised||sel.price)*0.1;
+    const ext = sel.source!=="DIRECT";
+    const fee = ((sel.price > 0 ? sel.price : sel.appraised) || 0) * 0.1;
     return (
       <div style={{ maxWidth:920, margin:"0 auto", padding:"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
           <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
             <img src={sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-            <div style={{ position:"absolute", top:14, left:14, background:si.color, color:"#F5EFE5", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{si.label}</div>
+            {ext ? (
+              <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5EFE5", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
+            ) : (
+              <div style={{ position:"absolute", top:14, left:14, background:SOURCES[0].color, color:"#F5EFE5", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+            )}
           </div>
           <div>
             <h1 style={{ fontFamily:S.serif, fontSize:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
@@ -446,13 +501,13 @@ export default function Look4it() {
             {ext ? (
               <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:10, padding:18, marginBottom:18 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
-                  <LockIco s={14}/><span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.font }}>{"External Listing - Finder's Fee Required"}</span>
+                  <LockIco s={14}/><span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.font }}>{"Finder's Fee Required"}</span>
                 </div>
                 <p style={{ color:S.muted, fontSize:12, fontFamily:S.font, margin:"0 0 14px", lineHeight:1.6 }}>
-                  {"This item is listed on "}{si.label}{". Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of appraised value) to unlock the purchase link."}
+                  {"We found this listing on an external platform. Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of "}{sel.price > 0 ? "listed price" : "AI appraised value"}{") to reveal where it's listed and get a direct link to purchase."}
                 </p>
                 <button onClick={()=>loggedIn?notify("Redirecting to Stripe checkout..."):setModal("auth")} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
-                  <LockIco s={14}/>{"Unlock for "}{fmt(fee)}
+                  <LockIco s={14}/>{"Unlock Source for "}{fmt(fee)}
                 </button>
               </div>
             ) : (
@@ -474,14 +529,14 @@ export default function Look4it() {
             </div>}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:18, borderTop:"1px solid " + S.border }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}><UserIco s={15}/></div>
+                <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}>{ext ? <LockIco s={15}/> : <UserIco s={15}/>}</div>
                 <div>
-                  <div style={{ color:S.text, fontSize:13, fontWeight:600, fontFamily:S.font }}>{sel.seller}</div>
-                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{sel.loc}</div>
+                  <div style={{ color:S.text, fontSize:13, fontWeight:600, fontFamily:S.font }}>{ext ? "Seller Hidden" : sel.seller}</div>
+                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{ext ? "Unlock to reveal seller & platform" : sel.loc}</div>
                 </div>
               </div>
               <div style={{ display:"flex", gap:6 }}>
-                <button onClick={()=>togFav(sel.id)} style={{ ...btn(), padding:"8px 14px", color:favs.has(sel.id)?S.accent:S.muted }}>
+                <button onClick={(e)=>togFav(sel,e)} style={{ ...btn(), padding:"8px 14px", color:favs.has(sel.id)?S.accent:S.muted }}>
                   <HeartIco s={14} f={favs.has(sel.id)}/>{favs.has(sel.id)?"Saved":"Save"}
                 </button>
                 <button onClick={()=>loggedIn?setModal("flag"):setModal("auth")} style={{ ...btn(), padding:"8px 14px", color:S.muted }}>
@@ -495,61 +550,175 @@ export default function Look4it() {
     );
   };
 
+  const handleCreateFiles = async (files: FileList | File[]) => {
+    const fileArr = Array.from(files).slice(0, 10 - createImages.length);
+    if (fileArr.length === 0) return;
+
+    // Convert to base64 and show previews
+    const newImages: string[] = [];
+    for (const file of fileArr) {
+      if (!file.type.startsWith("image/")) continue;
+      const b64: string = await new Promise((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      newImages.push(b64);
+    }
+
+    const allImages = [...createImages, ...newImages];
+    setCreateImages(allImages);
+
+    // Run AI analysis on the first image
+    if (createStep === 0) {
+      setCreateStep(1);
+      setCreateAnalyzing(true);
+      try {
+        const res = await fetch("/api/analyze-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images: allImages }),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCreateData(prev => ({
+            ...prev,
+            title: data.data.title || prev.title,
+            desc: data.data.description || prev.desc,
+            cat: data.data.category || prev.cat,
+            cond: data.data.condition || prev.cond,
+            priceLow: data.data.priceLow ? String(data.data.priceLow) : prev.priceLow,
+            priceHigh: data.data.priceHigh ? String(data.data.priceHigh) : prev.priceHigh,
+          }));
+          notify("AI analysis complete!");
+        }
+      } catch {
+        notify("AI analysis unavailable - fill in details manually", "info");
+      } finally {
+        setCreateAnalyzing(false);
+      }
+    }
+  };
+
+  const removeCreateImage = (idx: number) => {
+    setCreateImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const resetCreate = () => {
+    setCreateStep(0);
+    setCreateImages([]);
+    setCreateData({title:"",desc:"",cat:"OTHER",cond:"GOOD",priceLow:"",priceHigh:"",quantity:"1",lot:"",cosigner:"",loc:"Detroit Metro, MI"});
+  };
+
   const Create = () => (
-    <div style={{ maxWidth:660, margin:"0 auto", padding:"36px 24px 48px" }}>
+    <div style={{ maxWidth:720, margin:"0 auto", padding:"36px 24px 48px" }}>
       <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 6px", letterSpacing:"-0.02em" }}>
         {"Sell on Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}
       </h1>
-      <p style={{ color:S.muted, fontSize:14, fontFamily:S.font, margin:"0 0 30px" }}>{"Upload photos and our AI will generate a description and price appraisal."}</p>
-      {createStep===0 && (
-        <div>
-          <div style={{ border:"2px dashed rgba(123,45,59,0.25)", borderRadius:12, padding:52, textAlign:"center", marginBottom:24, background:S.accentPale, cursor:"pointer", transition:"all 0.2s" }}
-            onClick={()=>{ setCreateStep(1); notify("AI analyzing your images...","info"); setTimeout(()=>{
-              setCreateData({title:"Vintage Brass Table Lamp - Art Deco Style",desc:"Elegant Art Deco brass table lamp, circa 1940s. Features a geometric stepped base with original patina and a frosted glass shade. Fully rewired with a 3-way switch. Height 18 inches. Minor wear consistent with age.",cat:"HOME_DECOR",cond:"GOOD",price:"185",loc:"Detroit Metro, MI"});
-              notify("AI appraisal complete!");
-            },1500); }}>
+      <p style={{ color:S.muted, fontSize:14, fontFamily:S.font, margin:"0 0 30px" }}>{"Upload photos and our AI will generate a title, description, and price estimate."}</p>
+
+      {/* Image Upload Area - always visible */}
+      <div
+        onDragOver={e=>{e.preventDefault();setCreateDragOver(true);}}
+        onDragLeave={()=>setCreateDragOver(false)}
+        onDrop={e=>{e.preventDefault();setCreateDragOver(false);handleCreateFiles(e.dataTransfer.files);}}
+        onClick={()=>createFileRef.current?.click()}
+        style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(123,45,59,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : 52, textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(123,45,59,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
+        <input ref={createFileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{if(e.target.files) handleCreateFiles(e.target.files); e.target.value="";}}/>
+        {createImages.length === 0 ? (
+          <div>
             <CamIco s={44}/><br/>
-            <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Upload Photos"}</span>
-            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Drag and drop or click to browse. Up to 10 images."}</span>
+            <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Drop images here or click to browse"}</span>
+            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Up to 10 images. AI will analyze and generate listing details."}</span>
           </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8, color:S.dim, fontSize:12, fontFamily:S.font }}>
-            <SparkIco/>{"Our AI will automatically generate a title, description, category, condition, and price range from your photos."}
+        ) : (
+          <div>
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center" }}>
+              {createImages.map((img, i) => (
+                <div key={i} style={{ position:"relative", width:100, height:100, borderRadius:8, overflow:"hidden", border:"1px solid " + S.border }}>
+                  <img src={img} alt={`Upload ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+                  <button onClick={e=>{e.stopPropagation();removeCreateImage(i);}} style={{ position:"absolute", top:4, right:4, background:"rgba(28,23,18,0.8)", border:"none", width:20, height:20, borderRadius:4, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted }}>
+                    <XIco s={10}/>
+                  </button>
+                </div>
+              ))}
+              {createImages.length < 10 && (
+                <div style={{ width:100, height:100, borderRadius:8, border:"1px dashed " + S.border, display:"flex", alignItems:"center", justifyContent:"center", color:S.dim }}>
+                  <CamIco s={24}/>
+                </div>
+              )}
+            </div>
+            <span style={{ color:S.dim, fontSize:11, fontFamily:S.font, display:"block", marginTop:10 }}>{createImages.length}{"/10 images"}</span>
           </div>
+        )}
+      </div>
+
+      {/* AI Analysis Loading */}
+      {createAnalyzing && (
+        <div style={{ textAlign:"center", padding:40 }}>
+          <div style={{ width:36, height:36, border:"3px solid " + S.border, borderTopColor:S.accent, borderRadius:"50%", margin:"0 auto 14px", animation:"spin 0.8s linear infinite" }}/>
+          <p style={{ color:S.muted, fontSize:14, fontFamily:S.font }}>{"AI is analyzing your images..."}</p>
+          <p style={{ color:S.dim, fontSize:12, fontFamily:S.font, marginTop:4 }}>{"Generating title, description, and price estimate"}</p>
         </div>
       )}
-      {createStep===1 && (
+
+      {/* Listing Form - after images uploaded */}
+      {createStep===1 && !createAnalyzing && (
         <div>
           <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", borderRadius:8, padding:14, marginBottom:22, display:"flex", alignItems:"center", gap:8 }}>
             <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{"AI-generated listing - review and edit below"}</span>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
-            <div><label style={lbl}>{"Title"}</label><input value={createData.title} onChange={e=>setCreateData({...createData,title:e.target.value})} style={inp}/></div>
-            <div><label style={lbl}>{"Description"}</label><textarea value={createData.desc} onChange={e=>setCreateData({...createData,desc:e.target.value})} rows={5} style={{...inp, resize:"vertical"}}/></div>
+            <div><label style={lbl}>{"Title"}</label><input value={createData.title} onChange={e=>setCreateData({...createData,title:e.target.value})} placeholder="e.g. Hand-Painted Glass Santa Claus Ornament" style={inp}/></div>
+            <div><label style={lbl}>{"Description"}</label><textarea value={createData.desc} onChange={e=>setCreateData({...createData,desc:e.target.value})} rows={5} placeholder="Detailed description of the item, condition, dimensions, etc." style={{...inp, resize:"vertical"}}/></div>
+
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
               <Sel label="Category" value={createData.cat} onChange={v=>setCreateData({...createData,cat:v})} options={CATEGORIES} all="Select"/>
               <Sel label="Condition" value={createData.cond} onChange={v=>setCreateData({...createData,cond:v})} options={CONDITIONS} all="Select"/>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-              <div><label style={lbl}>{"Your Asking Price"}</label><input type="number" value={createData.price} onChange={e=>setCreateData({...createData,price:e.target.value})} placeholder="$0.00" style={inp}/></div>
-              <div><label style={lbl}>{"Location"}</label><input value={createData.loc} onChange={e=>setCreateData({...createData,loc:e.target.value})} style={inp}/></div>
-            </div>
-            {createData.price && (
-              <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:8, padding:16 }}>
-                <div style={{ color:S.goldDim, fontSize:10, fontFamily:S.font, marginBottom:8, textTransform:"uppercase", letterSpacing:"1.5px" }}>{"AI Price Appraisal Range"}</div>
-                <div style={{ display:"flex", justifyContent:"space-between" }}>
-                  <span style={{ color:S.muted, fontFamily:S.mono, fontSize:14 }}>{fmt(+createData.price*0.8)}</span>
-                  <span style={{ color:S.gold, fontFamily:S.mono, fontSize:14, fontWeight:700 }}>{fmt(+createData.price)}</span>
-                  <span style={{ color:S.muted, fontFamily:S.mono, fontSize:14 }}>{fmt(+createData.price*1.3)}</span>
-                </div>
+
+            {/* Price Estimate */}
+            <div>
+              <label style={lbl}>{"Price Estimate"}</label>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr auto 1fr", gap:8, alignItems:"center" }}>
+                <input type="number" value={createData.priceLow} onChange={e=>setCreateData({...createData,priceLow:e.target.value})} placeholder="$Low" style={inp}/>
+                <span style={{ color:S.dim, fontSize:12, fontFamily:S.font }}>{"to"}</span>
+                <input type="number" value={createData.priceHigh} onChange={e=>setCreateData({...createData,priceHigh:e.target.value})} placeholder="$High" style={inp}/>
               </div>
-            )}
+              {(createData.priceLow || createData.priceHigh) && (
+                <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:8, padding:12, marginTop:10, display:"flex", alignItems:"center", gap:8 }}>
+                  <SparkIco/>
+                  <span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.mono }}>
+                    {createData.priceLow && createData.priceHigh ? `${fmt(+createData.priceLow)} - ${fmt(+createData.priceHigh)}` : createData.priceLow ? `From ${fmt(+createData.priceLow)}` : `Up to ${fmt(+createData.priceHigh)}`}
+                  </span>
+                  <span style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{"estimated value"}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quantity, Lot#, Cosigner */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14 }}>
+              <div><label style={lbl}>{"Quantity"}</label><input type="number" min="1" value={createData.quantity} onChange={e=>setCreateData({...createData,quantity:e.target.value})} style={inp}/></div>
+              <div><label style={lbl}>{"Lot #"}</label><input value={createData.lot} onChange={e=>setCreateData({...createData,lot:e.target.value})} placeholder="Optional" style={inp}/></div>
+              <div><label style={lbl}>{"Cosigner"}</label><input value={createData.cosigner} onChange={e=>setCreateData({...createData,cosigner:e.target.value})} placeholder="Optional" style={inp}/></div>
+            </div>
+
+            <div><label style={lbl}>{"Location"}</label><input value={createData.loc} onChange={e=>setCreateData({...createData,loc:e.target.value})} style={inp}/></div>
+
             <div style={{ display:"flex", gap:10, marginTop:8 }}>
-              <button onClick={()=>setCreateStep(0)} style={{ ...btn(), flex:1, justifyContent:"center" }}>{"Back"}</button>
-              <button onClick={()=>{notify("Listing published successfully!"); setCreateStep(0); setCreateData({title:"",desc:"",cat:"FURNITURE",cond:"GOOD",price:"",loc:"Detroit Metro, MI"}); setView("home");}} style={{ ...btn(true), flex:2, justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
+              <button onClick={resetCreate} style={{ ...btn(), flex:1, justifyContent:"center" }}>{"Start Over"}</button>
+              <button onClick={()=>{notify("Listing published successfully!"); resetCreate(); setView("home");}} style={{ ...btn(true), flex:2, justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
                 {"Publish Listing"}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Hint text when no images */}
+      {createStep===0 && (
+        <div style={{ display:"flex", alignItems:"center", gap:8, color:S.dim, fontSize:12, fontFamily:S.font }}>
+          <SparkIco/>{"Drop your images above. AI will generate the title, description, condition, and price estimate automatically."}
         </div>
       )}
     </div>
@@ -566,13 +735,36 @@ export default function Look4it() {
       ) : (
         <div style={{ display:"grid", gap:18 }}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
-            {[["Active Listings","3"],["Total Views","295"],["Offers","2"],["Revenue","$850"]].map(([l,v])=>(
+            {[["Saved Items",String(favItems.length)],["Searches",String(wantList.length)],["Offers","0"],["Unlocked","0"]].map(([l,v])=>(
               <div key={l} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:18, textAlign:"center" }}>
                 <div style={{ color:S.gold, fontSize:26, fontWeight:700, fontFamily:S.mono }}>{v}</div>
                 <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>{l}</div>
               </div>
             ))}
           </div>
+          {favItems.length > 0 && (
+            <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:22 }}>
+              <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 6px", display:"flex", alignItems:"center", gap:8 }}><HeartIco s={16} f/>{"Saved Items"}</h3>
+              <p style={{ color:S.dim, fontSize:11, fontFamily:S.font, margin:"0 0 14px" }}>{"Items you've liked. Click to view details."}</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:12 }}>
+                {favItems.slice(0,8).map(l => (
+                  <div key={l.id} onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:8, overflow:"hidden", cursor:"pointer", transition:"all 0.2s" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;}}>
+                    <div style={{ position:"relative", paddingTop:"60%", background:S.bg }}>
+                      <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
+                      <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:6, right:6, background:"rgba(28,23,18,0.6)", border:"none", width:26, height:26, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.accent, backdropFilter:"blur(8px)" }}>
+                        <HeartIco s={12} f/>
+                      </button>
+                    </div>
+                    <div style={{ padding:10 }}>
+                      <div style={{ color:S.textLight, fontSize:12, fontWeight:600, fontFamily:S.font, lineHeight:1.4, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</div>
+                      <div style={{ color:S.gold, fontSize:14, fontWeight:700, fontFamily:S.mono, marginTop:6 }}>{l.price > 0 ? fmt(l.price) : (l.appraised ? "~" + fmt(l.appraised) : "See listing")}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {wantList.length > 0 && (
             <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:22 }}>
               <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 6px", display:"flex", alignItems:"center", gap:8 }}><SearchIco s={16}/>{"Your Want List"}</h3>
