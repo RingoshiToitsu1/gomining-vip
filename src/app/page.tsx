@@ -18,7 +18,7 @@ const CONDITIONS = [
 ];
 
 const SOURCES = [
-  { value: "DIRECT", label: "Look4it", color: "#7B2D3B" },
+  { value: "DIRECT", label: "Look4it", color: "#612950" },
   { value: "HIBID", label: "HiBid", color: "#A0522D" },
   { value: "AUCTION_NINJA", label: "Auction Ninja", color: "#5B3A6B" },
   { value: "ESTATESALES_NET", label: "EstateSales.net", color: "#4A7C6F" },
@@ -33,21 +33,21 @@ const S = {
   font: "'Libre Franklin', Georgia, serif",
   serif: "'Playfair Display', Georgia, serif",
   mono: "'DM Mono', 'Courier New', monospace",
-  bg: "#1C1712",
-  bgLight: "#231E18",
-  cream: "#2A2319",
-  accent: "#7B2D3B",
-  accentLight: "#9B3D4B",
-  accentPale: "rgba(123,45,59,0.15)",
-  gold: "#C4A265",
-  goldDim: "#8A7245",
-  card: "rgba(42,35,25,0.8)",
-  border: "rgba(196,162,101,0.12)",
-  borderHover: "rgba(123,45,59,0.4)",
-  text: "#E8DFD0",
-  textLight: "#F5EFE5",
-  muted: "#9B9082",
-  dim: "#6B6052",
+  bg: "#1A1820",
+  bgLight: "#21202A",
+  cream: "#2A2832",
+  accent: "#612950",
+  accentLight: "#7A3568",
+  accentPale: "rgba(97,41,80,0.15)",
+  gold: "#EDE5D0",
+  goldDim: "#C5C2C8",
+  card: "rgba(42,40,50,0.8)",
+  border: "rgba(197,194,200,0.12)",
+  borderHover: "rgba(97,41,80,0.4)",
+  text: "#EDE5D0",
+  textLight: "#F5F0E3",
+  muted: "#B5B3B8",
+  dim: "#8A8890",
 };
 
 const Svg = ({d,size=20,fill="none",stroke="currentColor"}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
@@ -298,25 +298,25 @@ export default function Look4it() {
   };
 
   const btn = (primary=false) => ({
-    background: primary ? "linear-gradient(135deg, #7B2D3B, #5A1F2B)" : "rgba(196,162,101,0.08)",
+    background: primary ? "linear-gradient(135deg, #612950, #4A1E3C)" : "rgba(197,194,200,0.08)",
     border: primary ? "1px solid rgba(155,61,75,0.3)" : "1px solid " + S.border,
-    color: primary ? "#F5EFE5" : S.muted,
+    color: primary ? "#F5F0E3" : S.muted,
     padding: "10px 20px", borderRadius: 8, cursor: "pointer",
     fontFamily: S.font, fontSize: 13, fontWeight: 500, transition: "all 0.25s ease",
     display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.02em",
   });
-  const inp = { background:"rgba(196,162,101,0.06)", border:"1px solid " + S.border, color:S.text, padding:"10px 14px", borderRadius:8, fontSize:14, fontFamily:S.font, width:"100%", boxSizing:"border-box", outline:"none", transition:"border-color 0.2s" };
+  const inp = { background:"rgba(197,194,200,0.06)", border:"1px solid " + S.border, color:S.text, padding:"10px 14px", borderRadius:8, fontSize:14, fontFamily:S.font, width:"100%", boxSizing:"border-box", outline:"none", transition:"border-color 0.2s" };
   const lbl = { display:"block", color:S.goldDim, fontSize:10, fontWeight:600, marginBottom:6, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1.5px" };
 
   const Header = () => (
-    <header style={{ position:"sticky", top:0, zIndex:50, background:"rgba(28,23,18,0.95)", backdropFilter:"blur(20px)", borderBottom:"1px solid " + S.border, padding:"0 24px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+    <header style={{ position:"sticky", top:0, zIndex:50, background:"rgba(26,24,32,0.95)", backdropFilter:"blur(20px)", borderBottom:"1px solid " + S.border, padding:"0 24px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
       <div style={{ display:"flex", alignItems:"center", gap:28 }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
           <span style={{ fontFamily:S.serif, fontSize:24, fontWeight:700, color:S.gold, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</span>
         </button>
         <nav style={{ display:"flex", gap:2 }}>
           {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setView(v)} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(123,45,59,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"6px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:500, letterSpacing:"0.03em", transition:"all 0.2s" }}>{l}</button>
+            <button key={v} onClick={()=>setView(v)} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"6px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:500, letterSpacing:"0.03em", transition:"all 0.2s" }}>{l}</button>
           ))}
         </nav>
       </div>
@@ -361,14 +361,14 @@ export default function Look4it() {
         <div style={{ position:"relative", paddingTop:"72%", background:S.bgLight }}>
           <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
           {ext ? (
-            <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5EFE5", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
+            <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
           ) : (
-            <div style={{ position:"absolute", top:8, left:8, background:SOURCES[0].color, color:"#F5EFE5", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+            <div style={{ position:"absolute", top:8, left:8, background:SOURCES[0].color, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
           )}
-          <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(28,23,18,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
+          <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(26,24,32,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
             <HeartIco s={14} f={favs.has(l.id)}/>
           </button>
-          {ext && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(28,23,18,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
+          {ext && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
         </div>
         <div style={{ padding:16 }}>
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
@@ -399,7 +399,7 @@ export default function Look4it() {
 
   const Home = () => (
     <div>
-      <div style={{ padding:"52px 20px 32px", textAlign:"center", background:"radial-gradient(ellipse at 50% 0%, rgba(123,45,59,0.08) 0%, transparent 70%)" }}>
+      <div style={{ padding:"52px 20px 32px", textAlign:"center", background:"radial-gradient(ellipse at 50% 0%, rgba(97,41,80,0.08) 0%, transparent 70%)" }}>
         <h1 style={{ fontFamily:S.serif, fontSize:42, fontWeight:700, color:S.textLight, margin:"0 0 8px", lineHeight:1.1, letterSpacing:"-0.02em" }}>
           {"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it. Find it."}
         </h1>
@@ -412,13 +412,13 @@ export default function Look4it() {
               <SearchIco/>
               <input placeholder="Look4it..." value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")setSearchQ(q)}}
                 style={{ background:"transparent", border:"none", outline:"none", color:S.textLight, fontSize:15, fontFamily:S.font, width:"100%", padding:"10px 0", letterSpacing:"0.01em" }}/>
-              {q && <button onClick={()=>{setQ("");setSearchQ("")}} style={{ background:"rgba(196,162,101,0.1)", border:"none", width:24, height:24, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted, flexShrink:0 }}><XIco s={12}/></button>}
+              {q && <button onClick={()=>{setQ("");setSearchQ("")}} style={{ background:"rgba(197,194,200,0.1)", border:"none", width:24, height:24, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted, flexShrink:0 }}><XIco s={12}/></button>}
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={handleImageUpload}/>
-            <button onClick={handleCameraSearch} title="Search by image" style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", color:S.accentLight, width:40, height:40, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s" }}>
+            <button onClick={handleCameraSearch} title="Search by image" style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", color:S.accentLight, width:40, height:40, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s" }}>
               <CamIco s={18}/>
             </button>
-            <button onClick={()=>setShowFil(!showFil)} style={{ background:showFil?S.accent:S.accentPale, border:"1px solid rgba(123,45,59,0.25)", color:showFil?S.textLight:S.accentLight, padding:"8px 18px", borderRadius:8, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600, letterSpacing:"0.05em", flexShrink:0, transition:"all 0.2s" }}>{"Filters"}</button>
+            <button onClick={()=>setShowFil(!showFil)} style={{ background:showFil?S.accent:S.accentPale, border:"1px solid rgba(97,41,80,0.25)", color:showFil?S.textLight:S.accentLight, padding:"8px 18px", borderRadius:8, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600, letterSpacing:"0.05em", flexShrink:0, transition:"all 0.2s" }}>{"Filters"}</button>
           </div>
         </div>
         {showFil && (
@@ -471,19 +471,19 @@ export default function Look4it() {
           <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
             <img src={sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
             {ext ? (
-              <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5EFE5", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
+              <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
             ) : (
-              <div style={{ position:"absolute", top:14, left:14, background:SOURCES[0].color, color:"#F5EFE5", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+              <div style={{ position:"absolute", top:14, left:14, background:SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
             )}
           </div>
           <div>
             <h1 style={{ fontFamily:S.serif, fontSize:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
             <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
-              {CATEGORIES.find(c=>c.value===sel.category) && <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CATEGORIES.find(c=>c.value===sel.category)?.label}</span>}
-              {CONDITIONS.find(c=>c.value===sel.condition) && <span style={{ background:"rgba(196,162,101,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===sel.condition)?.label}</span>}
+              {CATEGORIES.find(c=>c.value===sel.category) && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CATEGORIES.find(c=>c.value===sel.category)?.label}</span>}
+              {CONDITIONS.find(c=>c.value===sel.condition) && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===sel.condition)?.label}</span>}
               {sel.views > 0 && <span style={{ color:S.dim, fontSize:11, fontFamily:S.font, display:"flex", alignItems:"center", gap:4 }}><EyeIco/>{sel.views}{" views"}</span>}
             </div>
-            <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", borderRadius:10, padding:22, marginBottom:18 }}>
+            <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:10, padding:22, marginBottom:18 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                 <div>
                   <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Asking Price" : "Price"}</div>
@@ -515,7 +515,7 @@ export default function Look4it() {
                 <button onClick={()=>loggedIn?notify("Redirecting to Stripe checkout..."):setModal("auth")} style={{ ...btn(true), flex:1, justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
                   {"Buy Now - "}{fmt(sel.price)}
                 </button>
-                <button onClick={()=>loggedIn?setModal("offer"):setModal("auth")} style={{ ...btn(), flex:1, justifyContent:"center", padding:"13px 20px", fontSize:14, color:S.gold, borderColor:"rgba(196,162,101,0.2)" }}>
+                <button onClick={()=>loggedIn?setModal("offer"):setModal("auth")} style={{ ...btn(), flex:1, justifyContent:"center", padding:"13px 20px", fontSize:14, color:S.gold, borderColor:"rgba(197,194,200,0.2)" }}>
                   {"Make Offer"}
                 </button>
               </div>
@@ -525,7 +525,7 @@ export default function Look4it() {
               <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, lineHeight:1.8, margin:0 }}>{sel.desc}</p>
             </div>
             {sel.tags?.length > 0 && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:18 }}>
-              {sel.tags.map(t=><span key={t} style={{ background:"rgba(196,162,101,0.06)", border:"1px solid " + S.border, color:S.dim, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{"#"}{t}</span>)}
+              {sel.tags.map(t=><span key={t} style={{ background:"rgba(197,194,200,0.06)", border:"1px solid " + S.border, color:S.dim, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{"#"}{t}</span>)}
             </div>}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:18, borderTop:"1px solid " + S.border }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -649,7 +649,7 @@ export default function Look4it() {
         onDragLeave={()=>setCreateDragOver(false)}
         onDrop={e=>{e.preventDefault();setCreateDragOver(false);handleCreateFiles(e.dataTransfer.files);}}
         onClick={()=>createFileRef.current?.click()}
-        style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(123,45,59,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : 52, textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(123,45,59,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
+        style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(97,41,80,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : 52, textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(97,41,80,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
         <input ref={createFileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{if(e.target.files) handleCreateFiles(e.target.files); e.target.value="";}}/>
         {createImages.length === 0 ? (
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
@@ -663,7 +663,7 @@ export default function Look4it() {
               {createImages.map((img, i) => (
                 <div key={i} style={{ position:"relative", width:100, height:100, borderRadius:8, overflow:"hidden", border:"1px solid " + S.border }}>
                   <img src={img} alt={`Upload ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
-                  <button onClick={e=>{e.stopPropagation();removeCreateImage(i);}} style={{ position:"absolute", top:4, right:4, background:"rgba(28,23,18,0.8)", border:"none", width:20, height:20, borderRadius:4, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted }}>
+                  <button onClick={e=>{e.stopPropagation();removeCreateImage(i);}} style={{ position:"absolute", top:4, right:4, background:"rgba(26,24,32,0.8)", border:"none", width:20, height:20, borderRadius:4, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.muted }}>
                     <XIco s={10}/>
                   </button>
                 </div>
@@ -691,7 +691,7 @@ export default function Look4it() {
       {/* Listing Form - after images uploaded */}
       {createStep===1 && !createAnalyzing && (
         <div>
-          <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", borderRadius:8, padding:14, marginBottom:22, display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:8, padding:14, marginBottom:22, display:"flex", alignItems:"center", gap:8 }}>
             <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{createData.title ? "AI-generated listing - review and edit below" : "Fill in your listing details below"}</span>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
@@ -731,7 +731,7 @@ export default function Look4it() {
               const feeAmt = midPrice * feeRate;
               const payout = midPrice - feeAmt;
               return (
-                <div style={{ background:"rgba(74,124,111,0.06)", border:"1px solid rgba(74,124,111,0.15)", borderRadius:8, padding:16 }}>
+                <div style={{ background:"rgba(90,140,120,0.06)", border:"1px solid rgba(90,140,120,0.15)", borderRadius:8, padding:16 }}>
                   <div style={{ color:S.goldDim, fontSize:10, fontFamily:S.font, marginBottom:10, textTransform:"uppercase", letterSpacing:"1.5px" }}>{"Seller's Fee Breakdown"}</div>
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
                     <span style={{ color:S.muted, fontSize:13, fontFamily:S.font }}>{"Estimated sale price"}</span>
@@ -748,7 +748,7 @@ export default function Look4it() {
                   {!isPro && (
                     <div style={{ marginTop:10, background:S.accentPale, borderRadius:6, padding:"8px 12px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
                       <span style={{ color:S.muted, fontSize:11, fontFamily:S.font }}>{"Pro subscribers pay only 5% — save "}{fmt(midPrice * 0.15)}{" on this listing"}</span>
-                      <button onClick={()=>notify("Redirecting to subscription checkout...")} style={{ background:"none", border:"1px solid rgba(196,162,101,0.25)", color:S.gold, padding:"4px 12px", borderRadius:5, cursor:"pointer", fontFamily:S.font, fontSize:10, fontWeight:600, whiteSpace:"nowrap" }}>{"Upgrade"}</button>
+                      <button onClick={()=>notify("Redirecting to subscription checkout...")} style={{ background:"none", border:"1px solid rgba(197,194,200,0.25)", color:S.gold, padding:"4px 12px", borderRadius:5, cursor:"pointer", fontFamily:S.font, fontSize:10, fontWeight:600, whiteSpace:"nowrap" }}>{"Upgrade"}</button>
                     </div>
                   )}
                 </div>
@@ -811,7 +811,7 @@ export default function Look4it() {
                     onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;}}>
                     <div style={{ position:"relative", paddingTop:"60%", background:S.bg }}>
                       <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-                      <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:6, right:6, background:"rgba(28,23,18,0.6)", border:"none", width:26, height:26, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.accent, backdropFilter:"blur(8px)" }}>
+                      <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:6, right:6, background:"rgba(26,24,32,0.6)", border:"none", width:26, height:26, borderRadius:5, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:S.accent, backdropFilter:"blur(8px)" }}>
                         <HeartIco s={12} f/>
                       </button>
                     </div>
@@ -848,7 +848,7 @@ export default function Look4it() {
               ))}
             </div>
           )}
-          <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.15)", borderRadius:10, padding:22 }}>
+          <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.15)", borderRadius:10, padding:22 }}>
             <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 8px" }}>{"Seller Payment Setup"}</h3>
             <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, margin:"0 0 14px" }}>{"Connect your Stripe account to receive payments from sales."}</p>
             <button onClick={()=>notify("Redirecting to Stripe Connect onboarding...")} style={btn(true)}>{"Set Up Stripe Connect"}</button>
@@ -859,7 +859,7 @@ export default function Look4it() {
                 <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 4px" }}>{"Free Plan"}</h3>
                 <p style={{ color:S.muted, fontSize:12, fontFamily:S.font, margin:0 }}>{"Upgrade to Pro for unlimited free item unlocks"}</p>
               </div>
-              <button onClick={()=>notify("Redirecting to subscription checkout...")} style={{ ...btn(), color:S.gold, borderColor:"rgba(196,162,101,0.2)" }}>{"Upgrade to Pro - $99/mo"}</button>
+              <button onClick={()=>notify("Redirecting to subscription checkout...")} style={{ ...btn(), color:S.gold, borderColor:"rgba(197,194,200,0.2)" }}>{"Upgrade to Pro - $99/mo"}</button>
             </div>
           </div>
           <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:22 }}>
@@ -884,7 +884,7 @@ export default function Look4it() {
         </div>
       ) : (
         <div style={{ display:"grid", gap:22 }}>
-          {settingsSuccess && <div style={{ background:"rgba(74,124,111,0.1)", border:"1px solid rgba(74,124,111,0.3)", color:"#6BAF9B", padding:"12px 16px", borderRadius:8, fontSize:13, fontFamily:S.font }}>{settingsSuccess}</div>}
+          {settingsSuccess && <div style={{ background:"rgba(90,140,120,0.1)", border:"1px solid rgba(90,140,120,0.3)", color:"#7BBF9B", padding:"12px 16px", borderRadius:8, fontSize:13, fontFamily:S.font }}>{settingsSuccess}</div>}
           {settingsError && <div style={{ background:"rgba(200,60,60,0.1)", border:"1px solid rgba(200,60,60,0.3)", color:"#E07070", padding:"12px 16px", borderRadius:8, fontSize:13, fontFamily:S.font }}>{settingsError}</div>}
           <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:24 }}>
             <h3 style={{ color:S.textLight, fontSize:16, fontWeight:600, fontFamily:S.font, margin:"0 0 18px" }}>{"Profile"}</h3>
@@ -1005,7 +1005,7 @@ export default function Look4it() {
         {/* Hero image */}
         <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 36, position: "relative" }}>
           <img src="/images/robRob-greeting.jpg" alt="Robert McPherson and Robert Channer, founders of Look4it" style={{ width: "100%", height: 400, objectFit: "cover", objectPosition: "center top", display: "block" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(28,23,18,0.9))", padding: "60px 32px 28px" }}>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(26,24,32,0.9))", padding: "60px 32px 28px" }}>
             <h1 style={{ fontFamily: S.serif, fontSize: 36, fontWeight: 700, color: S.textLight, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
               {"Who We Are"}
             </h1>
@@ -1031,7 +1031,7 @@ export default function Look4it() {
         <p style={pStyle}>{"Upon their return to Michigan, Robert and Robert channeled their enthusiasm and passion for the estate sale industry into formalizing Look4it. With their extensive background in customer service and a deep understanding of the estate sale market, they were well-equipped to make a significant impact in this new venture. Their strong connection to Michigan\u2019s automotive history also fueled their appreciation for classic and antique automobiles, adding another layer of expertise to the services they offer."}</p>
 
         {/* Highlight quote block */}
-        <div style={{ background: S.accentPale, border: "1px solid rgba(123,45,59,0.2)", borderLeft: "4px solid " + S.accent, borderRadius: "0 10px 10px 0", padding: "24px 28px", margin: "36px 0" }}>
+        <div style={{ background: S.accentPale, border: "1px solid rgba(97,41,80,0.2)", borderLeft: "4px solid " + S.accent, borderRadius: "0 10px 10px 0", padding: "24px 28px", margin: "36px 0" }}>
           <p style={{ color: S.textLight, fontSize: 17, fontFamily: S.serif, fontStyle: "italic", lineHeight: "1.7", margin: 0 }}>
             {"\u201CWe approach each sale with a commitment to traditional customer service values\u2014offering warm greetings, providing personal assistance, and ensuring professional presentation of all items.\u201D"}
           </p>
@@ -1057,7 +1057,7 @@ export default function Look4it() {
   };
 
   const Toast = () => toast && (
-    <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:toast.type==="success"?"rgba(74,124,111,0.15)":"rgba(123,45,59,0.15)", border:"1px solid " + (toast.type==="success"?"rgba(74,124,111,0.3)":"rgba(123,45,59,0.3)"), color:toast.type==="success"?"#6BAF9B":"#C47080", padding:"12px 24px", borderRadius:8, fontSize:13, fontFamily:S.font, fontWeight:500, zIndex:200, animation:"fadeIn 0.2s ease-out", backdropFilter:"blur(10px)" }}>
+    <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:toast.type==="success"?"rgba(90,140,120,0.15)":"rgba(97,41,80,0.15)", border:"1px solid " + (toast.type==="success"?"rgba(90,140,120,0.3)":"rgba(97,41,80,0.3)"), color:toast.type==="success"?"#7BBF9B":"#C07090", padding:"12px 24px", borderRadius:8, fontSize:13, fontFamily:S.font, fontWeight:500, zIndex:200, animation:"fadeIn 0.2s ease-out", backdropFilter:"blur(10px)" }}>
       {toast.msg}
     </div>
   );
@@ -1121,16 +1121,16 @@ export default function Look4it() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        ::selection { background:rgba(123,45,59,0.4); color:#F5EFE5; }
+        ::selection { background:rgba(97,41,80,0.4); color:#F5F0E3; }
         ::-webkit-scrollbar { width:6px; }
         ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:rgba(196,162,101,0.15); border-radius:3px; }
-        select option { background:#231E18; color:#E8DFD0; }
-        input::placeholder, textarea::placeholder { color:#6B6052; }
-        input:focus, textarea:focus, select:focus { border-color: rgba(123,45,59,0.4) !important; }
+        ::-webkit-scrollbar-thumb { background:rgba(197,194,200,0.15); border-radius:3px; }
+        select option { background:#21202A; color:#EDE5D0; }
+        input::placeholder, textarea::placeholder { color:#8A8890; }
+        input:focus, textarea:focus, select:focus { border-color: rgba(97,41,80,0.4) !important; }
         @keyframes fadeIn { from{opacity:0;transform:translateX(-50%) translateY(10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
         @keyframes spin { to{transform:rotate(360deg)} }
-        footer a:hover { color: #C4A265 !important; }
+        footer a:hover { color: #EDE5D0 !important; }
       `}</style>
       <Header/>
       <div style={{ flex:1 }}>
