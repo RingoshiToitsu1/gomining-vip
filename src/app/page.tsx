@@ -130,6 +130,7 @@ export default function Look4it() {
   const userMenuRef = useRef(null);
   const { isMobile } = useViewport();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [footerOpen, setFooterOpen] = useState<string|null>(null);
 
   const [rawResults, setRawResults] = useState<any[]>([]);
 
@@ -1142,55 +1143,48 @@ export default function Look4it() {
     </div>
   );
 
+  const footerSections = {
+    Company: [
+      { label: "About Us", action: () => { setView("about"); window.scrollTo(0, 0); } },
+      { label: "Contact Us" }, { label: "Careers" }, { label: "Press" },
+    ],
+    Support: [
+      { label: "FAQ" }, { label: "Help Center" }, { label: "Support" }, { label: "Seller Guide" },
+    ],
+    Resources: [
+      { label: "Talk to our AI" }, { label: "Blog" }, { label: "Pricing" }, { label: "Privacy Policy" }, { label: "Terms of Service" },
+    ],
+  };
+
   const Footer = () => (
-    <footer style={{ background:S.bgLight, borderTop:"1px solid " + S.border, padding:isMobile?"48px 16px 32px":"48px 24px 32px" }}>
+    <footer style={{ background:S.bgLight, borderTop:"1px solid " + S.border, padding:isMobile?"12px 16px":"14px 24px" }}>
       <div style={{ maxWidth:1120, margin:"0 auto" }}>
-        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"2fr 1fr 1fr 1fr", gap:isMobile?24:40, marginBottom:40, textAlign:isMobile?"center":"left" }}>
-          <div>
-            <div style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.gold, marginBottom:12, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</div>
-            <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, lineHeight:1.7, margin:isMobile?"0 auto 16px":"0 0 16px", maxWidth:300 }}>
-              {"The all-in-one resale search tool."}<br/>{"Find it. Appraise it. Sell it. LOOK4it."}
-            </p>
-            <div style={{ display:"flex", alignItems:"center", gap:6, color:S.dim, fontSize:12, fontFamily:S.font, justifyContent:isMobile?"center":undefined }}>
-              <MapIco s={13}/>{" Oakland Twp, Michigan"}
-            </div>
+        <div style={{ display:"flex", flexDirection:isMobile?"column":"row", alignItems:"center", justifyContent:"space-between", gap:isMobile?10:0 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:isMobile?12:20, flexWrap:"wrap", justifyContent:isMobile?"center":undefined }}>
+            <span style={{ fontFamily:S.serif, fontSize:16, fontWeight:700, color:S.gold, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</span>
+            <span style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{"Oakland Twp, MI"}</span>
           </div>
-          <div>
-            <h4 style={{ color:S.goldDim, fontSize:10, fontWeight:700, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"2px", margin:"0 0 16px" }}>{"Company"}</h4>
-            <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:isMobile?"center":undefined }}>
-              <a href="#" onClick={e=>{e.preventDefault();setView("about");window.scrollTo(0,0);}} style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s", cursor:"pointer" }}>{"About Us"}</a>
-              {["Contact Us","Careers","Press"].map(l=>(
-                <a key={l} href="#" style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s" }}>{l}</a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 style={{ color:S.goldDim, fontSize:10, fontWeight:700, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"2px", margin:"0 0 16px" }}>{"Support"}</h4>
-            <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:isMobile?"center":undefined }}>
-              {["FAQ","Help Center","Support","Seller Guide"].map(l=>(
-                <a key={l} href="#" style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s" }}>{l}</a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 style={{ color:S.goldDim, fontSize:10, fontWeight:700, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"2px", margin:"0 0 16px" }}>{"Resources"}</h4>
-            <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:isMobile?"center":undefined }}>
-              <a href="#" style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", display:"flex", alignItems:"center", gap:6, transition:"color 0.2s", justifyContent:isMobile?"center":undefined }}><BotIco s={13}/>{"Talk to our AI"}</a>
-              {["Blog","Pricing","Privacy Policy","Terms of Service"].map(l=>(
-                <a key={l} href="#" style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s" }}>{l}</a>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div style={{ borderTop:"1px solid " + S.border, paddingTop:24, display:"flex", flexDirection:isMobile?"column":"row", justifyContent:isMobile?"center":"space-between", alignItems:"center", flexWrap:"wrap", gap:12, textAlign:isMobile?"center":"left" }}>
-          <p style={{ color:S.dim, fontSize:11, fontFamily:S.font, margin:0 }}>
-            {"2026 Look4it. All rights reserved. A Ringoshi LLC product."}
-          </p>
-          <div style={{ display:"flex", gap:16, flexWrap:"wrap", justifyContent:isMobile?"center":undefined }}>
-            {["Estate Sales","Auctions","Antiques","Vintage","Collectibles","Metro Detroit"].map(t=>(
-              <span key={t} style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{t}</span>
+          <div style={{ display:"flex", alignItems:"center", gap:4, position:"relative" }}>
+            {Object.keys(footerSections).map(section => (
+              <div key={section} style={{ position:"relative" }}
+                onMouseEnter={()=>!isMobile&&setFooterOpen(section)} onMouseLeave={()=>!isMobile&&setFooterOpen(null)}>
+                <button onClick={()=>setFooterOpen(footerOpen===section?null:section)} style={{ background:footerOpen===section?S.accentPale:"transparent", border:"1px solid " + (footerOpen===section?"rgba(97,41,80,0.25)":"transparent"), color:footerOpen===section?S.accentLight:S.dim, padding:"6px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:11, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase", transition:"all 0.2s" }}>
+                  {section}
+                </button>
+                {footerOpen===section && (
+                  <div style={{ position:"absolute", bottom:"calc(100% + 6px)", left:"50%", transform:"translateX(-50%)", background:S.bgLight, border:"1px solid " + S.border, borderRadius:8, padding:6, minWidth:160, boxShadow:"0 8px 32px rgba(0,0,0,0.4)", zIndex:40 }}>
+                    {footerSections[section].map(item => (
+                      <a key={item.label} href="#" onClick={e=>{e.preventDefault();setFooterOpen(null);item.action?.();}} style={{ display:"block", color:S.muted, fontSize:12, fontFamily:S.font, textDecoration:"none", padding:"8px 12px", borderRadius:5, transition:"background 0.15s", cursor:"pointer" }}
+                        onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{item.label}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
+          <p style={{ color:S.dim, fontSize:10, fontFamily:S.font, margin:0 }}>
+            {"\u00A9 2026 Look4it. A Ringoshi LLC product."}
+          </p>
         </div>
       </div>
     </footer>
