@@ -473,6 +473,7 @@ export default function Look4it() {
           </div>
         )}
       </div>
+      {(searchQ || loading) && (
       <div style={{ padding:isMobile?"24px 16px 48px":"24px 24px 48px", maxWidth:1120, margin:"0 auto" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, letterSpacing:"0.03em" }}>{results.length}{" results"}{q && <>{" for \""}<span style={{color:S.gold}}>{q}</span>{"\""}</>}</span>
@@ -485,7 +486,7 @@ export default function Look4it() {
           </div>
         ) : results.length===0 ? (
           <div style={{ textAlign:"center", padding:60, color:S.dim, fontFamily:S.font }}>
-            <SearchIco s={40}/><p style={{marginTop:16,fontSize:16}}>{searchQ ? "No items found" : "Search to discover items"}</p><p style={{fontSize:13,color:S.dim}}>{searchQ ? "Try different search terms or adjust your filters" : "Enter a search term above to find estate sales, auctions, and secondhand treasures"}</p>
+            <SearchIco s={40}/><p style={{marginTop:16,fontSize:16}}>{"No items found"}</p><p style={{fontSize:13,color:S.dim}}>{"Try different search terms or adjust your filters"}</p>
           </div>
         ) : (
           <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill, minmax(260px, 1fr))", gap:18 }}>
@@ -493,6 +494,7 @@ export default function Look4it() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 
