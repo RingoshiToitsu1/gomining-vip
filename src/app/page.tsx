@@ -233,12 +233,47 @@ export default function Look4it() {
   useEffect(() => { setMobileMenuOpen(false); }, [view]);
 
   const handleCameraSearch = () => { fileInputRef.current?.click(); };
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
-    if(file) {
-      notify("Analyzing image... AI is identifying the item");
-      setTimeout(() => { setQ("antique brass"); setSearchQ("antique brass"); notify("Found: Antique Brass item - showing results"); }, 2000);
+    if(!file) return;
+    notify("Analyzing image... AI is identifying the item");
+    try {
+      const b64: string = await new Promise((res) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      // Resize for smaller payload
+      const small: string = await new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 800;
+          let w = img.width, h = img.height;
+          if (w > max || h > max) { const r = Math.min(max/w, max/h); w = Math.round(w*r); h = Math.round(h*r); }
+          const c = document.createElement("canvas"); c.width = w; c.height = h;
+          c.getContext("2d")!.drawImage(img, 0, 0, w, h);
+          res(c.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = () => rej(new Error("Failed to load image"));
+        img.src = b64;
+      });
+      const resp = await fetch("/api/search-by-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: small }),
+      });
+      const data = await resp.json();
+      if (data.success && data.query) {
+        setQ(data.query);
+        setSearchQ(data.query);
+        notify("Found: " + data.query);
+      } else {
+        notify(data.error || "Could not identify the item", "error");
+      }
+    } catch {
+      notify("Image analysis failed. Please try again.", "error");
     }
+    e.target.value = "";
   };
 
   const resetAuthForm = () => { setAuthEmail(""); setAuthPassword(""); setAuthName(""); setAuthZip(""); setAuthError(""); };
