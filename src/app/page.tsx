@@ -591,9 +591,11 @@ export default function Look4it() {
             priceHigh: data.data.priceHigh ? String(data.data.priceHigh) : prev.priceHigh,
           }));
           notify("AI analysis complete!");
+        } else {
+          notify(data.error || "AI analysis failed - fill in details manually", "info");
         }
       } catch {
-        notify("AI analysis unavailable - fill in details manually", "info");
+        notify("Could not reach AI service - fill in details manually", "info");
       } finally {
         setCreateAnalyzing(false);
       }

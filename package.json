@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",

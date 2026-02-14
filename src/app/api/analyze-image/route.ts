@@ -1,39 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 
 const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
 const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
 
-// Simple category detection from title/description
-function detectCategory(text: string): string {
-  const t = text.toLowerCase();
-  const map: [string[], string][] = [
-    [["chair","table","desk","sofa","couch","dresser","cabinet","shelf","credenza","hutch","bookcase","bed","bench"], "FURNITURE"],
-    [["phone","laptop","computer","tablet","tv","television","speaker","camera","console","headphone"], "ELECTRONICS"],
-    [["necklace","ring","bracelet","earring","brooch","pendant","gemstone","diamond","gold chain"], "JEWELRY"],
-    [["painting","print","sculpture","lithograph","canvas","artwork","watercolor","oil on"], "ART"],
-    [["coin","stamp","card","figurine","doll","toy soldier","collectible","memorabilia","comic"], "COLLECTIBLES"],
-    [["antique","vintage","victorian","edwardian","georgian","colonial","primitive","circa"], "ANTIQUES"],
-    [["drill","saw","wrench","hammer","tool","socket","plier","screwdriver","level"], "TOOLS"],
-    [["watch","rolex","omega","seiko","casio","timepiece","wristwatch","pocket watch"], "WATCHES"],
-    [["lamp","vase","mirror","rug","curtain","pillow","decor","ornament","figurine","candle","frame"], "HOME_DECOR"],
-    [["guitar","piano","violin","trumpet","drum","saxophone","flute","instrument","amp"], "OTHER"],
-  ];
-  for (const [keywords, cat] of map) {
-    if (keywords.some((k) => t.includes(k))) return cat;
-  }
-  return "OTHER";
-}
-
-// Simple condition detection
-function detectCondition(text: string): string {
-  const t = text.toLowerCase();
-  if (t.includes("brand new") || t.includes("sealed") || t.includes("unused")) return "NEW";
-  if (t.includes("like new") || t.includes("mint")) return "LIKE_NEW";
-  if (t.includes("excellent") || t.includes("no visible") || t.includes("no chips") || t.includes("no cracks")) return "EXCELLENT";
-  if (t.includes("fair") || t.includes("worn") || t.includes("scratches")) return "FAIR";
-  if (t.includes("poor") || t.includes("broken") || t.includes("damaged")) return "POOR";
-  return "GOOD";
-}
+const VALID_CATEGORIES = [
+  "FURNITURE","ELECTRONICS","JEWELRY","ART","COLLECTIBLES","ANTIQUES",
+  "TOOLS","WATCHES","HOME_DECOR","OTHER",
+];
+const VALID_CONDITIONS = ["NEW","LIKE_NEW","EXCELLENT","GOOD","FAIR","POOR"];
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,10 +32,7 @@ export async function POST(req: NextRequest) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${AW_KEY}`,
           },
-          body: JSON.stringify({
-            images,
-            additional_context: additionalContext,
-          }),
+          body: JSON.stringify({ images, additional_context: additionalContext }),
           signal: AbortSignal.timeout(15000),
         });
 
@@ -70,10 +43,8 @@ export async function POST(req: NextRequest) {
             data: {
               title: data.title || data.name || "",
               description: data.description || data.listing_description || "",
-              category: detectCategory(
-                (data.title || "") + " " + (data.description || "")
-              ),
-              condition: detectCondition(data.description || data.condition || ""),
+              category: data.category || "OTHER",
+              condition: data.condition || "GOOD",
               priceLow: data.price_range?.low || data.estimated_low || 0,
               priceHigh: data.price_range?.high || data.estimated_high || 0,
               tags: data.tags || data.keywords || [],
@@ -81,70 +52,106 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch {
-        // Fall through to vision analysis
+        // Fall through to Claude vision
       }
     }
 
-    // Fallback: Use image content analysis via a vision-capable model
-    // For now, analyze what we can from the image data
-    // This provides reasonable defaults that the user can edit
-    const imageCount = images.length;
-    const context = additionalContext || "";
+    // Claude Vision analysis
+    if (ANTHROPIC_KEY) {
+      const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
 
-    // Generate analysis from context clues in the image data and user hints
-    let title = "Uploaded Item";
-    let description = "Item uploaded for listing. Please review and edit the details.";
-    let priceLow = 10;
-    let priceHigh = 50;
-
-    if (context) {
-      title = context;
-      description = `${context}. Please review and add more details about this item.`;
-      const cat = detectCategory(context);
-      const cond = detectCondition(context);
-
-      // Price heuristics based on category
-      const priceRanges: Record<string, [number, number]> = {
-        FURNITURE: [50, 500],
-        ELECTRONICS: [25, 300],
-        JEWELRY: [30, 500],
-        ART: [50, 800],
-        COLLECTIBLES: [15, 200],
-        ANTIQUES: [50, 1000],
-        TOOLS: [10, 150],
-        WATCHES: [50, 2000],
-        HOME_DECOR: [10, 200],
-        OTHER: [10, 100],
-      };
-
-      [priceLow, priceHigh] = priceRanges[cat] || [10, 100];
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          title,
-          description,
-          category: cat,
-          condition: cond,
-          priceLow,
-          priceHigh,
-          tags: context.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2),
-        },
+      // Build image content blocks (up to 4 images to keep token cost low)
+      const imageBlocks: Anthropic.ImageBlockParam[] = images.slice(0, 4).map((img: string) => {
+        // img is a data URL like "data:image/jpeg;base64,..."
+        const match = img.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (match) {
+          return {
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type: match[1] as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+              data: match[2],
+            },
+          };
+        }
+        // If it's a URL, use URL source
+        return {
+          type: "image" as const,
+          source: { type: "url" as const, url: img },
+        };
       });
+
+      const message = await client.messages.create({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: [
+              ...imageBlocks,
+              {
+                type: "text",
+                text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
+
+{
+  "title": "concise auction-ready title",
+  "description": "detailed 2-3 sentence description including material, era/age, dimensions if apparent, notable features, and condition observations",
+  "category": "one of: ${VALID_CATEGORIES.join(", ")}",
+  "condition": "one of: ${VALID_CONDITIONS.join(", ")}",
+  "priceLow": number (low estimate in USD),
+  "priceHigh": number (high estimate in USD)
+}
+
+${additionalContext ? `Additional context from the seller: ${additionalContext}` : ""}
+
+Be specific and accurate. Price based on current secondhand/auction market values.`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const text = message.content[0].type === "text" ? message.content[0].text : "";
+
+      try {
+        // Try to parse the JSON response, stripping any markdown fences
+        const cleaned = text.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            title: parsed.title || "Untitled Item",
+            description: parsed.description || "",
+            category: VALID_CATEGORIES.includes(parsed.category) ? parsed.category : "OTHER",
+            condition: VALID_CONDITIONS.includes(parsed.condition) ? parsed.condition : "GOOD",
+            priceLow: Number(parsed.priceLow) || 0,
+            priceHigh: Number(parsed.priceHigh) || 0,
+            tags: [],
+          },
+        });
+      } catch {
+        // Claude responded but not valid JSON - extract what we can
+        return NextResponse.json({
+          success: true,
+          data: {
+            title: "Uploaded Item",
+            description: text.slice(0, 500),
+            category: "OTHER",
+            condition: "GOOD",
+            priceLow: 0,
+            priceHigh: 0,
+            tags: [],
+          },
+        });
+      }
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        title,
-        description,
-        category: "OTHER",
-        condition: "GOOD",
-        priceLow,
-        priceHigh,
-        tags: [],
-      },
-    });
+    // No AI keys configured
+    return NextResponse.json(
+      { success: false, error: "No AI service configured. Add ANTHROPIC_API_KEY to your .env file." },
+      { status: 503 }
+    );
   } catch (error) {
     console.error("POST /api/analyze-image error:", error);
     return NextResponse.json(
