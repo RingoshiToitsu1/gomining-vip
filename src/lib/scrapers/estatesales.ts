@@ -6,8 +6,9 @@ export async function scrapeEstateSales({
   maxResults = 12,
   timeout = 8000,
 }: ScraperOptions): Promise<ScrapedResult[]> {
-  // EstateSales.net search is client-side only; the marketplace page
-  // server-renders popular items via NGRX_STATE that we can extract
+  // EstateSales.net search is client-side only (Angular SPA).
+  // We extract popular marketplace items from server-rendered NGRX_STATE
+  // and filter to Michigan / Detroit metro area only.
   const url = `https://www.estatesales.net/marketplace`;
 
   const res = await fetch(url, {
@@ -25,100 +26,54 @@ export async function scrapeEstateSales({
   const $ = cheerio.load(html);
   const results: ScrapedResult[] = [];
 
-  // Extract NGRX_STATE from the embedded JSON script tag
   const stateScript = $("script#estatesales-net-state").html();
-  if (stateScript) {
-    try {
-      const state = JSON.parse(stateScript);
-      const items =
-        state?.NGRX_STATE?.ui?.marketplace?.marketplaceLanding?.popularItems || [];
+  if (!stateScript) return [];
 
-      const queryWords = query.toLowerCase().split(/\s+/).filter(Boolean);
+  try {
+    const state = JSON.parse(stateScript);
+    const items =
+      state?.NGRX_STATE?.ui?.marketplace?.marketplaceLanding?.popularItems || [];
 
-      for (const item of (items as any[])) {
-        if (results.length >= maxResults) break;
+    for (const item of items as any[]) {
+      if (results.length >= maxResults) break;
 
-        const name = item.name || "";
-        const desc = item.plainTextDescription || "";
+      const stateCode = (item.stateCode || "").toUpperCase();
 
-        // Filter by query terms if possible (since server doesn't filter for us)
-        const text = `${name} ${desc}`.toLowerCase();
-        const matches = queryWords.length === 0 || queryWords.some((w) => text.includes(w));
-        if (!matches) continue;
+      // Only include Michigan listings
+      if (stateCode !== "MI") continue;
 
-        const imgUrl =
-          item.mainPicture?.url ||
-          item.mainPicture?.thumbnailUrl ||
-          "";
+      const name = item.name || "";
+      const imgUrl =
+        item.mainPicture?.url ||
+        item.mainPicture?.thumbnailUrl ||
+        "";
 
-        results.push({
-          id: `esnet-${item.id || results.length}`,
-          title: name,
-          desc,
-          category: "OTHER",
-          condition: "",
-          img: imgUrl,
-          price: item.currentPrice || item.currentBidPrice || 0,
-          appraised: null,
-          low: null,
-          high: null,
-          source: "ESTATESALES_NET",
-          loc: item.cityName && item.stateCode
-            ? `${item.cityName}, ${item.stateCode}`
-            : "",
-          tags: queryWords,
-          views: item.numberOfBids || 0,
-          seller: item.orgName || "Estate Sale",
-          time: new Date().toISOString(),
-          extUrl: `https://www.estatesales.net/marketplace/items/${item.id}`,
-        });
-      }
+      if (!imgUrl) continue;
 
-      if (results.length > 0) return results;
-    } catch {
-      // Fall through
+      results.push({
+        id: `esnet-${item.id || results.length}`,
+        title: name,
+        desc: item.plainTextDescription || "",
+        category: "OTHER",
+        condition: "",
+        img: imgUrl,
+        price: item.currentPrice || item.currentBidPrice || 0,
+        appraised: null,
+        low: null,
+        high: null,
+        source: "ESTATESALES_NET",
+        loc: item.cityName && stateCode
+          ? `${item.cityName}, ${stateCode}`
+          : "",
+        tags: query.toLowerCase().split(/\s+/).filter(Boolean),
+        views: item.numberOfBids || 0,
+        seller: item.orgName || "Estate Sale",
+        time: new Date().toISOString(),
+        extUrl: `https://www.estatesales.net/marketplace/items/${item.id}`,
+      });
     }
-  }
-
-  // If no NGRX items matched, return popular items unfiltered
-  if (results.length === 0 && stateScript) {
-    try {
-      const state = JSON.parse(stateScript);
-      const items =
-        state?.NGRX_STATE?.ui?.marketplace?.marketplaceLanding?.popularItems || [];
-
-      for (const item of (items as any[]).slice(0, maxResults)) {
-        const imgUrl =
-          item.mainPicture?.url ||
-          item.mainPicture?.thumbnailUrl ||
-          "";
-        if (!imgUrl) continue;
-
-        results.push({
-          id: `esnet-${item.id || results.length}`,
-          title: item.name || "",
-          desc: item.plainTextDescription || "",
-          category: "OTHER",
-          condition: "",
-          img: imgUrl,
-          price: item.currentPrice || item.currentBidPrice || 0,
-          appraised: null,
-          low: null,
-          high: null,
-          source: "ESTATESALES_NET",
-          loc: item.cityName && item.stateCode
-            ? `${item.cityName}, ${item.stateCode}`
-            : "",
-          tags: query.toLowerCase().split(/\s+/).filter(Boolean),
-          views: item.numberOfBids || 0,
-          seller: item.orgName || "Estate Sale",
-          time: new Date().toISOString(),
-          extUrl: `https://www.estatesales.net/marketplace/items/${item.id}`,
-        });
-      }
-    } catch {
-      // Fall through
-    }
+  } catch {
+    // Parse failed
   }
 
   return results;
