@@ -57,6 +57,7 @@ export async function scrapeEstateSales({
         category: "OTHER",
         condition: "",
         img: imgUrl,
+        images: [imgUrl],
         price: item.currentPrice || item.currentBidPrice || 0,
         appraised: null,
         low: null,

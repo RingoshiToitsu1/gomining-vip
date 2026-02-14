@@ -64,6 +64,7 @@ const CamIco = ({s=28})=><Svg size={s} d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 
 const SparkIco = ({s=14})=><Svg size={s} d="M12 3l-1.9 5.8a2 2 0 01-1.3 1.3L3 12l5.8 1.9a2 2 0 011.3 1.3L12 21l1.9-5.8a2 2 0 011.3-1.3L21 12l-5.8-1.9a2 2 0 01-1.3-1.3L12 3z"/>;
 const MapIco = ({s=14})=><Svg size={s} d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0zM12 7a3 3 0 100 6 3 3 0 000-6z"/>;
 const BotIco = ({s=14})=><Svg size={s} d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7v3a2 2 0 01-2 2h-1v1a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H5a2 2 0 01-2-2v-3a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM9.5 14a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>;
+const ShareIco = ({s=14})=><Svg size={s} d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/>;
 
 function useViewport() {
   const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
@@ -131,6 +132,7 @@ export default function Look4it() {
   const { isMobile } = useViewport();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [footerOpen, setFooterOpen] = useState<string|null>(null);
+  const [detailImgIdx, setDetailImgIdx] = useState(0);
 
   const [rawResults, setRawResults] = useState<any[]>([]);
 
@@ -232,6 +234,33 @@ export default function Look4it() {
 
   // Close mobile menu on view change
   useEffect(() => { setMobileMenuOpen(false); }, [view]);
+
+  // Reset gallery index when selecting a new item
+  useEffect(() => { setDetailImgIdx(0); }, [sel]);
+
+  // Handle shared listing URLs (?q=...&item=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedQ = params.get("q");
+    const sharedItem = params.get("item");
+    if (sharedQ) {
+      setQ(sharedQ);
+      setSearchQ(sharedQ);
+      if (sharedItem) {
+        // Wait for results, then auto-select the item
+        const checkResults = setInterval(() => {
+          setRawResults(prev => {
+            const found = prev.find(r => r.id === sharedItem);
+            if (found) { setSel(found); setView("listing"); clearInterval(checkResults); }
+            return prev;
+          });
+        }, 300);
+        setTimeout(() => clearInterval(checkResults), 10000);
+      }
+      // Clean URL without reload
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const handleCameraSearch = () => { fileInputRef.current?.click(); };
   const handleImageUpload = async (e) => {
@@ -534,22 +563,43 @@ export default function Look4it() {
     </div>
   );
 
+  const handleShare = () => {
+    const url = `${window.location.origin}?q=${encodeURIComponent(searchQ || sel?.title || "")}&item=${encodeURIComponent(sel?.id || "")}`;
+    if (navigator.share) {
+      navigator.share({ title: sel?.title, text: `Check out this listing on Look4it: ${sel?.title}`, url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => notify("Link copied to clipboard!")).catch(() => notify("Could not copy link", "error"));
+    }
+  };
+
   const Detail = () => {
     if(!sel) return null;
     const ext = sel.source!=="DIRECT";
     const locked = ext && !isPro;
     const fee = sel.price > 0 ? sel.price * 0.1 : 2;
     const si = srcInfo(sel.source);
+    const allImages = (sel.images && sel.images.length > 0) ? sel.images : [sel.img];
     return (
       <div style={{ maxWidth:920, margin:"0 auto", padding:isMobile?"20px 16px 40px":"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
         <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:isMobile?20:28 }}>
-          <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
-            <img src={sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-            {locked ? (
-              <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
-            ) : (
-              <div style={{ position:"absolute", top:14, left:14, background:ext ? si.color : SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{ext ? si.label : "Look4it"}</div>
+          <div>
+            <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
+              <img src={allImages[detailImgIdx] || sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
+              {locked ? (
+                <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
+              ) : (
+                <div style={{ position:"absolute", top:14, left:14, background:ext ? si.color : SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{ext ? si.label : "Look4it"}</div>
+              )}
+            </div>
+            {allImages.length > 1 && (
+              <div style={{ display:"flex", gap:8, marginTop:10, overflowX:"auto" }}>
+                {allImages.map((img, i) => (
+                  <button key={i} onClick={()=>setDetailImgIdx(i)} style={{ border:i===detailImgIdx?`2px solid ${S.accent}`:`2px solid ${S.border}`, borderRadius:6, overflow:"hidden", width:60, height:60, flexShrink:0, cursor:"pointer", padding:0, background:S.bgLight, opacity:i===detailImgIdx?1:0.6, transition:"all 0.2s" }}>
+                    <img src={img} alt={`${sel.title} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           <div>
@@ -620,6 +670,9 @@ export default function Look4it() {
               <div style={{ display:"flex", gap:6 }}>
                 <button onClick={(e)=>togFav(sel,e)} style={{ ...btn(), padding:"8px 14px", color:favs.has(sel.id)?S.accent:S.muted }}>
                   <HeartIco s={14} f={favs.has(sel.id)}/>{favs.has(sel.id)?"Saved":"Save"}
+                </button>
+                <button onClick={handleShare} style={{ ...btn(), padding:"8px 14px", color:S.muted }}>
+                  <ShareIco/>{"Share"}
                 </button>
                 <button onClick={()=>loggedIn?setModal("flag"):setModal("auth")} style={{ ...btn(), padding:"8px 14px", color:S.muted }}>
                   <FlagIco/>{"Report"}

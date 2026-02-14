@@ -5,6 +5,7 @@ export interface ScrapedResult {
   category: string;
   condition: string;
   img: string;
+  images: string[];
   price: number;
   appraised: number | null;
   low: number | null;

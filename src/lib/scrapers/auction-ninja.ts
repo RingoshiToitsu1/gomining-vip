@@ -47,6 +47,7 @@ export async function scrapeAuctionNinja({
         category: "OTHER",
         condition: "",
         img: img.startsWith("http") ? img : img ? `https://www.auctionninja.com${img}` : "",
+        images: [(img.startsWith("http") ? img : img ? `https://www.auctionninja.com${img}` : "")].filter(Boolean),
         price,
         appraised: null,
         low: null,
