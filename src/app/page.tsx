@@ -420,6 +420,9 @@ export default function Look4it() {
             </button>
             <button onClick={()=>setShowFil(!showFil)} style={{ background:showFil?S.accent:S.accentPale, border:"1px solid rgba(97,41,80,0.25)", color:showFil?S.textLight:S.accentLight, padding:"8px 18px", borderRadius:8, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600, letterSpacing:"0.05em", flexShrink:0, transition:"all 0.2s" }}>{"Filters"}</button>
           </div>
+          <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:14, flexWrap:"wrap" }}>
+            {SOURCES.map(s=><div key={s.value} style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ width:8, height:8, borderRadius:2, background:s.color }}/><span style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{s.label}</span></div>)}
+          </div>
         </div>
         {showFil && (
           <div style={{ maxWidth:700, margin:"12px auto 0" }}>
@@ -437,9 +440,6 @@ export default function Look4it() {
       <div style={{ padding:"24px 24px 48px", maxWidth:1120, margin:"0 auto" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, letterSpacing:"0.03em" }}>{results.length}{" results"}{q && <>{" for \""}<span style={{color:S.gold}}>{q}</span>{"\""}</>}</span>
-          <div style={{ display:"flex", gap:12 }}>
-            {SOURCES.map(s=><div key={s.value} style={{ display:"flex", alignItems:"center", gap:4 }}><div style={{ width:8, height:8, borderRadius:2, background:s.color }}/><span style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{s.label}</span></div>)}
-          </div>
         </div>
         {loading ? (
           <div style={{ textAlign:"center", padding:60, color:S.dim, fontFamily:S.font }}>
