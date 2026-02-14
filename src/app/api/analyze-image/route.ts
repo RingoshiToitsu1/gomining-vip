@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       // Build image content blocks (up to 4 images)
       const imageBlocks: Anthropic.ImageBlockParam[] = [];
       for (const img of images.slice(0, 4)) {
-        const match = img.match(/^data:(image\/[\w+.-]+);base64,(.+)/s);
+        const match = img.match(/^data:(image\/[\w+.-]+);base64,(.+)/);
         if (match) {
           imageBlocks.push({
             type: "image",
