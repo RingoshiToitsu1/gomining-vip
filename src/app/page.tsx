@@ -133,6 +133,8 @@ export default function Look4it() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [footerOpen, setFooterOpen] = useState<string|null>(null);
   const [detailImgIdx, setDetailImgIdx] = useState(0);
+  const [detailImages, setDetailImages] = useState<string[]>([]);
+  const [detailImgLoading, setDetailImgLoading] = useState(false);
 
   const [rawResults, setRawResults] = useState<any[]>([]);
 
@@ -235,8 +237,8 @@ export default function Look4it() {
   // Close mobile menu on view change
   useEffect(() => { setMobileMenuOpen(false); }, [view]);
 
-  // Reset gallery index when selecting a new item
-  useEffect(() => { setDetailImgIdx(0); }, [sel]);
+  // Reset gallery when selecting a new item
+  useEffect(() => { setDetailImgIdx(0); setDetailImages([]); }, [sel]);
 
   // Handle shared listing URLs (?q=...&item=...)
   useEffect(() => {
@@ -572,35 +574,64 @@ export default function Look4it() {
     }
   };
 
+  const loadDetailImages = async () => {
+    if (!sel?.extUrl || detailImgLoading) return;
+    setDetailImgLoading(true);
+    try {
+      const res = await fetch(`/api/listing-images?url=${encodeURIComponent(sel.extUrl)}`);
+      const data = await res.json();
+      if (data.success && data.images?.length > 0) {
+        // Merge: keep original thumbnail first, add new unique images
+        const merged = [sel.img, ...data.images.filter((u: string) => u !== sel.img)];
+        setDetailImages(merged);
+        notify(`Loaded ${merged.length} photo${merged.length > 1 ? "s" : ""}`);
+      } else {
+        notify("No additional photos found", "error");
+      }
+    } catch {
+      notify("Could not load photos", "error");
+    } finally {
+      setDetailImgLoading(false);
+    }
+  };
+
   const Detail = () => {
     if(!sel) return null;
     const ext = sel.source!=="DIRECT";
     const locked = ext && !isPro;
     const fee = sel.price > 0 ? sel.price * 0.1 : 2;
     const si = srcInfo(sel.source);
-    const allImages = (sel.images && sel.images.length > 0) ? sel.images : [sel.img];
+    const gallery = detailImages.length > 0 ? detailImages : [sel.img];
     return (
       <div style={{ maxWidth:920, margin:"0 auto", padding:isMobile?"20px 16px 40px":"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
         <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:isMobile?20:28 }}>
           <div>
             <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
-              <img src={allImages[detailImgIdx] || sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
+              <img src={gallery[detailImgIdx] || sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
               {locked ? (
                 <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
               ) : (
                 <div style={{ position:"absolute", top:14, left:14, background:ext ? si.color : SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{ext ? si.label : "Look4it"}</div>
               )}
             </div>
-            {allImages.length > 1 && (
-              <div style={{ display:"flex", gap:8, marginTop:10, overflowX:"auto" }}>
-                {allImages.map((img, i) => (
+            {gallery.length > 1 ? (
+              <div style={{ display:"flex", gap:8, marginTop:10, overflowX:"auto", paddingBottom:4 }}>
+                {gallery.map((img, i) => (
                   <button key={i} onClick={()=>setDetailImgIdx(i)} style={{ border:i===detailImgIdx?`2px solid ${S.accent}`:`2px solid ${S.border}`, borderRadius:6, overflow:"hidden", width:60, height:60, flexShrink:0, cursor:"pointer", padding:0, background:S.bgLight, opacity:i===detailImgIdx?1:0.6, transition:"all 0.2s" }}>
                     <img src={img} alt={`${sel.title} ${i+1}`} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
                   </button>
                 ))}
               </div>
-            )}
+            ) : sel.extUrl && detailImages.length === 0 ? (
+              <button onClick={loadDetailImages} disabled={detailImgLoading} style={{ ...btn(), width:"100%", justifyContent:"center", marginTop:10, padding:"10px 16px", fontSize:12, opacity:detailImgLoading?0.6:1, cursor:detailImgLoading?"not-allowed":"pointer" }}>
+                {detailImgLoading ? (
+                  <><div style={{ width:14, height:14, border:"2px solid " + S.border, borderTopColor:S.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>{"Loading Photos..."}</>
+                ) : (
+                  <><CamIco s={14}/>{"Load All Photos"}</>
+                )}
+              </button>
+            ) : null}
           </div>
           <div>
             <h1 style={{ fontFamily:S.serif, fontSize:isMobile?22:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
