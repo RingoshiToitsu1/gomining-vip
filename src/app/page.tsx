@@ -591,11 +591,9 @@ export default function Look4it() {
             priceHigh: data.data.priceHigh ? String(data.data.priceHigh) : prev.priceHigh,
           }));
           notify("AI analysis complete!");
-        } else {
-          notify(data.error || "AI analysis failed - fill in details manually", "info");
         }
       } catch {
-        notify("Could not reach AI service - fill in details manually", "info");
+        // Silently proceed — form is ready for manual entry
       } finally {
         setCreateAnalyzing(false);
       }
@@ -668,7 +666,7 @@ export default function Look4it() {
       {createStep===1 && !createAnalyzing && (
         <div>
           <div style={{ background:S.accentPale, border:"1px solid rgba(123,45,59,0.2)", borderRadius:8, padding:14, marginBottom:22, display:"flex", alignItems:"center", gap:8 }}>
-            <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{"AI-generated listing - review and edit below"}</span>
+            <SparkIco/><span style={{ color:S.accentLight, fontSize:12, fontWeight:600, fontFamily:S.font }}>{createData.title ? "AI-generated listing - review and edit below" : "Fill in your listing details below"}</span>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
             <div><label style={lbl}>{"Title"}</label><input value={createData.title} onChange={e=>setCreateData({...createData,title:e.target.value})} placeholder="e.g. Hand-Painted Glass Santa Claus Ornament" style={inp}/></div>

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 
 const AW_URL = process.env.AUCTIONWRITER_API_URL || "https://api.auctionwriter.com/v1";
 const AW_KEY = process.env.AUCTIONWRITER_API_KEY || "";
-const GEMINI_KEY = process.env.GEMINI_API_KEY || "";
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || "";
 
 const VALID_CATEGORIES = [
   "FURNITURE","ELECTRONICS","JEWELRY","ART","COLLECTIBLES","ANTIQUES",
@@ -52,25 +52,48 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch {
-        // Fall through to Gemini vision
+        // Fall through to Claude vision
       }
     }
 
-    // Google Gemini Vision analysis (free tier)
-    if (GEMINI_KEY) {
-      const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // Claude Vision analysis
+    if (ANTHROPIC_KEY) {
+      const client = new Anthropic({ apiKey: ANTHROPIC_KEY });
 
-      // Build image parts (up to 4 images)
-      const imageParts: { inlineData: { mimeType: string; data: string } }[] = [];
+      // Build image content blocks (up to 4 images)
+      const imageBlocks: Anthropic.ImageBlockParam[] = [];
       for (const img of images.slice(0, 4)) {
         const match = img.match(/^data:(image\/\w+);base64,(.+)$/);
         if (match) {
-          imageParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+          imageBlocks.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: match[1] as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+              data: match[2],
+            },
+          });
         }
       }
 
-      const prompt = `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences, no explanation):
+      if (imageBlocks.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Could not process uploaded images" },
+          { status: 400 }
+        );
+      }
+
+      const message = await client.messages.create({
+        model: "claude-sonnet-4-5-20250929",
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: [
+              ...imageBlocks,
+              {
+                type: "text",
+                text: `You are an expert auction appraiser. Analyze this item image and respond with ONLY a JSON object (no markdown, no code fences):
 
 {
   "title": "concise auction-ready title",
@@ -83,10 +106,14 @@ export async function POST(req: NextRequest) {
 
 ${additionalContext ? `Additional context from the seller: ${additionalContext}` : ""}
 
-Be specific and accurate. Price based on current secondhand/auction market values.`;
+Be specific and accurate. Price based on current secondhand/auction market values.`,
+              },
+            ],
+          },
+        ],
+      });
 
-      const result = await model.generateContent([prompt, ...imageParts]);
-      const text = result.response.text();
+      const text = message.content[0].type === "text" ? message.content[0].text : "";
 
       try {
         const cleaned = text.replace(/```json?\s*/g, "").replace(/```\s*/g, "").trim();
@@ -122,13 +149,13 @@ Be specific and accurate. Price based on current secondhand/auction market value
 
     // No AI keys configured
     return NextResponse.json(
-      { success: false, error: "No AI service configured. Get a free Gemini API key at aistudio.google.com/apikey and add GEMINI_API_KEY to your .env file." },
+      { success: false, error: "No AI service configured. Add ANTHROPIC_API_KEY to your .env file." },
       { status: 503 }
     );
   } catch (error) {
     console.error("POST /api/analyze-image error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to analyze image" },
+      { success: false, error: "Failed to analyze image. Please try again." },
       { status: 500 }
     );
   }
