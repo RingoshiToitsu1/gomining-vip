@@ -65,9 +65,19 @@ const SparkIco = ({s=14})=><Svg size={s} d="M12 3l-1.9 5.8a2 2 0 01-1.3 1.3L3 12
 const MapIco = ({s=14})=><Svg size={s} d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0zM12 7a3 3 0 100 6 3 3 0 000-6z"/>;
 const BotIco = ({s=14})=><Svg size={s} d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7v3a2 2 0 01-2 2h-1v1a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H5a2 2 0 01-2-2v-3a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM9.5 14a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>;
 
-const Overlay = ({children, onClose}: {children: React.ReactNode, onClose: ()=>void}) => (
-  <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", backdropFilter:"blur(10px)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-    <div onClick={e=>e.stopPropagation()} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:14, padding:30, maxWidth:440, width:"100%", position:"relative" }}>
+function useViewport() {
+  const [width, setWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  useEffect(() => {
+    const onResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return { isMobile: width < 768 };
+}
+
+const Overlay = ({children, onClose, compact=false}: {children: React.ReactNode, onClose: ()=>void, compact?: boolean}) => (
+  <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", backdropFilter:"blur(10px)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:compact?12:20 }}>
+    <div onClick={e=>e.stopPropagation()} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:14, padding:compact?20:30, maxWidth:440, width:"100%", position:"relative" }}>
       <button onClick={onClose} style={{ position:"absolute", top:14, right:14, background:"none", border:"none", color:S.dim, cursor:"pointer" }}><XIco/></button>
       {children}
     </div>
@@ -118,6 +128,8 @@ export default function Look4it() {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const userMenuRef = useRef(null);
+  const { isMobile } = useViewport();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [rawResults, setRawResults] = useState<any[]>([]);
 
@@ -217,6 +229,9 @@ export default function Look4it() {
     }
   }, [searchQ]);
 
+  // Close mobile menu on view change
+  useEffect(() => { setMobileMenuOpen(false); }, [view]);
+
   const handleCameraSearch = () => { fileInputRef.current?.click(); };
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
@@ -310,52 +325,71 @@ export default function Look4it() {
   const lbl = { display:"block", color:S.goldDim, fontSize:10, fontWeight:600, marginBottom:6, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1.5px" };
 
   const Header = () => (
-    <header style={{ position:"sticky", top:0, zIndex:50, background:"rgba(26,24,32,0.95)", backdropFilter:"blur(20px)", borderBottom:"1px solid " + S.border, padding:"0 24px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:28 }}>
-        <button onClick={()=>{setView("home");setSel(null);}} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
-          <span style={{ fontFamily:S.serif, fontSize:24, fontWeight:700, color:S.gold, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</span>
-        </button>
-        <nav style={{ display:"flex", gap:2 }}>
-          {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setView(v)} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"6px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:500, letterSpacing:"0.03em", transition:"all 0.2s" }}>{l}</button>
-          ))}
-        </nav>
-      </div>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <button style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
-          <BellIco/><div style={{ position:"absolute", top:-2, right:-2, width:7, height:7, background:S.accent, borderRadius:"50%", border:"2px solid " + S.bg }}/>
-        </button>
-        <div ref={userMenuRef} style={{ position:"relative" }}>
-          <button onClick={()=>loggedIn?setShowUserMenu(!showUserMenu):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
-            <UserIco s={14}/>{loggedIn?(session?.user?.name||"Account"):"Sign In"}
+    <header style={{ position:"sticky", top:0, zIndex:50, background:"rgba(26,24,32,0.95)", backdropFilter:"blur(20px)", borderBottom:"1px solid " + S.border }}>
+      <div style={{ padding:isMobile?"0 16px":"0 24px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:isMobile?16:28 }}>
+          <button onClick={()=>{setView("home");setSel(null);}} style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
+            <span style={{ fontFamily:S.serif, fontSize:24, fontWeight:700, color:S.gold, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</span>
           </button>
-          {showUserMenu && loggedIn && (
-            <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, width:240, background:S.bgLight, border:"1px solid " + S.border, borderRadius:10, boxShadow:"0 12px 40px rgba(0,0,0,0.5)", zIndex:60, overflow:"hidden" }}>
-              <div style={{ padding:"16px 16px 12px", borderBottom:"1px solid " + S.border }}>
-                <div style={{ color:S.textLight, fontSize:14, fontWeight:600, fontFamily:S.font }}>{session?.user?.name || "User"}</div>
-                <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:2 }}>{session?.user?.email}</div>
+          {!isMobile && (
+            <nav style={{ display:"flex", gap:2 }}>
+              {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"]].map(([v,l])=>(
+                <button key={v} onClick={()=>setView(v)} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"6px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:500, letterSpacing:"0.03em", transition:"all 0.2s" }}>{l}</button>
+              ))}
+            </nav>
+          )}
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
+            <BellIco/><div style={{ position:"absolute", top:-2, right:-2, width:7, height:7, background:S.accent, borderRadius:"50%", border:"2px solid " + S.bg }}/>
+          </button>
+          <div ref={userMenuRef} style={{ position:"relative" }}>
+            <button onClick={()=>loggedIn?setShowUserMenu(!showUserMenu):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
+              <UserIco s={14}/>{!isMobile && (loggedIn?(session?.user?.name||"Account"):"Sign In")}
+            </button>
+            {showUserMenu && loggedIn && (
+              <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, width:240, background:S.bgLight, border:"1px solid " + S.border, borderRadius:10, boxShadow:"0 12px 40px rgba(0,0,0,0.5)", zIndex:60, overflow:"hidden" }}>
+                <div style={{ padding:"16px 16px 12px", borderBottom:"1px solid " + S.border }}>
+                  <div style={{ color:S.textLight, fontSize:14, fontWeight:600, fontFamily:S.font }}>{session?.user?.name || "User"}</div>
+                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:2 }}>{session?.user?.email}</div>
+                </div>
+                <div style={{ padding:6 }}>
+                  {[["Dashboard","dashboard"],["Settings","settings"]].map(([label,v])=>(
+                    <button key={v} onClick={()=>{setView(v);setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.text, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
+                      onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{label}</button>
+                  ))}
+                </div>
+                <div style={{ borderTop:"1px solid " + S.border, padding:6 }}>
+                  <button onClick={()=>{signOut({redirect:false});setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.accent, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{"Sign Out"}</button>
+                </div>
               </div>
-              <div style={{ padding:6 }}>
-                {[["Dashboard","dashboard"],["Settings","settings"]].map(([label,v])=>(
-                  <button key={v} onClick={()=>{setView(v);setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.text, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
-                    onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{label}</button>
-                ))}
-              </div>
-              <div style={{ borderTop:"1px solid " + S.border, padding:6 }}>
-                <button onClick={()=>{signOut({redirect:false});setShowUserMenu(false);}} style={{ display:"block", width:"100%", textAlign:"left", background:"transparent", border:"none", color:S.accent, padding:"10px 12px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, transition:"background 0.15s" }}
-                  onMouseEnter={e=>e.currentTarget.style.background=S.accentPale} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>{"Sign Out"}</button>
-              </div>
-            </div>
+            )}
+          </div>
+          {isMobile && (
+            <button onClick={()=>setMobileMenuOpen(!mobileMenuOpen)} style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
           )}
         </div>
       </div>
+      {isMobile && mobileMenuOpen && (
+        <div style={{ borderTop:"1px solid " + S.border, padding:"8px 16px 12px", display:"flex", flexDirection:"column", gap:2 }}>
+          {[["home","Browse"],["create","Sell"],["dashboard","Dashboard"],["settings","Settings"]].map(([v,l])=>(
+            <button key={v} onClick={()=>{setView(v);setMobileMenuOpen(false);}} style={{ background:view===v?S.accentPale:"transparent", border:view===v?"1px solid rgba(97,41,80,0.25)":"1px solid transparent", color:view===v?S.accentLight:S.dim, padding:"10px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, fontWeight:500, letterSpacing:"0.03em", textAlign:"left", transition:"all 0.2s" }}>{l}</button>
+          ))}
+          {loggedIn && (
+            <button onClick={()=>{signOut({redirect:false});setMobileMenuOpen(false);}} style={{ background:"transparent", border:"1px solid transparent", color:S.accent, padding:"10px 16px", borderRadius:6, cursor:"pointer", fontFamily:S.font, fontSize:13, fontWeight:500, textAlign:"left", transition:"all 0.2s" }}>{"Sign Out"}</button>
+          )}
+        </div>
+      )}
     </header>
   );
 
   const Card = ({l}) => {
     const ext = l.source!=="DIRECT";
     const locked = ext && !isPro;
-    const cardFee = l.price > 0 ? l.price * 0.1 : 0;
+    const cardFee = l.price > 0 ? l.price * 0.1 : 2;
     const si = srcInfo(l.source);
     return (
       <div onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, overflow:"hidden", cursor:"pointer", transition:"all 0.3s ease" }}
@@ -364,11 +398,11 @@ export default function Look4it() {
         <div style={{ position:"relative", paddingTop:"72%", background:S.bgLight }}>
           <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
           {locked ? (
-            <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
+            <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:isMobile?10:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
           ) : (
-            <div style={{ position:"absolute", top:8, left:8, background:si.color, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{si.label}</div>
+            <div style={{ position:"absolute", top:8, left:8, background:si.color, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:isMobile?10:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{si.label}</div>
           )}
-          <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(26,24,32,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
+          <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(26,24,32,0.6)", border:"none", width:isMobile?40:30, height:isMobile?40:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
             <HeartIco s={14} f={favs.has(l.id)}/>
           </button>
           {locked && cardFee > 0 && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
@@ -377,7 +411,7 @@ export default function Look4it() {
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginTop:12 }}>
             <div>
-              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{l.price > 0 ? fmt(l.price) : "Price not listed"}</div>
+              <div style={{ color:S.gold, fontSize:18, fontWeight:700, fontFamily:S.mono }}>{l.price > 0 ? fmt(l.price) : "Active Auction"}</div>
             </div>
             <div style={{ textAlign:"right" }}>
               {l.loc && <div style={{ color:S.dim, fontSize:10, fontFamily:S.font }}>{l.loc}</div>}
@@ -401,11 +435,11 @@ export default function Look4it() {
 
   const Home = () => (
     <div>
-      <div style={{ padding:"52px 20px 32px", textAlign:"center", background:"radial-gradient(ellipse at 50% 0%, rgba(97,41,80,0.08) 0%, transparent 70%)" }}>
-        <h1 style={{ fontFamily:S.serif, fontSize:42, fontWeight:700, color:S.textLight, margin:"0 0 8px", lineHeight:1.1, letterSpacing:"-0.02em" }}>
+      <div style={{ padding:isMobile?"32px 16px 24px":"52px 20px 32px", textAlign:"center", background:"radial-gradient(ellipse at 50% 0%, rgba(97,41,80,0.08) 0%, transparent 70%)" }}>
+        <h1 style={{ fontFamily:S.serif, fontSize:isMobile?28:42, fontWeight:700, color:S.textLight, margin:"0 0 8px", lineHeight:1.1, letterSpacing:"-0.02em" }}>
           {"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it. Find it."}
         </h1>
-        <p style={{ fontFamily:S.font, fontSize:15, color:S.muted, margin:"0 0 32px", letterSpacing:"0.01em" }}>
+        <p style={{ fontFamily:S.font, fontSize:isMobile?13:15, color:S.muted, margin:"0 0 32px", letterSpacing:"0.01em" }}>
           {"The search engine for estate sales, auctions, and secondhand treasures across Metro Detroit."}
         </p>
         <div style={{ maxWidth:700, margin:"0 auto" }}>
@@ -422,13 +456,13 @@ export default function Look4it() {
             </button>
             <button onClick={()=>setShowFil(!showFil)} style={{ background:showFil?S.accent:S.accentPale, border:"1px solid rgba(97,41,80,0.25)", color:showFil?S.textLight:S.accentLight, padding:"8px 18px", borderRadius:8, cursor:"pointer", fontFamily:S.font, fontSize:12, fontWeight:600, letterSpacing:"0.05em", flexShrink:0, transition:"all 0.2s" }}>{"Filters"}</button>
           </div>
-          <div style={{ display:"flex", justifyContent:"center", gap:16, marginTop:14, flexWrap:"wrap" }}>
+          <div style={{ display:"flex", justifyContent:"center", gap:isMobile?10:16, marginTop:14, flexWrap:"wrap" }}>
             {SOURCES.map(s=><div key={s.value} style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ width:8, height:8, borderRadius:2, background:s.color }}/><span style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{s.label}</span></div>)}
           </div>
         </div>
         {showFil && (
           <div style={{ maxWidth:700, margin:"12px auto 0" }}>
-            <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:10, padding:18, display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(130px, 1fr))", gap:12, textAlign:"left" }}>
+            <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:10, padding:18, display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":"repeat(auto-fit, minmax(130px, 1fr))", gap:12, textAlign:"left" }}>
               <Sel label="Category" value={fil.cat} onChange={v=>setFil({...fil,cat:v})} options={CATEGORIES}/>
               <Sel label="Condition" value={fil.cond} onChange={v=>setFil({...fil,cond:v})} options={CONDITIONS}/>
               <Sel label="Source" value={fil.src} onChange={v=>setFil({...fil,src:v})} options={SOURCES} all="All Sources"/>
@@ -439,7 +473,7 @@ export default function Look4it() {
           </div>
         )}
       </div>
-      <div style={{ padding:"24px 24px 48px", maxWidth:1120, margin:"0 auto" }}>
+      <div style={{ padding:isMobile?"24px 16px 48px":"24px 24px 48px", maxWidth:1120, margin:"0 auto" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
           <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, letterSpacing:"0.03em" }}>{results.length}{" results"}{q && <>{" for \""}<span style={{color:S.gold}}>{q}</span>{"\""}</>}</span>
         </div>
@@ -454,7 +488,7 @@ export default function Look4it() {
             <SearchIco s={40}/><p style={{marginTop:16,fontSize:16}}>{searchQ ? "No items found" : "Search to discover items"}</p><p style={{fontSize:13,color:S.dim}}>{searchQ ? "Try different search terms or adjust your filters" : "Enter a search term above to find estate sales, auctions, and secondhand treasures"}</p>
           </div>
         ) : (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(260px, 1fr))", gap:18 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill, minmax(260px, 1fr))", gap:18 }}>
             {results.map(l=><Card key={l.id} l={l}/>)}
           </div>
         )}
@@ -466,12 +500,12 @@ export default function Look4it() {
     if(!sel) return null;
     const ext = sel.source!=="DIRECT";
     const locked = ext && !isPro;
-    const fee = sel.price > 0 ? sel.price * 0.1 : 0;
+    const fee = sel.price > 0 ? sel.price * 0.1 : 2;
     const si = srcInfo(sel.source);
     return (
-      <div style={{ maxWidth:920, margin:"0 auto", padding:"28px 24px 48px" }}>
+      <div style={{ maxWidth:920, margin:"0 auto", padding:isMobile?"20px 16px 40px":"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
+        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:isMobile?20:28 }}>
           <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
             <img src={sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
             {locked ? (
@@ -481,7 +515,7 @@ export default function Look4it() {
             )}
           </div>
           <div>
-            <h1 style={{ fontFamily:S.serif, fontSize:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
+            <h1 style={{ fontFamily:S.serif, fontSize:isMobile?22:26, fontWeight:700, color:S.textLight, margin:"0 0 10px", lineHeight:1.3, letterSpacing:"-0.01em" }}>{sel.title}</h1>
             <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
               {CATEGORIES.find(c=>c.value===sel.category) && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CATEGORIES.find(c=>c.value===sel.category)?.label}</span>}
               {CONDITIONS.find(c=>c.value===sel.condition) && <span style={{ background:"rgba(197,194,200,0.08)", color:S.muted, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{CONDITIONS.find(c=>c.value===sel.condition)?.label}</span>}
@@ -489,9 +523,10 @@ export default function Look4it() {
             </div>
             <div style={{ background:S.accentPale, border:"1px solid rgba(97,41,80,0.2)", borderRadius:10, padding:22, marginBottom:18 }}>
               <div>
-                <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Listed Price" : "Price"}</div>
-                <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "Price not listed"}</div>
+                <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Listed Price" : "Active Auction"}</div>
+                <div style={{ color:S.gold, fontSize:isMobile?24:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "Place a Bid"}</div>
                 {sel.price > 0 && !isPro && <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:4 }}>{"Finder's fee: "}{fmt(fee)}{" (10%)"}</div>}
+                {sel.price <= 0 && !isPro && <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:4 }}>{"Unlock fee: "}{fmt(2)}{" to view auction link"}</div>}
                 {isPro && <div style={{ color:"#6fbf73", fontSize:11, fontFamily:S.font, marginTop:4, fontWeight:600 }}>{"PRO — No finder's fee"}</div>}
               </div>
             </div>
@@ -501,7 +536,7 @@ export default function Look4it() {
                   <LockIco s={14}/><span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.font }}>{"Finder's Fee Required"}</span>
                 </div>
                 <p style={{ color:S.muted, fontSize:12, fontFamily:S.font, margin:"0 0 14px", lineHeight:1.6 }}>
-                  {sel.price > 0 ? <>{"We found this listing on an external platform. Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of the listed price) to reveal where it's listed and get a direct link to purchase."}</> : "We found this listing on an external platform. The price is not listed — unlock the source to view full details and purchase directly."}
+                  {sel.price > 0 ? <>{"We found this listing on an external platform. Pay a finder's fee of "}<strong style={{color:S.gold}}>{fmt(fee)}</strong>{" (10% of the listed price) to reveal where it's listed and get a direct link to purchase."}</> : <>{"This item is currently up for auction on an external platform. Pay "}<strong style={{color:S.gold}}>{fmt(2)}</strong>{" to unlock the source and get a direct link to place your bid."}</>}
                 </p>
                 <button onClick={()=>loggedIn?notify("Redirecting to Stripe checkout..."):setModal("auth")} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
                   <LockIco s={14}/>{fee > 0 ? <>{"Unlock Source for "}{fmt(fee)}</> : "Unlock Source"}
@@ -536,7 +571,7 @@ export default function Look4it() {
             {sel.tags?.length > 0 && <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:18 }}>
               {sel.tags.map(t=><span key={t} style={{ background:"rgba(197,194,200,0.06)", border:"1px solid " + S.border, color:S.dim, padding:"4px 12px", borderRadius:5, fontSize:11, fontFamily:S.font }}>{"#"}{t}</span>)}
             </div>}
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:18, borderTop:"1px solid " + S.border }}>
+            <div style={{ display:"flex", flexDirection:isMobile?"column":"row", justifyContent:"space-between", alignItems:isMobile?"stretch":"center", gap:isMobile?12:0, paddingTop:18, borderTop:"1px solid " + S.border }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                 <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}>{locked ? <LockIco s={15}/> : <UserIco s={15}/>}</div>
                 <div>
@@ -647,8 +682,8 @@ export default function Look4it() {
   };
 
   const Create = () => (
-    <div style={{ maxWidth:720, margin:"0 auto", padding:"36px 24px 48px" }}>
-      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 30px", letterSpacing:"-0.02em", textAlign:"center" }}>
+    <div style={{ maxWidth:720, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 30px", letterSpacing:"-0.02em", textAlign:"center" }}>
         {"Sell on Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}
       </h1>
 
@@ -658,7 +693,7 @@ export default function Look4it() {
         onDragLeave={()=>setCreateDragOver(false)}
         onDrop={e=>{e.preventDefault();setCreateDragOver(false);handleCreateFiles(e.dataTransfer.files);}}
         onClick={()=>createFileRef.current?.click()}
-        style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(97,41,80,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : 52, textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(97,41,80,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
+        style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(97,41,80,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : (isMobile?32:52), textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(97,41,80,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
         <input ref={createFileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{if(e.target.files) handleCreateFiles(e.target.files); e.target.value="";}}/>
         {createImages.length === 0 ? (
           <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
@@ -765,7 +800,7 @@ export default function Look4it() {
             })()}
 
             {/* Quantity, Lot#, Cosigner */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr", gap:14 }}>
               <div><label style={lbl}>{"Quantity"}</label><input type="number" min="1" value={createData.quantity} onChange={e=>setCreateData({...createData,quantity:e.target.value})} style={inp}/></div>
               <div><label style={lbl}>{"Lot #"}</label><input value={createData.lot} onChange={e=>setCreateData({...createData,lot:e.target.value})} placeholder="Optional" style={inp}/></div>
               <div><label style={lbl}>{"Cosigner"}</label><input value={createData.cosigner} onChange={e=>setCreateData({...createData,cosigner:e.target.value})} placeholder="Optional" style={inp}/></div>
@@ -793,8 +828,8 @@ export default function Look4it() {
   );
 
   const Dashboard = () => (
-    <div style={{ maxWidth:820, margin:"0 auto", padding:"36px 24px 48px" }}>
-      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 28px", letterSpacing:"-0.02em" }}>{"Dashboard"}</h1>
+    <div style={{ maxWidth:820, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 28px", letterSpacing:"-0.02em" }}>{"Dashboard"}</h1>
       {!loggedIn ? (
         <div style={{ textAlign:"center", padding:52, background:S.card, border:"1px solid " + S.border, borderRadius:12 }}>
           <UserIco s={40}/><p style={{ color:S.muted, fontFamily:S.font, fontSize:15, margin:"16px 0" }}>{"Sign in to access your dashboard"}</p>
@@ -802,10 +837,10 @@ export default function Look4it() {
         </div>
       ) : (
         <div style={{ display:"grid", gap:18 }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
+          <div style={{ display:"grid", gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(4,1fr)", gap:14 }}>
             {[["Saved Items",String(favItems.length)],["Searches",String(wantList.length)],["Offers","0"],["Unlocked","0"]].map(([l,v])=>(
-              <div key={l} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:18, textAlign:"center" }}>
-                <div style={{ color:S.gold, fontSize:26, fontWeight:700, fontFamily:S.mono }}>{v}</div>
+              <div key={l} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:isMobile?14:18, textAlign:"center" }}>
+                <div style={{ color:S.gold, fontSize:isMobile?22:26, fontWeight:700, fontFamily:S.mono }}>{v}</div>
                 <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:6, textTransform:"uppercase", letterSpacing:"0.5px" }}>{l}</div>
               </div>
             ))}
@@ -814,7 +849,7 @@ export default function Look4it() {
             <div style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, padding:22 }}>
               <h3 style={{ color:S.textLight, fontSize:15, fontWeight:600, fontFamily:S.font, margin:"0 0 6px", display:"flex", alignItems:"center", gap:8 }}><HeartIco s={16} f/>{"Saved Items"}</h3>
               <p style={{ color:S.dim, fontSize:11, fontFamily:S.font, margin:"0 0 14px" }}>{"Items you've liked. Click to view details."}</p>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:12 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"repeat(auto-fill, minmax(140px, 1fr))":"repeat(auto-fill, minmax(220px, 1fr))", gap:12 }}>
                 {favItems.slice(0,8).map(l => (
                   <div key={l.id} onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:8, overflow:"hidden", cursor:"pointer", transition:"all 0.2s" }}
                     onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;}} onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;}}>
@@ -826,7 +861,7 @@ export default function Look4it() {
                     </div>
                     <div style={{ padding:10 }}>
                       <div style={{ color:S.textLight, fontSize:12, fontWeight:600, fontFamily:S.font, lineHeight:1.4, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</div>
-                      <div style={{ color:S.gold, fontSize:14, fontWeight:700, fontFamily:S.mono, marginTop:6 }}>{l.price > 0 ? fmt(l.price) : "Price not listed"}</div>
+                      <div style={{ color:S.gold, fontSize:14, fontWeight:700, fontFamily:S.mono, marginTop:6 }}>{l.price > 0 ? fmt(l.price) : "Active Auction"}</div>
                     </div>
                   </div>
                 ))}
@@ -883,8 +918,8 @@ export default function Look4it() {
   );
 
   const Settings = () => (
-    <div style={{ maxWidth:660, margin:"0 auto", padding:"36px 24px 48px" }}>
-      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 6px", letterSpacing:"-0.02em" }}>{"Settings"}</h1>
+    <div style={{ maxWidth:660, margin:"0 auto", padding:isMobile?"36px 16px 48px":"36px 24px 48px" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:isMobile?24:30, fontWeight:700, color:S.textLight, margin:"0 0 6px", letterSpacing:"-0.02em" }}>{"Settings"}</h1>
       <p style={{ color:S.muted, fontSize:14, fontFamily:S.font, margin:"0 0 30px" }}>{"Manage your account and preferences."}</p>
       {!loggedIn ? (
         <div style={{ textAlign:"center", padding:52, background:S.card, border:"1px solid " + S.border, borderRadius:12 }}>
@@ -945,7 +980,7 @@ export default function Look4it() {
   // Overlay moved outside component to prevent remount/focus loss
 
   const AuthModal = () => (
-    <Overlay onClose={()=>{setModal(null);resetAuthForm();}}>
+    <Overlay onClose={()=>{setModal(null);resetAuthForm();}} compact={isMobile}>
       <h2 style={{ fontFamily:S.serif, fontSize:24, fontWeight:700, color:S.textLight, margin:"0 0 6px" }}>
         {authTab==="signin"?"Welcome back":"Create account"}
       </h2>
@@ -973,11 +1008,11 @@ export default function Look4it() {
   );
 
   const OfferModal = () => (
-    <Overlay onClose={()=>setModal(null)}>
+    <Overlay onClose={()=>setModal(null)} compact={isMobile}>
       <h2 style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.textLight, margin:"0 0 6px" }}>{"Make an Offer"}</h2>
       <p style={{ color:S.dim, fontSize:12, fontFamily:S.font, margin:"0 0 18px" }}>{"on "}{sel?.title}</p>
       <div style={{ background:S.cream, borderRadius:8, padding:14, marginBottom:18 }}>
-        <div><div style={{ color:S.dim, fontSize:10, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Listed Price"}</div><div style={{ color:S.textLight, fontFamily:S.mono, fontSize:18 }}>{sel?.price > 0 ? fmt(sel.price) : "Price not listed"}</div></div>
+        <div><div style={{ color:S.dim, fontSize:10, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{sel?.price > 0 ? "Listed Price" : "Active Auction"}</div><div style={{ color:S.textLight, fontFamily:S.mono, fontSize:18 }}>{sel?.price > 0 ? fmt(sel.price) : "Place a Bid"}</div></div>
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <div><label style={lbl}>{"Your Offer"}</label><input type="number" placeholder="$0.00" value={offerAmt} onChange={e=>setOfferAmt(e.target.value)} style={inp}/></div>
@@ -990,7 +1025,7 @@ export default function Look4it() {
   );
 
   const FlagModal = () => (
-    <Overlay onClose={()=>setModal(null)}>
+    <Overlay onClose={()=>setModal(null)} compact={isMobile}>
       <h2 style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.textLight, margin:"0 0 18px" }}>{"Report Listing"}</h2>
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <Sel label="Reason" value={flagReason} onChange={setFlagReason} options={[{value:"DUPLICATE",label:"Duplicate"},{value:"SCAM",label:"Scam/Fraud"},{value:"INAPPROPRIATE",label:"Inappropriate"},{value:"MISLEADING",label:"Misleading"},{value:"PROHIBITED_ITEM",label:"Prohibited Item"},{value:"OTHER",label:"Other"}]} all="Select reason"/>
@@ -1005,16 +1040,16 @@ export default function Look4it() {
   const About = () => {
     const pStyle = { color: S.text, fontSize: 15, fontFamily: S.font, lineHeight: "1.85", margin: "0 0 20px" } as const;
     return (
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 60px" }}>
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: isMobile ? "40px 16px 60px" : "40px 24px 60px" }}>
         <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: S.accentLight, cursor: "pointer", fontFamily: S.font, fontSize: 13, display: "flex", alignItems: "center", gap: 6, marginBottom: 28, padding: 0 }}>
           <ArrowIco s={14} />{"Back to Home"}
         </button>
 
         {/* Hero image */}
         <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 36, position: "relative" }}>
-          <img src="/images/robRob-greeting.jpg" alt="Robert McPherson and Robert Channer, founders of Look4it" style={{ width: "100%", height: 400, objectFit: "cover", objectPosition: "center top", display: "block" }} />
+          <img src="/images/robRob-greeting.jpg" alt="Robert McPherson and Robert Channer, founders of Look4it" style={{ width: "100%", height: isMobile ? 240 : 400, objectFit: "cover", objectPosition: "center top", display: "block" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(26,24,32,0.9))", padding: "60px 32px 28px" }}>
-            <h1 style={{ fontFamily: S.serif, fontSize: 36, fontWeight: 700, color: S.textLight, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+            <h1 style={{ fontFamily: S.serif, fontSize: isMobile ? 26 : 36, fontWeight: 700, color: S.textLight, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
               {"Who We Are"}
             </h1>
             <p style={{ color: S.gold, fontSize: 14, fontFamily: S.font, margin: 0, fontWeight: 500 }}>{"Robert McPherson & Robert Channer \u2014 Founders"}</p>
@@ -1028,7 +1063,7 @@ export default function Look4it() {
 
         {/* Estate sale home image - full width break */}
         <div style={{ borderRadius: 14, overflow: "hidden", margin: "36px 0", border: "1px solid " + S.border }}>
-          <img src="/images/estate-sale-home.jpg" alt="A Look4it estate sale in southeastern Michigan" style={{ width: "100%", height: 340, objectFit: "cover", display: "block" }} />
+          <img src="/images/estate-sale-home.jpg" alt="A Look4it estate sale in southeastern Michigan" style={{ width: "100%", height: isMobile ? 200 : 340, objectFit: "cover", display: "block" }} />
           <div style={{ background: S.cream, padding: "14px 20px", borderTop: "1px solid " + S.border }}>
             <p style={{ color: S.muted, fontSize: 12, fontFamily: S.font, margin: 0, fontStyle: "italic" }}>{"A Look4it estate sale in southeastern Michigan"}</p>
           </div>
@@ -1071,9 +1106,9 @@ export default function Look4it() {
   );
 
   const Footer = () => (
-    <footer style={{ background:S.bgLight, borderTop:"1px solid " + S.border, padding:"48px 24px 32px" }}>
+    <footer style={{ background:S.bgLight, borderTop:"1px solid " + S.border, padding:isMobile?"48px 16px 32px":"48px 24px 32px" }}>
       <div style={{ maxWidth:1120, margin:"0 auto" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:40, marginBottom:40 }}>
+        <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"2fr 1fr 1fr 1fr", gap:isMobile?24:40, marginBottom:40 }}>
           <div>
             <div style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.gold, marginBottom:12, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</div>
             <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, lineHeight:1.7, margin:"0 0 16px", maxWidth:300 }}>
