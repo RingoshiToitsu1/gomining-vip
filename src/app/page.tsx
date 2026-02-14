@@ -680,9 +680,9 @@ export default function Look4it() {
         {view==="dashboard" && Dashboard()}
       </div>
       <Footer/>
-      {modal==="auth" && <AuthModal/>}
-      {modal==="offer" && <OfferModal/>}
-      {modal==="flag" && <FlagModal/>}
+      {modal==="auth" && AuthModal()}
+      {modal==="offer" && OfferModal()}
+      {modal==="flag" && FlagModal()}
       <Toast/>
     </div>
   );
