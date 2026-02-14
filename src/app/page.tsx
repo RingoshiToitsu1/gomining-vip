@@ -220,7 +220,7 @@ export default function Look4it() {
         <button style={{ background:"transparent", border:"1px solid " + S.border, color:S.dim, width:36, height:36, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
           <BellIco/><div style={{ position:"absolute", top:-2, right:-2, width:7, height:7, background:S.accent, borderRadius:"50%", border:"2px solid " + S.bg }}/>
         </button>
-        <button onClick={()=>loggedIn?signOut():setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
+        <button onClick={()=>loggedIn?signOut({redirect:false}):setModal("auth")} style={{ ...btn(true), padding:"8px 16px" }}>
           <UserIco s={14}/>{loggedIn?(session?.user?.name||"Account"):"Sign In"}
         </button>
       </div>
