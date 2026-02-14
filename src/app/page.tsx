@@ -531,6 +531,13 @@ export default function Look4it() {
           <div style={{ display:"flex", justifyContent:"center", gap:isMobile?10:16, marginTop:14, flexWrap:"wrap" }}>
             {SOURCES.map(s=><div key={s.value} style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ width:8, height:8, borderRadius:2, background:s.color }}/><span style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{s.label}</span></div>)}
           </div>
+          <button onClick={()=>setView("appraise")} style={{ marginTop:20, background:"linear-gradient(135deg, #612950 0%, #7a3568 50%, #612950 100%)", border:"1px solid rgba(197,168,184,0.25)", color:"#F5F0E3", padding:isMobile?"14px 28px":"14px 36px", borderRadius:50, cursor:"pointer", fontFamily:S.font, fontSize:isMobile?13:14, fontWeight:600, letterSpacing:"0.04em", display:"inline-flex", alignItems:"center", gap:10, transition:"all 0.25s ease", boxShadow:"0 4px 20px rgba(97,41,80,0.3), inset 0 1px 0 rgba(255,255,255,0.1)" }}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 28px rgba(97,41,80,0.45), inset 0 1px 0 rgba(255,255,255,0.15)";}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 20px rgba(97,41,80,0.3), inset 0 1px 0 rgba(255,255,255,0.1)";}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {"What\u2019s it worth? Get a free appraisal"}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
         </div>
         {showFil && (
           <div style={{ maxWidth:700, margin:"12px auto 0" }}>
