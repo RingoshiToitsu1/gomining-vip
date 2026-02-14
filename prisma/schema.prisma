@@ -1,0 +1,317 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  password        String?
+  image           String?
+  phone           String?
+  zipCode         String?
+  role            UserRole  @default(BUYER)
+  stripeAccountId String?
+  stripeCustomerId String?
+  onboardingComplete Boolean @default(false)
+  subscriptionTier SubscriptionTier @default(FREE)
+  subscriptionExpiresAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  listings        Listing[]
+  purchases       Transaction[] @relation("BuyerTransactions")
+  sales           Transaction[] @relation("SellerTransactions")
+  offers          Offer[]
+  wantList        WantListItem[]
+  notifications   Notification[]
+  flags           Flag[]
+  accounts        Account[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  BOTH
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+}
+
+model Listing {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  title           String
+  description     String
+  category        Category
+  condition       ItemCondition
+  images          ListingImage[]
+  priceAsk        Float
+  priceAppraised  Float?
+  priceRangeLow   Float?
+  priceRangeHigh  Float?
+  status          ListingStatus @default(ACTIVE)
+  source          ListingSource @default(DIRECT)
+  externalUrl     String?
+  externalPlatform String?
+  location        String?
+  zipCode         String?
+  tags            String[]
+  aiDescription   String?
+  viewCount       Int           @default(0)
+  flagCount       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  sellerId        String
+  seller          User          @relation(fields: [sellerId], references: [id])
+  transactions    Transaction[]
+  offers          Offer[]
+  flags           Flag[]
+
+  @@index([title, description])
+  @@map("listings")
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  url       String
+  alt       String?
+  order     Int      @default(0)
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("listing_images")
+}
+
+enum Category {
+  FURNITURE
+  ELECTRONICS
+  CLOTHING
+  JEWELRY
+  ART
+  COLLECTIBLES
+  ANTIQUES
+  TOOLS
+  KITCHENWARE
+  BOOKS
+  TOYS
+  SPORTS
+  AUTOMOTIVE
+  HOME_DECOR
+  MUSICAL_INSTRUMENTS
+  COINS_CURRENCY
+  WATCHES
+  OTHER
+}
+
+enum ItemCondition {
+  NEW
+  LIKE_NEW
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  FOR_PARTS
+}
+
+enum ListingStatus {
+  DRAFT
+  ACTIVE
+  PENDING_REVIEW
+  SOLD
+  EXPIRED
+  REMOVED
+}
+
+enum ListingSource {
+  DIRECT
+  HIBID
+  AUCTION_NINJA
+  ESTATESALES_NET
+  EBAY
+}
+
+model Transaction {
+  id                String            @id @default(cuid())
+  type              TransactionType
+  amount            Float
+  findersFee        Float
+  sellerPayout      Float
+  stripePaymentId   String?
+  stripeTransferId  String?
+  status            TransactionStatus @default(PENDING)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  buyerId           String
+  buyer             User              @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  sellerId          String
+  seller            User              @relation("SellerTransactions", fields: [sellerId], references: [id])
+  listingId         String
+  listing           Listing           @relation(fields: [listingId], references: [id])
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  DIRECT_SALE
+  FINDERS_FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REFUNDED
+  FAILED
+}
+
+model Offer {
+  id          String      @id @default(cuid())
+  amount      Float
+  message     String?
+  status      OfferStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  buyerId     String
+  buyer       User        @relation(fields: [buyerId], references: [id])
+  listingId   String
+  listing     Listing     @relation(fields: [listingId], references: [id])
+
+  @@map("offers")
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  EXPIRED
+}
+
+model WantListItem {
+  id          String   @id @default(cuid())
+  query       String
+  category    Category?
+  maxPrice    Float?
+  minPrice    Float?
+  condition   ItemCondition?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("want_list_items")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  WANT_LIST_MATCH
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  ITEM_SOLD
+  LISTING_FLAGGED
+  SYSTEM
+}
+
+model Flag {
+  id          String     @id @default(cuid())
+  reason      FlagReason
+  description String?
+  status      FlagStatus @default(PENDING)
+  aiReviewResult String?
+  createdAt   DateTime   @default(now())
+  resolvedAt  DateTime?
+
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  listingId   String
+  listing     Listing    @relation(fields: [listingId], references: [id])
+
+  @@map("flags")
+}
+
+enum FlagReason {
+  DUPLICATE
+  INAPPROPRIATE
+  SCAM
+  WRONG_CATEGORY
+  MISLEADING
+  PROHIBITED_ITEM
+  OTHER
+}
+
+enum FlagStatus {
+  PENDING
+  AI_REVIEWED
+  ADMIN_REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+model ExcludedWord {
+  id          String   @id @default(cuid())
+  word        String   @unique
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  @@map("excluded_words")
+}
