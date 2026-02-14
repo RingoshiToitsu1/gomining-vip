@@ -85,6 +85,7 @@ export default function Look4it() {
   const [showFil, setShowFil] = useState(false);
   const { data: session, status } = useSession();
   const loggedIn = status === "authenticated";
+  const isPro = (session?.user as any)?.subscriptionTier === "PRO";
   const [favs, setFavs] = useState(new Set());
   const [favItems, setFavItems] = useState<any[]>([]);
   const [toast, setToast] = useState(null);
@@ -353,22 +354,24 @@ export default function Look4it() {
 
   const Card = ({l}) => {
     const ext = l.source!=="DIRECT";
+    const locked = ext && !isPro;
     const cardFee = l.price > 0 ? l.price * 0.1 : 0;
+    const si = srcInfo(l.source);
     return (
       <div onClick={()=>{setSel(l);setView("listing");}} style={{ background:S.card, border:"1px solid " + S.border, borderRadius:10, overflow:"hidden", cursor:"pointer", transition:"all 0.3s ease" }}
         onMouseEnter={e=>{e.currentTarget.style.borderColor=S.borderHover;e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,0.3)";}}
         onMouseLeave={e=>{e.currentTarget.style.borderColor=S.border;e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
         <div style={{ position:"relative", paddingTop:"72%", background:S.bgLight }}>
           <img src={l.img} alt={l.title} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-          {ext ? (
+          {locked ? (
             <div style={{ position:"absolute", top:8, left:8, background:S.accent, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:4 }}><LockIco s={10}/>{"Source Hidden"}</div>
           ) : (
-            <div style={{ position:"absolute", top:8, left:8, background:SOURCES[0].color, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+            <div style={{ position:"absolute", top:8, left:8, background:si.color, color:"#F5F0E3", padding:"3px 10px", borderRadius:4, fontSize:9, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{si.label}</div>
           )}
           <button onClick={e=>togFav(l,e)} style={{ position:"absolute", top:8, right:8, background:"rgba(26,24,32,0.6)", border:"none", width:30, height:30, borderRadius:6, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:favs.has(l.id)?S.accent:S.text, backdropFilter:"blur(8px)" }}>
             <HeartIco s={14} f={favs.has(l.id)}/>
           </button>
-          {ext && cardFee > 0 && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
+          {locked && cardFee > 0 && <div style={{ position:"absolute", bottom:8, right:8, background:"rgba(26,24,32,0.8)", backdropFilter:"blur(8px)", padding:"3px 10px", borderRadius:4, display:"flex", alignItems:"center", gap:4, color:S.gold, fontSize:9, fontWeight:600, fontFamily:S.font, letterSpacing:"0.5px" }}><LockIco/>{fmt(cardFee)}{" to unlock"}</div>}
         </div>
         <div style={{ padding:16 }}>
           <h3 style={{ color:S.textLight, fontSize:13, fontWeight:600, fontFamily:S.font, margin:0, lineHeight:1.5, display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" }}>{l.title}</h3>
@@ -462,17 +465,19 @@ export default function Look4it() {
   const Detail = () => {
     if(!sel) return null;
     const ext = sel.source!=="DIRECT";
+    const locked = ext && !isPro;
     const fee = sel.price > 0 ? sel.price * 0.1 : 0;
+    const si = srcInfo(sel.source);
     return (
       <div style={{ maxWidth:920, margin:"0 auto", padding:"28px 24px 48px" }}>
         <button onClick={()=>{setView("home");setSel(null);}} style={{ ...btn(), marginBottom:24, padding:"8px 16px", fontSize:12 }}><ArrowIco/>{"Back to results"}</button>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:28 }}>
           <div style={{ borderRadius:10, overflow:"hidden", background:S.bgLight, position:"relative" }}>
             <img src={sel.img} alt={sel.title} style={{ width:"100%", aspectRatio:"4/3", objectFit:"cover" }} onError={e=>e.target.style.opacity=0.3}/>
-            {ext ? (
+            {locked ? (
               <div style={{ position:"absolute", top:14, left:14, background:S.accent, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px", display:"flex", alignItems:"center", gap:5 }}><LockIco s={11}/>{"Source Hidden"}</div>
             ) : (
-              <div style={{ position:"absolute", top:14, left:14, background:SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{"Look4it"}</div>
+              <div style={{ position:"absolute", top:14, left:14, background:ext ? si.color : SOURCES[0].color, color:"#F5F0E3", padding:"4px 12px", borderRadius:5, fontSize:10, fontWeight:600, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"1px" }}>{ext ? si.label : "Look4it"}</div>
             )}
           </div>
           <div>
@@ -486,10 +491,11 @@ export default function Look4it() {
               <div>
                 <div style={{ color:S.muted, fontSize:10, fontFamily:S.font, marginBottom:4, textTransform:"uppercase", letterSpacing:"1px" }}>{sel.price > 0 ? "Listed Price" : "Price"}</div>
                 <div style={{ color:S.gold, fontSize:30, fontWeight:700, fontFamily:S.mono }}>{sel.price > 0 ? fmt(sel.price) : "Price not listed"}</div>
-                {sel.price > 0 && <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:4 }}>{"Finder's fee: "}{fmt(fee)}{" (10%)"}</div>}
+                {sel.price > 0 && !isPro && <div style={{ color:S.dim, fontSize:11, fontFamily:S.font, marginTop:4 }}>{"Finder's fee: "}{fmt(fee)}{" (10%)"}</div>}
+                {isPro && <div style={{ color:"#6fbf73", fontSize:11, fontFamily:S.font, marginTop:4, fontWeight:600 }}>{"PRO — No finder's fee"}</div>}
               </div>
             </div>
-            {ext ? (
+            {locked ? (
               <div style={{ background:S.cream, border:"1px solid " + S.border, borderRadius:10, padding:18, marginBottom:18 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
                   <LockIco s={14}/><span style={{ color:S.gold, fontSize:13, fontWeight:600, fontFamily:S.font }}>{"Finder's Fee Required"}</span>
@@ -500,6 +506,18 @@ export default function Look4it() {
                 <button onClick={()=>loggedIn?notify("Redirecting to Stripe checkout..."):setModal("auth")} style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px 20px", fontSize:14 }}>
                   <LockIco s={14}/>{fee > 0 ? <>{"Unlock Source for "}{fmt(fee)}</> : "Unlock Source"}
                 </button>
+              </div>
+            ) : ext ? (
+              <div style={{ background:S.cream, border:"1px solid rgba(111,191,115,0.2)", borderRadius:10, padding:18, marginBottom:18 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+                  <span style={{ color:"#6fbf73", fontSize:13, fontWeight:600, fontFamily:S.font }}>{"PRO Access — View Original Listing"}</span>
+                </div>
+                <p style={{ color:S.muted, fontSize:12, fontFamily:S.font, margin:"0 0 14px", lineHeight:1.6 }}>
+                  {"This item is listed on "}<strong style={{color:S.gold}}>{si.label}</strong>{". As a PRO member, you can view the original listing directly."}
+                </p>
+                <a href={sel.extUrl} target="_blank" rel="noopener noreferrer" style={{ ...btn(true), width:"100%", justifyContent:"center", padding:"13px 20px", fontSize:14, textDecoration:"none", display:"flex" }}>
+                  {"View on " + si.label + " →"}
+                </a>
               </div>
             ) : (
               <div style={{ display:"flex", gap:10, marginBottom:18 }}>
@@ -520,10 +538,10 @@ export default function Look4it() {
             </div>}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:18, borderTop:"1px solid " + S.border }}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}>{ext ? <LockIco s={15}/> : <UserIco s={15}/>}</div>
+                <div style={{ width:36, height:36, borderRadius:8, background:S.accentPale, display:"flex", alignItems:"center", justifyContent:"center", color:S.accentLight }}>{locked ? <LockIco s={15}/> : <UserIco s={15}/>}</div>
                 <div>
-                  <div style={{ color:S.text, fontSize:13, fontWeight:600, fontFamily:S.font }}>{ext ? "Seller Hidden" : sel.seller}</div>
-                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{ext ? "Unlock to reveal seller & platform" : sel.loc}</div>
+                  <div style={{ color:S.text, fontSize:13, fontWeight:600, fontFamily:S.font }}>{locked ? "Seller Hidden" : sel.seller}</div>
+                  <div style={{ color:S.dim, fontSize:11, fontFamily:S.font }}>{locked ? "Unlock to reveal seller & platform" : (sel.loc || si.label)}</div>
                 </div>
               </div>
               <div style={{ display:"flex", gap:6 }}>
