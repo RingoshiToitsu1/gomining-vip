@@ -585,18 +585,22 @@ export default function Look4it() {
     });
 
     // Run AI analysis on the first image
+    console.log("[Look4it] createStep:", createStep, "images:", allImages.length);
     if (createStep === 0) {
       setCreateStep(1);
       setCreateAnalyzing(true);
       try {
-        // Send only the first image, resized for speed
+        console.log("[Look4it] Resizing image for AI...");
         const smallImg = await resizeForAI(allImages[0]);
+        console.log("[Look4it] Resized image size:", Math.round(smallImg.length / 1024), "KB. Sending to API...");
         const res = await fetch("/api/analyze-image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ images: [smallImg] }),
         });
+        console.log("[Look4it] API response status:", res.status);
         const data = await res.json();
+        console.log("[Look4it] API response:", JSON.stringify(data).slice(0, 300));
         if (data.success && data.data) {
           setCreateData(prev => ({
             ...prev,
@@ -609,15 +613,17 @@ export default function Look4it() {
           }));
           notify("AI analysis complete!");
         } else {
-          console.error("AI analysis failed:", data.error || "Unknown error");
+          console.error("[Look4it] AI failed:", data.error || "Unknown error");
           notify(data.error || "AI analysis failed. You can fill in details manually.");
         }
       } catch (err) {
-        console.error("AI analysis error:", err);
+        console.error("[Look4it] AI error:", err);
         notify("Could not reach AI service. Fill in details manually.");
       } finally {
         setCreateAnalyzing(false);
       }
+    } else {
+      console.log("[Look4it] Skipping AI — createStep is already", createStep);
     }
   };
 
@@ -633,10 +639,9 @@ export default function Look4it() {
 
   const Create = () => (
     <div style={{ maxWidth:720, margin:"0 auto", padding:"36px 24px 48px" }}>
-      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 6px", letterSpacing:"-0.02em" }}>
+      <h1 style={{ fontFamily:S.serif, fontSize:30, fontWeight:700, color:S.textLight, margin:"0 0 30px", letterSpacing:"-0.02em", textAlign:"center" }}>
         {"Sell on Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}
       </h1>
-      <p style={{ color:S.muted, fontSize:14, fontFamily:S.font, margin:"0 0 30px" }}>{"Upload photos and our AI will generate a title, description, and price estimate."}</p>
 
       {/* Image Upload Area - always visible */}
       <div
@@ -647,10 +652,10 @@ export default function Look4it() {
         style={{ border: createDragOver ? "2px solid " + S.accent : "2px dashed rgba(123,45,59,0.25)", borderRadius:12, padding: createImages.length > 0 ? 16 : 52, textAlign:"center", marginBottom:24, background: createDragOver ? "rgba(123,45,59,0.12)" : S.accentPale, cursor:"pointer", transition:"all 0.2s" }}>
         <input ref={createFileRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={e=>{if(e.target.files) handleCreateFiles(e.target.files); e.target.value="";}}/>
         {createImages.length === 0 ? (
-          <div>
-            <CamIco s={44}/><br/>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center" }}>
+            <CamIco s={44}/>
             <span style={{ color:S.accentLight, fontSize:16, fontWeight:600, fontFamily:S.font, display:"block", marginTop:14 }}>{"Drop images here or click to browse"}</span>
-            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Up to 10 images. AI will analyze and generate listing details."}</span>
+            <span style={{ color:S.dim, fontSize:12, fontFamily:S.font, display:"block", marginTop:8 }}>{"Up to 10 images. We analyze and generate the listing details."}</span>
           </div>
         ) : (
           <div>
@@ -772,7 +777,7 @@ export default function Look4it() {
       {/* Hint text when no images */}
       {createStep===0 && (
         <div style={{ display:"flex", alignItems:"center", gap:8, color:S.dim, fontSize:12, fontFamily:S.font }}>
-          <SparkIco/>{"Drop your images above. AI will generate the title, description, condition, and price estimate automatically."}
+          <SparkIco/>{"Drop your images above. We will auto generate a title, description, condition, and a price appraisal automatically."}
         </div>
       )}
     </div>
@@ -989,6 +994,68 @@ export default function Look4it() {
     </Overlay>
   );
 
+  const About = () => {
+    const pStyle = { color: S.text, fontSize: 15, fontFamily: S.font, lineHeight: "1.85", margin: "0 0 20px" } as const;
+    return (
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "40px 24px 60px" }}>
+        <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: S.accentLight, cursor: "pointer", fontFamily: S.font, fontSize: 13, display: "flex", alignItems: "center", gap: 6, marginBottom: 28, padding: 0 }}>
+          <ArrowIco s={14} />{"Back to Home"}
+        </button>
+
+        {/* Hero image */}
+        <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 36, position: "relative" }}>
+          <img src="/images/robRob-greeting.jpg" alt="Robert McPherson and Robert Channer, founders of Look4it" style={{ width: "100%", height: 400, objectFit: "cover", objectPosition: "center top", display: "block" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(28,23,18,0.9))", padding: "60px 32px 28px" }}>
+            <h1 style={{ fontFamily: S.serif, fontSize: 36, fontWeight: 700, color: S.textLight, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
+              {"Who We Are"}
+            </h1>
+            <p style={{ color: S.gold, fontSize: 14, fontFamily: S.font, margin: 0, fontWeight: 500 }}>{"Robert McPherson & Robert Channer \u2014 Founders"}</p>
+          </div>
+        </div>
+
+        {/* Intro paragraphs */}
+        <p style={pStyle}>{"Robert McPherson and Robert Channer began working together with a shared dedication to creating value through excellent customer service. Their early business ventures demonstrated their ability to identify opportunities and deliver results, leading them to the stadium and event management industry. Starting with sales and service management at Michigan State University, they quickly recognized the potential to expand their expertise. Their work with NCAA university athletic departments across the country grew, and they soon found themselves managing a large team, recruiting, training, and overseeing hundreds of staff members throughout the southeastern United States."}</p>
+
+        <p style={pStyle}>{"With a strong entrepreneurial spirit, Robert and Robert branched out into real estate, purchasing and renovating distressed properties to bring them back to market. This experience in property transformation naturally led them to develop a passion for the estate sale industry. Over the years, they attended estate sales across the country as avid shoppers, gaining valuable insight into what buyers are seeking and how to price items for success."}</p>
+
+        {/* Estate sale home image - full width break */}
+        <div style={{ borderRadius: 14, overflow: "hidden", margin: "36px 0", border: "1px solid " + S.border }}>
+          <img src="/images/estate-sale-home.jpg" alt="A Look4it estate sale in southeastern Michigan" style={{ width: "100%", height: 340, objectFit: "cover", display: "block" }} />
+          <div style={{ background: S.cream, padding: "14px 20px", borderTop: "1px solid " + S.border }}>
+            <p style={{ color: S.muted, fontSize: 12, fontFamily: S.font, margin: 0, fontStyle: "italic" }}>{"A Look4it estate sale in southeastern Michigan"}</p>
+          </div>
+        </div>
+
+        <p style={pStyle}>{"After years of growing their business, they made the decision to sell their successful company, Game Time Vendors Inc, and embraced a new challenge by purchasing and operating a Dairy Queen franchise in Destin, Florida. Their dedication to outstanding customer service was evident throughout their four years of ownership, as they applied the same principles of value creation and customer care that had driven their earlier successes. However, the call of family and the allure of Michigan\u2019s natural beauty, with its four distinct seasons, ultimately drew them back home."}</p>
+
+        <p style={pStyle}>{"Upon their return to Michigan, Robert and Robert channeled their enthusiasm and passion for the estate sale industry into formalizing Look4it. With their extensive background in customer service and a deep understanding of the estate sale market, they were well-equipped to make a significant impact in this new venture. Their strong connection to Michigan\u2019s automotive history also fueled their appreciation for classic and antique automobiles, adding another layer of expertise to the services they offer."}</p>
+
+        {/* Highlight quote block */}
+        <div style={{ background: S.accentPale, border: "1px solid rgba(123,45,59,0.2)", borderLeft: "4px solid " + S.accent, borderRadius: "0 10px 10px 0", padding: "24px 28px", margin: "36px 0" }}>
+          <p style={{ color: S.textLight, fontSize: 17, fontFamily: S.serif, fontStyle: "italic", lineHeight: "1.7", margin: 0 }}>
+            {"\u201CWe approach each sale with a commitment to traditional customer service values\u2014offering warm greetings, providing personal assistance, and ensuring professional presentation of all items.\u201D"}
+          </p>
+          <p style={{ color: S.gold, fontSize: 13, fontFamily: S.font, margin: "12px 0 0", fontWeight: 600 }}>{"Robert McPherson & Robert Channer"}</p>
+        </div>
+
+        <p style={pStyle}>{"At Look4it, Robert and Robert stay current on market trends through industry associations like the Antiques & Collectibles National Association (ACNA) and leverage extensive resources to accurately evaluate and price items. Their dedication to excellence has earned them glowing reviews, with customers praising their professionalism, attention to detail, and genuine care for both clients and shoppers."}</p>
+
+        <p style={pStyle}>{"When you choose Look4it, you\u2019re selecting a team that understands the intricacies of estate sales, values transparency and fairness, and is passionate about bringing forgotten treasures back to life. Robert and Robert are deeply committed to serving the southeastern Michigan community with integrity, enthusiasm, and a genuine love for the work they do."}</p>
+
+        {/* CTA */}
+        <div style={{ textAlign: "center", marginTop: 44, padding: "32px 24px", background: S.cream, borderRadius: 14, border: "1px solid " + S.border }}>
+          <p style={{ color: S.gold, fontSize: 18, fontFamily: S.serif, fontWeight: 600, margin: "0 0 6px" }}>{"Find it. Appraise it. Sell it."}</p>
+          <p style={{ color: S.textLight, fontSize: 28, fontFamily: S.serif, fontWeight: 700, margin: "0 0 20px", letterSpacing: "-0.02em" }}>
+            {"LOOK"}<span style={{ color: S.accent }}>{"4"}</span>{"it"}
+          </p>
+          <button onClick={() => { setView("home"); window.scrollTo(0, 0); }} style={{ ...btn(true), padding: "12px 32px", fontSize: 14, justifyContent: "center" }}>
+            {"Start Searching"}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const Toast = () => toast && (
     <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", background:toast.type==="success"?"rgba(74,124,111,0.15)":"rgba(123,45,59,0.15)", border:"1px solid " + (toast.type==="success"?"rgba(74,124,111,0.3)":"rgba(123,45,59,0.3)"), color:toast.type==="success"?"#6BAF9B":"#C47080", padding:"12px 24px", borderRadius:8, fontSize:13, fontFamily:S.font, fontWeight:500, zIndex:200, animation:"fadeIn 0.2s ease-out", backdropFilter:"blur(10px)" }}>
       {toast.msg}
@@ -1002,7 +1069,7 @@ export default function Look4it() {
           <div>
             <div style={{ fontFamily:S.serif, fontSize:22, fontWeight:700, color:S.gold, marginBottom:12, letterSpacing:"-0.02em" }}>{"Look"}<span style={{color:S.accent}}>{"4"}</span>{"it"}</div>
             <p style={{ color:S.muted, fontSize:13, fontFamily:S.font, lineHeight:1.7, margin:"0 0 16px", maxWidth:300 }}>
-              {"The premier search engine for estate sales, auctions, and secondhand treasures across Metro Detroit. Discover unique finds from multiple platforms in one place."}
+              {"The all-in-one resale search tool."}<br/>{"Find it. Appraise it. Sell it. LOOK4it."}
             </p>
             <div style={{ display:"flex", alignItems:"center", gap:6, color:S.dim, fontSize:12, fontFamily:S.font }}>
               <MapIco s={13}/>{" Oakland Twp, Michigan"}
@@ -1011,7 +1078,8 @@ export default function Look4it() {
           <div>
             <h4 style={{ color:S.goldDim, fontSize:10, fontWeight:700, fontFamily:S.font, textTransform:"uppercase", letterSpacing:"2px", margin:"0 0 16px" }}>{"Company"}</h4>
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-              {["About Us","Contact Us","Careers","Press"].map(l=>(
+              <a href="#" onClick={e=>{e.preventDefault();setView("about");window.scrollTo(0,0);}} style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s", cursor:"pointer" }}>{"About Us"}</a>
+              {["Contact Us","Careers","Press"].map(l=>(
                 <a key={l} href="#" style={{ color:S.muted, fontSize:13, fontFamily:S.font, textDecoration:"none", transition:"color 0.2s" }}>{l}</a>
               ))}
             </div>
@@ -1071,6 +1139,7 @@ export default function Look4it() {
         {view==="create" && Create()}
         {view==="dashboard" && Dashboard()}
         {view==="settings" && Settings()}
+        {view==="about" && About()}
       </div>
       <Footer/>
       {modal==="auth" && AuthModal()}
