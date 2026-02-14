@@ -622,10 +622,10 @@ export default function Look4it() {
       `}</style>
       <Header/>
       <div style={{ flex:1 }}>
-        {view==="home" && <Home/>}
-        {view==="listing" && <Detail/>}
-        {view==="create" && <Create/>}
-        {view==="dashboard" && <Dashboard/>}
+        {view==="home" && Home()}
+        {view==="listing" && Detail()}
+        {view==="create" && Create()}
+        {view==="dashboard" && Dashboard()}
       </div>
       <Footer/>
       {modal==="auth" && <AuthModal/>}
