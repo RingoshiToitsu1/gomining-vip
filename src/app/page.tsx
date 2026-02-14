@@ -73,6 +73,15 @@ const SparkIco = ({s=14})=><Svg size={s} d="M12 3l-1.9 5.8a2 2 0 01-1.3 1.3L3 12
 const MapIco = ({s=14})=><Svg size={s} d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0zM12 7a3 3 0 100 6 3 3 0 000-6z"/>;
 const BotIco = ({s=14})=><Svg size={s} d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7v3a2 2 0 01-2 2h-1v1a2 2 0 01-2 2H8a2 2 0 01-2-2v-1H5a2 2 0 01-2-2v-3a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2zM9.5 14a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm5 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>;
 
+const Overlay = ({children, onClose}: {children: React.ReactNode, onClose: ()=>void}) => (
+  <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", backdropFilter:"blur(10px)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+    <div onClick={e=>e.stopPropagation()} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:14, padding:30, maxWidth:440, width:"100%", position:"relative" }}>
+      <button onClick={onClose} style={{ position:"absolute", top:14, right:14, background:"none", border:"none", color:S.dim, cursor:"pointer" }}><XIco/></button>
+      {children}
+    </div>
+  </div>
+);
+
 export default function Look4it() {
   const [view, setView] = useState("home");
   const [sel, setSel] = useState(null);
@@ -530,14 +539,7 @@ export default function Look4it() {
     </div>
   );
 
-  const Overlay = ({children, onClose}) => (
-    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", backdropFilter:"blur(10px)", zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div onClick={e=>e.stopPropagation()} style={{ background:S.bgLight, border:"1px solid " + S.border, borderRadius:14, padding:30, maxWidth:440, width:"100%", position:"relative" }}>
-        <button onClick={onClose} style={{ position:"absolute", top:14, right:14, background:"none", border:"none", color:S.dim, cursor:"pointer" }}><XIco/></button>
-        {children}
-      </div>
-    </div>
-  );
+  // Overlay moved outside component to prevent remount/focus loss
 
   const AuthModal = () => (
     <Overlay onClose={()=>{setModal(null);resetAuthForm();}}>
