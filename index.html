@@ -1104,10 +1104,10 @@ function renderPlanner(i,m){
   }
   const b=best;
 
-  // 20% target analysis
-  const curBurn=(fees(i.th,i.wth,bp).t*bp)/gp;
-  const gmtFor20=curBurn*378, gmtHave=i.gl+i.gw, gmtNeed20=Math.max(0,gmtFor20-gmtHave);
-  const usdNeed20=gmtNeed20*gp, canReach20=cap>=usdNeed20;
+  // 20% target analysis (post-investment values)
+  const postBurn=(b.f.t*(1-(Math.min(30,b.nv.d+(i.click?3:0)+i.mm+i.od))/100)*bp)/gp;
+  const gmtFor20=postBurn*378, gmtHave=i.gl+i.gw+b.ag, gmtNeed20=Math.max(0,gmtFor20-gmtHave);
+  const usdNeed20=gmtNeed20*gp, canReach20=gmtNeed20<=0;
 
   let ah='';
   // Explain why
