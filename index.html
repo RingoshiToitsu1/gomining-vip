@@ -1344,19 +1344,15 @@ function runReinvestProjection(){
         gmtW-=feeGMT;
         const rewardUSD=gross*bp*1.05;
 
-        // Calculate GMT needed to maintain token discount as TH grows
-        // If all reward went to TH, new fees would be higher → coverage drops
-        const tentativeTH=th+rewardUSD/i.cpt;
-        const tentativeF=fees(tentativeTH,i.wth,bp);
-        const tentativeFeeBase=(tentativeF.t*(1-nonTokD/100)*bp)/gp;
-        const targetCov=tokD>0?tokD*18.9:0;
-        const requiredGMT=tentativeFeeBase*targetCov;
-        const currentGMT=gmtLocked+gmtW;
-        const gmtNeeded=Math.max(0,requiredGMT-currentGMT);
-        const lockCostUSD=gmtNeeded*gp;
+        // Lock GMT proportionally to TH added to maintain GMT/TH ratio
+        // This keeps discount coverage scaling with hashrate growth
+        const gmtPerTH=(gmtLocked+gmtW)/th;
+        const thIfAll=rewardUSD/i.cpt;
+        const gmtForRatio=thIfAll*gmtPerTH;
+        const lockCostUSD=gmtForRatio*gp;
 
-        // Split reward: lock GMT to maintain coverage, rest goes to TH
-        const lockUSD=Math.min(lockCostUSD,rewardUSD);
+        // Split reward: proportional GMT lock, rest goes to TH
+        const lockUSD=Math.min(lockCostUSD,rewardUSD*0.5); // cap at 50% of reward
         const thUSD=rewardUSD-lockUSD;
         gmtLocked+=lockUSD/gp;
         th+=thUSD/i.cpt;
