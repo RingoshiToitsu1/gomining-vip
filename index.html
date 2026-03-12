@@ -715,11 +715,22 @@ input[type=number]{-moz-appearance:textfield}
   <!-- BTC PRICE PROJECTIONS -->
   <div class="section" id="secProj2">
     <div class="section-header" onclick="toggleSection('secProj2')">
-      <div class="section-title"><span class="icon icon-cyan">BTC</span> Monthly Income by BTC Price</div>
+      <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> Monthly Income by BTC Price</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-body">
       <div id="projTable"></div>
+    </div>
+  </div>
+
+  <!-- GMT VALUE PROJECTIONS -->
+  <div class="section" id="secProjGMT">
+    <div class="section-header" onclick="toggleSection('secProjGMT')">
+      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:50%"> Monthly Income by GMT Price</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-body">
+      <div id="projTableGMT"></div>
     </div>
   </div>
 
@@ -1049,11 +1060,43 @@ function renderProjections(th,wth,totD,label){
   return h;
 }
 
+function renderProjectionsGMT(th,wth,totD,label){
+  const gmtPrices=[0.15,0.20,0.25,0.30,0.40,0.50,0.75,1.00];
+  const cur=S.gmtPrice;
+  const allPrices=[cur,...gmtPrices.filter(p=>Math.abs(p-cur)>0.02)].sort((a,b)=>a-b);
+  const dbt=dailyBTCperTH();
+  const grossBTC=dbt*th;
+  const bp=S.btcPrice;
+  let maxMo=0;
+  const rows=allPrices.map(gp=>{
+    const f=fees(th,wth,bp);
+    const dfees=f.t*(1-totD/100);
+    const netBTC=grossBTC-dfees;
+    const moUSD=netBTC*bp*30;
+    const moGMT=gp>0?moUSD/gp:0;
+    if(Math.abs(moGMT)>maxMo)maxMo=Math.abs(moGMT);
+    return{gp,daily:gp>0?(netBTC*bp)/gp:0,moGMT,isCurrent:gp===cur};
+  });
+  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div><div class="proj-grid">`;
+  for(const r of rows){
+    const col=r.moGMT>=0?'green':'red';
+    const barW=maxMo>0?Math.abs(r.moGMT)/maxMo*100:0;
+    h+=`<div class="proj-cell${r.isCurrent?' current':''}">`;
+    if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
+    h+=`<div class="pc-price">$${r.gp<1?r.gp.toFixed(2):r.gp.toFixed(2)}</div>`;
+    h+=`<div class="pc-monthly ${col}">${fN(r.moGMT,0)} GMT</div>`;
+    h+=`<div class="pc-daily">${fN(r.daily,0)} GMT/day</div>`;
+    h+=`<div class="proj-bar"><div class="proj-bar-fill ${col}" style="width:${barW}%"></div></div></div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,cap=i.cap;
   if(!cap||cap<=0||!i.cpt){
     $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital and cost per TH above to see recommendation.</div>';
-    $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
+    $('projDisplay').innerHTML='';$('projTable').innerHTML='';$('projTableGMT').innerHTML='';return;
   }
   let best={mo:-Infinity};
   for(let j=0;j<=100;j++){
@@ -1149,6 +1192,10 @@ function renderPlanner(i,m){
   // BTC price projections using post-investment TH and discount
   $('projTable').innerHTML=renderProjections(b.nt,i.wth,b.td2,
     `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
+
+  // GMT price projections
+  $('projTableGMT').innerHTML=renderProjectionsGMT(b.nt,i.wth,b.td2,
+    `Projected monthly income in GMT at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
 }
 
 // ---- REACTIVE ----
