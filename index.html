@@ -274,7 +274,8 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- PROJECTION TABLE ---- */
 .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem}
 .proj-cell{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .7rem;text-align:center;transition:var(--transition);position:relative}
-.proj-cell:hover{border-color:var(--purple)}
+.proj-cell:hover{border-color:var(--purple);cursor:pointer}
+.pc-mode-tag{font-size:.55rem;color:var(--text4);font-weight:600;margin-top:.2rem;text-transform:uppercase;letter-spacing:.03em;transition:color .2s}
 .proj-cell.current{border-color:var(--cyan);background:rgba(0,194,255,.06)}
 .proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
 .proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
@@ -723,16 +724,6 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
-  <!-- GMT VALUE PROJECTIONS -->
-  <div class="section" id="secProjGMT">
-    <div class="section-header" onclick="toggleSection('secProjGMT')">
-      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:50%"> Monthly Income by GMT Price</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-body">
-      <div id="projTableGMT"></div>
-    </div>
-  </div>
 
 </div>
 
@@ -1037,66 +1028,65 @@ function renderProjections(th,wth,totD,label){
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
   let maxMo=0;
+  const gp=S.gmtPrice;
   const rows=allPrices.map(bp=>{
     const f=fees(th,wth,bp);
     const dfees=f.t*(1-totD/100);
     const netBTC=grossBTC-dfees;
     const moUSD=netBTC*bp*30;
+    const dailyUSD=netBTC*bp;
     if(Math.abs(moUSD)>maxMo)maxMo=Math.abs(moUSD);
-    return{bp,daily:netBTC*bp,moUSD,isCurrent:bp===cur};
+    const moGMT=gp>0?moUSD/gp:0;
+    const dailyGMT=gp>0?dailyUSD/gp:0;
+    return{bp,daily:dailyUSD,moUSD,moGMT,dailyGMT,isCurrent:bp===cur};
   });
-  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div><div class="proj-grid">`;
+  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div>`;
+  h+=`<div style="font-size:.65rem;color:var(--text4);margin-bottom:.6rem;text-align:center">Tap a cell to flip between USD and GMT</div>`;
+  h+=`<div class="proj-grid">`;
   for(const r of rows){
     const col=r.moUSD>=0?'green':'red';
     const barW=maxMo>0?Math.abs(r.moUSD)/maxMo*100:0;
-    h+=`<div class="proj-cell${r.isCurrent?' current':''}">`;
+    h+=`<div class="proj-cell${r.isCurrent?' current':''}" onclick="flipProjCell(this)" data-mo-usd="${r.moUSD.toFixed(2)}" data-daily-usd="${r.daily.toFixed(2)}" data-mo-gmt="${r.moGMT.toFixed(0)}" data-daily-gmt="${r.dailyGMT.toFixed(0)}" data-mode="usd">`;
     if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
     h+=`<div class="pc-price">${r.bp>=1000?'$'+(r.bp/1000).toFixed(0)+'K':fU(r.bp)}</div>`;
     h+=`<div class="pc-monthly ${col}">${fU(r.moUSD)}</div>`;
     h+=`<div class="pc-daily">${fU(r.daily)}/day</div>`;
+    h+=`<div class="pc-mode-tag">USD</div>`;
     h+=`<div class="proj-bar"><div class="proj-bar-fill ${col}" style="width:${barW}%"></div></div></div>`;
   }
   h+='</div>';
   return h;
 }
 
-function renderProjectionsGMT(th,wth,totD,label){
-  const gmtPrices=[0.15,0.20,0.25,0.30,0.40,0.50,0.75,1.00];
-  const cur=S.gmtPrice;
-  const allPrices=[cur,...gmtPrices.filter(p=>Math.abs(p-cur)>0.02)].sort((a,b)=>a-b);
-  const dbt=dailyBTCperTH();
-  const grossBTC=dbt*th;
-  const bp=S.btcPrice;
-  let maxMo=0;
-  const rows=allPrices.map(gp=>{
-    const f=fees(th,wth,bp);
-    const dfees=f.t*(1-totD/100);
-    const netBTC=grossBTC-dfees;
-    const moUSD=netBTC*bp*30;
-    const moGMT=gp>0?moUSD/gp:0;
-    if(Math.abs(moGMT)>maxMo)maxMo=Math.abs(moGMT);
-    return{gp,daily:gp>0?(netBTC*bp)/gp:0,moGMT,isCurrent:gp===cur};
-  });
-  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div><div class="proj-grid">`;
-  for(const r of rows){
-    const col=r.moGMT>=0?'green':'red';
-    const barW=maxMo>0?Math.abs(r.moGMT)/maxMo*100:0;
-    h+=`<div class="proj-cell${r.isCurrent?' current':''}">`;
-    if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
-    h+=`<div class="pc-price">$${r.gp<1?r.gp.toFixed(2):r.gp.toFixed(2)}</div>`;
-    h+=`<div class="pc-monthly ${col}">${fN(r.moGMT,0)} GMT</div>`;
-    h+=`<div class="pc-daily">${fN(r.daily,0)} GMT/day</div>`;
-    h+=`<div class="proj-bar"><div class="proj-bar-fill ${col}" style="width:${barW}%"></div></div></div>`;
+function flipProjCell(el){
+  const mode=el.dataset.mode;
+  const moUSD=parseFloat(el.dataset.moUsd);
+  const dailyUSD=parseFloat(el.dataset.dailyUsd);
+  const moGMT=parseFloat(el.dataset.moGmt);
+  const dailyGMT=parseFloat(el.dataset.dailyGmt);
+  const moEl=el.querySelector('.pc-monthly');
+  const dayEl=el.querySelector('.pc-daily');
+  const tagEl=el.querySelector('.pc-mode-tag');
+  if(mode==='usd'){
+    el.dataset.mode='gmt';
+    moEl.textContent=fN(moGMT,0)+' GMT';
+    dayEl.textContent=fN(dailyGMT,0)+' GMT/day';
+    tagEl.textContent='GMT';
+    tagEl.style.color='var(--cyan)';
+  }else{
+    el.dataset.mode='usd';
+    moEl.textContent=fU(moUSD);
+    dayEl.textContent=fU(dailyUSD)+'/day';
+    tagEl.textContent='USD';
+    tagEl.style.color='';
   }
-  h+='</div>';
-  return h;
 }
 
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,cap=i.cap;
   if(!cap||cap<=0||!i.cpt){
     $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital and cost per TH above to see recommendation.</div>';
-    $('projDisplay').innerHTML='';$('projTable').innerHTML='';$('projTableGMT').innerHTML='';return;
+    $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
   let best={mo:-Infinity};
   for(let j=0;j<=100;j++){
@@ -1193,9 +1183,6 @@ function renderPlanner(i,m){
   $('projTable').innerHTML=renderProjections(b.nt,i.wth,b.td2,
     `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
 
-  // GMT price projections
-  $('projTableGMT').innerHTML=renderProjectionsGMT(b.nt,i.wth,b.td2,
-    `Projected monthly income in GMT at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
 }
 
 // ---- REACTIVE ----
