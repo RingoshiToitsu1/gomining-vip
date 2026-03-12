@@ -433,7 +433,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>Total Hashrate</label>
         <div class="ob-hint">Sum of all your NFT hashrates. Go to My NFTs in the GoMining app to see your total computing power.</div>
-        <div class="ob-input-wrap"><input type="number" id="obTH" value="1370.49" step="0.01" min="0"><span class="ob-unit">TH</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obTH" value="1370.49" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
       </div>
       <div class="ob-field">
         <label>Energy Efficiency</label>
@@ -443,7 +443,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>Current TH Market Price</label>
         <div class="ob-hint">Average cost per TH on the marketplace. Varies by NFT size: 5000TH=$13.97 &bull; 2560=$14.26 &bull; 1024=$14.54 &bull; 512=$14.84 &bull; 192=$15.29 &bull; 64=$15.77 &bull; 16=$16.25 &bull; 1=$16.99</div>
-        <div class="ob-input-wrap"><input type="number" id="obCPT" value="14.54" step="0.01" min="0"><span class="ob-unit">USD</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obCPT" value="14.48" step="0.01" min="0"><span class="ob-unit">USD</span></div>
       </div>
     </div>
 
@@ -569,7 +569,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="input-grid">
         <div class="field">
           <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
-          <div class="field-input"><input type="number" id="inTH" value="1370.49" step="0.01" min="0"><span class="unit">TH</span></div>
+          <div class="field-input"><input type="number" id="inTH" value="1370.49" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
         </div>
         <div class="field">
           <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash. Lower is better. Found on each NFT detail card.">?</span></label>
@@ -593,7 +593,8 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$13.97 · 2560=$14.26 · 1024=$14.54 · 512=$14.84 · 192=$15.29 · 64=$15.77 · 16=$16.25 · 1=$16.99">?</span></label>
-          <div class="field-input"><input type="number" id="inCostPerTH" value="14.54" step="0.01" min="0"><span class="unit">USD</span></div>
+          <div class="field-input"><input type="number" id="inCostPerTH" value="14.48" step="0.01" min="0"><span class="unit">USD</span></div>
+          <div class="hint" id="cptAutoHint" style="color:var(--cyan);font-size:.6rem"></div>
         </div>
         <div class="field">
           <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
@@ -802,6 +803,34 @@ const TIERS=[
 const vipOf=(th,veg)=>{let t=TIERS[0];for(const x of TIERS)if(th>=x.th||veg>=x.veg)t=x;return t};
 const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;return null};
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
+
+// ---- TH COST TIERS ----
+const TH_TIERS=[
+  {th:1,cpt:16.99},{th:16,cpt:16.25},{th:64,cpt:15.77},{th:192,cpt:15.29},
+  {th:512,cpt:14.84},{th:1024,cpt:14.54},{th:2560,cpt:14.26},{th:5000,cpt:13.97}
+];
+function estimateCPT(th){
+  if(th<=0)return TH_TIERS[0].cpt;
+  if(th>=TH_TIERS[TH_TIERS.length-1].th)return TH_TIERS[TH_TIERS.length-1].cpt;
+  for(let i=0;i<TH_TIERS.length-1;i++){
+    const lo=TH_TIERS[i],hi=TH_TIERS[i+1];
+    if(th>=lo.th&&th<=hi.th){
+      const pct=(th-lo.th)/(hi.th-lo.th);
+      return lo.cpt+(hi.cpt-lo.cpt)*pct;
+    }
+  }
+  return TH_TIERS[0].cpt;
+}
+function autoFillCPT(thId,cptId){
+  const th=parseFloat(document.getElementById(thId).value)||0;
+  const el=document.getElementById(cptId);
+  const est=estimateCPT(th);
+  el.value=est.toFixed(2);
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  const hint=document.getElementById('cptAutoHint');
+  if(hint&&th>0)hint.textContent='Auto-estimated ~$'+est.toFixed(2)+'/TH for '+fN(th,0)+' TH farm';
+  else if(hint)hint.textContent='';
+}
 
 // ---- FORMAT ----
 const fB=v=>v.toFixed(8)+' BTC';
