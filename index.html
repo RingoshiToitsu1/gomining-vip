@@ -442,8 +442,8 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div class="ob-field">
         <label>Current TH Market Price</label>
-        <div class="ob-hint">What 1 TH costs on the GoMining marketplace right now. Check the marketplace before entering.</div>
-        <div class="ob-input-wrap"><input type="number" id="obCPT" value="20" step="0.01" min="0"><span class="ob-unit">USD</span></div>
+        <div class="ob-hint">Average cost per TH on the marketplace. Varies by NFT size: 5000TH=$13.97 &bull; 2560=$14.26 &bull; 1024=$14.54 &bull; 512=$14.84 &bull; 192=$15.29 &bull; 64=$15.77 &bull; 16=$16.25 &bull; 1=$16.99</div>
+        <div class="ob-input-wrap"><input type="number" id="obCPT" value="14.54" step="0.01" min="0"><span class="ob-unit">USD</span></div>
       </div>
     </div>
 
@@ -464,7 +464,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
         <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="22.97" step="0.01" min="0"><span class="ob-unit">%</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="19.62" step="0.01" min="0"><span class="ob-unit">%</span></div>
       </div>
       <div class="ob-divider"></div>
       <div class="ob-toggle-row">
@@ -589,11 +589,11 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="22.97" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inLockAPR" value="19.62" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
         <div class="field">
-          <label>TH Market Price <span class="tip" data-tip="What 1 TH costs on the GoMining marketplace. Fluctuates -- verify before investing.">?</span></label>
-          <div class="field-input"><input type="number" id="inCostPerTH" value="20" step="0.01" min="0"><span class="unit">USD</span></div>
+          <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$13.97 · 2560=$14.26 · 1024=$14.54 · 512=$14.84 · 192=$15.29 · 64=$15.77 · 16=$16.25 · 1=$16.99">?</span></label>
+          <div class="field-input"><input type="number" id="inCostPerTH" value="14.54" step="0.01" min="0"><span class="unit">USD</span></div>
         </div>
         <div class="field">
           <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
