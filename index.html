@@ -764,19 +764,19 @@ input[type=number]{-moz-appearance:textfield}
   <!-- AUTO-REINVEST PROJECTION -->
   <div class="section" id="secReinvest">
     <div class="section-header" onclick="toggleSection('secReinvest')">
-      <div class="section-title"><span class="icon icon-green">&#8635;</span> Auto-Reinvest Projection</div>
+      <div class="section-title"><span class="icon icon-green">&#8635;</span> Manual Reinvest Projection</div>
       <div class="section-toggle">&#9662;</div>
     </div>
-    <div class="section-desc">Simulate auto-reinvesting into TH over time. When your GMT wallet runs dry, the system switches to rebuilding GMT before resuming TH growth.</div>
+    <div class="section-desc">Simulate using your daily net profit to manually buy more TH each day. Fees are paid from BTC reward — GMT wallet stays untouched, token discount stays stable.</div>
     <div class="section-body">
       <div class="input-grid" style="max-width:300px">
         <div class="field">
-          <label>Projection Length <span class="tip" data-tip="Number of days to simulate auto-reinvesting. Max 3 years (1095 days).">?</span></label>
+          <label>Projection Length <span class="tip" data-tip="Number of days to simulate manually reinvesting net profit into TH. Max 3 years (1095 days).">?</span></label>
           <div class="field-input"><input type="number" id="inReinvestDays" value="365" step="1" min="1" max="1095"><span class="unit">days</span></div>
         </div>
       </div>
       <div style="margin-top:.8rem">
-        <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Reinvest into TH</button>
+        <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Run Projection</button>
       </div>
       <div id="reinvestResult" style="margin-top:1rem"></div>
     </div>
@@ -1281,7 +1281,7 @@ function renderPlanner(i,m){
 
 }
 
-// ---- AUTO-REINVEST PROJECTION ----
+// ---- MANUAL REINVEST PROJECTION ----
 function runReinvestProjection(){
   if(!S.loaded)return;
   const i=inp();
@@ -1317,24 +1317,10 @@ function runReinvestProjection(){
   const postLocked=i.gl+best.ag*0.87;
   const postWallet=i.gw+best.ag*0.13;
 
-  let th=postTH,gmtW=postWallet,gmtLocked=postLocked,mode='TH';
+  let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
   const startTH=th;
-
-  // Check if we can even start in TH mode
-  const initF=fees(th,i.wth,bp);
-  const initVip=vipOf(th,gmtLocked);
-  const initNonTokD=Math.min(30,initVip.d+(i.click?3:0)+i.mm+i.od);
-  const initTG=gmtLocked+gmtW;
-  const initFC=(initF.t*(1-initNonTokD/100)*bp)/gp;
-  const initCov=initFC>0?initTG/initFC:Infinity;
-  const initTokD=i.payG?Math.min(20,Math.floor(initCov/18.9)):0;
-  const initFullD=Math.min(30,initTokD+initNonTokD);
-  const initFeeGMT=(initF.t*(1-initFullD/100)*bp)/gp;
-  if(gmtW<initFeeGMT)mode='GMT';
-
-  const phases=[{start:1,mode:mode,startTH:th,startGMT:gmtW}];
-  let dTH=0,dGMT=0;
   const daily=[];
+  let totalSpent=0;
 
   for(let d=1;d<=days;d++){
     const gross=dbt*th;
@@ -1342,74 +1328,30 @@ function runReinvestProjection(){
     const vip=vipOf(th,gmtLocked);
     const nonTokD=Math.min(30,vip.d+(i.click?3:0)+i.mm+i.od);
 
-    if(mode==='TH'){
-      const tg=gmtLocked+gmtW;
-      const fc=(f.t*(1-nonTokD/100)*bp)/gp;
-      const cov=fc>0?tg/fc:Infinity;
-      const tokD=i.payG?Math.min(20,Math.floor(cov/18.9)):0;
-      const fullD=Math.min(30,tokD+nonTokD);
-      const feeGMT=(f.t*(1-fullD/100)*bp)/gp;
+    // Token discount from locked+wallet GMT
+    const tg=gmtLocked+gmtW;
+    const fc=(f.t*(1-nonTokD/100)*bp)/gp;
+    const cov=fc>0?tg/fc:Infinity;
+    const tokD=i.payG?Math.min(20,Math.floor(cov/18.9)):0;
+    const fullD=Math.min(30,tokD+nonTokD);
 
-      if(gmtW>=feeGMT){
-        gmtW-=feeGMT;
-        const rewardUSD=gross*bp*1.05;
+    // Fees paid from BTC reward (normal operation, no GMT drain)
+    const feesBTC=f.t*(1-fullD/100);
+    const net=gross-feesBTC;
+    const netUSD=net*bp;
 
-        // Full reward goes to TH — fees already paid from GMT wallet
-        // Token discount will degrade naturally as wallet drains
-        th+=thForBudget(rewardUSD);
-        dTH++;
-        const ssNet=(gross-f.t*(1-fullD/100))*bp;
-        daily.push({d,mode:'TH',th,gmtW,ssNet,disc:fullD,vip:vip.n});
-        continue;
-      }else{
-        mode='GMT';
-        phases[phases.length-1].end=d-1;
-        phases[phases.length-1].endTH=th;
-        phases[phases.length-1].endGMT=gmtW;
-        phases.push({start:d,mode:'GMT',startTH:th,startGMT:gmtW});
-      }
+    // Use net profit to manually buy TH
+    if(netUSD>0){
+      th+=thForBudget(netUSD);
+      totalSpent+=netUSD;
     }
 
-    // GMT mode: fees paid from BTC reward, no token discount, net → GMT
-    const feeNoTok=f.t*(1-nonTokD/100);
-    const net=gross-feeNoTok;
-    if(net>0)gmtW+=net*bp*1.05/gp;
-    dGMT++;
-
-    // Check if we can switch back to TH (need 30 days of maintenance coverage)
-    const fC=fees(th,i.wth,bp);
-    const vipC=vipOf(th,gmtLocked);
-    const nonTokDC=Math.min(30,vipC.d+(i.click?3:0)+i.mm+i.od);
-    const tgC=gmtLocked+gmtW;
-    const fcC=(fC.t*(1-nonTokDC/100)*bp)/gp;
-    const covC=fcC>0?tgC/fcC:Infinity;
-    const tokDC=i.payG?Math.min(20,Math.floor(covC/18.9)):0;
-    const fullDC=Math.min(30,tokDC+nonTokDC);
-    const dailyGMTCost=(fC.t*(1-fullDC/100)*bp)/gp;
-
-    if(gmtW>=dailyGMTCost*30&&d<days){
-      mode='TH';
-      phases[phases.length-1].end=d;
-      phases[phases.length-1].endTH=th;
-      phases[phases.length-1].endGMT=gmtW;
-      phases.push({start:d+1,mode:'TH',startTH:th,startGMT:gmtW});
-    }
-
-    const ssNet=net*bp;
-    daily.push({d,mode:'GMT',th,gmtW,ssNet,disc:nonTokD,vip:vipOf(th,gmtLocked).n});
+    daily.push({d,th,ssNet:netUSD,disc:fullD,vip:vip.n,gmtW});
   }
 
-  // Close last phase
-  const lp=phases[phases.length-1];
-  if(!lp.end){lp.end=days;lp.endTH=th;lp.endGMT=gmtW}
-
-  // Select snapshot days: first, last, every 30d, phase boundaries
+  // Select snapshot days: first, last, every 30d
   const snapSet=new Set([0,daily.length-1]);
   for(let j=29;j<daily.length;j+=30)snapSet.add(j);
-  for(const p of phases){
-    if(p.start-1>=0&&p.start-1<daily.length)snapSet.add(p.start-1);
-    if(p.end-1>=0&&p.end-1<daily.length)snapSet.add(p.end-1);
-  }
   const snaps=Array.from(snapSet).sort((a,b)=>a-b).map(j=>daily[j]).filter(Boolean);
 
   // Render results
@@ -1424,50 +1366,31 @@ function runReinvestProjection(){
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
-    <strong>${fN(postWallet,0)} GMT</strong> liquid wallet,
-    <strong>${fN(gmtLocked,0)} GMT</strong> locked</div>`;
+    <strong>${fN(postWallet,0)} GMT</strong> wallet,
+    <strong>${fN(postLocked,0)} GMT</strong> locked</div>`;
 
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
     <div class="ri-card"><div class="ri-label">Daily Profit (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label">TH Mode Days</div><div class="ri-val green">${dTH}</div><div class="ri-sub">${fN(dTH/days*100,0)}% of time</div></div>
-    <div class="ri-card"><div class="ri-label">GMT Rebuild Days</div><div class="ri-val cyan">${dGMT}</div><div class="ri-sub">${fN(dGMT/days*100,0)}% of time</div></div>
+    <div class="ri-card"><div class="ri-label">Total Reinvested</div><div class="ri-val green">${fU(totalSpent)}</div><div class="ri-sub">${days} days</div></div>
+    <div class="ri-card"><div class="ri-label">Discount</div><div class="ri-val cyan">${fP(daily[daily.length-1].disc)}</div><div class="ri-sub">stable (no GMT drain)</div></div>
   </div>`;
-
-  // Phase timeline
-  h+=`<div class="sub-title">Mode Timeline</div><div class="ri-timeline">`;
-  for(const p of phases){
-    const dur=p.end-p.start+1;
-    const cls=p.mode==='TH'?'th-phase':'gmt-phase';
-    const detail=p.mode==='TH'
-      ?fN(p.startTH,1)+' &rarr; '+fN(p.endTH,1)+' TH'
-      :fN(p.startGMT,0)+' &rarr; '+fN(p.endGMT,0)+' GMT';
-    h+=`<div class="ri-phase ${cls}">
-      <span class="ri-mode">${p.mode==='TH'?'Reinvest TH':'Rebuild GMT'}</span>
-      <span>Day ${p.start}&ndash;${p.end} (${dur}d)</span>
-      <span style="margin-left:auto;font-family:var(--mono);font-size:.72rem">${detail}</span>
-    </div>`;
-  }
-  h+=`</div>`;
 
   // Snapshot table
   h+=`<div class="sub-title">Projection Snapshots</div>`;
   h+=`<div class="ri-scroll"><table class="ri-table">
-    <thead><tr><th style="text-align:left">Day</th><th>Mode</th><th>TH</th><th>Daily Profit</th><th>Monthly</th><th>GMT Wallet</th><th>Discount</th></tr></thead><tbody>`;
+    <thead><tr><th style="text-align:left">Day</th><th>TH</th><th>Daily Profit</th><th>Monthly</th><th>Discount</th><th>VIP</th></tr></thead><tbody>`;
   for(const s of snaps){
-    const mCls=s.mode==='TH'?'mode-th':'mode-gmt';
-    const isSwitch=phases.some(p=>p.start===s.d||p.end===s.d);
-    h+=`<tr class="${isSwitch?'switch-row':''}">
-      <td>${s.d}</td><td class="${mCls}">${s.mode}</td><td>${fN(s.th,1)}</td>
-      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td><td>${fN(s.gmtW,0)}</td><td>${fP(s.disc)}</td></tr>`;
+    h+=`<tr>
+      <td>${s.d}</td><td>${fN(s.th,1)}</td>
+      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td><td>${fP(s.disc)}</td><td>${s.vip}</td></tr>`;
   }
   h+=`</tbody></table></div>`;
 
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
-    <strong style="color:var(--cyan)">How this works:</strong> Starting from your planned ${fU(cap)} investment, in TH mode your full daily reward (+5% bonus) buys hashrate while maintenance fees are paid from your GMT wallet (preserving token discount).
-    As the wallet drains, token discount naturally degrades. When GMT runs out, the system switches to GMT mode &mdash; fees come from your BTC reward (no token discount) and the net (+5% bonus) rebuilds your GMT balance.
-    Once you accumulate ~30 days of maintenance coverage, it switches back to TH mode. This cycle repeats.</div>`;
+    <strong style="color:var(--cyan)">How this works:</strong> Each day, your BTC mining reward is earned and fees are paid from it (normal operation). Your net daily profit is then used to manually purchase more TH at volume-discounted pricing.
+    Your GMT wallet stays untouched, so your token discount remains stable throughout the projection. Daily profit grows as TH compounds.</div>`;
 
   $('reinvestResult').innerHTML=h;
 }
