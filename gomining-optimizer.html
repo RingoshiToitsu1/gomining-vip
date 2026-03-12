@@ -1230,10 +1230,12 @@ function renderPlanner(i,m){
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
   ah+=row('GMT needed for 20%',`${fN(gmtFor20,0)} GMT<span class="sub">${fU(gmtFor20*gp)}</span>`);
   ah+=row('You currently have',`${fN(gmtHave,0)} GMT`);
-  ah+=row('Still need',`${fN(gmtNeed20,0)} GMT<span class="sub">${fU(usdNeed20)}</span>`,canReach20?'green':'orange');
   if(!canReach20){
+    ah+=row('Still need',`${fN(gmtNeed20,0)} GMT<span class="sub">${fU(usdNeed20)}</span>`,'orange');
     const deficit=usdNeed20-cap;
     ah+=`<div class="warn">Your ${fU(cap)} budget covers ${fP(cap/usdNeed20*100>100?100:cap/usdNeed20*100)} of the GMT needed for 20%. You would need an additional ${fU(deficit)} to reach full discount.</div>`;
+  }else{
+    ah+=row('Still need','None — budget covers 20%','green');
   }
 
   $('allocDisplay').innerHTML=ah;
