@@ -1232,8 +1232,7 @@ function renderPlanner(i,m){
   ah+=row('You currently have',`${fN(gmtHave,0)} GMT`);
   if(!canReach20){
     ah+=row('Still need',`${fN(gmtNeed20,0)} GMT<span class="sub">${fU(usdNeed20)}</span>`,'orange');
-    const deficit=usdNeed20-cap;
-    ah+=`<div class="warn">Your ${fU(cap)} budget covers ${fP(cap/usdNeed20*100>100?100:cap/usdNeed20*100)} of the GMT needed for 20%. You would need an additional ${fU(deficit)} to reach full discount.</div>`;
+    ah+=`<div class="warn">You would need an additional ${fU(usdNeed20)} in GMT to reach full 20% token discount.</div>`;
   }else{
     ah+=row('Still need','None — budget covers 20%','green');
   }
