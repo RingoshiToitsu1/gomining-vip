@@ -1202,7 +1202,7 @@ function renderPlanner(i,m){
   // 20% target analysis (post-investment values)
   const postBurn=(b.f.t*(1-(Math.min(30,b.nv.d+(i.click?3:0)+i.mm+i.od))/100)*bp)/gp;
   const gmtFor20=postBurn*378, gmtHave=i.gl+i.gw+b.ag, gmtNeed20=Math.max(0,gmtFor20-gmtHave);
-  const usdNeed20=gmtNeed20*gp, canReach20=gmtNeed20<=0||b.ntd>=20;
+  const usdNeed20=gmtNeed20*gp, canReach20=gmtNeed20<=0||b.ntd>=20||usdNeed20<=cap;
 
   let ah='';
   // Explain why
