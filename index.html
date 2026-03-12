@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMiningVIP</title>
+<link rel="icon" type="image/png" href="site-logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#181928;--bg2:#1e1f30;--bg-card:#2d2c31;--bg-card-hover:#3a3940;--bg-input:#232230;
+  --border:#3a3940;--border-focus:#7540ef;
+  --purple:#7540ef;--purple-glow:rgba(117,64,239,.18);--purple-soft:#9b72ff;
+  --cyan:#00c2ff;--cyan-glow:rgba(0,194,255,.12);--cyan-soft:#4dd8ff;
+  --text:#ffffff;--text2:#b0b8c8;--text3:#7a7d8e;--text4:#4a4d5c;
+  --green:#34d399;--green-glow:rgba(52,211,153,.12);
+  --orange:#fbbf24;--orange-glow:rgba(251,191,36,.1);
+  --red:#f87171;
+  --bronze:#cd7f32;--silver:#c0c0c0;--gold:#ffd700;--platinum:#e0dfe0;--diamond:#7ee8fa;--legend:#ff4d6a;
+  --radius:32px;--radius-sm:16px;
+  --mono:'Share Tech Mono',monospace;--sans:'Inter',system-ui,sans-serif;
+  --shadow:0 0 32px rgba(0,0,0,.04);--shadow-sm:0 2px 8px rgba(0,0,0,.2);
+  --transition:all .15s ease-in-out;
+}
+html{font-size:14px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5}
+::selection{background:var(--purple);color:#fff}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+
+/* ---- HEADER ---- */
+.header{position:sticky;top:0;z-index:100;background:rgba(24,25,40,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
+.header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+.logo{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--purple) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.live-bar{display:flex;gap:.2rem;align-items:center;flex-wrap:wrap}
+.live-chip{display:flex;align-items:center;gap:.35rem;padding:.3rem .65rem;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;font-size:.78rem;transition:var(--transition);overflow:visible}
+.live-chip:hover{border-color:var(--purple);background:var(--bg-card-hover)}
+.live-chip img{height:18px;width:18px;object-fit:contain;flex-shrink:0;border-radius:50%}
+.live-chip .lbl{color:var(--text3);font-weight:500}
+.live-chip .val{font-family:var(--mono);color:var(--text);font-weight:600}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.4)}50%{box-shadow:0 0 0 5px rgba(52,211,153,0)}}
+.api-err .live-dot{background:var(--red);animation:none}
+.api-err .val{color:var(--orange)}
+
+/* ---- CONTAINER ---- */
+.container{max-width:1200px;margin:0 auto;padding:0 1.2rem 4rem}
+
+/* ---- TABS ---- */
+.tabs{display:flex;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:var(--bg);padding-bottom:.8rem}
+.tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
+.tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
+.tab-btn.active{color:#fff;border-color:var(--purple);background:var(--purple-glow);box-shadow:0 0 20px rgba(123,79,255,.15)}
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ---- HERO CARDS ---- */
+.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.2rem}
+.hero-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition)}
+.hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.hero-card.purple-accent::before{background:linear-gradient(90deg,var(--purple),transparent)}
+.hero-card.cyan-accent::before{background:linear-gradient(90deg,var(--cyan),transparent)}
+.hero-card.green-accent::before{background:linear-gradient(90deg,var(--green),transparent)}
+.hero-card.orange-accent::before{background:linear-gradient(90deg,var(--orange),transparent)}
+.hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
+.hero-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;line-height:1.2}
+.hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
+.hero-val.green{color:var(--green)}.hero-val.cyan{color:var(--cyan)}.hero-val.orange{color:var(--orange)}.hero-val.purple{color:var(--purple-soft)}.hero-val.red{color:var(--red)}
+
+/* ---- SECTION ---- */
+.section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;transition:var(--transition)}
+.section:hover{border-color:#232d48}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;cursor:pointer;user-select:none;transition:var(--transition)}
+.section-header:hover{background:rgba(123,79,255,.03)}
+.section-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+.icon-purple{background:var(--purple)}.icon-cyan{background:var(--cyan)}.icon-green{background:var(--green)}.icon-orange{background:var(--orange)}
+.section-toggle{width:24px;height:24px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:var(--transition);color:var(--text3);font-size:.7rem}
+.section.collapsed .section-toggle{transform:rotate(-90deg)}
+.section-body{padding:0 1.2rem 1.2rem;transition:var(--transition)}
+.section.collapsed .section-body{display:none}
+
+/* ---- INPUTS ---- */
+.input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
+.field{position:relative}
+.field label{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--text2);font-weight:500;margin-bottom:.35rem}
+.field-input{position:relative}
+.field input[type="number"]{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .75rem;color:var(--text);font-family:var(--mono);font-size:.88rem;width:100%;outline:none;transition:var(--transition)}
+.field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.field .unit{position:absolute;right:.65rem;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--text4);font-weight:500;pointer-events:none}
+.field .hint{font-size:.65rem;color:var(--text4);margin-top:.25rem;line-height:1.3}
+.toggle-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--text4);border-radius:10px;cursor:pointer;transition:var(--transition)}
+.toggle-track::after{content:'';position:absolute;left:2px;top:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:var(--transition)}
+.toggle input:checked+.toggle-track{background:var(--purple)}
+.toggle input:checked+.toggle-track::after{transform:translateX(16px)}
+.toggle-label{font-size:.82rem;color:var(--text2);cursor:pointer;user-select:none}
+
+/* ---- TOOLTIP ---- */
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--text3);font-size:.6rem;font-weight:700;cursor:help;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);max-width:220px;white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s}
+.tip:hover::after,.tip.show::after{opacity:1}
+
+/* ---- OUTPUT ROWS ---- */
+.out-group{margin-top:.6rem}
+.out-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(26,32,56,.6)}
+.out-row:last-child{border-bottom:none}
+.out-label{color:var(--text2);font-size:.82rem;display:flex;align-items:center;gap:.3rem}
+.out-val{font-family:var(--mono);font-size:.88rem;text-align:right;max-width:55%}
+.out-val .sub{font-size:.72rem;color:var(--text3);display:block}
+.out-val.green{color:var(--green)}.out-val.orange{color:var(--orange)}.out-val.red{color:var(--red)}.out-val.cyan{color:var(--cyan)}.out-val.purple{color:var(--purple-soft)}
+
+/* ---- DIVIDER ---- */
+.divider{height:1px;background:linear-gradient(90deg,var(--purple),var(--cyan),transparent);margin:.6rem 0;opacity:.4}
+
+/* ---- VIP BADGE ---- */
+.vip-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .65rem;border-radius:16px;font-size:.75rem;font-weight:700;border:1.5px solid;letter-spacing:.01em}
+.vip-badge.bronze{color:var(--bronze);border-color:rgba(205,127,50,.4);background:rgba(205,127,50,.08)}
+.vip-badge.silver{color:var(--silver);border-color:rgba(192,192,192,.4);background:rgba(192,192,192,.08)}
+.vip-badge.gold{color:var(--gold);border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.08)}
+.vip-badge.platinum{color:var(--platinum);border-color:rgba(224,223,224,.4);background:rgba(224,223,224,.08)}
+.vip-badge.diamond{color:var(--diamond);border-color:rgba(126,232,250,.4);background:rgba(126,232,250,.08)}
+.vip-badge.legend{color:var(--legend);border-color:rgba(255,77,106,.4);background:rgba(255,77,106,.08)}
+
+/* ---- TIER PROGRESS ---- */
+.tier-progress{margin-top:.6rem;padding:.6rem .8rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.tier-bar-bg{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:.4rem 0 .2rem}
+.tier-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width .5s cubic-bezier(.4,0,.2,1)}
+.tier-info{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text4)}
+
+/* ---- DISCOUNT BAR ---- */
+.discount-visual{display:flex;gap:2px;height:24px;border-radius:5px;overflow:hidden;margin:.5rem 0}
+.discount-visual div{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:transparent;min-width:24px;transition:width .4s ease,color .2s ease;cursor:pointer}
+.discount-visual div:hover,.discount-visual div:active{color:rgba(0,0,0,.8)}
+.ds-token{background:var(--cyan)}.ds-vip{background:var(--purple-soft)}.ds-click{background:var(--green)}.ds-mining{background:#e879f9}.ds-other{background:var(--orange)}
+
+/* ---- SIGNAL BOX ---- */
+.signal{border-radius:var(--radius);padding:1rem 1.2rem;border:1px solid;position:relative;overflow:hidden}
+.signal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.signal.th{border-color:rgba(52,211,153,.25);background:var(--green-glow)}
+.signal.th::before{background:var(--green)}
+.signal.gmt{border-color:rgba(0,194,255,.25);background:var(--cyan-glow)}
+.signal.gmt::before{background:var(--cyan)}
+.signal-head{font-size:1rem;font-weight:700;margin-bottom:.3rem}
+.signal.th .signal-head{color:var(--green)}
+.signal.gmt .signal-head{color:var(--cyan)}
+.signal-body{font-size:.8rem;color:var(--text2);line-height:1.5}
+
+/* ---- BADGES ---- */
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .55rem;border-radius:5px;font-size:.75rem;font-weight:600}
+.badge.green{background:var(--green-glow);color:var(--green);border:1px solid rgba(52,211,153,.25)}
+.badge.red{background:rgba(248,113,113,.08);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.badge.orange{background:var(--orange-glow);color:var(--orange);border:1px solid rgba(251,191,36,.2)}
+
+/* ---- WARN BOX ---- */
+.warn{background:var(--orange-glow);border:1px solid rgba(251,191,36,.2);border-radius:var(--radius-sm);padding:.6rem .8rem;font-size:.78rem;color:var(--orange);margin-top:.5rem;line-height:1.4}
+
+/* ---- DONATION MODAL ---- */
+.donate-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.donate-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);max-width:420px;width:100%;padding:2rem;text-align:center;animation:fadeIn .3s ease}
+.donate-box h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+.donate-box p{font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:1rem}
+.donate-addr{font-family:var(--mono);font-size:.68rem;color:var(--orange);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;word-break:break-all;cursor:pointer;transition:var(--transition);margin-bottom:1rem}
+.donate-addr:hover{border-color:var(--orange);background:var(--bg-card-hover)}
+.donate-copied{font-size:.7rem;color:var(--green);opacity:0;transition:opacity .2s}
+.donate-copied.show{opacity:1}
+.donate-btn{padding:.6rem 1.8rem;border-radius:1rem;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;background:var(--purple);color:#fff;border:none;transition:var(--transition)}
+.donate-btn:hover{background:#8555f5;transform:translateY(-1px)}
+@keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+/* ---- FOOTER ---- */
+.site-footer{text-align:center;padding:2rem 1rem;margin-top:2rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--text3);line-height:1.6}
+.site-footer a{color:var(--orange);text-decoration:none}
+.site-footer a:hover{text-decoration:underline}
+.footer-addr{font-family:var(--mono);font-size:.65rem;color:var(--text3);word-break:break-all;cursor:pointer}
+.footer-addr:hover{color:var(--orange)}
+
+/* ---- ALLOC CARDS ---- */
+.alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.6rem 0}
+.alloc-card{background:var(--bg-input);border-radius:var(--radius);padding:1.1rem;text-align:center;border:1px solid var(--border);transition:var(--transition)}
+.alloc-card:hover{border-color:var(--purple)}
+.alloc-card .a-label{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}
+.alloc-card .a-val{font-family:var(--mono);font-size:1.5rem;font-weight:700}
+.alloc-card .a-sub{font-size:.75rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
+.a-val.cyan{color:var(--cyan)}.a-val.purple{color:var(--purple-soft)}
+
+/* ---- SECTION SUBTITLE ---- */
+.sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.35rem}
+
+/* ---- GMT TIER TABLE ---- */
+.gmt-tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin:.5rem 0}
+.gmt-tier{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.65rem .8rem;transition:var(--transition)}
+.gmt-tier:hover{border-color:var(--purple)}
+.gmt-tier .t-pct{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--cyan)}
+.gmt-tier .t-need{font-size:.75rem;color:var(--text2);margin-top:.15rem;font-family:var(--mono)}
+.gmt-tier .t-delta{font-size:.7rem;margin-top:.15rem}
+.gmt-tier .t-delta.covered{color:var(--green)}
+.gmt-tier .t-delta.needed{color:var(--text3)}
+
+/* ---- LOADING SKELETON ---- */
+.skel{background:linear-gradient(90deg,var(--border) 25%,var(--bg-card-hover) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:1.1em;display:inline-block;min-width:80px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  html{font-size:13px}
+  .header{padding:.5rem .7rem}
+  .header-inner{gap:.4rem}
+  .logo{font-size:1.1rem}
+  .live-bar{gap:.15rem;width:100%;justify-content:space-between}
+  .live-chip{padding:.25rem .4rem;font-size:.68rem;border-radius:14px;gap:.2rem;flex:1;justify-content:center;min-width:0}
+  .live-chip .lbl{font-size:.58rem}
+  .container{padding:0 .5rem 3rem}
+  .hero-grid{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}
+  .hero-card{padding:.7rem}
+  .hero-val{font-size:1.05rem}
+  .hero-sub{font-size:.65rem}
+  .hero-label{font-size:.62rem}
+  .tabs{top:68px;gap:.3rem;padding:.6rem 0 .5rem}
+  .tab-btn{padding:.45rem 1rem;font-size:.8rem;border-radius:20px}
+  .section{margin-bottom:.6rem;border-radius:10px}
+  .section-header{padding:.7rem .8rem}
+  .section-title{font-size:.85rem;gap:.35rem}
+  .section-title .icon{width:18px;height:18px;font-size:.6rem}
+  .section-body{padding:0 .7rem 1rem}
+  .input-grid{grid-template-columns:1fr;gap:.6rem}
+  .field input[type="number"]{padding:.6rem .7rem;font-size:.9rem;border-radius:8px}
+  .field .unit{font-size:.65rem;right:.55rem}
+  .toggle-row{padding:.4rem 0}
+  .toggle-label{font-size:.78rem}
+  .out-row{padding:.45rem 0;gap:.5rem}
+  .out-label{font-size:.78rem;min-width:0;flex-shrink:1}
+  .out-val{font-size:.82rem;max-width:50%;word-break:break-word}
+  .out-val .sub{font-size:.68rem}
+  .alloc-grid{grid-template-columns:1fr 1fr;gap:.5rem}
+  .alloc-card{padding:.8rem .6rem}
+  .alloc-card .a-val{font-size:1.15rem}
+  .alloc-card .a-sub{font-size:.68rem}
+  .gmt-tiers{grid-template-columns:1fr 1fr;gap:.4rem}
+  .gmt-tier{padding:.5rem .6rem}
+  .gmt-tier .t-pct{font-size:.9rem}
+  .gmt-tier .t-need{font-size:.7rem}
+  .signal{padding:.8rem}
+  .signal-head{font-size:.9rem}
+  .signal-body{font-size:.75rem}
+  .discount-visual{height:20px}
+  .discount-visual div{font-size:.55rem;min-width:18px}
+  .tier-progress{padding:.5rem .6rem}
+  .vip-badge{font-size:.7rem;padding:.15rem .5rem}
+  .sub-title{font-size:.78rem}
+  .warn{font-size:.72rem;padding:.5rem .6rem}
+  .badge{font-size:.7rem;padding:.15rem .4rem}
+  .tip{width:13px;height:13px;font-size:.55rem}
+  .divider{margin:.4rem 0}
+}
+@media(max-width:380px){
+  .hero-grid{grid-template-columns:1fr;gap:.4rem}
+  .hero-card{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem}
+  .hero-card::before{display:none}
+  .hero-label{margin-bottom:0;font-size:.65rem}
+  .hero-val{font-size:1rem}
+  .hero-sub{display:none}
+  .alloc-grid{grid-template-columns:1fr}
+  .gmt-tiers{grid-template-columns:1fr}
+}
+/* ---- PROJECTION TABLE ---- */
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem}
+.proj-cell{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .7rem;text-align:center;transition:var(--transition);position:relative}
+.proj-cell:hover{border-color:var(--purple)}
+.proj-cell.current{border-color:var(--cyan);background:rgba(0,194,255,.06)}
+.proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
+.proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
+.proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
+.proj-cell .pc-monthly.green{color:var(--green)}
+.proj-cell .pc-monthly.red{color:var(--red)}
+.proj-cell .pc-tag{position:absolute;top:3px;right:5px;font-size:.55rem;color:var(--cyan);font-weight:600}
+.proj-bar{height:3px;border-radius:2px;margin-top:.3rem;background:var(--border);overflow:hidden}
+.proj-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
+.proj-bar-fill.green{background:var(--green)}
+.proj-bar-fill.red{background:var(--red)}
+
+/* touch targets */
+@media(pointer:coarse){
+  .field input[type="number"]{padding:.7rem .75rem;font-size:16px}
+  .section-header{min-height:48px}
+  .tab-btn{min-height:40px}
+  .toggle{width:44px;height:24px}
+  .toggle-track::after{width:20px;height:20px}
+  .toggle input:checked+.toggle-track::after{transform:translateX(20px)}
+}
+
+/* ---- ONBOARDING MODAL ---- */
+.ob-overlay{position:fixed;inset:0;z-index:1000;background:rgba(24,25,40,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;opacity:0;animation:obFadeIn .5s ease forwards}
+@keyframes obFadeIn{to{opacity:1}}
+.ob-modal{width:min(600px,92vw);max-height:90vh;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:0 0 80px rgba(123,79,255,.12),0 0 200px rgba(0,194,255,.05);position:relative}
+.ob-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
+.ob-dots{display:flex;justify-content:center;gap:8px;padding:1.5rem 0 0}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--text4);transition:all .3s}
+.ob-dot.active{background:var(--purple);box-shadow:0 0 10px var(--purple)}
+.ob-dot.done{background:var(--cyan)}
+.ob-body{padding:1.5rem 2rem 1rem;min-height:320px;position:relative;overflow:hidden}
+.ob-step{display:none;animation:obSlideIn .35s ease}
+.ob-step.active{display:block}
+@keyframes obSlideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.ob-title{font-size:1.5rem;font-weight:800;text-align:center;margin-bottom:.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ob-subtitle{text-align:center;color:var(--text2);font-size:.88rem;line-height:1.6;margin-bottom:1.5rem}
+.ob-features{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.5rem}
+.ob-feat{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:1rem .8rem;text-align:center;transition:var(--transition)}
+.ob-feat:hover{border-color:var(--purple);transform:translateY(-2px)}
+.ob-feat-icon{font-size:1.4rem;margin-bottom:.5rem}
+.ob-feat-title{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
+.ob-feat-desc{font-size:.72rem;color:var(--text3);line-height:1.4}
+.ob-field{margin-bottom:1.1rem}
+.ob-field label{display:block;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
+.ob-field .ob-hint{font-size:.72rem;color:var(--text3);margin-bottom:.5rem;line-height:1.5}
+.ob-field input[type=number],.ob-field input[type=text]{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .8rem;color:var(--text);font-family:var(--mono);font-size:.9rem;transition:var(--transition)}
+.ob-field input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.ob-field .ob-input-wrap{display:flex;align-items:center;gap:.5rem}
+.ob-field .ob-unit{color:var(--text3);font-size:.8rem;font-family:var(--mono);min-width:30px}
+.ob-toggle-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
+.ob-toggle-row span{font-size:.82rem;color:var(--text2)}
+.ob-nav{display:flex;justify-content:space-between;padding:0 2rem 1.5rem;gap:1rem}
+.ob-btn{padding:.7rem 1.8rem;border-radius:8px;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:var(--transition);border:none}
+.ob-btn-primary{background:#7540ef;color:#fff;box-shadow:0 4px 20px rgba(117,64,239,.3);border-radius:1rem}
+.ob-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(117,64,239,.4);background:#8555f5}
+.ob-btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.ob-btn-secondary:hover{border-color:var(--text3);color:var(--text)}
+.ob-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
+.ob-preview-card{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem;text-align:center}
+.ob-preview-card .ob-pv-label{font-size:.7rem;color:var(--text3);margin-bottom:.3rem}
+.ob-preview-card .ob-pv-val{font-family:var(--mono);font-size:1.1rem;font-weight:700}
+.ob-preview-card .ob-pv-val.green{color:var(--green)}
+.ob-preview-card .ob-pv-val.cyan{color:var(--cyan)}
+.ob-preview-card .ob-pv-val.purple{color:var(--purple-soft)}
+.ob-divider{height:1px;background:var(--border);margin:1.2rem 0}
+.ob-logo{text-align:center;font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--purple-soft);margin-bottom:.3rem;letter-spacing:1px}
+@media(max-width:600px){
+  .ob-body{padding:1rem 1.2rem .8rem}
+  .ob-nav{padding:0 1.2rem 1.2rem}
+  .ob-features{grid-template-columns:1fr}
+  .ob-title{font-size:1.2rem}
+  .ob-preview-grid{grid-template-columns:1fr}
+}
+
+/* ---- PLANNER INTRO ---- */
+.pi-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .3s ease}
+.pi-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;box-shadow:0 0 80px rgba(123,79,255,.12);position:relative;overflow:hidden}
+.pi-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
+.pi-body{padding:2rem 2rem 1.2rem}
+.pi-title{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:.4rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pi-subtitle{text-align:center;color:var(--text2);font-size:.82rem;line-height:1.6;margin-bottom:1.5rem}
+.pi-steps{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem}
+.pi-step{display:flex;align-items:flex-start;gap:.8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;transition:var(--transition)}
+.pi-step:hover{border-color:var(--purple);transform:translateY(-1px)}
+.pi-step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;flex-shrink:0}
+.pi-step-num.purple{background:var(--purple)}.pi-step-num.cyan{background:var(--cyan)}.pi-step-num.green{background:var(--green)}
+.pi-step-text{font-size:.8rem;color:var(--text2);line-height:1.5}
+.pi-step-text strong{color:var(--text);font-weight:700}
+.pi-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem}
+@media(max-width:600px){
+  .pi-body{padding:1.2rem 1.2rem .8rem}
+  .pi-nav{padding:0 1.2rem 1.2rem}
+  .pi-title{font-size:1.1rem}
+}
+
+/* ---- CARD ANIMATIONS ---- */
+@keyframes cardEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero-card{animation:cardEnter .4s ease backwards}
+.hero-card:nth-child(1){animation-delay:.1s}
+.hero-card:nth-child(2){animation-delay:.15s}
+.hero-card:nth-child(3){animation-delay:.2s}
+.hero-card:nth-child(4){animation-delay:.25s}
+.field input:focus{box-shadow:0 0 0 3px var(--purple-glow),0 0 20px rgba(123,79,255,.08)}
+
+/* ---- SETUP BUTTON ---- */
+.ob-reset-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:.72rem;padding:.25rem .6rem;cursor:pointer;font-family:var(--sans);transition:var(--transition);margin-left:.5rem}
+.ob-reset-btn:hover{border-color:var(--purple);color:var(--text2)}
+
+/* ---- SECTION DESCRIPTIONS ---- */
+.section-desc{font-size:.73rem;color:var(--text3);padding:.2rem 1.2rem .6rem;line-height:1.5;border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div class="ob-overlay" id="onboarding" style="display:none">
+<div class="ob-modal">
+  <div class="ob-dots">
+    <div class="ob-dot active" id="obDot0"></div>
+    <div class="ob-dot" id="obDot1"></div>
+    <div class="ob-dot" id="obDot2"></div>
+    <div class="ob-dot" id="obDot3"></div>
+  </div>
+  <div class="ob-body">
+
+    <!-- STEP 0: Welcome -->
+    <div class="ob-step active" data-ob-step="0">
+      <div class="ob-logo"><img src="site-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GoMiningVIP</div>
+      <div class="ob-title">Maximize Your Mining Profits</div>
+      <div class="ob-subtitle">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
+      <div class="ob-features">
+        <div class="ob-feat">
+          <div class="ob-feat-icon">&#9889;</div>
+          <div class="ob-feat-title">Live Data</div>
+          <div class="ob-feat-desc">BTC price, GMT price, network difficulty, and sats/TH/day updated every 60 seconds from live APIs.</div>
+        </div>
+        <div class="ob-feat">
+          <div class="ob-feat-icon">&#9881;</div>
+          <div class="ob-feat-title">Smart Optimizer</div>
+          <div class="ob-feat-desc">Tests every possible TH/GMT split to find the allocation that maximizes your monthly income.</div>
+        </div>
+        <div class="ob-feat">
+          <div class="ob-feat-icon">&#128176;</div>
+          <div class="ob-feat-title">Full Discount Stack</div>
+          <div class="ob-feat-desc">Tracks VIP tier, token discount, click streak, and mining mode to calculate your true net profit.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Mining Setup -->
+    <div class="ob-step" data-ob-step="1">
+      <div class="ob-title">Your Mining Farm</div>
+      <div class="ob-subtitle">Enter your current GoMining stats. You can find these in the GoMining app.</div>
+      <div class="ob-field">
+        <label>Total Hashrate</label>
+        <div class="ob-hint">Sum of all your NFT hashrates. Go to My NFTs in the GoMining app to see your total computing power.</div>
+        <div class="ob-input-wrap"><input type="number" id="obTH" value="1370.49" step="0.01" min="0"><span class="ob-unit">TH</span></div>
+      </div>
+      <div class="ob-field">
+        <label>Energy Efficiency</label>
+        <div class="ob-hint">Average watts per terahash across your NFTs. Lower is better. Found on each NFT detail card.</div>
+        <div class="ob-input-wrap"><input type="number" id="obWTH" value="17.06" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
+      </div>
+      <div class="ob-field">
+        <label>Current TH Market Price</label>
+        <div class="ob-hint">What 1 TH costs on the GoMining marketplace right now. Check the marketplace before entering.</div>
+        <div class="ob-input-wrap"><input type="number" id="obCPT" value="20" step="0.01" min="0"><span class="ob-unit">USD</span></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: GMT Holdings -->
+    <div class="ob-step" data-ob-step="2">
+      <div class="ob-title">Your GMT Position</div>
+      <div class="ob-subtitle">GMT is the fuel behind your fee discounts and staking rewards. The more you lock, the higher your discount and the more you earn passively.</div>
+      <div class="ob-field">
+        <label>Locked GMT (VeGoMining)</label>
+        <div class="ob-hint">GMT you've staked in VeGoMining. Earns weekly yield and counts toward your VIP tier.</div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="2552" step="1" min="0"><span class="ob-unit">GMT</span></div>
+      </div>
+      <div class="ob-field">
+        <label>Liquid GMT Balance</label>
+        <div class="ob-hint">Unlocked GMT in your GoMining virtual wallet. Available for locking or transfers.</div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="1488" step="0.01" min="0"><span class="ob-unit">GMT</span></div>
+      </div>
+      <div class="ob-field">
+        <label>VeGoMining Staking APR</label>
+        <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="22.97" step="0.01" min="0"><span class="ob-unit">%</span></div>
+      </div>
+      <div class="ob-divider"></div>
+      <div class="ob-toggle-row">
+        <label class="toggle"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
+        <span>Daily click streak active (10+ consecutive days = 3% fee discount)</span>
+      </div>
+      <div class="ob-toggle-row">
+        <label class="toggle"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
+        <span>Pay maintenance fees in GMT (enables token discount)</span>
+      </div>
+    </div>
+
+    <!-- STEP 3: Confirmation -->
+    <div class="ob-step" data-ob-step="3">
+      <div class="ob-title">You're All Set!</div>
+      <div class="ob-subtitle">Here's a quick preview of your mining operation based on live data. All values update in real-time on the dashboard.</div>
+      <div class="ob-preview-grid">
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Daily Net Profit</div>
+          <div class="ob-pv-val green" id="obPrevDaily">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Monthly Earnings</div>
+          <div class="ob-pv-val cyan" id="obPrevMonthly">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Total Discount</div>
+          <div class="ob-pv-val purple" id="obPrevDiscount">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">VIP Level</div>
+          <div class="ob-pv-val cyan" id="obPrevVip">--</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1rem;font-size:.78rem;color:var(--text3)">You can change any of these settings at any time from the dashboard.</div>
+    </div>
+
+  </div>
+  <div class="ob-nav">
+    <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="visibility:hidden">Back</button>
+    <button class="ob-btn ob-btn-primary" id="obNext" onclick="obNext()">Get Started</button>
+  </div>
+</div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo"><img src="site-logo.png" alt="" style="height:24px;vertical-align:middle;margin-right:6px">GoMiningVIP <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button></div>
+    <div class="live-bar" id="liveBar">
+      <div class="live-chip"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip"><span class="live-dot" id="liveDot"></span><span class="val" id="refreshTimer" style="min-width:24px;text-align:center">--</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tab-current">Current Operation</button>
+  <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
+</div>
+
+<!-- ==================== TAB 1 ==================== -->
+<div class="tab-content active" id="tab-current">
+
+  <!-- HERO SUMMARY -->
+  <div class="hero-grid" id="heroGrid">
+    <div class="hero-card green-accent">
+      <div class="hero-label">Daily Net Profit</div>
+      <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroDailyBTC">--</div>
+    </div>
+    <div class="hero-card cyan-accent">
+      <div class="hero-label">Monthly Earnings</div>
+      <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroMonthlyBTC">--</div>
+    </div>
+    <div class="hero-card purple-accent">
+      <div class="hero-label">Total Discount</div>
+      <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroDiscountSub">--</div>
+    </div>
+    <div class="hero-card orange-accent">
+      <div class="hero-label">VIP Level</div>
+      <div id="heroVip"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroVipSub">--</div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="section" id="secInputs">
+    <div class="section-header" onclick="toggleSection('secInputs')">
+      <div class="section-title"><img src="miningsetup.png" style="height:20px;width:20px;border-radius:6px"> Your Mining Setup</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Enter your current farm parameters. All calculations update in real-time.</div>
+    <div class="section-body">
+      <div class="input-grid">
+        <div class="field">
+          <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
+          <div class="field-input"><input type="number" id="inTH" value="1370.49" step="0.01" min="0"><span class="unit">TH</span></div>
+        </div>
+        <div class="field">
+          <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash. Lower is better. Found on each NFT detail card.">?</span></label>
+          <div class="field-input"><input type="number" id="inWTH" value="17.06" step="0.01" min="0"><span class="unit">W/TH</span></div>
+        </div>
+        <div class="field">
+          <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
+          <div class="field-input"><input type="number" id="inGMTLocked" value="2552" step="1" min="0"><span class="unit">GMT</span></div>
+        </div>
+        <div class="field">
+          <label>Liquid GMT Balance <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
+          <div class="field-input"><input type="number" id="inGMTWallet" value="1488" step="0.01" min="0"><span class="unit">GMT</span></div>
+        </div>
+        <div class="field">
+          <label>Token Discount <span class="tip" data-tip="Auto-calculated from your GMT holdings. More GMT held = higher discount, up to 20%.">?</span></label>
+          <div class="field-input"><span id="inTokenDiscountDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">%</span></div>
+        </div>
+        <div class="field">
+          <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
+          <div class="field-input"><input type="number" id="inLockAPR" value="22.97" step="0.01" min="0"><span class="unit">%</span></div>
+        </div>
+        <div class="field">
+          <label>TH Market Price <span class="tip" data-tip="What 1 TH costs on the GoMining marketplace. Fluctuates -- verify before investing.">?</span></label>
+          <div class="field-input"><input type="number" id="inCostPerTH" value="20" step="0.01" min="0"><span class="unit">USD</span></div>
+        </div>
+        <div class="field">
+          <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
+          <div class="field-input"><input type="number" id="inMiningMode" value="0.82" step="0.01" min="0"><span class="unit">%</span></div>
+        </div>
+        <div class="field">
+          <label>Additional Discounts <span class="tip" data-tip="Any promotional or special discounts not covered by the categories above.">?</span></label>
+          <div class="field-input"><input type="number" id="inOtherDiscount" value="0" step="0.1" min="0"><span class="unit">%</span></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:1.2rem;margin-top:.8rem">
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
+          <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak active (10+ consecutive days = 3% discount)</span>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
+          <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT (enables token discount)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIP & DISCOUNTS -->
+  <div class="section" id="secVip">
+    <div class="section-header" onclick="toggleSection('secVip')">
+      <div class="section-title"><img src="vip.png" style="height:20px;width:20px;border-radius:6px"> VIP Level &amp; Discount Stack</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Your VIP tier is determined by TH owned or GMT locked -- whichever qualifies you higher.</div>
+    <div class="section-body">
+      <div id="vipDisplay"></div>
+      <div id="discountDisplay"></div>
+    </div>
+  </div>
+
+  <!-- DAILY P&L -->
+  <div class="section" id="secPnl">
+    <div class="section-header" onclick="toggleSection('secPnl')">
+      <div class="section-title"><img src="pnl.png" style="height:20px;width:20px;border-radius:6px"> Daily Operation Breakdown</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Revenue and costs calculated from live Bitcoin network data, updated every 60 seconds.</div>
+    <div class="section-body">
+      <div id="dailyPnl"></div>
+    </div>
+  </div>
+
+  <!-- GMT COVERAGE -->
+  <div class="section" id="secGmt">
+    <div class="section-header" onclick="toggleSection('secGmt')">
+      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:6px"> GMT Rewards &amp; Self-Sustaining Loop</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Your daily mining rewards in GMT, staking income, and whether your farm sustains itself.</div>
+    <div class="section-body">
+      <div id="gmtCoverage"></div>
+    </div>
+  </div>
+
+  <!-- REINVEST SIGNAL -->
+  <div class="section" id="secSignal">
+    <div class="section-header" onclick="toggleSection('secSignal')">
+      <div class="section-title"><img src="reinvest.png" style="height:20px;width:20px;border-radius:6px"> Reinvestment Signal</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Based on current BTC price, should you buy more hashrate or accumulate more GMT?</div>
+    <div class="section-body">
+      <div id="reinvestSignal"></div>
+    </div>
+  </div>
+
+
+</div>
+
+<!-- ==================== TAB 2 ==================== -->
+<div class="tab-content" id="tab-planner">
+
+  <!-- CAPITAL INPUT -->
+  <div class="section" id="secCapIn">
+    <div class="section-header" onclick="toggleSection('secCapIn')">
+      <div class="section-title"><span class="icon icon-purple">$</span> Investment Amount</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">How much new capital are you planning to deploy into GoMining?</div>
+    <div class="section-body">
+      <div class="input-grid" style="max-width:300px">
+        <div class="field">
+          <label>Total Capital to Invest</label>
+          <div class="field-input"><input type="number" id="inCapital" value="5000" step="100" min="0"><span class="unit">USD</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALLOCATION -->
+  <div class="section" id="secAlloc">
+    <div class="section-header" onclick="toggleSection('secAlloc')">
+      <div class="section-title"><span class="icon icon-cyan">OPT</span> Optimal Capital Allocation</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Tests every TH/GMT split to find the allocation that maximizes your monthly net income.</div>
+    <div class="section-body">
+      <div id="allocDisplay"></div>
+    </div>
+  </div>
+
+  <!-- PROJECTION -->
+  <div class="section" id="secProj">
+    <div class="section-header" onclick="toggleSection('secProj')">
+      <div class="section-title"><span class="icon icon-green">PRJ</span> Post-Investment Projection</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">What your farm looks like after deploying capital with the recommended allocation.</div>
+    <div class="section-body">
+      <div id="projDisplay"></div>
+    </div>
+  </div>
+
+  <!-- BTC PRICE PROJECTIONS -->
+  <div class="section" id="secProj2">
+    <div class="section-header" onclick="toggleSection('secProj2')">
+      <div class="section-title"><span class="icon icon-cyan">BTC</span> Monthly Income by BTC Price</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-body">
+      <div id="projTable"></div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- container -->
+
+<!-- DONATION MODAL -->
+<div class="donate-overlay" id="donateModal" style="display:none">
+  <div class="donate-box">
+    <h3>GoMiningVIP is Free Forever</h3>
+    <p>This site has no ads and never will. If you find it useful, please consider supporting development with a small donation.</p>
+    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">BTC</p>
+    <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
+    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">GoMining Token (GMT)</p>
+    <div class="donate-addr" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</div>
+    <div class="donate-copied" id="donateCopied">Copied to clipboard!</div>
+    <br>
+    <button class="donate-btn" onclick="closeDonate()">Continue to Dashboard</button>
+  </div>
+</div>
+
+<!-- PLANNER INTRO -->
+<div class="pi-overlay" id="plannerIntro" style="display:none">
+  <div class="pi-modal">
+    <div class="pi-body">
+      <div class="pi-title">Capital Planner</div>
+      <div class="pi-subtitle">Find the optimal way to allocate new capital into your GoMining farm in three simple steps.</div>
+      <div class="pi-steps">
+        <div class="pi-step">
+          <div class="pi-step-num purple">1</div>
+          <div class="pi-step-text"><strong>Enter your budget</strong> &mdash; Start by entering the total amount you're planning to deploy into GoMining.</div>
+        </div>
+        <div class="pi-step">
+          <div class="pi-step-num cyan">2</div>
+          <div class="pi-step-text"><strong>Get the optimal split</strong> &mdash; The planner tests every possible TH/GMT allocation and finds the split that maximizes your monthly income.</div>
+        </div>
+        <div class="pi-step">
+          <div class="pi-step-num green">3</div>
+          <div class="pi-step-text"><strong>Review your projection</strong> &mdash; See exactly what your farm will look like after deploying capital, including income at various BTC prices.</div>
+        </div>
+      </div>
+    </div>
+    <div class="pi-nav">
+      <button class="ob-btn ob-btn-primary" onclick="closePlannerIntro()">Let's Go</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="site-footer">
+  GoMiningVIP is free and ad-free forever. If you find it helpful, consider donating.<br>
+  <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
+  <span style="color:var(--text2)">GMT:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
+  <div class="donate-copied" id="footerCopied">Copied to clipboard!</div>
+</div>
+
+<script>
+// ---- STATE ----
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false };
+const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
+
+// ---- VIP TIERS ----
+const TIERS=[
+  {n:'Bronze I',th:0,veg:0,d:0,rb:0},{n:'Bronze II',th:5,veg:50,d:.3,rb:0},
+  {n:'Silver I',th:10,veg:100,d:.6,rb:5},{n:'Silver II',th:25,veg:250,d:.9,rb:0},
+  {n:'Silver III',th:50,veg:500,d:1.2,rb:0},{n:'Gold I',th:100,veg:1000,d:1.5,rb:0},
+  {n:'Gold II',th:200,veg:2000,d:1.8,rb:0},{n:'Platinum I',th:500,veg:5000,d:2.1,rb:0},
+  {n:'Platinum II',th:1000,veg:10000,d:2.4,rb:0},{n:'Platinum III',th:2500,veg:25000,d:2.7,rb:0},
+  {n:'Diamond I',th:5000,veg:50000,d:3.0,rb:10},{n:'Diamond II',th:7000,veg:70000,d:3.3,rb:0},
+  {n:'Diamond III',th:9000,veg:90000,d:3.6,rb:0},{n:'Diamond IV',th:12000,veg:120000,d:3.9,rb:0},
+  {n:'Diamond V',th:20000,veg:200000,d:4.2,rb:0},
+  {n:'Legend I',th:50000,veg:500000,d:4.5,rb:0},{n:'Legend II',th:100000,veg:1000000,d:4.8,rb:0},
+  {n:'Legend III',th:250000,veg:2500000,d:5.1,rb:0},{n:'Legend IV',th:400000,veg:4000000,d:5.4,rb:0},
+  {n:'Legend V',th:750000,veg:7500000,d:5.7,rb:0},{n:'Elite',th:1000000,veg:10000000,d:6.0,rb:0}
+];
+const vipOf=(th,veg)=>{let t=TIERS[0];for(const x of TIERS)if(th>=x.th||veg>=x.veg)t=x;return t};
+const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;return null};
+const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
+
+// ---- FORMAT ----
+const fB=v=>v.toFixed(8)+' BTC';
+const fU=v=>'$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fP=v=>v.toFixed(2)+'%';
+const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+
+// ---- SECTIONS ----
+function toggleSection(id){document.getElementById(id).classList.toggle('collapsed')}
+
+// ---- TABS ----
+let plannerIntroShown=false;
+try{plannerIntroShown=!!localStorage.getItem('gm_planner_intro')}catch(e){}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+  if(b.dataset.tab==='tab-planner'&&!plannerIntroShown){
+    plannerIntroShown=true;
+    try{localStorage.setItem('gm_planner_intro','1')}catch(e){}
+    document.getElementById('plannerIntro').style.display='';
+    document.body.style.overflow='hidden';
+  }
+}));
+function closePlannerIntro(){
+  document.getElementById('plannerIntro').style.display='none';
+  document.body.style.overflow='';
+}
+
+// ---- API ----
+async function fetchData(){
+  let ok=true;
+  try{
+    const[a,b]=await Promise.all([
+      fetch('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(r=>r.json()),
+      fetch('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token').then(r=>r.json())
+    ]);
+    S.btcPrice=a.quotes?.USD?.price||0;S.gmtPrice=b.quotes?.USD?.price||0;
+    if(!S.btcPrice){S.btcPrice=FB.btcPrice;ok=false}
+    if(!S.gmtPrice){S.gmtPrice=FB.gmtPrice;ok=false}
+  }catch(e){S.btcPrice=FB.btcPrice;S.gmtPrice=FB.gmtPrice;ok=false}
+  try{
+    const[h,f]=await Promise.all([
+      fetch('https://mempool.space/api/v1/mining/hashrate/3d').then(r=>r.json()),
+      fetch('https://mempool.space/api/v1/mining/reward-stats/144').then(r=>r.json())
+    ]);
+    S.difficulty=h.currentDifficulty||FB.difficulty;
+    S.avgTxFees=(parseFloat(f.totalFee||0)/144)/1e8;
+    if(!S.avgTxFees)S.avgTxFees=FB.avgTxFees;
+  }catch(e){S.difficulty=FB.difficulty;S.avgTxFees=FB.avgTxFees;ok=false}
+  S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
+  S.apiOk=ok;S.loaded=true;
+  updateHeader();recalc();
+}
+
+function updateHeader(){
+  const$=id=>document.getElementById(id);
+  $('btcVal').textContent=S.btcPrice?fU(S.btcPrice):'--';
+  $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
+  $('satsVal').textContent=S.satsPerTHDay?S.satsPerTHDay.toFixed(1):'--';
+  const bar=$('liveBar');S.apiOk?bar.classList.remove('api-err'):bar.classList.add('api-err');
+}
+
+// ---- INPUTS ----
+function inp(){return{
+  th:+$('inTH').value||0, wth:+$('inWTH').value||0,
+  gl:+$('inGMTLocked').value||0, gw:+$('inGMTWallet').value||0,
+  apr:+$('inLockAPR').value||0,
+  click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
+  mm:+$('inMiningMode').value||0, od:+$('inOtherDiscount').value||0, cpt:+$('inCostPerTH').value||0,
+  cap:+$('inCapital').value||0
+}}
+function $(id){return document.getElementById(id)}
+
+// ---- CALC ----
+// GoMining verified fee formulas (per TH per day in BTC, pre-discount)
+// electricity_per_TH = (0.05 * 24 * W/TH) / BTC_price / 1000
+// service_per_TH = 0.0089 / BTC_price
+function fees(th,wth,bp){const e=(0.05*24*wth)/bp/1000*th,s=(0.0089/bp)*th;return{e,s,t:e+s}}
+function dailyBTCperTH(){return(1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32)}
+
+function calc(i){
+  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
+  const vip=vipOf(i.th,i.gl),nxt=nextVip(i.th,i.gl);
+  const vd=vip.d,cb=i.click?3:0;
+  const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
+  // Token discount auto-calculated from GMT holdings
+  const feesGMT=(f.t*(1-nonTokD/100)*bp)/gp; // daily fees in GMT after non-token discounts
+  const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
+  const eTok=cov<18.9?0:Math.min(20,Math.floor(cov/18.9));
+  const tok=i.payG?eTok:0;
+  const totD=Math.min(30,tok+nonTokD);
+  const dfees=f.t*(1-totD/100),net=gross-dfees,save=f.t*(totD/100);
+  const wkGMT=(i.gl*i.apr/100)/52;
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp}
+}
+
+// ---- RENDER HELPERS ----
+function row(l,v,c=''){return`<div class="out-row"><span class="out-label">${l}</span><span class="out-val ${c}">${v}</span></div>`}
+function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${vip.est?' (est.)':''}</span>`}
+
+// ---- MAIN RENDER ----
+function recalc(){
+  if(!S.loaded)return;
+  const i=inp(),m=calc(i);
+
+  // Update auto-calculated token discount display
+  $('inTokenDiscountDisplay').textContent=m.eTok;
+
+  // Hero cards
+  const netUSD=m.net*m.bp, moUSD=netUSD*30;
+  $('heroDailyNet').textContent=fU(netUSD);$('heroDailyNet').className='hero-val '+(m.net>=0?'green':'red');
+  $('heroDailyBTC').textContent=fB(m.net);
+  $('heroMonthly').textContent=fU(moUSD);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
+  $('heroMonthlyBTC').textContent=fB(m.net*30);
+  $('heroDiscount').textContent=fP(m.totD);
+  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp)+'/day';
+  $('heroVip').innerHTML=badge(m.vip);
+  if(m.nxt){const need=m.nxt.th-i.th;$('heroVipSub').textContent=fN(need,0)+' TH to '+m.nxt.n}
+  else $('heroVipSub').textContent='Max tier reached';
+
+  // VIP section
+  let vh='<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem">'+badge(m.vip);
+  if(m.vip.rb)vh+=` <span class="badge green">+${m.vip.rb}% TH reinvest bonus</span>`;
+  if(m.vip.est)vh+=` <span class="badge orange">discount estimated</span>`;
+  vh+='</div>';
+  if(m.nxt){
+    const need=m.nxt.th-i.th, pct=Math.min(100,(i.th/m.nxt.th)*100);
+    vh+=`<div class="tier-progress"><div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:.78rem;color:var(--text2)">Next: ${badge(m.nxt)}</span>
+      <span style="font-size:.78rem;color:var(--text3)">${fN(need,0)} TH needed</span></div>
+      <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:${pct}%"></div></div>
+      <div class="tier-info"><span>${fN(i.th,1)} TH</span><span>${fN(m.nxt.th,0)} TH</span></div></div>`;
+  }
+  $('vipDisplay').innerHTML=vh;
+
+  // Discount
+  let dh='';const pts=[];
+  if(m.tok>0)pts.push({l:'Token '+fP(m.tok),p:m.tok,c:'ds-token'});
+  if(m.vd>0)pts.push({l:'VIP '+fP(m.vd),p:m.vd,c:'ds-vip'});
+  if(m.cb>0)pts.push({l:'Click '+fP(m.cb),p:m.cb,c:'ds-click'});
+  if(i.mm>0)pts.push({l:'Mining '+fP(i.mm),p:i.mm,c:'ds-mining'});
+  if(i.od>0)pts.push({l:'Other '+fP(i.od),p:i.od,c:'ds-other'});
+  if(pts.length){
+    dh+='<div class="discount-visual">';
+    for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/30)*100}%">${p.l}</div>`;
+    dh+='</div>';
+  }
+  dh+=row('Total Discount',fP(m.totD),'cyan');
+  dh+=row('Daily savings',`${fB(m.save)}<span class="sub">${fU(m.save*m.bp)}/day</span>`,'green');
+  $('discountDisplay').innerHTML=dh;
+
+  // P&L
+  let pl='';
+  pl+=row('Sats/TH/day',`${(m.dbt*1e8).toFixed(1)}<span class="sub">Pre-platform cut, from live network data</span>`,'cyan');
+  pl+=row('Daily gross',`${fB(m.gross)}<span class="sub">${fU(m.gross*m.bp)}</span>`);
+  pl+=`<div class="divider"></div>`;
+  pl+=row('Electricity fee',`${fB(m.f.e)}<span class="sub">${fU(m.f.e*m.bp)}</span>`,'orange');
+  pl+=row('Service fee',`${fB(m.f.s)}<span class="sub">${fU(m.f.s*m.bp)}</span>`,'orange');
+  pl+=row('Total fees (pre-discount)',`${fB(m.f.t)}<span class="sub">${fU(m.f.t*m.bp)}</span>`,'orange');
+  pl+=row('Fees after discount',`${fB(m.dfees)}<span class="sub">${fU(m.dfees*m.bp)}</span>`);
+  pl+=`<div class="divider"></div>`;
+  pl+=row('Daily net',`${fB(m.net)}<span class="sub">${fU(m.net*m.bp)}</span>`,m.net>=0?'green':'red');
+  pl+=row('Monthly net',fU(m.net*m.bp*30),m.net>=0?'green':'red');
+  $('dailyPnl').innerHTML=pl;
+
+  // GMT
+  let g='';
+  g+=row('Token discount',fP(m.eTok),'cyan');
+  g+=row('Total discount stack',fP(m.totD),'cyan');
+  const tg=i.gl+i.gw;
+  g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
+
+  // Daily reward in GMT terms
+  const dailyGrossGMT=(m.gross*m.bp)/m.gp;
+  const dailyFeesGMT=(m.f.t*m.bp)/m.gp;
+  const dailyDiscountGMT=(m.save*m.bp)/m.gp;
+  const dailyNetGMT=(m.net*m.bp)/m.gp;
+  g+=`<div class="sub-title">Daily Reward (GMT)</div>`;
+  g+=row('Gross reward',`${fN(dailyGrossGMT,2)} GMT<span class="sub">${fU(dailyGrossGMT*m.gp)}</span>`);
+  g+=row('Electricity',`-${fN((m.f.e*m.bp)/m.gp,2)} GMT`,'orange');
+  g+=row('Service',`-${fN((m.f.s*m.bp)/m.gp,2)} GMT`,'orange');
+  g+=row('Discount saves',`+${fN(dailyDiscountGMT,2)} GMT<span class="sub">${fP(m.totD)} off</span>`,'green');
+  g+=row('Net reward',`${fN(dailyNetGMT,2)} GMT<span class="sub">${fU(dailyNetGMT*m.gp)}/day</span>`,dailyNetGMT>=0?'green':'red');
+
+  g+=`<div class="sub-title">Self-Sustaining Loop</div>`;
+  const wkNet=dailyNetGMT*7, wkStake=m.wkGMT, wkTotal=wkNet+wkStake;
+  const moTotal=wkTotal*4.33;
+  g+=row('Weekly net rewards',`${fN(wkNet,2)} GMT<span class="sub">${fU(wkNet*m.gp)}/week</span>`);
+  g+=row('Weekly staking rewards',`${fN(wkStake,2)} GMT<span class="sub">${fU(wkStake*m.gp)}/week</span>`);
+  g+=row('Total weekly GMT earned',`${fN(wkTotal,2)} GMT<span class="sub">${fU(wkTotal*m.gp)}/week</span>`,'cyan');
+  g+=row('Total monthly income',`${fU(moTotal*m.gp)}`,moTotal>=0?'green':'red');
+  if(wkTotal>0){
+    g+=row('Status',`<span class="badge green">SELF-SUSTAINING</span> Farm generates ${fN(moTotal,1)} GMT/mo in pure profit`);
+  }else{
+    g+=row('Status',`<span class="badge red">UNDERWATER</span> Farm loses ${fN(-moTotal,1)} GMT/mo`);
+  }
+
+  $('gmtCoverage').innerHTML=g;
+
+  // Signal
+  let sg='';
+  if(m.bp>80000){
+    sg+=`<div class="signal th"><div class="signal-head">REINVEST IN TH</div><div class="signal-body">BTC is at ${fU(m.bp)} (above $80K). Convert BTC rewards to hashrate -- purchasing power is elevated.`;
+    if(m.vip.rb>0)sg+=` Your ${m.vip.n} tier gives +${m.vip.rb}% TH reinvest bonus.`;
+    const nv=nextVip(i.th,i.gl);
+    if(nv&&nv.rb>0)sg+=` Reaching ${nv.n} (${nv.th} TH) unlocks +${nv.rb}% reinvest bonus.`;
+    sg+='</div></div>';
+  }else if(m.bp>=60000){
+    sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (mid-range). Build discount coverage -- maintenance savings compound and protect margins if BTC pulls back.</div></div>`;
+  }else{
+    sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (below $60K). Accumulate GMT while cheap. Discount savings outweigh TH growth since hashrate ROI compresses at lower prices.</div></div>`;
+  }
+  $('reinvestSignal').innerHTML=sg;
+
+  // Capital planner (includes projections)
+  renderPlanner(i,m);
+}
+
+function renderProjections(th,wth,totD,label){
+  const prices=[80000,90000,100000,110000,120000,130000,140000,150000];
+  const cur=S.btcPrice;
+  const allPrices=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
+  const dbt=dailyBTCperTH();
+  const grossBTC=dbt*th;
+  let maxMo=0;
+  const rows=allPrices.map(bp=>{
+    const f=fees(th,wth,bp);
+    const dfees=f.t*(1-totD/100);
+    const netBTC=grossBTC-dfees;
+    const moUSD=netBTC*bp*30;
+    if(Math.abs(moUSD)>maxMo)maxMo=Math.abs(moUSD);
+    return{bp,daily:netBTC*bp,moUSD,isCurrent:bp===cur};
+  });
+  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div><div class="proj-grid">`;
+  for(const r of rows){
+    const col=r.moUSD>=0?'green':'red';
+    const barW=maxMo>0?Math.abs(r.moUSD)/maxMo*100:0;
+    h+=`<div class="proj-cell${r.isCurrent?' current':''}">`;
+    if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
+    h+=`<div class="pc-price">${r.bp>=1000?'$'+(r.bp/1000).toFixed(0)+'K':fU(r.bp)}</div>`;
+    h+=`<div class="pc-monthly ${col}">${fU(r.moUSD)}</div>`;
+    h+=`<div class="pc-daily">${fU(r.daily)}/day</div>`;
+    h+=`<div class="proj-bar"><div class="proj-bar-fill ${col}" style="width:${barW}%"></div></div></div>`;
+  }
+  h+='</div>';
+  return h;
+}
+
+function renderPlanner(i,m){
+  const bp=m.bp,gp=m.gp,cap=i.cap;
+  if(!cap||cap<=0||!i.cpt){
+    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital and cost per TH above to see recommendation.</div>';
+    $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
+  }
+  let best={mo:-Infinity};
+  for(let j=0;j<=100;j++){
+    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=tu/i.cpt,ag=gu/gp;
+    const nt=i.th+at,ng=i.gl+i.gw+ag,f=fees(nt,i.wth,bp);
+    const gr=dailyBTCperTH()*nt;
+    const ngl=i.gl+ag*0.87,nv=vipOf(nt,ngl);
+    const nonTokD2=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
+    const feesForBurn2=f.t*(1-nonTokD2/100);
+    const nb=(feesForBurn2*bp)/gp,cd=nb>0?ng/nb:Infinity;
+    const ntd=i.payG?Math.min(20,Math.floor(cd/18.9)):0;
+    const td2=Math.min(30,ntd+nonTokD2);
+    const df=f.t*(1-td2/100),net=gr-df,mo=net*bp*30;
+    if(mo>best.mo)best={tu,gu,at,ag,nt,ng,f,nb,cd,ntd,nv,td2,df,net,mo,gr};
+  }
+  const b=best;
+
+  // 20% target analysis
+  const curBurn=(fees(i.th,i.wth,bp).t*bp)/gp;
+  const gmtFor20=curBurn*378, gmtHave=i.gl+i.gw, gmtNeed20=Math.max(0,gmtFor20-gmtHave);
+  const usdNeed20=gmtNeed20*gp, canReach20=cap>=usdNeed20;
+
+  let ah='';
+  // Explain why
+  const thPct=Math.round(b.tu/cap*100), gmtPct=100-thPct;
+  ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
+  if(gmtPct>=80){
+    ah+=`<strong style="color:var(--cyan)">Why ${gmtPct}% GMT?</strong> A ${fP(b.ntd-m.tok)} discount increase on your entire ${fN(i.th,0)} TH farm saves more per month than the marginal revenue from ${fN(b.at,0)} extra TH.`;
+    if(!canReach20)ah+=` Note: ${fU(cap)} is not enough for 20% discount -- you'd need ${fU(usdNeed20)} in GMT alone (${fN(gmtNeed20,0)} GMT). This plan gets you to ${fP(b.ntd)}.`;
+  }else if(thPct>=80){
+    ah+=`<strong style="color:var(--cyan)">Why ${thPct}% TH?</strong> Your discount coverage is already strong. Additional TH generates more revenue than further GMT accumulation at this point.`;
+  }else{
+    ah+=`<strong style="color:var(--cyan)">Balanced split.</strong> The optimizer found that ${gmtPct}% GMT / ${thPct}% TH maximizes your monthly net by balancing discount savings with revenue growth.`;
+  }
+  ah+='</div>';
+
+  ah+=`<div class="alloc-grid">
+    <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(b.tu)}</div><div class="a-sub">+${fN(b.at,1)} TH</div></div>
+    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(b.gu)}</div><div class="a-sub">+${fN(b.ag,0)} GMT</div></div>
+  </div>`;
+  const gl=b.ag*.87,gq=b.ag*.13;
+  ah+=row('Lock in VeGoMining (87%)',`${fN(gl,0)} GMT`);
+  ah+=row('Keep liquid (13%)',`${fN(gq,0)} GMT`);
+
+  // 20% target
+  ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
+  ah+=row('GMT needed for 20%',`${fN(gmtFor20,0)} GMT<span class="sub">${fU(gmtFor20*gp)}</span>`);
+  ah+=row('You currently have',`${fN(gmtHave,0)} GMT`);
+  ah+=row('Still need',`${fN(gmtNeed20,0)} GMT<span class="sub">${fU(usdNeed20)}</span>`,canReach20?'green':'orange');
+  if(!canReach20){
+    const deficit=usdNeed20-cap;
+    ah+=`<div class="warn">Your ${fU(cap)} budget covers ${fP(cap/usdNeed20*100>100?100:cap/usdNeed20*100)} of the GMT needed for 20%. You would need an additional ${fU(deficit)} to reach full discount.</div>`;
+  }
+
+  $('allocDisplay').innerHTML=ah;
+
+  const ov=vipOf(i.th,i.gl),tc=b.nv.n!==ov.n;
+  const curMo=m.net*m.bp*30,imp=b.mo-curMo;
+  const svBTC=b.f.t*(b.td2/100),rec=imp>0?cap/imp:Infinity;
+
+  let ph='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
+  ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(b.nv)}`;
+  if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
+  ph+='</div>';
+  ph+=row('New hashrate',`${fN(b.nt,1)} TH`);
+  ph+=row('New token discount',fP(b.ntd),'cyan');
+  ph+=row('New total discount',fP(b.td2),'cyan');
+  ph+=`<div class="divider"></div>`;
+  ph+=row('Projected monthly',fU(b.mo),b.mo>=0?'green':'red');
+  ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}`,imp>=0?'green':'red');
+  ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
+  ph+=`<div class="divider"></div>`;
+  // Self-sustaining loop for projected position
+  const newLocked=i.gl+gl;
+  const newWkStake=(newLocked*i.apr/100)/52;
+  const newDailyNetGMT=(b.net*bp)/gp;
+  const newWkNet=newDailyNetGMT*7,newWkTotal=newWkNet+newWkStake;
+  const newMoTotal=newWkTotal*4.33;
+  ph+=`<div class="sub-title">Self-Sustaining Loop</div>`;
+  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`);
+  ph+=row('Weekly net rewards',`${fN(newWkNet,2)} GMT<span class="sub">${fU(newWkNet*gp)}/week</span>`);
+  ph+=row('Weekly staking rewards',`${fN(newWkStake,2)} GMT<span class="sub">${fU(newWkStake*gp)}/week</span>`);
+  ph+=row('Total weekly GMT earned',`${fN(newWkTotal,2)} GMT<span class="sub">${fU(newWkTotal*gp)}/week</span>`,'cyan');
+  ph+=row('Total monthly income',`${fU(newMoTotal*gp)}`,newMoTotal>=0?'green':'red');
+  if(newWkTotal>0){
+    ph+=row('Status',`<span class="badge green">SELF-SUSTAINING</span> +${fN(newMoTotal,1)} GMT/mo profit`);
+  }else{
+    ph+=row('Status',`<span class="badge red">UNDERWATER</span> -${fN(-newMoTotal,1)} GMT/mo loss`);
+  }
+  ph+=row('Months to recoup',rec===Infinity?'N/A':`${fN(rec,1)} months`,rec<12?'green':rec<24?'orange':'red');
+  $('projDisplay').innerHTML=ph;
+
+  // BTC price projections using post-investment TH and discount
+  $('projTable').innerHTML=renderProjections(b.nt,i.wth,b.td2,
+    `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
+}
+
+// ---- REACTIVE ----
+document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});
+
+// ---- TIMER ----
+setInterval(()=>{S.timer--;if(S.timer<=0){S.timer=60;fetchData()}$('refreshTimer').textContent=S.timer+'s'},1000);
+
+// ---- TOOLTIPS (touch) ----
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.tip.show').forEach(t=>t.classList.remove('show'));
+  if(e.target.classList.contains('tip')){e.preventDefault();e.target.classList.add('show')}
+});
+
+// ---- ONBOARDING ----
+let obCur=0;
+function initOnboarding(){
+  try{if(localStorage.getItem('gm_onboarded'))return}catch(e){}
+  document.getElementById('onboarding').style.display='';
+  document.body.style.overflow='hidden';
+}
+function obGoStep(n){
+  if(n<0||n>3)return;
+  obCur=n;
+  document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
+  document.querySelector(`[data-ob-step="${n}"]`).classList.add('active');
+  document.getElementById('obBack').style.visibility=n===0?'hidden':'visible';
+  document.getElementById('obNext').textContent=n===3?'Launch Dashboard':n===0?'Get Started':'Next';
+  if(n===3)obPreview();
+}
+function obNext(){
+  if(obCur<3){obGoStep(obCur+1);if(obCur>=2)syncOB()}
+  else obFinish();
+}
+function syncOB(){
+  const map={obTH:'inTH',obWTH:'inWTH',obCPT:'inCostPerTH',obGMTLocked:'inGMTLocked',obGMTWallet:'inGMTWallet',obLockAPR:'inLockAPR'};
+  for(const[ob,main]of Object.entries(map)){const el=document.getElementById(ob);if(el&&el.value)document.getElementById(main).value=el.value}
+  document.getElementById('inClickStreak').checked=document.getElementById('obClickStreak')?.checked||false;
+  document.getElementById('inPayGMT').checked=document.getElementById('obPayGMT')?.checked??true;
+}
+function obPreview(){
+  syncOB();
+  if(S.loaded){
+    const i=inp(),m=calc(i),netUSD=m.net*m.bp;
+    document.getElementById('obPrevDaily').textContent=fU(netUSD);
+    document.getElementById('obPrevMonthly').textContent=fU(netUSD*30);
+    document.getElementById('obPrevDiscount').textContent=fP(m.totD);
+    document.getElementById('obPrevVip').textContent=m.vip.n;
+  }
+}
+function obFinish(){
+  syncOB();
+  try{localStorage.setItem('gm_onboarded','1')}catch(e){}
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('donateModal').style.display='';
+}
+function closeDonate(){
+  document.getElementById('donateModal').style.display='none';
+  document.body.style.overflow='';
+  recalc();
+}
+function copyAddr(el,addr){
+  navigator.clipboard.writeText(addr).catch(()=>{});
+  const msg=document.getElementById('donateCopied');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),2000);
+}
+function copyFooterAddr(addr){
+  navigator.clipboard.writeText(addr).catch(()=>{});
+  const msg=document.getElementById('footerCopied');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'),2000);
+}
+function resetOnboarding(){
+  try{localStorage.removeItem('gm_onboarded')}catch(e){}
+  location.reload();
+}
+
+// ---- INIT ----
+fetchData();
+initOnboarding();
+</script>
+</body>
+</html>
