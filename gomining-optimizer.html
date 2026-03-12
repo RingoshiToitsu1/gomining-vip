@@ -1342,10 +1342,27 @@ function runReinvestProjection(){
 
       if(gmtW>=feeGMT){
         gmtW-=feeGMT;
-        th+=gross*bp*1.05/i.cpt;
+        const rewardUSD=gross*bp*1.05;
+
+        // Calculate GMT needed to maintain token discount as TH grows
+        // If all reward went to TH, new fees would be higher → coverage drops
+        const tentativeTH=th+rewardUSD/i.cpt;
+        const tentativeF=fees(tentativeTH,i.wth,bp);
+        const tentativeFeeBase=(tentativeF.t*(1-nonTokD/100)*bp)/gp;
+        const targetCov=tokD>0?tokD*18.9:0;
+        const requiredGMT=tentativeFeeBase*targetCov;
+        const currentGMT=gmtLocked+gmtW;
+        const gmtNeeded=Math.max(0,requiredGMT-currentGMT);
+        const lockCostUSD=gmtNeeded*gp;
+
+        // Split reward: lock GMT to maintain coverage, rest goes to TH
+        const lockUSD=Math.min(lockCostUSD,rewardUSD);
+        const thUSD=rewardUSD-lockUSD;
+        gmtLocked+=lockUSD/gp;
+        th+=thUSD/i.cpt;
         dTH++;
         const ssNet=(gross-f.t*(1-fullD/100))*bp;
-        daily.push({d,mode:'TH',th,gmtW,ssNet,disc:fullD,vip:vip.n});
+        daily.push({d,mode:'TH',th,gmtW,gmtLocked,ssNet,disc:fullD,vip:vip.n});
         continue;
       }else{
         mode='GMT';
@@ -1382,7 +1399,7 @@ function runReinvestProjection(){
     }
 
     const ssNet=net*bp;
-    daily.push({d,mode:'GMT',th,gmtW,ssNet,disc:nonTokD,vip:vipOf(th,gmtLocked).n});
+    daily.push({d,mode:'GMT',th,gmtW,gmtLocked,ssNet,disc:nonTokD,vip:vipOf(th,gmtLocked).n});
   }
 
   // Close last phase
@@ -1439,20 +1456,20 @@ function runReinvestProjection(){
   // Snapshot table
   h+=`<div class="sub-title">Projection Snapshots</div>`;
   h+=`<div class="ri-scroll"><table class="ri-table">
-    <thead><tr><th style="text-align:left">Day</th><th>Mode</th><th>TH</th><th>Daily Profit</th><th>Monthly</th><th>GMT Wallet</th><th>Discount</th></tr></thead><tbody>`;
+    <thead><tr><th style="text-align:left">Day</th><th>Mode</th><th>TH</th><th>Daily Profit</th><th>Monthly</th><th>GMT Wallet</th><th>GMT Locked</th><th>Discount</th></tr></thead><tbody>`;
   for(const s of snaps){
     const mCls=s.mode==='TH'?'mode-th':'mode-gmt';
     const isSwitch=phases.some(p=>p.start===s.d||p.end===s.d);
     h+=`<tr class="${isSwitch?'switch-row':''}">
       <td>${s.d}</td><td class="${mCls}">${s.mode}</td><td>${fN(s.th,1)}</td>
-      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td><td>${fN(s.gmtW,0)}</td><td>${fP(s.disc)}</td></tr>`;
+      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td><td>${fN(s.gmtW,0)}</td><td>${fN(s.gmtLocked,0)}</td><td>${fP(s.disc)}</td></tr>`;
   }
   h+=`</tbody></table></div>`;
 
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
-    <strong style="color:var(--cyan)">How this works:</strong> Starting from your planned ${fU(cap)} investment, in TH mode your full daily reward (+5% bonus) buys hashrate while maintenance fees drain your GMT wallet.
-    When GMT runs out, the system switches to GMT mode &mdash; fees are paid from your BTC reward (losing token discount) and the net (+5% bonus) rebuilds your GMT balance.
+    <strong style="color:var(--cyan)">How this works:</strong> Starting from your planned ${fU(cap)} investment, in TH mode your daily reward (+5% bonus) is split between buying hashrate and time-locking GMT to maintain your token discount as TH grows. Maintenance fees drain your GMT wallet.
+    When GMT wallet runs out, the system switches to GMT mode &mdash; fees are paid from your BTC reward (losing token discount) and the net (+5% bonus) rebuilds your GMT balance.
     Once you accumulate ~30 days of maintenance coverage, it switches back to TH mode. This cycle repeats throughout the projection.</div>`;
 
   $('reinvestResult').innerHTML=h;
