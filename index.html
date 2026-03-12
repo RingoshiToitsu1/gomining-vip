@@ -9,11 +9,11 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#181928;--bg2:#1e1f30;--bg-card:#2d2c31;--bg-card-hover:#3a3940;--bg-input:#232230;
+  --bg:#141520;--bg2:#1a1b2c;--bg-card:#252636;--bg-card-hover:#33344a;--bg-input:#1e1f30;
   --border:#3a3940;--border-focus:#7540ef;
   --purple:#7540ef;--purple-glow:rgba(117,64,239,.18);--purple-soft:#9b72ff;
   --cyan:#00c2ff;--cyan-glow:rgba(0,194,255,.12);--cyan-soft:#4dd8ff;
-  --text:#ffffff;--text2:#b0b8c8;--text3:#7a7d8e;--text4:#4a4d5c;
+  --text:#ffffff;--text2:#c4cbda;--text3:#9499ab;--text4:#6b7085;
   --green:#34d399;--green-glow:rgba(52,211,153,.12);
   --orange:#fbbf24;--orange-glow:rgba(251,191,36,.1);
   --red:#f87171;
@@ -30,7 +30,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 input[type=number]{-moz-appearance:textfield}
 
 /* ---- HEADER ---- */
-.header{position:sticky;top:0;z-index:100;background:rgba(24,25,40,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
+.header{position:sticky;top:0;z-index:100;background:rgba(20,21,32,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
 .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
 .logo{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--purple) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .live-bar{display:flex;gap:.2rem;align-items:center;flex-wrap:wrap}
@@ -771,6 +771,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- FOOTER -->
 <div class="site-footer">
+  <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(117,64,239,.1);border:1px solid rgba(117,64,239,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use promo code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('Ringo5')">Ringo5</span> <span style="color:var(--text2)">for 5% bonus TH on your first miner</span></div><br>
   GoMiningVIP is free and ad-free forever. If you find it helpful, consider donating.<br>
   <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
   <span style="color:var(--text2)">GMT:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
