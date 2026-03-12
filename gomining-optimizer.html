@@ -878,6 +878,15 @@ function estimateCPT(th){
   }
   return TH_TIERS[0].cpt;
 }
+function thForBudget(budget){
+  if(budget<=0)return 0;
+  let lo=0,hi=budget/TH_TIERS[TH_TIERS.length-1].cpt;
+  for(let k=0;k<50;k++){
+    const mid=(lo+hi)/2;
+    if(mid*estimateCPT(mid)<budget)lo=mid;else hi=mid;
+  }
+  return(lo+hi)/2;
+}
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
   const el=document.getElementById(cptId);
@@ -1170,13 +1179,13 @@ function flipProjCell(el){
 
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,cap=i.cap;
-  if(!cap||cap<=0||!i.cpt){
-    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital and cost per TH above to see recommendation.</div>';
+  if(!cap||cap<=0){
+    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital above to see recommendation.</div>';
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
   let best={mo:-Infinity};
   for(let j=0;j<=100;j++){
-    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=tu/i.cpt,ag=gu/gp;
+    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=thForBudget(tu),ag=gu/gp;
     const nt=i.th+at,ng=i.gl+i.gw+ag,f=fees(nt,i.wth,bp);
     const gr=dailyBTCperTH()*nt;
     const ngl=i.gl+ag*0.87,nv=vipOf(nt,ngl);
@@ -1277,7 +1286,7 @@ function runReinvestProjection(){
   const i=inp();
   const days=Math.min(1095,Math.max(1,+$('inReinvestDays').value||365));
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
-  if(!bp||!gp||!dbt||!i.th||!i.cpt){
+  if(!bp||!gp||!dbt||!i.th){
     $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter valid mining parameters to run projection.</div>';
     return;
   }
@@ -1289,7 +1298,7 @@ function runReinvestProjection(){
   // ---- Run the same optimal allocation as the Capital Planner ----
   let best={mo:-Infinity};
   for(let j=0;j<=100;j++){
-    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=tu/i.cpt,ag=gu/gp;
+    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=thForBudget(tu),ag=gu/gp;
     const nt=i.th+at,ng=i.gl+i.gw+ag,f=fees(nt,i.wth,bp);
     const gr=dbt*nt;
     const ngl=i.gl+ag*0.87,nv=vipOf(nt,ngl);
@@ -1346,7 +1355,7 @@ function runReinvestProjection(){
 
         // Full reward goes to TH — fees already paid from GMT wallet
         // Token discount will degrade naturally as wallet drains
-        th+=rewardUSD/i.cpt;
+        th+=thForBudget(rewardUSD);
         dTH++;
         const ssNet=(gross-f.t*(1-fullD/100))*bp;
         daily.push({d,mode:'TH',th,gmtW,ssNet,disc:fullD,vip:vip.n});
