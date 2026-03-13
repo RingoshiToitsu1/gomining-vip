@@ -1324,15 +1324,9 @@ function runReinvestProjection(){
   const startTH=th;
   const daily=[];
 
-  // Calculate starting discount to maintain throughout
-  const startF=fees(th,i.wth,bp);
-  const startVip=vipOf(th,gmtLocked);
-  const startNonTokD=Math.min(30,startVip.d+(i.click?3:0)+i.mm+i.od);
-  const startTG=gmtLocked+gmtW;
-  const startFC=(startF.t*(1-startNonTokD/100)*bp)/gp;
-  const startCov=startFC>0?startTG/startFC:Infinity;
-  const targetTokD=i.payG?Math.min(20,Math.floor(startCov/18.9)):0;
-  const targetCovDays=targetTokD*18.9;
+  // Use planner's computed discount as target to maintain
+  const targetTokD=best.ntd||0;
+  const targetCovDays=(targetTokD+0.5)*18.9; // slight buffer to avoid floor() boundary issues
 
   // Helper: compute daily net USD at a given TH/GMT state
   function dailyNet(curTH,curLocked){
