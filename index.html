@@ -1333,9 +1333,11 @@ function runReinvestProjection(){
   const targetCovDays=targetTokD*18.9;
 
   for(let d=1;d<=days;d++){
-    // --- Staking yield: locked GMT earns daily portion of APR ---
-    const stakingGMT=gmtLocked*(apr/100)/365;
-    gmtLocked+=stakingGMT;
+    // --- Staking yield: paid weekly (every 7th day) ---
+    if(d%7===0){
+      const weeklyGMT=gmtLocked*(apr/100)/52;
+      gmtLocked+=weeklyGMT;
+    }
 
     // --- Current state ---
     const gross=dbt*th;
