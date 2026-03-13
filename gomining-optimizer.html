@@ -1179,89 +1179,123 @@ function flipProjCell(el){
 }
 
 function renderPlanner(i,m){
-  const bp=m.bp,gp=m.gp,cap=i.cap;
+  const bp=m.bp,gp=m.gp,cap=i.cap,dbt=dailyBTCperTH();
   if(!cap||cap<=0){
     $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital above to see recommendation.</div>';
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
-  let best={mo:-Infinity};
-  for(let j=0;j<=100;j++){
-    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=thForBudget(tu),ag=gu/gp;
-    const nt=i.th+at,ng=i.gl+i.gw+ag,f=fees(nt,i.wth,bp);
-    const gr=dailyBTCperTH()*nt;
-    const ngl=i.gl+ag*0.87,nv=vipOf(nt,ngl);
-    const nonTokD2=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
-    const feesForBurn2=f.t*(1-nonTokD2/100);
-    const nb=(feesForBurn2*bp)/gp,cd=nb>0?ng/nb:Infinity;
-    const ntd=i.payG?Math.min(20,Math.floor(cd/18.9)):0;
-    const td2=Math.min(30,ntd+nonTokD2);
-    const df=f.t*(1-td2/100),net=gr-df,mo=net*bp*30;
-    if(mo>best.mo)best={tu,gu,at,ag,nt,ng,f,nb,cd,ntd,nv,td2,df,net,mo,gr};
-  }
-  const b=best;
 
-  // 20% target analysis (post-investment values)
-  const postBurn=(b.f.t*(1-(Math.min(30,b.nv.d+(i.click?3:0)+i.mm+i.od))/100)*bp)/gp;
-  const gmtFor20=postBurn*378, gmtHave=i.gl+i.gw+b.ag, gmtNeed20=Math.max(0,gmtFor20-gmtHave);
-  const usdNeed20=gmtNeed20*gp, canReach20=gmtNeed20<=0||b.ntd>=20||usdNeed20<=cap;
+  // --- STEP 1: GMT needed for 20% at CURRENT TH ---
+  const curF=fees(i.th,i.wth,bp);
+  const curVip=vipOf(i.th,i.gl);
+  const curNonTokD=Math.min(30,curVip.d+(i.click?3:0)+i.mm+i.od);
+  const curDailyBurnGMT=(curF.t*(1-curNonTokD/100)*bp)/gp;
+  const covNeeded=378; // 20 * 18.9
+  const gmtNeededCur=curDailyBurnGMT*covNeeded;
 
-  let ah='';
-  // Explain why
-  const thPct=Math.round(b.tu/cap*100), gmtPct=100-thPct;
-  ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
-  if(gmtPct>=80){
-    ah+=`<strong style="color:var(--cyan)">Why ${gmtPct}% GMT?</strong> A ${fP(b.ntd-m.tok)} discount increase on your entire ${fN(i.th,0)} TH farm saves more per month than the marginal revenue from ${fN(b.at,0)} extra TH.`;
-    if(!canReach20)ah+=` Note: ${fU(cap)} is not enough for 20% discount -- you'd need ${fU(usdNeed20)} in GMT alone (${fN(gmtNeed20,0)} GMT). This plan gets you to ${fP(b.ntd)}.`;
-  }else if(thPct>=80){
-    ah+=`<strong style="color:var(--cyan)">Why ${thPct}% TH?</strong> Your discount coverage is already strong. Additional TH generates more revenue than further GMT accumulation at this point.`;
+  // --- STEP 2: Existing GMT ---
+  const existingGMT=i.gl+i.gw;
+
+  // --- STEP 3: GMT deficit ---
+  const gmtDeficit=Math.max(0,gmtNeededCur-existingGMT);
+  const deficitCostUSD=gmtDeficit*gp;
+
+  // --- STEPS 5-6: Allocate ---
+  let gu,tu,ag,at;
+  if(deficitCostUSD>=cap){
+    // Can't cover 20% — all capital to GMT
+    gu=cap; tu=0; ag=cap/gp; at=0;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Balanced split.</strong> The optimizer found that ${gmtPct}% GMT / ${thPct}% TH maximizes your monthly net by balancing discount savings with revenue growth.`;
+    // Cover deficit, rest to TH
+    gu=deficitCostUSD; tu=cap-deficitCostUSD;
+    ag=gmtDeficit; at=thForBudget(tu);
+  }
+
+  // --- STEP 7: Recalculate at NEW TH level ---
+  const nt=i.th+at, ng=existingGMT+ag;
+  const newF=fees(nt,i.wth,bp);
+  const ngl=i.gl+ag*0.87, nv=vipOf(nt,ngl);
+  const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
+  const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
+  const gmtNeededNew=newDailyBurnGMT*covNeeded;
+  const gmtAfter=ng; // total GMT after purchase
+  const covAfter=newDailyBurnGMT>0?gmtAfter/newDailyBurnGMT:Infinity;
+  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
+  const td2=Math.min(30,ntd+newNonTokD);
+  const newGmtShortfall=Math.max(0,gmtNeededNew-gmtAfter);
+  const newShortfallUSD=newGmtShortfall*gp;
+
+  // Compute net/monthly at post-investment state
+  const gr=dbt*nt;
+  const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*30;
+
+  // --- STEP 8: Display ---
+  let ah='';
+
+  // Explanation
+  const thPct=cap>0?Math.round(tu/cap*100):0, gmtPct=100-thPct;
+  ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
+  if(deficitCostUSD>=cap){
+    ah+=`<strong style="color:var(--orange)">100% to GMT.</strong> Your ${fU(cap)} budget is not enough to cover the 20% token discount deficit. You need ${fN(gmtDeficit,0)} GMT (${fU(deficitCostUSD)}) to reach 20%. This plan buys ${fN(ag,0)} GMT — you're still ${fN(gmtDeficit-ag,0)} GMT short.`;
+  }else if(gmtDeficit<=0){
+    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> You already have enough GMT for 20% token discount at your current ${fN(i.th,1)} TH. All capital goes to hashrate growth.`;
+    if(newGmtShortfall>0)ah+=` Note: the additional ${fN(at,1)} TH increases fees, requiring ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% at the new farm size.`;
+  }else{
+    ah+=`<strong style="color:var(--cyan)">Deficit-based split.</strong> You need ${fN(gmtDeficit,0)} GMT (${fU(deficitCostUSD)}) to reach 20% token discount. The remaining ${fU(tu)} goes to TH (+${fN(at,1)} TH).`;
+    if(newGmtShortfall>0)ah+=` Note: the new TH pushes GMT requirement higher — you'll need ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% at ${fN(nt,1)} TH.`;
   }
   ah+='</div>';
 
   ah+=`<div class="alloc-grid">
-    <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(b.tu)}</div><div class="a-sub">+${fN(b.at,1)} TH</div></div>
-    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(b.gu)}</div><div class="a-sub">+${fN(b.ag,0)} GMT</div></div>
+    <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>
+    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(gu)}</div><div class="a-sub">+${fN(ag,0)} GMT (deficit only)</div></div>
   </div>`;
-  const gl=b.ag*.87,gq=b.ag*.13;
-  ah+=row('Lock in VeGoMining (87%)',`${fN(gl,0)} GMT`);
-  ah+=row('Keep liquid (13%)',`${fN(gq,0)} GMT`);
+  const gl=ag*0.87,gq=ag*0.13;
+  if(ag>0){
+    ah+=row('Lock in VeGoMining (87%)',`${fN(gl,0)} GMT`);
+    ah+=row('Keep liquid (13%)',`${fN(gq,0)} GMT`);
+  }
 
-  // 20% target
+  // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
-  ah+=row('GMT needed for 20%',`${fN(gmtFor20,0)} GMT<span class="sub">${fU(gmtFor20*gp)}</span>`);
-  ah+=row('You currently have',`${fN(gmtHave,0)} GMT`);
-  if(!canReach20){
-    ah+=row('Still need',`${fN(gmtNeed20,0)} GMT<span class="sub">${fU(usdNeed20)}</span>`,'orange');
-    ah+=`<div class="warn">You would need an additional ${fU(usdNeed20)} in GMT to reach full 20% token discount.</div>`;
-  }else{
-    ah+=row('Still need','None — budget covers 20%','green');
+  ah+=row('GMT needed for 20% (at new TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
+  ah+=row('You currently have',`${fN(existingGMT,0)} GMT`);
+  if(ag>0)ah+=row('Purchasing',`+${fN(ag,0)} GMT<span class="sub">${fU(gu)}</span>`);
+  ah+=row('Total after purchase',`${fN(gmtAfter,0)} GMT`);
+  if(newGmtShortfall>0){
+    ah+=row('Still need for 20% at new TH',`${fN(newGmtShortfall,0)} GMT<span class="sub">${fU(newShortfallUSD)}</span>`,'orange');
+    ah+=`<div class="warn">Adding ${fN(at,1)} TH increases daily fees. You need ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% discount at ${fN(nt,1)} TH.</div>`;
+  }else if(ntd>=20){
+    ah+=row('Status','20% token discount covered','green');
+  }else if(deficitCostUSD>=cap){
+    ah+=row('Still need',`${fN(gmtDeficit-ag,0)} GMT<span class="sub">${fU((gmtDeficit-ag)*gp)}</span>`,'orange');
   }
 
   $('allocDisplay').innerHTML=ah;
 
-  const ov=vipOf(i.th,i.gl),tc=b.nv.n!==ov.n;
-  const curMo=m.net*m.bp*30,imp=b.mo-curMo;
-  const svBTC=b.f.t*(b.td2/100),rec=imp>0?cap/imp:Infinity;
+  // --- Post-investment projections ---
+  const ov=vipOf(i.th,i.gl),tc=nv.n!==ov.n;
+  const curMo=m.net*m.bp*30,imp=mo-curMo;
+  const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
   let ph='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
-  ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(b.nv)}`;
+  ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  ph+=row('New hashrate',`${fN(b.nt,1)} TH`);
-  ph+=row('New token discount',fP(b.ntd),'cyan');
-  ph+=row('New total discount',fP(b.td2),'cyan');
+  ph+=row('New hashrate',`${fN(nt,1)} TH`);
+  ph+=row('New token discount',fP(ntd),'cyan');
+  ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
-  const projMoStaking=(i.gl+b.ag*0.87)*(i.apr/100)/52*gp*4.33;
-  const projMoTotal=b.mo+projMoStaking;
+  const newLocked=i.gl+gl;
+  const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
+  const projMoTotal=mo+projMoStaking;
   ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">mining + staking</span>`,projMoTotal>=0?'green':'red');
   ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}<span class="sub">mining only</span>`,imp>=0?'green':'red');
   ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
   ph+=`<div class="divider"></div>`;
-  // Self-sustaining loop for projected position
-  const newLocked=i.gl+gl;
+  // Self-sustaining loop
   const newWkStake=(newLocked*i.apr/100)/52;
-  const newDailyNetGMT=(b.net*bp)/gp;
+  const newDailyNetGMT=(net*bp)/gp;
   const newWkNet=newDailyNetGMT*7,newWkTotal=newWkNet+newWkStake;
   const newMoTotal=newWkTotal*4.33;
   ph+=`<div class="sub-title">Self-Sustaining Loop</div>`;
@@ -1278,10 +1312,10 @@ function renderPlanner(i,m){
   ph+=row('Months to recoup',rec===Infinity?'N/A':`${fN(rec,1)} months`,rec<12?'green':rec<24?'orange':'red');
   $('projDisplay').innerHTML=ph;
 
-  // BTC price projections using post-investment TH and discount
+  // BTC price projections
   const moStakingUSD=newWkStake*gp*4.33;
-  $('projTable').innerHTML=renderProjections(b.nt,i.wth,b.td2,
-    `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount (incl. staking)`,moStakingUSD);
+  $('projTable').innerHTML=renderProjections(nt,i.wth,td2,
+    `Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (incl. staking)`,moStakingUSD);
 
 }
 
@@ -1300,21 +1334,18 @@ function runReinvestProjection(){
     return;
   }
 
-  // ---- Run the same optimal allocation as the Capital Planner ----
-  let best={mo:-Infinity};
-  for(let j=0;j<=100;j++){
-    const fr=j/100,tu=cap*fr,gu=cap*(1-fr),at=thForBudget(tu),ag=gu/gp;
-    const nt=i.th+at,ng=i.gl+i.gw+ag,f=fees(nt,i.wth,bp);
-    const gr=dbt*nt;
-    const ngl=i.gl+ag*0.87,nv=vipOf(nt,ngl);
-    const nonTokD2=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
-    const feesForBurn2=f.t*(1-nonTokD2/100);
-    const nb=(feesForBurn2*bp)/gp,cd=nb>0?ng/nb:Infinity;
-    const ntd=i.payG?Math.min(20,Math.floor(cd/18.9)):0;
-    const td2=Math.min(30,ntd+nonTokD2);
-    const df=f.t*(1-td2/100),net=gr-df,mo=net*bp*30;
-    if(mo>best.mo)best={tu,gu,at,ag,nt,td2,ntd,nv,net,mo};
-  }
+  // ---- Run the same deficit-based allocation as the Capital Planner ----
+  const curF=fees(i.th,i.wth,bp);
+  const curVip=vipOf(i.th,i.gl);
+  const curNonTokD=Math.min(30,curVip.d+(i.click?3:0)+i.mm+i.od);
+  const curBurnGMT=(curF.t*(1-curNonTokD/100)*bp)/gp;
+  const existGMT=i.gl+i.gw;
+  const gmtDef=Math.max(0,curBurnGMT*378-existGMT);
+  const defCost=gmtDef*gp;
+  let bTU,bAG,bAT;
+  if(defCost>=cap){bTU=0;bAG=cap/gp;bAT=0;}
+  else{bTU=cap-defCost;bAG=gmtDef;bAT=thForBudget(bTU);}
+  const best={tu:bTU,ag:bAG,at:bAT,nt:i.th+bAT};
 
   // Post-investment starting values
   const postTH=best.nt;
