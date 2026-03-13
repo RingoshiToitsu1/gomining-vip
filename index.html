@@ -1197,7 +1197,7 @@ function renderPlanner(i,m){
     const ntTest=i.th+atTest;
     const totalGMT=existingGMT+agTest;
     const fTest=fees(ntTest,i.wth,bp);
-    const vTest=vipOf(ntTest,i.gl+agTest*0.87);
+    const vTest=vipOf(ntTest,i.gl+agTest);
     const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
     const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
     const needed=burnGMT*covNeeded;
@@ -1227,7 +1227,7 @@ function renderPlanner(i,m){
   // Final state
   const nt=i.th+at, ng=existingGMT+ag;
   const newF=fees(nt,i.wth,bp);
-  const ngl=i.gl+ag*0.87, nv=vipOf(nt,ngl);
+  const ngl=i.gl+ag, nv=vipOf(nt,ngl);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
@@ -1263,10 +1263,9 @@ function renderPlanner(i,m){
     <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>
     <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(gu)}</div><div class="a-sub">+${fN(ag,0)} GMT</div></div>
   </div>`;
-  const gl=ag*0.87,gq=ag*0.13;
+  const gl=ag;
   if(ag>0){
-    ah+=row('Lock in VeGoMining (87%)',`${fN(gl,0)} GMT`);
-    ah+=row('Keep liquid (13%)',`${fN(gq,0)} GMT`);
+    ah+=row('Lock in VeGoMining',`${fN(gl,0)} GMT`);
   }
 
   // Path to 20%
@@ -1349,7 +1348,7 @@ function runReinvestProjection(){
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
     const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
-    const fT=fees(ntT,i.wth,bp),vT=vipOf(ntT,i.gl+agT*0.87);
+    const fT=fees(ntT,i.wth,bp),vT=vipOf(ntT,i.gl+agT);
     const nd=Math.min(30,vT.d+(i.click?3:0)+i.mm+i.od);
     const burn=(fT.t*(1-nd/100)*bp)/gp;
     return{deficit:Math.max(0,burn*378-(existGMT+agT)),at:atT,ag:agT,nt:ntT};
@@ -1365,8 +1364,8 @@ function runReinvestProjection(){
 
   // Post-investment starting values
   const postTH=best.nt;
-  const postLocked=i.gl+best.ag*0.87;
-  const postWallet=i.gw+best.ag*0.13;
+  const postLocked=i.gl+best.ag;
+  const postWallet=i.gw;
   const apr=i.apr||0;
 
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
@@ -1464,7 +1463,6 @@ function runReinvestProjection(){
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
-    <strong>${fN(postWallet,0)} GMT</strong> wallet,
     <strong>${fN(postLocked,0)} GMT</strong> locked</div>`;
 
   h+=`<div class="ri-summary">
