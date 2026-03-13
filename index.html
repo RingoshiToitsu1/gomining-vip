@@ -1185,45 +1185,58 @@ function renderPlanner(i,m){
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
 
-  // --- STEP 1: GMT needed for 20% at CURRENT TH ---
-  const curF=fees(i.th,i.wth,bp);
-  const curVip=vipOf(i.th,i.gl);
-  const curNonTokD=Math.min(30,curVip.d+(i.click?3:0)+i.mm+i.od);
-  const curDailyBurnGMT=(curF.t*(1-curNonTokD/100)*bp)/gp;
-  const covNeeded=378; // 20 * 18.9
-  const gmtNeededCur=curDailyBurnGMT*covNeeded;
-
-  // --- STEP 2: Existing GMT ---
+  // --- Iterative deficit solver: find GMT/TH split that covers 20% at final TH ---
   const existingGMT=i.gl+i.gw;
+  const covNeeded=378; // 20 * 18.9
 
-  // --- STEP 3: GMT deficit ---
-  const gmtDeficit=Math.max(0,gmtNeededCur-existingGMT);
-  const deficitCostUSD=gmtDeficit*gp;
-
-  // --- STEPS 5-6: Allocate ---
-  let gu,tu,ag,at;
-  if(deficitCostUSD>=cap){
-    // Can't cover 20% — all capital to GMT
-    gu=cap; tu=0; ag=cap/gp; at=0;
-  }else{
-    // Cover deficit, rest to TH
-    gu=deficitCostUSD; tu=cap-deficitCostUSD;
-    ag=gmtDeficit; at=thForBudget(tu);
+  // Helper: given GMT budget, compute deficit at resulting TH level
+  function solveAlloc(gmtBudgetUSD){
+    const agTest=gmtBudgetUSD/gp;
+    const thBudgetUSD=cap-gmtBudgetUSD;
+    const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
+    const ntTest=i.th+atTest;
+    const totalGMT=existingGMT+agTest;
+    const fTest=fees(ntTest,i.wth,bp);
+    const vTest=vipOf(ntTest,i.gl+agTest*0.87);
+    const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
+    const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
+    const needed=burnGMT*covNeeded;
+    return{needed,have:totalGMT,deficit:Math.max(0,needed-totalGMT),at:atTest,ag:agTest,nt:ntTest,burnGMT};
   }
 
-  // --- STEP 7: Recalculate at NEW TH level ---
+  // Iterate: start with deficit at current TH, then adjust for new TH
+  let gu=0,tu=cap,ag=0,at=thForBudget(cap);
+  const check0=solveAlloc(0);
+  if(check0.deficit<=0&&i.payG){
+    // Already have enough GMT for 20% even with all capital to TH
+    gu=0; tu=cap; ag=0; at=check0.at;
+  }else if(i.payG){
+    // Binary search for the minimum GMT spend that covers 20% at resulting TH
+    let lo=0,hi=cap;
+    for(let k=0;k<50;k++){
+      const mid=(lo+hi)/2;
+      const r=solveAlloc(mid);
+      if(r.deficit<=0)hi=mid; else lo=mid;
+    }
+    gu=hi; tu=cap-gu; ag=gu/gp; at=tu>0?thForBudget(tu):0;
+  }else{
+    // Not paying in GMT — all to TH
+    gu=0; tu=cap; ag=0; at=thForBudget(cap);
+  }
+
+  // Final state
   const nt=i.th+at, ng=existingGMT+ag;
   const newF=fees(nt,i.wth,bp);
   const ngl=i.gl+ag*0.87, nv=vipOf(nt,ngl);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
-  const gmtAfter=ng; // total GMT after purchase
+  const gmtAfter=ng;
   const covAfter=newDailyBurnGMT>0?gmtAfter/newDailyBurnGMT:Infinity;
   const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
   const td2=Math.min(30,ntd+newNonTokD);
-  const newGmtShortfall=Math.max(0,gmtNeededNew-gmtAfter);
-  const newShortfallUSD=newGmtShortfall*gp;
+  const canCover20=ntd>=20;
+  const gmtShortfall=Math.max(0,gmtNeededNew-gmtAfter);
 
   // Compute net/monthly at post-investment state
   const gr=dbt*nt;
@@ -1235,20 +1248,20 @@ function renderPlanner(i,m){
   // Explanation
   const thPct=cap>0?Math.round(tu/cap*100):0, gmtPct=100-thPct;
   ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
-  if(deficitCostUSD>=cap){
-    ah+=`<strong style="color:var(--orange)">100% to GMT.</strong> Your ${fU(cap)} budget is not enough to cover the 20% token discount deficit. You need ${fN(gmtDeficit,0)} GMT (${fU(deficitCostUSD)}) to reach 20%. This plan buys ${fN(ag,0)} GMT — you're still ${fN(gmtDeficit-ag,0)} GMT short.`;
-  }else if(gmtDeficit<=0){
-    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> You already have enough GMT for 20% token discount at your current ${fN(i.th,1)} TH. All capital goes to hashrate growth.`;
-    if(newGmtShortfall>0)ah+=` Note: the additional ${fN(at,1)} TH increases fees, requiring ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% at the new farm size.`;
+  if(!i.payG){
+    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> GMT fee payment is off — all capital goes to hashrate.`;
+  }else if(!canCover20&&ag>0){
+    ah+=`<strong style="color:var(--orange)">100% to GMT.</strong> Your ${fU(cap)} budget is not enough to cover the 20% token discount deficit. You need ${fN(gmtNeededNew,0)} GMT (${fU(gmtNeededNew*gp)}) total for 20%. This plan buys ${fN(ag,0)} GMT — you're still ${fN(gmtShortfall,0)} GMT short.`;
+  }else if(gu<=0){
+    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> You already have enough GMT for 20% token discount at ${fN(nt,1)} TH. All capital goes to hashrate growth.`;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Deficit-based split.</strong> You need ${fN(gmtDeficit,0)} GMT (${fU(deficitCostUSD)}) to reach 20% token discount. The remaining ${fU(tu)} goes to TH (+${fN(at,1)} TH).`;
-    if(newGmtShortfall>0)ah+=` Note: the new TH pushes GMT requirement higher — you'll need ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% at ${fN(nt,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> ${fU(gu)} to GMT ensures 20% token discount at the new ${fN(nt,1)} TH level (accounts for increased fees from more TH). The remaining ${fU(tu)} buys +${fN(at,1)} TH.`;
   }
   ah+='</div>';
 
   ah+=`<div class="alloc-grid">
     <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>
-    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(gu)}</div><div class="a-sub">+${fN(ag,0)} GMT (deficit only)</div></div>
+    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(gu)}</div><div class="a-sub">+${fN(ag,0)} GMT</div></div>
   </div>`;
   const gl=ag*0.87,gq=ag*0.13;
   if(ag>0){
@@ -1258,17 +1271,14 @@ function renderPlanner(i,m){
 
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
-  ah+=row('GMT needed for 20% (at new TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
+  ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
   ah+=row('You currently have',`${fN(existingGMT,0)} GMT`);
   if(ag>0)ah+=row('Purchasing',`+${fN(ag,0)} GMT<span class="sub">${fU(gu)}</span>`);
   ah+=row('Total after purchase',`${fN(gmtAfter,0)} GMT`);
-  if(newGmtShortfall>0){
-    ah+=row('Still need for 20% at new TH',`${fN(newGmtShortfall,0)} GMT<span class="sub">${fU(newShortfallUSD)}</span>`,'orange');
-    ah+=`<div class="warn">Adding ${fN(at,1)} TH increases daily fees. You need ${fN(newGmtShortfall,0)} more GMT (${fU(newShortfallUSD)}) to maintain 20% discount at ${fN(nt,1)} TH.</div>`;
-  }else if(ntd>=20){
-    ah+=row('Status','20% token discount covered','green');
-  }else if(deficitCostUSD>=cap){
-    ah+=row('Still need',`${fN(gmtDeficit-ag,0)} GMT<span class="sub">${fU((gmtDeficit-ag)*gp)}</span>`,'orange');
+  if(canCover20){
+    ah+=row('Status','20% token discount covered at new TH','green');
+  }else{
+    ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
   }
 
   $('allocDisplay').innerHTML=ah;
@@ -1334,18 +1344,24 @@ function runReinvestProjection(){
     return;
   }
 
-  // ---- Run the same deficit-based allocation as the Capital Planner ----
-  const curF=fees(i.th,i.wth,bp);
-  const curVip=vipOf(i.th,i.gl);
-  const curNonTokD=Math.min(30,curVip.d+(i.click?3:0)+i.mm+i.od);
-  const curBurnGMT=(curF.t*(1-curNonTokD/100)*bp)/gp;
+  // ---- Run the same iterative allocation as the Capital Planner ----
   const existGMT=i.gl+i.gw;
-  const gmtDef=Math.max(0,curBurnGMT*378-existGMT);
-  const defCost=gmtDef*gp;
-  let bTU,bAG,bAT;
-  if(defCost>=cap){bTU=0;bAG=cap/gp;bAT=0;}
-  else{bTU=cap-defCost;bAG=gmtDef;bAT=thForBudget(bTU);}
-  const best={tu:bTU,ag:bAG,at:bAT,nt:i.th+bAT};
+  function solveSplit(gmtUSD){
+    const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
+    const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
+    const fT=fees(ntT,i.wth,bp),vT=vipOf(ntT,i.gl+agT*0.87);
+    const nd=Math.min(30,vT.d+(i.click?3:0)+i.mm+i.od);
+    const burn=(fT.t*(1-nd/100)*bp)/gp;
+    return{deficit:Math.max(0,burn*378-(existGMT+agT)),at:atT,ag:agT,nt:ntT};
+  }
+  let bGU=0;
+  if(i.payG&&solveSplit(0).deficit>0){
+    let lo=0,hi=cap;
+    for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(solveSplit(mid).deficit<=0)hi=mid;else lo=mid;}
+    bGU=hi;
+  }
+  const bR=solveSplit(bGU);
+  const best={tu:cap-bGU,ag:bR.ag,at:bR.at,nt:bR.nt};
 
   // Post-investment starting values
   const postTH=best.nt;
