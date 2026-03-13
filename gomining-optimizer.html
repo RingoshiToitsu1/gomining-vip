@@ -1252,8 +1252,10 @@ function renderPlanner(i,m){
   ph+=row('New token discount',fP(b.ntd),'cyan');
   ph+=row('New total discount',fP(b.td2),'cyan');
   ph+=`<div class="divider"></div>`;
-  ph+=row('Projected monthly',fU(b.mo),b.mo>=0?'green':'red');
-  ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}`,imp>=0?'green':'red');
+  const projMoStaking=(i.gl+b.ag*0.87)*(i.apr/100)/52*gp*4.33;
+  const projMoTotal=b.mo+projMoStaking;
+  ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">mining + staking</span>`,projMoTotal>=0?'green':'red');
+  ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}<span class="sub">mining only</span>`,imp>=0?'green':'red');
   ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
   ph+=`<div class="divider"></div>`;
   // Self-sustaining loop for projected position
@@ -1328,7 +1330,7 @@ function runReinvestProjection(){
   const targetTokD=best.ntd||0;
   const targetCovDays=(targetTokD+0.5)*18.9; // slight buffer to avoid floor() boundary issues
 
-  // Helper: compute daily net USD at a given TH/GMT state
+  // Helper: compute daily net USD at a given TH/GMT state (mining + staking)
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,i.wth,bp);
     const v=vipOf(curTH,curLocked);
@@ -1338,7 +1340,9 @@ function runReinvestProjection(){
     const cv=fc2>0?tg2/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
-    return{net:(g-f.t*(1-fd/100))*bp,disc:fd,tokD:td,vip:v.n};
+    const miningUSD=(g-f.t*(1-fd/100))*bp;
+    const stakingUSD=(curLocked*(apr/100)/365)*gp;
+    return{net:miningUSD+stakingUSD,disc:fd,tokD:td,vip:v.n};
   }
 
   // Helper: check if a given TH/GMT combo maintains target discount
