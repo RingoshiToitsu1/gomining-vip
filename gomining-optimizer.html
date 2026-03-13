@@ -771,8 +771,8 @@ input[type=number]{-moz-appearance:textfield}
     <div class="section-body">
       <div class="input-grid" style="max-width:300px">
         <div class="field">
-          <label>Projection Length <span class="tip" data-tip="Number of days to simulate manually reinvesting net profit into TH. Max 3 years (1095 days).">?</span></label>
-          <div class="field-input"><input type="number" id="inReinvestDays" value="365" step="1" min="1" max="1095"><span class="unit">days</span></div>
+          <label>Projection Length <span class="tip" data-tip="Number of days to simulate reinvesting net profit into TH. Max 10 years (3650 days).">?</span></label>
+          <div class="field-input"><input type="number" id="inReinvestDays" value="365" step="1" min="1" max="3650"><span class="unit">days</span></div>
         </div>
       </div>
       <div style="margin-top:.8rem">
@@ -1333,7 +1333,7 @@ function renderPlanner(i,m){
 function runReinvestProjection(){
   if(!S.loaded)return;
   const i=inp();
-  const days=Math.min(1095,Math.max(1,+$('inReinvestDays').value||365));
+  const days=Math.min(3650,Math.max(1,+$('inReinvestDays').value||365));
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
   if(!bp||!gp||!dbt){
     $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load...</div>';
@@ -1446,7 +1446,8 @@ function runReinvestProjection(){
 
   // Select snapshot days: first, last, every 30d
   const snapSet=new Set([0,daily.length-1]);
-  for(let j=29;j<daily.length;j+=30)snapSet.add(j);
+  const snapInterval=days<=365?30:days<=1095?90:180;
+  for(let j=snapInterval-1;j<daily.length;j+=snapInterval)snapSet.add(j);
   const snaps=Array.from(snapSet).sort((a,b)=>a-b).map(j=>daily[j]).filter(Boolean);
 
   // Final state discount
