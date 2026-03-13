@@ -764,10 +764,10 @@ input[type=number]{-moz-appearance:textfield}
   <!-- AUTO-REINVEST PROJECTION -->
   <div class="section" id="secReinvest">
     <div class="section-header" onclick="toggleSection('secReinvest')">
-      <div class="section-title"><span class="icon icon-green">&#8635;</span> Manual Reinvest Projection</div>
+      <div class="section-title"><span class="icon icon-green">&#8635;</span> Reinvest Growth Projection</div>
       <div class="section-toggle">&#9662;</div>
     </div>
-    <div class="section-desc">Simulate using your daily net profit to manually buy more TH each day. Fees are paid from BTC reward — GMT wallet stays untouched, token discount stays stable.</div>
+    <div class="section-desc">Simulate reinvesting all daily rewards (mining + staking) into TH and GMT. Automatically balances TH growth with GMT locking to maintain 20% token discount.</div>
     <div class="section-body">
       <div class="input-grid" style="max-width:300px">
         <div class="field">
@@ -776,7 +776,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
       </div>
       <div style="margin-top:.8rem">
-        <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Run Projection</button>
+        <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Run Growth Projection</button>
       </div>
       <div id="reinvestResult" style="margin-top:1rem"></div>
     </div>
@@ -1281,7 +1281,7 @@ function renderPlanner(i,m){
 
 }
 
-// ---- MANUAL REINVEST PROJECTION ----
+// ---- REINVEST PROJECTION ----
 function runReinvestProjection(){
   if(!S.loaded)return;
   const i=inp();
@@ -1316,37 +1316,75 @@ function runReinvestProjection(){
   const postTH=best.nt;
   const postLocked=i.gl+best.ag*0.87;
   const postWallet=i.gw+best.ag*0.13;
+  const apr=i.apr||0;
 
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
   const startTH=th;
   const daily=[];
-  let totalSpent=0;
+  let totalTHSpent=0,totalGMTBought=0;
 
   for(let d=1;d<=days;d++){
+    // --- Staking yield: locked GMT earns daily portion of APR ---
+    const stakingGMT=gmtLocked*(apr/100)/365;
+    gmtLocked+=stakingGMT;
+
+    // --- Mining reward ---
     const gross=dbt*th;
     const f=fees(th,i.wth,bp);
     const vip=vipOf(th,gmtLocked);
     const nonTokD=Math.min(30,vip.d+(i.click?3:0)+i.mm+i.od);
-
-    // Token discount from locked+wallet GMT
     const tg=gmtLocked+gmtW;
     const fc=(f.t*(1-nonTokD/100)*bp)/gp;
     const cov=fc>0?tg/fc:Infinity;
     const tokD=i.payG?Math.min(20,Math.floor(cov/18.9)):0;
     const fullD=Math.min(30,tokD+nonTokD);
-
-    // Fees paid from BTC reward (normal operation, no GMT drain)
     const feesBTC=f.t*(1-fullD/100);
-    const net=gross-feesBTC;
-    const netUSD=net*bp;
+    const netBTC=gross-feesBTC;
+    const netUSD=netBTC*bp;
 
-    // Use net profit to manually buy TH
-    if(netUSD>0){
-      th+=thForBudget(netUSD);
-      totalSpent+=netUSD;
+    if(netUSD<=0){
+      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:0,gmtBought:0});
+      continue;
     }
 
-    daily.push({d,th,ssNet:netUSD,disc:fullD,vip:vip.n,gmtW});
+    // --- Allocate net reward: maximize TH while maintaining 20% token discount ---
+    // Try splits from 100% TH down to 0% TH, find highest TH that keeps tokD>=20
+    let bestSplit={at:0,ag:0,thFr:0};
+    for(let j=100;j>=0;j--){
+      const fr=j/100;
+      const thBudget=netUSD*fr,gmtBudget=netUSD*(1-fr);
+      const at=thForBudget(thBudget);
+      const ag=gmtBudget/gp;
+      const newTH=th+at;
+      const newLocked=gmtLocked+ag;
+      const newTotal=newLocked+gmtW;
+      const newF=fees(newTH,i.wth,bp);
+      const newVip=vipOf(newTH,newLocked);
+      const newNonTokD=Math.min(30,newVip.d+(i.click?3:0)+i.mm+i.od);
+      const newFc=(newF.t*(1-newNonTokD/100)*bp)/gp;
+      const newCov=newFc>0?newTotal/newFc:Infinity;
+      const newTokD=i.payG?Math.min(20,Math.floor(newCov/18.9)):0;
+      if(newTokD>=20){
+        bestSplit={at,ag,thFr:fr};
+        break;
+      }
+    }
+
+    // If no split reaches 20%, put everything into GMT to rebuild toward it
+    if(bestSplit.at===0&&bestSplit.ag===0){
+      const ag=netUSD/gp;
+      gmtLocked+=ag;
+      totalGMTBought+=ag;
+      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:0,gmtBought:ag});
+      continue;
+    }
+
+    th+=bestSplit.at;
+    gmtLocked+=bestSplit.ag;
+    totalTHSpent+=netUSD*bestSplit.thFr;
+    totalGMTBought+=bestSplit.ag;
+
+    daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:bestSplit.at,gmtBought:bestSplit.ag});
   }
 
   // Select snapshot days: first, last, every 30d
@@ -1354,10 +1392,12 @@ function runReinvestProjection(){
   for(let j=29;j<daily.length;j+=30)snapSet.add(j);
   const snaps=Array.from(snapSet).sort((a,b)=>a-b).map(j=>daily[j]).filter(Boolean);
 
-  // Render results
+  // Final state discount
+  const finalEntry=daily[daily.length-1];
   const thGain=th-startTH,thPct=thGain/startTH*100;
-  const startSS=daily[0].ssNet,finalSS=daily[daily.length-1].ssNet;
+  const startSS=daily[0].ssNet,finalSS=finalEntry.ssNet;
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
+  const gmtGain=gmtLocked-postLocked;
 
   let h='';
 
@@ -1371,26 +1411,28 @@ function runReinvestProjection(){
 
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
-    <div class="ri-card"><div class="ri-label">Daily Profit (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label">Total Reinvested</div><div class="ri-val green">${fU(totalSpent)}</div><div class="ri-sub">${days} days</div></div>
-    <div class="ri-card"><div class="ri-label">Discount</div><div class="ri-val cyan">${fP(daily[daily.length-1].disc)}</div><div class="ri-sub">stable (no GMT drain)</div></div>
+    <div class="ri-card"><div class="ri-label">Daily Reward (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
+    <div class="ri-card"><div class="ri-label">Locked GMT (end)</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
+    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
   </div>`;
 
   // Snapshot table
   h+=`<div class="sub-title">Projection Snapshots</div>`;
   h+=`<div class="ri-scroll"><table class="ri-table">
-    <thead><tr><th style="text-align:left">Day</th><th>TH</th><th>Daily Profit</th><th>Monthly</th><th>Discount</th><th>VIP</th></tr></thead><tbody>`;
+    <thead><tr><th style="text-align:left">Day</th><th>TH</th><th>Daily Reward</th><th>Monthly</th><th>Locked GMT</th><th>Token Disc</th><th>Total Disc</th><th>VIP</th></tr></thead><tbody>`;
   for(const s of snaps){
     h+=`<tr>
       <td>${s.d}</td><td>${fN(s.th,1)}</td>
-      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td><td>${fP(s.disc)}</td><td>${s.vip}</td></tr>`;
+      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td>
+      <td>${fN(s.gmtLocked,0)}</td><td>${fP(s.tokD)}</td><td>${fP(s.disc)}</td><td>${s.vip}</td></tr>`;
   }
   h+=`</tbody></table></div>`;
 
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
-    <strong style="color:var(--cyan)">How this works:</strong> Each day, your BTC mining reward is earned and fees are paid from it (normal operation). Your net daily profit is then used to manually purchase more TH at volume-discounted pricing.
-    Your GMT wallet stays untouched, so your token discount remains stable throughout the projection. Daily profit grows as TH compounds.</div>`;
+    <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward plus GMT staking yield (${fN(apr,2)}% APR) are reinvested.
+    The optimizer splits each day's reward between buying TH and locking GMT, maximizing TH growth while ensuring 20% token discount is maintained.
+    As TH grows, more GMT must be locked to keep coverage at 378+ days &mdash; the split adjusts automatically each day.</div>`;
 
   $('reinvestResult').innerHTML=h;
 }
