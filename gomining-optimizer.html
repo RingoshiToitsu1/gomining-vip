@@ -1116,7 +1116,8 @@ function recalc(){
   renderPlanner(i,m);
 }
 
-function renderProjections(th,wth,totD,label){
+function renderProjections(th,wth,totD,label,moStakingUSD){
+  moStakingUSD=moStakingUSD||0;
   const prices=[80000,90000,100000,110000,120000,130000,140000,150000];
   const cur=S.btcPrice;
   const allPrices=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
@@ -1128,8 +1129,8 @@ function renderProjections(th,wth,totD,label){
     const f=fees(th,wth,bp);
     const dfees=f.t*(1-totD/100);
     const netBTC=grossBTC-dfees;
-    const moUSD=netBTC*bp*30;
-    const dailyUSD=netBTC*bp;
+    const moUSD=netBTC*bp*30+moStakingUSD;
+    const dailyUSD=netBTC*bp+moStakingUSD/30;
     if(Math.abs(moUSD)>maxMo)maxMo=Math.abs(moUSD);
     const moGMT=gp>0?moUSD/gp:0;
     const dailyGMT=gp>0?dailyUSD/gp:0;
@@ -1266,7 +1267,7 @@ function renderPlanner(i,m){
   ph+=row('Weekly net rewards',`${fN(newWkNet,2)} GMT<span class="sub">${fU(newWkNet*gp)}/week</span>`);
   ph+=row('Weekly staking rewards',`${fN(newWkStake,2)} GMT<span class="sub">${fU(newWkStake*gp)}/week</span>`);
   ph+=row('Total weekly GMT earned',`${fN(newWkTotal,2)} GMT<span class="sub">${fU(newWkTotal*gp)}/week</span>`,'cyan');
-  ph+=row('Total monthly income',`${fU(newMoTotal*gp)}`,newMoTotal>=0?'green':'red');
+  ph+=row('Total monthly income',`${fU(newMoTotal*gp)}<span class="sub">mining + staking</span>`,newMoTotal>=0?'green':'red');
   if(newWkTotal>0){
     ph+=row('Status',`<span class="badge green">SELF-SUSTAINING</span> +${fN(newMoTotal,1)} GMT/mo profit`);
   }else{
@@ -1276,8 +1277,9 @@ function renderPlanner(i,m){
   $('projDisplay').innerHTML=ph;
 
   // BTC price projections using post-investment TH and discount
+  const moStakingUSD=newWkStake*gp*4.33;
   $('projTable').innerHTML=renderProjections(b.nt,i.wth,b.td2,
-    `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount`);
+    `Projected monthly income at ${fN(b.nt,1)} TH with ${fP(b.td2)} total discount (incl. staking)`,moStakingUSD);
 
 }
 
