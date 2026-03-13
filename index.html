@@ -1321,14 +1321,23 @@ function runReinvestProjection(){
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
   const startTH=th;
   const daily=[];
-  let totalTHSpent=0,totalGMTBought=0;
+
+  // Calculate starting discount to maintain throughout
+  const startF=fees(th,i.wth,bp);
+  const startVip=vipOf(th,gmtLocked);
+  const startNonTokD=Math.min(30,startVip.d+(i.click?3:0)+i.mm+i.od);
+  const startTG=gmtLocked+gmtW;
+  const startFC=(startF.t*(1-startNonTokD/100)*bp)/gp;
+  const startCov=startFC>0?startTG/startFC:Infinity;
+  const targetTokD=i.payG?Math.min(20,Math.floor(startCov/18.9)):0;
+  const targetCovDays=targetTokD*18.9;
 
   for(let d=1;d<=days;d++){
     // --- Staking yield: locked GMT earns daily portion of APR ---
     const stakingGMT=gmtLocked*(apr/100)/365;
     gmtLocked+=stakingGMT;
 
-    // --- Mining reward ---
+    // --- Current state ---
     const gross=dbt*th;
     const f=fees(th,i.wth,bp);
     const vip=vipOf(th,gmtLocked);
@@ -1338,53 +1347,55 @@ function runReinvestProjection(){
     const cov=fc>0?tg/fc:Infinity;
     const tokD=i.payG?Math.min(20,Math.floor(cov/18.9)):0;
     const fullD=Math.min(30,tokD+nonTokD);
+
+    // --- Net daily reward ---
     const feesBTC=f.t*(1-fullD/100);
     const netBTC=gross-feesBTC;
     const netUSD=netBTC*bp;
 
     if(netUSD<=0){
-      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:0,gmtBought:0});
+      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n});
       continue;
     }
 
-    // --- Allocate net reward: maximize TH while maintaining 20% token discount ---
-    // Try splits from 100% TH down to 0% TH, find highest TH that keeps tokD>=20
-    let bestSplit={at:0,ag:0,thFr:0};
-    for(let j=100;j>=0;j--){
-      const fr=j/100;
-      const thBudget=netUSD*fr,gmtBudget=netUSD*(1-fr);
-      const at=thForBudget(thBudget);
-      const ag=gmtBudget/gp;
-      const newTH=th+at;
-      const newLocked=gmtLocked+ag;
-      const newTotal=newLocked+gmtW;
-      const newF=fees(newTH,i.wth,bp);
-      const newVip=vipOf(newTH,newLocked);
-      const newNonTokD=Math.min(30,newVip.d+(i.click?3:0)+i.mm+i.od);
-      const newFc=(newF.t*(1-newNonTokD/100)*bp)/gp;
-      const newCov=newFc>0?newTotal/newFc:Infinity;
-      const newTokD=i.payG?Math.min(20,Math.floor(newCov/18.9)):0;
-      if(newTokD>=20){
-        bestSplit={at,ag,thFr:fr};
-        break;
+    // --- Buy TH with full reward first ---
+    const newTHAll=th+thForBudget(netUSD);
+
+    // --- Calculate GMT needed to maintain target discount at new TH ---
+    const newF=fees(newTHAll,i.wth,bp);
+    const newVip=vipOf(newTHAll,gmtLocked);
+    const newNonTokD=Math.min(30,newVip.d+(i.click?3:0)+i.mm+i.od);
+    const newDailyFeeGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
+    const gmtNeeded=targetCovDays*newDailyFeeGMT;
+    const gmtShortfall=Math.max(0,gmtNeeded-(gmtLocked+gmtW));
+
+    if(gmtShortfall<=0){
+      // Staking yield covers it — all reward goes to TH
+      th=newTHAll;
+    }else{
+      // Divert some reward to buy GMT to lock, rest goes to TH
+      const gmtCostUSD=gmtShortfall*gp;
+      if(gmtCostUSD>=netUSD){
+        // All reward goes to GMT (can't afford any TH and maintain discount)
+        gmtLocked+=netUSD/gp;
+      }else{
+        const thBudget=netUSD-gmtCostUSD;
+        th+=thForBudget(thBudget);
+        gmtLocked+=gmtShortfall;
       }
     }
 
-    // If no split reaches 20%, put everything into GMT to rebuild toward it
-    if(bestSplit.at===0&&bestSplit.ag===0){
-      const ag=netUSD/gp;
-      gmtLocked+=ag;
-      totalGMTBought+=ag;
-      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:0,gmtBought:ag});
-      continue;
-    }
+    // Record snapshot with POST-purchase values
+    const snapF=fees(th,i.wth,bp);
+    const snapVip=vipOf(th,gmtLocked);
+    const snapNonTokD=Math.min(30,snapVip.d+(i.click?3:0)+i.mm+i.od);
+    const snapTG=gmtLocked+gmtW;
+    const snapFC=(snapF.t*(1-snapNonTokD/100)*bp)/gp;
+    const snapCov=snapFC>0?snapTG/snapFC:Infinity;
+    const snapTokD=i.payG?Math.min(20,Math.floor(snapCov/18.9)):0;
+    const snapFullD=Math.min(30,snapTokD+snapNonTokD);
 
-    th+=bestSplit.at;
-    gmtLocked+=bestSplit.ag;
-    totalTHSpent+=netUSD*bestSplit.thFr;
-    totalGMTBought+=bestSplit.ag;
-
-    daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n,thBought:bestSplit.at,gmtBought:bestSplit.ag});
+    daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:snapFullD,tokD:snapTokD,vip:snapVip.n});
   }
 
   // Select snapshot days: first, last, every 30d
@@ -1413,7 +1424,7 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
     <div class="ri-card"><div class="ri-label">Daily Reward (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
     <div class="ri-card"><div class="ri-label">Locked GMT (end)</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
-    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
+    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at ${fP(targetTokD)}</div></div>
   </div>`;
 
   // Snapshot table
@@ -1430,9 +1441,9 @@ function runReinvestProjection(){
 
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
-    <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward plus GMT staking yield (${fN(apr,2)}% APR) are reinvested.
-    The optimizer splits each day's reward between buying TH and locking GMT, maximizing TH growth while ensuring 20% token discount is maintained.
-    As TH grows, more GMT must be locked to keep coverage at 378+ days &mdash; the split adjusts automatically each day.</div>`;
+    <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward goes toward buying more TH. Your locked GMT earns ${fN(apr,2)}% APR staking yield.
+    When adding TH would reduce your token discount below ${fP(targetTokD)}, part of the reward is diverted to lock GMT instead, keeping coverage at ${fN(targetCovDays,0)}+ days.
+    This ensures your discount stays stable while TH compounds.</div>`;
 
   $('reinvestResult').innerHTML=h;
 }
