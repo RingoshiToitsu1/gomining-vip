@@ -1445,7 +1445,173 @@ function runReinvestProjection(){
     When adding TH would reduce your token discount below ${fP(targetTokD)}, part of the reward is diverted to lock GMT instead, keeping coverage at ${fN(targetCovDays,0)}+ days.
     This ensures your discount stays stable while TH compounds.</div>`;
 
+  // Share button
+  h+=`<div style="text-align:center;margin-top:1rem">
+    <button class="ri-btn" onclick="shareProjection()" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan))">Share Projection</button>
+  </div>`;
+
   $('reinvestResult').innerHTML=h;
+
+  // Store data for share image
+  window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,
+    thGain,thPct,startSS,finalSS,ssPct,targetTokD,finalDisc:finalEntry.disc,
+    finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain};
+}
+
+function shareProjection(){
+  const d=window._shareData;
+  if(!d)return;
+  const W=720,H=920;
+  const c=document.createElement('canvas');
+  c.width=W;c.height=H;
+  const x=c.getContext('2d');
+
+  // Background
+  const bg=x.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#0a0e1a');
+  bg.addColorStop(1,'#111827');
+  x.fillStyle=bg;
+  x.fillRect(0,0,W,H);
+
+  // Border glow
+  x.strokeStyle='rgba(0,194,255,0.3)';
+  x.lineWidth=2;
+  x.roundRect(8,8,W-16,H-16,12);
+  x.stroke();
+
+  // Header bar
+  const hg=x.createLinearGradient(0,0,W,0);
+  hg.addColorStop(0,'rgba(117,64,239,0.2)');
+  hg.addColorStop(1,'rgba(0,194,255,0.2)');
+  x.fillStyle=hg;
+  x.fillRect(20,20,W-40,56);
+
+  // Logo text
+  x.fillStyle='#ffffff';
+  x.font='bold 22px "General Sans",system-ui,sans-serif';
+  x.fillText('GoMiningVIP',36,56);
+  x.fillStyle='rgba(0,194,255,0.8)';
+  x.font='13px "General Sans",system-ui,sans-serif';
+  x.fillText('gomining.vip',210,56);
+
+  // Title
+  x.fillStyle='#ffffff';
+  x.font='bold 20px "General Sans",system-ui,sans-serif';
+  x.fillText(`${d.days}-Day Reinvest Growth Projection`,36,110);
+
+  // Divider
+  x.strokeStyle='rgba(255,255,255,0.1)';
+  x.lineWidth=1;
+  x.beginPath();x.moveTo(36,124);x.lineTo(W-36,124);x.stroke();
+
+  // Summary cards
+  const cards=[
+    {label:'Starting TH',val:fN(d.startTH,1),color:'#00c2ff'},
+    {label:'Final TH',val:fN(d.th,1),color:'#10b981'},
+    {label:'TH Growth',val:'+'+fN(d.thPct,1)+'%',color:'#10b981'},
+    {label:'Token Discount',val:fP(d.finalTokD),color:'#00c2ff'},
+  ];
+  const cw=(W-40-30)/4;
+  cards.forEach((cd,ci)=>{
+    const cx=36+ci*(cw+10),cy=140;
+    x.fillStyle='rgba(255,255,255,0.04)';
+    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.fill();
+    x.strokeStyle='rgba(255,255,255,0.08)';
+    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.5)';
+    x.font='11px "General Sans",system-ui,sans-serif';
+    x.fillText(cd.label,cx+10,cy+22);
+    x.fillStyle=cd.color;
+    x.font='bold 18px "Share Tech Mono",monospace';
+    x.fillText(cd.val,cx+10,cy+52);
+  });
+
+  // Daily reward cards
+  const cards2=[
+    {label:'Day 1 Daily Reward',val:fU(d.startSS),color:'#00c2ff'},
+    {label:'Day '+d.days+' Daily Reward',val:fU(d.finalSS),color:'#10b981'},
+    {label:'Reward Growth',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,1)+'%',color:'#10b981'},
+    {label:'Locked GMT (end)',val:fN(d.gmtLocked,0),color:'#00c2ff'},
+  ];
+  cards2.forEach((cd,ci)=>{
+    const cx=36+ci*(cw+10),cy=225;
+    x.fillStyle='rgba(255,255,255,0.04)';
+    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.fill();
+    x.strokeStyle='rgba(255,255,255,0.08)';
+    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.5)';
+    x.font='11px "General Sans",system-ui,sans-serif';
+    x.fillText(cd.label,cx+10,cy+22);
+    x.fillStyle=cd.color;
+    x.font='bold 18px "Share Tech Mono",monospace';
+    x.fillText(cd.val,cx+10,cy+52);
+  });
+
+  // Investment info
+  x.fillStyle='rgba(117,64,239,0.15)';
+  x.beginPath();x.roundRect(36,310,W-72,36,6);x.fill();
+  x.fillStyle='rgba(255,255,255,0.6)';
+  x.font='12px "General Sans",system-ui,sans-serif';
+  x.fillText(`Initial Investment: ${fU(d.cap)}  \u2022  Starting: ${fN(d.startTH,1)} TH  \u2022  VIP: ${d.finalVip}`,50,334);
+
+  // Snapshot table
+  const tY=370;
+  x.fillStyle='rgba(255,255,255,0.06)';
+  x.beginPath();x.roundRect(36,tY,W-72,30,6);x.fill();
+  const cols=[{l:'Day',w:60},{l:'TH',w:100},{l:'Daily',w:110},{l:'Monthly',w:120},{l:'Discount',w:80},{l:'VIP',w:80}];
+  let tx=50;
+  x.fillStyle='rgba(255,255,255,0.5)';
+  x.font='bold 11px "General Sans",system-ui,sans-serif';
+  cols.forEach(cl=>{x.fillText(cl.l,tx,tY+20);tx+=cl.w});
+
+  const maxRows=Math.min(d.snaps.length,12);
+  for(let ri=0;ri<maxRows;ri++){
+    const s=d.snaps[ri],ry=tY+36+ri*28;
+    if(ri%2===0){
+      x.fillStyle='rgba(255,255,255,0.02)';
+      x.fillRect(36,ry-6,W-72,28);
+    }
+    tx=50;
+    x.font='13px "Share Tech Mono",monospace';
+    x.fillStyle='rgba(255,255,255,0.8)';
+    x.fillText(s.d,tx,ry+12);tx+=60;
+    x.fillText(fN(s.th,1),tx,ry+12);tx+=100;
+    x.fillStyle='#10b981';
+    x.fillText(fU(s.ssNet),tx,ry+12);tx+=110;
+    x.fillText(fU(s.ssNet*30),tx,ry+12);tx+=120;
+    x.fillStyle='#00c2ff';
+    x.fillText(fP(s.disc),tx,ry+12);tx+=80;
+    x.fillStyle='rgba(255,255,255,0.6)';
+    x.fillText(s.vip,tx,ry+12);
+  }
+
+  // Footer
+  const fY=H-50;
+  x.strokeStyle='rgba(255,255,255,0.1)';
+  x.beginPath();x.moveTo(36,fY);x.lineTo(W-36,fY);x.stroke();
+  x.fillStyle='rgba(255,255,255,0.4)';
+  x.font='12px "General Sans",system-ui,sans-serif';
+  x.fillText('gomining.vip',36,fY+26);
+  x.fillStyle='rgba(0,194,255,0.6)';
+  x.font='11px "General Sans",system-ui,sans-serif';
+  x.fillText('Use code ringo5 for 5% bonus',W/2-80,fY+26);
+  x.fillStyle='rgba(255,255,255,0.25)';
+  x.font='10px "General Sans",system-ui,sans-serif';
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  x.fillText(now,W-100,fY+26);
+
+  // Download
+  c.toBlob(blob=>{
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'gomining-projection.png',{type:'image/png'})]})){
+      navigator.share({files:[new File([blob],'gomining-projection.png',{type:'image/png'})],title:'GoMiningVIP Projection'}).catch(()=>{});
+    }else{
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download='gomining-projection.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  },'image/png');
 }
 
 // ---- REACTIVE ----
