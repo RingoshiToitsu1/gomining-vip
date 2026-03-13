@@ -1537,10 +1537,18 @@ function shareProjection(){
   x.fillStyle='rgba(0,0,0,0.02)';
   for(let sy=0;sy<H;sy+=2){x.fillRect(0,sy,W,1)}
 
+  // --- VERTICAL CENTERING ---
+  // Content block: title(68) to GMT row bottom(594) = 526px
+  // Footer occupies last 60px. Available = H-60 = 940.
+  // Center: oY = (940 - 526)/2 - 68 ≈ 139
+  const oY=140;
+  x.save();
+  x.translate(0,oY);
+
   // --- HEADER ---
   const tGlow=x.createRadialGradient(W/2,55,0,W/2,55,250);
   tGlow.addColorStop(0,'rgba(147,51,234,0.14)');tGlow.addColorStop(1,'transparent');
-  x.fillStyle=tGlow;x.fillRect(0,0,W,130);
+  x.fillStyle=tGlow;x.fillRect(0,-oY,W,130+oY);
 
   x.fillStyle='#ffffff';
   x.font='bold 36px Orbitron,"General Sans",system-ui,sans-serif';
@@ -1678,6 +1686,9 @@ function shareProjection(){
   x.textAlign='center';
   const gmtEarned=d.gmtLocked-(d.postLocked||0);
   x.fillText(`GMT Earned from Reinvesting: ${fN(gmtEarned>0?gmtEarned:0,0)} GMT  \u2022  Total Locked: ${fN(d.gmtLocked,0)} GMT`,W/2,geY+27);
+
+  // Restore transform so footer stays at absolute bottom
+  x.restore();
 
   // --- FOOTER ---
   const footY=H-60;
