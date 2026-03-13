@@ -1334,6 +1334,30 @@ function runReinvestProjection(){
   const targetTokD=i.payG?Math.min(20,Math.floor(startCov/18.9)):0;
   const targetCovDays=targetTokD*18.9;
 
+  // Helper: compute daily net USD at a given TH/GMT state
+  function dailyNet(curTH,curLocked){
+    const g=dbt*curTH,f=fees(curTH,i.wth,bp);
+    const v=vipOf(curTH,curLocked);
+    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const tg2=curLocked+gmtW;
+    const fc2=(f.t*(1-ntd/100)*bp)/gp;
+    const cv=fc2>0?tg2/fc2:Infinity;
+    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const fd=Math.min(30,td+ntd);
+    return{net:(g-f.t*(1-fd/100))*bp,disc:fd,tokD:td,vip:v.n};
+  }
+
+  // Helper: check if a given TH/GMT combo maintains target discount
+  function covOk(curTH,curLocked){
+    const f=fees(curTH,i.wth,bp);
+    const v=vipOf(curTH,curLocked);
+    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const fc2=(f.t*(1-ntd/100)*bp)/gp;
+    const tg2=curLocked+gmtW;
+    const cv=fc2>0?tg2/fc2:Infinity;
+    return i.payG?Math.floor(cv/18.9)>=targetTokD:true;
+  }
+
   for(let d=1;d<=days;d++){
     // --- Staking yield: paid weekly (every 7th day) ---
     if(d%7===0){
@@ -1341,65 +1365,39 @@ function runReinvestProjection(){
       gmtLocked+=weeklyGMT;
     }
 
-    // --- Current state ---
-    const gross=dbt*th;
-    const f=fees(th,i.wth,bp);
-    const vip=vipOf(th,gmtLocked);
-    const nonTokD=Math.min(30,vip.d+(i.click?3:0)+i.mm+i.od);
-    const tg=gmtLocked+gmtW;
-    const fc=(f.t*(1-nonTokD/100)*bp)/gp;
-    const cov=fc>0?tg/fc:Infinity;
-    const tokD=i.payG?Math.min(20,Math.floor(cov/18.9)):0;
-    const fullD=Math.min(30,tokD+nonTokD);
-
-    // --- Net daily reward ---
-    const feesBTC=f.t*(1-fullD/100);
-    const netBTC=gross-feesBTC;
-    const netUSD=netBTC*bp;
+    // --- Today's net reward (what gets reinvested) ---
+    const dn=dailyNet(th,gmtLocked);
+    const netUSD=dn.net;
 
     if(netUSD<=0){
-      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:fullD,tokD,vip:vip.n});
+      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:dn.disc,tokD:dn.tokD,vip:dn.vip});
       continue;
     }
 
-    // --- Buy TH with full reward first ---
-    const newTHAll=th+thForBudget(netUSD);
-
-    // --- Calculate GMT needed to maintain target discount at new TH ---
-    const newF=fees(newTHAll,i.wth,bp);
-    const newVip=vipOf(newTHAll,gmtLocked);
-    const newNonTokD=Math.min(30,newVip.d+(i.click?3:0)+i.mm+i.od);
-    const newDailyFeeGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
-    const gmtNeeded=targetCovDays*newDailyFeeGMT;
-    const gmtShortfall=Math.max(0,gmtNeeded-(gmtLocked+gmtW));
-
-    if(gmtShortfall<=0){
-      // Staking yield covers it — all reward goes to TH
-      th=newTHAll;
-    }else{
-      // Divert some reward to buy GMT to lock, rest goes to TH
-      const gmtCostUSD=gmtShortfall*gp;
-      if(gmtCostUSD>=netUSD){
-        // All reward goes to GMT (can't afford any TH and maintain discount)
-        gmtLocked+=netUSD/gp;
+    // --- Binary search: max % of reward to TH while maintaining target discount ---
+    let lo=0,hi=100,bestFr=0;
+    for(let k=0;k<20;k++){
+      const mid=Math.floor((lo+hi)/2);
+      const fr=mid/100;
+      const thBudget=netUSD*fr,gmtBudget=netUSD*(1-fr);
+      const at=thForBudget(thBudget);
+      const ag=gmtBudget/gp;
+      if(covOk(th+at,gmtLocked+ag)){
+        bestFr=fr;
+        lo=mid+1;
       }else{
-        const thBudget=netUSD-gmtCostUSD;
-        th+=thForBudget(thBudget);
-        gmtLocked+=gmtShortfall;
+        hi=mid-1;
       }
     }
 
-    // Record snapshot with POST-purchase values
-    const snapF=fees(th,i.wth,bp);
-    const snapVip=vipOf(th,gmtLocked);
-    const snapNonTokD=Math.min(30,snapVip.d+(i.click?3:0)+i.mm+i.od);
-    const snapTG=gmtLocked+gmtW;
-    const snapFC=(snapF.t*(1-snapNonTokD/100)*bp)/gp;
-    const snapCov=snapFC>0?snapTG/snapFC:Infinity;
-    const snapTokD=i.payG?Math.min(20,Math.floor(snapCov/18.9)):0;
-    const snapFullD=Math.min(30,snapTokD+snapNonTokD);
+    // Apply the split
+    const thBudget=netUSD*bestFr,gmtBudget=netUSD*(1-bestFr);
+    th+=thForBudget(thBudget);
+    gmtLocked+=gmtBudget/gp;
 
-    daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:snapFullD,tokD:snapTokD,vip:snapVip.n});
+    // Record POST-purchase daily reward (what you'd earn per day at new TH level)
+    const postDN=dailyNet(th,gmtLocked);
+    daily.push({d,th,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
   }
 
   // Select snapshot days: first, last, every 30d
