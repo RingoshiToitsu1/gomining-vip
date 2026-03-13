@@ -1373,10 +1373,6 @@ function runReinvestProjection(){
   const startTH=th;
   const daily=[];
 
-  // Use planner's computed discount as target to maintain
-  const targetTokD=best.ntd||0;
-  const targetCovDays=(targetTokD+0.5)*18.9; // slight buffer to avoid floor() boundary issues
-
   // Helper: compute daily net USD at a given TH/GMT state (mining + staking)
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,i.wth,bp);
@@ -1392,15 +1388,13 @@ function runReinvestProjection(){
     return{net:miningUSD+stakingUSD,disc:fd,tokD:td,vip:v.n};
   }
 
-  // Helper: check if a given TH/GMT combo maintains target discount
-  function covOk(curTH,curLocked){
+  // Helper: check GMT deficit for 20% at a given TH, with a given GMT pool
+  function gmtDeficit(curTH,curLocked){
     const f=fees(curTH,i.wth,bp);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const fc2=(f.t*(1-ntd/100)*bp)/gp;
-    const tg2=curLocked+gmtW;
-    const cv=fc2>0?tg2/fc2:Infinity;
-    return i.payG?Math.floor(cv/18.9)>=targetTokD:true;
+    const burn=(f.t*(1-ntd/100)*bp)/gp;
+    return Math.max(0,burn*378-(curLocked+gmtW));
   }
 
   for(let d=1;d<=days;d++){
@@ -1419,28 +1413,33 @@ function runReinvestProjection(){
       continue;
     }
 
-    // --- Binary search: max % of reward to TH while maintaining target discount ---
-    let lo=0,hi=100,bestFr=0;
-    for(let k=0;k<20;k++){
-      const mid=Math.floor((lo+hi)/2);
-      const fr=mid/100;
-      const thBudget=netUSD*fr,gmtBudget=netUSD*(1-fr);
-      const at=thForBudget(thBudget);
-      const ag=gmtBudget/gp;
-      if(covOk(th+at,gmtLocked+ag)){
-        bestFr=fr;
-        lo=mid+1;
-      }else{
-        hi=mid-1;
+    // --- Discount-first allocation: same solver as capital planner ---
+    // Binary search: find minimum GMT spend so 20% holds at resulting TH
+    let gmtSpend=0;
+    if(i.payG){
+      // Check if 100% to TH still maintains discount
+      const allTH=th+thForBudget(netUSD);
+      if(gmtDeficit(allTH,gmtLocked)>0){
+        // Need some GMT — binary search for minimum
+        let lo=0,hi=netUSD;
+        for(let k=0;k<40;k++){
+          const mid=(lo+hi)/2;
+          const agT=mid/gp;
+          const thRem=netUSD-mid;
+          const atT=thRem>0?thForBudget(thRem):0;
+          if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;
+        }
+        gmtSpend=hi;
       }
     }
 
-    // Apply the split
-    const thBudget=netUSD*bestFr,gmtBudget=netUSD*(1-bestFr);
-    th+=thForBudget(thBudget);
-    gmtLocked+=gmtBudget/gp;
+    // Apply: GMT first (discount priority), remainder to TH
+    const gmtBuy=gmtSpend/gp;
+    const thBudget=netUSD-gmtSpend;
+    gmtLocked+=gmtBuy;
+    if(thBudget>0)th+=thForBudget(thBudget);
 
-    // Record POST-purchase daily reward (what you'd earn per day at new TH level)
+    // Record POST-purchase daily reward
     const postDN=dailyNet(th,gmtLocked);
     daily.push({d,th,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
   }
@@ -1471,7 +1470,7 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
     <div class="ri-card"><div class="ri-label">Daily Reward (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
     <div class="ri-card"><div class="ri-label">Locked GMT (end)</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
-    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at ${fP(targetTokD)}</div></div>
+    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
   </div>`;
 
   // Snapshot table
@@ -1489,7 +1488,7 @@ function runReinvestProjection(){
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
     <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward goes toward buying more TH. Your locked GMT earns ${fN(apr,2)}% APR staking yield.
-    When adding TH would reduce your token discount below ${fP(targetTokD)}, part of the reward is diverted to lock GMT instead, keeping coverage at ${fN(targetCovDays,0)}+ days.
+    When adding TH would reduce your token discount below 20%, part of the reward is diverted to lock GMT instead, keeping coverage at 378+ days.
     This ensures your discount stays stable while TH compounds.</div>`;
 
   // Share button
@@ -1501,7 +1500,7 @@ function runReinvestProjection(){
 
   // Store data for share image
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,
-    thGain,thPct,startSS,finalSS,ssPct,targetTokD,finalDisc:finalEntry.disc,
+    thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
     finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain};
 }
 
