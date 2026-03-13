@@ -1506,146 +1506,196 @@ function runReinvestProjection(){
 function shareProjection(){
   const d=window._shareData;
   if(!d)return;
-  const W=720,H=920;
+  const W=800,H=780;
   const c=document.createElement('canvas');
   c.width=W;c.height=H;
   const x=c.getContext('2d');
 
-  // Background
-  const bg=x.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#0a0e1a');
-  bg.addColorStop(1,'#111827');
-  x.fillStyle=bg;
+  // --- BACKGROUND ---
+  x.fillStyle='#060a12';
   x.fillRect(0,0,W,H);
 
-  // Border glow
-  x.strokeStyle='rgba(0,194,255,0.3)';
-  x.lineWidth=2;
-  x.roundRect(8,8,W-16,H-16,12);
-  x.stroke();
+  // Atmospheric orbs
+  const orb=(cx,cy,r,color)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)};
+  orb(120,100,260,'rgba(147,51,234,0.12)');
+  orb(680,200,220,'rgba(6,182,212,0.08)');
+  orb(400,600,300,'rgba(16,185,129,0.06)');
 
-  // Header bar
-  const hg=x.createLinearGradient(0,0,W,0);
-  hg.addColorStop(0,'rgba(117,64,239,0.2)');
-  hg.addColorStop(1,'rgba(0,194,255,0.2)');
-  x.fillStyle=hg;
-  x.fillRect(20,20,W-40,56);
-
-  // Logo text
-  x.fillStyle='#ffffff';
-  x.font='bold 22px "General Sans",system-ui,sans-serif';
-  x.fillText('GoMiningVIP',36,56);
-  x.fillStyle='rgba(0,194,255,0.8)';
-  x.font='13px "General Sans",system-ui,sans-serif';
-  x.fillText('gomining.vip',210,56);
-
-  // Title
-  x.fillStyle='#ffffff';
-  x.font='bold 20px "General Sans",system-ui,sans-serif';
-  x.fillText(`${d.days}-Day Reinvest Growth Projection`,36,110);
-
-  // Divider
-  x.strokeStyle='rgba(255,255,255,0.1)';
+  // Grid lines
+  x.strokeStyle='rgba(147,51,234,0.06)';
   x.lineWidth=1;
-  x.beginPath();x.moveTo(36,124);x.lineTo(W-36,124);x.stroke();
+  for(let gy=0;gy<H;gy+=40){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke()}
+  for(let gx=0;gx<W;gx+=40){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke()}
 
-  // Summary cards
-  const cards=[
-    {label:'Starting TH',val:fN(d.startTH,1),color:'#00c2ff'},
-    {label:'Final TH',val:fN(d.th,1),color:'#10b981'},
-    {label:'TH Growth',val:'+'+fN(d.thPct,1)+'%',color:'#10b981'},
-    {label:'Token Discount',val:fP(d.finalTokD),color:'#00c2ff'},
-  ];
-  const cw=(W-40-30)/4;
-  cards.forEach((cd,ci)=>{
-    const cx=36+ci*(cw+10),cy=140;
-    x.fillStyle='rgba(255,255,255,0.04)';
-    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.fill();
+  // Scan lines
+  x.fillStyle='rgba(0,0,0,0.03)';
+  for(let sy=0;sy<H;sy+=2){x.fillRect(0,sy,W,1)}
+
+  // --- HEADER ---
+  x.fillStyle='#ffffff';
+  x.font='bold 28px Orbitron,"General Sans",system-ui,sans-serif';
+  x.textAlign='center';
+  x.fillText(`${d.days}-Day Growth Projection`,W/2,50);
+
+  // Subtitle line
+  x.fillStyle='rgba(147,51,234,0.7)';
+  x.font='13px "Share Tech Mono","General Sans",monospace';
+  x.fillText('Auto-Reinvest Compound Strategy',W/2,72);
+
+  // Decorative line under header
+  const lg=x.createLinearGradient(100,0,W-100,0);
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.3,'rgba(147,51,234,0.5)');
+  lg.addColorStop(0.7,'rgba(6,182,212,0.5)');lg.addColorStop(1,'transparent');
+  x.strokeStyle=lg;x.lineWidth=1;
+  x.beginPath();x.moveTo(100,84);x.lineTo(W-100,84);x.stroke();
+
+  // --- COMPARISON CARDS ---
+  const cardW=310,cardH=240,cardY=110,gap=40;
+  const leftX=(W-cardW*2-gap)/2, rightX=leftX+cardW+gap;
+
+  // Card draw helper
+  const drawCard=(cx,cy,title,titleColor,items)=>{
+    // Card bg
+    x.fillStyle='rgba(255,255,255,0.03)';
+    x.beginPath();x.roundRect(cx,cy,cardW,cardH,12);x.fill();
+    // Card border
     x.strokeStyle='rgba(255,255,255,0.08)';
-    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.5)';
-    x.font='11px "General Sans",system-ui,sans-serif';
-    x.fillText(cd.label,cx+10,cy+22);
-    x.fillStyle=cd.color;
-    x.font='bold 18px "Share Tech Mono",monospace';
-    x.fillText(cd.val,cx+10,cy+52);
+    x.lineWidth=1;
+    x.beginPath();x.roundRect(cx,cy,cardW,cardH,12);x.stroke();
+    // Top accent line
+    const ag=x.createLinearGradient(cx,0,cx+cardW,0);
+    ag.addColorStop(0,titleColor);ag.addColorStop(1,'transparent');
+    x.strokeStyle=ag;x.lineWidth=2;
+    x.beginPath();x.moveTo(cx,cy+1);x.lineTo(cx+cardW,cy+1);x.stroke();
+    // Title
+    x.fillStyle=titleColor;
+    x.font='bold 14px Orbitron,"General Sans",system-ui,sans-serif';
+    x.textAlign='left';
+    x.fillText(title,cx+20,cy+32);
+    // Items
+    items.forEach((item,i)=>{
+      const iy=cy+60+i*42;
+      x.fillStyle='rgba(255,255,255,0.4)';
+      x.font='11px "Share Tech Mono","General Sans",monospace';
+      x.textAlign='left';
+      x.fillText(item.label,cx+20,iy);
+      x.fillStyle=item.color||'#ffffff';
+      x.font='bold 20px "Share Tech Mono","General Sans",monospace';
+      x.fillText(item.val,cx+20,iy+22);
+    });
+  };
+
+  // BEFORE card
+  drawCard(leftX,cardY,'STARTING POSITION','rgba(6,182,212,0.8)',[
+    {label:'HASHRATE',val:fN(d.startTH,1)+' TH',color:'#06b6d4'},
+    {label:'DAILY REWARD',val:fU(d.startSS),color:'#06b6d4'},
+    {label:'MONTHLY INCOME',val:fU(d.startSS*30),color:'#06b6d4'},
+    {label:'LOCKED GMT',val:fN(d.postLocked||0,0),color:'#06b6d4'},
+  ]);
+
+  // AFTER card
+  drawCard(rightX,cardY,'AFTER '+d.days+' DAYS','rgba(16,185,129,0.8)',[
+    {label:'HASHRATE',val:fN(d.th,1)+' TH',color:'#10b981'},
+    {label:'DAILY REWARD',val:fU(d.finalSS),color:'#10b981'},
+    {label:'MONTHLY INCOME',val:fU(d.finalSS*30),color:'#10b981'},
+    {label:'LOCKED GMT',val:fN(d.gmtLocked,0),color:'#10b981'},
+  ]);
+
+  // Arrow between cards
+  x.fillStyle='rgba(147,51,234,0.6)';
+  x.font='bold 28px "General Sans",system-ui,sans-serif';
+  x.textAlign='center';
+  x.fillText('\u27A4',W/2,cardY+cardH/2+6);
+
+  // --- STAT PILLS ROW ---
+  const pillY=cardY+cardH+30;
+  const pills=[
+    {label:'INVESTED',val:fU(d.cap),color:'#9333ea'},
+    {label:'TH GROWTH',val:'+'+fN(d.thPct,1)+'%',color:'#10b981'},
+    {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,1)+'%',color:'#10b981'},
+    {label:'DISCOUNT',val:fP(d.finalTokD),color:'#06b6d4'},
+    {label:'VIP',val:d.finalVip,color:'#9333ea'},
+  ];
+
+  // Measure and layout pills centered
+  x.font='bold 11px "Share Tech Mono","General Sans",monospace';
+  const pillPad=14,pillGap=10,pillH=50;
+  const pillWidths=pills.map(p=>{
+    const lw=x.measureText(p.label).width;
+    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
+    const vw=x.measureText(p.val).width;
+    x.font='bold 11px "Share Tech Mono","General Sans",monospace';
+    return Math.max(lw,vw)+pillPad*2;
+  });
+  const totalPillW=pillWidths.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
+  let px=(W-totalPillW)/2;
+
+  pills.forEach((p,pi)=>{
+    const pw=pillWidths[pi];
+    // Pill bg
+    x.fillStyle='rgba(255,255,255,0.04)';
+    x.beginPath();x.roundRect(px,pillY,pw,pillH,8);x.fill();
+    x.strokeStyle='rgba(255,255,255,0.08)';
+    x.beginPath();x.roundRect(px,pillY,pw,pillH,8);x.stroke();
+    // Label
+    x.fillStyle='rgba(255,255,255,0.4)';
+    x.font='bold 9px "Share Tech Mono","General Sans",monospace';
+    x.textAlign='center';
+    x.fillText(p.label,px+pw/2,pillY+16);
+    // Value
+    x.fillStyle=p.color;
+    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
+    x.fillText(p.val,px+pw/2,pillY+38);
+    px+=pw+pillGap;
   });
 
-  // Daily reward cards
-  const cards2=[
-    {label:'Day 1 Daily Reward',val:fU(d.startSS),color:'#00c2ff'},
-    {label:'Day '+d.days+' Daily Reward',val:fU(d.finalSS),color:'#10b981'},
-    {label:'Reward Growth',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,1)+'%',color:'#10b981'},
-    {label:'Locked GMT (end)',val:fN(d.gmtLocked,0),color:'#00c2ff'},
-  ];
-  cards2.forEach((cd,ci)=>{
-    const cx=36+ci*(cw+10),cy=225;
-    x.fillStyle='rgba(255,255,255,0.04)';
-    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.fill();
-    x.strokeStyle='rgba(255,255,255,0.08)';
-    x.beginPath();x.roundRect(cx,cy,cw,70,8);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.5)';
-    x.font='11px "General Sans",system-ui,sans-serif';
-    x.fillText(cd.label,cx+10,cy+22);
-    x.fillStyle=cd.color;
-    x.font='bold 18px "Share Tech Mono",monospace';
-    x.fillText(cd.val,cx+10,cy+52);
-  });
-
-  // Investment info
-  x.fillStyle='rgba(117,64,239,0.15)';
-  x.beginPath();x.roundRect(36,310,W-72,36,6);x.fill();
-  x.fillStyle='rgba(255,255,255,0.6)';
-  x.font='12px "General Sans",system-ui,sans-serif';
-  x.fillText(`Initial Investment: ${fU(d.cap)}  \u2022  Starting: ${fN(d.startTH,1)} TH  \u2022  VIP: ${d.finalVip}`,50,334);
-
-  // Snapshot table
-  const tY=370;
-  x.fillStyle='rgba(255,255,255,0.06)';
-  x.beginPath();x.roundRect(36,tY,W-72,30,6);x.fill();
-  const cols=[{l:'Day',w:60},{l:'TH',w:100},{l:'Daily',w:110},{l:'Monthly',w:120},{l:'Discount',w:80},{l:'VIP',w:80}];
-  let tx=50;
+  // --- GMT EARNED ROW ---
+  const geY=pillY+pillH+20;
+  x.fillStyle='rgba(147,51,234,0.1)';
+  x.beginPath();x.roundRect(60,geY,W-120,36,8);x.fill();
+  x.strokeStyle='rgba(147,51,234,0.2)';
+  x.beginPath();x.roundRect(60,geY,W-120,36,8);x.stroke();
   x.fillStyle='rgba(255,255,255,0.5)';
-  x.font='bold 11px "General Sans",system-ui,sans-serif';
-  cols.forEach(cl=>{x.fillText(cl.l,tx,tY+20);tx+=cl.w});
+  x.font='12px "Share Tech Mono","General Sans",monospace';
+  x.textAlign='center';
+  const gmtEarned=d.gmtLocked-(d.postLocked||0);
+  x.fillText(`GMT Earned from Reinvesting: ${fN(gmtEarned>0?gmtEarned:0,0)} GMT  \u2022  Total Locked: ${fN(d.gmtLocked,0)} GMT`,W/2,geY+23);
 
-  const maxRows=Math.min(d.snaps.length,12);
-  for(let ri=0;ri<maxRows;ri++){
-    const s=d.snaps[ri],ry=tY+36+ri*28;
-    if(ri%2===0){
-      x.fillStyle='rgba(255,255,255,0.02)';
-      x.fillRect(36,ry-6,W-72,28);
-    }
-    tx=50;
-    x.font='13px "Share Tech Mono",monospace';
-    x.fillStyle='rgba(255,255,255,0.8)';
-    x.fillText(s.d,tx,ry+12);tx+=60;
-    x.fillText(fN(s.th,1),tx,ry+12);tx+=100;
-    x.fillStyle='#10b981';
-    x.fillText(fU(s.ssNet),tx,ry+12);tx+=110;
-    x.fillText(fU(s.ssNet*30),tx,ry+12);tx+=120;
-    x.fillStyle='#00c2ff';
-    x.fillText(fP(s.disc),tx,ry+12);tx+=80;
-    x.fillStyle='rgba(255,255,255,0.6)';
-    x.fillText(s.vip,tx,ry+12);
-  }
+  // --- FOOTER ---
+  const footY=H-55;
+  // Separator line
+  const fg=x.createLinearGradient(60,0,W-60,0);
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.3,'rgba(147,51,234,0.3)');
+  fg.addColorStop(0.7,'rgba(6,182,212,0.3)');fg.addColorStop(1,'transparent');
+  x.strokeStyle=fg;x.lineWidth=1;
+  x.beginPath();x.moveTo(60,footY);x.lineTo(W-60,footY);x.stroke();
 
-  // Footer
-  const fY=H-50;
-  x.strokeStyle='rgba(255,255,255,0.1)';
-  x.beginPath();x.moveTo(36,fY);x.lineTo(W-36,fY);x.stroke();
-  x.fillStyle='rgba(255,255,255,0.4)';
-  x.font='12px "General Sans",system-ui,sans-serif';
-  x.fillText('gomining.vip',36,fY+26);
-  x.fillStyle='rgba(0,194,255,0.6)';
-  x.font='11px "General Sans",system-ui,sans-serif';
-  x.fillText('Use code ringo5 for 5% bonus',W/2-80,fY+26);
+  // GOMININGVIP.COM left
+  x.textAlign='left';
+  x.fillStyle='rgba(147,51,234,0.9)';
+  x.font='bold 8px "General Sans",system-ui,sans-serif';
+  x.fillText('\u25CF',60,footY+22);
+  x.fillStyle='rgba(255,255,255,0.5)';
+  x.font='bold 13px Orbitron,"General Sans",system-ui,sans-serif';
+  x.fillText('GOMININGVIP.COM',74,footY+23);
+
+  // Date center
+  x.textAlign='center';
   x.fillStyle='rgba(255,255,255,0.25)';
-  x.font='10px "General Sans",system-ui,sans-serif';
+  x.font='10px "Share Tech Mono","General Sans",monospace';
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now,W-100,fY+26);
+  x.fillText(now,W/2,footY+23);
 
-  // Download
+  // Use code right
+  x.textAlign='right';
+  x.fillStyle='rgba(6,182,212,0.6)';
+  x.font='11px "Share Tech Mono","General Sans",monospace';
+  x.fillText('use code RINGO5',W-60,footY+23);
+
+  // Reset textAlign
+  x.textAlign='left';
+
+  // --- DOWNLOAD ---
   c.toBlob(blob=>{
     if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'gomining-projection.png',{type:'image/png'})]})){
       navigator.share({files:[new File([blob],'gomining-projection.png',{type:'image/png'})],title:'GoMiningVIP Projection'}).catch(()=>{});
