@@ -1287,8 +1287,8 @@ function runReinvestProjection(){
   const i=inp();
   const days=Math.min(1095,Math.max(1,+$('inReinvestDays').value||365));
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
-  if(!bp||!gp||!dbt||!i.th){
-    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter valid mining parameters to run projection.</div>';
+  if(!bp||!gp||!dbt){
+    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load...</div>';
     return;
   }
   if(!cap||cap<=0){
