@@ -1308,7 +1308,7 @@ function renderPlanner(i,m){
   const newWkNet=newDailyNetGMT*7,newWkTotal=newWkNet+newWkStake;
   const newMoTotal=newWkTotal*4.33;
   ph+=`<div class="sub-title">Self-Sustaining Loop</div>`;
-  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`);
+  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`+(i.gw>0?`<span class="sub">+${fN(i.gw,0)} in wallet = ${fN(newLocked+i.gw,0)} total</span>`:''));
   ph+=row('Weekly net rewards',`${fN(newWkNet,2)} GMT<span class="sub">${fU(newWkNet*gp)}/week</span>`);
   ph+=row('Weekly staking rewards',`${fN(newWkStake,2)} GMT<span class="sub">${fU(newWkStake*gp)}/week</span>`);
   ph+=row('Total weekly GMT earned',`${fN(newWkTotal,2)} GMT<span class="sub">${fU(newWkTotal*gp)}/week</span>`,'cyan');
