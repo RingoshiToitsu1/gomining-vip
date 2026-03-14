@@ -500,7 +500,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
         <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="19.57" step="0.01" min="0"><span class="ob-unit">%</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="19.65" step="0.01" min="0"><span class="ob-unit">%</span></div>
       </div>
       <div class="ob-divider"></div>
       <div class="ob-toggle-row">
@@ -625,7 +625,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="19.57" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inLockAPR" value="19.65" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
         <div class="field">
           <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$13.97 · 2560=$14.26 · 1024=$14.54 · 512=$14.84 · 192=$15.29 · 64=$15.77 · 16=$16.25 · 1=$16.99">?</span></label>
@@ -1120,7 +1120,7 @@ function recalc(){
 
 function renderProjections(th,wth,totD,label,moStakingUSD){
   moStakingUSD=moStakingUSD||0;
-  const prices=[80000,90000,100000,110000,120000,130000,140000,150000];
+  const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const cur=S.btcPrice;
   const allPrices=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
   const dbt=dailyBTCperTH();
@@ -1131,8 +1131,10 @@ function renderProjections(th,wth,totD,label,moStakingUSD){
     const f=fees(th,wth,bp);
     const dfees=f.t*(1-totD/100);
     const netBTC=grossBTC-dfees;
-    const moUSD=netBTC*bp*30+moStakingUSD;
-    const dailyUSD=netBTC*bp+moStakingUSD/30;
+    // GoMining stops mining if unprofitable — floor at $0
+    const rawDailyUSD=netBTC*bp+moStakingUSD/30;
+    const dailyUSD=Math.max(0,rawDailyUSD);
+    const moUSD=dailyUSD*30;
     if(Math.abs(moUSD)>maxMo)maxMo=Math.abs(moUSD);
     const moGMT=gp>0?moUSD/gp:0;
     const dailyGMT=gp>0?dailyUSD/gp:0;
