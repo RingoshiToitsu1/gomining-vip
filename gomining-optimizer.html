@@ -1007,11 +1007,13 @@ function recalc(){
   $('inTokenDiscountDisplay').textContent=m.eTok;
 
   // Hero cards
-  const netUSD=m.net*m.bp, moUSD=netUSD*30;
-  $('heroDailyNet').textContent=fU(netUSD);$('heroDailyNet').className='hero-val '+(m.net>=0?'green':'red');
-  $('heroDailyBTC').textContent=fB(m.net);
+  const dailyStakeUSD=(m.wkGMT/7)*m.gp;
+  const netUSD=m.net*m.bp, totalDailyUSD=netUSD+dailyStakeUSD;
+  const moUSD=totalDailyUSD*30;
+  $('heroDailyNet').textContent=fU(totalDailyUSD);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
+  $('heroDailyBTC').textContent=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   $('heroMonthly').textContent=fU(moUSD);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
-  $('heroMonthlyBTC').textContent=fB(m.net*30);
+  $('heroMonthlyBTC').textContent=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
   $('heroDiscount').textContent=fP(m.totD);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp)+'/day';
   $('heroVip').innerHTML=badge(m.vip);
