@@ -277,13 +277,14 @@ input[type=number]{-moz-appearance:textfield}
 .proj-cell{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .7rem;text-align:center;transition:var(--transition);position:relative}
 .proj-cell:hover{border-color:var(--purple);cursor:pointer}
 .pc-mode-tag{font-size:.55rem;color:var(--text4);font-weight:600;margin-top:.2rem;text-transform:uppercase;letter-spacing:.03em;transition:color .2s}
-.proj-cell.current{border-color:var(--cyan);background:rgba(0,194,255,.06)}
+.proj-cell.current{border-color:var(--cyan);background:rgba(0,194,255,.10);box-shadow:0 0 12px rgba(0,194,255,.15),inset 0 0 20px rgba(0,194,255,.05);padding-top:1.4rem}
 .proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
 .proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
 .proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
 .proj-cell .pc-monthly.green{color:var(--green)}
 .proj-cell .pc-monthly.red{color:var(--red)}
-.proj-cell .pc-tag{position:absolute;top:3px;right:5px;font-size:.55rem;color:var(--cyan);font-weight:600}
+.proj-cell .pc-monthly.cyan{color:var(--cyan)}
+.proj-cell .pc-tag{position:absolute;top:0;left:0;right:0;font-size:.6rem;color:#fff;font-weight:700;background:var(--cyan);text-align:center;padding:2px 0;border-radius:var(--radius-sm) var(--radius-sm) 0 0;letter-spacing:.08em;text-transform:uppercase}
 .proj-bar{height:3px;border-radius:2px;margin-top:.3rem;background:var(--border);overflow:hidden}
 .proj-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
 .proj-bar-fill.green{background:var(--green)}
@@ -1144,7 +1145,7 @@ function renderProjections(th,wth,totD,label,moStakingUSD){
   h+=`<div style="font-size:.65rem;color:var(--text4);margin-bottom:.6rem;text-align:center">Tap a cell to flip between USD and GMT</div>`;
   h+=`<div class="proj-grid">`;
   for(const r of rows){
-    const col=r.moUSD>=0?'green':'red';
+    const col=r.isCurrent?'cyan':r.bp<cur?'red':'green';
     const barW=maxMo>0?Math.abs(r.moUSD)/maxMo*100:0;
     h+=`<div class="proj-cell${r.isCurrent?' current':''}" onclick="flipProjCell(this)" data-mo-usd="${r.moUSD.toFixed(2)}" data-daily-usd="${r.daily.toFixed(2)}" data-mo-gmt="${r.moGMT.toFixed(0)}" data-daily-gmt="${r.dailyGMT.toFixed(0)}" data-mode="usd">`;
     if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
