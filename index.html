@@ -468,6 +468,16 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-title">Your Mining Farm</div>
       <div class="ob-subtitle">Enter your current GoMining stats. You can find these in the GoMining app.</div>
       <div class="ob-field">
+        <label>Display Currency</label>
+        <div class="ob-hint">Choose your preferred currency for all prices and earnings.</div>
+        <div class="ob-input-wrap">
+          <select id="obCurrency" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (&pound;)</option>
+          </select>
+        </div>
+      </div>
+      <div class="ob-field">
         <label>Total Hashrate</label>
         <div class="ob-hint">Sum of all your NFT hashrates. Go to My NFTs in the GoMining app to see your total computing power.</div>
         <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
@@ -629,6 +639,17 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="section-desc">Enter your current farm parameters. All calculations update in real-time.</div>
     <div class="section-body">
+      <div style="margin-bottom:.8rem">
+        <div class="field">
+          <label>Display Currency</label>
+          <div class="field-input">
+            <select id="inCurrency" onchange="setCurrency(this.value)" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (&pound;)</option>
+            </select>
+          </div>
+        </div>
+      </div>
       <div class="input-grid">
         <div class="field">
           <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
@@ -863,7 +884,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false };
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1 };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 
 // ---- VIP TIERS ----
@@ -923,7 +944,7 @@ function autoFillCPT(thId,cptId){
 
 // ---- FORMAT ----
 const fB=v=>v.toFixed(8)+' BTC';
-const fU=v=>'$'+v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const fU=v=>{const sym=S.currency==='GBP'?'\u00a3':'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})};
 const fP=v=>v.toFixed(2)+'%';
 const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 
@@ -971,6 +992,11 @@ async function fetchData(){
     if(!S.avgTxFees)S.avgTxFees=FB.avgTxFees;
   }catch(e){S.difficulty=FB.difficulty;S.avgTxFees=FB.avgTxFees;ok=false}
   S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
+  try{
+    const fx=await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP').then(r=>r.json());
+    S.gbpRate=fx.rates?.GBP||0.79;
+  }catch(e){S.gbpRate=0.79}
+  if(S.currency==='GBP')S.fxRate=S.gbpRate;
   S.apiOk=ok;S.loaded=true;
   updateHeader();recalc();
 }
@@ -1798,11 +1824,21 @@ function obNext(){
   if(obCur<3){obGoStep(obCur+1);if(obCur>=2)syncOB()}
   else obFinish();
 }
+function setCurrency(c){
+  S.currency=c;
+  S.fxRate=c==='GBP'?(S.gbpRate||0.79):1;
+  const ob=document.getElementById('obCurrency');if(ob)ob.value=c;
+  const main=document.getElementById('inCurrency');if(main)main.value=c;
+  try{localStorage.setItem('gm_currency',c)}catch(e){}
+  recalc();
+}
 function syncOB(){
   const map={obTH:'inTH',obWTH:'inWTH',obCPT:'inCostPerTH',obGMTLocked:'inGMTLocked',obGMTWallet:'inGMTWallet',obLockAPR:'inLockAPR'};
   for(const[ob,main]of Object.entries(map)){const el=document.getElementById(ob);if(el&&el.value)document.getElementById(main).value=el.value}
   document.getElementById('inClickStreak').checked=document.getElementById('obClickStreak')?.checked||false;
   document.getElementById('inPayGMT').checked=document.getElementById('obPayGMT')?.checked??true;
+  const cur=document.getElementById('obCurrency')?.value||'USD';
+  setCurrency(cur);
 }
 function obPreview(){
   syncOB();
@@ -1882,6 +1918,7 @@ function resetOnboarding(){
 }
 
 // ---- INIT ----
+try{const sc=localStorage.getItem('gm_currency');if(sc==='GBP')setCurrency('GBP')}catch(e){}
 fetchData();
 initOnboarding();
 </script>
