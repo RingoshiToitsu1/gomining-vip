@@ -470,12 +470,12 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>Total Hashrate</label>
         <div class="ob-hint">Sum of all your NFT hashrates. Go to My NFTs in the GoMining app to see your total computing power.</div>
-        <div class="ob-input-wrap"><input type="number" id="obTH" value="1370.49" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
       </div>
       <div class="ob-field">
         <label>Energy Efficiency</label>
         <div class="ob-hint">Average watts per terahash across your NFTs. Lower is better. Found on each NFT detail card.</div>
-        <div class="ob-input-wrap"><input type="number" id="obWTH" value="17.06" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obWTH" value="15" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
       </div>
       <div class="ob-field">
         <label>Current TH Market Price</label>
@@ -491,12 +491,12 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>Locked GMT (VeGoMining)</label>
         <div class="ob-hint">GMT you've staked in VeGoMining. Earns weekly yield and counts toward your VIP tier.</div>
-        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="2552" step="1" min="0"><span class="ob-unit">GMT</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit">GMT</span></div>
       </div>
       <div class="ob-field">
         <label>Liquid GMT Balance</label>
         <div class="ob-hint">Unlocked GMT in your GoMining virtual wallet. Available for locking or transfers.</div>
-        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="1488" step="0.01" min="0"><span class="ob-unit">GMT</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit">GMT</span></div>
       </div>
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
@@ -632,19 +632,19 @@ input[type=number]{-moz-appearance:textfield}
       <div class="input-grid">
         <div class="field">
           <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
-          <div class="field-input"><input type="number" id="inTH" value="1370.49" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
+          <div class="field-input"><input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
         </div>
         <div class="field">
           <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash. Lower is better. Found on each NFT detail card.">?</span></label>
-          <div class="field-input"><input type="number" id="inWTH" value="17.06" step="0.01" min="0"><span class="unit">W/TH</span></div>
+          <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
         </div>
         <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTLocked" value="2552" step="1" min="0"><span class="unit">GMT</span></div>
+          <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit">GMT</span></div>
         </div>
         <div class="field">
           <label>Liquid GMT Balance <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTWallet" value="1488" step="0.01" min="0"><span class="unit">GMT</span></div>
+          <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit">GMT</span></div>
         </div>
         <div class="field">
           <label>Token Discount <span class="tip" data-tip="Auto-calculated from your GMT holdings. More GMT held = higher discount, up to 20%.">?</span></label>
@@ -662,10 +662,6 @@ input[type=number]{-moz-appearance:textfield}
         <div class="field">
           <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
           <div class="field-input"><input type="number" id="inMiningMode" value="0.82" step="0.01" min="0"><span class="unit">%</span></div>
-        </div>
-        <div class="field">
-          <label>Additional Discounts <span class="tip" data-tip="Any promotional or special discounts not covered by the categories above.">?</span></label>
-          <div class="field-input"><input type="number" id="inOtherDiscount" value="0" step="0.1" min="0"><span class="unit">%</span></div>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:1.2rem;margin-top:.8rem">
@@ -993,7 +989,7 @@ function inp(){return{
   gl:+$('inGMTLocked').value||0, gw:+$('inGMTWallet').value||0,
   apr:+$('inLockAPR').value||0,
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
-  mm:+$('inMiningMode').value||0, od:+$('inOtherDiscount').value||0, cpt:+$('inCostPerTH').value||0,
+  mm:+$('inMiningMode').value||0, od:0, cpt:+$('inCostPerTH').value||0,
   cap:+$('inCapital').value||0
 }}
 function $(id){return document.getElementById(id)}
