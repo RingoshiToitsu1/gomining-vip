@@ -1859,6 +1859,12 @@ function obNewUser(){
 }
 function closeNewUserModal(){
   document.getElementById('newUserModal').style.display='none';
+  // Zero capital and scroll to top of planner
+  const capEl=document.getElementById('inCapital');if(capEl)capEl.value='0';
+  recalc();
+  const planTab=document.getElementById('tab-planner');
+  if(planTab)planTab.scrollIntoView({behavior:'smooth',block:'start'});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function resetOnboarding(){
   try{localStorage.removeItem('gm_onboarded')}catch(e){}
