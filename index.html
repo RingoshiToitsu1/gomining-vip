@@ -1843,7 +1843,8 @@ function copyFooterAddr(addr){
 }
 function obNewUser(){
   // Zero out all onboarding fields
-  ['obTH','obWTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
+  ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
+  const wth=document.getElementById('obWTH');if(wth)wth.value='15';
   const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
   const apr=document.getElementById('obLockAPR');if(apr)apr.value='19.65';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
