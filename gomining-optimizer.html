@@ -461,9 +461,6 @@ input[type=number]{-moz-appearance:textfield}
           <div class="ob-feat-desc">Tracks VIP tier, token discount, click streak, and mining mode to calculate your true net profit.</div>
         </div>
       </div>
-      <div style="display:flex;gap:.75rem;margin-top:1.2rem;flex-wrap:wrap;justify-content:center">
-        <button class="ob-btn ob-btn-primary" onclick="obNewUser()" style="flex:1;min-width:180px;padding:.7rem 1rem;font-size:.82rem;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3)">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
-      </div>
     </div>
 
     <!-- STEP 1: Mining Setup -->
@@ -545,7 +542,8 @@ input[type=number]{-moz-appearance:textfield}
   </div>
   <div class="ob-nav">
     <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="visibility:hidden">Back</button>
-    <button class="ob-btn ob-btn-primary" id="obNext" onclick="obNext()" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3)">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
+    <button class="ob-btn ob-btn-primary" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3)">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
+    <button class="ob-btn ob-btn-primary" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3)">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
   </div>
 </div>
 </div>
@@ -1795,6 +1793,7 @@ function obGoStep(n){
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
   document.querySelector(`[data-ob-step="${n}"]`).classList.add('active');
   document.getElementById('obBack').style.visibility=n===0?'hidden':'visible';
+  document.getElementById('obNewBtn').style.display=n===0?'':'none';
   document.getElementById('obNext').textContent=n===3?'Launch Dashboard':n===0?'Get Started':'Next';
   if(n===3)obPreview();
 }
