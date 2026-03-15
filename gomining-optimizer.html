@@ -561,7 +561,15 @@ input[type=number]{-moz-appearance:textfield}
       <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener" class="ri-btn" style="background:linear-gradient(135deg,var(--green),#059669);display:inline-block;padding:.65rem 1.5rem;font-size:.85rem;text-decoration:none;color:#fff;font-weight:700;border-radius:var(--radius-sm)">Sign Up for GoMining</a>
       <div style="font-size:.7rem;color:var(--green);margin-top:.5rem;font-weight:600">Use code RINGO5 — 5% bonus on your first miner purchase</div>
     </div>
-    <button class="ob-btn ob-btn-primary" onclick="closeNewUserModal()" style="width:100%">Go to Capital Planner</button>
+    <div style="background:rgba(117,64,239,.08);border:1px solid rgba(117,64,239,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem">
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:.6rem;font-weight:600;text-align:center">How much are you looking to invest?</div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <span style="font-size:1.1rem;color:var(--text3);font-weight:700">$</span>
+        <input type="number" id="newUserBudget" value="" placeholder="e.g. 5000" min="0" step="100" style="flex:1;padding:.65rem .8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:1rem;font-family:var(--mono);outline:none" onkeydown="if(event.key==='Enter')submitNewUserBudget()">
+        <span style="font-size:.8rem;color:var(--text3)">USD</span>
+      </div>
+    </div>
+    <button class="ob-btn ob-btn-primary" onclick="submitNewUserBudget()" style="width:100%">Go to Capital Planner</button>
   </div>
 </div>
 </div>
@@ -1857,13 +1865,12 @@ function obNewUser(){
   // Show new user welcome modal
   const m=document.getElementById('newUserModal');if(m)m.style.display='';
 }
-function closeNewUserModal(){
+function submitNewUserBudget(){
+  const budgetEl=document.getElementById('newUserBudget');
+  const budget=budgetEl?parseFloat(budgetEl.value)||0:0;
   document.getElementById('newUserModal').style.display='none';
-  // Zero capital and scroll to top of planner
-  const capEl=document.getElementById('inCapital');if(capEl)capEl.value='0';
+  const capEl=document.getElementById('inCapital');if(capEl)capEl.value=budget;
   recalc();
-  const planTab=document.getElementById('tab-planner');
-  if(planTab)planTab.scrollIntoView({behavior:'smooth',block:'start'});
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function resetOnboarding(){
