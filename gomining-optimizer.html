@@ -330,7 +330,7 @@ input[type=number]{-moz-appearance:textfield}
 .ob-field .ob-unit{color:var(--text3);font-size:.8rem;font-family:var(--mono);min-width:30px}
 .ob-toggle-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
 .ob-toggle-row span{font-size:.82rem;color:var(--text2)}
-.ob-nav{display:flex;justify-content:space-between;padding:0 2rem 1.5rem;gap:1rem}
+.ob-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem;gap:1rem}
 .ob-btn{padding:.7rem 1.8rem;border-radius:8px;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:var(--transition);border:none}
 .ob-btn-primary{background:#7540ef;color:#fff;box-shadow:0 4px 20px rgba(117,64,239,.3);border-radius:1rem}
 .ob-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(117,64,239,.4);background:#8555f5}
@@ -541,7 +541,7 @@ input[type=number]{-moz-appearance:textfield}
 
   </div>
   <div class="ob-nav">
-    <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="visibility:hidden">Back</button>
+    <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="display:none">Back</button>
     <button class="ob-btn ob-btn-primary" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3)">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
     <button class="ob-btn ob-btn-primary" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3)">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
   </div>
@@ -1792,7 +1792,7 @@ function obGoStep(n){
   document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
   document.querySelector(`[data-ob-step="${n}"]`).classList.add('active');
-  document.getElementById('obBack').style.visibility=n===0?'hidden':'visible';
+  document.getElementById('obBack').style.display=n===0?'none':'';
   document.getElementById('obNewBtn').style.display=n===0?'':'none';
   document.getElementById('obNext').textContent=n===3?'Launch Dashboard':n===0?'Get Started':'Next';
   if(n===3)obPreview();
