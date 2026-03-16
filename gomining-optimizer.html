@@ -316,7 +316,11 @@ input[type=number]{-moz-appearance:textfield}
 .ob-title{font-size:1.5rem;font-weight:800;text-align:center;margin-bottom:.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .ob-subtitle{text-align:center;color:var(--text2);font-size:.88rem;line-height:1.6;margin-bottom:1.5rem}
 .ob-features{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.5rem}
-.ob-feat{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:1rem .8rem;text-align:center;transition:var(--transition)}
+.ob-feat{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius);padding:1rem .8rem;text-align:center;transition:var(--transition);cursor:pointer}
+.ob-feat .ob-feat-desc{max-height:0;overflow:hidden;opacity:0;margin-top:0;transition:max-height .35s ease,opacity .3s ease,margin-top .3s ease}
+.ob-feat.expanded .ob-feat-desc{max-height:80px;opacity:1;margin-top:.3rem}
+.ob-feat::after{content:'tap to learn more';display:block;font-size:.58rem;color:var(--text4);margin-top:.3rem;transition:opacity .3s ease}
+.ob-feat.expanded::after{opacity:0}
 .ob-feat:hover{border-color:var(--purple);transform:translateY(-2px)}
 .ob-feat-icon{font-size:1.4rem;margin-bottom:.5rem}
 .ob-feat-title{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:.3rem}
@@ -454,17 +458,17 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-title ob-reveal" style="animation-delay:.6s">Maximize Your Mining Profits</div>
       <div class="ob-subtitle ob-reveal" style="animation-delay:1s">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
       <div class="ob-features">
-        <div class="ob-feat ob-reveal" style="animation-delay:1.6s">
+        <div class="ob-feat ob-reveal" style="animation-delay:1.6s" onclick="this.classList.toggle('expanded')">
           <div class="ob-feat-icon">&#9889;</div>
           <div class="ob-feat-title">Live Data</div>
           <div class="ob-feat-desc">BTC price, GMT price, network difficulty, and sats/TH/day updated every 60 seconds from live APIs.</div>
         </div>
-        <div class="ob-feat ob-reveal" style="animation-delay:2.1s">
+        <div class="ob-feat ob-reveal" style="animation-delay:2.1s" onclick="this.classList.toggle('expanded')">
           <div class="ob-feat-icon">&#9881;</div>
           <div class="ob-feat-title">Smart Optimizer</div>
           <div class="ob-feat-desc">Tests every possible TH/GMT split to find the allocation that maximizes your monthly income.</div>
         </div>
-        <div class="ob-feat ob-reveal" style="animation-delay:2.6s">
+        <div class="ob-feat ob-reveal" style="animation-delay:2.6s" onclick="this.classList.toggle('expanded')">
           <div class="ob-feat-icon">&#128176;</div>
           <div class="ob-feat-title">Full Discount Stack</div>
           <div class="ob-feat-desc">Tracks VIP tier, token discount, click streak, and mining mode to calculate your true net profit.</div>
