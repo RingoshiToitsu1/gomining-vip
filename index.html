@@ -345,6 +345,9 @@ input[type=number]{-moz-appearance:textfield}
 .ob-preview-card .ob-pv-val.purple{color:var(--purple-soft)}
 .ob-divider{height:1px;background:var(--border);margin:1.2rem 0}
 .ob-logo{text-align:center;font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--purple-soft);margin-bottom:.3rem;letter-spacing:1px}
+@keyframes obReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.ob-reveal{opacity:0;animation:obReveal .6s ease forwards}
+.ob-nav .ob-btn{transition:opacity .5s ease,transform .5s ease}
 @media(max-width:600px){
   .ob-body{padding:1rem 1.2rem .8rem}
   .ob-nav{padding:0 1.2rem 1.2rem}
@@ -441,21 +444,21 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 0: Welcome -->
     <div class="ob-step active" data-ob-step="0">
-      <div class="ob-logo"><img src="gomining-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GoMiningVIP</div>
-      <div class="ob-title">Maximize Your Mining Profits</div>
-      <div class="ob-subtitle">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
+      <div class="ob-logo ob-reveal" style="animation-delay:.2s"><img src="gomining-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GoMiningVIP</div>
+      <div class="ob-title ob-reveal" style="animation-delay:.6s">Maximize Your Mining Profits</div>
+      <div class="ob-subtitle ob-reveal" style="animation-delay:1s">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
       <div class="ob-features">
-        <div class="ob-feat">
+        <div class="ob-feat ob-reveal" style="animation-delay:1.6s">
           <div class="ob-feat-icon">&#9889;</div>
           <div class="ob-feat-title">Live Data</div>
           <div class="ob-feat-desc">BTC price, GMT price, network difficulty, and sats/TH/day updated every 60 seconds from live APIs.</div>
         </div>
-        <div class="ob-feat">
+        <div class="ob-feat ob-reveal" style="animation-delay:2.1s">
           <div class="ob-feat-icon">&#9881;</div>
           <div class="ob-feat-title">Smart Optimizer</div>
           <div class="ob-feat-desc">Tests every possible TH/GMT split to find the allocation that maximizes your monthly income.</div>
         </div>
-        <div class="ob-feat">
+        <div class="ob-feat ob-reveal" style="animation-delay:2.6s">
           <div class="ob-feat-icon">&#128176;</div>
           <div class="ob-feat-title">Full Discount Stack</div>
           <div class="ob-feat-desc">Tracks VIP tier, token discount, click streak, and mining mode to calculate your true net profit.</div>
@@ -552,8 +555,8 @@ input[type=number]{-moz-appearance:textfield}
   </div>
   <div class="ob-nav">
     <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="display:none">Back</button>
-    <button class="ob-btn ob-btn-primary" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3)">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
-    <button class="ob-btn ob-btn-primary" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3)">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3);animation-delay:3.5s">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3);animation-delay:3.5s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
   </div>
 </div>
 </div>
@@ -1816,8 +1819,13 @@ function obGoStep(n){
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
   document.querySelector(`[data-ob-step="${n}"]`).classList.add('active');
   document.getElementById('obBack').style.display=n===0?'none':'';
-  document.getElementById('obNewBtn').style.display=n===0?'':'none';
-  document.getElementById('obNext').textContent=n===3?'Launch Dashboard':n===0?'Get Started':'Next';
+  const newBtn=document.getElementById('obNewBtn'),nextBtn=document.getElementById('obNext');
+  newBtn.style.display=n===0?'':'none';
+  // After first visit, remove reveal animation so buttons show instantly on Back
+  if(n===0){newBtn.classList.remove('ob-reveal');newBtn.style.opacity='1';nextBtn.classList.remove('ob-reveal');nextBtn.style.opacity='1'}
+  if(n===0)nextBtn.innerHTML='Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span>';
+  else if(n===3)nextBtn.textContent='Launch Dashboard';
+  else nextBtn.textContent='Next';
   if(n===3)obPreview();
 }
 function obNext(){
