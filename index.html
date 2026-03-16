@@ -483,6 +483,7 @@ input[type=number]{-moz-appearance:textfield}
           <select id="obCurrency" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
             <option value="USD">USD ($)</option>
             <option value="GBP">GBP (&pound;)</option>
+            <option value="EUR">EUR (&euro;)</option>
           </select>
         </div>
       </div>
@@ -655,6 +656,7 @@ input[type=number]{-moz-appearance:textfield}
             <select id="inCurrency" onchange="setCurrency(this.value)" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
               <option value="USD">USD ($)</option>
               <option value="GBP">GBP (&pound;)</option>
+            <option value="EUR">EUR (&euro;)</option>
             </select>
           </div>
         </div>
@@ -953,7 +955,7 @@ function autoFillCPT(thId,cptId){
 
 // ---- FORMAT ----
 const fB=v=>v.toFixed(8)+' BTC';
-const fU=v=>{const sym=S.currency==='GBP'?'\u00a3':'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})};
+const fU=v=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})};
 const fP=v=>v.toFixed(2)+'%';
 const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 
@@ -1004,10 +1006,12 @@ async function fetchData(){
   }catch(e){S.difficulty=FB.difficulty;S.avgTxFees=FB.avgTxFees;ok=false}
   S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
   try{
-    const fx=await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP').then(r=>r.json());
+    const fx=await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR').then(r=>r.json());
     S.gbpRate=fx.rates?.GBP||0.79;
-  }catch(e){S.gbpRate=0.79}
+    S.eurRate=fx.rates?.EUR||0.92;
+  }catch(e){S.gbpRate=0.79;S.eurRate=0.92}
   if(S.currency==='GBP')S.fxRate=S.gbpRate;
+  else if(S.currency==='EUR')S.fxRate=S.eurRate;
   S.apiOk=ok;S.loaded=true;
   updateHeader();recalc();
 }
@@ -1845,7 +1849,7 @@ function obNext(){
 }
 function setCurrency(c){
   S.currency=c;
-  S.fxRate=c==='GBP'?(S.gbpRate||0.79):1;
+  S.fxRate=c==='GBP'?(S.gbpRate||0.79):c==='EUR'?(S.eurRate||0.92):1;
   const ob=document.getElementById('obCurrency');if(ob)ob.value=c;
   const main=document.getElementById('inCurrency');if(main)main.value=c;
   try{localStorage.setItem('gm_currency',c)}catch(e){}
@@ -1953,7 +1957,7 @@ const revealObs=new IntersectionObserver((entries)=>{
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 
 // ---- INIT ----
-try{const sc=localStorage.getItem('gm_currency');if(sc==='GBP')setCurrency('GBP')}catch(e){}
+try{const sc=localStorage.getItem('gm_currency');if(sc&&sc!=='USD')setCurrency(sc)}catch(e){}
 fetchData();
 initOnboarding();
 </script>
