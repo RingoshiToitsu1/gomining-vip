@@ -348,6 +348,12 @@ input[type=number]{-moz-appearance:textfield}
 @keyframes obReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .ob-reveal{opacity:0;animation:obReveal .6s ease forwards}
 .ob-nav .ob-btn{transition:opacity .5s ease,transform .5s ease}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.ob-step-reveal{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
+.ob-step.active .ob-step-reveal{opacity:1;transform:translateY(0)}
+.ob-field,.ob-toggle-row,.ob-preview-card,.ob-preview-grid{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
+.ob-step.active .ob-field,.ob-step.active .ob-toggle-row,.ob-step.active .ob-preview-card,.ob-step.active .ob-preview-grid{opacity:1;transform:translateY(0)}
 @media(max-width:600px){
   .ob-body{padding:1rem 1.2rem .8rem}
   .ob-nav{padding:0 1.2rem 1.2rem}
@@ -468,8 +474,8 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 1: Mining Setup -->
     <div class="ob-step" data-ob-step="1">
-      <div class="ob-title">Your Mining Farm</div>
-      <div class="ob-subtitle">Enter your current GoMining stats. You can find these in the GoMining app.</div>
+      <div class="ob-title ob-step-reveal">Your Mining Farm</div>
+      <div class="ob-subtitle ob-step-reveal">Enter your current GoMining stats. You can find these in the GoMining app.</div>
       <div class="ob-field">
         <label>Display Currency</label>
         <div class="ob-hint">Choose your preferred currency for all prices and earnings.</div>
@@ -499,8 +505,8 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 2: GMT Holdings -->
     <div class="ob-step" data-ob-step="2">
-      <div class="ob-title">Your GMT Position</div>
-      <div class="ob-subtitle">GMT is the fuel behind your fee discounts and staking rewards. The more you lock, the higher your discount and the more you earn passively.</div>
+      <div class="ob-title ob-step-reveal">Your GMT Position</div>
+      <div class="ob-subtitle ob-step-reveal">GMT is the fuel behind your fee discounts and staking rewards. The more you lock, the higher your discount and the more you earn passively.</div>
       <div class="ob-field">
         <label>Locked GMT (VeGoMining)</label>
         <div class="ob-hint">GMT you've staked in VeGoMining. Earns weekly yield and counts toward your VIP tier.</div>
@@ -529,8 +535,8 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 3: Confirmation -->
     <div class="ob-step" data-ob-step="3">
-      <div class="ob-title">You're All Set!</div>
-      <div class="ob-subtitle">Here's a quick preview of your mining operation based on live data. All values update in real-time on the dashboard.</div>
+      <div class="ob-title ob-step-reveal">You're All Set!</div>
+      <div class="ob-subtitle ob-step-reveal">Here's a quick preview of your mining operation based on live data. All values update in real-time on the dashboard.</div>
       <div class="ob-preview-grid">
         <div class="ob-preview-card">
           <div class="ob-pv-label">Daily Net Profit</div>
@@ -612,22 +618,22 @@ input[type=number]{-moz-appearance:textfield}
 
   <!-- HERO SUMMARY -->
   <div class="hero-grid" id="heroGrid">
-    <div class="hero-card green-accent">
+    <div class="hero-card green-accent reveal">
       <div class="hero-label">Daily Net Profit</div>
       <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDailyBTC">--</div>
     </div>
-    <div class="hero-card cyan-accent">
+    <div class="hero-card cyan-accent reveal">
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
     </div>
-    <div class="hero-card purple-accent">
+    <div class="hero-card purple-accent reveal">
       <div class="hero-label">Total Discount</div>
       <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDiscountSub">--</div>
     </div>
-    <div class="hero-card orange-accent">
+    <div class="hero-card orange-accent reveal">
       <div class="hero-label">VIP Level</div>
       <div id="heroVip"><span class="skel"></span></div>
       <div class="hero-sub" id="heroVipSub">--</div>
@@ -635,7 +641,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- INPUTS -->
-  <div class="section" id="secInputs">
+  <div class="section reveal" id="secInputs">
     <div class="section-header" onclick="toggleSection('secInputs')">
       <div class="section-title"><img src="miningsetup.png" style="height:20px;width:20px;border-radius:6px"> Your Mining Setup</div>
       <div class="section-toggle">&#9662;</div>
@@ -702,7 +708,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- VIP & DISCOUNTS -->
-  <div class="section" id="secVip">
+  <div class="section reveal" id="secVip">
     <div class="section-header" onclick="toggleSection('secVip')">
       <div class="section-title"><img src="vip.png" style="height:20px;width:20px;border-radius:6px"> VIP Level &amp; Discount Stack</div>
       <div class="section-toggle">&#9662;</div>
@@ -715,7 +721,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- DAILY P&L -->
-  <div class="section" id="secPnl">
+  <div class="section reveal" id="secPnl">
     <div class="section-header" onclick="toggleSection('secPnl')">
       <div class="section-title"><img src="pnl.png" style="height:20px;width:20px;border-radius:6px"> Daily Operation Breakdown</div>
       <div class="section-toggle">&#9662;</div>
@@ -727,7 +733,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- GMT COVERAGE -->
-  <div class="section" id="secGmt">
+  <div class="section reveal" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
       <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:6px"> GMT Rewards &amp; Self-Sustaining Loop</div>
       <div class="section-toggle">&#9662;</div>
@@ -739,7 +745,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- REINVEST SIGNAL -->
-  <div class="section" id="secSignal">
+  <div class="section reveal" id="secSignal">
     <div class="section-header" onclick="toggleSection('secSignal')">
       <div class="section-title"><img src="reinvest.png" style="height:20px;width:20px;border-radius:6px"> Reinvestment Signal</div>
       <div class="section-toggle">&#9662;</div>
@@ -757,7 +763,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="tab-content" id="tab-planner">
 
   <!-- CAPITAL INPUT -->
-  <div class="section" id="secCapIn">
+  <div class="section reveal" id="secCapIn">
     <div class="section-header" onclick="toggleSection('secCapIn')">
       <div class="section-title"><span class="icon icon-purple">$</span> Investment Amount</div>
       <div class="section-toggle">&#9662;</div>
@@ -774,7 +780,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- ALLOCATION -->
-  <div class="section" id="secAlloc">
+  <div class="section reveal" id="secAlloc">
     <div class="section-header" onclick="toggleSection('secAlloc')">
       <div class="section-title"><span class="icon icon-cyan">OPT</span> Optimal Capital Allocation</div>
       <div class="section-toggle">&#9662;</div>
@@ -786,7 +792,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- PROJECTION -->
-  <div class="section" id="secProj">
+  <div class="section reveal" id="secProj">
     <div class="section-header" onclick="toggleSection('secProj')">
       <div class="section-title"><span class="icon icon-green">PRJ</span> Post-Investment Projection</div>
       <div class="section-toggle">&#9662;</div>
@@ -798,7 +804,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- BTC PRICE PROJECTIONS -->
-  <div class="section" id="secProj2">
+  <div class="section reveal" id="secProj2">
     <div class="section-header" onclick="toggleSection('secProj2')">
       <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> Monthly Income by BTC Price</div>
       <div class="section-toggle">&#9662;</div>
@@ -809,7 +815,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- AUTO-REINVEST PROJECTION -->
-  <div class="section" id="secReinvest">
+  <div class="section reveal" id="secReinvest">
     <div class="section-header" onclick="toggleSection('secReinvest')">
       <div class="section-title"><span class="icon icon-green">&#8635;</span> Reinvest Growth Projection</div>
       <div class="section-toggle">&#9662;</div>
@@ -961,6 +967,8 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+  // Re-observe reveals in newly visible tab
+  document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
   if(b.dataset.tab==='tab-planner'&&!plannerIntroShown){
     plannerIntroShown=true;
     try{localStorage.setItem('gm_planner_intro','1')}catch(e){}
@@ -1817,11 +1825,14 @@ function obGoStep(n){
   obCur=n;
   document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
-  document.querySelector(`[data-ob-step="${n}"]`).classList.add('active');
+  const step=document.querySelector(`[data-ob-step="${n}"]`);
+  step.classList.add('active');
+  // Stagger reveal delays for children within the step
+  const revealEls=step.querySelectorAll('.ob-step-reveal,.ob-field,.ob-toggle-row,.ob-preview-card');
+  revealEls.forEach((el,i)=>{el.style.transitionDelay=(0.15+i*0.12)+'s'});
   document.getElementById('obBack').style.display=n===0?'none':'';
   const newBtn=document.getElementById('obNewBtn'),nextBtn=document.getElementById('obNext');
   newBtn.style.display=n===0?'':'none';
-  // After first visit, remove reveal animation so buttons show instantly on Back
   if(n===0){newBtn.classList.remove('ob-reveal');newBtn.style.opacity='1';nextBtn.classList.remove('ob-reveal');nextBtn.style.opacity='1'}
   if(n===0)nextBtn.innerHTML='Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span>';
   else if(n===3)nextBtn.textContent='Launch Dashboard';
@@ -1924,6 +1935,22 @@ function resetOnboarding(){
   try{localStorage.removeItem('gm_onboarded')}catch(e){}
   location.reload();
 }
+
+// ---- SCROLL REVEAL ----
+const revealObs=new IntersectionObserver((entries)=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      // Stagger siblings in the same parent (e.g. hero cards)
+      const parent=e.target.parentElement;
+      const siblings=[...parent.querySelectorAll(':scope > .reveal:not(.visible)')];
+      const idx=siblings.indexOf(e.target);
+      e.target.style.transitionDelay=(idx>=0?idx*0.1:0)+'s';
+      e.target.classList.add('visible');
+      revealObs.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 
 // ---- INIT ----
 try{const sc=localStorage.getItem('gm_currency');if(sc==='GBP')setCurrency('GBP')}catch(e){}
