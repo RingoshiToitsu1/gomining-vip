@@ -1263,6 +1263,9 @@ function renderPlanner(i,m){
   const existingGMT=i.gl+i.gw;
   const covNeeded=378; // 20 * 18.9
 
+  // Blended W/TH: new miners are 15 W/TH, weighted average with existing
+  function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
+
   // Helper: given GMT budget, compute deficit at resulting TH level
   function solveAlloc(gmtBudgetUSD){
     const agTest=gmtBudgetUSD/gp;
@@ -1270,7 +1273,8 @@ function renderPlanner(i,m){
     const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
     const ntTest=i.th+atTest;
     const totalGMT=existingGMT+agTest;
-    const fTest=fees(ntTest,i.wth,bp);
+    const bwth=blendWTH(atTest);
+    const fTest=fees(ntTest,bwth,bp);
     const vTest=vipOf(ntTest,i.gl+agTest);
     const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
     const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
@@ -1300,7 +1304,8 @@ function renderPlanner(i,m){
 
   // Final state
   const nt=i.th+at, ng=existingGMT+ag;
-  const newF=fees(nt,i.wth,bp);
+  const bwth=blendWTH(at);
+  const newF=fees(nt,bwth,bp);
   const ngl=i.gl+ag, nv=vipOf(nt,ngl);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
@@ -1366,6 +1371,7 @@ function renderPlanner(i,m){
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
   ph+=row('New hashrate',`${fN(nt,1)} TH`);
+  if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
@@ -1397,7 +1403,7 @@ function renderPlanner(i,m){
 
   // BTC price projections
   const moStakingUSD=newWkStake*gp*4.33;
-  $('projTable').innerHTML=renderProjections(nt,i.wth,td2,
+  $('projTable').innerHTML=renderProjections(nt,bwth,td2,
     `Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (incl. staking)`,moStakingUSD);
 
 }
@@ -1422,7 +1428,8 @@ function runReinvestProjection(){
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
     const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
-    const fT=fees(ntT,i.wth,bp),vT=vipOf(ntT,i.gl+agT);
+    const bw=(i.th>0||atT>0)?(i.th*i.wth+atT*15)/(i.th+atT):i.wth;
+    const fT=fees(ntT,bw,bp),vT=vipOf(ntT,i.gl+agT);
     const nd=Math.min(30,vT.d+(i.click?3:0)+i.mm+i.od);
     const burn=(fT.t*(1-nd/100)*bp)/gp;
     return{deficit:Math.max(0,burn*378-(existGMT+agT)),at:atT,ag:agT,nt:ntT};
@@ -1444,11 +1451,14 @@ function runReinvestProjection(){
 
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
   const startTH=th;
+  // Track blended W/TH: initial purchase already blended, new reinvest TH is 15W
+  const postWTH=(i.th>0||best.at>0)?(i.th*i.wth+best.at*15)/(i.th+best.at):i.wth;
+  let curWTH=postWTH;
   const daily=[];
 
   // Helper: compute daily net USD at a given TH/GMT state (mining + staking)
   function dailyNet(curTH,curLocked){
-    const g=dbt*curTH,f=fees(curTH,i.wth,bp);
+    const g=dbt*curTH,f=fees(curTH,curWTH,bp);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
@@ -1463,7 +1473,7 @@ function runReinvestProjection(){
 
   // Helper: check GMT deficit for 20% at a given TH, with a given GMT pool
   function gmtDeficit(curTH,curLocked){
-    const f=fees(curTH,i.wth,bp);
+    const f=fees(curTH,curWTH,bp);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bp)/gp;
@@ -1510,7 +1520,7 @@ function runReinvestProjection(){
     const gmtBuy=gmtSpend/gp;
     const thBudget=netUSD-gmtSpend;
     gmtLocked+=gmtBuy;
-    if(thBudget>0)th+=thForBudget(thBudget);
+    if(thBudget>0){const addTH=thForBudget(thBudget);curWTH=(th*curWTH+addTH*15)/(th+addTH);th+=addTH;}
 
     // Record POST-purchase daily reward
     const postDN=dailyNet(th,gmtLocked);
