@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoMiningVIP</title>
+<title>GMT Optimizer</title>
 <link rel="icon" type="image/png" href="gomining-logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700,800&display=swap" rel="stylesheet">
@@ -454,7 +454,7 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 0: Welcome -->
     <div class="ob-step active" data-ob-step="0">
-      <div class="ob-logo ob-reveal" style="animation-delay:.2s"><img src="gomining-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GoMiningVIP</div>
+      <div class="ob-logo ob-reveal" style="animation-delay:.2s"><img src="gomining-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GMT Optimizer</div>
       <div class="ob-title ob-reveal" style="animation-delay:.6s">Maximize Your Mining Profits</div>
       <div class="ob-subtitle ob-reveal" style="animation-delay:1s">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
       <div class="ob-features">
@@ -577,7 +577,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="ob-modal" style="max-width:460px;position:relative">
   <div class="ob-body" style="padding:2rem">
     <button onclick="goBackFromNewUser()" style="position:absolute;top:12px;left:14px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem;padding:.3rem;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'" title="Go back">&#8592;</button>
-    <div class="ob-title" style="margin-bottom:.5rem">Welcome to GoMiningVIP!</div>
+    <div class="ob-title" style="margin-bottom:.5rem">Welcome to GMT Optimizer!</div>
     <div class="ob-subtitle" style="margin-bottom:1.2rem">All mining values have been set to zero since you're starting fresh. Use the <strong>Capital Planner</strong> to simulate your first investment — enter a budget and see exactly how much TH and GMT to buy.</div>
     <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem;text-align:center">
       <div style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">Don't have a GoMining account yet?</div>
@@ -600,7 +600,7 @@ input[type=number]{-moz-appearance:textfield}
 <!-- HEADER -->
 <div class="header">
   <div class="header-inner">
-    <div class="logo"><img src="gomining-logo.png" alt="" style="height:24px;vertical-align:middle;margin-right:6px">GoMiningVIP <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button></div>
+    <div class="logo"><img src="gomining-logo.png" alt="" style="height:24px;vertical-align:middle;margin-right:6px">GMT Optimizer <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button></div>
     <div class="live-bar" id="liveBar">
       <div class="live-chip"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
@@ -850,7 +850,7 @@ input[type=number]{-moz-appearance:textfield}
 <!-- DONATION MODAL -->
 <div class="donate-overlay" id="donateModal" style="display:none">
   <div class="donate-box">
-    <h3>GoMiningVIP is Free Forever</h3>
+    <h3>GMT Optimizer is Free Forever</h3>
     <p>This site has no ads and never will. If you find it useful, please consider supporting development with a small donation.</p>
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">BTC</p>
     <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
@@ -892,10 +892,11 @@ input[type=number]{-moz-appearance:textfield}
 <!-- FOOTER -->
 <div class="site-footer">
   <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(117,64,239,.1);border:1px solid rgba(117,64,239,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use promo code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> <span style="color:var(--text2)">for 5% bonus TH on your first miner</span></div><br>
-  GoMiningVIP is free and ad-free forever. If you find it helpful, consider donating.<br>
+  GMT Optimizer is free and ad-free forever. If you find it helpful, consider donating.<br>
   <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
   <span style="color:var(--text2)">GMT:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
   <div class="donate-copied" id="footerCopied">Copied to clipboard!</div>
+  <div style="margin-top:1rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
 </div>
 
 <script>
@@ -1625,7 +1626,7 @@ function shareProjection(){
   // Subtitle
   x.fillStyle='rgba(190,155,255,0.9)';
   x.font='15px "Share Tech Mono","General Sans",monospace';
-  x.fillText('Auto-Reinvest Compound Strategy  \u2022  powered by GoMining.vip',W/2,95);
+  x.fillText('Auto-Reinvest Compound Strategy  \u2022  powered by gmt-optimizer.com',W/2,95);
 
   // Decorative line
   const lg=x.createLinearGradient(pad,0,W-pad,0);
@@ -1771,14 +1772,14 @@ function shareProjection(){
   x.strokeStyle=fg;x.lineWidth=1;
   x.beginPath();x.moveTo(pad,footY);x.lineTo(W-pad,footY);x.stroke();
 
-  // GoMining.vip left
+  // gmt-optimizer.com left
   x.textAlign='left';
   x.fillStyle='rgba(147,51,234,0.9)';
   x.font='bold 10px "General Sans",system-ui,sans-serif';
   x.fillText('\u25CF',pad,footY+26);
   x.fillStyle='rgba(255,255,255,0.6)';
   x.font='bold 15px Orbitron,"General Sans",system-ui,sans-serif';
-  x.fillText('GoMining.vip',pad+16,footY+27);
+  x.fillText('gmt-optimizer.com',pad+16,footY+27);
 
   // Date center
   x.textAlign='center';
@@ -1798,12 +1799,12 @@ function shareProjection(){
 
   // --- DOWNLOAD ---
   c.toBlob(blob=>{
-    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'gomining-projection.png',{type:'image/png'})]})){
-      navigator.share({files:[new File([blob],'gomining-projection.png',{type:'image/png'})],title:'GoMiningVIP Projection'}).catch(()=>{});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'gmt-optimizer-projection.png',{type:'image/png'})]})){
+      navigator.share({files:[new File([blob],'gmt-optimizer-projection.png',{type:'image/png'})],title:'GMT Optimizer Projection'}).catch(()=>{});
     }else{
       const a=document.createElement('a');
       a.href=URL.createObjectURL(blob);
-      a.download='gomining-projection.png';
+      a.download='gmt-optimizer-projection.png';
       a.click();
       URL.revokeObjectURL(a.href);
     }
