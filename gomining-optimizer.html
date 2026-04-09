@@ -525,7 +525,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
         <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="20.96" step="0.01" min="0"><span class="ob-unit">%</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="22.60" step="0.01" min="0"><span class="ob-unit">%</span></div>
       </div>
       <div class="ob-divider"></div>
       <div class="ob-toggle-row">
@@ -689,7 +689,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="20.96" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inLockAPR" value="22.60" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
         <div class="field">
           <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$11.67 · 2560=$11.90 · 1024=$12.14 · 512=$12.39 · 192=$12.77 · 64=$13.16 · 16=$13.56 · 1=$14.99">?</span></label>
@@ -1920,7 +1920,7 @@ function obNewUser(){
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
   const wth=document.getElementById('obWTH');if(wth)wth.value='15';
   const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
-  const apr=document.getElementById('obLockAPR');if(apr)apr.value='19.65';
+  const apr=document.getElementById('obLockAPR');if(apr)apr.value='22.60';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
   // Sync zeros to main inputs
