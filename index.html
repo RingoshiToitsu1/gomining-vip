@@ -876,11 +876,21 @@ input[type=number]{-moz-appearance:textfield}
     <div class="pi-body">
       <div class="pi-title">Capital Planner</div>
       <div class="pi-subtitle">How much are you planning to invest?</div>
-      <div style="margin:1.5rem auto;max-width:280px">
-        <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Total Capital to Invest</label>
-        <div style="display:flex;align-items:center;gap:.5rem">
-          <input type="number" id="piCapitalInput" value="5000" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
-          <span style="color:var(--text3);font-size:.85rem">USD</span>
+      <div style="margin:1.5rem auto;max-width:300px;display:flex;flex-direction:column;gap:1rem">
+        <div>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Capital (USD)</label>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <input type="number" id="piCapitalInput" value="5000" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
+            <span style="color:var(--text3);font-size:.85rem">USD</span>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Available GMT (not locked)</label>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <input type="number" id="piGMTInput" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
+            <span style="color:var(--text3);font-size:.85rem">GMT</span>
+          </div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Added to your wallet GMT balance. A 2-day fee reserve will be kept unlocked.</div>
         </div>
       </div>
     </div>
@@ -980,16 +990,17 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
   if(b.dataset.tab==='tab-planner'){
-    // Sync popup input with current capital value
-    const cur=$('inCapital').value;
-    document.getElementById('piCapitalInput').value=cur;
+    document.getElementById('piCapitalInput').value=$('inCapital').value;
+    document.getElementById('piGMTInput').value=$('inGMTWallet').value;
     document.getElementById('plannerIntro').style.display='';
     document.body.style.overflow='hidden';
   }
 }));
 function submitPlannerCapital(){
   const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
+  const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
   $('inCapital').value=val;
+  $('inGMTWallet').value=gmtVal;
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
   recalc();
@@ -1282,7 +1293,13 @@ function renderPlanner(i,m){
   }
 
   // --- Iterative deficit solver: find GMT/TH split that covers 20% at final TH ---
-  const existingGMT=i.gl+i.gw;
+  // Reserve 2 days of maintenance fees in wallet GMT (never advise locking below this)
+  const reserveF=fees(i.th||1,i.wth||15,bp);
+  const reserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
+  const dailyFeeGMT=(reserveF.t*(1-reserveDisc/100)*bp)/gp;
+  const gmtReserve=dailyFeeGMT*2;
+  const availableWalletGMT=Math.max(0,i.gw-gmtReserve);
+  const existingGMT=i.gl+availableWalletGMT;
   const covNeeded=378; // 20 * 18.9
 
   // Blended W/TH: new miners are 15 W/TH, weighted average with existing
@@ -1381,6 +1398,13 @@ function renderPlanner(i,m){
     ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
   }
 
+  // 2-day fee reserve warning
+  if(i.gw>0){
+    ah+=`<div class="sub-title" style="margin-top:.8rem">Wallet GMT Reserve</div>`;
+    ah+=row('2-day fee reserve',`${fN(gmtReserve,1)} GMT<span class="sub">${fU(gmtReserve*gp)}</span>`);
+    ah+=row('Available for locking',`${fN(availableWalletGMT,1)} GMT<span class="sub">of ${fN(i.gw,0)} wallet GMT</span>`);
+  }
+
   $('allocDisplay').innerHTML=ah;
 
   // --- Post-investment projections ---
@@ -1447,7 +1471,11 @@ function runReinvestProjection(){
   }
 
   // ---- Run the same iterative allocation as the Capital Planner ----
-  const existGMT=i.gl+i.gw;
+  const riReserveF=fees(i.th||1,i.wth||15,bp);
+  const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
+  const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
+  const riGmtReserve=riDailyFeeGMT*2;
+  const existGMT=i.gl+Math.max(0,i.gw-riGmtReserve);
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
     const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
