@@ -192,6 +192,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- SECTION SUBTITLE ---- */
 .sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.35rem}
+.sub-title.centered{display:block;text-align:center;border-bottom:none;margin:1.2rem 0 .5rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
 
 /* ---- GMT TIER TABLE ---- */
 .gmt-tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin:.5rem 0}
@@ -1572,19 +1573,19 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
   </div>`;
 
-  h+=`<div class="sub-title" style="margin-top:1rem;text-align:center">Daily Reward (End of Period)</div>`;
+  h+=`<div class="sub-title centered">Daily Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
   </div>`;
 
-  h+=`<div class="sub-title" style="margin-top:1rem;text-align:center">Monthly Reward (End of Period)</div>`;
+  h+=`<div class="sub-title centered">Monthly Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
   </div>`;
 
-  h+=`<div class="sub-title" style="margin-top:1rem;text-align:center">Locked GMT (End of Period)</div>`;
+  h+=`<div class="sub-title centered">Locked GMT (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
     <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
