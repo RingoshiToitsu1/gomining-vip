@@ -1307,33 +1307,38 @@ function renderPlanner(i,m){
 
   function solveWithReserve(reserve){
     const deployable=Math.max(0,gmtAvail-reserve);
-    function solveAlloc(gmtToLock){
-      const gmtSell=deployable-gmtToLock;
-      const thBudgetUSD=usdCap+(gmtSell*gp);
+    const maxLockGMT=deployable+(usdCap/gp);
+    function solveAlloc(totalGmtLock){
+      const fromPool=Math.min(totalGmtLock,deployable);
+      const fromUSD=totalGmtLock-fromPool;
+      const usdSpentOnGMT=fromUSD*gp;
+      const gmtSell=deployable-fromPool;
+      const thBudgetUSD=(usdCap-usdSpentOnGMT)+(gmtSell*gp);
       const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
       const ntTest=i.th+atTest;
-      const totalLocked=i.gl+gmtToLock;
+      const totalLocked=i.gl+totalGmtLock;
       const bwth=blendWTH(atTest);
       const fTest=fees(ntTest,bwth,bp);
       const vTest=vipOf(ntTest,totalLocked);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
-      return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest};
+      return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest,
+        fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD};
     }
     let lock=0;
     if(i.payG){
       const check0=solveAlloc(0);
       if(check0.deficit>0){
-        let lo=0,hi=deployable;
+        let lo=0,hi=maxLockGMT;
         for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(solveAlloc(mid).deficit<=0)hi=mid;else lo=mid;}
-        lock=Math.min(hi,deployable);
+        lock=Math.min(hi,maxLockGMT);
       }
     }
-    const sell=deployable-lock;
-    const thUSD=usdCap+(sell*gp);
-    const addTH=thUSD>0?thForBudget(thUSD):0;
-    return{lock,sell,deployable,addTH,thUSD,finalTH:i.th+addTH,finalLocked:i.gl+lock};
+    const r=solveAlloc(lock);
+    return{lock,fromPool:r.fromPool,fromUSD:r.fromUSD,usdSpentOnGMT:r.usdSpentOnGMT,
+      sell:r.gmtSell,deployable,addTH:r.at,thUSD:r.thBudgetUSD,
+      finalTH:i.th+r.at,finalLocked:i.gl+lock};
   }
 
   let gmtReserve=calcReserve(i.th||1,i.gl);
@@ -1344,6 +1349,7 @@ function renderPlanner(i,m){
   sol=solveWithReserve(gmtReserve);
 
   const gmtDeployable=sol.deployable,gmtLock=sol.lock,gmtSell=sol.sell;
+  const gmtFromPool=sol.fromPool,gmtFromUSD=sol.fromUSD,usdSpentOnGMT=sol.usdSpentOnGMT;
   let at=sol.addTH,tu=sol.thUSD;
 
   const nt=i.th+at;
@@ -1367,28 +1373,33 @@ function renderPlanner(i,m){
 
   let ah='';
 
+  const usdToTH=usdCap-usdSpentOnGMT;
   ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
   if(!i.payG){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
-  }else if(!canCover20&&gmtLock>0&&gmtLock>=gmtDeployable){
-    ah+=`<strong style="color:var(--orange)">Not enough GMT.</strong> Even locking all ${fN(gmtDeployable,0)} deployable GMT isn't enough for 20% token discount at ${fN(nt,1)} TH. You need ${fN(gmtNeededNew,0)} GMT total — you're ${fN(gmtShortfall,0)} GMT short.`;
+  }else if(!canCover20){
+    ah+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
   }else if(gmtLock<=0){
-    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. Sell all deployable GMT and buy hashrate.`;
+    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
+  }else if(gmtFromUSD>0){
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT (${fN(gmtFromPool,0)} from pool + ${fN(gmtFromUSD,0)} bought with ${fU(usdSpentOnGMT)}) for 20% discount. Remaining ${fU(usdToTH)}${gmtSell>0?' + '+fN(gmtSell,0)+' GMT':''} buys +${fN(at,1)} TH.`;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT to maintain 20% token discount at ${fN(nt,1)} TH. Sell the remaining ${fN(gmtSell,0)} GMT (${fU(gmtSell*gp)}) for +${fN(at,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT for 20% discount at ${fN(nt,1)} TH.${gmtSell>0?' Sell '+fN(gmtSell,0)+' GMT ('+fU(gmtSell*gp)+')':''} ${usdToTH>0?'+ '+fU(usdToTH)+' USD':''} → +${fN(at,1)} TH.`;
   }
   ah+='</div>';
 
-  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(3,1fr)">
-    <div class="alloc-card"><div class="a-label">Keep as Reserve</div><div class="a-val" style="color:var(--orange)">${fN(gmtReserve,1)} GMT</div><div class="a-sub">2-day fees (${fU(gmtReserve*gp)})</div></div>
-    <div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(gmtLock*gp)}</div></div>
-    <div class="alloc-card"><div class="a-label">Convert to TH</div><div class="a-val cyan">${fN(gmtSell,0)} GMT</div><div class="a-sub">+${fN(at,1)} TH (${fU(tu)})</div></div>
-  </div>`;
+  const hasGMT=gmtAvail>0;
+  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(${hasGMT?3:2},1fr)">`;
+  if(hasGMT)ah+=`<div class="alloc-card"><div class="a-label">Keep as Reserve</div><div class="a-val" style="color:var(--orange)">${fN(gmtReserve,1)} GMT</div><div class="a-sub">2-day fees (${fU(gmtReserve*gp)})</div></div>`;
+  ah+=`<div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(gmtLock*gp)}${gmtFromUSD>0?' ('+fN(gmtFromUSD,0)+' bought)':''}</div></div>`;
+  ah+=`<div class="alloc-card"><div class="a-label">Buy TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>`;
+  ah+=`</div>`;
 
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
   ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
   ah+=row('Already locked',`${fN(i.gl,0)} GMT`);
-  if(gmtLock>0)ah+=row('Locking from pool',`+${fN(gmtLock,0)} GMT`);
+  if(gmtFromPool>0)ah+=row('Lock from GMT pool',`+${fN(gmtFromPool,0)} GMT`);
+  if(gmtFromUSD>0)ah+=row('Buy & lock with USD',`+${fN(gmtFromUSD,0)} GMT<span class="sub">${fU(usdSpentOnGMT)}</span>`);
   ah+=row('Total locked after',`${fN(newLocked,0)} GMT`);
   if(canCover20){
     ah+=row('Status','20% token discount covered','green');
@@ -1396,13 +1407,18 @@ function renderPlanner(i,m){
     ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
   }
 
-  ah+=`<div class="sub-title" style="margin-top:.8rem">GMT Breakdown</div>`;
-  ah+=row('Total GMT entered',`${fN(gmtAvail,0)} GMT<span class="sub">${fU(gmtAvail*gp)}</span>`);
-  ah+=row('2-day fee reserve',`${fN(gmtReserve,1)} GMT<span class="sub">kept unlocked</span>`,'orange');
-  ah+=row('Deployable',`${fN(gmtDeployable,0)} GMT`);
-  ah+=row('→ Lock',`${fN(gmtLock,0)} GMT`,'purple');
-  ah+=row('→ Sell for TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
-  if(usdCap>0)ah+=row('+ USD capital',`${fU(usdCap)}<span class="sub">added to TH budget</span>`,'cyan');
+  ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
+  if(hasGMT){
+    ah+=row('GMT on hand',`${fN(gmtAvail,0)} GMT<span class="sub">${fU(gmtAvail*gp)}</span>`);
+    ah+=row('2-day fee reserve',`${fN(gmtReserve,1)} GMT<span class="sub">kept unlocked</span>`,'orange');
+    if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
+    if(gmtSell>0)ah+=row('→ Sell for TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
+  }
+  if(usdCap>0){
+    ah+=row('USD capital',`${fU(usdCap)}`);
+    if(usdSpentOnGMT>0)ah+=row('→ Buy GMT to lock',`${fU(usdSpentOnGMT)}<span class="sub">${fN(gmtFromUSD,0)} GMT</span>`,'purple');
+    if(usdToTH>0)ah+=row('→ Buy TH',`${fU(usdToTH)}`,'cyan');
+  }
 
   $('allocDisplay').innerHTML=ah;
 
