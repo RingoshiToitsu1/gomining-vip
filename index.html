@@ -1590,17 +1590,6 @@ function runReinvestProjection(){
   </div>`;
 
   // Snapshot table
-  h+=`<div class="sub-title">Projection Snapshots</div>`;
-  h+=`<div class="ri-scroll"><table class="ri-table">
-    <thead><tr><th style="text-align:left">Day</th><th>TH</th><th>Daily Reward</th><th>Monthly</th><th>Locked GMT</th><th>Token Disc</th><th>Total Disc</th><th>VIP</th></tr></thead><tbody>`;
-  for(const s of snaps){
-    h+=`<tr>
-      <td>${s.d}</td><td>${fN(s.th,1)}</td>
-      <td>${fU(s.ssNet)}</td><td>${fU(s.ssNet*30)}</td>
-      <td>${fN(s.gmtLocked,0)}</td><td>${fP(s.tokD)}</td><td>${fP(s.disc)}</td><td>${s.vip}</td></tr>`;
-  }
-  h+=`</tbody></table></div>`;
-
   // Info box
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
     <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward goes toward buying more TH. Your locked GMT earns ${fN(apr,2)}% APR staking yield.
