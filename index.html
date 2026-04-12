@@ -1000,7 +1000,7 @@ function submitPlannerCapital(){
   const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
   const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
   $('inCapital').value=val;
-  $('inGMTWallet').value=gmtVal;
+  if(gmtVal>0)$('inGMTWallet').value=gmtVal;
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
   recalc();
