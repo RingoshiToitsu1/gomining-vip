@@ -1294,56 +1294,63 @@ function renderPlanner(i,m){
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
 
-  // --- 2-day fee reserve (calculated at current TH) ---
-  const reserveF=fees(i.th||1,i.wth||15,bp);
-  const reserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
-  const dailyFeeGMT=(reserveF.t*(1-reserveDisc/100)*bp)/gp;
-  const gmtReserve=Math.min(dailyFeeGMT*2,gmtAvail);
-  const gmtDeployable=Math.max(0,gmtAvail-gmtReserve); // GMT available to lock or sell for TH
-
-  // Total deployable: USD cash + sellable GMT value
-  // GMT can be locked (free, no conversion) or sold for TH (converted to USD)
   const covNeeded=378; // 20 * 18.9
 
   function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
 
-  // Solver: given gmtToLock (from deployable pool), rest sells for TH
-  // usdCap always goes to TH
-  function solveAlloc(gmtToLock){
-    const gmtSell=gmtDeployable-gmtToLock;
-    const thBudgetUSD=usdCap+(gmtSell*gp);
-    const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
-    const ntTest=i.th+atTest;
-    const totalLocked=i.gl+gmtToLock;
-    const bwth=blendWTH(atTest);
-    const fTest=fees(ntTest,bwth,bp);
-    const vTest=vipOf(ntTest,totalLocked);
-    const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
-    const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
-    const needed=burnGMT*covNeeded;
-    return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest,burnGMT,gmtSell,thUSD:thBudgetUSD};
+  // Reserve must be calculated at FINAL TH, but final TH depends on reserve.
+  // Solve iteratively: estimate reserve → solve allocation → recalc reserve at final TH → re-solve.
+  function calcReserve(th,lockedGMT){
+    const bw=blendWTH(th-i.th);
+    const rf=fees(th||1,bw||15,bp);
+    const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
+    const dailyFee=(rf.t*(1-rd/100)*bp)/gp;
+    return Math.min(dailyFee*2,gmtAvail);
   }
 
-  // Find optimal split: minimum GMT to lock for 20% discount, rest to TH
-  let gmtLock=0,gmtSell=gmtDeployable,at,tu;
-  if(i.payG){
-    const check0=solveAlloc(0);
-    if(check0.deficit<=0){
-      // Existing locked GMT + 0 new lock is enough — sell all deployable for TH
-      gmtLock=0;
-    }else{
-      // Binary search: minimum GMT to lock so 20% holds
-      let lo=0,hi=gmtDeployable;
-      for(let k=0;k<50;k++){
-        const mid=(lo+hi)/2;
-        if(solveAlloc(mid).deficit<=0)hi=mid;else lo=mid;
-      }
-      gmtLock=Math.min(hi,gmtDeployable);
+  function solveWithReserve(reserve){
+    const deployable=Math.max(0,gmtAvail-reserve);
+    function solveAlloc(gmtToLock){
+      const gmtSell=deployable-gmtToLock;
+      const thBudgetUSD=usdCap+(gmtSell*gp);
+      const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
+      const ntTest=i.th+atTest;
+      const totalLocked=i.gl+gmtToLock;
+      const bwth=blendWTH(atTest);
+      const fTest=fees(ntTest,bwth,bp);
+      const vTest=vipOf(ntTest,totalLocked);
+      const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
+      const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
+      const needed=burnGMT*covNeeded;
+      return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest};
     }
+    let lock=0;
+    if(i.payG){
+      const check0=solveAlloc(0);
+      if(check0.deficit>0){
+        let lo=0,hi=deployable;
+        for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(solveAlloc(mid).deficit<=0)hi=mid;else lo=mid;}
+        lock=Math.min(hi,deployable);
+      }
+    }
+    const sell=deployable-lock;
+    const thUSD=usdCap+(sell*gp);
+    const addTH=thUSD>0?thForBudget(thUSD):0;
+    return{lock,sell,deployable,addTH,thUSD,finalTH:i.th+addTH,finalLocked:i.gl+lock};
   }
-  gmtSell=gmtDeployable-gmtLock;
-  tu=usdCap+(gmtSell*gp);
-  at=tu>0?thForBudget(tu):0;
+
+  // Pass 1: estimate reserve at current TH
+  let gmtReserve=calcReserve(i.th||1,i.gl);
+  let sol=solveWithReserve(gmtReserve);
+  // Pass 2: recalculate reserve at final TH, re-solve
+  gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
+  sol=solveWithReserve(gmtReserve);
+  // Pass 3: one more for convergence
+  gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
+  sol=solveWithReserve(gmtReserve);
+
+  const gmtDeployable=sol.deployable,gmtLock=sol.lock,gmtSell=sol.sell;
+  let at=sol.addTH,tu=sol.thUSD;
 
   // Final state
   const nt=i.th+at;
