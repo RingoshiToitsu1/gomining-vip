@@ -1201,42 +1201,53 @@ function recalc(){
 
 function renderProjections(th,wth,totD,label,moStakingUSD){
   moStakingUSD=moStakingUSD||0;
-  const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const cur=S.btcPrice;
-  const allPrices=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
+  const gp=S.gmtPrice;
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
-  let maxMo=0;
-  const gp=S.gmtPrice;
-  const rows=allPrices.map(bp=>{
-    const f=fees(th,wth,bp);
-    const dfees=f.t*(1-totD/100);
-    const netBTC=grossBTC-dfees;
-    // GoMining stops mining if unprofitable — floor at $0
-    const rawDailyUSD=netBTC*bp+moStakingUSD/30;
-    const dailyUSD=Math.max(0,rawDailyUSD);
-    const moUSD=dailyUSD*30;
-    if(Math.abs(moUSD)>maxMo)maxMo=Math.abs(moUSD);
-    const moGMT=gp>0?moUSD/gp:0;
-    const dailyGMT=gp>0?dailyUSD/gp:0;
-    return{bp,daily:dailyUSD,moUSD,moGMT,dailyGMT,isCurrent:bp===cur};
-  });
+  window._projParams={th,wth,totD,moStakingUSD,grossBTC,cur,gp};
+
+  const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
+  const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
+
   let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div>`;
-  h+=`<div style="font-size:.65rem;color:var(--text4);margin-bottom:.6rem;text-align:center">Tap a cell to flip between USD and GMT</div>`;
-  h+=`<div class="proj-grid">`;
-  for(const r of rows){
-    const col=r.isCurrent?'cyan':r.bp<cur?'red':'green';
-    const barW=maxMo>0?Math.abs(r.moUSD)/maxMo*100:0;
-    h+=`<div class="proj-cell${r.isCurrent?' current':''}" onclick="flipProjCell(this)" data-mo-usd="${r.moUSD.toFixed(2)}" data-daily-usd="${r.daily.toFixed(2)}" data-mo-gmt="${r.moGMT.toFixed(0)}" data-daily-gmt="${r.dailyGMT.toFixed(0)}" data-mode="usd">`;
-    if(r.isCurrent)h+=`<span class="pc-tag">LIVE</span>`;
-    h+=`<div class="pc-price">${r.bp>=1000?'$'+(r.bp/1000).toFixed(0)+'K':fU(r.bp)}</div>`;
-    h+=`<div class="pc-monthly ${col}">${fU(r.moUSD)}</div>`;
-    h+=`<div class="pc-daily">${fU(r.daily)}/day</div>`;
-    h+=`<div class="pc-mode-tag">USD</div>`;
-    h+=`<div class="proj-bar"><div class="proj-bar-fill ${col}" style="width:${barW}%"></div></div></div>`;
+  h+=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
+  h+=`<label style="font-size:.75rem;color:var(--text3)">BTC Price</label>`;
+  h+=`<select id="projBtcSelect" onchange="updateProjCell()" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem">`;
+  for(const p of opts){
+    const lbl=p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
+    h+=`<option value="${p}"${p===cur?' selected':''}>${lbl}</option>`;
   }
-  h+='</div>';
+  h+=`</select></div>`;
+  h+=`<div id="projSingleCell" style="display:flex;justify-content:center"></div>`;
   return h;
+}
+
+function updateProjCell(){
+  const p=window._projParams;
+  if(!p)return;
+  const sel=document.getElementById('projBtcSelect');
+  const bp=parseFloat(sel.value);
+  const isLive=bp===p.cur;
+  const f=fees(p.th,p.wth,bp);
+  const dfees=f.t*(1-p.totD/100);
+  const netBTC=p.grossBTC-dfees;
+  const dailyUSD=Math.max(0,netBTC*bp+p.moStakingUSD/30);
+  const moUSD=dailyUSD*30;
+  const moGMT=p.gp>0?moUSD/p.gp:0;
+  const dailyGMT=p.gp>0?dailyUSD/p.gp:0;
+  const tag=isLive?'LIVE':'SIMULATED';
+  const tagCol=isLive?'var(--cyan)':'var(--orange)';
+  const col=isLive?'cyan':'orange';
+  const priceLabel=bp>=1000?'$'+(bp/1000).toFixed(0)+'K':fU(bp);
+  let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:220px;width:100%">`;
+  h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
+  h+=`<div class="pc-price">${priceLabel}</div>`;
+  h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
+  h+=`<div class="pc-daily">${fU(dailyUSD)}/day</div>`;
+  h+=`<div class="pc-mode-tag">USD</div>`;
+  h+=`</div>`;
+  document.getElementById('projSingleCell').innerHTML=h;
 }
 
 function flipProjCell(el){
@@ -1416,6 +1427,7 @@ function renderPlanner(i,m){
   const moStakingUSD=newWkStake*gp*4.33;
   $('projTable').innerHTML=renderProjections(nt,bwth,td2,
     `Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (incl. staking)`,moStakingUSD);
+  updateProjCell();
 
 }
 
