@@ -1285,124 +1285,115 @@ function flipProjCell(el){
 }
 
 function renderPlanner(i,m){
-  const bp=m.bp,gp=m.gp,cap=i.cap,dbt=dailyBTCperTH();
-  if(!cap||cap<=0){
-    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital above to see recommendation.</div>';
+  const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
+  const gmtAvail=i.gw;
+  const totalValue=usdCap+(gmtAvail*gp);
+  if(totalValue<=0){
+    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see recommendation.</div>';
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
   }
 
-  // --- Iterative deficit solver: find GMT/TH split that covers 20% at final TH ---
-  // Reserve 2 days of maintenance fees in wallet GMT (never advise locking below this)
+  // --- 2-day fee reserve (calculated at current TH) ---
   const reserveF=fees(i.th||1,i.wth||15,bp);
   const reserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
   const dailyFeeGMT=(reserveF.t*(1-reserveDisc/100)*bp)/gp;
-  const gmtReserve=dailyFeeGMT*2;
-  const availableWalletGMT=Math.max(0,i.gw-gmtReserve);
-  const existingGMT=i.gl+availableWalletGMT;
-  const covNeeded=378; // 20 * 18.9
+  const gmtReserve=Math.min(dailyFeeGMT*2,gmtAvail);
+  const gmtDeployable=Math.max(0,gmtAvail-gmtReserve);
 
-  // Blended W/TH: new miners are 15 W/TH, weighted average with existing
+  const covNeeded=378;
+
   function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
 
-  // Helper: given GMT budget, compute deficit at resulting TH level
-  function solveAlloc(gmtBudgetUSD){
-    const agTest=gmtBudgetUSD/gp;
-    const thBudgetUSD=cap-gmtBudgetUSD;
+  function solveAlloc(gmtToLock){
+    const gmtSell=gmtDeployable-gmtToLock;
+    const thBudgetUSD=usdCap+(gmtSell*gp);
     const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
     const ntTest=i.th+atTest;
-    const totalGMT=existingGMT+agTest;
+    const totalLocked=i.gl+gmtToLock;
     const bwth=blendWTH(atTest);
     const fTest=fees(ntTest,bwth,bp);
-    const vTest=vipOf(ntTest,i.gl+agTest);
+    const vTest=vipOf(ntTest,totalLocked);
     const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
     const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
     const needed=burnGMT*covNeeded;
-    return{needed,have:totalGMT,deficit:Math.max(0,needed-totalGMT),at:atTest,ag:agTest,nt:ntTest,burnGMT};
+    return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest,burnGMT,gmtSell,thUSD:thBudgetUSD};
   }
 
-  // Iterate: start with deficit at current TH, then adjust for new TH
-  let gu=0,tu=cap,ag=0,at=thForBudget(cap);
-  const check0=solveAlloc(0);
-  if(check0.deficit<=0&&i.payG){
-    // Already have enough GMT for 20% even with all capital to TH
-    gu=0; tu=cap; ag=0; at=check0.at;
-  }else if(i.payG){
-    // Binary search for the minimum GMT spend that covers 20% at resulting TH
-    let lo=0,hi=cap;
-    for(let k=0;k<50;k++){
-      const mid=(lo+hi)/2;
-      const r=solveAlloc(mid);
-      if(r.deficit<=0)hi=mid; else lo=mid;
+  let gmtLock=0,gmtSell=gmtDeployable,at,tu;
+  if(i.payG){
+    const check0=solveAlloc(0);
+    if(check0.deficit<=0){
+      gmtLock=0;
+    }else{
+      let lo=0,hi=gmtDeployable;
+      for(let k=0;k<50;k++){
+        const mid=(lo+hi)/2;
+        if(solveAlloc(mid).deficit<=0)hi=mid;else lo=mid;
+      }
+      gmtLock=Math.min(hi,gmtDeployable);
     }
-    gu=hi; tu=cap-gu; ag=gu/gp; at=tu>0?thForBudget(tu):0;
-  }else{
-    // Not paying in GMT — all to TH
-    gu=0; tu=cap; ag=0; at=thForBudget(cap);
   }
+  gmtSell=gmtDeployable-gmtLock;
+  tu=usdCap+(gmtSell*gp);
+  at=tu>0?thForBudget(tu):0;
 
-  // Final state
-  const nt=i.th+at, ng=existingGMT+ag;
+  const nt=i.th+at;
+  const newLocked=i.gl+gmtLock;
   const bwth=blendWTH(at);
   const newF=fees(nt,bwth,bp);
-  const ngl=i.gl+ag, nv=vipOf(nt,ngl);
+  const nv=vipOf(nt,newLocked);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
-  const gmtAfter=ng;
-  const covAfter=newDailyBurnGMT>0?gmtAfter/newDailyBurnGMT:Infinity;
+  const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
   const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
   const td2=Math.min(30,ntd+newNonTokD);
   const canCover20=ntd>=20;
-  const gmtShortfall=Math.max(0,gmtNeededNew-gmtAfter);
+  const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
+  const ag=gmtLock;
+  const cap=totalValue;
 
-  // Compute net/monthly at post-investment state
   const gr=dbt*nt;
   const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*30;
 
-  // --- STEP 8: Display ---
   let ah='';
 
-  // Explanation
-  const thPct=cap>0?Math.round(tu/cap*100):0, gmtPct=100-thPct;
   ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
   if(!i.payG){
-    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> GMT fee payment is off — all capital goes to hashrate.`;
-  }else if(!canCover20&&ag>0){
-    ah+=`<strong style="color:var(--orange)">100% to GMT.</strong> Your ${fU(cap)} budget is not enough to cover the 20% token discount deficit. You need ${fN(gmtNeededNew,0)} GMT (${fU(gmtNeededNew*gp)}) total for 20%. This plan buys ${fN(ag,0)} GMT — you're still ${fN(gmtShortfall,0)} GMT short.`;
-  }else if(gu<=0){
-    ah+=`<strong style="color:var(--cyan)">100% to TH.</strong> You already have enough GMT for 20% token discount at ${fN(nt,1)} TH. All capital goes to hashrate growth.`;
+    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
+  }else if(!canCover20&&gmtLock>0&&gmtLock>=gmtDeployable){
+    ah+=`<strong style="color:var(--orange)">Not enough GMT.</strong> Even locking all ${fN(gmtDeployable,0)} deployable GMT isn't enough for 20% token discount at ${fN(nt,1)} TH. You need ${fN(gmtNeededNew,0)} GMT total — you're ${fN(gmtShortfall,0)} GMT short.`;
+  }else if(gmtLock<=0){
+    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. Sell all deployable GMT and buy hashrate.`;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> ${fU(gu)} to GMT ensures 20% token discount at the new ${fN(nt,1)} TH level (accounts for increased fees from more TH). The remaining ${fU(tu)} buys +${fN(at,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT to maintain 20% token discount at ${fN(nt,1)} TH. Sell the remaining ${fN(gmtSell,0)} GMT (${fU(gmtSell*gp)}) for +${fN(at,1)} TH.`;
   }
   ah+='</div>';
 
-  ah+=`<div class="alloc-grid">
-    <div class="alloc-card"><div class="a-label">Allocate to TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>
-    <div class="alloc-card"><div class="a-label">Allocate to GMT</div><div class="a-val purple">${fU(gu)}</div><div class="a-sub">+${fN(ag,0)} GMT</div></div>
+  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="alloc-card"><div class="a-label">Keep as Reserve</div><div class="a-val" style="color:var(--orange)">${fN(gmtReserve,1)} GMT</div><div class="a-sub">2-day fees (${fU(gmtReserve*gp)})</div></div>
+    <div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(gmtLock*gp)}</div></div>
+    <div class="alloc-card"><div class="a-label">Convert to TH</div><div class="a-val cyan">${fN(gmtSell,0)} GMT</div><div class="a-sub">+${fN(at,1)} TH (${fU(tu)})</div></div>
   </div>`;
-  const gl=ag;
-  if(ag>0){
-    ah+=row('Lock in VeGoMining',`${fN(gl,0)} GMT`);
-  }
 
-  // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
   ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
-  ah+=row('You currently have',`${fN(existingGMT,0)} GMT`);
-  if(ag>0)ah+=row('Purchasing',`+${fN(ag,0)} GMT<span class="sub">${fU(gu)}</span>`);
-  ah+=row('Total after purchase',`${fN(gmtAfter,0)} GMT`);
+  ah+=row('Already locked',`${fN(i.gl,0)} GMT`);
+  if(gmtLock>0)ah+=row('Locking from pool',`+${fN(gmtLock,0)} GMT`);
+  ah+=row('Total locked after',`${fN(newLocked,0)} GMT`);
   if(canCover20){
-    ah+=row('Status','20% token discount covered at new TH','green');
+    ah+=row('Status','20% token discount covered','green');
   }else{
     ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
   }
 
-  // 2-day fee reserve warning
-  if(i.gw>0){
-    ah+=`<div class="sub-title" style="margin-top:.8rem">Wallet GMT Reserve</div>`;
-    ah+=row('2-day fee reserve',`${fN(gmtReserve,1)} GMT<span class="sub">${fU(gmtReserve*gp)}</span>`);
-    ah+=row('Available for locking',`${fN(availableWalletGMT,1)} GMT<span class="sub">of ${fN(i.gw,0)} wallet GMT</span>`);
-  }
+  ah+=`<div class="sub-title" style="margin-top:.8rem">GMT Breakdown</div>`;
+  ah+=row('Total GMT entered',`${fN(gmtAvail,0)} GMT<span class="sub">${fU(gmtAvail*gp)}</span>`);
+  ah+=row('2-day fee reserve',`${fN(gmtReserve,1)} GMT<span class="sub">kept unlocked</span>`,'orange');
+  ah+=row('Deployable',`${fN(gmtDeployable,0)} GMT`);
+  ah+=row('→ Lock',`${fN(gmtLock,0)} GMT`,'purple');
+  ah+=row('→ Sell for TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
+  if(usdCap>0)ah+=row('+ USD capital',`${fU(usdCap)}<span class="sub">added to TH budget</span>`,'cyan');
 
   $('allocDisplay').innerHTML=ah;
 
@@ -1420,7 +1411,6 @@ function renderPlanner(i,m){
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
-  const newLocked=i.gl+gl;
   const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
   const projMoTotal=mo+projMoStaking;
   ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">mining + staking</span>`,projMoTotal>=0?'green':'red');
@@ -1433,7 +1423,7 @@ function renderPlanner(i,m){
   const newWkNet=newDailyNetGMT*7,newWkTotal=newWkNet+newWkStake;
   const newMoTotal=newWkTotal*4.33;
   ph+=`<div class="sub-title">Self-Sustaining Loop</div>`;
-  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`+(i.gw>0?`<span class="sub">+${fN(i.gw,0)} in wallet = ${fN(newLocked+i.gw,0)} total</span>`:''));
+  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`+(gmtReserve>0?`<span class="sub">+${fN(gmtReserve,1)} reserve in wallet</span>`:''));
   ph+=row('Weekly net rewards',`${fN(newWkNet,2)} GMT<span class="sub">${fU(newWkNet*gp)}/week</span>`);
   ph+=row('Weekly staking rewards',`${fN(newWkStake,2)} GMT<span class="sub">${fU(newWkStake*gp)}/week</span>`);
   ph+=row('Total weekly GMT earned',`${fN(newWkTotal,2)} GMT<span class="sub">${fU(newWkTotal*gp)}/week</span>`,'cyan');
