@@ -831,8 +831,14 @@ input[type=number]{-moz-appearance:textfield}
     <div class="section-body">
       <div class="input-grid" style="max-width:300px">
         <div class="field">
-          <label>Projection Length <span class="tip" data-tip="Number of days to simulate reinvesting net profit into TH. Max 10 years (3650 days).">?</span></label>
-          <div class="field-input"><input type="number" id="inReinvestDays" value="365" step="1" min="1" max="3650"><span class="unit">days</span></div>
+          <label>Projection Length <span class="tip" data-tip="Number of years to simulate reinvesting net profit into TH.">?</span></label>
+          <div class="field-input"><select id="inReinvestDays" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
+            <option value="365" selected>1 Year</option>
+            <option value="730">2 Years</option>
+            <option value="1095">3 Years</option>
+            <option value="1460">4 Years</option>
+            <option value="1825">5 Years</option>
+          </select></div>
         </div>
       </div>
       <div style="margin-top:.8rem">
@@ -1552,11 +1558,38 @@ function runReinvestProjection(){
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
     <strong>${fN(postLocked,0)} GMT</strong> locked</div>`;
 
+  const finalDailyBTC=finalSS/bp;
+  const finalDailyGMT=finalSS/gp;
+  const finalMonthly=finalSS*30;
+  const finalMonthlyBTC=finalMonthly/bp;
+  const finalMonthlyGMT=finalMonthly/gp;
+  const lockedUSD=gmtLocked*gp;
+  const lockedBTC=lockedUSD/bp;
+
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
-    <div class="ri-card"><div class="ri-label">Daily Reward (end)</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label">Locked GMT (end)</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
     <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
+  </div>`;
+
+  h+=`<div class="sub-title" style="margin-top:1rem">Daily Reward (End of Period)</div>`;
+  h+=`<div class="ri-summary">
+    <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
+    <div class="ri-card"><div class="ri-label">BTC</div><div class="ri-val" style="color:var(--orange,#f7931a)">${finalDailyBTC.toFixed(8)}</div></div>
+    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
+  </div>`;
+
+  h+=`<div class="sub-title" style="margin-top:1rem">Monthly Reward (End of Period)</div>`;
+  h+=`<div class="ri-summary">
+    <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
+    <div class="ri-card"><div class="ri-label">BTC</div><div class="ri-val" style="color:var(--orange,#f7931a)">${finalMonthlyBTC.toFixed(8)}</div></div>
+    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
+  </div>`;
+
+  h+=`<div class="sub-title" style="margin-top:1rem">Locked GMT (End of Period)</div>`;
+  h+=`<div class="ri-summary">
+    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
+    <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
+    <div class="ri-card"><div class="ri-label">BTC Value</div><div class="ri-val" style="color:var(--orange,#f7931a)">${lockedBTC.toFixed(8)}</div></div>
   </div>`;
 
   // Snapshot table
