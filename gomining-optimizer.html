@@ -875,24 +875,17 @@ input[type=number]{-moz-appearance:textfield}
   <div class="pi-modal">
     <div class="pi-body">
       <div class="pi-title">Capital Planner</div>
-      <div class="pi-subtitle">Find the optimal way to allocate new capital into your GoMining farm in three simple steps.</div>
-      <div class="pi-steps">
-        <div class="pi-step">
-          <div class="pi-step-num purple">1</div>
-          <div class="pi-step-text"><strong>Enter your budget</strong> &mdash; Start by entering the total amount you're planning to deploy into GoMining.</div>
-        </div>
-        <div class="pi-step">
-          <div class="pi-step-num cyan">2</div>
-          <div class="pi-step-text"><strong>Get the optimal split</strong> &mdash; The planner tests every possible TH/GMT allocation and finds the split that maximizes your monthly income.</div>
-        </div>
-        <div class="pi-step">
-          <div class="pi-step-num green">3</div>
-          <div class="pi-step-text"><strong>Review your projection</strong> &mdash; See exactly what your farm will look like after deploying capital, including income at various BTC prices.</div>
+      <div class="pi-subtitle">How much are you planning to invest?</div>
+      <div style="margin:1.5rem auto;max-width:280px">
+        <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Total Capital to Invest</label>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <input type="number" id="piCapitalInput" value="5000" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
+          <span style="color:var(--text3);font-size:.85rem">USD</span>
         </div>
       </div>
     </div>
     <div class="pi-nav">
-      <button class="ob-btn ob-btn-primary" onclick="closePlannerIntro()">Let's Go</button>
+      <button class="ob-btn ob-btn-primary" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
     </div>
   </div>
 </div>
@@ -980,21 +973,26 @@ const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFra
 function toggleSection(id){document.getElementById(id).classList.toggle('collapsed')}
 
 // ---- TABS ----
-let plannerIntroShown=false;
-try{plannerIntroShown=!!localStorage.getItem('gm_planner_intro')}catch(e){}
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
-  if(b.dataset.tab==='tab-planner'&&!plannerIntroShown){
-    plannerIntroShown=true;
-    try{localStorage.setItem('gm_planner_intro','1')}catch(e){}
+  if(b.dataset.tab==='tab-planner'){
+    const cur=$('inCapital').value;
+    document.getElementById('piCapitalInput').value=cur;
     document.getElementById('plannerIntro').style.display='';
     document.body.style.overflow='hidden';
   }
 }));
+function submitPlannerCapital(){
+  const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
+  $('inCapital').value=val;
+  document.getElementById('plannerIntro').style.display='none';
+  document.body.style.overflow='';
+  recalc();
+}
 function closePlannerIntro(){
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
