@@ -1574,14 +1574,12 @@ function runReinvestProjection(){
   h+=`<div class="sub-title" style="margin-top:1rem">Daily Reward (End of Period)</div>`;
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label">BTC</div><div class="ri-val" style="color:var(--orange,#f7931a)">${finalDailyBTC.toFixed(8)}</div></div>
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
   </div>`;
 
   h+=`<div class="sub-title" style="margin-top:1rem">Monthly Reward (End of Period)</div>`;
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
-    <div class="ri-card"><div class="ri-label">BTC</div><div class="ri-val" style="color:var(--orange,#f7931a)">${finalMonthlyBTC.toFixed(8)}</div></div>
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
   </div>`;
 
@@ -1589,7 +1587,6 @@ function runReinvestProjection(){
   h+=`<div class="ri-summary">
     <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
     <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
-    <div class="ri-card"><div class="ri-label">BTC Value</div><div class="ri-val" style="color:var(--orange,#f7931a)">${lockedBTC.toFixed(8)}</div></div>
   </div>`;
 
   // Snapshot table
