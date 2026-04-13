@@ -655,6 +655,11 @@ input[type=number]{-moz-appearance:textfield}
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Enter your current farm parameters. All calculations update in real-time.</div>
+    <div style="display:flex;gap:.5rem;margin:.5rem 0 0 0;padding:0 1rem">
+      <button onclick="saveSetup()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600">Save Setup</button>
+      <button onclick="clearSetup()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer">Clear Saved</button>
+      <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
+    </div>
     <div class="section-body">
       <div style="margin-bottom:.8rem">
         <div class="field">
@@ -1040,6 +1045,7 @@ async function fetchData(){
   if(S.currency==='GBP')S.fxRate=S.gbpRate;
   else if(S.currency==='EUR')S.fxRate=S.eurRate;
   S.apiOk=ok;S.loaded=true;
+  loadSetup();
   updateHeader();recalc();
 }
 
@@ -1061,6 +1067,47 @@ function inp(){return{
   cap:+$('inCapital').value||0
 }}
 function $(id){return document.getElementById(id)}
+
+const SETUP_KEY='gm_saved_setup';
+function saveSetup(){
+  const data={
+    inTH:$('inTH').value, inWTH:$('inWTH').value,
+    inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
+    inLockAPR:$('inLockAPR').value, inCostPerTH:$('inCostPerTH').value,
+    inMiningMode:$('inMiningMode').value, inCapital:$('inCapital').value,
+    inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
+    inCurrency:$('inCurrency').value
+  };
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify(data))}catch(e){}
+  const el=$('saveStatus');
+  el.textContent='Saved!';el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',2000);
+}
+function loadSetup(){
+  try{
+    const raw=localStorage.getItem(SETUP_KEY);
+    if(!raw)return false;
+    const d=JSON.parse(raw);
+    if(d.inTH)$('inTH').value=d.inTH;
+    if(d.inWTH)$('inWTH').value=d.inWTH;
+    if(d.inGMTLocked)$('inGMTLocked').value=d.inGMTLocked;
+    if(d.inGMTWallet)$('inGMTWallet').value=d.inGMTWallet;
+    if(d.inLockAPR)$('inLockAPR').value=d.inLockAPR;
+    if(d.inCostPerTH)$('inCostPerTH').value=d.inCostPerTH;
+    if(d.inMiningMode)$('inMiningMode').value=d.inMiningMode;
+    if(d.inCapital)$('inCapital').value=d.inCapital;
+    if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
+    if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
+    if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
+    return true;
+  }catch(e){return false}
+}
+function clearSetup(){
+  try{localStorage.removeItem(SETUP_KEY)}catch(e){}
+  const el=$('saveStatus');
+  el.textContent='Cleared';el.style.opacity='1';
+  setTimeout(()=>el.style.opacity='0',2000);
+}
 
 // ---- CALC ----
 // GoMining verified fee formulas (per TH per day in BTC, pre-discount)
