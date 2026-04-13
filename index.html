@@ -1044,8 +1044,9 @@ async function fetchData(){
   }catch(e){S.gbpRate=0.79;S.eurRate=0.92}
   if(S.currency==='GBP')S.fxRate=S.gbpRate;
   else if(S.currency==='EUR')S.fxRate=S.eurRate;
-  S.apiOk=ok;S.loaded=true;
-  loadSetup();
+  S.apiOk=ok;
+  if(!S.setupLoaded){S.setupLoaded=true;loadSetup();}
+  S.loaded=true;
   updateHeader();recalc();
 }
 
