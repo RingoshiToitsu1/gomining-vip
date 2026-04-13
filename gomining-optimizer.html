@@ -1345,11 +1345,12 @@ function renderPlanner(i,m){
   function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
 
   function calcReserve(th,lockedGMT){
+    if(!i.payG||gmtAvail<=0)return 0;
     const bw=blendWTH(th-i.th);
     const rf=fees(th||1,bw||15,bp);
     const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
-    const dailyFee=(rf.t*(1-rd/100)*bp)/gp;
-    return Math.min(dailyFee*2,gmtAvail);
+    const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
+    return Math.min(dailyFeeGMT*2,gmtAvail);
   }
 
   function solveWithReserve(reserve){
@@ -1532,10 +1533,13 @@ function runReinvestProjection(){
   }
 
   // ---- Run the same iterative allocation as the Capital Planner ----
-  const riReserveF=fees(i.th||1,i.wth||15,bp);
-  const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
-  const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
-  const riGmtReserve=riDailyFeeGMT*2;
+  let riGmtReserve=0;
+  if(i.payG&&i.gw>0){
+    const riReserveF=fees(i.th||1,i.wth||15,bp);
+    const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
+    const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
+    riGmtReserve=Math.min(riDailyFeeGMT*2,i.gw);
+  }
   const existGMT=i.gl+Math.max(0,i.gw-riGmtReserve);
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;

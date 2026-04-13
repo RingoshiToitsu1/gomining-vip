@@ -1348,11 +1348,15 @@ function renderPlanner(i,m){
   // Reserve must be calculated at FINAL TH, but final TH depends on reserve.
   // Solve iteratively: estimate reserve → solve allocation → recalc reserve at final TH → re-solve.
   function calcReserve(th,lockedGMT){
+    // No GMT reserve needed if not paying fees in GMT
+    if(!i.payG||gmtAvail<=0)return 0;
     const bw=blendWTH(th-i.th);
     const rf=fees(th||1,bw||15,bp);
+    // Use non-token discounts only (conservative — token discount depends on locked GMT)
     const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
-    const dailyFee=(rf.t*(1-rd/100)*bp)/gp;
-    return Math.min(dailyFee*2,gmtAvail);
+    // Daily fee in GMT = (daily BTC fee after non-token discounts) * BTC price / GMT price
+    const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
+    return Math.min(dailyFeeGMT*2,gmtAvail);
   }
 
   // Solver handles two pools: GMT on hand (lock or sell) + USD (buy GMT or buy TH)
@@ -1551,10 +1555,13 @@ function runReinvestProjection(){
   }
 
   // ---- Run the same iterative allocation as the Capital Planner ----
-  const riReserveF=fees(i.th||1,i.wth||15,bp);
-  const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
-  const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
-  const riGmtReserve=riDailyFeeGMT*2;
+  let riGmtReserve=0;
+  if(i.payG&&i.gw>0){
+    const riReserveF=fees(i.th||1,i.wth||15,bp);
+    const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
+    const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
+    riGmtReserve=Math.min(riDailyFeeGMT*2,i.gw);
+  }
   const existGMT=i.gl+Math.max(0,i.gw-riGmtReserve);
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
