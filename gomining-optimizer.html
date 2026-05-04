@@ -1297,13 +1297,14 @@ function recalc(){
   renderPlanner(i,m);
 }
 
-function renderProjections(th,wth,totD,label,moStakingUSD){
+function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
   moStakingUSD=moStakingUSD||0;
+  moAmbUSD=moAmbUSD||0;
   const cur=S.btcPrice;
   const gp=S.gmtPrice;
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
-  window._projParams={th,wth,totD,moStakingUSD,grossBTC,cur,gp};
+  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp};
 
   const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
@@ -1330,7 +1331,7 @@ function updateProjCell(){
   const f=fees(p.th,p.wth,bp);
   const dfees=f.t*(1-p.totD/100);
   const netBTC=p.grossBTC-dfees;
-  const dailyUSD=Math.max(0,netBTC*bp+p.moStakingUSD/30);
+  const dailyUSD=Math.max(0,netBTC*bp+p.moStakingUSD/30+(p.moAmbUSD||0)/30);
   const moUSD=dailyUSD*30;
   const moGMT=p.gp>0?moUSD/p.gp:0;
   const dailyGMT=p.gp>0?dailyUSD/p.gp:0;
@@ -1584,10 +1585,10 @@ function renderPlanner(i,m){
   }
   $('projDisplay').innerHTML=ph;
 
-  // BTC price projections
+  // BTC price projections (includes mining + staking + ambassador)
   const moStakingUSD=newWkStake*gp*4.33;
-  $('projTable').innerHTML=renderProjections(nt,bwth,td2,
-    `Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (incl. staking)`,moStakingUSD);
+  const projLabel=`Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''})`;
+  $('projTable').innerHTML=renderProjections(nt,bwth,td2,projLabel,moStakingUSD,projAmbMo);
   updateProjCell();
 
 }
