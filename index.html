@@ -94,6 +94,8 @@ input[type=number]{-moz-appearance:textfield}
 .field input[type="number"]{background:transparent;border:none;padding:0;color:var(--text);font-family:var(--mono);font-size:.88rem;outline:none;text-align:right;field-sizing:content;width:auto;min-width:4ch}
 .field input:focus{outline:none}
 .field .unit{font-size:.78rem;color:var(--text3);font-weight:600;font-family:var(--mono);flex-shrink:0}
+.gmt-logo{display:inline-block;height:1em;width:1em;vertical-align:-.15em;border-radius:3px;margin:0 1px}
+.unit .gmt-logo,.ob-unit .gmt-logo{height:1.1em;width:1.1em;vertical-align:-.2em}
 .field .hint{font-size:.65rem;color:var(--text4);margin-top:.25rem;line-height:1.3}
 .toggle-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0}
 .toggle{position:relative;width:36px;height:20px;flex-shrink:0}
@@ -522,12 +524,12 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>Locked GMT (VeGoMining)</label>
         <div class="ob-hint">GMT you've staked in VeGoMining. Earns weekly yield and counts toward your VIP tier.</div>
-        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit">GMT</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
       <div class="ob-field">
         <label>Liquid GMT Balance</label>
         <div class="ob-hint">Unlocked GMT in your GoMining virtual wallet. Available for locking or transfers.</div>
-        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit">GMT</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
@@ -689,11 +691,11 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit">GMT</span></div>
+          <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
         </div>
         <div class="field">
           <label>Liquid GMT Balance <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit">GMT</span></div>
+          <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
         </div>
         <div class="field">
           <label>Token Discount <span class="tip" data-tip="Auto-calculated from your GMT holdings. More GMT held = higher discount, up to 20%.">?</span></label>
@@ -882,7 +884,7 @@ input[type=number]{-moz-appearance:textfield}
     <p>This site has no ads and never will. If you find it useful, please consider supporting development with a small donation.</p>
     <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">BTC</p>
     <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
-    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">GoMining Token (GMT)</p>
+    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">GoMining Token (<img src="gmt36.png" class="gmt-logo" alt="GMT">)</p>
     <div class="donate-addr" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</div>
     <div class="donate-copied" id="donateCopied">Copied to clipboard!</div>
     <br>
@@ -901,7 +903,7 @@ input[type=number]{-moz-appearance:textfield}
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
           <div style="display:flex;align-items:center;gap:.5rem">
             <input type="number" id="piGMTInput" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
-            <span style="color:var(--text3);font-size:.85rem">GMT</span>
+            <span style="color:var(--text3);font-size:.85rem"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
           </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Total unlocked GMT you have on hand</div>
         </div>
@@ -925,7 +927,7 @@ input[type=number]{-moz-appearance:textfield}
   <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(117,64,239,.1);border:1px solid rgba(117,64,239,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use promo code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> <span style="color:var(--text2)">for 5% bonus TH on your first miner</span></div><br>
   GMT Optimizer is free and ad-free forever. If you find it helpful, consider donating.<br>
   <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
-  <span style="color:var(--text2)">GMT:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
+  <span style="color:var(--text2)"><img src="gmt36.png" class="gmt-logo" alt="GMT">:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
   <div class="donate-copied" id="footerCopied">Copied to clipboard!</div>
   <div style="margin-top:1rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
 </div>
@@ -1338,8 +1340,8 @@ function flipProjCell(el){
   const tagEl=el.querySelector('.pc-mode-tag');
   if(mode==='usd'){
     el.dataset.mode='gmt';
-    moEl.textContent=fN(moGMT,0)+' GMT';
-    dayEl.textContent=fN(dailyGMT,0)+' GMT/day';
+    moEl.innerHTML=fN(moGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">';
+    dayEl.innerHTML=fN(dailyGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">/day';
     tagEl.innerHTML='<img src="gmt36.png" alt="GMT" style="height:16px;width:16px;border-radius:4px;vertical-align:middle">';
     tagEl.style.color='';
   }else{
@@ -1713,18 +1715,18 @@ function runReinvestProjection(){
   h+=`<div class="sub-title centered">Daily Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
+    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
   </div>`;
 
   h+=`<div class="sub-title centered">Monthly Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
-    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
+    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
   </div>`;
 
   h+=`<div class="sub-title centered">Locked GMT (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
-    <div class="ri-card"><div class="ri-label">GMT</div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
+    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
     <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
   </div>`;
 
