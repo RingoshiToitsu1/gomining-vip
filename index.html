@@ -1798,7 +1798,8 @@ function runReinvestProjection(){
     const netUSD=dn.reinvest;
 
     if(netUSD<=0){
-      daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:dn.disc,tokD:dn.tokD,vip:dn.vip});
+      // No reinvest possible (mining+amb non-positive), but still record total daily value
+      daily.push({d,th,gmtLocked,gmtW,ssNet:dn.net,disc:dn.disc,tokD:dn.tokD,vip:dn.vip});
       continue;
     }
 
