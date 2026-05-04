@@ -1018,6 +1018,7 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   if(b.dataset.tab==='tab-planner'){
     document.getElementById('piCapitalInput').value=$('inCapital').value;
     document.getElementById('piGMTInput').value=$('inGMTWallet').value;
+    document.getElementById('piRefCapInput').value=$('inRefCapital').value;
     document.getElementById('plannerIntro').style.display='';
     document.body.style.overflow='hidden';
   }
@@ -1025,8 +1026,10 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
 function submitPlannerCapital(){
   const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
   const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
+  const refCapVal=parseFloat(document.getElementById('piRefCapInput').value)||0;
   $('inCapital').value=val;
   if(gmtVal>0)$('inGMTWallet').value=gmtVal;
+  $('inRefCapital').value=refCapVal;
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
   recalc();
