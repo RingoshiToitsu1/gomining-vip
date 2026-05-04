@@ -1314,8 +1314,8 @@ function updateProjCell(){
   const moGMT=p.gp>0?moUSD/p.gp:0;
   const dailyGMT=p.gp>0?dailyUSD/p.gp:0;
   const tag=isLive?'LIVE':'SIMULATED';
-  const tagCol=isLive?'var(--cyan)':'var(--orange)';
-  const col=isLive?'cyan':'orange';
+  const tagCol=isLive?'var(--green)':'var(--orange)';
+  const col=isLive?'green':'orange';
   const priceLabel=bp>=1000?'$'+(bp/1000).toFixed(0)+'K':fU(bp);
   let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
   h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
