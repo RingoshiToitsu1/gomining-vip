@@ -1319,7 +1319,6 @@ function updateProjCell(){
   const priceLabel=bp>=1000?'$'+(bp/1000).toFixed(0)+'K':fU(bp);
   let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
   h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
-  h+=`<div class="pc-price">${priceLabel}</div>`;
   h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
   h+=`<div class="pc-daily">${fU(dailyUSD)}/day</div>`;
   h+=`<div class="pc-mode-tag">USD</div>`;
