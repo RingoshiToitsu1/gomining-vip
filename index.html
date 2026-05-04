@@ -1702,6 +1702,7 @@ function runReinvestProjection(){
   const manualRefTH=i.amb?i.refTH:0;
   let ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
   let totalAmbUSD=0;
+  let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,curWTH,bp);
@@ -1714,7 +1715,9 @@ function runReinvestProjection(){
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
     const stakingUSD=(curLocked*(apr/100)/365)*gp;
-    return{net:miningUSD+stakingUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
+    // net = total daily VALUE (mining + staking + amb) — used for display
+    // reinvest = USD available to reinvest (mining + amb only — staking already compounds via weekly gmtLocked accrual)
+    return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
   function gmtDeficit(curTH,curLocked){
@@ -1735,7 +1738,8 @@ function runReinvestProjection(){
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
     const stakingUSD=(rLocked*(apr/100)/365)*gp;
-    return{net:miningUSD+stakingUSD,disc:fd};
+    // net = total (display); reinvest = mining only for referral (no amb on their side, staking compounds via weekly accrual)
+    return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
   }
   function refDeficit(rTH,rLocked){
     const f=fees(rTH,refCurWTH,bp);
@@ -1747,16 +1751,17 @@ function runReinvestProjection(){
   function stepReferral(){
     if(refTH<=0)return;
     const rdn=refDailyNet(refTH,refLocked);
-    if(rdn.net<=0)return;
+    const rRein=rdn.reinvest;
+    if(rRein<=0)return;
     let rGmtSpend=0;
     if(i.payG){
-      const allTH=refTH+thForBudget(rdn.net);
+      const allTH=refTH+thForBudget(rRein);
       if(refDeficit(allTH,refLocked)>0){
-        let lo=0,hi=rdn.net;
+        let lo=0,hi=rRein;
         for(let k=0;k<40;k++){
           const mid=(lo+hi)/2;
           const agT=mid/gp;
-          const thRem=rdn.net-mid;
+          const thRem=rRein-mid;
           const atT=thRem>0?thForBudget(thRem):0;
           if(refDeficit(refTH+atT,refLocked+agT)<=0)hi=mid;else lo=mid;
         }
@@ -1764,12 +1769,15 @@ function runReinvestProjection(){
       }
     }
     const rGmtBuy=rGmtSpend/gp;
-    const rThBudget=rdn.net-rGmtSpend;
+    const rThBudget=rRein-rGmtSpend;
     refLocked+=rGmtBuy;
     if(rThBudget>0){const addTH=thForBudget(rThBudget);refCurWTH=(refTH*refCurWTH+addTH*15)/(refTH+addTH);refTH+=addTH;}
   }
 
   for(let d=1;d<=days;d++){
+    // First-day baseline must be captured BEFORE referral compounds (else inflates start vs end comparison)
+    if(d===1){startSS_capture=dailyNet(th,gmtLocked).net;}
+
     // --- Referral's day (run first so user's ambDaily reflects updated refTH) ---
     if(refTH>0&&d%7===0){
       const rWk=refLocked*(apr/100)/52;
@@ -1785,9 +1793,9 @@ function runReinvestProjection(){
       gmtLocked+=weeklyGMT;
     }
 
-    // --- Today's net reward (what gets reinvested) ---
+    // --- Today's reinvestable reward (mining + ambassador; staking auto-compounds via weekly accrual above) ---
     const dn=dailyNet(th,gmtLocked);
-    const netUSD=dn.net;
+    const netUSD=dn.reinvest;
 
     if(netUSD<=0){
       daily.push({d,th,gmtLocked,gmtW,ssNet:netUSD,disc:dn.disc,tokD:dn.tokD,vip:dn.vip});
@@ -1834,8 +1842,8 @@ function runReinvestProjection(){
   // Final state discount
   const finalEntry=daily[daily.length-1];
   const thGain=th-startTH,thPct=thGain/startTH*100;
-  // True baseline: daily reward at the post-investment starting state, before any reinvest compounding
-  const startSS=dailyNet(postTH,postLocked).net;
+  // True baseline: captured during the loop at d===1, BEFORE referral compounded (so ambDaily reflects initial state)
+  const startSS=startSS_capture;
   const finalSS=finalEntry.ssNet;
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
   const gmtGain=gmtLocked-postLocked;
