@@ -1711,6 +1711,16 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
   </div>`;
 
+  if(i.amb&&i.refTH>0){
+    const ambMonthly=ambDaily*30;
+    const ambTotal=ambDaily*days;
+    h+=`<div class="sub-title centered">Ambassador Rewards (USDT)</div>`;
+    h+=`<div class="ri-summary ri-center">
+      <div class="ri-card"><div class="ri-label">Monthly</div><div class="ri-val green">${fU(ambMonthly)}</div><div class="ri-sub">${fN(i.refTH,0)} referred TH</div></div>
+      <div class="ri-card"><div class="ri-label">Total over ${days}d</div><div class="ri-val cyan">${fU(ambTotal)}</div><div class="ri-sub">added to daily reinvest pool</div></div>
+    </div>`;
+  }
+
   h+=`<div class="sub-title centered">Locked GMT (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
