@@ -1603,7 +1603,7 @@ function runReinvestProjection(){
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
     const stakingUSD=(curLocked*(apr/100)/365)*gp;
-    return{net:miningUSD+stakingUSD+ambDaily,disc:fd,tokD:td,vip:v.n};
+    return{net:miningUSD+stakingUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
   // Helper: check GMT deficit for 20% at a given TH, with a given GMT pool
@@ -1699,17 +1699,24 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
   </div>`;
 
+  // End-of-period breakdown (mining / staking / ambassador)
+  const finalBreakdown=dailyNet(th,gmtLocked);
+  const breakdownDaily=`mining ${fU(finalBreakdown.mining)} + staking ${fU(finalBreakdown.staking)}${ambDaily>0?` + ambassador ${fU(finalBreakdown.amb)}`:''}`;
+  const breakdownMonthly=`mining ${fU(finalBreakdown.mining*30)} + staking ${fU(finalBreakdown.staking*30)}${ambDaily>0?` + ambassador ${fU(finalBreakdown.amb*30)}`:''}`;
+
   h+=`<div class="sub-title centered">Daily Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
     <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
   </div>`;
+  h+=`<div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:-.4rem;font-family:var(--mono)">${breakdownDaily}</div>`;
 
   h+=`<div class="sub-title centered">Monthly Reward (End of Period)</div>`;
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
     <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
   </div>`;
+  h+=`<div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:-.4rem;font-family:var(--mono)">${breakdownMonthly}</div>`;
 
   if(i.amb&&i.refTH>0){
     const ambMonthly=ambDaily*30;
