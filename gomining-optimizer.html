@@ -1331,19 +1331,29 @@ function updateProjCell(){
   const f=fees(p.th,p.wth,bp);
   const dfees=f.t*(1-p.totD/100);
   const netBTC=p.grossBTC-dfees;
-  const dailyUSD=Math.max(0,netBTC*bp+p.moStakingUSD/30+(p.moAmbUSD||0)/30);
+  const miningUSD=Math.max(0,netBTC*bp);
+  const stakingDailyUSD=(p.moStakingUSD||0)/30;
+  const ambDailyUSD=(p.moAmbUSD||0)/30;
+  const dailyUSD=miningUSD+stakingDailyUSD+ambDailyUSD;
   const moUSD=dailyUSD*30;
   const moGMT=p.gp>0?moUSD/p.gp:0;
   const dailyGMT=p.gp>0?dailyUSD/p.gp:0;
   const tag=isLive?'LIVE':'SIMULATED';
   const tagCol=isLive?'var(--green)':'var(--orange)';
   const col=isLive?'green':'orange';
-  const priceLabel=bp>=1000?'$'+(bp/1000).toFixed(0)+'K':fU(bp);
-  let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
+  let h=`<div style="display:flex;flex-direction:column;align-items:center;gap:.4rem">`;
+  h+=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
   h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
   h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
   h+=`<div class="pc-daily">${fU(dailyUSD)}/day</div>`;
   h+=`<div class="pc-mode-tag">USD</div>`;
+  h+=`</div>`;
+  // Breakdown so user can see all three components
+  const moMine=miningUSD*30, moStake=stakingDailyUSD*30, moAmb=ambDailyUSD*30;
+  let parts=[`mining ${fU(moMine)}`];
+  if(moStake>0)parts.push(`staking ${fU(moStake)}`);
+  if(moAmb>0)parts.push(`ambassador ${fU(moAmb)}`);
+  h+=`<div style="font-size:.72rem;color:var(--text3);font-family:var(--mono);text-align:center">${parts.join(' + ')}</div>`;
   h+=`</div>`;
   document.getElementById('projSingleCell').innerHTML=h;
 }
