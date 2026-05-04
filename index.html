@@ -749,7 +749,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- GMT COVERAGE -->
   <div class="section reveal" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
-      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:6px"> GMT Rewards &amp; Self-Sustaining Loop</div>
+      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:6px"> GMT Rewards</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Your daily mining rewards in GMT, staking income, and whether your farm sustains itself.</div>
@@ -1156,7 +1156,7 @@ function recalc(){
   $('heroMonthly').textContent=fU(moUSD);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   $('heroMonthlyBTC').textContent=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
   $('heroDiscount').textContent=fP(m.totD);
-  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp)+'/day';
+  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   $('heroVip').innerHTML=badge(m.vip);
   if(m.nxt){const need=m.nxt.th-i.th;$('heroVipSub').textContent=fN(need,0)+' TH to '+m.nxt.n}
   else $('heroVipSub').textContent='Max tier reached';
@@ -1189,20 +1189,19 @@ function recalc(){
     dh+='</div>';
   }
   dh+=row('Total Discount',fP(m.totD),'cyan');
-  dh+=row('Daily savings',`${fB(m.save)}<span class="sub">${fU(m.save*m.bp)}/day</span>`,'green');
+  dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
   $('discountDisplay').innerHTML=dh;
 
   // P&L
   let pl='';
   pl+=row('Sats/TH/day',`${(m.dbt*1e8).toFixed(1)}<span class="sub">Pre-platform cut, from live network data</span>`,'cyan');
-  pl+=row('Daily gross',`${fB(m.gross)}<span class="sub">${fU(m.gross*m.bp)}</span>`);
+  pl+=row('Daily gross',fU(m.gross*m.bp));
   pl+=`<div class="divider"></div>`;
-  pl+=row('Electricity fee',`${fB(m.f.e)}<span class="sub">${fU(m.f.e*m.bp)}</span>`,'orange');
-  pl+=row('Service fee',`${fB(m.f.s)}<span class="sub">${fU(m.f.s*m.bp)}</span>`,'orange');
-  pl+=row('Total fees (pre-discount)',`${fB(m.f.t)}<span class="sub">${fU(m.f.t*m.bp)}</span>`,'orange');
-  pl+=row('Fees after discount',`${fB(m.dfees)}<span class="sub">${fU(m.dfees*m.bp)}</span>`);
+  pl+=row('Total fees (electricity + service)',fU((m.f.e+m.f.s)*m.bp),'orange');
+  pl+=row('Fees (pre-discount)',fU(m.f.t*m.bp),'orange');
+  pl+=row('Total fees (after discount)',fU(m.dfees*m.bp));
   pl+=`<div class="divider"></div>`;
-  pl+=row('Daily net',`${fB(m.net)}<span class="sub">${fU(m.net*m.bp)}</span>`,m.net>=0?'green':'red');
+  pl+=row('Daily net',fU(m.net*m.bp),m.net>=0?'green':'red');
   pl+=row('Monthly net',fU(m.net*m.bp*30),m.net>=0?'green':'red');
   $('dailyPnl').innerHTML=pl;
 
@@ -1213,30 +1212,14 @@ function recalc(){
   const tg=i.gl+i.gw;
   g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
 
-  // Daily reward in GMT terms
-  const dailyGrossGMT=(m.gross*m.bp)/m.gp;
-  const dailyFeesGMT=(m.f.t*m.bp)/m.gp;
-  const dailyDiscountGMT=(m.save*m.bp)/m.gp;
   const dailyNetGMT=(m.net*m.bp)/m.gp;
-  g+=`<div class="sub-title">Daily Reward (GMT)</div>`;
-  g+=row('Gross reward',`${fN(dailyGrossGMT,2)} GMT<span class="sub">${fU(dailyGrossGMT*m.gp)}</span>`);
-  g+=row('Electricity',`-${fN((m.f.e*m.bp)/m.gp,2)} GMT`,'orange');
-  g+=row('Service',`-${fN((m.f.s*m.bp)/m.gp,2)} GMT`,'orange');
-  g+=row('Discount saves',`+${fN(dailyDiscountGMT,2)} GMT<span class="sub">${fP(m.totD)} off</span>`,'green');
-  g+=row('Net reward',`${fN(dailyNetGMT,2)} GMT<span class="sub">${fU(dailyNetGMT*m.gp)}/day</span>`,dailyNetGMT>=0?'green':'red');
-
-  g+=`<div class="sub-title">Self-Sustaining Loop</div>`;
-  const wkNet=dailyNetGMT*7, wkStake=m.wkGMT, wkTotal=wkNet+wkStake;
-  const moTotal=wkTotal*4.33;
-  g+=row('Weekly net rewards',`${fN(wkNet,2)} GMT<span class="sub">${fU(wkNet*m.gp)}/week</span>`);
-  g+=row('Weekly staking rewards',`${fN(wkStake,2)} GMT<span class="sub">${fU(wkStake*m.gp)}/week</span>`);
-  g+=row('Total weekly GMT earned',`${fN(wkTotal,2)} GMT<span class="sub">${fU(wkTotal*m.gp)}/week</span>`,'cyan');
-  g+=row('Total monthly income',`${fU(moTotal*m.gp)}`,moTotal>=0?'green':'red');
-  if(wkTotal>0){
-    g+=row('Status',`<span class="badge green">SELF-SUSTAINING</span> Farm generates ${fN(moTotal,1)} GMT/mo in pure profit`);
-  }else{
-    g+=row('Status',`<span class="badge red">UNDERWATER</span> Farm loses ${fN(-moTotal,1)} GMT/mo`);
-  }
+  const stakingMonthly=m.wkGMT*m.gp*4.33;
+  const miningMonthly=m.net*m.bp*30;
+  const totalMonthly=miningMonthly+stakingMonthly;
+  g+=row('TH mining income',`${fU(miningMonthly)}/mo`,miningMonthly>=0?'green':'red');
+  g+=row('Staking income',`${fU(stakingMonthly)}/mo`,'green');
+  g+=`<div class="divider"></div>`;
+  g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
 
   $('gmtCoverage').innerHTML=g;
 
@@ -1516,23 +1499,13 @@ function renderPlanner(i,m){
   ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}<span class="sub">mining only</span>`,imp>=0?'green':'red');
   ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
   ph+=`<div class="divider"></div>`;
-  // Self-sustaining loop
   const newWkStake=(newLocked*i.apr/100)/52;
-  const newDailyNetGMT=(net*bp)/gp;
-  const newWkNet=newDailyNetGMT*7,newWkTotal=newWkNet+newWkStake;
-  const newMoTotal=newWkTotal*4.33;
-  ph+=`<div class="sub-title">Self-Sustaining Loop</div>`;
-  ph+=row('New locked GMT',`${fN(newLocked,0)} GMT`+(gmtReserve>0?`<span class="sub">+${fN(gmtReserve,1)} reserve in wallet</span>`:''));
-  ph+=row('Weekly net rewards',`${fN(newWkNet,2)} GMT<span class="sub">${fU(newWkNet*gp)}/week</span>`);
-  ph+=row('Weekly staking rewards',`${fN(newWkStake,2)} GMT<span class="sub">${fU(newWkStake*gp)}/week</span>`);
-  ph+=row('Total weekly GMT earned',`${fN(newWkTotal,2)} GMT<span class="sub">${fU(newWkTotal*gp)}/week</span>`,'cyan');
-  ph+=row('Total monthly income',`${fU(newMoTotal*gp)}<span class="sub">mining + staking</span>`,newMoTotal>=0?'green':'red');
-  if(newWkTotal>0){
-    ph+=row('Status',`<span class="badge green">SELF-SUSTAINING</span> +${fN(newMoTotal,1)} GMT/mo profit`);
-  }else{
-    ph+=row('Status',`<span class="badge red">UNDERWATER</span> -${fN(-newMoTotal,1)} GMT/mo loss`);
-  }
-  ph+=row('Months to recoup',rec===Infinity?'N/A':`${fN(rec,1)} months`,rec<12?'green':rec<24?'orange':'red');
+  const newStakingMo=newWkStake*gp*4.33;
+  const curStakingMo=m.wkGMT*m.gp*4.33;
+  const totalImp=imp+(newStakingMo-curStakingMo);
+  const recAdj=totalImp>0?cap/totalImp:Infinity;
+  ph+=row('New locked GMT',`${fU(newLocked*gp)}`+(gmtReserve>0?`<span class="sub">+${fU(gmtReserve*gp)} reserve</span>`:''));
+  ph+=row('Months to recoup',recAdj===Infinity?'N/A':`${fN(recAdj,1)} months`,recAdj<12?'green':recAdj<24?'orange':'red');
   $('projDisplay').innerHTML=ph;
 
   // BTC price projections
