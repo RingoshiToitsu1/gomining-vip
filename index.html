@@ -1530,8 +1530,11 @@ function renderPlanner(i,m){
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
   const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
-  const projMoTotal=mo+projMoStaking;
-  ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">mining + staking</span>`,projMoTotal>=0?'green':'red');
+  const projAmbDaily=i.amb?(i.refTH*15*24/1000*0.005):0;
+  const projAmbMo=projAmbDaily*30;
+  const projMoTotal=mo+projMoStaking+projAmbMo;
+  const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'');
+  ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">${projSub}</span>`,projMoTotal>=0?'green':'red');
   ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}<span class="sub">mining only</span>`,imp>=0?'green':'red');
   ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
   ph+=`<div class="divider"></div>`;
