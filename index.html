@@ -1163,12 +1163,20 @@ function recalc(){
 
   // Hero cards
   const dailyStakeUSD=(m.wkGMT/7)*m.gp;
-  const netUSD=m.net*m.bp, totalDailyUSD=netUSD+dailyStakeUSD;
+  const netUSD=m.net*m.bp;
+  const heroIsAmb=$('inAmbassador').checked;
+  const heroRefTH=heroIsAmb?(+$('inReferredTH').value||0):0;
+  const heroAmbDaily=heroRefTH*15*24/1000*0.005;
+  const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily;
   const moUSD=totalDailyUSD*30;
   $('heroDailyNet').textContent=fU(totalDailyUSD);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
-  $('heroDailyBTC').textContent=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
+  let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
+  if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
+  $('heroDailyBTC').textContent=heroSub;
   $('heroMonthly').textContent=fU(moUSD);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
-  $('heroMonthlyBTC').textContent=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
+  let heroMoSub=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
+  if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
+  $('heroMonthlyBTC').textContent=heroMoSub;
   $('heroDiscount').textContent=fP(m.totD);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   $('heroVip').innerHTML=badge(m.vip);
