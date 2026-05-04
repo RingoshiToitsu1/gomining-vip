@@ -1340,8 +1340,8 @@ function flipProjCell(el){
     el.dataset.mode='gmt';
     moEl.textContent=fN(moGMT,0)+' GMT';
     dayEl.textContent=fN(dailyGMT,0)+' GMT/day';
-    tagEl.textContent='GMT';
-    tagEl.style.color='var(--cyan)';
+    tagEl.innerHTML='<img src="gmt36.png" alt="GMT" style="height:16px;width:16px;border-radius:4px;vertical-align:middle">';
+    tagEl.style.color='';
   }else{
     el.dataset.mode='usd';
     moEl.textContent=fU(moUSD);
