@@ -1755,13 +1755,13 @@ function runReinvestProjection(){
 function shareProjection(){
   const d=window._shareData;
   if(!d)return;
-  const S=2,W=1000,H=1000;
+  const S=3,W=1200,H=675;
   const c=document.createElement('canvas');
   c.width=W*S;c.height=H*S;
   c.style.width=W+'px';c.style.height=H+'px';
   const x=c.getContext('2d');
   x.scale(S,S);
-  const pad=60; // consistent side padding
+  const pad=50;
 
   // --- BACKGROUND ---
   const bgG=x.createLinearGradient(0,0,W,H);
@@ -1786,81 +1786,67 @@ function shareProjection(){
   x.fillStyle='rgba(0,0,0,0.02)';
   for(let sy=0;sy<H;sy+=2){x.fillRect(0,sy,W,1)}
 
-  // --- HEADER (fixed at top) ---
-  const tGlow=x.createRadialGradient(W/2,55,0,W/2,55,250);
+  // --- HEADER ---
+  const tGlow=x.createRadialGradient(W/2,55,0,W/2,55,360);
   tGlow.addColorStop(0,'rgba(147,51,234,0.14)');tGlow.addColorStop(1,'transparent');
-  x.fillStyle=tGlow;x.fillRect(0,0,W,130);
+  x.fillStyle=tGlow;x.fillRect(0,0,W,140);
 
   x.fillStyle='#ffffff';
-  x.font='bold 36px Orbitron,"General Sans",system-ui,sans-serif';
+  x.font='bold 56px Orbitron,"General Sans",system-ui,sans-serif';
   x.textAlign='center';
-  x.shadowColor='rgba(147,51,234,0.6)';x.shadowBlur=24;
-  x.fillText(`${d.days}-Day Growth Projection`,W/2,68);
+  x.shadowColor='rgba(147,51,234,0.6)';x.shadowBlur=28;
+  x.fillText(`${d.days}-Day Growth Projection`,W/2,72);
   x.shadowBlur=0;
 
   // Subtitle
-  x.fillStyle='rgba(190,155,255,0.9)';
-  x.font='15px "Share Tech Mono","General Sans",monospace';
-  x.fillText('Auto-Reinvest Compound Strategy  \u2022  powered by gmt-optimizer.com',W/2,95);
+  x.fillStyle='rgba(190,155,255,0.92)';
+  x.font='22px "Share Tech Mono","General Sans",monospace';
+  x.fillText('Auto-Reinvest Compound Strategy  \u2022  powered by gmt-optimizer.com',W/2,108);
 
   // Decorative line
   const lg=x.createLinearGradient(pad,0,W-pad,0);
   lg.addColorStop(0,'transparent');lg.addColorStop(0.15,'rgba(147,51,234,0.6)');
   lg.addColorStop(0.5,'rgba(190,155,255,0.4)');
   lg.addColorStop(0.85,'rgba(6,182,212,0.6)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=1.5;
-  x.beginPath();x.moveTo(pad,112);x.lineTo(W-pad,112);x.stroke();
-
-  // --- VERTICAL CENTERING for main content ---
-  // Cards(290) + gap(40) + pills(58) + gap(24) + GMT row(42) = 454px
-  // Available between header(120) and footer(H-60): 1000-120-60 = 820
-  // Center: topOfContent = 120 + (820-454)/2 = 303
-  const contentOY=303;
-  x.save();
-  x.translate(0,contentOY-140); // shift from original cardY=140
+  x.strokeStyle=lg;x.lineWidth=2;
+  x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
 
   // --- COMPARISON CARDS ---
-  const cardW=380,cardH=290,cardY=140,gap=50;
+  const cardW=510,cardH=350,cardY=150,gap=80;
   const leftX=(W-cardW*2-gap)/2, rightX=leftX+cardW+gap;
 
-  // Card draw helper
   const drawCard=(cx,cy,title,titleColor,accentHex,items)=>{
     const cbg=x.createLinearGradient(cx,cy,cx,cy+cardH);
     cbg.addColorStop(0,'rgba(255,255,255,0.07)');cbg.addColorStop(1,'rgba(255,255,255,0.02)');
     x.fillStyle=cbg;
-    x.beginPath();x.roundRect(cx,cy,cardW,cardH,14);x.fill();
-    // Border
+    x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
     x.strokeStyle='rgba(255,255,255,0.16)';
-    x.lineWidth=1;
-    x.beginPath();x.roundRect(cx,cy,cardW,cardH,14);x.stroke();
-    // Top accent line + glow
+    x.lineWidth=1.5;
+    x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
     const ag=x.createLinearGradient(cx,0,cx+cardW,0);
     ag.addColorStop(0,accentHex);ag.addColorStop(0.7,titleColor);ag.addColorStop(1,'transparent');
-    x.strokeStyle=ag;x.lineWidth=3;
-    x.beginPath();x.moveTo(cx+14,cy);x.lineTo(cx+cardW-14,cy);x.stroke();
-    x.shadowColor=accentHex;x.shadowBlur=14;
-    x.strokeStyle=ag;x.lineWidth=1;
-    x.beginPath();x.moveTo(cx+14,cy);x.lineTo(cx+cardW-14,cy);x.stroke();
+    x.strokeStyle=ag;x.lineWidth=4;
+    x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();
+    x.shadowColor=accentHex;x.shadowBlur=18;
+    x.strokeStyle=ag;x.lineWidth=1.5;
+    x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();
     x.shadowBlur=0;
-    // Title
     x.fillStyle=accentHex;
-    x.font='bold 16px Orbitron,"General Sans",system-ui,sans-serif';
+    x.font='bold 26px Orbitron,"General Sans",system-ui,sans-serif';
     x.textAlign='left';
-    x.fillText(title,cx+24,cy+40);
-    // Items
+    x.fillText(title,cx+30,cy+50);
     items.forEach((item,i)=>{
-      const iy=cy+72+i*52;
+      const iy=cy+105+i*68;
       x.fillStyle='rgba(255,255,255,0.6)';
-      x.font='13px "Share Tech Mono","General Sans",monospace';
+      x.font='20px "Share Tech Mono","General Sans",monospace';
       x.textAlign='left';
-      x.fillText(item.label,cx+24,iy);
+      x.fillText(item.label,cx+30,iy);
       x.fillStyle=item.color||'#ffffff';
-      x.font='bold 26px "Share Tech Mono","General Sans",monospace';
-      x.fillText(item.val,cx+24,iy+28);
+      x.font='bold 38px "Share Tech Mono","General Sans",monospace';
+      x.fillText(item.val,cx+30,iy+38);
     });
   };
 
-  // BEFORE card
   drawCard(leftX,cardY,'STARTING POSITION','rgba(6,182,212,0.8)','#22d3ee',[
     {label:'HASHRATE',val:fN(d.startTH,1)+' TH',color:'#22d3ee'},
     {label:'DAILY REWARD',val:fU(d.startSS),color:'#22d3ee'},
@@ -1868,7 +1854,6 @@ function shareProjection(){
     {label:'LOCKED GMT',val:fN(d.postLocked||0,0),color:'#22d3ee'},
   ]);
 
-  // AFTER card
   drawCard(rightX,cardY,'AFTER '+d.days+' DAYS','rgba(16,185,129,0.8)','#34d399',[
     {label:'HASHRATE',val:fN(d.th,1)+' TH',color:'#34d399'},
     {label:'DAILY REWARD',val:fU(d.finalSS),color:'#34d399'},
@@ -1877,15 +1862,15 @@ function shareProjection(){
   ]);
 
   // Arrow between cards
-  x.fillStyle='rgba(210,180,255,0.9)';
-  x.shadowColor='rgba(147,51,234,0.7)';x.shadowBlur=20;
-  x.font='bold 34px "General Sans",system-ui,sans-serif';
+  x.fillStyle='rgba(210,180,255,0.92)';
+  x.shadowColor='rgba(147,51,234,0.7)';x.shadowBlur=24;
+  x.font='bold 56px "General Sans",system-ui,sans-serif';
   x.textAlign='center';
-  x.fillText('\u27A4',W/2,cardY+cardH/2+6);
+  x.fillText('\u27A4',W/2,cardY+cardH/2+10);
   x.shadowBlur=0;
 
   // --- STAT PILLS ROW ---
-  const pillY=cardY+cardH+40;
+  const pillY=cardY+cardH+25;
   const pills=[
     {label:'INVESTED',val:fU(d.cap),color:'#c084fc'},
     {label:'TH GROWTH',val:'+'+fN(d.thPct,1)+'%',color:'#34d399'},
@@ -1894,13 +1879,12 @@ function shareProjection(){
     {label:'VIP',val:d.finalVip,color:'#c084fc'},
   ];
 
-  x.font='bold 12px "Share Tech Mono","General Sans",monospace';
-  const pillPad=18,pillGap=12,pillH=58;
+  const pillPad=22,pillGap=14,pillH=70;
   const pillWidths=pills.map(p=>{
+    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
     const lw=x.measureText(p.label).width;
-    x.font='bold 20px "Share Tech Mono","General Sans",monospace';
+    x.font='bold 28px "Share Tech Mono","General Sans",monospace';
     const vw=x.measureText(p.val).width;
-    x.font='bold 12px "Share Tech Mono","General Sans",monospace';
     return Math.max(lw,vw)+pillPad*2;
   });
   const totalPillW=pillWidths.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
@@ -1909,67 +1893,46 @@ function shareProjection(){
   pills.forEach((p,pi)=>{
     const pw=pillWidths[pi];
     x.fillStyle='rgba(255,255,255,0.06)';
-    x.beginPath();x.roundRect(px,pillY,pw,pillH,10);x.fill();
+    x.beginPath();x.roundRect(px,pillY,pw,pillH,12);x.fill();
     x.strokeStyle='rgba(255,255,255,0.15)';
-    x.beginPath();x.roundRect(px,pillY,pw,pillH,10);x.stroke();
-    // Label
-    x.fillStyle='rgba(255,255,255,0.65)';
-    x.font='bold 10px "Share Tech Mono","General Sans",monospace';
+    x.beginPath();x.roundRect(px,pillY,pw,pillH,12);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.7)';
+    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
     x.textAlign='center';
-    x.fillText(p.label,px+pw/2,pillY+18);
-    // Value
+    x.fillText(p.label,px+pw/2,pillY+26);
     x.fillStyle=p.color;
-    x.font='bold 20px "Share Tech Mono","General Sans",monospace';
-    x.fillText(p.val,px+pw/2,pillY+44);
+    x.font='bold 28px "Share Tech Mono","General Sans",monospace';
+    x.fillText(p.val,px+pw/2,pillY+58);
     px+=pw+pillGap;
   });
 
-  // --- GMT EARNED ROW ---
-  const geY=pillY+pillH+24;
-  x.fillStyle='rgba(147,51,234,0.12)';
-  x.beginPath();x.roundRect(pad,geY,W-pad*2,42,10);x.fill();
-  x.strokeStyle='rgba(147,51,234,0.25)';
-  x.beginPath();x.roundRect(pad,geY,W-pad*2,42,10);x.stroke();
-  x.fillStyle='rgba(255,255,255,0.6)';
-  x.font='13px "Share Tech Mono","General Sans",monospace';
-  x.textAlign='center';
-  const gmtEarned=d.gmtLocked-(d.postLocked||0);
-  x.fillText(`GMT Earned from Reinvesting: ${fN(gmtEarned>0?gmtEarned:0,0)} GMT  \u2022  Total Locked: ${fN(d.gmtLocked,0)} GMT`,W/2,geY+27);
-
-  // Restore transform so footer stays at absolute bottom
-  x.restore();
-
   // --- FOOTER ---
-  const footY=H-60;
+  const footY=H-38;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
   fg.addColorStop(0,'transparent');fg.addColorStop(0.2,'rgba(147,51,234,0.4)');
   fg.addColorStop(0.8,'rgba(6,182,212,0.4)');fg.addColorStop(1,'transparent');
-  x.strokeStyle=fg;x.lineWidth=1;
-  x.beginPath();x.moveTo(pad,footY);x.lineTo(W-pad,footY);x.stroke();
+  x.strokeStyle=fg;x.lineWidth=1.2;
+  x.beginPath();x.moveTo(pad,footY-22);x.lineTo(W-pad,footY-22);x.stroke();
 
-  // gmt-optimizer.com left
   x.textAlign='left';
   x.fillStyle='rgba(147,51,234,0.9)';
-  x.font='bold 10px "General Sans",system-ui,sans-serif';
-  x.fillText('\u25CF',pad,footY+26);
-  x.fillStyle='rgba(255,255,255,0.6)';
-  x.font='bold 15px Orbitron,"General Sans",system-ui,sans-serif';
-  x.fillText('gmt-optimizer.com',pad+16,footY+27);
+  x.font='bold 14px "General Sans",system-ui,sans-serif';
+  x.fillText('\u25CF',pad,footY);
+  x.fillStyle='rgba(255,255,255,0.7)';
+  x.font='bold 20px Orbitron,"General Sans",system-ui,sans-serif';
+  x.fillText('gmt-optimizer.com',pad+18,footY+1);
 
-  // Date center
   x.textAlign='center';
-  x.fillStyle='rgba(255,255,255,0.3)';
-  x.font='11px "Share Tech Mono","General Sans",monospace';
+  x.fillStyle='rgba(255,255,255,0.4)';
+  x.font='15px "Share Tech Mono","General Sans",monospace';
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now,W/2,footY+27);
+  x.fillText(now,W/2,footY+1);
 
-  // Use code right
   x.textAlign='right';
-  x.fillStyle='rgba(6,182,212,0.7)';
-  x.font='12px "Share Tech Mono","General Sans",monospace';
-  x.fillText('use code RINGO5',W-pad,footY+27);
+  x.fillStyle='rgba(6,182,212,0.85)';
+  x.font='bold 17px "Share Tech Mono","General Sans",monospace';
+  x.fillText('use code RINGO5',W-pad,footY+1);
 
-  // Reset textAlign
   x.textAlign='left';
 
   // --- DOWNLOAD ---
