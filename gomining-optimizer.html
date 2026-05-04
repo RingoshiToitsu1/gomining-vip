@@ -88,11 +88,12 @@ input[type=number]{-moz-appearance:textfield}
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
 .field{position:relative}
 .field label{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--text2);font-weight:500;margin-bottom:.35rem}
-.field-input{display:flex;align-items:center;gap:.5rem}
-.field-input>input,.field-input>select{flex:1;min-width:0}
-.field input[type="number"]{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .75rem;color:var(--text);font-family:var(--mono);font-size:.88rem;width:100%;outline:none;transition:var(--transition);text-align:center}
-.field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
-.field .unit{font-size:.78rem;color:var(--text3);font-weight:600;font-family:var(--mono);flex-shrink:0;min-width:38px;text-align:left}
+.field-input{position:relative}
+.field-input:has(input[type="number"]),.field-input:has(#inTokenDiscountDisplay){display:inline-flex;align-items:center;gap:.4rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .7rem;transition:var(--transition);max-width:100%}
+.field-input:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.field input[type="number"]{background:transparent;border:none;padding:0;color:var(--text);font-family:var(--mono);font-size:.88rem;outline:none;text-align:right;field-sizing:content;width:auto;min-width:4ch}
+.field input:focus{outline:none}
+.field .unit{font-size:.78rem;color:var(--text3);font-weight:600;font-family:var(--mono);flex-shrink:0}
 .field .hint{font-size:.65rem;color:var(--text4);margin-top:.25rem;line-height:1.3}
 .toggle-row{display:flex;align-items:center;gap:.6rem;padding:.55rem 0}
 .toggle{position:relative;width:36px;height:20px;flex-shrink:0}
@@ -279,7 +280,7 @@ input[type=number]{-moz-appearance:textfield}
 .proj-cell{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .7rem;text-align:center;transition:var(--transition);position:relative}
 .proj-cell:hover{border-color:var(--purple);cursor:pointer}
 .pc-mode-tag{font-size:.55rem;color:var(--text4);font-weight:600;margin-top:.2rem;text-transform:uppercase;letter-spacing:.03em;transition:color .2s}
-.proj-cell.current{border-color:var(--cyan);background:rgba(0,194,255,.10);box-shadow:0 0 12px rgba(0,194,255,.15),inset 0 0 20px rgba(0,194,255,.05);padding-top:1.4rem}
+.proj-cell.current{border-color:var(--cyan);background:#000;box-shadow:0 0 12px rgba(0,194,255,.15);padding-top:1.4rem}
 .proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
 .proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
 .proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
@@ -693,7 +694,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Token Discount <span class="tip" data-tip="Auto-calculated from your GMT holdings. More GMT held = higher discount, up to 20%.">?</span></label>
-          <div class="field-input"><span id="inTokenDiscountDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem;flex:1;text-align:center;padding:.55rem .75rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm)">--</span><span class="unit">%</span></div>
+          <div class="field-input"><span id="inTokenDiscountDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">%</span></div>
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
