@@ -1074,7 +1074,6 @@ function saveSetup(){
   const data={
     inTH:$('inTH').value, inWTH:$('inWTH').value,
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
-    inLockAPR:$('inLockAPR').value, inCostPerTH:$('inCostPerTH').value,
     inMiningMode:$('inMiningMode').value, inCapital:$('inCapital').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inCurrency:$('inCurrency').value
@@ -1093,8 +1092,6 @@ function loadSetup(){
     if(d.inWTH)$('inWTH').value=d.inWTH;
     if(d.inGMTLocked)$('inGMTLocked').value=d.inGMTLocked;
     if(d.inGMTWallet)$('inGMTWallet').value=d.inGMTWallet;
-    if(d.inLockAPR)$('inLockAPR').value=d.inLockAPR;
-    if(d.inCostPerTH)$('inCostPerTH').value=d.inCostPerTH;
     if(d.inMiningMode)$('inMiningMode').value=d.inMiningMode;
     if(d.inCapital)$('inCapital').value=d.inCapital;
     if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
@@ -1109,6 +1106,10 @@ function clearSetup(){
   el.textContent='Cleared';el.style.opacity='1';
   setTimeout(()=>el.style.opacity='0',2000);
 }
+// Auto-save: silently persist profile whenever user changes an input
+function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
+['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inClickStreak','inPayGMT'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 
 // ---- CALC ----
 // GoMining verified fee formulas (per TH per day in BTC, pre-discount)
@@ -2025,7 +2026,7 @@ function setCurrency(c){
   recalc();
 }
 function syncOB(){
-  const map={obTH:'inTH',obWTH:'inWTH',obCPT:'inCostPerTH',obGMTLocked:'inGMTLocked',obGMTWallet:'inGMTWallet',obLockAPR:'inLockAPR'};
+  const map={obTH:'inTH',obWTH:'inWTH',obGMTLocked:'inGMTLocked',obGMTWallet:'inGMTWallet'};
   for(const[ob,main]of Object.entries(map)){const el=document.getElementById(ob);if(el&&el.value)document.getElementById(main).value=el.value}
   document.getElementById('inClickStreak').checked=document.getElementById('obClickStreak')?.checked||false;
   document.getElementById('inPayGMT').checked=document.getElementById('obPayGMT')?.checked??true;
