@@ -806,6 +806,10 @@ input[type=number]{-moz-appearance:textfield}
           <label>Total Capital to Invest</label>
           <div class="field-input"><input type="number" id="inCapital" value="5000" step="100" min="0"><span class="unit">USD</span></div>
         </div>
+        <div class="field">
+          <label>Referral's Planned Capital <span class="tip" data-tip="Optional. Capital your referral plans to invest, following the same TH/GMT strategy as you. Their TH adds to your Ambassador rewards, and they reinvest along with you in projections.">?</span></label>
+          <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1083,7 +1087,8 @@ function inp(){return{
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
   mm:+$('inMiningMode').value||0, od:0, cpt:+$('inCostPerTH').value||0,
   cap:+$('inCapital').value||0,
-  amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0
+  amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
+  refCap:+$('inRefCapital').value||0
 }}
 function $(id){return document.getElementById(id)}
 
@@ -1095,6 +1100,7 @@ function saveSetup(){
     inMiningMode:$('inMiningMode').value, inCapital:$('inCapital').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
+    inRefCapital:$('inRefCapital').value,
     inCurrency:$('inCurrency').value
   };
   try{localStorage.setItem(SETUP_KEY,JSON.stringify(data))}catch(e){}
@@ -1117,6 +1123,7 @@ function loadSetup(){
     if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
     if(d.inAmbassador!==undefined){$('inAmbassador').checked=d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
     if(d.inReferredTH)$('inReferredTH').value=d.inReferredTH;
+    if(d.inRefCapital)$('inRefCapital').value=d.inRefCapital;
     if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
     autoFillCPT('inTH','inCostPerTH');
     return true;
@@ -1130,7 +1137,7 @@ function clearSetup(){
 }
 // Auto-save: silently persist profile whenever user changes an input
 function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
-['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital','inReferredTH'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
 
@@ -1529,8 +1536,33 @@ function renderPlanner(i,m){
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
+  // Referral capital: solve same TH/GMT split for a fresh referral
+  function refAllocation(refCap){
+    if(refCap<=0)return null;
+    function refSolve(gmtUSD){
+      const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
+      const at=thUSD>0?thForBudget(thUSD):0;
+      const fT=fees(at||1,15,bp);
+      const vT=vipOf(at,ag);
+      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const burn=(fT.t*(1-ntd/100)*bp)/gp;
+      return{deficit:Math.max(0,burn*covNeeded-ag),at,ag};
+    }
+    let bGU=0;
+    if(i.payG&&refSolve(0).deficit>0){
+      let lo=0,hi=refCap;
+      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(refSolve(mid).deficit<=0)hi=mid;else lo=mid;}
+      bGU=hi;
+    }
+    return refSolve(bGU);
+  }
+  const ref=refAllocation(i.refCap);
+  const refInitTH=ref?ref.at:0;
+  const refInitLocked=ref?ref.ag:0;
+
   const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
-  const projAmbDaily=i.amb?(i.refTH*15*24/1000*0.005):0;
+  const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
+  const projAmbDaily=projTotalRefTH*15*24/1000*0.005;
   const projAmbMo=projAmbDaily*30;
   const projMoTotal=mo+projMoStaking+projAmbMo;
   const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'');
@@ -1545,6 +1577,13 @@ function renderPlanner(i,m){
   const recAdj=totalImp>0?cap/totalImp:Infinity;
   ph+=row('New locked GMT',`${fU(newLocked*gp)}`+(gmtReserve>0?`<span class="sub">+${fU(gmtReserve*gp)} reserve</span>`:''));
   ph+=row('Months to recoup',recAdj===Infinity?'N/A':`${fN(recAdj,1)} months`,recAdj<12?'green':recAdj<24?'orange':'red');
+  if(ref){
+    ph+=`<div class="divider"></div>`;
+    ph+=`<div class="sub-title">Referral's planned allocation (${fU(i.refCap)})</div>`;
+    ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(refInitTH*(i.cpt||0))}</span>`,'cyan');
+    ph+=row('Referral locked <img src="gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
+    ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
+  }
   $('projDisplay').innerHTML=ph;
 
   // BTC price projections
@@ -1610,10 +1649,33 @@ function runReinvestProjection(){
   let curWTH=postWTH;
   const daily=[];
 
-  // Ambassador USDT rewards (constant — based on referred TH, not user's hashrate)
-  const ambDaily=i.amb?(i.refTH*15*24/1000*0.005):0;
+  // ---- Referral parallel simulation: starts from refCap, follows same strategy ----
+  function refAlloc(refCap){
+    if(refCap<=0)return null;
+    function rs(gmtUSD){
+      const ag=gmtUSD/gp,thUSD=refCap-gmtUSD;
+      const at=thUSD>0?thForBudget(thUSD):0;
+      const fT=fees(at||1,15,bp);
+      const vT=vipOf(at,ag);
+      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const burn=(fT.t*(1-ntd/100)*bp)/gp;
+      return{deficit:Math.max(0,burn*378-ag),at,ag};
+    }
+    let bGU=0;
+    if(i.payG&&rs(0).deficit>0){
+      let lo=0,hi=refCap;
+      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(rs(mid).deficit<=0)hi=mid;else lo=mid;}
+      bGU=hi;
+    }
+    return rs(bGU);
+  }
+  const refInit=refAlloc(i.refCap);
+  let refTH=refInit?refInit.at:0, refLocked=refInit?refInit.ag:0, refCurWTH=15;
+  const refStartTH=refTH, refStartLocked=refLocked;
+  const manualRefTH=i.amb?i.refTH:0;
+  let ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
+  let totalAmbUSD=0;
 
-  // Helper: compute daily net USD at a given TH/GMT state (mining + staking + ambassador)
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,curWTH,bp);
     const v=vipOf(curTH,curLocked);
@@ -1628,7 +1690,6 @@ function runReinvestProjection(){
     return{net:miningUSD+stakingUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
-  // Helper: check GMT deficit for 20% at a given TH, with a given GMT pool
   function gmtDeficit(curTH,curLocked){
     const f=fees(curTH,curWTH,bp);
     const v=vipOf(curTH,curLocked);
@@ -1637,7 +1698,60 @@ function runReinvestProjection(){
     return Math.max(0,burn*378-(curLocked+gmtW));
   }
 
+  function refDailyNet(rTH,rLocked){
+    const g=dbt*rTH,f=fees(rTH,refCurWTH,bp);
+    const v=vipOf(rTH,rLocked);
+    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const fc=(f.t*(1-ntd/100)*bp)/gp;
+    const cv=fc>0?rLocked/fc:Infinity;
+    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const fd=Math.min(30,td+ntd);
+    const miningUSD=(g-f.t*(1-fd/100))*bp;
+    const stakingUSD=(rLocked*(apr/100)/365)*gp;
+    return{net:miningUSD+stakingUSD,disc:fd};
+  }
+  function refDeficit(rTH,rLocked){
+    const f=fees(rTH,refCurWTH,bp);
+    const v=vipOf(rTH,rLocked);
+    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const burn=(f.t*(1-ntd/100)*bp)/gp;
+    return Math.max(0,burn*378-rLocked);
+  }
+  function stepReferral(){
+    if(refTH<=0)return;
+    const rdn=refDailyNet(refTH,refLocked);
+    if(rdn.net<=0)return;
+    let rGmtSpend=0;
+    if(i.payG){
+      const allTH=refTH+thForBudget(rdn.net);
+      if(refDeficit(allTH,refLocked)>0){
+        let lo=0,hi=rdn.net;
+        for(let k=0;k<40;k++){
+          const mid=(lo+hi)/2;
+          const agT=mid/gp;
+          const thRem=rdn.net-mid;
+          const atT=thRem>0?thForBudget(thRem):0;
+          if(refDeficit(refTH+atT,refLocked+agT)<=0)hi=mid;else lo=mid;
+        }
+        rGmtSpend=hi;
+      }
+    }
+    const rGmtBuy=rGmtSpend/gp;
+    const rThBudget=rdn.net-rGmtSpend;
+    refLocked+=rGmtBuy;
+    if(rThBudget>0){const addTH=thForBudget(rThBudget);refCurWTH=(refTH*refCurWTH+addTH*15)/(refTH+addTH);refTH+=addTH;}
+  }
+
   for(let d=1;d<=days;d++){
+    // --- Referral's day (run first so user's ambDaily reflects updated refTH) ---
+    if(refTH>0&&d%7===0){
+      const rWk=refLocked*(apr/100)/52;
+      refLocked+=rWk;
+    }
+    stepReferral();
+    ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
+    totalAmbUSD+=ambDaily;
+
     // --- Staking yield: paid weekly (every 7th day) ---
     if(d%7===0){
       const weeklyGMT=gmtLocked*(apr/100)/52;
@@ -1740,14 +1854,23 @@ function runReinvestProjection(){
   </div>`;
   h+=`<div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:-.4rem;font-family:var(--mono)">${breakdownMonthly}</div>`;
 
-  if(i.amb&&i.refTH>0){
-    const ambMonthly=ambDaily*30;
-    const ambTotal=ambDaily*days;
+  if(manualRefTH>0||refTH>0){
+    const finalAmbMonthly=ambDaily*30;
+    const totalRefTH=manualRefTH+refTH;
     h+=`<div class="sub-title centered">Ambassador Rewards (USDT)</div>`;
     h+=`<div class="ri-summary ri-center">
-      <div class="ri-card"><div class="ri-label">Monthly</div><div class="ri-val green">${fU(ambMonthly)}</div><div class="ri-sub">${fN(i.refTH,0)} referred TH</div></div>
-      <div class="ri-card"><div class="ri-label">Total over ${days}d</div><div class="ri-val cyan">${fU(ambTotal)}</div><div class="ri-sub">added to daily reinvest pool</div></div>
+      <div class="ri-card"><div class="ri-label">Monthly (End)</div><div class="ri-val green">${fU(finalAmbMonthly)}</div><div class="ri-sub">${fN(totalRefTH,0)} referred TH</div></div>
+      <div class="ri-card"><div class="ri-label">Total over ${days}d</div><div class="ri-val cyan">${fU(totalAmbUSD)}</div><div class="ri-sub">added to daily reinvest pool</div></div>
     </div>`;
+    if(refStartTH>0){
+      const refGain=refTH-refStartTH;
+      const refPct=refStartTH>0?(refGain/refStartTH*100):0;
+      h+=`<div class="sub-title centered">Your Referral's Growth (${fU(i.refCap)} starting capital)</div>`;
+      h+=`<div class="ri-summary ri-center">
+        <div class="ri-card"><div class="ri-label">Referral TH</div><div class="ri-val cyan">${fN(refTH,1)}</div><div class="ri-sub">${fN(refStartTH,1)} → ${fN(refTH,1)} (+${fN(refPct,1)}%)</div></div>
+        <div class="ri-card"><div class="ri-label">Referral Locked <img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(refLocked,0)}</div><div class="ri-sub">${fN(refStartLocked,0)} → ${fN(refLocked,0)}</div></div>
+      </div>`;
+    }
   }
 
   h+=`<div class="sub-title centered">Locked GMT (End of Period)</div>`;
