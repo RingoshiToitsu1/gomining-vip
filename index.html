@@ -1297,14 +1297,15 @@ function recalc(){
   renderPlanner(i,m);
 }
 
-function renderProjections(th,wth,totD,label,moStakingUSD){
+function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
   moStakingUSD=moStakingUSD||0;
+  moAmbUSD=moAmbUSD||0;
   const cur=S.btcPrice;
   const gp=S.gmtPrice;
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
   // Store params for dropdown recalc
-  window._projParams={th,wth,totD,moStakingUSD,grossBTC,cur,gp};
+  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp};
 
   const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
