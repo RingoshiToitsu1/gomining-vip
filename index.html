@@ -10,7 +10,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#141520;--bg2:#1a1b2c;--bg-card:#252636;--bg-card-hover:#33344a;--bg-input:#1e1f30;
+  --bg:#0a0b13;--bg2:#11121d;--bg-card:#101120;--bg-card-hover:#1a1b2e;--bg-input:#0d0e18;
   --border:#3a3940;--border-focus:#7540ef;
   --purple:#7540ef;--purple-glow:rgba(117,64,239,.18);--purple-soft:#9b72ff;
   --cyan:#00c2ff;--cyan-glow:rgba(0,194,255,.12);--cyan-soft:#4dd8ff;
@@ -24,14 +24,14 @@
   --shadow:0 0 32px rgba(0,0,0,.04);--shadow-sm:0 2px 8px rgba(0,0,0,.2);
   --transition:all .15s ease-in-out;
 }
-html{font-size:16.5px;scroll-behavior:smooth}
+html{font-size:19.8px;scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5}
 ::selection{background:var(--purple);color:#fff}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 
 /* ---- HEADER ---- */
-.header{position:sticky;top:0;z-index:100;background:rgba(20,21,32,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
+.header{position:sticky;top:0;z-index:100;background:rgba(10,11,19,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
 .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
 .logo{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--purple) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .live-bar{display:flex;gap:.2rem;align-items:center;flex-wrap:wrap}
@@ -89,7 +89,7 @@ input[type=number]{-moz-appearance:textfield}
 .field{position:relative}
 .field label{display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--text2);font-weight:500;margin-bottom:.35rem}
 .field-input{position:relative}
-.field input[type="number"]{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .75rem;color:var(--text);font-family:var(--mono);font-size:.88rem;width:100%;outline:none;transition:var(--transition)}
+.field input[type="number"]{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem 2rem .55rem .75rem;color:var(--text);font-family:var(--mono);font-size:.88rem;width:100%;outline:none;transition:var(--transition);text-align:right}
 .field input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .field .unit{position:absolute;right:.65rem;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--text4);font-weight:500;pointer-events:none}
 .field .hint{font-size:.65rem;color:var(--text4);margin-top:.25rem;line-height:1.3}
@@ -104,14 +104,14 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- TOOLTIP ---- */
 .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--text3);font-size:.6rem;font-weight:700;cursor:help;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);max-width:220px;white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);max-width:264px;white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s;text-align:left}
 .tip:hover::after,.tip.show::after{opacity:1}
 
 /* ---- OUTPUT ROWS ---- */
 .out-group{margin-top:.6rem}
 .out-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(26,32,56,.6)}
 .out-row:last-child{border-bottom:none}
-.out-label{color:var(--text2);font-size:.82rem;display:flex;align-items:center;gap:.3rem}
+.out-label{color:var(--text2);font-size:.82rem;display:flex;align-items:center;gap:.3rem;text-align:left}
 .out-val{font-family:var(--mono);font-size:.88rem;text-align:right;max-width:55%}
 .out-val .sub{font-size:.72rem;color:var(--text3);display:block}
 .out-val.green{color:var(--green)}.out-val.orange{color:var(--orange)}.out-val.red{color:var(--red)}.out-val.cyan{color:var(--cyan)}.out-val.purple{color:var(--purple-soft)}
@@ -163,7 +163,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- DONATION MODAL ---- */
 .donate-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem}
-.donate-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);max-width:420px;width:100%;padding:2rem;text-align:center;animation:fadeIn .3s ease}
+.donate-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);max-width:504px;width:100%;padding:2rem;text-align:center;animation:fadeIn .3s ease}
 .donate-box h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
 .donate-box p{font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:1rem}
 .donate-addr{font-family:var(--mono);font-size:.68rem;color:var(--orange);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;word-break:break-all;cursor:pointer;transition:var(--transition);margin-bottom:1rem}
@@ -213,7 +213,7 @@ input[type=number]{-moz-appearance:textfield}
   .hero-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:600px){
-  html{font-size:14.5px}
+  html{font-size:17.4px}
   .header{padding:.5rem .7rem}
   .header-inner{gap:.4rem}
   .logo{font-size:1.1rem}
@@ -329,10 +329,10 @@ input[type=number]{-moz-appearance:textfield}
 .ob-field{margin-bottom:1.1rem}
 .ob-field label{display:block;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
 .ob-field .ob-hint{font-size:.72rem;color:var(--text3);margin-bottom:.5rem;line-height:1.5}
-.ob-field input[type=number],.ob-field input[type=text]{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .8rem;color:var(--text);font-family:var(--mono);font-size:.9rem;transition:var(--transition)}
+.ob-field input[type=number],.ob-field input[type=text]{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .8rem;color:var(--text);font-family:var(--mono);font-size:.9rem;transition:var(--transition);text-align:right}
 .ob-field input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .ob-field .ob-input-wrap{display:flex;align-items:center;gap:.5rem}
-.ob-field .ob-unit{color:var(--text3);font-size:.8rem;font-family:var(--mono);min-width:30px}
+.ob-field .ob-unit{color:var(--text3);font-size:.8rem;font-family:var(--mono);min-width:36px}
 .ob-toggle-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
 .ob-toggle-row span{font-size:.82rem;color:var(--text2)}
 .ob-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem;gap:1rem}
@@ -369,7 +369,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- PLANNER INTRO ---- */
 .pi-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .3s ease}
-.pi-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;box-shadow:0 0 80px rgba(123,79,255,.12);position:relative;overflow:hidden}
+.pi-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:576px;width:100%;box-shadow:0 0 80px rgba(123,79,255,.12);position:relative;overflow:hidden}
 .pi-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
 .pi-body{padding:2rem 2rem 1.2rem}
 .pi-title{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:.4rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -406,7 +406,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- REINVEST PROJECTION ---- */
 .ri-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem;justify-items:center}
-.ri-summary.ri-center{grid-template-columns:repeat(2,1fr);max-width:500px;margin-left:auto;margin-right:auto}
+.ri-summary.ri-center{grid-template-columns:repeat(2,1fr);max-width:600px;margin-left:auto;margin-right:auto}
 .ri-card{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.7rem .8rem;text-align:center}
 .ri-card .ri-label{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;margin-bottom:.2rem}
 .ri-card .ri-val{font-family:var(--mono);font-size:1.1rem;font-weight:700}
@@ -415,7 +415,7 @@ input[type=number]{-moz-appearance:textfield}
 .ri-phase{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;border-left:3px solid;margin-bottom:.3rem;border-radius:0 8px 8px 0;background:var(--bg-input);font-size:.78rem;color:var(--text2)}
 .ri-phase.th-phase{border-color:var(--green);background:var(--green-glow)}
 .ri-phase.gmt-phase{border-color:var(--cyan);background:var(--cyan-glow)}
-.ri-phase .ri-mode{font-weight:700;min-width:80px}
+.ri-phase .ri-mode{font-weight:700;min-width:96px}
 .ri-phase.th-phase .ri-mode{color:var(--green)}
 .ri-phase.gmt-phase .ri-mode{color:var(--cyan)}
 .ri-scroll{max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
@@ -576,7 +576,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- NEW USER MODAL -->
 <div class="ob-overlay" id="newUserModal" style="display:none">
-<div class="ob-modal" style="max-width:460px;position:relative">
+<div class="ob-modal" style="max-width:552px;position:relative">
   <div class="ob-body" style="padding:2rem">
     <button onclick="goBackFromNewUser()" style="position:absolute;top:12px;left:14px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem;padding:.3rem;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'" title="Go back">&#8592;</button>
     <div class="ob-title" style="margin-bottom:.5rem">Welcome to GMT Optimizer!</div>
@@ -794,7 +794,7 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="section-desc">How much new capital are you planning to deploy into GoMining?</div>
     <div class="section-body">
-      <div class="input-grid" style="max-width:300px">
+      <div class="input-grid" style="max-width:360px">
         <div class="field">
           <label>Total Capital to Invest</label>
           <div class="field-input"><input type="number" id="inCapital" value="5000" step="100" min="0"><span class="unit">USD</span></div>
@@ -846,7 +846,7 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="section-desc">Simulate reinvesting all daily rewards (mining + staking) into TH and GMT. Automatically balances TH growth with GMT locking to maintain 20% token discount.</div>
     <div class="section-body">
-      <div class="input-grid" style="max-width:300px">
+      <div class="input-grid" style="max-width:360px">
         <div class="field">
           <label>Projection Length <span class="tip" data-tip="Number of years to simulate reinvesting net profit into TH.">?</span></label>
           <div class="field-input"><select id="inReinvestDays" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
@@ -1313,7 +1313,7 @@ function updateProjCell(){
   const tagCol=isLive?'var(--cyan)':'var(--orange)';
   const col=isLive?'cyan':'orange';
   const priceLabel=bp>=1000?'$'+(bp/1000).toFixed(0)+'K':fU(bp);
-  let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:220px;width:100%">`;
+  let h=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
   h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
   h+=`<div class="pc-price">${priceLabel}</div>`;
   h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
