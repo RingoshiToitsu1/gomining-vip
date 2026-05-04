@@ -717,6 +717,16 @@ input[type=number]{-moz-appearance:textfield}
           <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
           <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT (enables token discount)</span>
         </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
+          <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador (earn rewards from referred TH)</span>
+        </div>
+      </div>
+      <div id="ambassadorFields" class="input-grid" style="max-width:300px;margin-top:.8rem;display:none">
+        <div class="field">
+          <label>Referred TH <span class="tip" data-tip="Total TH from users you've referred. You earn a daily USDT reward based on their power consumption.">?</span></label>
+          <div class="field-input"><input type="number" id="inReferredTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1076,6 +1086,7 @@ function saveSetup(){
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inMiningMode:$('inMiningMode').value, inCapital:$('inCapital').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
+    inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inCurrency:$('inCurrency').value
   };
   try{localStorage.setItem(SETUP_KEY,JSON.stringify(data))}catch(e){}
@@ -1096,6 +1107,8 @@ function loadSetup(){
     if(d.inCapital)$('inCapital').value=d.inCapital;
     if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
     if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
+    if(d.inAmbassador!==undefined){$('inAmbassador').checked=d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
+    if(d.inReferredTH)$('inReferredTH').value=d.inReferredTH;
     if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
     autoFillCPT('inTH','inCostPerTH');
     return true;
@@ -1109,8 +1122,9 @@ function clearSetup(){
 }
 // Auto-save: silently persist profile whenever user changes an input
 function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
-['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
-['inClickStreak','inPayGMT'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital','inReferredTH'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+$('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
 
 // ---- CALC ----
 // GoMining verified fee formulas (per TH per day in BTC, pre-discount)
@@ -1202,7 +1216,7 @@ function recalc(){
   pl+=row('Total fees (after discount)',fU(m.dfees*m.bp));
   pl+=`<div class="divider"></div>`;
   pl+=row('Daily net',fU(m.net*m.bp),m.net>=0?'green':'red');
-  pl+=row('Monthly net',fU(m.net*m.bp*30),m.net>=0?'green':'red');
+  pl+=row('Monthly net (without staking)',fU(m.net*m.bp*30),m.net>=0?'green':'red');
   $('dailyPnl').innerHTML=pl;
 
   // GMT
@@ -1215,9 +1229,16 @@ function recalc(){
   const dailyNetGMT=(m.net*m.bp)/m.gp;
   const stakingMonthly=m.wkGMT*m.gp*4.33;
   const miningMonthly=m.net*m.bp*30;
-  const totalMonthly=miningMonthly+stakingMonthly;
+  const isAmb=$('inAmbassador').checked;
+  const refTH=isAmb?(+$('inReferredTH').value||0):0;
+  const ambDaily=refTH*15*24/1000*0.005;
+  const ambMonthly=ambDaily*30;
+  const totalMonthly=miningMonthly+stakingMonthly+ambMonthly;
   g+=row('TH mining income',`${fU(miningMonthly)}/mo`,miningMonthly>=0?'green':'red');
   g+=row('Staking income',`${fU(stakingMonthly)}/mo`,'green');
+  if(isAmb&&refTH>0){
+    g+=row('Ambassador rewards',`${fU(ambMonthly)}/mo<span class="sub">${fU(ambDaily)}/day USDT &middot; ${fN(refTH,0)} referred TH</span>`,'green');
+  }
   g+=`<div class="divider"></div>`;
   g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
 
