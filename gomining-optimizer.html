@@ -1667,7 +1667,9 @@ function runReinvestProjection(){
   // Final state discount
   const finalEntry=daily[daily.length-1];
   const thGain=th-startTH,thPct=thGain/startTH*100;
-  const startSS=daily[0].ssNet,finalSS=finalEntry.ssNet;
+  // True baseline: daily reward at the post-investment starting state, before any reinvest compounding
+  const startSS=dailyNet(postTH,postLocked).net;
+  const finalSS=finalEntry.ssNet;
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
   const gmtGain=gmtLocked-postLocked;
 
