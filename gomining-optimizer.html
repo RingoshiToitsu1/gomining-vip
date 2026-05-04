@@ -1082,7 +1082,8 @@ function inp(){return{
   apr:+$('inLockAPR').value||0,
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
   mm:+$('inMiningMode').value||0, od:0, cpt:+$('inCostPerTH').value||0,
-  cap:+$('inCapital').value||0
+  cap:+$('inCapital').value||0,
+  amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0
 }}
 function $(id){return document.getElementById(id)}
 
@@ -1587,7 +1588,10 @@ function runReinvestProjection(){
   let curWTH=postWTH;
   const daily=[];
 
-  // Helper: compute daily net USD at a given TH/GMT state (mining + staking)
+  // Ambassador USDT rewards (constant — based on referred TH, not user's hashrate)
+  const ambDaily=i.amb?(i.refTH*15*24/1000*0.005):0;
+
+  // Helper: compute daily net USD at a given TH/GMT state (mining + staking + ambassador)
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,curWTH,bp);
     const v=vipOf(curTH,curLocked);
@@ -1599,7 +1603,7 @@ function runReinvestProjection(){
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
     const stakingUSD=(curLocked*(apr/100)/365)*gp;
-    return{net:miningUSD+stakingUSD,disc:fd,tokD:td,vip:v.n};
+    return{net:miningUSD+stakingUSD+ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
   // Helper: check GMT deficit for 20% at a given TH, with a given GMT pool
