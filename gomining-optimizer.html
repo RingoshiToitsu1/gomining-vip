@@ -1097,6 +1097,7 @@ function loadSetup(){
     if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
     if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
     if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
+    autoFillCPT('inTH','inCostPerTH');
     return true;
   }catch(e){return false}
 }
