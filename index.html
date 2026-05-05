@@ -926,6 +926,13 @@ input[type=number]{-moz-appearance:textfield}
           </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. Their TH adds to your Ambassador rewards and compounds with you in projections.</div>
         </div>
+        <div style="background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem">
+          <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin:0">
+            <input type="checkbox" id="piVipBonus" style="width:16px;height:16px;cursor:pointer;accent-color:#ffd700">
+            <span style="font-size:.8rem;color:var(--text);font-weight:600">VIP Member — 10% bonus TH on deposits ≥ $10,000</span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;padding-left:1.55rem">When the USD spent on TH is $10k+, GoMining adds 10% extra TH. Planner re-balances locked GMT so 20% token discount still holds at the larger farm.</div>
+        </div>
       </div>
     </div>
     <div class="pi-nav">
@@ -1112,7 +1119,8 @@ function saveSetup(){
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
-    inCurrency:$('inCurrency').value
+    inCurrency:$('inCurrency').value,
+    piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false
   };
   try{localStorage.setItem(SETUP_KEY,JSON.stringify(data))}catch(e){}
   const el=$('saveStatus');
@@ -1135,6 +1143,7 @@ function loadSetup(){
     if(d.inAmbassador!==undefined){$('inAmbassador').checked=d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
     if(d.inReferredTH)$('inReferredTH').value=d.inReferredTH;
     if(d.inRefCapital)$('inRefCapital').value=d.inRefCapital;
+    if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=d.piVipBonus;
     if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
     autoFillCPT('inTH','inCostPerTH');
     return true;
@@ -1150,6 +1159,7 @@ function clearSetup(){
 function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
 ['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+{const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
 
 // ---- CALC ----
@@ -1386,6 +1396,9 @@ function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
   const gmtAvail=i.gw; // total unlocked GMT on hand
   const totalValue=usdCap+(gmtAvail*gp);
+  const vipBonusEl=document.getElementById('piVipBonus');
+  const vipBonus=!!(vipBonusEl&&vipBonusEl.checked);
+  const VIP_BONUS_MIN=10000, VIP_BONUS_MULT=1.10;
   if(totalValue<=0){
     $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see recommendation.</div>';
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
@@ -1423,7 +1436,10 @@ function renderPlanner(i,m){
       const usdSpentOnGMT=fromUSD*gp;
       const gmtSell=deployable-fromPool;
       const thBudgetUSD=(usdCap-usdSpentOnGMT)+(gmtSell*gp);
-      const atTest=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
+      const baseTH=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
+      const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
+      const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
+      const bonusTH=atTest-baseTH;
       const ntTest=i.th+atTest;
       const totalLocked=i.gl+totalGmtLock;
       const bwth=blendWTH(atTest);
@@ -1433,7 +1449,7 @@ function renderPlanner(i,m){
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
       return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest,
-        fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD};
+        fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD,baseTH,bonusActive,bonusTH};
     }
     let lock=0;
     if(i.payG){
@@ -1447,6 +1463,7 @@ function renderPlanner(i,m){
     const r=solveAlloc(lock);
     return{lock,fromPool:r.fromPool,fromUSD:r.fromUSD,usdSpentOnGMT:r.usdSpentOnGMT,
       sell:r.gmtSell,deployable,addTH:r.at,thUSD:r.thBudgetUSD,
+      baseTH:r.baseTH,bonusActive:r.bonusActive,bonusTH:r.bonusTH,
       finalTH:i.th+r.at,finalLocked:i.gl+lock};
   }
 
@@ -1502,6 +1519,11 @@ function renderPlanner(i,m){
   }else{
     ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT for 20% discount at ${fN(nt,1)} TH.${gmtSell>0?' Sell '+fN(gmtSell,0)+' GMT ('+fU(gmtSell*gp)+')':''} ${usdToTH>0?'+ '+fU(usdToTH)+' USD':''} → +${fN(at,1)} TH.`;
   }
+  if(sol.bonusActive){
+    ah+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
+  }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
+    ah+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
+  }
   ah+='</div>';
 
   // Allocation cards
@@ -1512,7 +1534,7 @@ function renderPlanner(i,m){
     ah+=`<div class="alloc-card"><div class="a-label">Wallet Reserve</div><div class="a-val" style="color:var(--orange)">${fN(reserveNeeded,1)} GMT</div><div class="a-sub">2-day fees at ${fN(nt,1)} TH (${fU(reserveNeeded*gp)})</div></div>`;
   }
   ah+=`<div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(gmtLock*gp)}${gmtFromUSD>0?' ('+fN(gmtFromUSD,0)+' bought)':''}</div></div>`;
-  ah+=`<div class="alloc-card"><div class="a-label">Buy TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH</div></div>`;
+  ah+=`<div class="alloc-card"><div class="a-label">Buy TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH${sol.bonusActive?` <span style="color:var(--gold,#ffd700)">(incl. +${fN(sol.bonusTH,1)} VIP bonus)</span>`:''}</div></div>`;
   ah+=`</div>`;
 
   // Path to 20%
