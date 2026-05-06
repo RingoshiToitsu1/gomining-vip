@@ -924,7 +924,7 @@ input[type=number]{-moz-appearance:textfield}
             <input type="number" id="piRefCapInput" value="0" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
             <span style="color:var(--text3);font-size:.85rem">USD</span>
           </div>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. Their TH adds to your Ambassador rewards and compounds with you in projections.</div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. You receive <strong style="color:var(--green)">5% of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
         </div>
         <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
           <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin:0">
@@ -1394,11 +1394,40 @@ function flipProjCell(el){
 
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
-  const gmtAvail=i.gw; // total unlocked GMT on hand
-  const totalValue=usdCap+(gmtAvail*gp);
   const vipBonusEl=document.getElementById('piVipBonus');
   const vipBonus=!!(vipBonusEl&&vipBonusEl.checked);
   const VIP_BONUS_MIN=10000, VIP_BONUS_MULT=1.10;
+  const REF_GMT_BONUS=0.05; // 5% of referral's TH spend, paid in GMT to the referrer
+
+  // Solve referral's allocation first so we know their TH spend, then credit
+  // 5% of that as GMT to the user's available pool before the main solver runs.
+  function solveReferral(refCap){
+    if(refCap<=0)return null;
+    const COV=378;
+    function refSolve(gmtUSD){
+      const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
+      const at=thUSD>0?thForBudget(thUSD):0;
+      const fT=fees(at||1,15,bp);
+      const vT=vipOf(at,ag);
+      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const burn=(fT.t*(1-ntd/100)*bp)/gp;
+      return{deficit:Math.max(0,burn*COV-ag),at,ag,thUSD};
+    }
+    let bGU=0;
+    if(i.payG&&refSolve(0).deficit>0){
+      let lo=0,hi=refCap;
+      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(refSolve(mid).deficit<=0)hi=mid;else lo=mid;}
+      bGU=hi;
+    }
+    return refSolve(bGU);
+  }
+  const ref=solveReferral(i.refCap);
+  const refBonusGMT=ref?(ref.thUSD*REF_GMT_BONUS)/gp:0;
+  const refBonusUSD=refBonusGMT*gp;
+
+  const baseGmtAvail=i.gw;                       // user's actual unlocked GMT
+  const gmtAvail=baseGmtAvail+refBonusGMT;       // augment with referral 5% bonus
+  const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0){
     $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see recommendation.</div>';
     $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
@@ -1553,7 +1582,8 @@ function renderPlanner(i,m){
   // Resource breakdown
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
   if(hasGMT){
-    ah+=row('GMT on hand',`${fN(gmtAvail,0)} GMT<span class="sub">${fU(gmtAvail*gp)}</span>`);
+    if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
+    if(refBonusGMT>0)ah+=row('+ Referral 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (5% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
     if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
     if(gmtSell>0)ah+=row('→ Sell for TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
   }
@@ -1579,27 +1609,7 @@ function renderPlanner(i,m){
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
-  // Referral capital: solve same TH/GMT split for a fresh referral
-  function refAllocation(refCap){
-    if(refCap<=0)return null;
-    function refSolve(gmtUSD){
-      const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget(thUSD):0;
-      const fT=fees(at||1,15,bp);
-      const vT=vipOf(at,ag);
-      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
-      const burn=(fT.t*(1-ntd/100)*bp)/gp;
-      return{deficit:Math.max(0,burn*covNeeded-ag),at,ag};
-    }
-    let bGU=0;
-    if(i.payG&&refSolve(0).deficit>0){
-      let lo=0,hi=refCap;
-      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(refSolve(mid).deficit<=0)hi=mid;else lo=mid;}
-      bGU=hi;
-    }
-    return refSolve(bGU);
-  }
-  const ref=refAllocation(i.refCap);
+  // ref already solved at top of renderPlanner so the 5% GMT bonus could feed the main solver.
   const refInitTH=ref?ref.at:0;
   const refInitLocked=ref?ref.ag:0;
 
@@ -1632,6 +1642,7 @@ function renderPlanner(i,m){
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(refInitTH*(i.cpt||0))}</span>`,'cyan');
     ph+=row('Referral locked <img src="gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
     ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
+    if(refBonusGMT>0)ph+=row('Your 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
 
