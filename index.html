@@ -1669,15 +1669,40 @@ function runReinvestProjection(){
     return;
   }
 
+  // ---- Solve referral first so the 5% GMT bonus seeds the user's initial allocation ----
+  const REF_GMT_BONUS=0.05;
+  function riRefAlloc(refCap){
+    if(refCap<=0)return null;
+    function rs(gmtUSD){
+      const ag=gmtUSD/gp,thUSD=refCap-gmtUSD;
+      const at=thUSD>0?thForBudget(thUSD):0;
+      const fT=fees(at||1,15,bp);
+      const vT=vipOf(at,ag);
+      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const burn=(fT.t*(1-ntd/100)*bp)/gp;
+      return{deficit:Math.max(0,burn*378-ag),at,ag,thUSD};
+    }
+    let bGU=0;
+    if(i.payG&&rs(0).deficit>0){
+      let lo=0,hi=refCap;
+      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(rs(mid).deficit<=0)hi=mid;else lo=mid;}
+      bGU=hi;
+    }
+    return rs(bGU);
+  }
+  const refInit=riRefAlloc(i.refCap);
+  const refInitBonusGMT=refInit?(refInit.thUSD*REF_GMT_BONUS)/gp:0;
+  const seedWallet=i.gw+refInitBonusGMT;     // bonus lands in the user's GMT wallet up front
+
   // ---- Run the same iterative allocation as the Capital Planner ----
   let riGmtReserve=0;
-  if(i.payG&&i.gw>0){
+  if(i.payG&&seedWallet>0){
     const riReserveF=fees(i.th||1,i.wth||15,bp);
     const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
     const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
-    riGmtReserve=Math.min(riDailyFeeGMT*2,i.gw);
+    riGmtReserve=Math.min(riDailyFeeGMT*2,seedWallet);
   }
-  const existGMT=i.gl+Math.max(0,i.gw-riGmtReserve);
+  const existGMT=i.gl+Math.max(0,seedWallet-riGmtReserve);
   function solveSplit(gmtUSD){
     const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
     const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
@@ -1699,7 +1724,7 @@ function runReinvestProjection(){
   // Post-investment starting values
   const postTH=best.nt;
   const postLocked=i.gl+best.ag;
-  const postWallet=i.gw;
+  const postWallet=seedWallet;               // includes initial referral 5% bonus
   const apr=i.apr||0;
 
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
@@ -1709,32 +1734,13 @@ function runReinvestProjection(){
   let curWTH=postWTH;
   const daily=[];
 
-  // ---- Referral parallel simulation: starts from refCap, follows same strategy ----
-  function refAlloc(refCap){
-    if(refCap<=0)return null;
-    function rs(gmtUSD){
-      const ag=gmtUSD/gp,thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget(thUSD):0;
-      const fT=fees(at||1,15,bp);
-      const vT=vipOf(at,ag);
-      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
-      const burn=(fT.t*(1-ntd/100)*bp)/gp;
-      return{deficit:Math.max(0,burn*378-ag),at,ag};
-    }
-    let bGU=0;
-    if(i.payG&&rs(0).deficit>0){
-      let lo=0,hi=refCap;
-      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(rs(mid).deficit<=0)hi=mid;else lo=mid;}
-      bGU=hi;
-    }
-    return rs(bGU);
-  }
-  const refInit=refAlloc(i.refCap);
+  // ---- Referral parallel simulation: refInit was solved above to seed the 5% bonus ----
   let refTH=refInit?refInit.at:0, refLocked=refInit?refInit.ag:0, refCurWTH=15;
   const refStartTH=refTH, refStartLocked=refLocked;
   const manualRefTH=i.amb?i.refTH:0;
   let ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
   let totalAmbUSD=0;
+  let totalRefBonusGMT=refInitBonusGMT;       // user's cumulative 5% GMT (initial + ongoing)
   let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
   function dailyNet(curTH,curLocked){
@@ -1804,7 +1810,15 @@ function runReinvestProjection(){
     const rGmtBuy=rGmtSpend/gp;
     const rThBudget=rRein-rGmtSpend;
     refLocked+=rGmtBuy;
-    if(rThBudget>0){const addTH=thForBudget(rThBudget);refCurWTH=(refTH*refCurWTH+addTH*15)/(refTH+addTH);refTH+=addTH;}
+    if(rThBudget>0){
+      const addTH=thForBudget(rThBudget);
+      refCurWTH=(refTH*refCurWTH+addTH*15)/(refTH+addTH);
+      refTH+=addTH;
+      // 5% of the referral's daily TH spend is paid to the user as fresh GMT
+      const dailyBonusGMT=(rThBudget*REF_GMT_BONUS)/gp;
+      gmtW+=dailyBonusGMT;
+      totalRefBonusGMT+=dailyBonusGMT;
+    }
   }
 
   for(let d=1;d<=days;d++){
@@ -1939,6 +1953,11 @@ function runReinvestProjection(){
         <div class="ri-card"><div class="ri-label">Referral TH</div><div class="ri-val cyan">${fN(refTH,1)}</div><div class="ri-sub">${fN(refStartTH,1)} → ${fN(refTH,1)} (+${fN(refPct,1)}%)</div></div>
         <div class="ri-card"><div class="ri-label">Referral Locked <img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(refLocked,0)}</div><div class="ri-sub">${fN(refStartLocked,0)} → ${fN(refLocked,0)}</div></div>
       </div>`;
+      if(totalRefBonusGMT>0){
+        h+=`<div class="ri-summary ri-center">
+          <div class="ri-card"><div class="ri-label">Your 5% GMT Bonus (cumulative)</div><div class="ri-val green">${fN(totalRefBonusGMT,0)} GMT</div><div class="ri-sub">${fU(totalRefBonusGMT*gp)} — initial ${fN(refInitBonusGMT,0)} + ${fN(totalRefBonusGMT-refInitBonusGMT,0)} from their daily TH purchases</div></div>
+        </div>`;
+      }
     }
   }
 
