@@ -1070,12 +1070,19 @@ function loadPriceCache(){
   return null;
 }
 function savePriceCache(){
-  if(!(S.btcPrice>0&&S.gmtPrice>0))return;
-  try{localStorage.setItem(PRICE_CACHE_KEY,JSON.stringify({
-    btc:S.btcPrice,gmt:S.gmtPrice,
-    gbp:S.gbpRate||0.79,eur:S.eurRate||0.92,
-    diff:S.difficulty,fees:S.avgTxFees,t:Date.now()
-  }))}catch(e){}
+  // Only persist truly-live values from this run; otherwise we'd rewrite the cache with FB/cached numbers.
+  if(!(S.priceLiveBTC>0&&S.priceLiveGMT>0))return;
+  try{
+    const prev=loadPriceCache()||{};
+    localStorage.setItem(PRICE_CACHE_KEY,JSON.stringify({
+      btc:S.priceLiveBTC,gmt:S.priceLiveGMT,
+      gbp:S.gbpRate||prev.gbp||0.79,
+      eur:S.eurRate||prev.eur||0.92,
+      diff:S.difficulty||prev.diff,
+      fees:S.avgTxFees||prev.fees,
+      t:Date.now()
+    }));
+  }catch(e){}
 }
 async function fetchBTCPrice(){
   try{const r=await fetchTO('https://api.coinpaprika.com/v1/tickers/btc-bitcoin');const p=+r?.quotes?.USD?.price;if(p>0)return p;}catch(e){}
@@ -1085,7 +1092,8 @@ async function fetchBTCPrice(){
 }
 async function fetchGMTPrice(){
   try{const r=await fetchTO('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token');const p=+r?.quotes?.USD?.price;if(p>0)return p;}catch(e){}
-  try{const r=await fetchTO('https://api.coingecko.com/api/v3/simple/price?ids=gomining-token&vs_currencies=usd');const p=+r?.['gomining-token']?.usd;if(p>0)return p;}catch(e){}
+  // CoinGecko's ID for GoMining (symbol GOMINING) is 'gmt-token', NOT 'gomining-token'.
+  try{const r=await fetchTO('https://api.coingecko.com/api/v3/simple/price?ids=gmt-token&vs_currencies=usd');const p=+r?.['gmt-token']?.usd;if(p>0)return p;}catch(e){}
   return 0;
 }
 
@@ -1103,6 +1111,9 @@ async function fetchData(){
   else{S.gmtPrice=FB.gmtPrice;ok=false;}
   S.priceStale=!(btcLive>0&&gmtLive>0);
   S.priceCachedAt=(S.priceStale&&cached)?cached.t:0;
+  // Only the live values from this run are eligible to overwrite the cache;
+  // never write FB or previously-cached values back, or we lock in stale prices.
+  S.priceLiveBTC=btcLive;S.priceLiveGMT=gmtLive;
 
   // ---- MEMPOOL (difficulty + tx fees) ----
   try{
