@@ -953,7 +953,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1 };
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 
 // ---- VIP TIERS ----
@@ -1055,35 +1055,85 @@ function closePlannerIntro(){
 }
 
 // ---- API ----
+// fetch with hard timeout — default fetch() can hang for ages on slow/dead endpoints
+function fetchTO(url,ms=8000){
+  const ctrl=new AbortController();
+  const id=setTimeout(()=>ctrl.abort(),ms);
+  return fetch(url,{signal:ctrl.signal}).then(r=>{clearTimeout(id);if(!r.ok)throw new Error('http '+r.status);return r.json()}).catch(e=>{clearTimeout(id);throw e});
+}
+// Persist last-good market data so a transient API outage doesn't drop the user back to year-old static fallbacks.
+const PRICE_CACHE_KEY='gm_price_cache_v1';
+function loadPriceCache(){
+  try{const raw=localStorage.getItem(PRICE_CACHE_KEY);if(!raw)return null;
+    const c=JSON.parse(raw);if(c&&c.btc>0&&c.gmt>0&&c.t)return c;
+  }catch(e){}
+  return null;
+}
+function savePriceCache(){
+  if(!(S.btcPrice>0&&S.gmtPrice>0))return;
+  try{localStorage.setItem(PRICE_CACHE_KEY,JSON.stringify({
+    btc:S.btcPrice,gmt:S.gmtPrice,
+    gbp:S.gbpRate||0.79,eur:S.eurRate||0.92,
+    diff:S.difficulty,fees:S.avgTxFees,t:Date.now()
+  }))}catch(e){}
+}
+async function fetchBTCPrice(){
+  try{const r=await fetchTO('https://api.coinpaprika.com/v1/tickers/btc-bitcoin');const p=+r?.quotes?.USD?.price;if(p>0)return p;}catch(e){}
+  try{const r=await fetchTO('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');const p=+r?.bitcoin?.usd;if(p>0)return p;}catch(e){}
+  try{const r=await fetchTO('https://mempool.space/api/v1/prices');const p=+r?.USD;if(p>0)return p;}catch(e){}
+  return 0;
+}
+async function fetchGMTPrice(){
+  try{const r=await fetchTO('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token');const p=+r?.quotes?.USD?.price;if(p>0)return p;}catch(e){}
+  try{const r=await fetchTO('https://api.coingecko.com/api/v3/simple/price?ids=gomining-token&vs_currencies=usd');const p=+r?.['gomining-token']?.usd;if(p>0)return p;}catch(e){}
+  return 0;
+}
+
 async function fetchData(){
   let ok=true;
-  try{
-    const[a,b]=await Promise.all([
-      fetch('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(r=>r.json()),
-      fetch('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token').then(r=>r.json())
-    ]);
-    S.btcPrice=a.quotes?.USD?.price||0;S.gmtPrice=b.quotes?.USD?.price||0;
-    if(!S.btcPrice){S.btcPrice=FB.btcPrice;ok=false}
-    if(!S.gmtPrice){S.gmtPrice=FB.gmtPrice;ok=false}
-  }catch(e){S.btcPrice=FB.btcPrice;S.gmtPrice=FB.gmtPrice;ok=false}
+  const cached=loadPriceCache();
+
+  // ---- PRICES (BTC + GMT) — multi-source with cache fallback ----
+  const[btcLive,gmtLive]=await Promise.all([fetchBTCPrice(),fetchGMTPrice()]);
+  if(btcLive>0)S.btcPrice=btcLive;
+  else if(cached&&cached.btc>0){S.btcPrice=cached.btc;ok=false;}
+  else{S.btcPrice=FB.btcPrice;ok=false;}
+  if(gmtLive>0)S.gmtPrice=gmtLive;
+  else if(cached&&cached.gmt>0){S.gmtPrice=cached.gmt;ok=false;}
+  else{S.gmtPrice=FB.gmtPrice;ok=false;}
+  S.priceStale=!(btcLive>0&&gmtLive>0);
+  S.priceCachedAt=(S.priceStale&&cached)?cached.t:0;
+
+  // ---- MEMPOOL (difficulty + tx fees) ----
   try{
     const[h,f]=await Promise.all([
-      fetch('https://mempool.space/api/v1/mining/hashrate/3d').then(r=>r.json()),
-      fetch('https://mempool.space/api/v1/mining/reward-stats/144').then(r=>r.json())
+      fetchTO('https://mempool.space/api/v1/mining/hashrate/3d'),
+      fetchTO('https://mempool.space/api/v1/mining/reward-stats/144')
     ]);
-    S.difficulty=h.currentDifficulty||FB.difficulty;
+    S.difficulty=h.currentDifficulty||(cached&&cached.diff)||FB.difficulty;
     S.avgTxFees=(parseFloat(f.totalFee||0)/144)/1e8;
-    if(!S.avgTxFees)S.avgTxFees=FB.avgTxFees;
-  }catch(e){S.difficulty=FB.difficulty;S.avgTxFees=FB.avgTxFees;ok=false}
+    if(!S.avgTxFees)S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
+  }catch(e){
+    S.difficulty=(cached&&cached.diff)||FB.difficulty;
+    S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
+    ok=false;
+  }
   S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
+
+  // ---- FX (GBP, EUR) ----
   try{
-    const fx=await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR').then(r=>r.json());
-    S.gbpRate=fx.rates?.GBP||0.79;
-    S.eurRate=fx.rates?.EUR||0.92;
-  }catch(e){S.gbpRate=0.79;S.eurRate=0.92}
+    const fx=await fetchTO('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR');
+    S.gbpRate=fx.rates?.GBP||(cached&&cached.gbp)||0.79;
+    S.eurRate=fx.rates?.EUR||(cached&&cached.eur)||0.92;
+  }catch(e){
+    S.gbpRate=(cached&&cached.gbp)||0.79;
+    S.eurRate=(cached&&cached.eur)||0.92;
+  }
   if(S.currency==='GBP')S.fxRate=S.gbpRate;
   else if(S.currency==='EUR')S.fxRate=S.eurRate;
+
   S.apiOk=ok;
+  savePriceCache();
   if(!S.setupLoaded){S.setupLoaded=true;loadSetup();}
   S.loaded=true;
   updateHeader();recalc();
@@ -1094,7 +1144,18 @@ function updateHeader(){
   $('btcVal').textContent=S.btcPrice?fU(S.btcPrice):'--';
   $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
   $('satsVal').textContent=S.satsPerTHDay?S.satsPerTHDay.toFixed(1):'--';
-  const bar=$('liveBar');S.apiOk?bar.classList.remove('api-err'):bar.classList.add('api-err');
+  const bar=$('liveBar');
+  if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
+  else{
+    bar.classList.add('api-err');
+    if(S.priceStale&&S.priceCachedAt){
+      const mins=Math.round((Date.now()-S.priceCachedAt)/60000);
+      const ago=mins<60?mins+' min':mins<1440?Math.round(mins/60)+'h':Math.round(mins/1440)+'d';
+      bar.title='Live API unreachable — showing cached prices from '+ago+' ago';
+    }else{
+      bar.title='Live API unreachable';
+    }
+  }
 }
 
 // ---- INPUTS ----
