@@ -880,7 +880,6 @@ input[type=number]{-moz-appearance:textfield}
               <option value="firm:ark-bull">ARK Invest (Bull) — 2030</option>
               <option value="firm:vaneck">VanEck — 2050</option>
               <option value="firm:ark-mega">ARK Invest (Mega-Bull) — 2030</option>
-              <option value="firm:fidelity">Fidelity (Timmer) — 2038</option>
             </optgroup>
             <optgroup label="Manual">
               <option value="manual:80000">$80K</option>
@@ -1767,7 +1766,6 @@ const BTC_FIRM_FORECASTS={
   'ark-bull':     {firm:'ARK Invest',price:1500000,year:2030,scenario:'Bull'},
   'vaneck':       {firm:'VanEck',price:2900000,year:2050},
   'ark-mega':     {firm:'ARK Invest',price:3800000,year:2030,scenario:'Mega-Bull'},
-  'fidelity':     {firm:'Fidelity (Timmer)',price:1000000000,year:2038},
 };
 function fmtBTCPrice(p){
   if(p>=1e9)return '$'+(p/1e9).toFixed(p%1e9===0?0:1)+'B';
@@ -1988,6 +1986,13 @@ function runReinvestProjection(){
     // Record POST-purchase daily reward
     const postDN=dailyNet(th,gmtLocked);
     daily.push({d,th,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
+
+    // Defensive: extreme BTC targets can push compounding past JS number range.
+    // Bail with a friendly error rather than render NaN/Infinity in the result.
+    if(!isFinite(th)||!isFinite(gmtLocked)||!isFinite(postDN.net)){
+      $('reinvestResult').innerHTML='<div class="warn" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5"><strong>Numbers exceeded simulation precision.</strong> The selected BTC target is so high that compounding TH growth overflows after day '+d+'. Pick a more conservative BTC target or shorter horizon.</div>';
+      return;
+    }
   }
 
   // Select snapshot days: first, last, every 30d
