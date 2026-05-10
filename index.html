@@ -1289,7 +1289,8 @@ function calc(i){
   // Wallet (liquid) GMT counts toward coverage alongside locked.
   const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
   // GoMining grants the token discount in 1% steps based on coverage days.
-  const eTok=cov<18.9?0:Math.min(20,Math.floor(cov/18.9));
+  // GoMining uses 18 days per 1% step (360 days = 20% max), not 18.9.
+  const eTok=cov<18?0:Math.min(20,Math.floor(cov/18));
   const tok=i.payG?eTok:0;
   const totD=Math.min(30,tok+nonTokD);
   const dfees=f.t*(1-totD/100),net=gross-dfees,save=f.t*(totD/100);
@@ -1517,7 +1518,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   function solveReferral(refCap){
     if(refCap<=0)return null;
-    const COV=378;
+    const COV=360;
     function refSolve(gmtUSD){
       const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
       const at=thUSD>0?thForBudget(thUSD):0;
@@ -1544,7 +1545,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0)return null;
 
-  const covNeeded=378; // 20 * 18.9
+  const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
 
   function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
 
@@ -1617,7 +1618,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
   const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
-  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
+  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18)):0;
   const td2=Math.min(30,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
@@ -1878,7 +1879,7 @@ function runReinvestProjection(){
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc2>0?tg2/fc2:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
@@ -1893,7 +1894,7 @@ function runReinvestProjection(){
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    return Math.max(0,burn*378-(curLocked+gmtW));
+    return Math.max(0,burn*360-(curLocked+gmtW));
   }
 
   function refDailyNet(rTH,rLocked){
@@ -1902,7 +1903,7 @@ function runReinvestProjection(){
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const fc=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc>0?rLocked/fc:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
@@ -1913,7 +1914,7 @@ function runReinvestProjection(){
     const v=vipOf(rTH,rLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    return Math.max(0,burn*378-rLocked);
+    return Math.max(0,burn*360-rLocked);
   }
   function stepReferral(){
     if(refTH<=0)return;
