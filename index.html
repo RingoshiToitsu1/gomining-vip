@@ -1269,7 +1269,8 @@ function calc(i){
   // Only LOCKED GMT counts toward token discount on GoMining — wallet GMT is
   // unstaked and does not contribute. (Bug fix: previously summed gl+gw.)
   const cov=feesGMT>0?i.gl/feesGMT:Infinity;
-  const eTok=cov<18.9?0:Math.min(20,Math.floor(cov/18.9));
+  // GoMining grants the token discount continuously (fractional %), not in 1% steps.
+  const eTok=cov<18.9?0:Math.min(20,cov/18.9);
   const tok=i.payG?eTok:0;
   const totD=Math.min(30,tok+nonTokD);
   const dfees=f.t*(1-totD/100),net=gross-dfees,save=f.t*(totD/100);
@@ -1597,7 +1598,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
   const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
-  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
+  const ntd=i.payG?Math.min(20,covAfter/18.9):0;
   const td2=Math.min(30,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
@@ -1858,7 +1859,7 @@ function runReinvestProjection(){
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
     // Only locked GMT counts toward token discount (wallet doesn't).
     const cv=fc2>0?curLocked/fc2:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const td=i.payG?Math.min(20,cv/18.9):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
@@ -1883,7 +1884,7 @@ function runReinvestProjection(){
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const fc=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc>0?rLocked/fc:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
+    const td=i.payG?Math.min(20,cv/18.9):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
