@@ -2019,6 +2019,7 @@ function runReinvestProjection(){
   const finalSS=finalEntry.ssNet;
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
   const gmtGain=gmtLocked-postLocked;
+  const bpAtEnd=bpForDay(days);  // BTC price actually reached at end of projection
 
   let h='';
 
@@ -2040,10 +2041,8 @@ function runReinvestProjection(){
     <strong>${fN(postLocked,0)} GMT</strong> locked
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
 
-  // End-of-period values: BTC count uses the price actually reached on the last
-  // day of the projection (which may be capped below bpEnd if the firm's target
-  // year is past the projection horizon).
-  const bpAtEnd=bpForDay(days);
+  // End-of-period values: BTC count uses bpAtEnd (price actually reached on the
+  // last day of the projection — capped below bpEnd if firm target is past horizon).
   const finalDailyBTC=finalSS/bpAtEnd;
   const finalDailyGMT=finalSS/gp;
   const finalMonthly=finalSS*30;
