@@ -1470,8 +1470,9 @@ function flipProjCell(el){
 // means "Monthly Income by BTC (LIVE)" matches the Reinvest's day-1 baseline.
 function solvePlannerAllocation(i, bp, gp, dbt){
   const usdCap=i.cap;
-  const vipBonusEl=document.getElementById('piVipBonus');
-  const vipBonus=!!(vipBonusEl&&vipBonusEl.checked);
+  // VIP 10% bonus disabled — GoMining is not currently offering this promo.
+  // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
+  const vipBonus=false;
   const VIP_BONUS_MIN=10000, VIP_BONUS_MULT=1.10;
   const REF_GMT_BONUS=0.05; // 5% of referral's TH spend, paid in GMT to the referrer
 
