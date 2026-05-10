@@ -857,7 +857,7 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="section-desc">Simulate reinvesting all daily rewards (mining + staking) into TH and GMT. Automatically balances TH growth with GMT locking to maintain 20% token discount.</div>
     <div class="section-body">
-      <div class="input-grid" style="max-width:360px">
+      <div class="input-grid" style="max-width:560px">
         <div class="field">
           <label>Projection Length <span class="tip" data-tip="Number of years to simulate reinvesting net profit into TH.">?</span></label>
           <div class="field-input"><select id="inReinvestDays" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
@@ -867,6 +867,21 @@ input[type=number]{-moz-appearance:textfield}
             <option value="1460">4 Years</option>
             <option value="1825">5 Years</option>
             <option value="3650">10 Years</option>
+          </select></div>
+        </div>
+        <div class="field">
+          <label>BTC Price <span class="tip" data-tip="Hold BTC at this price for the entire projection. AI Forecast picks a horizon-matched median from big-bank/firm projections (Standard Chartered, Bernstein, Bitwise, Galaxy, ARK, Fidelity).">?</span></label>
+          <div class="field-input"><select id="inReinvestBTC" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
+            <option value="live" selected>Live (current)</option>
+            <option value="ai">AI Forecast (horizon-matched)</option>
+            <option value="80000">$80K</option>
+            <option value="100000">$100K</option>
+            <option value="120000">$120K</option>
+            <option value="150000">$150K</option>
+            <option value="200000">$200K</option>
+            <option value="300000">$300K</option>
+            <option value="500000">$500K</option>
+            <option value="1000000">$1M</option>
           </select></div>
         </div>
       </div>
@@ -1736,11 +1751,36 @@ function renderPlanner(i,m){
 }
 
 // ---- REINVEST PROJECTION ----
+// Horizon-matched AI BTC forecast based on median of public projections from
+// Standard Chartered, Bernstein, Bitwise, Galaxy (near-term) and ARK, Fidelity
+// (long-term). Numbers chosen as conservative consensus, not bull cases.
+const AI_BTC_FORECAST=[
+  {maxDays:365,  price:300000,  label:'1Y AI ($300K)'},
+  {maxDays:730,  price:450000,  label:'2Y AI ($450K)'},
+  {maxDays:1095, price:600000,  label:'3Y AI ($600K)'},
+  {maxDays:1460, price:750000,  label:'4Y AI ($750K)'},
+  {maxDays:1825, price:900000,  label:'5Y AI ($900K)'},
+  {maxDays:3650, price:2000000, label:'10Y AI ($2M)'},
+];
+function reinvestBTCSelection(days){
+  const sel=$('inReinvestBTC');
+  const v=sel?sel.value:'live';
+  if(v==='live')return{price:S.btcPrice,label:'Live ($'+(S.btcPrice/1000).toFixed(1)+'K)',mode:'live'};
+  if(v==='ai'){
+    const f=AI_BTC_FORECAST.find(x=>days<=x.maxDays)||AI_BTC_FORECAST[AI_BTC_FORECAST.length-1];
+    return{price:f.price,label:f.label,mode:'ai'};
+  }
+  const p=parseFloat(v);
+  if(p>0)return{price:p,label:'$'+(p>=1e6?(p/1e6).toFixed(1)+'M':(p/1000).toFixed(0)+'K'),mode:'static'};
+  return{price:S.btcPrice,label:'Live',mode:'live'};
+}
+
 function runReinvestProjection(){
   if(!S.loaded)return;
   const i=inp();
   const days=Math.min(3650,Math.max(1,+$('inReinvestDays').value||365));
-  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
+  const btcSel=reinvestBTCSelection(days);
+  const bp=btcSel.price,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
   if(!bp||!gp||!dbt){
     $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load...</div>';
     return;
@@ -1939,11 +1979,13 @@ function runReinvestProjection(){
   let h='';
 
   // Show post-investment starting point
+  const btcModeBadge=btcSel.mode==='ai'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">AI FORECAST</span>':btcSel.mode==='static'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(117,64,239,.06);border-color:rgba(117,64,239,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
-    <strong>${fN(postLocked,0)} GMT</strong> locked</div>`;
+    <strong>${fN(postLocked,0)} GMT</strong> locked
+    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> for the entire ${days}d projection${btcModeBadge}</div></div>`;
 
   const finalDailyBTC=finalSS/bp;
   const finalDailyGMT=finalSS/gp;
@@ -2024,7 +2066,8 @@ function runReinvestProjection(){
   // Store data for share image
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
     thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
-    finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain};
+    finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain,
+    btcLabel:btcSel.label,btcMode:btcSel.mode};
 }
 
 function shareProjection(){
@@ -2076,7 +2119,8 @@ function shareProjection(){
   // Subtitle
   x.fillStyle='rgba(190,155,255,0.92)';
   x.font='22px "Share Tech Mono","General Sans",monospace';
-  x.fillText('Auto-Reinvest Compound Strategy  \u2022  powered by gmt-optimizer.com',W/2,108);
+  const btcSubLabel=d.btcMode==='ai'?'  \u2022  BTC '+d.btcLabel:d.btcMode==='static'?'  \u2022  BTC @ '+d.btcLabel:'';
+  x.fillText('Auto-Reinvest Compound Strategy'+btcSubLabel+'  \u2022  powered by gmt-optimizer.com',W/2,108);
 
   // Decorative line
   const lg=x.createLinearGradient(pad,0,W-pad,0);
