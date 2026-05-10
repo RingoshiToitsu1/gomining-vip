@@ -875,12 +875,7 @@ input[type=number]{-moz-appearance:textfield}
             <option value="live" selected>Live (current)</option>
             <optgroup label="Bank / Firm Forecasts">
               <option value="firm:std-chartered">Standard Chartered — 2028</option>
-              <option value="firm:ark-base">ARK Invest (Base) — 2030</option>
               <option value="firm:bernstein">Bernstein — 2033</option>
-              <option value="firm:ark-bull">ARK Invest (Bull) — 2030</option>
-              <option value="firm:vaneck">VanEck — 2050</option>
-              <option value="firm:ark-mega">ARK Invest (Mega-Bull) — 2030</option>
-              <option value="firm:fidelity">Fidelity (Timmer) — 2038</option>
             </optgroup>
             <optgroup label="Manual">
               <option value="manual:80000">$80K</option>
@@ -1762,12 +1757,7 @@ function renderPlanner(i,m){
 // notes. Year is the firm's target horizon, not when the note was written.
 const BTC_FIRM_FORECASTS={
   'std-chartered':{firm:'Standard Chartered',price:500000,year:2028},
-  'ark-base':     {firm:'ARK Invest',price:710000,year:2030,scenario:'Base'},
   'bernstein':    {firm:'Bernstein',price:1000000,year:2033},
-  'ark-bull':     {firm:'ARK Invest',price:1500000,year:2030,scenario:'Bull'},
-  'vaneck':       {firm:'VanEck',price:2900000,year:2050},
-  'ark-mega':     {firm:'ARK Invest',price:3800000,year:2030,scenario:'Mega-Bull'},
-  'fidelity':     {firm:'Fidelity (Timmer)',price:1000000000,year:2038},
 };
 function fmtBTCPrice(p){
   if(p>=1e9)return '$'+(p/1e9).toFixed(p%1e9===0?0:1)+'B';
