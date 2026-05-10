@@ -1266,11 +1266,10 @@ function calc(i){
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
   const feesGMT=(f.t*(1-nonTokD/100)*bp)/gp; // daily fees in GMT after non-token discounts
-  // Only LOCKED GMT counts toward token discount on GoMining — wallet GMT is
-  // unstaked and does not contribute. (Bug fix: previously summed gl+gw.)
-  const cov=feesGMT>0?i.gl/feesGMT:Infinity;
-  // GoMining grants the token discount continuously (fractional %), not in 1% steps.
-  const eTok=cov<18.9?0:Math.min(20,cov/18.9);
+  // Wallet (liquid) GMT counts toward coverage alongside locked.
+  const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
+  // GoMining grants the token discount in 1% steps based on coverage days.
+  const eTok=cov<18.9?0:Math.min(20,Math.floor(cov/18.9));
   const tok=i.payG?eTok:0;
   const totD=Math.min(30,tok+nonTokD);
   const dfees=f.t*(1-totD/100),net=gross-dfees,save=f.t*(totD/100);
@@ -1598,7 +1597,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
   const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
-  const ntd=i.payG?Math.min(20,covAfter/18.9):0;
+  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18.9)):0;
   const td2=Math.min(30,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
@@ -1856,10 +1855,10 @@ function runReinvestProjection(){
     const g=dbt*curTH,f=fees(curTH,curWTH,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
-    // Only locked GMT counts toward token discount (wallet doesn't).
-    const cv=fc2>0?curLocked/fc2:Infinity;
-    const td=i.payG?Math.min(20,cv/18.9):0;
+    const cv=fc2>0?tg2/fc2:Infinity;
+    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
@@ -1874,8 +1873,7 @@ function runReinvestProjection(){
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    // Locked-only: wallet GMT doesn't grant discount until staked.
-    return Math.max(0,burn*378-curLocked);
+    return Math.max(0,burn*378-(curLocked+gmtW));
   }
 
   function refDailyNet(rTH,rLocked){
@@ -1884,7 +1882,7 @@ function runReinvestProjection(){
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const fc=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc>0?rLocked/fc:Infinity;
-    const td=i.payG?Math.min(20,cv/18.9):0;
+    const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
