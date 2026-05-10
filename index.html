@@ -870,18 +870,25 @@ input[type=number]{-moz-appearance:textfield}
           </select></div>
         </div>
         <div class="field">
-          <label>BTC Price <span class="tip" data-tip="Hold BTC at this price for the entire projection. AI Forecast picks a horizon-matched median from big-bank/firm projections (Standard Chartered, Bernstein, Bitwise, Galaxy, ARK, Fidelity).">?</span></label>
+          <label>BTC Price <span class="tip" data-tip="Hold BTC at this price for the entire projection. Firm options use each firm's published BTC target — match the horizon to the target year for a realistic scenario.">?</span></label>
           <div class="field-input"><select id="inReinvestBTC" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
             <option value="live" selected>Live (current)</option>
-            <option value="ai">AI Forecast (horizon-matched)</option>
-            <option value="80000">$80K</option>
-            <option value="100000">$100K</option>
-            <option value="120000">$120K</option>
-            <option value="150000">$150K</option>
-            <option value="200000">$200K</option>
-            <option value="300000">$300K</option>
-            <option value="500000">$500K</option>
-            <option value="1000000">$1M</option>
+            <optgroup label="Bank / Firm Forecasts">
+              <option value="firm:std-chartered">Standard Chartered — 2028</option>
+              <option value="firm:ark-base">ARK Invest (Base) — 2030</option>
+              <option value="firm:bernstein">Bernstein — 2033</option>
+              <option value="firm:ark-bull">ARK Invest (Bull) — 2030</option>
+              <option value="firm:vaneck">VanEck — 2050</option>
+              <option value="firm:ark-mega">ARK Invest (Mega-Bull) — 2030</option>
+              <option value="firm:fidelity">Fidelity (Timmer) — 2038</option>
+            </optgroup>
+            <optgroup label="Manual">
+              <option value="manual:80000">$80K</option>
+              <option value="manual:100000">$100K</option>
+              <option value="manual:150000">$150K</option>
+              <option value="manual:200000">$200K</option>
+              <option value="manual:300000">$300K</option>
+            </optgroup>
           </select></div>
         </div>
       </div>
@@ -1751,27 +1758,37 @@ function renderPlanner(i,m){
 }
 
 // ---- REINVEST PROJECTION ----
-// Horizon-matched AI BTC forecast based on median of public projections from
-// Standard Chartered, Bernstein, Bitwise, Galaxy (near-term) and ARK, Fidelity
-// (long-term). Numbers chosen as conservative consensus, not bull cases.
-const AI_BTC_FORECAST=[
-  {maxDays:365,  price:300000,  label:'1Y AI ($300K)'},
-  {maxDays:730,  price:450000,  label:'2Y AI ($450K)'},
-  {maxDays:1095, price:600000,  label:'3Y AI ($600K)'},
-  {maxDays:1460, price:750000,  label:'4Y AI ($750K)'},
-  {maxDays:1825, price:900000,  label:'5Y AI ($900K)'},
-  {maxDays:3650, price:2000000, label:'10Y AI ($2M)'},
-];
-function reinvestBTCSelection(days){
+// Public BTC price targets by firm. Sourced from each firm's published research
+// notes. Year is the firm's target horizon, not when the note was written.
+const BTC_FIRM_FORECASTS={
+  'std-chartered':{firm:'Standard Chartered',price:500000,year:2028},
+  'ark-base':     {firm:'ARK Invest',price:710000,year:2030,scenario:'Base'},
+  'bernstein':    {firm:'Bernstein',price:1000000,year:2033},
+  'ark-bull':     {firm:'ARK Invest',price:1500000,year:2030,scenario:'Bull'},
+  'vaneck':       {firm:'VanEck',price:2900000,year:2050},
+  'ark-mega':     {firm:'ARK Invest',price:3800000,year:2030,scenario:'Mega-Bull'},
+  'fidelity':     {firm:'Fidelity (Timmer)',price:1000000000,year:2038},
+};
+function fmtBTCPrice(p){
+  if(p>=1e9)return '$'+(p/1e9).toFixed(p%1e9===0?0:1)+'B';
+  if(p>=1e6)return '$'+(p/1e6).toFixed(p%1e6===0?0:1)+'M';
+  return '$'+(p/1000).toFixed(0)+'K';
+}
+function reinvestBTCSelection(){
   const sel=$('inReinvestBTC');
   const v=sel?sel.value:'live';
-  if(v==='live')return{price:S.btcPrice,label:'Live ($'+(S.btcPrice/1000).toFixed(1)+'K)',mode:'live'};
-  if(v==='ai'){
-    const f=AI_BTC_FORECAST.find(x=>days<=x.maxDays)||AI_BTC_FORECAST[AI_BTC_FORECAST.length-1];
-    return{price:f.price,label:f.label,mode:'ai'};
+  if(v==='live')return{price:S.btcPrice,label:'Live ('+fmtBTCPrice(S.btcPrice)+')',mode:'live'};
+  if(v.startsWith('firm:')){
+    const f=BTC_FIRM_FORECASTS[v.slice(5)];
+    if(f){
+      const tag=f.scenario?f.firm+' '+f.scenario:f.firm;
+      return{price:f.price,label:tag+' — '+fmtBTCPrice(f.price)+' by '+f.year,mode:'firm'};
+    }
   }
-  const p=parseFloat(v);
-  if(p>0)return{price:p,label:'$'+(p>=1e6?(p/1e6).toFixed(1)+'M':(p/1000).toFixed(0)+'K'),mode:'static'};
+  if(v.startsWith('manual:')){
+    const p=parseFloat(v.slice(7));
+    if(p>0)return{price:p,label:fmtBTCPrice(p)+' (manual)',mode:'manual'};
+  }
   return{price:S.btcPrice,label:'Live',mode:'live'};
 }
 
@@ -1779,9 +1796,12 @@ function runReinvestProjection(){
   if(!S.loaded)return;
   const i=inp();
   const days=Math.min(3650,Math.max(1,+$('inReinvestDays').value||365));
-  const btcSel=reinvestBTCSelection(days);
-  const bp=btcSel.price,gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
-  if(!bp||!gp||!dbt){
+  const btcSel=reinvestBTCSelection();
+  const bpStart=S.btcPrice;
+  const bpEnd=btcSel.price;
+  const useRamp=btcSel.mode!=='live';   // firm/manual ramp; live stays flat
+  const gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
+  if(!bpStart||!bpEnd||!gp||!dbt){
     $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load...</div>';
     return;
   }
@@ -1790,9 +1810,17 @@ function runReinvestProjection(){
     return;
   }
 
-  // Use the SAME allocation solver as the Capital Planner so the Reinvest's
-  // day-1 baseline matches "Monthly Income by BTC Price (LIVE)" exactly.
-  const a=solvePlannerAllocation(i,bp,gp,dbt);
+  // Linear ramp from today's price to the target. Day 1 = bpStart, last day = bpEnd.
+  // Per-day price is read via the bpToday closure var below; the daily-loop functions
+  // (dailyNet, gmtDeficit, refDailyNet, refDeficit) all reference it.
+  let bpToday=bpStart;
+  function bpForDay(d){
+    if(!useRamp||days<=1)return bpEnd;
+    return bpStart+(bpEnd-bpStart)*(d-1)/(days-1);
+  }
+
+  // Initial allocation runs at TODAY'S price — that's when the user actually buys.
+  const a=solvePlannerAllocation(i,bpStart,gp,dbt);
   if(!a){
     $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see projection.</div>';
     return;
@@ -1824,15 +1852,15 @@ function runReinvestProjection(){
   let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
   function dailyNet(curTH,curLocked){
-    const g=dbt*curTH,f=fees(curTH,curWTH,bp);
+    const g=dbt*curTH,f=fees(curTH,curWTH,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
-    const fc2=(f.t*(1-ntd/100)*bp)/gp;
+    const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc2>0?tg2/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g-f.t*(1-fd/100))*bp;
+    const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
     // startSS*30 lines up with the BTC-projection card. Daily here is cosmetic —
     // the real accrual happens weekly via the d%7 block.
@@ -1841,30 +1869,30 @@ function runReinvestProjection(){
   }
 
   function gmtDeficit(curTH,curLocked){
-    const f=fees(curTH,curWTH,bp);
+    const f=fees(curTH,curWTH,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const burn=(f.t*(1-ntd/100)*bp)/gp;
+    const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*378-(curLocked+gmtW));
   }
 
   function refDailyNet(rTH,rLocked){
-    const g=dbt*rTH,f=fees(rTH,refCurWTH,bp);
+    const g=dbt*rTH,f=fees(rTH,refCurWTH,bpToday);
     const v=vipOf(rTH,rLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const fc=(f.t*(1-ntd/100)*bp)/gp;
+    const fc=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc>0?rLocked/fc:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g-f.t*(1-fd/100))*bp;
+    const miningUSD=(g-f.t*(1-fd/100))*bpToday;
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
   }
   function refDeficit(rTH,rLocked){
-    const f=fees(rTH,refCurWTH,bp);
+    const f=fees(rTH,refCurWTH,bpToday);
     const v=vipOf(rTH,rLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const burn=(f.t*(1-ntd/100)*bp)/gp;
+    const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*378-rLocked);
   }
   function stepReferral(){
@@ -1902,6 +1930,7 @@ function runReinvestProjection(){
   }
 
   for(let d=1;d<=days;d++){
+    bpToday=bpForDay(d);  // linear ramp from bpStart (d=1) to bpEnd (d=days)
     // First-day baseline must be captured BEFORE referral compounds (else inflates start vs end comparison)
     if(d===1){startSS_capture=dailyNet(th,gmtLocked).net;}
 
@@ -1979,21 +2008,25 @@ function runReinvestProjection(){
   let h='';
 
   // Show post-investment starting point
-  const btcModeBadge=btcSel.mode==='ai'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">AI FORECAST</span>':btcSel.mode==='static'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
+  const btcModeBadge=btcSel.mode==='firm'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">FIRM FORECAST</span>':btcSel.mode==='manual'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
+  const btcRangeLine=btcSel.mode==='live'
+    ? `BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> throughout`
+    : `BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(117,64,239,.06);border-color:rgba(117,64,239,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
     <strong>${fN(postLocked,0)} GMT</strong> locked
-    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> for the entire ${days}d projection${btcModeBadge}</div></div>`;
+    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
 
-  const finalDailyBTC=finalSS/bp;
+  // End-of-period values: BTC count uses bpEnd (price at end of projection)
+  const finalDailyBTC=finalSS/bpEnd;
   const finalDailyGMT=finalSS/gp;
   const finalMonthly=finalSS*30;
-  const finalMonthlyBTC=finalMonthly/bp;
+  const finalMonthlyBTC=finalMonthly/bpEnd;
   const finalMonthlyGMT=finalMonthly/gp;
   const lockedUSD=gmtLocked*gp;
-  const lockedBTC=lockedUSD/bp;
+  const lockedBTC=lockedUSD/bpEnd;
 
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
@@ -2067,7 +2100,7 @@ function runReinvestProjection(){
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
     thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
     finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain,
-    btcLabel:btcSel.label,btcMode:btcSel.mode};
+    btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd};
 }
 
 function shareProjection(){
@@ -2119,7 +2152,7 @@ function shareProjection(){
   // Subtitle
   x.fillStyle='rgba(190,155,255,0.92)';
   x.font='22px "Share Tech Mono","General Sans",monospace';
-  const btcSubLabel=d.btcMode==='ai'?'  \u2022  BTC '+d.btcLabel:d.btcMode==='static'?'  \u2022  BTC @ '+d.btcLabel:'';
+  const btcSubLabel=d.btcMode==='live'?'':'  \u2022  BTC '+fmtBTCPrice(d.bpStart)+' \u2192 '+fmtBTCPrice(d.bpEnd)+' (linear)';
   x.fillText('Auto-Reinvest Compound Strategy'+btcSubLabel+'  \u2022  powered by gmt-optimizer.com',W/2,108);
 
   // Decorative line
