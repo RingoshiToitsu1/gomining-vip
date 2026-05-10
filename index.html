@@ -880,6 +880,7 @@ input[type=number]{-moz-appearance:textfield}
               <option value="firm:ark-bull">ARK Invest (Bull) — 2030</option>
               <option value="firm:vaneck">VanEck — 2050</option>
               <option value="firm:ark-mega">ARK Invest (Mega-Bull) — 2030</option>
+              <option value="firm:fidelity">Fidelity (Timmer) — 2038</option>
             </optgroup>
             <optgroup label="Manual">
               <option value="manual:80000">$80K</option>
@@ -1766,6 +1767,7 @@ const BTC_FIRM_FORECASTS={
   'ark-bull':     {firm:'ARK Invest',price:1500000,year:2030,scenario:'Bull'},
   'vaneck':       {firm:'VanEck',price:2900000,year:2050},
   'ark-mega':     {firm:'ARK Invest',price:3800000,year:2030,scenario:'Mega-Bull'},
+  'fidelity':     {firm:'Fidelity (Timmer)',price:1000000000,year:2038},
 };
 function fmtBTCPrice(p){
   if(p>=1e9)return '$'+(p/1e9).toFixed(p%1e9===0?0:1)+'B';
@@ -1780,7 +1782,7 @@ function reinvestBTCSelection(){
     const f=BTC_FIRM_FORECASTS[v.slice(5)];
     if(f){
       const tag=f.scenario?f.firm+' '+f.scenario:f.firm;
-      return{price:f.price,label:tag+' — '+fmtBTCPrice(f.price)+' by '+f.year,mode:'firm'};
+      return{price:f.price,label:tag+' — '+fmtBTCPrice(f.price)+' by '+f.year,mode:'firm',targetYear:f.year};
     }
   }
   if(v.startsWith('manual:')){
@@ -1808,13 +1810,21 @@ function runReinvestProjection(){
     return;
   }
 
-  // Linear ramp from today's price to the target. Day 1 = bpStart, last day = bpEnd.
-  // Per-day price is read via the bpToday closure var below; the daily-loop functions
-  // (dailyNet, gmtDeficit, refDailyNet, refDeficit) all reference it.
+  // Linear ramp. For firm picks, the ramp is anchored to the firm's PUBLISHED
+  // target year — so a 1Y run with Fidelity ($1B by 2038) reaches only ~1/12th
+  // of the way to $1B, not the full target. Once the target year is reached,
+  // price flatlines at bpEnd. Manual picks ramp over the projection length.
   let bpToday=bpStart;
+  let daysToTarget=days;     // default for manual: ramp over projection length
+  if(btcSel.mode==='firm'&&btcSel.targetYear){
+    const todayMs=Date.now();
+    const targetMs=new Date(btcSel.targetYear,0,1).getTime();
+    daysToTarget=Math.max(1,(targetMs-todayMs)/86400000);
+  }
   function bpForDay(d){
-    if(!useRamp||days<=1)return bpEnd;
-    return bpStart+(bpEnd-bpStart)*(d-1)/(days-1);
+    if(!useRamp)return bpEnd;
+    const fraction=Math.min(1,(d-1)/Math.max(1,daysToTarget));
+    return bpStart+(bpEnd-bpStart)*fraction;
   }
 
   // Initial allocation runs at TODAY'S price — that's when the user actually buys.
@@ -2014,9 +2024,15 @@ function runReinvestProjection(){
 
   // Show post-investment starting point
   const btcModeBadge=btcSel.mode==='firm'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">FIRM FORECAST</span>':btcSel.mode==='manual'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
-  const btcRangeLine=btcSel.mode==='live'
-    ? `BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> throughout`
-    : `BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
+  let btcRangeLine;
+  if(btcSel.mode==='live'){
+    btcRangeLine=`BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> throughout`;
+  }else if(btcSel.mode==='firm'){
+    const reached=bpAtEnd>=bpEnd?'reaches target':`reaches <strong style="color:var(--text2)">${fmtBTCPrice(bpAtEnd)}</strong> (${(bpAtEnd/bpEnd*100).toFixed(1)}% of way)`;
+    btcRangeLine=`BTC ramps linearly toward <strong style="color:var(--text2)">${btcSel.label}</strong> &mdash; over ${days}d ${reached}`;
+  }else{
+    btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
+  }
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(117,64,239,.06);border-color:rgba(117,64,239,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
@@ -2024,14 +2040,17 @@ function runReinvestProjection(){
     <strong>${fN(postLocked,0)} GMT</strong> locked
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
 
-  // End-of-period values: BTC count uses bpEnd (price at end of projection)
-  const finalDailyBTC=finalSS/bpEnd;
+  // End-of-period values: BTC count uses the price actually reached on the last
+  // day of the projection (which may be capped below bpEnd if the firm's target
+  // year is past the projection horizon).
+  const bpAtEnd=bpForDay(days);
+  const finalDailyBTC=finalSS/bpAtEnd;
   const finalDailyGMT=finalSS/gp;
   const finalMonthly=finalSS*30;
-  const finalMonthlyBTC=finalMonthly/bpEnd;
+  const finalMonthlyBTC=finalMonthly/bpAtEnd;
   const finalMonthlyGMT=finalMonthly/gp;
   const lockedUSD=gmtLocked*gp;
-  const lockedBTC=lockedUSD/bpEnd;
+  const lockedBTC=lockedUSD/bpAtEnd;
 
   h+=`<div class="ri-summary ri-center">
     <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
@@ -2105,7 +2124,7 @@ function runReinvestProjection(){
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
     thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
     finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain,
-    btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd};
+    btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd,bpAtEnd};
 }
 
 function shareProjection(){
@@ -2157,7 +2176,7 @@ function shareProjection(){
   // Subtitle
   x.fillStyle='rgba(190,155,255,0.92)';
   x.font='22px "Share Tech Mono","General Sans",monospace';
-  const btcSubLabel=d.btcMode==='live'?'':'  \u2022  BTC '+fmtBTCPrice(d.bpStart)+' \u2192 '+fmtBTCPrice(d.bpEnd)+' (linear)';
+  const btcSubLabel=d.btcMode==='live'?'':'  \u2022  BTC '+fmtBTCPrice(d.bpStart)+' \u2192 '+fmtBTCPrice(d.bpAtEnd)+' (linear)';
   x.fillText('Auto-Reinvest Compound Strategy'+btcSubLabel+'  \u2022  powered by gmt-optimizer.com',W/2,108);
 
   // Decorative line
