@@ -1266,7 +1266,9 @@ function calc(i){
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
   const feesGMT=(f.t*(1-nonTokD/100)*bp)/gp; // daily fees in GMT after non-token discounts
-  const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
+  // Only LOCKED GMT counts toward token discount on GoMining — wallet GMT is
+  // unstaked and does not contribute. (Bug fix: previously summed gl+gw.)
+  const cov=feesGMT>0?i.gl/feesGMT:Infinity;
   const eTok=cov<18.9?0:Math.min(20,Math.floor(cov/18.9));
   const tok=i.payG?eTok:0;
   const totD=Math.min(30,tok+nonTokD);
@@ -1853,9 +1855,9 @@ function runReinvestProjection(){
     const g=dbt*curTH,f=fees(curTH,curWTH,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
-    const cv=fc2>0?tg2/fc2:Infinity;
+    // Only locked GMT counts toward token discount (wallet doesn't).
+    const cv=fc2>0?curLocked/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bpToday;
@@ -1871,7 +1873,8 @@ function runReinvestProjection(){
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    return Math.max(0,burn*378-(curLocked+gmtW));
+    // Locked-only: wallet GMT doesn't grant discount until staked.
+    return Math.max(0,burn*378-curLocked);
   }
 
   function refDailyNet(rTH,rLocked){
