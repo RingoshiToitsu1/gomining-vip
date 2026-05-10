@@ -534,7 +534,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
         <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="28.57" step="0.01" min="0"><span class="ob-unit">%</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="25.43" step="0.01" min="0"><span class="ob-unit">%</span></div>
       </div>
       <div class="ob-divider"></div>
       <div class="ob-toggle-row">
@@ -703,7 +703,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="28.57" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inLockAPR" value="25.43" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
         <div class="field">
           <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$11.67 · 2560=$11.90 · 1024=$12.14 · 512=$12.39 · 192=$12.77 · 64=$13.16 · 16=$13.56 · 1=$14.99">?</span></label>
@@ -1465,15 +1465,16 @@ function flipProjCell(el){
   }
 }
 
-function renderPlanner(i,m){
-  const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
+// Shared solver: produces the post-investment state used by both the
+// Capital Planner and the Reinvest Growth Projection. Keeping these in sync
+// means "Monthly Income by BTC (LIVE)" matches the Reinvest's day-1 baseline.
+function solvePlannerAllocation(i, bp, gp, dbt){
+  const usdCap=i.cap;
   const vipBonusEl=document.getElementById('piVipBonus');
   const vipBonus=!!(vipBonusEl&&vipBonusEl.checked);
   const VIP_BONUS_MIN=10000, VIP_BONUS_MULT=1.10;
   const REF_GMT_BONUS=0.05; // 5% of referral's TH spend, paid in GMT to the referrer
 
-  // Solve referral's allocation first so we know their TH spend, then credit
-  // 5% of that as GMT to the user's available pool before the main solver runs.
   function solveReferral(refCap){
     if(refCap<=0)return null;
     const COV=378;
@@ -1498,21 +1499,16 @@ function renderPlanner(i,m){
   const refBonusGMT=ref?(ref.thUSD*REF_GMT_BONUS)/gp:0;
   const refBonusUSD=refBonusGMT*gp;
 
-  const baseGmtAvail=i.gw;                       // user's actual unlocked GMT
-  const gmtAvail=baseGmtAvail+refBonusGMT;       // augment with referral 5% bonus
+  const baseGmtAvail=i.gw;
+  const gmtAvail=baseGmtAvail+refBonusGMT;
   const totalValue=usdCap+(gmtAvail*gp);
-  if(totalValue<=0){
-    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see recommendation.</div>';
-    $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
-  }
+  if(totalValue<=0)return null;
 
   const covNeeded=378; // 20 * 18.9
 
   function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
 
-  // Reserve must be calculated at FINAL TH, but final TH depends on reserve.
-  // Solve iteratively: estimate reserve → solve allocation → recalc reserve at final TH → re-solve.
-  let reserveNeeded=0; // uncapped — what you actually need for 2 days
+  let reserveNeeded=0;
   function calcReserve(th,lockedGMT){
     if(!i.payG)return 0;
     const bw=blendWTH(th-i.th);
@@ -1523,16 +1519,11 @@ function renderPlanner(i,m){
     return Math.min(reserveNeeded,gmtAvail);
   }
 
-  // Solver handles two pools: GMT on hand (lock or sell) + USD (buy GMT or buy TH)
-  // gmtToLock: GMT from pool to lock, usdToGMT: USD spent buying GMT to lock
-  // Remainder: sell leftover GMT + leftover USD → all to TH
   function solveWithReserve(reserve){
     const deployable=Math.max(0,gmtAvail-reserve);
-    // Total lockable budget = deployable GMT + (usdCap converted to GMT)
     const maxLockGMT=deployable+(usdCap/gp);
 
     function solveAlloc(totalGmtLock){
-      // First use deployable GMT, then buy remainder with USD
       const fromPool=Math.min(totalGmtLock,deployable);
       const fromUSD=totalGmtLock-fromPool;
       const usdSpentOnGMT=fromUSD*gp;
@@ -1569,24 +1560,17 @@ function renderPlanner(i,m){
       finalTH:i.th+r.at,finalLocked:i.gl+lock};
   }
 
-  // Pass 1: estimate reserve at current TH
+  // Three-pass convergence: reserve depends on final TH, final TH depends on reserve.
   let gmtReserve=calcReserve(i.th||1,i.gl);
   let sol=solveWithReserve(gmtReserve);
-  // Pass 2: recalculate reserve at final TH, re-solve
   gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
   sol=solveWithReserve(gmtReserve);
-  // Pass 3: one more for convergence
   gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
   sol=solveWithReserve(gmtReserve);
 
-  const gmtDeployable=sol.deployable,gmtLock=sol.lock,gmtSell=sol.sell;
-  const gmtFromPool=sol.fromPool,gmtFromUSD=sol.fromUSD,usdSpentOnGMT=sol.usdSpentOnGMT;
-  let at=sol.addTH,tu=sol.thUSD;
-
-  // Final state
-  const nt=i.th+at;
-  const newLocked=i.gl+gmtLock;
-  const bwth=blendWTH(at);
+  const nt=i.th+sol.addTH;
+  const newLocked=i.gl+sol.lock;
+  const bwth=blendWTH(sol.addTH);
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(nt,newLocked);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
@@ -1597,10 +1581,33 @@ function renderPlanner(i,m){
   const td2=Math.min(30,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
-  const ag=gmtLock; // alias for downstream code
-  const cap=totalValue; // for ROI calcs
 
-  // Compute net/monthly at post-investment state
+  return{
+    sol, ref, refBonusGMT, refBonusUSD, baseGmtAvail, gmtAvail, totalValue,
+    gmtReserve, reserveNeeded,
+    nt, newLocked, bwth, newF, nv, newNonTokD, newDailyBurnGMT,
+    gmtNeededNew, covAfter, ntd, td2, canCover20, gmtShortfall,
+    vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS
+  };
+}
+
+function renderPlanner(i,m){
+  const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
+  const a=solvePlannerAllocation(i,bp,gp,dbt);
+  if(!a){
+    $('allocDisplay').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see recommendation.</div>';
+    $('projDisplay').innerHTML='';$('projTable').innerHTML='';return;
+  }
+  const {sol, ref, refBonusGMT, refBonusUSD, baseGmtAvail, gmtAvail, totalValue,
+         gmtReserve, reserveNeeded, nt, newLocked, bwth, newF, nv,
+         newNonTokD, newDailyBurnGMT, gmtNeededNew, ntd, td2,
+         canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN}=a;
+  const gmtDeployable=sol.deployable, gmtLock=sol.lock, gmtSell=sol.sell;
+  const gmtFromPool=sol.fromPool, gmtFromUSD=sol.fromUSD, usdSpentOnGMT=sol.usdSpentOnGMT;
+  let at=sol.addTH, tu=sol.thUSD;
+  const ag=gmtLock;
+  const cap=totalValue;
+
   const gr=dbt*nt;
   const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*30;
 
@@ -1742,68 +1749,27 @@ function runReinvestProjection(){
     return;
   }
 
-  // ---- Solve referral first so the 5% GMT bonus seeds the user's initial allocation ----
+  // Use the SAME allocation solver as the Capital Planner so the Reinvest's
+  // day-1 baseline matches "Monthly Income by BTC Price (LIVE)" exactly.
+  const a=solvePlannerAllocation(i,bp,gp,dbt);
+  if(!a){
+    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see projection.</div>';
+    return;
+  }
   const REF_GMT_BONUS=0.05;
-  function riRefAlloc(refCap){
-    if(refCap<=0)return null;
-    function rs(gmtUSD){
-      const ag=gmtUSD/gp,thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget(thUSD):0;
-      const fT=fees(at||1,15,bp);
-      const vT=vipOf(at,ag);
-      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
-      const burn=(fT.t*(1-ntd/100)*bp)/gp;
-      return{deficit:Math.max(0,burn*378-ag),at,ag,thUSD};
-    }
-    let bGU=0;
-    if(i.payG&&rs(0).deficit>0){
-      let lo=0,hi=refCap;
-      for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(rs(mid).deficit<=0)hi=mid;else lo=mid;}
-      bGU=hi;
-    }
-    return rs(bGU);
-  }
-  const refInit=riRefAlloc(i.refCap);
-  const refInitBonusGMT=refInit?(refInit.thUSD*REF_GMT_BONUS)/gp:0;
-  const seedWallet=i.gw+refInitBonusGMT;     // bonus lands in the user's GMT wallet up front
+  const refInit=a.ref;
+  const refInitBonusGMT=a.refBonusGMT;
 
-  // ---- Run the same iterative allocation as the Capital Planner ----
-  let riGmtReserve=0;
-  if(i.payG&&seedWallet>0){
-    const riReserveF=fees(i.th||1,i.wth||15,bp);
-    const riReserveDisc=Math.min(30,(vipOf(i.th,i.gl).d)+(i.click?3:0)+(i.mm||0));
-    const riDailyFeeGMT=(riReserveF.t*(1-riReserveDisc/100)*bp)/gp;
-    riGmtReserve=Math.min(riDailyFeeGMT*2,seedWallet);
-  }
-  const existGMT=i.gl+Math.max(0,seedWallet-riGmtReserve);
-  function solveSplit(gmtUSD){
-    const agT=gmtUSD/gp,thUSD=cap-gmtUSD;
-    const atT=thUSD>0?thForBudget(thUSD):0,ntT=i.th+atT;
-    const bw=(i.th>0||atT>0)?(i.th*i.wth+atT*15)/(i.th+atT):i.wth;
-    const fT=fees(ntT,bw,bp),vT=vipOf(ntT,i.gl+agT);
-    const nd=Math.min(30,vT.d+(i.click?3:0)+i.mm+i.od);
-    const burn=(fT.t*(1-nd/100)*bp)/gp;
-    return{deficit:Math.max(0,burn*378-(existGMT+agT)),at:atT,ag:agT,nt:ntT};
-  }
-  let bGU=0;
-  if(i.payG&&solveSplit(0).deficit>0){
-    let lo=0,hi=cap;
-    for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(solveSplit(mid).deficit<=0)hi=mid;else lo=mid;}
-    bGU=hi;
-  }
-  const bR=solveSplit(bGU);
-  const best={tu:cap-bGU,ag:bR.ag,at:bR.at,nt:bR.nt};
-
-  // Post-investment starting values
-  const postTH=best.nt;
-  const postLocked=i.gl+best.ag;
-  const postWallet=seedWallet;               // includes initial referral 5% bonus
+  // Post-investment starting values — identical to Capital Planner's post-state
+  const postTH=a.nt;
+  const postLocked=a.newLocked;
+  const postWallet=a.gmtReserve;             // wallet GMT remaining after planner's allocation
+  const postWTH=a.bwth;
+  const best={tu:a.sol.thUSD,ag:a.sol.lock,at:a.sol.addTH,nt:a.nt};
   const apr=i.apr||0;
 
   let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
   const startTH=th;
-  // Track blended W/TH: initial purchase already blended, new reinvest TH is 15W
-  const postWTH=(i.th>0||best.at>0)?(i.th*i.wth+best.at*15)/(i.th+best.at):i.wth;
   let curWTH=postWTH;
   const daily=[];
 
@@ -1826,9 +1792,10 @@ function runReinvestProjection(){
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
-    const stakingUSD=(curLocked*(apr/100)/365)*gp;
-    // net = total daily VALUE (mining + staking + amb) — used for display
-    // reinvest = USD available to reinvest (mining + amb only — staking already compounds via weekly gmtLocked accrual)
+    // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
+    // startSS*30 lines up with the BTC-projection card. Daily here is cosmetic —
+    // the real accrual happens weekly via the d%7 block.
+    const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
@@ -1849,8 +1816,7 @@ function runReinvestProjection(){
     const td=i.payG?Math.min(20,Math.floor(cv/18.9)):0;
     const fd=Math.min(30,td+ntd);
     const miningUSD=(g-f.t*(1-fd/100))*bp;
-    const stakingUSD=(rLocked*(apr/100)/365)*gp;
-    // net = total (display); reinvest = mining only for referral (no amb on their side, staking compounds via weekly accrual)
+    const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
   }
   function refDeficit(rTH,rLocked){
@@ -2055,7 +2021,7 @@ function runReinvestProjection(){
   $('reinvestResult').innerHTML=h;
 
   // Store data for share image
-  window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,
+  window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
     thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
     finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain};
 }
@@ -2159,14 +2125,14 @@ function shareProjection(){
     {label:'HASHRATE',val:fN(d.startTH,1)+' TH',color:'#22d3ee'},
     {label:'DAILY REWARD',val:fU(d.startSS),color:'#22d3ee'},
     {label:'MONTHLY INCOME',val:fU(d.startSS*30),color:'#22d3ee'},
-    {label:'LOCKED GMT',val:fN(d.postLocked||0,0),color:'#22d3ee'},
+    {label:'GMT Value',val:fU((d.postLocked||0)*d.gp),color:'#22d3ee'},
   ]);
 
   drawCard(rightX,cardY,'AFTER '+d.days+' DAYS','rgba(16,185,129,0.8)','#34d399',[
     {label:'HASHRATE',val:fN(d.th,1)+' TH',color:'#34d399'},
     {label:'DAILY REWARD',val:fU(d.finalSS),color:'#34d399'},
     {label:'MONTHLY INCOME',val:fU(d.finalSS*30),color:'#34d399'},
-    {label:'LOCKED GMT',val:fN(d.gmtLocked,0),color:'#34d399'},
+    {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp),color:'#34d399'},
   ]);
 
   // Arrow between cards
@@ -2353,7 +2319,7 @@ function obNewUser(){
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
   const wth=document.getElementById('obWTH');if(wth)wth.value='15';
   const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
-  const apr=document.getElementById('obLockAPR');if(apr)apr.value='28.57';
+  const apr=document.getElementById('obLockAPR');if(apr)apr.value='25.43';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
   // Sync zeros to main inputs
