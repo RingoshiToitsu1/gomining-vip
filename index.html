@@ -1201,11 +1201,22 @@ function inp(){return{
 function $(id){return document.getElementById(id)}
 
 const SETUP_KEY='gm_saved_setup';
+// Mining mode is a DAO-governance rate that applies across every saved setup,
+// so it persists in its own localStorage key — not bundled with per-setup data.
+const MINING_MODE_KEY='gmtopt_mining_mode_v1';
+function saveMiningMode(){try{localStorage.setItem(MINING_MODE_KEY,$('inMiningMode').value)}catch(e){}}
+function loadMiningMode(){
+  try{
+    const v=localStorage.getItem(MINING_MODE_KEY);
+    if(v!==null&&$('inMiningMode'))$('inMiningMode').value=v;
+  }catch(e){}
+}
+
 function saveSetup(){
   const data={
     inTH:$('inTH').value, inWTH:$('inWTH').value,
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
-    inMiningMode:$('inMiningMode').value, inCapital:$('inCapital').value,
+    inCapital:$('inCapital').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
@@ -1218,6 +1229,8 @@ function saveSetup(){
   setTimeout(()=>el.style.opacity='0',2000);
 }
 function loadSetup(){
+  // Always restore the global mining mode first so it survives any per-setup load.
+  loadMiningMode();
   try{
     const raw=localStorage.getItem(SETUP_KEY);
     if(!raw)return false;
@@ -1226,7 +1239,12 @@ function loadSetup(){
     if(d.inWTH)$('inWTH').value=d.inWTH;
     if(d.inGMTLocked)$('inGMTLocked').value=d.inGMTLocked;
     if(d.inGMTWallet)$('inGMTWallet').value=d.inGMTWallet;
-    if(d.inMiningMode)$('inMiningMode').value=d.inMiningMode;
+    // One-time migration: if the global key is empty but a legacy per-setup
+    // value exists, promote it so previously-saved values aren't lost.
+    if(d.inMiningMode&&localStorage.getItem(MINING_MODE_KEY)===null){
+      $('inMiningMode').value=d.inMiningMode;
+      saveMiningMode();
+    }
     if(d.inCapital)$('inCapital').value=d.inCapital;
     if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
     if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
@@ -1247,7 +1265,9 @@ function clearSetup(){
 }
 // Auto-save: silently persist profile whenever user changes an input
 function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
-['inTH','inWTH','inGMTLocked','inGMTWallet','inMiningMode','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+// Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
+{const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 {const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
