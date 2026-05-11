@@ -662,9 +662,13 @@ input[type=number]{-moz-appearance:textfield}
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Enter your current farm parameters. All calculations update in real-time.</div>
-    <div style="display:flex;gap:.5rem;margin:.5rem 0 0 0;padding:0 1rem">
-      <button onclick="saveSetup()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600">Save Setup</button>
-      <button onclick="clearSetup()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer">Clear Saved</button>
+    <div style="display:flex;gap:.5rem;margin:.5rem 0 0 0;padding:0 1rem;flex-wrap:wrap;align-items:center">
+      <select id="profileSelect" onchange="onProfileChange()" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);min-width:170px;outline:none;cursor:pointer">
+        <option value="">— No profile —</option>
+      </select>
+      <button onclick="saveAsNewProfile()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600">Save as…</button>
+      <button onclick="clearInputs()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
+      <button id="btnDeleteProfile" onclick="deleteActiveProfile()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Delete the selected profile">Delete</button>
       <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
     </div>
     <div class="section-body">
@@ -1200,7 +1204,8 @@ function inp(){return{
 }}
 function $(id){return document.getElementById(id)}
 
-const SETUP_KEY='gm_saved_setup';
+const SETUP_KEY='gm_saved_setup';        // legacy single-slot, kept only for one-shot migration
+const PROFILES_KEY='gm_profiles_v1';     // {profiles:[{id,name,data}], activeId}
 // Mining mode is a DAO-governance rate that applies across every saved setup,
 // so it persists in its own localStorage key — not bundled with per-setup data.
 const MINING_MODE_KEY='gmtopt_mining_mode_v1';
@@ -1212,8 +1217,17 @@ function loadMiningMode(){
   }catch(e){}
 }
 
-function saveSetup(){
-  const data={
+function loadProfilesState(){
+  try{
+    const raw=localStorage.getItem(PROFILES_KEY);
+    if(raw){const s=JSON.parse(raw);if(s&&Array.isArray(s.profiles))return s;}
+  }catch(e){}
+  return {profiles:[],activeId:null};
+}
+function saveProfilesState(s){try{localStorage.setItem(PROFILES_KEY,JSON.stringify(s))}catch(e){}}
+
+function readInputs(){
+  return {
     inTH:$('inTH').value, inWTH:$('inWTH').value,
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
@@ -1223,48 +1237,143 @@ function saveSetup(){
     inCurrency:$('inCurrency').value,
     piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false
   };
-  try{localStorage.setItem(SETUP_KEY,JSON.stringify(data))}catch(e){}
-  const el=$('saveStatus');
-  el.textContent='Saved!';el.style.opacity='1';
-  setTimeout(()=>el.style.opacity='0',2000);
 }
-function loadSetup(){
-  // Always restore the global mining mode first so it survives any per-setup load.
-  loadMiningMode();
+function applyInputs(d){
+  if(d.inTH!=null)$('inTH').value=d.inTH;
+  if(d.inWTH!=null)$('inWTH').value=d.inWTH;
+  if(d.inGMTLocked!=null)$('inGMTLocked').value=d.inGMTLocked;
+  if(d.inGMTWallet!=null)$('inGMTWallet').value=d.inGMTWallet;
+  if(d.inCapital!=null)$('inCapital').value=d.inCapital;
+  if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
+  if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
+  if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
+  if(d.inReferredTH!=null)$('inReferredTH').value=d.inReferredTH;
+  if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
+  if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=!!d.piVipBonus;
+  if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
+  autoFillCPT('inTH','inCostPerTH');
+}
+
+function migrateLegacySetup(){
+  const state=loadProfilesState();
+  if(state.profiles.length>0)return state;
   try{
     const raw=localStorage.getItem(SETUP_KEY);
-    if(!raw)return false;
+    if(!raw)return state;
     const d=JSON.parse(raw);
-    if(d.inTH)$('inTH').value=d.inTH;
-    if(d.inWTH)$('inWTH').value=d.inWTH;
-    if(d.inGMTLocked)$('inGMTLocked').value=d.inGMTLocked;
-    if(d.inGMTWallet)$('inGMTWallet').value=d.inGMTWallet;
-    // One-time migration: if the global key is empty but a legacy per-setup
-    // value exists, promote it so previously-saved values aren't lost.
     if(d.inMiningMode&&localStorage.getItem(MINING_MODE_KEY)===null){
-      $('inMiningMode').value=d.inMiningMode;
+      if($('inMiningMode'))$('inMiningMode').value=d.inMiningMode;
       saveMiningMode();
     }
-    if(d.inCapital)$('inCapital').value=d.inCapital;
-    if(d.inClickStreak!==undefined)$('inClickStreak').checked=d.inClickStreak;
-    if(d.inPayGMT!==undefined)$('inPayGMT').checked=d.inPayGMT;
-    if(d.inAmbassador!==undefined){$('inAmbassador').checked=d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
-    if(d.inReferredTH)$('inReferredTH').value=d.inReferredTH;
-    if(d.inRefCapital)$('inRefCapital').value=d.inRefCapital;
-    if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=d.piVipBonus;
-    if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
-    autoFillCPT('inTH','inCostPerTH');
-    return true;
-  }catch(e){return false}
+    const id='p_'+Date.now().toString(36);
+    state.profiles.push({id,name:'My Setup',data:d});
+    state.activeId=id;
+    saveProfilesState(state);
+  }catch(e){}
+  return state;
 }
-function clearSetup(){
-  try{localStorage.removeItem(SETUP_KEY)}catch(e){}
-  const el=$('saveStatus');
-  el.textContent='Cleared';el.style.opacity='1';
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderProfileSelect(){
+  const sel=$('profileSelect');if(!sel)return;
+  const state=loadProfilesState();
+  const cur=state.activeId||'';
+  sel.innerHTML='<option value="">— No profile —</option>'+
+    state.profiles.map(p=>`<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(p.name)}</option>`).join('');
+  const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
+}
+
+function flashStatus(msg){
+  const el=$('saveStatus');if(!el)return;
+  el.textContent=msg;el.style.opacity='1';
   setTimeout(()=>el.style.opacity='0',2000);
 }
-// Auto-save: silently persist profile whenever user changes an input
-function autoSave(){try{saveSetup();$('saveStatus').style.opacity='0'}catch(e){}}
+
+function onProfileChange(){
+  const state=loadProfilesState();
+  const id=$('profileSelect').value;
+  state.activeId=id||null;
+  saveProfilesState(state);
+  if(id){
+    const p=state.profiles.find(x=>x.id===id);
+    if(p){applyInputs(p.data);if(S.loaded)recalc();}
+    flashStatus('Loaded "'+(p?p.name:'')+'"');
+  }
+  renderProfileSelect();
+}
+
+function saveAsNewProfile(){
+  const name=(prompt('Name this setup (e.g. "Mine", "Client - John"):','')||'').trim();
+  if(!name)return;
+  const state=loadProfilesState();
+  if(state.profiles.some(p=>p.name===name)){
+    if(!confirm('A profile named "'+name+'" already exists. Overwrite it?'))return;
+    const existing=state.profiles.find(p=>p.name===name);
+    existing.data=readInputs();
+    state.activeId=existing.id;
+  }else{
+    const id='p_'+Date.now().toString(36);
+    state.profiles.push({id,name,data:readInputs()});
+    state.activeId=id;
+  }
+  saveProfilesState(state);
+  renderProfileSelect();
+  flashStatus('Saved as "'+name+'"');
+}
+
+function clearInputs(){
+  // Wipes the form for a fresh demo. Saved profiles are untouched; auto-save is paused
+  // until a profile is loaded or "Save as…" is used.
+  applyInputs({
+    inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
+    inCapital:'5000',inClickStreak:false,inPayGMT:true,
+    inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
+    piVipBonus:false
+  });
+  const state=loadProfilesState();
+  state.activeId=null;
+  saveProfilesState(state);
+  renderProfileSelect();
+  if(S.loaded)recalc();
+  flashStatus('Inputs cleared');
+}
+
+function deleteActiveProfile(){
+  const state=loadProfilesState();
+  if(!state.activeId)return;
+  const p=state.profiles.find(x=>x.id===state.activeId);
+  if(!p)return;
+  if(!confirm('Delete profile "'+p.name+'"? (Inputs stay on screen.)'))return;
+  state.profiles=state.profiles.filter(x=>x.id!==state.activeId);
+  state.activeId=null;
+  saveProfilesState(state);
+  renderProfileSelect();
+  flashStatus('Deleted "'+p.name+'"');
+}
+
+function loadSetup(){
+  loadMiningMode();
+  const state=migrateLegacySetup();
+  renderProfileSelect();
+  if(state.activeId){
+    const p=state.profiles.find(x=>x.id===state.activeId);
+    if(p){applyInputs(p.data);return true;}
+  }
+  return false;
+}
+
+// Auto-save: silently persist into the active profile only.
+// Demo mode (no active profile) intentionally does not write anywhere.
+function autoSave(){
+  try{
+    const state=loadProfilesState();
+    if(!state.activeId)return;
+    const p=state.profiles.find(x=>x.id===state.activeId);
+    if(!p)return;
+    p.data=readInputs();
+    saveProfilesState(state);
+  }catch(e){}
+}
 ['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
