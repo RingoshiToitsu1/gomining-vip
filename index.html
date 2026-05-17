@@ -962,7 +962,7 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to gross (matches GoMining's "PR" already being post-conversion)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
-const SNAPSHOT_HOUR_ET= 3;       // hour of day (Eastern Time, DST-aware) used for daily price/sats snapshot
+const SNAPSHOT_HOUR_ET= 0;       // hour of day (Eastern Time, DST-aware) used for daily price/sats snapshot
 
 // ---- VIP TIERS ----
 const TIERS=[
@@ -1231,7 +1231,8 @@ function updateHeader(){
   $('satsVal').textContent=S.satsPerTHDay?Math.floor(S.satsPerTHDay):'--';
   const snapLbl=S.snapAt?new Date(S.snapAt).toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/New_York'}):'';
   const bs=$('btcSnapVal'),gs=$('gmtSnapVal'),ss=$('satsSnapVal');
-  if(bs)bs.textContent=S.btcSnap?`snap ${fU(S.btcSnap)} · ${snapLbl} ${SNAPSHOT_HOUR_ET}am ET`:'';
+  const snapHrLbl=SNAPSHOT_HOUR_ET===0?'midnight ET':SNAPSHOT_HOUR_ET<12?`${SNAPSHOT_HOUR_ET}am ET`:SNAPSHOT_HOUR_ET===12?'noon ET':`${SNAPSHOT_HOUR_ET-12}pm ET`;
+  if(bs)bs.textContent=S.btcSnap?`snap ${fU(S.btcSnap)} · ${snapLbl} ${snapHrLbl}`:'';
   if(gs)gs.textContent=S.gmtSnap?`snap ${fU(S.gmtSnap)}`:'';
   if(ss)ss.textContent=S.satsSnap?`snap ${Math.floor(S.satsSnap)}`:'';
   const bar=$('liveBar');
