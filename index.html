@@ -534,7 +534,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-field">
         <label>VeGoMining Staking APR</label>
         <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="25.43" step="0.01" min="0"><span class="ob-unit">%</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="28.76" step="0.01" min="0"><span class="ob-unit">%</span></div>
       </div>
       <div class="ob-divider"></div>
       <div class="ob-toggle-row">
@@ -707,7 +707,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="25.43" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inLockAPR" value="28.76" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
         <div class="field">
           <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$11.67 · 2560=$11.90 · 1024=$12.14 · 512=$12.39 · 192=$12.77 · 64=$13.16 · 16=$13.56 · 1=$14.99">?</span></label>
@@ -755,25 +755,13 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
-  <!-- DAILY P&L -->
-  <div class="section reveal" id="secPnl">
-    <div class="section-header" onclick="toggleSection('secPnl')">
-      <div class="section-title"><img src="pnl.png" style="height:20px;width:20px;border-radius:6px"> Daily Operation Breakdown</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-desc">Revenue and costs calculated from live Bitcoin network data, updated every 60 seconds.</div>
-    <div class="section-body">
-      <div id="dailyPnl"></div>
-    </div>
-  </div>
-
-  <!-- GMT COVERAGE -->
+  <!-- DAILY OPERATION & REWARDS -->
   <div class="section reveal" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
-      <div class="section-title"><img src="gmt36.png" style="height:20px;width:20px;border-radius:6px"> GMT Rewards</div>
+      <div class="section-title"><img src="pnl.png" style="height:20px;width:20px;border-radius:6px"> Daily Operation &amp; Rewards</div>
       <div class="section-toggle">&#9662;</div>
     </div>
-    <div class="section-desc">Your daily mining rewards in GMT, staking income, and whether your farm sustains itself.</div>
+    <div class="section-desc">Live mining revenue, fees, and your monthly GMT mining + staking income.</div>
     <div class="section-body">
       <div id="gmtCoverage"></div>
     </div>
@@ -1472,27 +1460,18 @@ function recalc(){
   dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
   $('discountDisplay').innerHTML=dh;
 
-  // P&L
-  let pl='';
-  pl+=row('Sats/TH/day',`${(m.dbt*1e8).toFixed(1)}<span class="sub">Pre-platform cut, from live network data</span>`,'cyan');
-  pl+=row('Daily gross',fU(m.gross*m.bp));
-  pl+=`<div class="divider"></div>`;
-  pl+=row('Total fees (electricity + service)',fU((m.f.e+m.f.s)*m.bp),'orange');
-  pl+=row('Fees (pre-discount)',fU(m.f.t*m.bp),'orange');
-  pl+=row('Total fees (after discount)',fU(m.dfees*m.bp));
-  pl+=`<div class="divider"></div>`;
-  pl+=row('Daily net',fU(m.net*m.bp),m.net>=0?'green':'red');
-  pl+=row('Monthly net (without staking)',fU(m.net*m.bp*30),m.net>=0?'green':'red');
-  $('dailyPnl').innerHTML=pl;
-
-  // GMT
+  // Combined: Daily Operation & Rewards
   let g='';
+  g+=row('Sats/TH/day',`${(m.dbt*1e8).toFixed(1)}<span class="sub">Pre-platform cut, from live network data</span>`,'cyan');
+  g+=row('Daily gross',fU(m.gross*m.bp));
   g+=row('Token discount',fP(m.eTok),'cyan');
   g+=row('Total discount stack',fP(m.totD),'cyan');
+  g+=row('Fees pre-discount (electricity + service)',fU(m.f.t*m.bp),'orange');
+  g+=row('Total fees (after discount)',fU(m.dfees*m.bp));
+  g+=`<div class="divider"></div>`;
   const tg=i.gl+i.gw;
   g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
 
-  const dailyNetGMT=(m.net*m.bp)/m.gp;
   const stakingMonthly=m.wkGMT*m.gp*4.33;
   const miningMonthly=m.net*m.bp*30;
   const isAmb=$('inAmbassador').checked;
