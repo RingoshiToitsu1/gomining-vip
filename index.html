@@ -1242,11 +1242,27 @@ const PROFILES_KEY='gm_profiles_v1';     // {profiles:[{id,name,data}], activeId
 // Mining mode is a DAO-governance rate that applies across every saved setup,
 // so it persists in its own localStorage key — not bundled with per-setup data.
 const MINING_MODE_KEY='gmtopt_mining_mode_v1';
-function saveMiningMode(){try{localStorage.setItem(MINING_MODE_KEY,$('inMiningMode').value)}catch(e){}}
+// Keep this in sync with the HTML default on the inMiningMode input. When the DAO
+// bumps the rate, update both and saved values that were tracking the old default
+// will auto-pick up the new one on next load.
+const MINING_MODE_DEFAULT=1.13;
+function saveMiningMode(){
+  try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
+}
 function loadMiningMode(){
   try{
-    const v=localStorage.getItem(MINING_MODE_KEY);
-    if(v!==null&&$('inMiningMode'))$('inMiningMode').value=v;
+    const raw=localStorage.getItem(MINING_MODE_KEY);
+    if(raw===null)return;
+    let parsed=null;try{parsed=JSON.parse(raw)}catch(e){}
+    if(parsed&&typeof parsed==='object'&&'v' in parsed){
+      // If the cached value was the default at save time AND the default has changed,
+      // the user wasn't customizing — honor the new default.
+      if(Number(parsed.base)!==MINING_MODE_DEFAULT&&Number(parsed.v)===Number(parsed.base))return;
+      if($('inMiningMode'))$('inMiningMode').value=parsed.v;
+      return;
+    }
+    // Legacy bare-value format from before this migration: abandon and let the
+    // current HTML default (MINING_MODE_DEFAULT) win.
   }catch(e){}
 }
 
