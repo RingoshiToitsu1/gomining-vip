@@ -1462,12 +1462,7 @@ function recalc(){
 
   // Combined: Daily Operation & Rewards
   let g='';
-  g+=row('Sats/TH/day',`${(m.dbt*1e8).toFixed(1)}<span class="sub">Pre-platform cut, from live network data</span>`,'cyan');
-  g+=row('Daily gross',fU(m.gross*m.bp));
   g+=row('Token discount',fP(m.eTok),'cyan');
-  g+=row('Total discount stack',fP(m.totD),'cyan');
-  g+=row('Fees pre-discount (electricity + service)',fU(m.f.t*m.bp),'orange');
-  g+=row('Total fees (after discount)',fU(m.dfees*m.bp));
   g+=`<div class="divider"></div>`;
   const tg=i.gl+i.gw;
   g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
