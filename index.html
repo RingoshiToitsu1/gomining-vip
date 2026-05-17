@@ -657,32 +657,23 @@ input[type=number]{-moz-appearance:textfield}
 
   <!-- INPUTS -->
   <div class="section reveal" id="secInputs">
-    <div class="section-header" onclick="toggleSection('secInputs')">
-      <div class="section-title"><img src="miningsetup.png" style="height:20px;width:20px;border-radius:6px"> Your Mining Setup</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-desc">Enter your current farm parameters. All calculations update in real-time.</div>
-    <div style="display:flex;gap:.5rem;margin:.5rem 0 0 0;padding:0 1rem;flex-wrap:wrap;align-items:center">
+    <div style="display:flex;gap:.5rem;padding:.8rem 1rem;flex-wrap:wrap;align-items:center">
       <select id="profileSelect" onchange="onProfileChange()" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);min-width:170px;outline:none;cursor:pointer">
         <option value="">— No profile —</option>
       </select>
       <button onclick="saveAsNewProfile()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600">Save as…</button>
-      <button onclick="clearInputs()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       <button id="btnDeleteProfile" onclick="deleteActiveProfile()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Delete the selected profile">Delete</button>
+      <button id="btnEditSetup" onclick="toggleEditSetup()" style="background:transparent;color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600" title="Edit your farm parameters">Edit setup</button>
+      <select id="inCurrency" onchange="setCurrency(this.value)" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);outline:none;cursor:pointer" title="Display Currency">
+        <option value="USD">USD ($)</option>
+        <option value="GBP">GBP (&pound;)</option>
+        <option value="EUR">EUR (&euro;)</option>
+      </select>
       <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
     </div>
-    <div class="section-body">
-      <div style="margin-bottom:.8rem">
-        <div class="field">
-          <label>Display Currency</label>
-          <div class="field-input">
-            <select id="inCurrency" onchange="setCurrency(this.value)" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
-              <option value="USD">USD ($)</option>
-              <option value="GBP">GBP (&pound;)</option>
-            <option value="EUR">EUR (&euro;)</option>
-            </select>
-          </div>
-        </div>
+    <div class="section-body" id="setupEditBody" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:.4rem">
+        <button onclick="clearInputs()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
       <div class="input-grid">
         <div class="field">
@@ -1307,6 +1298,15 @@ function saveAsNewProfile(){
   saveProfilesState(state);
   renderProfileSelect();
   flashStatus('Saved as "'+name+'"');
+}
+
+function toggleEditSetup(){
+  const body=$('setupEditBody');
+  const btn=$('btnEditSetup');
+  if(!body||!btn)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'':'none';
+  btn.textContent=open?'Done':'Edit setup';
 }
 
 function clearInputs(){
