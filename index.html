@@ -613,7 +613,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="live-bar" id="liveBar">
       <div class="live-chip" title="Live BTC price (top) and yesterday's 4am ET snapshot used in calc (bottom)"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span id="btcSnapVal" style="font-size:.6rem;color:var(--text4);margin-left:5px"></span></div>
       <div class="live-chip" title="Live GMT price (top) and yesterday's 4am ET snapshot used in calc (bottom)"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span id="gmtSnapVal" style="font-size:.6rem;color:var(--text4);margin-left:5px"></span></div>
-      <div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip" title="Live sats/TH/day (top) and yesterday's 4am ET snapshot used in calc (bottom)"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span><span id="satsSnapVal" style="font-size:.6rem;color:var(--text4);margin-left:5px"></span></div>
       <div class="live-chip"><span class="live-dot" id="liveDot"></span><span class="val" id="refreshTimer" style="min-width:24px;text-align:center">--</span></div>
     </div>
   </div>
@@ -954,7 +954,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, btcSnap:0, gmtSnap:0, snapAt:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
+const S = { btcPrice:0, gmtPrice:0, btcSnap:0, gmtSnap:0, snapAt:0, dbtSnap:0, satsSnap:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
@@ -1141,6 +1141,21 @@ async function fetchGMTSnapshot(tsMs){
   return 0;
 }
 
+async function fetchDbtSnapshot(tsMs,diff){
+  // Combine yesterday-4am-ET's avg tx fees with current difficulty (changes
+  // every ~2 weeks, stable day-to-day) to produce yesterday's effective dbt.
+  if(!diff||diff<=0)return 0;
+  try{const r=await fetchTO('https://mempool.space/api/v1/mining/blocks/fees/3d');
+    if(Array.isArray(r)&&r.length>0){
+      let best=r[0],bd=Infinity;
+      for(const e of r){const eMs=(e.timestamp||0)*1000;const d=Math.abs(eMs-tsMs);if(d<bd){bd=d;best=e;}}
+      const avgFeesBTC=best&&best.avgFees>0?best.avgFees/1e8:0;
+      if(avgFeesBTC>0)return(1e12*86400*(3.125+avgFeesBTC))/(diff*2**32);
+    }
+  }catch(e){}
+  return 0;
+}
+
 async function fetchData(){
   let ok=true;
   const cached=loadPriceCache();
@@ -1182,6 +1197,12 @@ async function fetchData(){
   }
   S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
 
+  // dbt snapshot: yesterday's effective sats/TH/day using historical avg tx fees
+  // and current difficulty (which is stable between retargets).
+  const dbtSnap=await fetchDbtSnapshot(snapMs,S.difficulty);
+  S.dbtSnap=dbtSnap>0?dbtSnap:0;
+  S.satsSnap=S.dbtSnap*1e8;
+
   // ---- FX (GBP, EUR) ----
   try{
     const fx=await fetchTO('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR');
@@ -1207,9 +1228,10 @@ function updateHeader(){
   $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
   $('satsVal').textContent=S.satsPerTHDay?S.satsPerTHDay.toFixed(1):'--';
   const snapLbl=S.snapAt?new Date(S.snapAt).toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/New_York'}):'';
-  const bs=$('btcSnapVal'),gs=$('gmtSnapVal');
+  const bs=$('btcSnapVal'),gs=$('gmtSnapVal'),ss=$('satsSnapVal');
   if(bs)bs.textContent=S.btcSnap?`snap ${fU(S.btcSnap)} · ${snapLbl} 4am ET`:'';
   if(gs)gs.textContent=S.gmtSnap?`snap ${fU(S.gmtSnap)}`:'';
+  if(ss)ss.textContent=S.satsSnap?`snap ${S.satsSnap.toFixed(1)}`:'';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
   else{
@@ -1444,7 +1466,7 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 // electricity_per_TH = (0.05 * 24 * W/TH) / BTC_price / 1000
 // service_per_TH = 0.0089 / BTC_price
 function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
-function dailyBTCperTH(){return(1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32)}
+function dailyBTCperTH(){return S.dbtSnap||((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))}
 
 function calc(i){
   const bp=S.btcSnap||S.btcPrice,gp=S.gmtSnap||S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
