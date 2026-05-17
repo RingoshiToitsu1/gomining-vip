@@ -959,7 +959,7 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
-const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to gross (matches GoMining's "PR" already being post-conversion)
+const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 const SNAPSHOT_HOUR_ET= 0;       // hour of day (Eastern Time, DST-aware) used for daily price/sats snapshot
@@ -1490,7 +1490,7 @@ function calc(i){
   const eTok=cov<18?0:Math.min(20,Math.floor(cov/18));
   const tok=i.payG?eTok:0;
   const totD=Math.min(30,tok+nonTokD);
-  const dfees=f.t*(1-totD/100),net=gross*(1-CONVERSION_FEE)-dfees,save=f.t*(totD/100);
+  const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
   return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp}
 }
@@ -1635,7 +1635,7 @@ function updateProjCell(){
   const isLive=bp===p.cur;
   const f=fees(p.th,p.wth,bp);
   const dfees=f.t*(1-p.totD/100);
-  const netBTC=p.grossBTC*(1-CONVERSION_FEE)-dfees;
+  const netBTC=(p.grossBTC-dfees)*(1-CONVERSION_FEE);
   const miningUSD=Math.max(0,netBTC*bp);
   const stakingDailyUSD=(p.moStakingUSD||0)/30;
   const ambDailyUSD=(p.moAmbUSD||0)/30;
@@ -2062,7 +2062,7 @@ function runReinvestProjection(){
     const cv=fc2>0?tg2/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g*(1-CONVERSION_FEE)-f.t*(1-fd/100))*bpToday;
+    const miningUSD=(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE);
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
     // startSS*30 lines up with the BTC-projection card. Daily here is cosmetic —
     // the real accrual happens weekly via the d%7 block.
@@ -2086,7 +2086,7 @@ function runReinvestProjection(){
     const cv=fc>0?rLocked/fc:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g*(1-CONVERSION_FEE)-f.t*(1-fd/100))*bpToday;
+    const miningUSD=(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE);
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
   }
