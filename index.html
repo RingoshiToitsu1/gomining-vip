@@ -1226,12 +1226,12 @@ function updateHeader(){
   const$=id=>document.getElementById(id);
   $('btcVal').textContent=S.btcPrice?fU(S.btcPrice):'--';
   $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
-  $('satsVal').textContent=S.satsPerTHDay?S.satsPerTHDay.toFixed(1):'--';
+  $('satsVal').textContent=S.satsPerTHDay?Math.floor(S.satsPerTHDay):'--';
   const snapLbl=S.snapAt?new Date(S.snapAt).toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/New_York'}):'';
   const bs=$('btcSnapVal'),gs=$('gmtSnapVal'),ss=$('satsSnapVal');
   if(bs)bs.textContent=S.btcSnap?`snap ${fU(S.btcSnap)} · ${snapLbl} 4am ET`:'';
   if(gs)gs.textContent=S.gmtSnap?`snap ${fU(S.gmtSnap)}`:'';
-  if(ss)ss.textContent=S.satsSnap?`snap ${S.satsSnap.toFixed(1)}`:'';
+  if(ss)ss.textContent=S.satsSnap?`snap ${Math.floor(S.satsSnap)}`:'';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
   else{
@@ -1466,7 +1466,12 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 // electricity_per_TH = (0.05 * 24 * W/TH) / BTC_price / 1000
 // service_per_TH = 0.0089 / BTC_price
 function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
-function dailyBTCperTH(){return S.dbtSnap||((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))}
+function dailyBTCperTH(){
+  // Floor to integer sats/TH/day — GoMining appears to use whole sats in their
+  // internal reward calc, so matching that closes the residual ~1-2% gap.
+  const raw=S.dbtSnap||((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32));
+  return Math.floor(raw*1e8)/1e8;
+}
 
 function calc(i){
   const bp=S.btcSnap||S.btcPrice,gp=S.gmtSnap||S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
