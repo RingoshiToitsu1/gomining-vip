@@ -611,8 +611,8 @@ input[type=number]{-moz-appearance:textfield}
   <div class="header-inner">
     <div class="logo"><img src="gomining-logo.png" alt="" style="height:24px;vertical-align:middle;margin-right:6px">GMT Optimizer <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button></div>
     <div class="live-bar" id="liveBar">
-      <div class="live-chip"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
-      <div class="live-chip"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip" title="Live BTC price (top) and yesterday's 4am ET snapshot used in calc (bottom)"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span id="btcSnapVal" style="font-size:.6rem;color:var(--text4);margin-left:5px"></span></div>
+      <div class="live-chip" title="Live GMT price (top) and yesterday's 4am ET snapshot used in calc (bottom)"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span id="gmtSnapVal" style="font-size:.6rem;color:var(--text4);margin-left:5px"></span></div>
       <div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip"><span class="live-dot" id="liveDot"></span><span class="val" id="refreshTimer" style="min-width:24px;text-align:center">--</span></div>
     </div>
@@ -954,7 +954,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
+const S = { btcPrice:0, gmtPrice:0, btcSnap:0, gmtSnap:0, snapAt:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 
 // ---- VIP TIERS ----
@@ -1098,6 +1098,43 @@ async function fetchGMTPrice(){
   return 0;
 }
 
+// Yesterday's 4am Eastern Time (DST-aware) as a UTC millisecond timestamp.
+// Probes ET hour for noon UTC on the target date to derive offset (EDT=-4, EST=-5).
+function yesterdayAt4amETMs(){
+  const fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'});
+  const [y,m,d]=fmt.format(new Date()).split('-').map(Number);
+  // Yesterday's date in ET
+  const yest=new Date(Date.UTC(y,m-1,d)); yest.setUTCDate(yest.getUTCDate()-1);
+  const yY=yest.getUTCFullYear(),yM=yest.getUTCMonth(),yD=yest.getUTCDate();
+  const probe=new Date(Date.UTC(yY,yM,yD,12,0,0));
+  const etHour=parseInt(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',hour12:false}).format(probe),10);
+  const offsetHours=etHour-12; // -4 (EDT) or -5 (EST)
+  return Date.UTC(yY,yM,yD,4-offsetHours,0,0);
+}
+
+async function fetchBTCSnapshot(tsMs){
+  // Binance 1h kline open at the target hour.
+  try{const r=await fetchTO(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=${tsMs}&limit=1`);
+    if(Array.isArray(r)&&r.length>0){const p=+r[0][1];if(p>0)return p;}
+  }catch(e){}
+  return 0;
+}
+
+async function fetchGMTSnapshot(tsMs){
+  // CoinGecko market_chart/range, 1-hour window centered on the target. Returns
+  // 5-min granularity for recent ranges; pick the point closest to tsMs.
+  const fromS=Math.floor(tsMs/1000)-1800,toS=Math.floor(tsMs/1000)+1800;
+  try{const r=await fetchTO(`https://api.coingecko.com/api/v3/coins/gmt-token/market_chart/range?vs_currency=usd&from=${fromS}&to=${toS}`);
+    const arr=r?.prices;
+    if(Array.isArray(arr)&&arr.length>0){
+      let best=arr[0],bd=Math.abs(arr[0][0]-tsMs);
+      for(const p of arr){const d=Math.abs(p[0]-tsMs);if(d<bd){bd=d;best=p;}}
+      if(best[1]>0)return +best[1];
+    }
+  }catch(e){}
+  return 0;
+}
+
 async function fetchData(){
   let ok=true;
   const cached=loadPriceCache();
@@ -1115,6 +1152,13 @@ async function fetchData(){
   // Only the live values from this run are eligible to overwrite the cache;
   // never write FB or previously-cached values back, or we lock in stale prices.
   S.priceLiveBTC=btcLive;S.priceLiveGMT=gmtLive;
+
+  // ---- SNAPSHOT (yesterday 4am ET) — settlement basis for daily rewards ----
+  const snapMs=yesterdayAt4amETMs();
+  const[btcSnap,gmtSnap]=await Promise.all([fetchBTCSnapshot(snapMs),fetchGMTSnapshot(snapMs)]);
+  S.btcSnap=btcSnap>0?btcSnap:S.btcPrice;
+  S.gmtSnap=gmtSnap>0?gmtSnap:S.gmtPrice;
+  S.snapAt=snapMs;
 
   // ---- MEMPOOL (difficulty + tx fees) ----
   try{
@@ -1156,6 +1200,10 @@ function updateHeader(){
   $('btcVal').textContent=S.btcPrice?fU(S.btcPrice):'--';
   $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
   $('satsVal').textContent=S.satsPerTHDay?S.satsPerTHDay.toFixed(1):'--';
+  const snapLbl=S.snapAt?new Date(S.snapAt).toLocaleDateString('en-US',{month:'numeric',day:'numeric',timeZone:'America/New_York'}):'';
+  const bs=$('btcSnapVal'),gs=$('gmtSnapVal');
+  if(bs)bs.textContent=S.btcSnap?`snap ${fU(S.btcSnap)} · ${snapLbl} 4am ET`:'';
+  if(gs)gs.textContent=S.gmtSnap?`snap ${fU(S.gmtSnap)}`:'';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
   else{
@@ -1377,7 +1425,7 @@ function fees(th,wth,bp){const e=(0.05*24*wth)/bp/1000*th,s=(0.0089/bp)*th;retur
 function dailyBTCperTH(){return(1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32)}
 
 function calc(i){
-  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
+  const bp=S.btcSnap||S.btcPrice,gp=S.gmtSnap||S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
   const vip=vipOf(i.th,i.gl),nxt=nextVip(i.th,i.gl);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
