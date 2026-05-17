@@ -956,9 +956,12 @@ input[type=number]{-moz-appearance:textfield}
 // ---- STATE ----
 const S = { btcPrice:0, gmtPrice:0, btcSnap:0, gmtSnap:0, snapAt:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:60, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
-// GoMining charges 2% when converting net BTC mining reward into the GMT
-// the user actually receives. Applied to (gross - fees_after_discount), not gross.
-const CONVERSION_FEE = 0.02;
+// ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
+// Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
+// quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
+const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to net reward
+const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
+const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 
 // ---- VIP TIERS ----
 const TIERS=[
@@ -1424,7 +1427,7 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 // GoMining verified fee formulas (per TH per day in BTC, pre-discount)
 // electricity_per_TH = (0.05 * 24 * W/TH) / BTC_price / 1000
 // service_per_TH = 0.0089 / BTC_price
-function fees(th,wth,bp){const e=(0.05*24*wth)/bp/1000*th,s=(0.0089/bp)*th;return{e,s,t:e+s}}
+function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
 function dailyBTCperTH(){return(1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32)}
 
 function calc(i){
