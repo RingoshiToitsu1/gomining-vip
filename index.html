@@ -874,6 +874,10 @@ input[type=number]{-moz-appearance:textfield}
           <label>Weekly Distribution % <span class="tip" data-tip="Set aside this percentage of mining + ambassador rewards each week as income (not reinvested). 0% = full compounding. Staking yield always auto-compounds locked GMT and is unaffected.">?</span></label>
           <div class="field-input"><input type="number" id="inReinvestDistPct" value="0" min="0" max="100" step="1" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%"></div>
         </div>
+        <div class="field">
+          <label>Weekly Distribution $ <span class="tip" data-tip="Set aside a fixed USD amount per week as income (not reinvested), in addition to any % above. Applied as $/7 each day; if daily rewards are smaller, only what's available is taken (no debt).">?</span></label>
+          <div class="field-input"><input type="number" id="inReinvestDistUSD" value="0" min="0" step="1" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%"></div>
+        </div>
       </div>
       <div style="margin-top:.8rem">
         <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Run Growth Projection</button>
@@ -1996,6 +2000,8 @@ function runReinvestProjection(){
   const i=inp();
   const days=Math.min(7300,Math.max(1,+$('inReinvestDays').value||365));
   const distPct=Math.min(100,Math.max(0,+$('inReinvestDistPct').value||0))/100;
+  const distWeeklyUSD=Math.max(0,+$('inReinvestDistUSD').value||0);
+  const distDailyUSD=distWeeklyUSD/7;
   const btcSel=reinvestBTCSelection();
   const bpStart=S.btcPrice;
   const bpEnd=btcSel.price;
@@ -2057,7 +2063,8 @@ function runReinvestProjection(){
   let ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
   let totalAmbUSD=0;
   let totalRefBonusGMT=refInitBonusGMT;       // user's cumulative 5% GMT (initial + ongoing)
-  let totalDistributionUSD=0;                 // cumulative USD paid out (not reinvested) via distribution %
+  let totalDistributionUSD=0;                 // cumulative USD paid out (not reinvested) via distribution
+  let totalDollarPaidUSD=0;                   // cumulative USD from the $/wk floor portion only (for shortfall check)
   let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
   function dailyNet(curTH,curLocked){
@@ -2161,11 +2168,14 @@ function runReinvestProjection(){
     // --- Today's reinvestable reward (mining + ambassador; staking auto-compounds via weekly accrual above) ---
     const dn=dailyNet(th,gmtLocked);
     const grossReinvest=dn.reinvest;
-    // Set aside distPct as user distribution (income), reinvest the remainder.
-    // Applied daily here, but conceptually a weekly cut — the math is equivalent
-    // and integrates cleanly with the existing daily compounding loop.
-    const distributionUSD=Math.max(0,grossReinvest)*distPct;
+    // Set aside distribution (% of gross + fixed weekly $ split daily), reinvest
+    // the remainder. Applied daily for clean integration with the compounding loop;
+    // the $ floor is capped at what's available each day (no debt accrues).
+    const pctPortion=Math.max(0,grossReinvest)*distPct;
+    const dollarPortion=Math.min(distDailyUSD,Math.max(0,grossReinvest-pctPortion));
+    const distributionUSD=pctPortion+dollarPortion;
     if(distributionUSD>0)totalDistributionUSD+=distributionUSD;
+    if(dollarPortion>0)totalDollarPaidUSD+=dollarPortion;
     const netUSD=grossReinvest-distributionUSD;
 
     if(netUSD<=0){
@@ -2312,20 +2322,35 @@ function runReinvestProjection(){
     <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
   </div>`;
 
-  if(distPct>0){
+  if(distPct>0||distWeeklyUSD>0){
     const weeks=days/7;
     const avgWeekly=weeks>0?totalDistributionUSD/weeks:0;
     const avgMonthly=avgWeekly*(52/12);
+    const requestedWeekly=distWeeklyUSD;
+    let modeSub;
+    if(distPct>0&&distWeeklyUSD>0)modeSub=`${fP(distPct*100)} of rewards + ${fU(distWeeklyUSD)}/wk floor over ${days}d`;
+    else if(distPct>0)modeSub=`${fP(distPct*100)} of mining + ambassador over ${days}d`;
+    else modeSub=`${fU(distWeeklyUSD)}/wk requested over ${days}d`;
+    // Shortfall = requested $ floor couldn't always be met by daily rewards
+    // (compares requested $ vs actually-paid $ portion only, not the % portion).
+    const expectedFromDollar=distWeeklyUSD*weeks;
+    const shortfall=distWeeklyUSD>0&&totalDollarPaidUSD<expectedFromDollar?expectedFromDollar-totalDollarPaidUSD:0;
     h+=`<div class="sub-title centered">Distribution (Not Reinvested)</div>`;
     h+=`<div class="ri-summary ri-center">
-      <div class="ri-card"><div class="ri-label">Total Paid Out</div><div class="ri-val cyan">${fU(totalDistributionUSD)}</div><div class="ri-sub">${fP(distPct*100)} of mining + ambassador over ${days}d</div></div>
-      <div class="ri-card"><div class="ri-label">Avg Weekly</div><div class="ri-val green">${fU(avgWeekly)}</div><div class="ri-sub">≈ ${fU(avgMonthly)}/mo</div></div>
+      <div class="ri-card"><div class="ri-label">Total Paid Out</div><div class="ri-val cyan">${fU(totalDistributionUSD)}</div><div class="ri-sub">${modeSub}</div></div>
+      <div class="ri-card"><div class="ri-label">Avg Weekly</div><div class="ri-val green">${fU(avgWeekly)}</div><div class="ri-sub">≈ ${fU(avgMonthly)}/mo${requestedWeekly>0?` &middot; req ${fU(requestedWeekly)}/wk`:''}</div></div>
     </div>`;
+    if(shortfall>0){
+      h+=`<div style="text-align:center;font-size:.72rem;color:#fb923c;margin-top:-.4rem">Note: daily rewards couldn't fully cover the $${fN(distWeeklyUSD,0)}/wk floor on some days &mdash; shortfall ${fU(shortfall)} over period.</div>`;
+    }
   }
 
   // Snapshot table
   // Info box
-  const distNote=distPct>0?` <strong style="color:var(--purple-soft)">${fP(distPct*100)}</strong> of each day's mining + ambassador reward is set aside as distribution and not reinvested.`:'';
+  let distNote='';
+  if(distPct>0&&distWeeklyUSD>0)distNote=` <strong style="color:var(--purple-soft)">${fP(distPct*100)}</strong> of each day's mining + ambassador reward plus a <strong style="color:var(--purple-soft)">${fU(distWeeklyUSD)}/wk</strong> floor is set aside as distribution and not reinvested.`;
+  else if(distPct>0)distNote=` <strong style="color:var(--purple-soft)">${fP(distPct*100)}</strong> of each day's mining + ambassador reward is set aside as distribution and not reinvested.`;
+  else if(distWeeklyUSD>0)distNote=` <strong style="color:var(--purple-soft)">${fU(distWeeklyUSD)}/wk</strong> is set aside as distribution (capped at what each day's rewards yield).`;
   h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
     <strong style="color:var(--cyan)">How this works:</strong> Each day, your net BTC mining reward goes toward buying more TH. Your locked GMT earns ${fN(apr,2)}% APR staking yield.
     When adding TH would reduce your token discount below 20%, part of the reward is diverted to lock GMT instead, keeping coverage at 378+ days.
