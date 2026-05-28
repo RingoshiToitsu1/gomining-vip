@@ -367,8 +367,10 @@ input[type=number]{-moz-appearance:textfield}
 .ob-step.active .ob-step-reveal{opacity:1;transform:translateY(0)}
 .ob-field,.ob-toggle-row,.ob-preview-card,.ob-preview-grid{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
 .ob-step.active .ob-field,.ob-step.active .ob-toggle-row,.ob-step.active .ob-preview-card,.ob-step.active .ob-preview-grid{opacity:1;transform:translateY(0)}
-.ob-tutorial-img{display:block;width:100%;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin:.6rem 0 1.1rem;background:#0d0e1a}
-.ob-tutorial-img+.ob-tutorial-img{margin-top:-.4rem}
+.ob-tutorial-wrap{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-sm);margin:.6rem 0 1.1rem;background:#0d0e1a;cursor:zoom-in}
+.ob-tutorial-wrap+.ob-tutorial-wrap{margin-top:-.4rem}
+.ob-tutorial-img{display:block;width:100%;max-width:100%;height:auto;transition:transform .25s ease;transform-origin:center center;will-change:transform}
+.ob-tutorial-wrap:hover .ob-tutorial-img{transform:scale(2.6)}
 .ob-tutorial-cap{display:block;text-align:center;font-size:.68rem;color:var(--text4);margin:-.6rem 0 1rem;font-style:italic}
 @media(max-width:600px){
   .ob-body{padding:1rem 1.2rem .8rem}
@@ -495,7 +497,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="2">
       <div class="ob-title ob-step-reveal">Total Hashrate</div>
       <div class="ob-subtitle ob-step-reveal">Your total computing power across all NFTs.</div>
-      <img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img">
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
       <div class="ob-field">
         <label>Total Hashrate</label>
@@ -507,7 +509,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="3">
       <div class="ob-title ob-step-reveal">Energy Efficiency</div>
       <div class="ob-subtitle ob-step-reveal">Average watts per terahash across your NFTs. Lower is better.</div>
-      <img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img">
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> tile</span>
       <div class="ob-field">
         <label>Efficiency</label>
@@ -519,7 +521,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="4">
       <div class="ob-title ob-step-reveal">Liquid GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">Unlocked GMT sitting in your GoMining virtual wallet.</div>
-      <img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img">
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
       <div class="ob-field">
         <label>Liquid GMT</label>
@@ -531,9 +533,9 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="5">
       <div class="ob-title ob-step-reveal">Locked GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">GMT you've staked in VeGoMining. Earns yield and counts toward your VIP tier.</div>
-      <img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img">
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">Governance &rarr; My lock &rarr; <b>Total Locked</b></span>
-      <img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img">
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">Don't have any locked yet? Wallet &rarr; More &rarr; <b>Lock</b> to stake</span>
       <div class="ob-field">
         <label>Locked GMT</label>
@@ -2584,6 +2586,13 @@ document.addEventListener('click',e=>{
 });
 
 // ---- ONBOARDING ----
+function obZoom(e,el){
+  const r=el.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width)*100;
+  const y=((e.clientY-r.top)/r.height)*100;
+  const img=el.querySelector('.ob-tutorial-img');
+  if(img)img.style.transformOrigin=x+'% '+y+'%';
+}
 let obCur=0;
 function initOnboarding(){
   try{if(localStorage.getItem('gm_onboarded'))return}catch(e){}
