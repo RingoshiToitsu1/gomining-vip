@@ -81,6 +81,9 @@ input[type=number]{-moz-appearance:textfield}
 .section-header:hover{background:rgba(123,79,255,.03)}
 .section-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
 .section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-title .thumb{width:20px;height:20px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(138,95,247,.25))}
+.section-title .thumb rect.bg{fill:url(#thumbGrad)}
+.section-title .thumb .g{stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .icon-purple{background:var(--purple)}.icon-cyan{background:var(--cyan)}.icon-green{background:var(--green)}.icon-orange{background:var(--orange)}
 .section-toggle{width:24px;height:24px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:var(--transition);color:var(--text3);font-size:.7rem}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
@@ -459,6 +462,16 @@ input[type=number]{-moz-appearance:textfield}
 </head>
 <body>
 
+<!-- SHARED SVG DEFS (gradient palette for section thumbnails) -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <linearGradient id="thumbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a5ff7"/>
+      <stop offset="100%" stop-color="#4ecffa"/>
+    </linearGradient>
+  </defs>
+</svg>
+
 <!-- ONBOARDING -->
 <div class="ob-overlay" id="onboarding" style="display:none">
 <div class="ob-modal">
@@ -740,7 +753,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- VIP & DISCOUNTS -->
   <div class="section reveal" id="secVip">
     <div class="section-header" onclick="toggleSection('secVip')">
-      <div class="section-title"><img src="vip.png" style="height:20px;width:20px;border-radius:6px"> VIP Level &amp; Discount Stack</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M9 27 L11 16 L17 22 L20 12 L23 22 L29 16 L31 27 Z"/><path d="M11 30 L29 30"/></g></svg> VIP Level &amp; Discount Stack</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Your VIP tier is determined by TH owned or GMT locked -- whichever qualifies you higher.</div>
@@ -753,7 +766,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- DAILY OPERATION & REWARDS -->
   <div class="section reveal" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
-      <div class="section-title"><img src="pnl.png" style="height:20px;width:20px;border-radius:6px"> Daily Operation &amp; Rewards</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M13 26 A7 7 0 0 1 27 26"/><path d="M7 30 L33 30"/><path d="M20 12 L20 9"/><path d="M11 19 L13 21"/><path d="M29 19 L27 21"/></g></svg> Daily Operation &amp; Rewards</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Live mining revenue, fees, and your monthly GMT mining + staking income.</div>
@@ -765,7 +778,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- REINVEST SIGNAL -->
   <div class="section reveal" id="secSignal">
     <div class="section-header" onclick="toggleSection('secSignal')">
-      <div class="section-title"><img src="reinvest.png" style="height:20px;width:20px;border-radius:6px"> Reinvestment Signal</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M7 22 L13 22 L16 13 L20 28 L24 16 L27 22 L33 22"/></g></svg> Reinvestment Signal</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Based on current BTC price, should you buy more hashrate or accumulate more GMT?</div>
@@ -783,7 +796,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- CAPITAL INPUT -->
   <div class="section reveal" id="secCapIn">
     <div class="section-header" onclick="toggleSection('secCapIn')">
-      <div class="section-title"><span class="icon icon-purple">$</span> Investment Amount</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><ellipse cx="20" cy="13" rx="10" ry="2.8"/><ellipse cx="20" cy="20" rx="10" ry="2.8"/><ellipse cx="20" cy="27" rx="10" ry="2.8"/><path d="M10 13 L10 27"/><path d="M30 13 L30 27"/></g></svg> Investment Amount</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">How much new capital are you planning to deploy into GoMining?</div>
@@ -804,7 +817,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- ALLOCATION -->
   <div class="section reveal" id="secAlloc">
     <div class="section-header" onclick="toggleSection('secAlloc')">
-      <div class="section-title"><span class="icon icon-cyan">OPT</span> Optimal Capital Allocation</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><circle cx="20" cy="20" r="10"/><path d="M20 20 L20 10"/><path d="M20 20 L28.66 25"/></g></svg> Optimal Capital Allocation</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Tests every TH/GMT split to find the allocation that maximizes your monthly net income.</div>
@@ -816,7 +829,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- PROJECTION -->
   <div class="section reveal" id="secProj">
     <div class="section-header" onclick="toggleSection('secProj')">
-      <div class="section-title"><span class="icon icon-green">PRJ</span> Post-Investment Projection</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M8 30 L32 30"/><path d="M11 26 L17 21 L22 23 L29 13"/><path d="M24 13 L29 13 L29 18"/></g></svg> Post-Investment Projection</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">What your farm looks like after deploying capital with the recommended allocation.</div>
@@ -839,7 +852,7 @@ input[type=number]{-moz-appearance:textfield}
   <!-- AUTO-REINVEST PROJECTION -->
   <div class="section reveal" id="secReinvest">
     <div class="section-header" onclick="toggleSection('secReinvest')">
-      <div class="section-title"><span class="icon icon-green">&#8635;</span> Reinvest Growth Projection</div>
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M28 11 A10 10 0 1 0 30 24"/><path d="M28 7 L30 11 L26 13"/><path d="M20 26 L20 14"/><path d="M16 18 L20 14 L24 18"/></g></svg> Reinvest Growth Projection</div>
       <div class="section-toggle">&#9662;</div>
     </div>
     <div class="section-desc">Simulate reinvesting all daily rewards (mining + staking) into TH and GMT. Automatically balances TH growth with GMT locking to maintain 20% token discount.</div>
