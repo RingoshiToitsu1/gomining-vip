@@ -10,12 +10,12 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0b13;--bg2:#11121d;--bg-card:#101120;--bg-card-hover:#1a1b2e;--bg-input:#0d0e18;
-  --border:#3a3940;--border-focus:#7540ef;
-  --purple:#7540ef;--purple-glow:rgba(117,64,239,.18);--purple-soft:#9b72ff;
-  --cyan:#00c2ff;--cyan-glow:rgba(0,194,255,.12);--cyan-soft:#4dd8ff;
-  --text:#ffffff;--text2:#c4cbda;--text3:#9499ab;--text4:#6b7085;
-  --green:#34d399;--green-glow:rgba(52,211,153,.12);
+  --bg:#0c0e1c;--bg2:#13152a;--bg-card:#14162a;--bg-card-hover:#1c1e36;--bg-input:#0e1020;
+  --border:rgba(255,255,255,.08);--border-focus:#8a5ff7;
+  --purple:#8a5ff7;--purple-glow:rgba(138,95,247,.15);--purple-soft:#b094ff;
+  --cyan:#4ecffa;--cyan-glow:rgba(78,207,250,.1);--cyan-soft:#7fdcff;
+  --text:#eef0f8;--text2:#c4cbda;--text3:#9499ab;--text4:#6b7085;
+  --green:#5ad9a8;--green-glow:rgba(90,217,168,.12);
   --orange:#fbbf24;--orange-glow:rgba(251,191,36,.1);
   --red:#f87171;
   --bronze:#cd7f32;--silver:#c0c0c0;--gold:#ffd700;--platinum:#e0dfe0;--diamond:#7ee8fa;--legend:#ff4d6a;
@@ -25,13 +25,13 @@
   --transition:all .15s ease-in-out;
 }
 html{font-size:19.8px;scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(138,95,247,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(78,207,250,.07),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(138,95,247,.05),transparent 60%);background-attachment:fixed}
 ::selection{background:var(--purple);color:#fff}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 
 /* ---- HEADER ---- */
-.header{position:sticky;top:0;z-index:100;background:rgba(10,11,19,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
+.header{position:sticky;top:0;z-index:100;background:rgba(12,14,28,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
 .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
 .logo{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--purple) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .live-bar{display:flex;gap:.2rem;align-items:center;flex-wrap:wrap}
@@ -69,6 +69,7 @@ input[type=number]{-moz-appearance:textfield}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;line-height:1.2}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
+.hero-yearly{font-size:.66rem;color:var(--text4);margin-top:.15rem;font-family:var(--mono);letter-spacing:.02em}
 .hero-val.green{color:var(--green)}.hero-val.cyan{color:var(--cyan)}.hero-val.orange{color:var(--orange)}.hero-val.purple{color:var(--purple-soft)}.hero-val.red{color:var(--red)}
 
 /* ---- SECTION ---- */
@@ -366,6 +367,9 @@ input[type=number]{-moz-appearance:textfield}
 .ob-step.active .ob-step-reveal{opacity:1;transform:translateY(0)}
 .ob-field,.ob-toggle-row,.ob-preview-card,.ob-preview-grid{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
 .ob-step.active .ob-field,.ob-step.active .ob-toggle-row,.ob-step.active .ob-preview-card,.ob-step.active .ob-preview-grid{opacity:1;transform:translateY(0)}
+.ob-tutorial-img{display:block;width:100%;max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin:.6rem 0 1.1rem;background:#0d0e1a}
+.ob-tutorial-img+.ob-tutorial-img{margin-top:-.4rem}
+.ob-tutorial-cap{display:block;text-align:center;font-size:.68rem;color:var(--text4);margin:-.6rem 0 1rem;font-style:italic}
 @media(max-width:600px){
   .ob-body{padding:1rem 1.2rem .8rem}
   .ob-nav{padding:0 1.2rem 1.2rem}
@@ -458,6 +462,9 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-dot" id="obDot1"></div>
     <div class="ob-dot" id="obDot2"></div>
     <div class="ob-dot" id="obDot3"></div>
+    <div class="ob-dot" id="obDot4"></div>
+    <div class="ob-dot" id="obDot5"></div>
+    <div class="ob-dot" id="obDot6"></div>
   </div>
   <div class="ob-body">
 
@@ -466,89 +473,80 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-logo ob-reveal" style="animation-delay:.2s"><img src="gomining-logo.png" alt="" style="height:40px;vertical-align:middle;margin-right:8px">GMT Optimizer</div>
       <div class="ob-title ob-reveal" style="animation-delay:.6s">Maximize Your Mining Profits</div>
       <div class="ob-subtitle ob-reveal" style="animation-delay:1s">The smartest way to optimize your GoMining farm. Live network data, real-time P&L tracking, and an AI-powered capital planner that finds the perfect TH/GMT split for your budget.</div>
-      <div class="ob-features">
-        <div class="ob-feat ob-reveal" style="animation-delay:1.6s" onclick="this.classList.toggle('expanded')">
-          <div class="ob-feat-icon">&#9889;</div>
-          <div class="ob-feat-title">Live Data</div>
-          <div class="ob-feat-desc">BTC price, GMT price, network difficulty, and sats/TH/day updated every 60 seconds from live APIs.</div>
-        </div>
-        <div class="ob-feat ob-reveal" style="animation-delay:2.1s" onclick="this.classList.toggle('expanded')">
-          <div class="ob-feat-icon">&#9881;</div>
-          <div class="ob-feat-title">Smart Optimizer</div>
-          <div class="ob-feat-desc">Tests every possible TH/GMT split to find the allocation that maximizes your monthly income.</div>
-        </div>
-        <div class="ob-feat ob-reveal" style="animation-delay:2.6s" onclick="this.classList.toggle('expanded')">
-          <div class="ob-feat-icon">&#128176;</div>
-          <div class="ob-feat-title">Full Discount Stack</div>
-          <div class="ob-feat-desc">Tracks VIP tier, token discount, click streak, and mining mode to calculate your true net profit.</div>
-        </div>
-      </div>
     </div>
 
-    <!-- STEP 1: Mining Setup -->
+    <!-- STEP 1: Display Currency -->
     <div class="ob-step" data-ob-step="1">
-      <div class="ob-title ob-step-reveal">Your Mining Farm</div>
-      <div class="ob-subtitle ob-step-reveal">Enter your current GoMining stats. You can find these in the GoMining app.</div>
+      <div class="ob-title ob-step-reveal">Display Currency</div>
+      <div class="ob-subtitle ob-step-reveal">Choose your preferred currency for all prices and earnings.</div>
       <div class="ob-field">
-        <label>Display Currency</label>
-        <div class="ob-hint">Choose your preferred currency for all prices and earnings.</div>
+        <label>Currency</label>
         <div class="ob-input-wrap">
-          <select id="obCurrency" style="flex:1;padding:.5rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.9rem;outline:none">
+          <select id="obCurrency" style="flex:1;padding:.55rem .8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.95rem;outline:none">
             <option value="USD">USD ($)</option>
             <option value="GBP">GBP (&pound;)</option>
             <option value="EUR">EUR (&euro;)</option>
           </select>
         </div>
       </div>
+    </div>
+
+    <!-- STEP 2: Total Hashrate -->
+    <div class="ob-step" data-ob-step="2">
+      <div class="ob-title ob-step-reveal">Total Hashrate</div>
+      <div class="ob-subtitle ob-step-reveal">Your total computing power across all NFTs.</div>
+      <img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img">
+      <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
       <div class="ob-field">
         <label>Total Hashrate</label>
-        <div class="ob-hint">Sum of all your NFT hashrates. Go to My NFTs in the GoMining app to see your total computing power.</div>
         <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
       </div>
+    </div>
+
+    <!-- STEP 3: Energy Efficiency -->
+    <div class="ob-step" data-ob-step="3">
+      <div class="ob-title ob-step-reveal">Energy Efficiency</div>
+      <div class="ob-subtitle ob-step-reveal">Average watts per terahash across your NFTs. Lower is better.</div>
+      <img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img">
+      <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> tile</span>
       <div class="ob-field">
-        <label>Energy Efficiency</label>
-        <div class="ob-hint">Average watts per terahash across your NFTs. Lower is better. Found on each NFT detail card.</div>
+        <label>Efficiency</label>
         <div class="ob-input-wrap"><input type="number" id="obWTH" value="15" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
       </div>
-      <div class="ob-field">
-        <label>Current TH Market Price</label>
-        <div class="ob-hint">Average cost per TH on the marketplace. Varies by NFT size: 5000TH=$11.67 &bull; 2560=$11.90 &bull; 1024=$12.14 &bull; 512=$12.39 &bull; 192=$12.77 &bull; 64=$13.16 &bull; 16=$13.56 &bull; 1=$14.99</div>
-        <div class="ob-input-wrap"><input type="number" id="obCPT" value="12.77" step="0.01" min="0"><span class="ob-unit">USD</span></div>
-      </div>
     </div>
 
-    <!-- STEP 2: GMT Holdings -->
-    <div class="ob-step" data-ob-step="2">
-      <div class="ob-title ob-step-reveal">Your GMT Position</div>
-      <div class="ob-subtitle ob-step-reveal">GMT is the fuel behind your fee discounts and staking rewards. The more you lock, the higher your discount and the more you earn passively.</div>
+    <!-- STEP 4: Liquid GMT Balance -->
+    <div class="ob-step" data-ob-step="4">
+      <div class="ob-title ob-step-reveal">Liquid GMT Balance</div>
+      <div class="ob-subtitle ob-step-reveal">Unlocked GMT sitting in your GoMining virtual wallet.</div>
+      <img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img">
+      <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
       <div class="ob-field">
-        <label>Locked GMT (VeGoMining)</label>
-        <div class="ob-hint">GMT you've staked in VeGoMining. Earns weekly yield and counts toward your VIP tier.</div>
-        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
-      </div>
-      <div class="ob-field">
-        <label>Liquid GMT Balance</label>
-        <div class="ob-hint">Unlocked GMT in your GoMining virtual wallet. Available for locking or transfers.</div>
+        <label>Liquid GMT</label>
         <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
-      <div class="ob-field">
-        <label>VeGoMining Staking APR</label>
-        <div class="ob-hint">Annual yield on your locked GMT. Shown in the VeGoMining section of the app.</div>
-        <div class="ob-input-wrap"><input type="number" id="obLockAPR" value="28.76" step="0.01" min="0"><span class="ob-unit">%</span></div>
-      </div>
-      <div class="ob-divider"></div>
-      <div class="ob-toggle-row">
-        <label class="toggle"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
-        <span>Daily click streak active (10+ consecutive days = 3% fee discount)</span>
-      </div>
-      <div class="ob-toggle-row">
-        <label class="toggle"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
-        <span>Pay maintenance fees in GMT (enables token discount)</span>
-      </div>
     </div>
 
-    <!-- STEP 3: Confirmation -->
-    <div class="ob-step" data-ob-step="3">
+    <!-- STEP 5: Locked GMT Balance -->
+    <div class="ob-step" data-ob-step="5">
+      <div class="ob-title ob-step-reveal">Locked GMT Balance</div>
+      <div class="ob-subtitle ob-step-reveal">GMT you've staked in VeGoMining. Earns yield and counts toward your VIP tier.</div>
+      <img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img">
+      <span class="ob-tutorial-cap">Governance &rarr; My lock &rarr; <b>Total Locked</b></span>
+      <img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img">
+      <span class="ob-tutorial-cap">Don't have any locked yet? Wallet &rarr; More &rarr; <b>Lock</b> to stake</span>
+      <div class="ob-field">
+        <label>Locked GMT</label>
+        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
+      </div>
+      <input type="hidden" id="obLockAPR" value="28.76">
+      <input type="hidden" id="obCPT" value="12.77">
+      <label class="toggle" style="display:none"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
+      <label class="toggle" style="display:none"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
+    </div>
+
+    <!-- STEP 6: Confirmation -->
+    <div class="ob-step" data-ob-step="6">
       <div class="ob-title ob-step-reveal">You're All Set!</div>
       <div class="ob-subtitle ob-step-reveal">Here's a quick preview of your mining operation based on live data. All values update in real-time on the dashboard.</div>
       <div class="ob-preview-grid">
@@ -575,8 +573,8 @@ input[type=number]{-moz-appearance:textfield}
   </div>
   <div class="ob-nav">
     <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="display:none">Back</button>
-    <button class="ob-btn ob-btn-primary ob-reveal" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3);animation-delay:3.5s">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
-    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3);animation-delay:3.5s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3);animation-delay:1.4s">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3);animation-delay:1.4s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
   </div>
 </div>
 </div>
@@ -642,6 +640,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
+      <div class="hero-yearly" id="heroYearly">--</div>
     </div>
     <div class="hero-card purple-accent reveal">
       <div class="hero-label">Total Discount</div>
@@ -1532,6 +1531,7 @@ function recalc(){
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   $('heroMonthlyBTC').textContent=heroMoSub;
+  $('heroYearly').textContent=fU(moUSD*12)+' / yr';
   $('heroDiscount').textContent=fP(m.totD);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   $('heroVip').innerHTML=badge(m.vip);
@@ -2590,8 +2590,9 @@ function initOnboarding(){
   document.getElementById('onboarding').style.display='';
   document.body.style.overflow='hidden';
 }
+const OB_LAST_STEP=6;
 function obGoStep(n){
-  if(n<0||n>3)return;
+  if(n<0||n>OB_LAST_STEP)return;
   obCur=n;
   document.querySelectorAll('.ob-step').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.ob-dot').forEach((d,i)=>{d.classList.toggle('active',i===n);d.classList.toggle('done',i<n)});
@@ -2605,12 +2606,12 @@ function obGoStep(n){
   newBtn.style.display=n===0?'':'none';
   if(n===0){newBtn.classList.remove('ob-reveal');newBtn.style.opacity='1';nextBtn.classList.remove('ob-reveal');nextBtn.style.opacity='1'}
   if(n===0)nextBtn.innerHTML='Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span>';
-  else if(n===3)nextBtn.textContent='Launch Dashboard';
+  else if(n===OB_LAST_STEP)nextBtn.textContent='Launch Dashboard';
   else nextBtn.textContent='Next';
-  if(n===3)obPreview();
+  if(n===OB_LAST_STEP)obPreview();
 }
 function obNext(){
-  if(obCur<3){obGoStep(obCur+1);if(obCur>=2)syncOB()}
+  if(obCur<OB_LAST_STEP){obGoStep(obCur+1);if(obCur>=1)syncOB()}
   else obFinish();
 }
 function setCurrency(c){
