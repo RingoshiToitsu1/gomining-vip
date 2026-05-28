@@ -69,7 +69,9 @@ input[type=number]{-moz-appearance:textfield}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;line-height:1.2}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
-.hero-yearly{font-size:.66rem;color:var(--text4);margin-top:.15rem;font-family:var(--mono);letter-spacing:.02em}
+.hero-yearly{font-size:.72rem;margin-top:.1rem;margin-bottom:.15rem;font-family:var(--mono);letter-spacing:.02em;opacity:.75;font-weight:600}
+.hero-yearly.cyan{color:var(--cyan)}
+.hero-yearly.red{color:var(--red)}
 .hero-val.green{color:var(--green)}.hero-val.cyan{color:var(--cyan)}.hero-val.orange{color:var(--orange)}.hero-val.purple{color:var(--purple-soft)}.hero-val.red{color:var(--red)}
 
 /* ---- SECTION ---- */
@@ -286,10 +288,11 @@ input[type=number]{-moz-appearance:textfield}
 .proj-cell.current{border-color:var(--green);background:rgba(0,0,0,.55);box-shadow:0 0 12px rgba(52,211,153,.20);padding-top:1.4rem}
 .proj-cell.current .pc-tag{background:var(--green)}
 .proj-cell.current .pc-monthly,.proj-cell.current .pc-monthly.green,.proj-cell.current .pc-monthly.red,.proj-cell.current .pc-monthly.cyan{color:var(--green)}
-.proj-cell.current .pc-price,.proj-cell.current .pc-daily{color:rgba(52,211,153,.65)}
+.proj-cell.current .pc-price,.proj-cell.current .pc-daily,.proj-cell.current .pc-yearly{color:rgba(52,211,153,.65)}
 .proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
 .proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
 .proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
+.proj-cell .pc-yearly{font-size:.6rem;color:var(--text4);margin-top:.1rem;font-family:var(--mono)}
 .proj-cell .pc-monthly.green{color:var(--green)}
 .proj-cell .pc-monthly.red{color:var(--red)}
 .proj-cell .pc-monthly.cyan{color:var(--cyan)}
@@ -641,8 +644,8 @@ input[type=number]{-moz-appearance:textfield}
     <div class="hero-card cyan-accent reveal">
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
+      <div class="hero-yearly cyan" id="heroYearly">--</div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
-      <div class="hero-yearly" id="heroYearly">--</div>
     </div>
     <div class="hero-card purple-accent reveal">
       <div class="hero-label">Total Discount</div>
@@ -1533,7 +1536,7 @@ function recalc(){
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   $('heroMonthlyBTC').textContent=heroMoSub;
-  $('heroYearly').textContent=fU(moUSD*12)+' / yr';
+  $('heroYearly').textContent=fU(moUSD*12)+' / yr';$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   $('heroDiscount').textContent=fP(m.totD);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   $('heroVip').innerHTML=badge(m.vip);
@@ -1658,10 +1661,11 @@ function updateProjCell(){
   const tagCol=isLive?'var(--green)':'var(--orange)';
   const col=isLive?'green':'orange';
   let h=`<div style="display:flex;flex-direction:column;align-items:center;gap:.4rem">`;
-  h+=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
+  h+=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-yearly-usd="${(moUSD*12).toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-yearly-gmt="${(moGMT*12).toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
   h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
   h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
   h+=`<div class="pc-daily">${fU(dailyUSD)}/day</div>`;
+  h+=`<div class="pc-yearly">${fU(moUSD*12)}/yr</div>`;
   h+=`<div class="pc-mode-tag">USD</div>`;
   h+=`</div>`;
   const moMine=miningUSD*30, moStake=stakingDailyUSD*30, moAmb=ambDailyUSD*30;
@@ -1677,21 +1681,26 @@ function flipProjCell(el){
   const mode=el.dataset.mode;
   const moUSD=parseFloat(el.dataset.moUsd);
   const dailyUSD=parseFloat(el.dataset.dailyUsd);
+  const yearlyUSD=parseFloat(el.dataset.yearlyUsd);
   const moGMT=parseFloat(el.dataset.moGmt);
   const dailyGMT=parseFloat(el.dataset.dailyGmt);
+  const yearlyGMT=parseFloat(el.dataset.yearlyGmt);
   const moEl=el.querySelector('.pc-monthly');
   const dayEl=el.querySelector('.pc-daily');
+  const yrEl=el.querySelector('.pc-yearly');
   const tagEl=el.querySelector('.pc-mode-tag');
   if(mode==='usd'){
     el.dataset.mode='gmt';
     moEl.innerHTML=fN(moGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">';
     dayEl.innerHTML=fN(dailyGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">/day';
+    if(yrEl)yrEl.innerHTML=fN(yearlyGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">/yr';
     tagEl.innerHTML='<img src="gmt36.png" alt="GMT" style="height:16px;width:16px;border-radius:4px;vertical-align:middle">';
     tagEl.style.color='';
   }else{
     el.dataset.mode='usd';
     moEl.textContent=fU(moUSD);
     dayEl.textContent=fU(dailyUSD)+'/day';
+    if(yrEl)yrEl.textContent=fU(yearlyUSD)+'/yr';
     tagEl.textContent='USD';
     tagEl.style.color='';
   }
