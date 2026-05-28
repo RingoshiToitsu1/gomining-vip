@@ -451,12 +451,18 @@ input[type=number]{-moz-appearance:textfield}
 .ri-btn{padding:.55rem 1.5rem;border-radius:1rem;font-family:var(--sans);font-size:.82rem;font-weight:600;cursor:pointer;background:var(--green);color:#000;border:none;transition:var(--transition);display:inline-flex;align-items:center;gap:.4rem}
 .ri-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(52,211,153,.3);background:#4ae8ac}
 .ri-chart-wrap{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;position:relative}
-.ri-chart-title{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:.6rem}
-.ri-chart-svg{width:100%;height:auto;display:block}
-.ri-unit-toggle{position:absolute;top:.6rem;right:.6rem;display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px;z-index:2}
+.ri-chart-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem}
+.ri-chart-title{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.ri-chart-controls{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px}
 .ri-tog-btn{background:transparent;border:none;color:var(--text3);font-family:var(--sans);font-size:.7rem;font-weight:700;padding:.3rem .65rem;border-radius:6px;cursor:pointer;transition:var(--transition);letter-spacing:.04em}
 .ri-tog-btn:hover{color:var(--text2)}
 .ri-tog-btn.active{background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff}
+.ri-tog-sep{width:1px;background:var(--border);margin:2px 4px}
+.ri-chart-svg{width:100%;height:auto;display:block;cursor:crosshair}
+.ri-tooltip{position:absolute;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.4rem .65rem;pointer-events:none;transition:opacity .12s ease;box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:5;font-family:var(--mono);opacity:0;white-space:nowrap}
+.ri-tip-day{color:var(--text3);font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.1rem}
+.ri-tip-val{color:var(--cyan);font-weight:700;font-size:.88rem}
+.ri-tip-val.green{color:var(--green)}
 .ri-single-card{max-width:380px;margin:0 auto 1rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem 1.2rem;text-align:center}
 .ri-single-card .ri-label{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
 .ri-single-card .ri-headline{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.1}
@@ -2358,8 +2364,9 @@ function runReinvestProjection(){
   </div>`;
 
   $('reinvestResult').innerHTML=h;
-  // Reset toggle to USD whenever the projection re-renders
+  // Reset toggles whenever the projection re-renders
   window._reinvestUnit='usd';
+  window._reinvestPeriod='day';
 
   // Store data for share image
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
@@ -2368,59 +2375,165 @@ function runReinvestProjection(){
     btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd,bpAtEnd};
 }
 
+function buildReinvestXLabels(days){
+  let step;
+  if(days<=365)step=30;
+  else if(days<=1095)step=90;
+  else if(days<=3650)step=365;
+  else step=730;
+  const out=[];
+  for(let d=step;d<=days;d+=step)out.push(d);
+  return out;
+}
+
 function buildReinvestChart(daily,days,gp){
   const N=daily.length;
-  const target=Math.min(110,N);
+  const target=Math.min(150,N);
   const stride=Math.max(1,Math.floor(N/target));
   const pts=[];
-  for(let i=0;i<N;i+=stride)pts.push(daily[i]);
-  if(pts[pts.length-1]!==daily[N-1])pts.push(daily[N-1]);
-  const W=600,H=210,padL=52,padR=18,padT=18,padB=34;
+  for(let i=0;i<N;i+=stride)pts.push({d:daily[i].d,v:daily[i].ssNet});
+  if(pts[pts.length-1].d!==daily[N-1].d)pts.push({d:daily[N-1].d,v:daily[N-1].ssNet});
+  const W=600,H=210,padL=58,padR=18,padT=18,padB=34;
   const innerW=W-padL-padR,innerH=H-padT-padB;
-  function svgFor(unit,gradId,stroke){
-    const ys=pts.map(p=>unit==='usd'?p.ssNet:p.ssNet/gp);
-    const yMax=Math.max(...ys,1e-9);
-    const px=i=>padL+(i/(pts.length-1))*innerW;
-    const py=v=>padT+innerH-(v/yMax)*innerH;
-    let line='';
-    for(let i=0;i<pts.length;i++)line+=(i===0?'M':' L')+px(i).toFixed(1)+' '+py(ys[i]).toFixed(1);
-    const area=line+` L ${px(pts.length-1).toFixed(1)} ${(padT+innerH).toFixed(1)} L ${padL} ${(padT+innerH).toFixed(1)} Z`;
-    const lblMax=unit==='usd'?fU(yMax):fN(yMax,2)+' GMT';
-    const lblMid=unit==='usd'?fU(yMax/2):fN(yMax/2,2)+' GMT';
-    const xStart='Day 1',xMid='Day '+Math.floor(days/2),xEnd='Day '+days;
-    return `<svg class="ri-chart-svg" viewBox="0 0 ${W} ${H}" data-reinvest-unit="${unit}"${unit==='gmt'?' style="display:none"':''}>
-      <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${stroke}" stop-opacity=".35"/><stop offset="100%" stop-color="${stroke}" stop-opacity="0"/></linearGradient></defs>
+
+  // Store geometry + data for hover/toggle handlers
+  window._reinvestChart={pts,gp,days,W,H,padL,padR,padT,padB,innerW,innerH};
+
+  const ys=pts.map(p=>p.v);
+  const yMax=Math.max(...ys,1e-9);
+  const px=i=>padL+(i/(pts.length-1))*innerW;
+  const py=v=>padT+innerH-(v/yMax)*innerH;
+  let line='';
+  for(let i=0;i<pts.length;i++)line+=(i===0?'M':' L')+px(i).toFixed(1)+' '+py(pts[i].v).toFixed(1);
+  const area=line+` L ${px(pts.length-1).toFixed(1)} ${(padT+innerH).toFixed(1)} L ${padL} ${(padT+innerH).toFixed(1)} Z`;
+
+  // X-axis ticks at 30-day (or scaled) increments
+  const xTicks=buildReinvestXLabels(days);
+  let xLabelHtml='';
+  for(const td of xTicks){
+    const xc=padL+(td/days)*innerW;
+    xLabelHtml+=`<line x1="${xc.toFixed(1)}" y1="${padT+innerH}" x2="${xc.toFixed(1)}" y2="${padT+innerH+3}" stroke="rgba(255,255,255,.18)"/>`;
+    xLabelHtml+=`<text x="${xc.toFixed(1)}" y="${H-10}" text-anchor="middle" fill="rgba(255,255,255,.45)" font-size="9" font-family="monospace">D${td}</text>`;
+  }
+
+  return `<div class="ri-chart-wrap">
+    <div class="ri-chart-head">
+      <div class="ri-chart-title">Reward Growth &middot; ${days} days</div>
+      <div class="ri-chart-controls">
+        <button class="ri-tog-btn active" data-period="day" onclick="setReinvestPeriod('day')">Daily</button>
+        <button class="ri-tog-btn" data-period="month" onclick="setReinvestPeriod('month')">Monthly</button>
+        <span class="ri-tog-sep"></span>
+        <button class="ri-tog-btn active" data-unit="usd" onclick="setReinvestUnit('usd')">USD</button>
+        <button class="ri-tog-btn" data-unit="gmt" onclick="setReinvestUnit('gmt')">GMT</button>
+      </div>
+    </div>
+    <svg class="ri-chart-svg" viewBox="0 0 ${W} ${H}" id="riChartSvg" onmousemove="riChartHover(event)" onmouseleave="riChartLeave()">
+      <defs>
+        <linearGradient id="riChartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4ecffa" stop-opacity=".35"/>
+          <stop offset="100%" stop-color="#4ecffa" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
       <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
       <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
       <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" stroke="rgba(255,255,255,.05)" stroke-dasharray="2 4"/>
-      <path d="${area}" fill="url(#${gradId})"/>
-      <path d="${line}" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="${padL-6}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">${lblMax}</text>
-      <text x="${padL-6}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">${lblMid}</text>
-      <text x="${padL-6}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">0</text>
-      <text x="${padL}" y="${H-10}" text-anchor="start" fill="rgba(255,255,255,.4)" font-size="10">${xStart}</text>
-      <text x="${padL+innerW/2}" y="${H-10}" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="10">${xMid}</text>
-      <text x="${padL+innerW}" y="${H-10}" text-anchor="end" fill="rgba(255,255,255,.4)" font-size="10">${xEnd}</text>
-    </svg>`;
-  }
-  return `<div class="ri-chart-wrap">
-    <div class="ri-unit-toggle">
-      <button class="ri-tog-btn active" data-unit="usd" onclick="setReinvestUnit('usd')">USD</button>
-      <button class="ri-tog-btn" data-unit="gmt" onclick="setReinvestUnit('gmt')">GMT</button>
-    </div>
-    <div class="ri-chart-title">Daily Reward Growth &middot; ${days} days</div>
-    ${svgFor('usd','riGradUsd','#4ecffa')}
-    ${svgFor('gmt','riGradGmt','#5ad9a8')}
+      <path d="${area}" id="riChartArea" fill="url(#riChartGrad)"/>
+      <path d="${line}" id="riChartLine" fill="none" stroke="#4ecffa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#4ecffa" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+      <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#fff" stroke-width="1.5" opacity="0"/>
+      <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="10" font-family="monospace" id="riAxisMax">${fU(yMax)}</text>
+      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="10" font-family="monospace" id="riAxisMid">${fU(yMax/2)}</text>
+      <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="10" font-family="monospace">0</text>
+      ${xLabelHtml}
+    </svg>
+    <div class="ri-tooltip" id="riChartTip"></div>
   </div>`;
 }
 
 window._reinvestUnit='usd';
+window._reinvestPeriod='day';
+
+function riChartUpdateAxis(){
+  const c=window._reinvestChart;if(!c)return;
+  const unit=window._reinvestUnit,period=window._reinvestPeriod;
+  const mult=period==='month'?30:1;
+  const ys=c.pts.map(p=>p.v);
+  const yMax=Math.max(...ys,1e-9);
+  const scaled=unit==='gmt'?(yMax/c.gp)*mult:yMax*mult;
+  const fmt=v=>unit==='gmt'?fN(v,v>=1000?0:2)+' GMT':fU(v);
+  const aMax=document.getElementById('riAxisMax');
+  const aMid=document.getElementById('riAxisMid');
+  if(aMax)aMax.textContent=fmt(scaled);
+  if(aMid)aMid.textContent=fmt(scaled/2);
+  const color=unit==='gmt'?'#5ad9a8':'#4ecffa';
+  const line=document.getElementById('riChartLine');
+  const cursor=document.getElementById('riChartCursor');
+  const dot=document.getElementById('riChartDot');
+  if(line)line.setAttribute('stroke',color);
+  if(cursor)cursor.setAttribute('stroke',color);
+  if(dot)dot.setAttribute('fill',color);
+  document.querySelectorAll('#riChartGrad stop').forEach(s=>s.setAttribute('stop-color',color));
+  const tipVal=document.querySelector('#riChartTip .ri-tip-val');
+  if(tipVal)tipVal.classList.toggle('green',unit==='gmt');
+}
+
 function setReinvestUnit(unit){
   window._reinvestUnit=unit;
   document.querySelectorAll('#reinvestResult [data-reinvest-unit]').forEach(el=>{
     el.style.display=el.dataset.reinvestUnit===unit?'':'none';
   });
-  document.querySelectorAll('#reinvestResult .ri-tog-btn').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
+  document.querySelectorAll('#reinvestResult [data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
+  riChartUpdateAxis();
+}
+
+function setReinvestPeriod(period){
+  window._reinvestPeriod=period;
+  document.querySelectorAll('#reinvestResult [data-period]').forEach(b=>b.classList.toggle('active',b.dataset.period===period));
+  riChartUpdateAxis();
+}
+
+function riChartHover(e){
+  const c=window._reinvestChart;if(!c)return;
+  const svg=e.currentTarget;
+  const rect=svg.getBoundingClientRect();
+  const vbX=((e.clientX-rect.left)/rect.width)*c.W;
+  if(vbX<c.padL||vbX>c.padL+c.innerW){riChartLeave();return;}
+  const frac=(vbX-c.padL)/c.innerW;
+  const idx=Math.max(0,Math.min(c.pts.length-1,Math.round(frac*(c.pts.length-1))));
+  const pt=c.pts[idx];
+  const ys=c.pts.map(p=>p.v);
+  const yMax=Math.max(...ys,1e-9);
+  const ptX=c.padL+(idx/(c.pts.length-1))*c.innerW;
+  const ptY=c.padT+c.innerH-(pt.v/yMax)*c.innerH;
+  const cursor=document.getElementById('riChartCursor');
+  const dot=document.getElementById('riChartDot');
+  cursor.setAttribute('x1',ptX);cursor.setAttribute('x2',ptX);cursor.style.opacity='.55';
+  dot.setAttribute('cx',ptX);dot.setAttribute('cy',ptY);dot.style.opacity='1';
+
+  const unit=window._reinvestUnit,period=window._reinvestPeriod;
+  const mult=period==='month'?30:1;
+  const val=unit==='gmt'?(pt.v/c.gp)*mult:pt.v*mult;
+  const valStr=unit==='gmt'?fN(val,val>=1000?0:2)+' GMT':fU(val);
+  const suffix=period==='month'?'/mo':'/day';
+  const tip=document.getElementById('riChartTip');
+  tip.innerHTML=`<div class="ri-tip-day">Day ${pt.d}</div><div class="ri-tip-val${unit==='gmt'?' green':''}">${valStr}${suffix}</div>`;
+  const wrap=tip.parentElement.getBoundingClientRect();
+  let left=e.clientX-wrap.left+14;
+  let top=e.clientY-wrap.top-44;
+  if(left+140>wrap.width)left=e.clientX-wrap.left-152;
+  if(top<6)top=e.clientY-wrap.top+18;
+  tip.style.left=left+'px';
+  tip.style.top=top+'px';
+  tip.style.opacity='1';
+}
+
+function riChartLeave(){
+  const cursor=document.getElementById('riChartCursor');
+  const dot=document.getElementById('riChartDot');
+  const tip=document.getElementById('riChartTip');
+  if(cursor)cursor.style.opacity='0';
+  if(dot)dot.style.opacity='0';
+  if(tip)tip.style.opacity='0';
 }
 
 function shareProjection(){
