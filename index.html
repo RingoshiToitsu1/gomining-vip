@@ -450,6 +450,23 @@ input[type=number]{-moz-appearance:textfield}
 .ri-table .switch-row td{background:rgba(251,191,36,.06);border-bottom:1px solid rgba(251,191,36,.2)}
 .ri-btn{padding:.55rem 1.5rem;border-radius:1rem;font-family:var(--sans);font-size:.82rem;font-weight:600;cursor:pointer;background:var(--green);color:#000;border:none;transition:var(--transition);display:inline-flex;align-items:center;gap:.4rem}
 .ri-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(52,211,153,.3);background:#4ae8ac}
+.ri-chart-wrap{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;position:relative}
+.ri-chart-title{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:center;margin-bottom:.6rem}
+.ri-chart-svg{width:100%;height:auto;display:block}
+.ri-unit-toggle{position:absolute;top:.6rem;right:.6rem;display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:2px;gap:2px;z-index:2}
+.ri-tog-btn{background:transparent;border:none;color:var(--text3);font-family:var(--sans);font-size:.7rem;font-weight:700;padding:.3rem .65rem;border-radius:6px;cursor:pointer;transition:var(--transition);letter-spacing:.04em}
+.ri-tog-btn:hover{color:var(--text2)}
+.ri-tog-btn.active{background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff}
+.ri-single-card{max-width:380px;margin:0 auto 1rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem 1.2rem;text-align:center}
+.ri-single-card .ri-label{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem}
+.ri-single-card .ri-headline{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.1}
+.ri-single-card .ri-headline.cyan{color:var(--cyan)}
+.ri-single-card .ri-headline.green{color:var(--green)}
+.ri-single-card .ri-mo-yr{font-family:var(--mono);font-size:.82rem;color:var(--text2);margin-top:.35rem;letter-spacing:.02em}
+.ri-single-card .ri-mo-yr .ri-sep{color:var(--text4);margin:0 .45rem}
+.ri-single-card .ri-breakdown{font-family:var(--mono);font-size:.66rem;color:var(--text3);margin-top:.3rem}
+.ri-single-card .ri-usd-value{font-family:var(--mono);font-size:.9rem;color:var(--green);margin-top:.2rem;font-weight:600;opacity:.85}
+.ri-single-card .ri-gain{font-size:.66rem;color:var(--text3);margin-top:.25rem;font-family:var(--mono)}
 @media(max-width:600px){
   .ri-summary{grid-template-columns:1fr 1fr}
   .ri-card .ri-val{font-size:.95rem}
@@ -2286,102 +2303,54 @@ function runReinvestProjection(){
     <strong>${fN(postLocked,0)} GMT</strong> locked
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
 
-  // End-of-period values: BTC count uses bpAtEnd (price actually reached on the
-  // last day of the projection — capped below bpEnd if firm target is past horizon).
-  const finalDailyBTC=finalSS/bpAtEnd;
+  // End-of-period values
   const finalDailyGMT=finalSS/gp;
   const finalMonthly=finalSS*30;
-  const finalMonthlyBTC=finalMonthly/bpAtEnd;
+  const finalYearly=finalSS*365;
   const finalMonthlyGMT=finalMonthly/gp;
+  const finalYearlyGMT=finalYearly/gp;
   const lockedUSD=gmtLocked*gp;
-  const lockedBTC=lockedUSD/bpAtEnd;
 
-  h+=`<div class="ri-summary ri-center">
-    <div class="ri-card"><div class="ri-label">Final Hashrate</div><div class="ri-val green">${fN(th,1)} TH</div><div class="ri-sub">+${fN(thGain,1)} TH (+${fN(thPct,1)}%)</div></div>
-    <div class="ri-card"><div class="ri-label">Token Discount</div><div class="ri-val cyan">${fP(finalEntry.tokD)}</div><div class="ri-sub">maintained at 20%</div></div>
-  </div>`;
+  // Build chart (USD + GMT series, both rendered, USD visible)
+  h+=buildReinvestChart(daily,days,gp);
 
   // End-of-period breakdown (mining / staking / ambassador)
   const finalBreakdown=dailyNet(th,gmtLocked);
   const breakdownDaily=`mining ${fU(finalBreakdown.mining)} + staking ${fU(finalBreakdown.staking)}${ambDaily>0?` + ambassador ${fU(finalBreakdown.amb)}`:''}`;
-  const breakdownMonthly=`mining ${fU(finalBreakdown.mining*30)} + staking ${fU(finalBreakdown.staking*30)}${ambDaily>0?` + ambassador ${fU(finalBreakdown.amb*30)}`:''}`;
 
-  h+=`<div class="sub-title centered">Daily Reward (End of Period)</div>`;
-  h+=`<div class="ri-summary ri-center">
-    <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalSS)}</div><div class="ri-sub">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div></div>
-    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalDailyGMT,2)}</div></div>
+  // Daily reward card (USD + GMT versions, swappable via toggle)
+  h+=`<div class="ri-single-card">
+    <div class="ri-label">Daily Reward (End of Period)</div>
+    <div class="ri-headline cyan" data-reinvest-unit="usd">${fU(finalSS)}</div>
+    <div class="ri-headline green" data-reinvest-unit="gmt" style="display:none">${fN(finalDailyGMT,2)} <img src="gmt36.png" class="gmt-logo" alt="GMT"></div>
+    <div class="ri-mo-yr">
+      <span data-reinvest-unit="usd">${fU(finalMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalYearly)}/yr</span>
+      <span data-reinvest-unit="gmt" style="display:none">${fN(finalMonthlyGMT,0)} GMT/mo<span class="ri-sep">&bull;</span>${fN(finalYearlyGMT,0)} GMT/yr</span>
+    </div>
+    <div class="ri-breakdown">${breakdownDaily}</div>
+    <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
-  h+=`<div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:-.4rem;font-family:var(--mono)">${breakdownDaily}</div>`;
 
-  h+=`<div class="sub-title centered">Monthly Reward (End of Period)</div>`;
-  h+=`<div class="ri-summary ri-center">
-    <div class="ri-card"><div class="ri-label">USD</div><div class="ri-val cyan">${fU(finalMonthly)}</div></div>
-    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(finalMonthlyGMT,2)}</div></div>
-  </div>`;
-  h+=`<div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:-.4rem;font-family:var(--mono)">${breakdownMonthly}</div>`;
-
+  // Ambassador rewards — kept when ambassador option engaged
   if(manualRefTH>0||refTH>0){
     const finalAmbMonthly=ambDaily*30;
+    const finalAmbYearly=ambDaily*365;
     const totalRefTH=manualRefTH+refTH;
-    h+=`<div class="sub-title centered">Ambassador Rewards (USDT)</div>`;
-    h+=`<div class="ri-summary ri-center">
-      <div class="ri-card"><div class="ri-label">Monthly (End)</div><div class="ri-val green">${fU(finalAmbMonthly)}</div><div class="ri-sub">${fN(totalRefTH,0)} referred TH</div></div>
-      <div class="ri-card"><div class="ri-label">Total over ${days}d</div><div class="ri-val cyan">${fU(totalAmbUSD)}</div><div class="ri-sub">added to daily reinvest pool</div></div>
+    h+=`<div class="ri-single-card">
+      <div class="ri-label">Ambassador Rewards (USDT)</div>
+      <div class="ri-headline green">${fU(ambDaily)}</div>
+      <div class="ri-mo-yr">${fU(finalAmbMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalAmbYearly)}/yr</div>
+      <div class="ri-breakdown">${fN(totalRefTH,0)} referred TH &middot; total over ${days}d: ${fU(totalAmbUSD)}</div>
     </div>`;
-    if(refStartTH>0){
-      const refGain=refTH-refStartTH;
-      const refPct=refStartTH>0?(refGain/refStartTH*100):0;
-      h+=`<div class="sub-title centered">Your Referral's Growth (${fU(i.refCap)} starting capital)</div>`;
-      h+=`<div class="ri-summary ri-center">
-        <div class="ri-card"><div class="ri-label">Referral TH</div><div class="ri-val cyan">${fN(refTH,1)}</div><div class="ri-sub">${fN(refStartTH,1)} → ${fN(refTH,1)} (+${fN(refPct,1)}%)</div></div>
-        <div class="ri-card"><div class="ri-label">Referral Locked <img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(refLocked,0)}</div><div class="ri-sub">${fN(refStartLocked,0)} → ${fN(refLocked,0)}</div></div>
-      </div>`;
-      if(totalRefBonusGMT>0){
-        h+=`<div class="ri-summary ri-center">
-          <div class="ri-card"><div class="ri-label">Your 5% GMT Bonus (cumulative)</div><div class="ri-val green">${fN(totalRefBonusGMT,0)} GMT</div><div class="ri-sub">${fU(totalRefBonusGMT*gp)} — initial ${fN(refInitBonusGMT,0)} + ${fN(totalRefBonusGMT-refInitBonusGMT,0)} from their daily TH purchases</div></div>
-        </div>`;
-      }
-    }
   }
 
-  h+=`<div class="sub-title centered">Locked GMT (End of Period)</div>`;
-  h+=`<div class="ri-summary ri-center">
-    <div class="ri-card"><div class="ri-label"><img src="gmt36.png" class="gmt-logo" alt="GMT"></div><div class="ri-val green">${fN(gmtLocked,0)}</div><div class="ri-sub">+${fN(gmtGain,0)} GMT gained</div></div>
-    <div class="ri-card"><div class="ri-label">USD Value</div><div class="ri-val cyan">${fU(lockedUSD)}</div></div>
+  // Locked GMT — count + USD value (both green)
+  h+=`<div class="ri-single-card">
+    <div class="ri-label">Locked GMT (End of Period)</div>
+    <div class="ri-headline green">${fN(gmtLocked,0)} <img src="gmt36.png" class="gmt-logo" alt="GMT"></div>
+    <div class="ri-usd-value">${fU(lockedUSD)} USD value</div>
+    <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
   </div>`;
-
-  if(distPct>0||distWeeklyUSD>0){
-    const avgWeekly=weeklySettlements>0?totalDistributionUSD/weeklySettlements:0;
-    const avgMonthly=avgWeekly*(52/12);
-    const requestedWeekly=distWeeklyUSD;
-    let modeSub;
-    if(distPct>0&&distWeeklyUSD>0)modeSub=`${fP(distPct*100)} of rewards + ${fU(distWeeklyUSD)}/wk floor over ${weeklySettlements} wks`;
-    else if(distPct>0)modeSub=`${fP(distPct*100)} of mining + ambassador over ${weeklySettlements} wks`;
-    else modeSub=`${fU(distWeeklyUSD)}/wk requested over ${weeklySettlements} wks`;
-    // Shortfall = requested $ floor couldn't always be met by weekly rewards
-    // (compares requested $ vs actually-paid $ portion only, not the % portion).
-    const expectedFromDollar=distWeeklyUSD*weeklySettlements;
-    const shortfall=distWeeklyUSD>0&&totalDollarPaidUSD<expectedFromDollar?expectedFromDollar-totalDollarPaidUSD:0;
-    h+=`<div class="sub-title centered">Distribution (Not Reinvested)</div>`;
-    h+=`<div class="ri-summary ri-center">
-      <div class="ri-card"><div class="ri-label">Total Paid Out</div><div class="ri-val cyan">${fU(totalDistributionUSD)}</div><div class="ri-sub">${modeSub}</div></div>
-      <div class="ri-card"><div class="ri-label">Avg Weekly</div><div class="ri-val green">${fU(avgWeekly)}</div><div class="ri-sub">≈ ${fU(avgMonthly)}/mo${requestedWeekly>0?` &middot; req ${fU(requestedWeekly)}/wk`:''}</div></div>
-    </div>`;
-    if(shortfall>0){
-      h+=`<div style="text-align:center;font-size:.72rem;color:#fb923c;margin-top:-.4rem">Note: weekly rewards couldn't fully cover the $${fN(distWeeklyUSD,0)}/wk floor in some weeks &mdash; shortfall ${fU(shortfall)} over period.</div>`;
-    }
-  }
-
-  // Snapshot table
-  // Info box
-  let distNote='';
-  if(distPct>0&&distWeeklyUSD>0)distNote=` Each week, <strong style="color:var(--purple-soft)">${fP(distPct*100)}</strong> of the week's mining + ambassador reward plus a <strong style="color:var(--purple-soft)">${fU(distWeeklyUSD)}</strong> floor is set aside as distribution; the remainder is reinvested.`;
-  else if(distPct>0)distNote=` Each week, <strong style="color:var(--purple-soft)">${fP(distPct*100)}</strong> of the week's mining + ambassador reward is set aside as distribution; the remainder is reinvested.`;
-  else if(distWeeklyUSD>0)distNote=` Each week, <strong style="color:var(--purple-soft)">${fU(distWeeklyUSD)}</strong> is set aside as distribution (capped at what the week's rewards yield); the remainder is reinvested.`;
-  h+=`<div class="warn" style="margin-top:.8rem;background:rgba(0,194,255,.06);border-color:rgba(0,194,255,.2);color:var(--text2)">
-    <strong style="color:var(--cyan)">How this works:</strong> Each week, your accumulated BTC mining + ambassador rewards go toward buying more TH. Your locked GMT earns ${fN(apr,2)}% APR staking yield.
-    When adding TH would reduce your token discount below 20%, part of the reward is diverted to lock GMT instead, keeping coverage at 378+ days.
-    This ensures your discount stays stable while TH compounds.${distNote}</div>`;
 
   // Share button
   h+=`<div style="text-align:center;margin-top:1rem">
@@ -2389,12 +2358,69 @@ function runReinvestProjection(){
   </div>`;
 
   $('reinvestResult').innerHTML=h;
+  // Reset toggle to USD whenever the projection re-renders
+  window._reinvestUnit='usd';
 
   // Store data for share image
   window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
     thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
     finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain,
     btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd,bpAtEnd};
+}
+
+function buildReinvestChart(daily,days,gp){
+  const N=daily.length;
+  const target=Math.min(110,N);
+  const stride=Math.max(1,Math.floor(N/target));
+  const pts=[];
+  for(let i=0;i<N;i+=stride)pts.push(daily[i]);
+  if(pts[pts.length-1]!==daily[N-1])pts.push(daily[N-1]);
+  const W=600,H=210,padL=52,padR=18,padT=18,padB=34;
+  const innerW=W-padL-padR,innerH=H-padT-padB;
+  function svgFor(unit,gradId,stroke){
+    const ys=pts.map(p=>unit==='usd'?p.ssNet:p.ssNet/gp);
+    const yMax=Math.max(...ys,1e-9);
+    const px=i=>padL+(i/(pts.length-1))*innerW;
+    const py=v=>padT+innerH-(v/yMax)*innerH;
+    let line='';
+    for(let i=0;i<pts.length;i++)line+=(i===0?'M':' L')+px(i).toFixed(1)+' '+py(ys[i]).toFixed(1);
+    const area=line+` L ${px(pts.length-1).toFixed(1)} ${(padT+innerH).toFixed(1)} L ${padL} ${(padT+innerH).toFixed(1)} Z`;
+    const lblMax=unit==='usd'?fU(yMax):fN(yMax,2)+' GMT';
+    const lblMid=unit==='usd'?fU(yMax/2):fN(yMax/2,2)+' GMT';
+    const xStart='Day 1',xMid='Day '+Math.floor(days/2),xEnd='Day '+days;
+    return `<svg class="ri-chart-svg" viewBox="0 0 ${W} ${H}" data-reinvest-unit="${unit}"${unit==='gmt'?' style="display:none"':''}>
+      <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${stroke}" stop-opacity=".35"/><stop offset="100%" stop-color="${stroke}" stop-opacity="0"/></linearGradient></defs>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
+      <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" stroke="rgba(255,255,255,.05)" stroke-dasharray="2 4"/>
+      <path d="${area}" fill="url(#${gradId})"/>
+      <path d="${line}" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="${padL-6}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">${lblMax}</text>
+      <text x="${padL-6}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">${lblMid}</text>
+      <text x="${padL-6}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.5)" font-size="10" font-family="monospace">0</text>
+      <text x="${padL}" y="${H-10}" text-anchor="start" fill="rgba(255,255,255,.4)" font-size="10">${xStart}</text>
+      <text x="${padL+innerW/2}" y="${H-10}" text-anchor="middle" fill="rgba(255,255,255,.4)" font-size="10">${xMid}</text>
+      <text x="${padL+innerW}" y="${H-10}" text-anchor="end" fill="rgba(255,255,255,.4)" font-size="10">${xEnd}</text>
+    </svg>`;
+  }
+  return `<div class="ri-chart-wrap">
+    <div class="ri-unit-toggle">
+      <button class="ri-tog-btn active" data-unit="usd" onclick="setReinvestUnit('usd')">USD</button>
+      <button class="ri-tog-btn" data-unit="gmt" onclick="setReinvestUnit('gmt')">GMT</button>
+    </div>
+    <div class="ri-chart-title">Daily Reward Growth &middot; ${days} days</div>
+    ${svgFor('usd','riGradUsd','#4ecffa')}
+    ${svgFor('gmt','riGradGmt','#5ad9a8')}
+  </div>`;
+}
+
+window._reinvestUnit='usd';
+function setReinvestUnit(unit){
+  window._reinvestUnit=unit;
+  document.querySelectorAll('#reinvestResult [data-reinvest-unit]').forEach(el=>{
+    el.style.display=el.dataset.reinvestUnit===unit?'':'none';
+  });
+  document.querySelectorAll('#reinvestResult .ri-tog-btn').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
 }
 
 function shareProjection(){
