@@ -1454,7 +1454,7 @@ function dailyBTCperTH(){
 
 function calc(i){
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
-  const vip=vipOf(i.th,i.gl),nxt=nextVip(i.th,i.gl);
+  const vip=vipOf(i.th,i.gl+i.gw),nxt=nextVip(i.th,i.gl+i.gw);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
@@ -1564,7 +1564,7 @@ function recalc(){
   if(m.bp>80000){
     sg+=`<div class="signal th"><div class="signal-head">REINVEST IN TH</div><div class="signal-body">BTC is at ${fU(m.bp)} (above $80K). Convert BTC rewards to hashrate -- purchasing power is elevated.`;
     if(m.vip.rb>0)sg+=` Your ${m.vip.n} tier gives +${m.vip.rb}% TH reinvest bonus.`;
-    const nv=nextVip(i.th,i.gl);
+    const nv=nextVip(i.th,i.gl+i.gw);
     if(nv&&nv.rb>0)sg+=` Reaching ${nv.n} (${nv.th} TH) unlocks +${nv.rb}% reinvest bonus.`;
     sg+='</div></div>';
   }else if(m.bp>=60000){
@@ -1718,7 +1718,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     if(!i.payG)return 0;
     const bw=blendWTH(th-i.th);
     const rf=fees(th||1,bw||15,bp);
-    const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
+    const rd=Math.min(30,(vipOf(th,lockedGMT+gmtAvail).d)+(i.click?3:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
     return Math.min(reserveNeeded,gmtAvail);
@@ -1740,9 +1740,10 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const bonusTH=atTest-baseTH;
       const ntTest=i.th+atTest;
       const totalLocked=i.gl+totalGmtLock;
+      const walletAfter=reserve;
       const bwth=blendWTH(atTest);
       const fTest=fees(ntTest,bwth,bp);
-      const vTest=vipOf(ntTest,totalLocked);
+      const vTest=vipOf(ntTest,totalLocked+walletAfter);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
@@ -1777,7 +1778,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const newLocked=i.gl+sol.lock;
   const bwth=blendWTH(sol.addTH);
   const newF=fees(nt,bwth,bp);
-  const nv=vipOf(nt,newLocked);
+  const nv=vipOf(nt,newLocked+gmtReserve);
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
@@ -1881,7 +1882,7 @@ function renderPlanner(i,m){
   $('allocDisplay').innerHTML=ah;
 
   // --- Post-investment projections ---
-  const ov=vipOf(i.th,i.gl),tc=nv.n!==ov.n;
+  const ov=vipOf(i.th,i.gl+i.gw),tc=nv.n!==ov.n;
   const curMo=m.net*m.bp*30,imp=mo-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
@@ -2044,7 +2045,7 @@ function runReinvestProjection(){
 
   function dailyNet(curTH,curLocked){
     const g=dbt*curTH,f=fees(curTH,curWTH,bpToday);
-    const v=vipOf(curTH,curLocked);
+    const v=vipOf(curTH,curLocked+gmtW);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
@@ -2061,7 +2062,7 @@ function runReinvestProjection(){
 
   function gmtDeficit(curTH,curLocked){
     const f=fees(curTH,curWTH,bpToday);
-    const v=vipOf(curTH,curLocked);
+    const v=vipOf(curTH,curLocked+gmtW);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*360-(curLocked+gmtW));
