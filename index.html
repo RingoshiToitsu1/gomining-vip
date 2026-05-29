@@ -1011,6 +1011,11 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
+// PancakeSwap V2 GMT pool model — one-side USD-equivalent liquidity, fitted to
+// a real swap data point ($28,059 to buy 94,120 GMT at $0.27688 spot). Used to
+// adjust planner GMT buys/sells for AMM slippage on large allocations.
+const DEX_POOL_USD    = 365000;
+const DEX_FEE         = 0.0025;  // 0.25% PancakeSwap V2 swap fee on input side
 
 // ---- VIP TIERS ----
 const TIERS=[
@@ -1452,6 +1457,29 @@ function dailyBTCperTH(){
   return Math.floor(raw*1e8)/1e8;
 }
 
+// Constant-product AMM cost models. Spot price = DEX_POOL_USD / pool_GMT, so
+// pool_GMT = DEX_POOL_USD / gp. Big swaps shift the curve, so larger
+// allocations cost meaningfully more than the spot quote suggests.
+function dexBuyCostUSD(gmtAmount,gp){
+  if(gmtAmount<=0||gp<=0)return 0;
+  const X=DEX_POOL_USD/gp;
+  if(gmtAmount>=X*0.95)return Infinity;
+  const dyAfterFee=DEX_POOL_USD*gmtAmount/(X-gmtAmount);
+  return dyAfterFee/(1-DEX_FEE);
+}
+function dexSellProceedsUSD(gmtAmount,gp){
+  if(gmtAmount<=0||gp<=0)return 0;
+  const X=DEX_POOL_USD/gp;
+  const effective=gmtAmount*(1-DEX_FEE);
+  return DEX_POOL_USD*effective/(X+effective);
+}
+function dexBuyGmtFromUSD(usdSpent,gp){
+  if(usdSpent<=0||gp<=0)return 0;
+  const X=DEX_POOL_USD/gp;
+  const dyAfterFee=usdSpent*(1-DEX_FEE);
+  return X*dyAfterFee/(DEX_POOL_USD+dyAfterFee);
+}
+
 function calc(i){
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
   const vip=vipOf(i.th,i.gl+i.gw),nxt=nextVip(i.th,i.gl+i.gw);
@@ -1684,7 +1712,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     if(refCap<=0)return null;
     const COV=360;
     function refSolve(gmtUSD){
-      const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
+      const ag=dexBuyGmtFromUSD(gmtUSD,gp), thUSD=refCap-gmtUSD;
       const at=thUSD>0?thForBudget(thUSD):0;
       const fT=fees(at||1,15,bp);
       const vT=vipOf(at,ag);
@@ -1731,9 +1759,9 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     function solveAlloc(totalGmtLock){
       const fromPool=Math.min(totalGmtLock,deployable);
       const fromUSD=totalGmtLock-fromPool;
-      const usdSpentOnGMT=fromUSD*gp;
+      const usdSpentOnGMT=dexBuyCostUSD(fromUSD,gp);
       const gmtSell=deployable-fromPool;
-      const thBudgetUSD=(usdCap-usdSpentOnGMT)+(gmtSell*gp);
+      const thBudgetUSD=(usdCap-usdSpentOnGMT)+dexSellProceedsUSD(gmtSell,gp);
       const baseTH=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
@@ -1822,6 +1850,8 @@ function renderPlanner(i,m){
 
   // Explanation
   const usdToTH=usdCap-usdSpentOnGMT;
+  const slipPct=gmtFromUSD>0?(usdSpentOnGMT/(gmtFromUSD*gp)-1)*100:0;
+  const slipNote=slipPct>=1?` <span style="color:var(--text3);font-size:.75rem">(incl. ~${fN(slipPct,1)}% DEX slippage)</span>`:'';
   ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
   if(!i.payG){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
@@ -1830,9 +1860,9 @@ function renderPlanner(i,m){
   }else if(gmtLock<=0){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
   }else if(gmtFromUSD>0){
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT (${fN(gmtFromPool,0)} from pool + ${fN(gmtFromUSD,0)} bought with ${fU(usdSpentOnGMT)}) for 20% discount. Remaining ${fU(usdToTH)}${gmtSell>0?' + '+fN(gmtSell,0)+' GMT':''} buys +${fN(at,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT (${fN(gmtFromPool,0)} from pool + ${fN(gmtFromUSD,0)} bought with ${fU(usdSpentOnGMT)}${slipNote}) for 20% discount. Remaining ${fU(usdToTH)}${gmtSell>0?' + '+fN(gmtSell,0)+' GMT':''} buys +${fN(at,1)} TH.`;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT for 20% discount at ${fN(nt,1)} TH.${gmtSell>0?' Sell '+fN(gmtSell,0)+' GMT ('+fU(gmtSell*gp)+')':''} ${usdToTH>0?'+ '+fU(usdToTH)+' USD':''} → +${fN(at,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT for 20% discount at ${fN(nt,1)} TH.${gmtSell>0?' Sell '+fN(gmtSell,0)+' GMT ('+fU(dexSellProceedsUSD(gmtSell,gp))+')':''} ${usdToTH>0?'+ '+fU(usdToTH)+' USD':''} → +${fN(at,1)} TH.`;
   }
   if(sol.bonusActive){
     ah+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
