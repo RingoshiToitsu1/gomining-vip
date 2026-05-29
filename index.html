@@ -747,7 +747,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
-          <div class="field-input"><input type="number" id="inMiningMode" value="1.13" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inMiningMode" value="1.12" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:1.2rem;margin-top:.8rem">
@@ -1246,7 +1246,7 @@ const MINING_MODE_KEY='gmtopt_mining_mode_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.13;
+const MINING_MODE_DEFAULT=1.12;
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
