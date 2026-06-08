@@ -69,6 +69,19 @@ input[type=number]{-moz-appearance:textfield}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;line-height:1.2}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
+.disc-override{margin-top:.55rem}
+.disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}
+.disc-override-toggle:hover{border-color:var(--purple);color:var(--purple-soft);background:var(--purple-glow)}
+.disc-override-toggle.active{border-style:solid;border-color:var(--purple);color:var(--purple-soft);background:var(--purple-glow)}
+.disc-override-panel{margin-top:.5rem;animation:fadeIn .2s ease}
+.disc-override-hint{font-size:.66rem;color:var(--text4);font-family:var(--sans);line-height:1.4;margin-bottom:.45rem}
+.disc-override-row{display:flex;gap:.4rem;align-items:stretch}
+.disc-override-row input{flex:1;min-width:0;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:7px;padding:6px 9px;font-size:.78rem;font-family:var(--mono);outline:none}
+.disc-override-row input:focus{border-color:var(--border-focus)}
+.disc-override-row button{background:var(--purple);color:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:.72rem;font-family:var(--sans);font-weight:600;cursor:pointer}
+.disc-override-row button:hover{filter:brightness(1.08)}
+.disc-override-reset{margin-top:.45rem;background:transparent;border:none;color:var(--text4);font-size:.66rem;font-family:var(--sans);cursor:pointer;text-decoration:underline;padding:2px 0}
+.disc-override-reset:hover{color:var(--text2)}
 .hero-yearly{font-size:.72rem;margin-top:.1rem;margin-bottom:.15rem;font-family:var(--mono);letter-spacing:.02em;opacity:.75;font-weight:600}
 .hero-yearly.cyan{color:var(--cyan)}
 .hero-yearly.red{color:var(--red)}
@@ -687,6 +700,17 @@ input[type=number]{-moz-appearance:textfield}
       <div class="hero-label">Total Discount</div>
       <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDiscountSub">--</div>
+      <div class="disc-override">
+        <button class="disc-override-toggle" id="discOverrideToggle" onclick="toggleDiscountOverride()">Incorrect discount?</button>
+        <div class="disc-override-panel" id="discOverridePanel" style="display:none">
+          <div class="disc-override-hint">Enter the total discount shown in your GoMining app to override the estimate.</div>
+          <div class="disc-override-row">
+            <input type="number" id="inDiscOverride" min="0" max="30" step="0.1" placeholder="e.g. 24" inputmode="decimal">
+            <button onclick="applyDiscountOverride()">Apply</button>
+          </div>
+          <button class="disc-override-reset" id="discOverrideReset" onclick="resetDiscountOverride()" style="display:none">Reset to auto-calc</button>
+        </div>
+      </div>
     </div>
     <div class="hero-card orange-accent reveal">
       <div class="hero-label">VIP Level</div>
@@ -747,7 +771,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
-          <div class="field-input"><input type="number" id="inMiningMode" value="1.12" step="0.01" min="0"><span class="unit">%</span></div>
+          <div class="field-input"><input type="number" id="inMiningMode" value="1.09" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:1.2rem;margin-top:.8rem">
@@ -1003,7 +1027,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0 };
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
@@ -1243,10 +1267,13 @@ const PROFILES_KEY='gm_profiles_v1';     // {profiles:[{id,name,data}], activeId
 // Mining mode is a DAO-governance rate that applies across every saved setup,
 // so it persists in its own localStorage key — not bundled with per-setup data.
 const MINING_MODE_KEY='gmtopt_mining_mode_v1';
+// Manual total-discount override (global, like mining mode): the value the user
+// reads in their GoMining app, used when the coverage-based estimate is off.
+const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.12;
+const MINING_MODE_DEFAULT=1.09;
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
@@ -1265,6 +1292,47 @@ function loadMiningMode(){
     // Legacy bare-value format from before this migration: abandon and let the
     // current HTML default (MINING_MODE_DEFAULT) win.
   }catch(e){}
+}
+
+// ---- DISCOUNT OVERRIDE ----
+function loadDiscountOverride(){
+  try{
+    const raw=localStorage.getItem(DISCOUNT_OVERRIDE_KEY);
+    if(raw===null)return;
+    const v=Number(raw);
+    if(isFinite(v))S.discountOverride=Math.max(0,Math.min(30,v));
+  }catch(e){}
+}
+function toggleDiscountOverride(){
+  const panel=$('discOverridePanel'),btn=$('discOverrideToggle');
+  const open=panel.style.display==='none';
+  panel.style.display=open?'':'none';
+  btn.classList.toggle('active',open);
+  if(open){
+    // Prefill with the current displayed discount as a starting point.
+    if(S.discountOverride!=null)$('inDiscOverride').value=S.discountOverride;
+    else{const m=calc(inp());$('inDiscOverride').value=(+m.totD.toFixed(1));}
+    $('inDiscOverride').focus();$('inDiscOverride').select();
+  }
+}
+function applyDiscountOverride(){
+  let v=parseFloat($('inDiscOverride').value);
+  if(!isFinite(v)){resetDiscountOverride();return;}
+  v=Math.max(0,Math.min(30,v));
+  S.discountOverride=v;
+  try{localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v))}catch(e){}
+  $('discOverridePanel').style.display='none';
+  $('discOverrideToggle').classList.remove('active');
+  if(S.loaded)recalc();
+  flashStatus('Discount override set to '+fP(v));
+}
+function resetDiscountOverride(){
+  S.discountOverride=null;
+  try{localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
+  $('discOverridePanel').style.display='none';
+  $('discOverrideToggle').classList.remove('active');
+  if(S.loaded)recalc();
+  flashStatus('Discount reset to auto-calc');
 }
 
 function loadProfilesState(){
@@ -1412,6 +1480,7 @@ function deleteActiveProfile(){
 
 function loadSetup(){
   loadMiningMode();
+  loadDiscountOverride();
   const state=migrateLegacySetup();
   renderProfileSelect();
   if(state.activeId){
@@ -1464,11 +1533,20 @@ function calc(i){
   // GoMining grants the token discount in 1% steps based on coverage days.
   // GoMining uses 18 days per 1% step (360 days = 20% max), not 18.9.
   const eTok=cov<18?0:Math.min(20,Math.floor(cov/18));
-  const tok=i.payG?eTok:0;
-  const totD=Math.min(30,tok+nonTokD);
+  let tok=i.payG?eTok:0;
+  let totD=Math.min(30,tok+nonTokD);
+  // Manual override: user enters the real discount they see in the GoMining app.
+  // The delta from the auto-calc is attributed to the token (coverage) discount so
+  // the breakdown still sums to the displayed total.
+  let ovr=false;
+  if(S.discountOverride!=null&&isFinite(S.discountOverride)){
+    totD=Math.max(0,Math.min(30,S.discountOverride));
+    tok=Math.max(0,totD-nonTokD);
+    ovr=true;
+  }
   const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
-  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp}
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr}
 }
 
 // ---- RENDER HELPERS ----
@@ -1502,6 +1580,15 @@ function recalc(){
   $('heroYearly').textContent=fU(moUSD*12)+' / yr';$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   $('heroDiscount').textContent=fP(m.totD);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
+  // Reflect manual override state on the "Incorrect discount?" control.
+  const ovrToggle=$('discOverrideToggle'),ovrReset=$('discOverrideReset');
+  if(ovrToggle){
+    ovrToggle.textContent=m.ovr?'Manual override · '+fP(m.totD):'Incorrect discount?';
+    // Keep it visually "set" while overridden, even with the editor collapsed.
+    if(m.ovr)ovrToggle.classList.add('active');
+    else if($('discOverridePanel')&&$('discOverridePanel').style.display==='none')ovrToggle.classList.remove('active');
+  }
+  if(ovrReset)ovrReset.style.display=m.ovr?'':'none';
   $('heroVip').innerHTML=badge(m.vip);
   if(m.nxt){const need=m.nxt.th-i.th;$('heroVipSub').textContent=fN(need,0)+' TH to '+m.nxt.n}
   else $('heroVipSub').textContent='Max tier reached';
