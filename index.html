@@ -858,6 +858,24 @@ input[type=number]{-moz-appearance:textfield}
           <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
       </div>
+      <div style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Buy a specific marketplace miner <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Eyeing a cheap miner on the GoMining marketplace? Enter it here. Its hashrate counts toward rewards &amp; fees, but <strong style="color:var(--text3)">not</strong> toward your VIP tier. The planner spends the remaining balance on locking GMT / minting TH for max discount.</div>
+        <div class="input-grid">
+          <div class="field">
+            <label>Miner Hashrate</label>
+            <div class="field-input"><input type="number" id="inMpTH" value="0" step="10" min="0"><span class="unit">TH</span></div>
+          </div>
+          <div class="field">
+            <label>Miner Price <span class="tip" data-tip="The marketplace asking price for this miner, in GMT. Paid from your GMT on hand first, then USD capital.">?</span></label>
+            <div class="field-input"><input type="number" id="inMpGMT" value="0" step="1" min="0"><span class="unit">GMT</span></div>
+          </div>
+          <div class="field">
+            <label>Miner Efficiency <span class="tip" data-tip="Watts per terahash of this marketplace miner — drives its daily fees. Older miners are less efficient (higher W/TH). Defaults to 15.">?</span></label>
+            <div class="field-input"><input type="number" id="inMpWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -992,6 +1010,24 @@ input[type=number]{-moz-appearance:textfield}
             <span style="color:var(--text3);font-size:.85rem">USD</span>
           </div>
         </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem">
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.5rem">Specific marketplace miner <span style="color:var(--text4)">(optional)</span></label>
+          <div style="display:flex;gap:.5rem">
+            <div style="flex:1.2">
+              <input type="number" id="piMpTH" value="0" step="10" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">miner TH</div>
+            </div>
+            <div style="flex:1.4">
+              <input type="number" id="piMpGMT" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">price (GMT)</div>
+            </div>
+            <div style="flex:1">
+              <input type="number" id="piMpWth" value="15" step="0.1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">W/TH</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
+        </div>
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Referral's Planned Capital <span style="color:var(--text4)">(optional)</span></label>
           <div style="display:flex;align-items:center;gap:.5rem">
@@ -1114,6 +1150,9 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
     document.getElementById('piCapitalInput').value=$('inCapital').value;
     document.getElementById('piGMTInput').value=$('inGMTWallet').value;
     document.getElementById('piRefCapInput').value=$('inRefCapital').value;
+    document.getElementById('piMpTH').value=$('inMpTH').value;
+    document.getElementById('piMpGMT').value=$('inMpGMT').value;
+    document.getElementById('piMpWth').value=$('inMpWth').value;
     document.getElementById('plannerIntro').style.display='';
     document.body.style.overflow='hidden';
   }
@@ -1125,6 +1164,10 @@ function submitPlannerCapital(){
   $('inCapital').value=val;
   if(gmtVal>0)$('inGMTWallet').value=gmtVal;
   $('inRefCapital').value=refCapVal;
+  $('inMpTH').value=parseFloat(document.getElementById('piMpTH').value)||0;
+  $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
+  const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
+  $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
   recalc();
@@ -1257,6 +1300,9 @@ function inp(){return{
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
   mm:+$('inMiningMode').value||0, od:0, cpt:+$('inCostPerTH').value||0,
   cap:+$('inCapital').value||0,
+  mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
+  mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
+  mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
   refCap:+$('inRefCapital').value||0
 }}
@@ -1349,6 +1395,7 @@ function readInputs(){
     inTH:$('inTH').value, inWTH:$('inWTH').value,
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
+    inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
@@ -1362,6 +1409,9 @@ function applyInputs(d){
   if(d.inGMTLocked!=null)$('inGMTLocked').value=d.inGMTLocked;
   if(d.inGMTWallet!=null)$('inGMTWallet').value=d.inGMTWallet;
   if(d.inCapital!=null)$('inCapital').value=d.inCapital;
+  if(d.inMpTH!=null)$('inMpTH').value=d.inMpTH;
+  if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
+  if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
   if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
@@ -1454,6 +1504,7 @@ function clearInputs(){
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'5000',inClickStreak:false,inPayGMT:true,
+    inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
     piVipBonus:false
   });
@@ -1502,7 +1553,7 @@ function autoSave(){
     saveProfilesState(state);
   }catch(e){}
 }
-['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inMpTH','inMpGMT','inMpWth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
@@ -1760,7 +1811,13 @@ function flipProjCell(el){
 // Capital Planner and the Reinvest Growth Projection. Keeping these in sync
 // means "Monthly Income by BTC (LIVE)" matches the Reinvest's day-1 baseline.
 function solvePlannerAllocation(i, bp, gp, dbt){
-  const usdCap=i.cap;
+  let usdCap=i.cap;
+  // Marketplace miner: a specific miner the user plans to buy off the GoMining
+  // marketplace. Its hashrate earns rewards and incurs fees, but does NOT count
+  // toward the VIP tier (terahash bonus) — so it never lifts the tier .d discount.
+  const mpTH=Math.max(0,i.mpTH||0);
+  const mpWth=mpTH>0?(i.mpWth>0?i.mpWth:15):0;
+  const mpGmtCost=mpTH>0?Math.max(0,i.mpGMT||0):0;
   // VIP 10% bonus disabled — GoMining is not currently offering this promo.
   // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
   const vipBonus=false;
@@ -1792,19 +1849,29 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const refBonusUSD=refBonusGMT*gp;
 
   const baseGmtAvail=i.gw;
-  const gmtAvail=baseGmtAvail+refBonusGMT;
+  const gmtAvailPre=baseGmtAvail+refBonusGMT;
+  // Pay for the marketplace miner: GMT on hand first, then USD capital for the shortfall.
+  const gmtForMiner=Math.min(mpGmtCost,gmtAvailPre);
+  const usdForMiner=(mpGmtCost-gmtForMiner)*gp;
+  const minerShortfallUSD=Math.max(0,usdForMiner-usdCap);
+  const gmtAvail=gmtAvailPre-gmtForMiner;
+  usdCap=Math.max(0,usdCap-usdForMiner);
   const totalValue=usdCap+(gmtAvail*gp);
-  if(totalValue<=0)return null;
+  if(totalValue<=0&&mpTH<=0)return null;
 
   const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
 
-  function blendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
+  // VIP-only blended efficiency (existing farm + freshly minted TH at 15 W/TH).
+  function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
+  // Total blended efficiency including the marketplace miner — drives fees.
+  function blendWTH(addTH){const tot=i.th+addTH+mpTH;return tot>0?(i.th*i.wth+addTH*15+mpTH*mpWth)/tot:i.wth}
 
   let reserveNeeded=0;
   function calcReserve(th,lockedGMT){
     if(!i.payG)return 0;
+    const feeTH=th+mpTH;
     const bw=blendWTH(th-i.th);
-    const rf=fees(th||1,bw||15,bp);
+    const rf=fees(feeTH||1,bw||15,bp);
     const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
@@ -1825,16 +1892,17 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
       const bonusTH=atTest-baseTH;
-      const ntTest=i.th+atTest;
+      const vipTH=i.th+atTest;                 // counts toward VIP tier
+      const feeTH=vipTH+mpTH;                   // total hashrate (fees + rewards)
       const totalLocked=i.gl+totalGmtLock;
       const walletAfter=reserve;
       const bwth=blendWTH(atTest);
-      const fTest=fees(ntTest,bwth,bp);
-      const vTest=vipOf(ntTest,totalLocked);
+      const fTest=fees(feeTH,bwth,bp);
+      const vTest=vipOf(vipTH,totalLocked);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
-      return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:ntTest,
+      return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:feeTH,
         fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD,baseTH,bonusActive,bonusTH};
     }
     let lock=0;
@@ -1861,11 +1929,13 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
   sol=solveWithReserve(gmtReserve);
 
-  const nt=i.th+sol.addTH;
+  const vipTH=i.th+sol.addTH;          // VIP-eligible hashrate (excludes marketplace miner)
+  const nt=vipTH+mpTH;                 // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(sol.addTH);
+  const bwth=blendWTH(sol.addTH);      // total blended efficiency (incl. marketplace)
+  const vipWth=vipBlendWTH(sol.addTH); // VIP-only blend, for the reinvest sim
   const newF=fees(nt,bwth,bp);
-  const nv=vipOf(nt,newLocked);
+  const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
@@ -1880,7 +1950,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     gmtReserve, reserveNeeded,
     nt, newLocked, bwth, newF, nv, newNonTokD, newDailyBurnGMT,
     gmtNeededNew, covAfter, ntd, td2, canCover20, gmtShortfall,
-    vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS
+    vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
+    vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap
   };
 }
 
@@ -1894,7 +1965,8 @@ function renderPlanner(i,m){
   const {sol, ref, refBonusGMT, refBonusUSD, baseGmtAvail, gmtAvail, totalValue,
          gmtReserve, reserveNeeded, nt, newLocked, bwth, newF, nv,
          newNonTokD, newDailyBurnGMT, gmtNeededNew, ntd, td2,
-         canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN}=a;
+         canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN,
+         mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter, vipTH}=a;
   const gmtDeployable=sol.deployable, gmtLock=sol.lock, gmtSell=sol.sell;
   const gmtFromPool=sol.fromPool, gmtFromUSD=sol.fromUSD, usdSpentOnGMT=sol.usdSpentOnGMT;
   let at=sol.addTH, tu=sol.thUSD;
@@ -1908,8 +1980,15 @@ function renderPlanner(i,m){
   let ah='';
 
   // Explanation
-  const usdToTH=usdCap-usdSpentOnGMT;
+  const usdToTH=usdCapAfter-usdSpentOnGMT;
   ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
+  if(mpTH>0){
+    ah+=`<strong style="color:var(--purple-soft)">Marketplace miner:</strong> +${fN(mpTH,0)} TH for ${fN(mpGmtCost,0)} GMT`;
+    if(usdForMiner>0)ah+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
+    else ah+=` (from your GMT)`;
+    ah+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
+    if(minerShortfallUSD>0)ah+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
+  }
   if(!i.payG){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
   }else if(!canCover20){
@@ -1954,14 +2033,19 @@ function renderPlanner(i,m){
 
   // Resource breakdown
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
+  if(mpTH>0){
+    ah+=row('Marketplace miner',`+${fN(mpTH,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWth,1)} W/TH · non-VIP</span>`,'purple');
+  }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
     if(refBonusGMT>0)ah+=row('+ Referral 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (5% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
+    if(gmtForMiner>0)ah+=row('→ Marketplace miner',`${fN(gmtForMiner,0)} GMT<span class="sub">${fU(gmtForMiner*gp)}</span>`,'purple');
     if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
     if(gmtSell>0)ah+=row('→ Sell for TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
   }
   if(usdCap>0){
     ah+=row('USD capital',`${fU(usdCap)}`);
+    if(usdForMiner>0)ah+=row('→ Marketplace miner',`${fU(usdForMiner)}`,'purple');
     if(usdSpentOnGMT>0)ah+=row('→ Buy GMT to lock',`${fU(usdSpentOnGMT)}<span class="sub">${fN(gmtFromUSD,0)} GMT</span>`,'purple');
     if(usdToTH>0)ah+=row('→ Buy TH',`${fU(usdToTH)}`,'cyan');
   }
@@ -1977,7 +2061,7 @@ function renderPlanner(i,m){
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  ph+=row('New hashrate',`${fN(nt,1)} TH`);
+  ph+=row('New hashrate',`${fN(nt,1)} TH`+(mpTH>0?`<span class="sub">${fN(vipTH,1)} TH VIP + ${fN(mpTH,0)} TH marketplace</span>`:''));
   if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
@@ -2105,15 +2189,18 @@ function runReinvestProjection(){
   const refInitBonusGMT=a.refBonusGMT;
 
   // Post-investment starting values — identical to Capital Planner's post-state
-  const postTH=a.nt;
+  const MP_TH=a.mpTH||0;                     // marketplace miner — constant, non-VIP hashrate
+  const MP_WTH=a.mpWth>0?a.mpWth:15;
+  const postTH=a.nt;                         // total hashrate (VIP + marketplace), for display
+  const postVipTH=a.vipTH;                   // VIP-eligible hashrate — the part that compounds
   const postLocked=a.newLocked;
   const postWallet=a.gmtReserve;             // wallet GMT remaining after planner's allocation
-  const postWTH=a.bwth;
+  const postWTH=a.vipWth;                     // VIP-only blended efficiency (marketplace added per-day)
   const best={tu:a.sol.thUSD,ag:a.sol.lock,at:a.sol.addTH,nt:a.nt};
   const apr=i.apr||0;
 
-  let th=postTH,gmtW=postWallet,gmtLocked=postLocked;
-  const startTH=th;
+  let th=postVipTH,gmtW=postWallet,gmtLocked=postLocked;
+  const startTH=postTH;                       // display baseline = total hashrate
   let curWTH=postWTH;
   const daily=[];
 
@@ -2131,7 +2218,9 @@ function runReinvestProjection(){
   let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
   function dailyNet(curTH,curLocked){
-    const g=dbt*curTH,f=fees(curTH,curWTH,bpToday);
+    const totTH=curTH+MP_TH;
+    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH)/totTH:curWTH;
+    const g=dbt*totTH,f=fees(totTH,bw,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
@@ -2148,7 +2237,9 @@ function runReinvestProjection(){
   }
 
   function gmtDeficit(curTH,curLocked){
-    const f=fees(curTH,curWTH,bpToday);
+    const totTH=curTH+MP_TH;
+    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH)/totTH:curWTH;
+    const f=fees(totTH,bw,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
@@ -2278,7 +2369,7 @@ function runReinvestProjection(){
       // Recompute post-purchase daily rate for the snapshot
       postDN=dailyNet(th,gmtLocked);
     }
-    daily.push({d,th,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
+    daily.push({d,th:th+MP_TH,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
 
     // Defensive: extreme BTC targets can push compounding past JS number range.
     // Bail with a friendly error rather than render NaN/Infinity in the result.
@@ -2296,7 +2387,7 @@ function runReinvestProjection(){
 
   // Final state discount
   const finalEntry=daily[daily.length-1];
-  const thGain=th-startTH,thPct=thGain/startTH*100;
+  const thGain=(th+MP_TH)-startTH,thPct=startTH>0?thGain/startTH*100:0;
   // True baseline: captured during the loop at d===1, BEFORE referral compounded (so ambDaily reflects initial state)
   const startSS=startSS_capture;
   const finalSS=finalEntry.ssNet;
