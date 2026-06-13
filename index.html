@@ -749,6 +749,14 @@ input[type=number]{-moz-appearance:textfield}
           <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
         </div>
         <div class="field">
+          <label>Greedy Machine TH <span class="tip" data-tip="Hashrate from Greedy Machine NFTs you own. Earns rewards &amp; pays fees, but does NOT count toward your VIP tier. Grows passively each week at the rate set in the Capital Planner (default 0.3%/wk), compounding even past the 5,000 TH manual-upgrade cap.">?</span></label>
+          <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+        </div>
+        <div class="field">
+          <label>Greedy Efficiency <span class="tip" data-tip="Watts per terahash of your Greedy Machine(s) — drives their daily fees. Defaults to 15.">?</span></label>
+          <div class="field-input"><input type="number" id="inGreedyWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
+        </div>
+        <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
           <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
         </div>
@@ -873,6 +881,16 @@ input[type=number]{-moz-appearance:textfield}
           <div class="field">
             <label>Miner Efficiency <span class="tip" data-tip="Watts per terahash of this marketplace miner — drives its daily fees. Older miners are less efficient (higher W/TH). Defaults to 15.">?</span></label>
             <div class="field-input"><input type="number" id="inMpWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Greedy Machine passive growth <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Weekly TH growth for the Greedy Machine(s) you entered in Current Operation. Compounds on the current TH every week — and is the <strong style="color:var(--text3)">only</strong> growth once a miner hits the 5,000 TH manual-upgrade cap. Until then, reinvested rewards fill it up to 5k (discount-first). Enter last week's observed growth.</div>
+        <div class="input-grid">
+          <div class="field">
+            <label>Weekly TH Growth</label>
+            <div class="field-input"><input type="number" id="inGreedyGrowth" value="0.3" step="0.01" min="0"><span class="unit">%/wk</span></div>
           </div>
         </div>
       </div>
@@ -1071,6 +1089,7 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
+const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passive growth compounds past this
 
 // ---- VIP TIERS ----
 const TIERS=[
@@ -1303,6 +1322,9 @@ function inp(){return{
   mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
   mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
   mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
+  gth:+($('inGreedyTH')?$('inGreedyTH').value:0)||0,
+  gwth:+($('inGreedyWth')?$('inGreedyWth').value:0)||0,
+  ggrow:+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
   refCap:+$('inRefCapital').value||0
 }}
@@ -1396,6 +1418,7 @@ function readInputs(){
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
+    inGreedyTH:$('inGreedyTH').value, inGreedyWth:$('inGreedyWth').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
@@ -1412,6 +1435,9 @@ function applyInputs(d){
   if(d.inMpTH!=null)$('inMpTH').value=d.inMpTH;
   if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
+  if(d.inGreedyTH!=null)$('inGreedyTH').value=d.inGreedyTH;
+  if(d.inGreedyWth!=null)$('inGreedyWth').value=d.inGreedyWth;
+  if(d.inGreedyGrowth!=null)$('inGreedyGrowth').value=d.inGreedyGrowth;
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
   if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
@@ -1505,6 +1531,7 @@ function clearInputs(){
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'5000',inClickStreak:false,inPayGMT:true,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
+    inGreedyTH:'0',inGreedyWth:'15',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
     piVipBonus:false
   });
@@ -1553,7 +1580,7 @@ function autoSave(){
     saveProfilesState(state);
   }catch(e){}
 }
-['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inMpTH','inMpGMT','inMpWth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
@@ -1573,7 +1600,11 @@ function dailyBTCperTH(){
 }
 
 function calc(i){
-  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH(),gross=dbt*i.th,f=fees(i.th,i.wth,bp);
+  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH();
+  // Greedy Machine TH earns rewards + pays fees but is NOT VIP-eligible.
+  const gth=Math.max(0,i.gth||0),gwth=gth>0?(i.gwth>0?i.gwth:15):0;
+  const totTH=i.th+gth,bwth=totTH>0?(i.th*i.wth+gth*gwth)/totTH:i.wth;
+  const gross=dbt*totTH,f=fees(totTH,bwth,bp);
   const vip=vipOf(i.th,i.gl),nxt=nextVip(i.th,i.gl);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
@@ -1818,6 +1849,10 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const mpTH=Math.max(0,i.mpTH||0);
   const mpWth=mpTH>0?(i.mpWth>0?i.mpWth:15):0;
   const mpGmtCost=mpTH>0?Math.max(0,i.mpGMT||0):0;
+  // Greedy Machine: existing owned TH — earns rewards + pays fees, never VIP-eligible.
+  // Reinvestment grows it (greedy-first, up to 5k) inside the projection, not here.
+  const gth0=Math.max(0,i.gth||0);
+  const gwth0=gth0>0?(i.gwth>0?i.gwth:15):0;
   // VIP 10% bonus disabled — GoMining is not currently offering this promo.
   // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
   const vipBonus=false;
@@ -1864,12 +1899,12 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // VIP-only blended efficiency (existing farm + freshly minted TH at 15 W/TH).
   function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
   // Total blended efficiency including the marketplace miner — drives fees.
-  function blendWTH(addTH){const tot=i.th+addTH+mpTH;return tot>0?(i.th*i.wth+addTH*15+mpTH*mpWth)/tot:i.wth}
+  function blendWTH(addTH){const tot=i.th+addTH+mpTH+gth0;return tot>0?(i.th*i.wth+addTH*15+mpTH*mpWth+gth0*gwth0)/tot:i.wth}
 
   let reserveNeeded=0;
   function calcReserve(th,lockedGMT){
     if(!i.payG)return 0;
-    const feeTH=th+mpTH;
+    const feeTH=th+mpTH+gth0;
     const bw=blendWTH(th-i.th);
     const rf=fees(feeTH||1,bw||15,bp);
     const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
@@ -1893,7 +1928,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
       const bonusTH=atTest-baseTH;
       const vipTH=i.th+atTest;                 // counts toward VIP tier
-      const feeTH=vipTH+mpTH;                   // total hashrate (fees + rewards)
+      const feeTH=vipTH+mpTH+gth0;             // total hashrate (fees + rewards)
       const totalLocked=i.gl+totalGmtLock;
       const walletAfter=reserve;
       const bwth=blendWTH(atTest);
@@ -1929,8 +1964,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
   sol=solveWithReserve(gmtReserve);
 
-  const vipTH=i.th+sol.addTH;          // VIP-eligible hashrate (excludes marketplace miner)
-  const nt=vipTH+mpTH;                 // total hashrate for rewards + fees
+  const vipTH=i.th+sol.addTH;          // VIP-eligible hashrate (excludes marketplace + greedy)
+  const nt=vipTH+mpTH+gth0;            // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
   const bwth=blendWTH(sol.addTH);      // total blended efficiency (incl. marketplace)
   const vipWth=vipBlendWTH(sol.addTH); // VIP-only blend, for the reinvest sim
@@ -1951,7 +1986,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     nt, newLocked, bwth, newF, nv, newNonTokD, newDailyBurnGMT,
     gmtNeededNew, covAfter, ntd, td2, canCover20, gmtShortfall,
     vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
-    vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap
+    vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
+    gth:gth0, gwth:gwth0, ggrow:i.ggrow||0
   };
 }
 
@@ -2061,7 +2097,7 @@ function renderPlanner(i,m){
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  ph+=row('New hashrate',`${fN(nt,1)} TH`+(mpTH>0?`<span class="sub">${fN(vipTH,1)} TH VIP + ${fN(mpTH,0)} TH marketplace</span>`:''));
+  ph+=row('New hashrate',`${fN(nt,1)} TH`+(mpTH>0||a.gth>0?`<span class="sub">${fN(vipTH,1)} TH VIP${mpTH>0?` + ${fN(mpTH,0)} TH marketplace`:''}${a.gth>0?` + ${fN(a.gth,0)} TH greedy`:''}</span>`:''));
   if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
@@ -2191,6 +2227,12 @@ function runReinvestProjection(){
   // Post-investment starting values — identical to Capital Planner's post-state
   const MP_TH=a.mpTH||0;                     // marketplace miner — constant, non-VIP hashrate
   const MP_WTH=a.mpWth>0?a.mpWth:15;
+  // Greedy Machine — non-VIP. Reinvestment fills it to 5k (discount-first), then it
+  // only grows passively. Passive growth compounds weekly on the current TH, past 5k too.
+  const HAS_GREEDY=(a.gth||0)>0;
+  const GGROW=(a.ggrow||0)/100;
+  let greedyTH=a.gth||0;
+  let greedyWTH=a.gwth>0?a.gwth:15;
   const postTH=a.nt;                         // total hashrate (VIP + marketplace), for display
   const postVipTH=a.vipTH;                   // VIP-eligible hashrate — the part that compounds
   const postLocked=a.newLocked;
@@ -2217,9 +2259,10 @@ function runReinvestProjection(){
   let weeklySettlements=0;                    // count of weekly settlements that actually fired (for $-floor shortfall expectation)
   let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
 
-  function dailyNet(curTH,curLocked){
-    const totTH=curTH+MP_TH;
-    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH)/totTH:curWTH;
+  function dailyNet(curTH,curLocked,curGreedy){
+    const gTH=curGreedy==null?greedyTH:curGreedy;
+    const totTH=curTH+MP_TH+gTH;
+    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+gTH*greedyWTH)/totTH:curWTH;
     const g=dbt*totTH,f=fees(totTH,bw,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
@@ -2236,9 +2279,10 @@ function runReinvestProjection(){
     return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
 
-  function gmtDeficit(curTH,curLocked){
-    const totTH=curTH+MP_TH;
-    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH)/totTH:curWTH;
+  function gmtDeficit(curTH,curLocked,curGreedy){
+    const gTH=curGreedy==null?greedyTH:curGreedy;
+    const totTH=curTH+MP_TH+gTH;
+    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+gTH*greedyWTH)/totTH:curWTH;
     const f=fees(totTH,bw,bpToday);
     const v=vipOf(curTH,curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
@@ -2317,6 +2361,8 @@ function runReinvestProjection(){
     if(d%7===0){
       const weeklyGMT=gmtLocked*(apr/100)/52;
       gmtLocked+=weeklyGMT;
+      // Greedy Machine passive growth: compounds on the current TH, even past the 5k cap.
+      if(greedyTH>0&&GGROW>0)greedyTH*=(1+GGROW);
     }
 
     // --- Accumulate today's reinvestable reward (mining + ambassador) into the weekly bucket.
@@ -2359,21 +2405,33 @@ function runReinvestProjection(){
           }
         }
 
-        // Apply: GMT first (discount priority), remainder to TH
+        // Apply: GMT first (discount priority), remainder to TH.
         const gmtBuy=gmtSpend/gp;
         const thBudget=netUSD-gmtSpend;
         gmtLocked+=gmtBuy;
-        if(thBudget>0){const addTH=thForBudget(thBudget);curWTH=(th*curWTH+addTH*15)/(th+addTH);th+=addTH;}
+        if(thBudget>0){
+          const addTH=thForBudget(thBudget);
+          // Discount-first done; now fill the greedy machine up to 5k (manual upgrades),
+          // then mint the overflow as VIP-eligible TH. Past 5k, greedy grows only passively.
+          let addGreedy=0;
+          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
+            addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);
+            greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);
+            greedyTH+=addGreedy;
+          }
+          const addVip=addTH-addGreedy;
+          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        }
       }
 
       // Recompute post-purchase daily rate for the snapshot
       postDN=dailyNet(th,gmtLocked);
     }
-    daily.push({d,th:th+MP_TH,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
+    daily.push({d,th:th+MP_TH+greedyTH,greedy:greedyTH,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
 
     // Defensive: extreme BTC targets can push compounding past JS number range.
     // Bail with a friendly error rather than render NaN/Infinity in the result.
-    if(!isFinite(th)||!isFinite(gmtLocked)||!isFinite(postDN.net)){
+    if(!isFinite(th)||!isFinite(greedyTH)||!isFinite(gmtLocked)||!isFinite(postDN.net)){
       $('reinvestResult').innerHTML='<div class="warn" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5"><strong>Numbers exceeded simulation precision.</strong> The selected BTC target is so high that compounding TH growth overflows after day '+d+'. Pick a more conservative BTC target or shorter horizon.</div>';
       return;
     }
@@ -2387,7 +2445,7 @@ function runReinvestProjection(){
 
   // Final state discount
   const finalEntry=daily[daily.length-1];
-  const thGain=(th+MP_TH)-startTH,thPct=startTH>0?thGain/startTH*100:0;
+  const thGain=(th+MP_TH+greedyTH)-startTH,thPct=startTH>0?thGain/startTH*100:0;
   // True baseline: captured during the loop at d===1, BEFORE referral compounded (so ambDaily reflects initial state)
   const startSS=startSS_capture;
   const finalSS=finalEntry.ssNet;
@@ -2453,6 +2511,19 @@ function runReinvestProjection(){
       <div class="ri-headline green">${fU(ambDaily)}</div>
       <div class="ri-mo-yr">${fU(finalAmbMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalAmbYearly)}/yr</div>
       <div class="ri-breakdown">${fN(totalRefTH,0)} referred TH &middot; total over ${days}d: ${fU(totalAmbUSD)}</div>
+    </div>`;
+  }
+
+  // Greedy Machine — end-of-period TH (manual upgrades to 5k + passive growth)
+  if(HAS_GREEDY){
+    const greedyStart=a.gth||0;
+    const greedyGain=greedyTH-greedyStart;
+    const capped=greedyTH>=GREEDY_CAP;
+    h+=`<div class="ri-single-card">
+      <div class="ri-label">Greedy Machine TH (End of Period)</div>
+      <div class="ri-headline cyan">${fN(greedyTH,1)} TH</div>
+      <div class="ri-usd-value">from ${fN(greedyStart,1)} TH start &middot; ${fP(i.ggrow)}/wk passive${capped?' &middot; at 5k cap, passive only':''}</div>
+      <div class="ri-gain">+${fN(greedyGain,1)} TH${greedyStart>0?` (+${fN(greedyGain/greedyStart*100,0)}%)`:''}</div>
     </div>`;
   }
 
