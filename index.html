@@ -2909,9 +2909,17 @@ function syncOB(){
 function obPreview(){
   syncOB();
   if(S.loaded){
-    const i=inp(),m=calc(i),netUSD=m.net*m.bp;
-    document.getElementById('obPrevDaily').textContent=fU(netUSD);
-    document.getElementById('obPrevMonthly').textContent=fU(netUSD*30);
+    const i=inp(),m=calc(i);
+    // Mirror the Current Operation hero card: mining + staking + ambassador,
+    // otherwise the preview shows a lower number than the dashboard.
+    const netUSD=m.net*m.bp;
+    const dailyStakeUSD=(m.wkGMT/7)*m.gp;
+    const isAmb=$('inAmbassador').checked;
+    const refTH=isAmb?(+$('inReferredTH').value||0):0;
+    const ambDaily=refTH*15*24/1000*0.005;
+    const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily;
+    document.getElementById('obPrevDaily').textContent=fU(totalDailyUSD);
+    document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*30);
     document.getElementById('obPrevDiscount').textContent=fP(m.totD);
     document.getElementById('obPrevVip').textContent=m.vip.n;
   }
