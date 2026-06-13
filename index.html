@@ -755,7 +755,10 @@ input[type=number]{-moz-appearance:textfield}
         <div class="field">
           <label>Greedy Efficiency <span class="tip" data-tip="Watts per terahash of your Greedy Machine(s) — drives their daily fees. Defaults to 15.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
-          <div class="hint" id="blendWthHint" style="color:var(--cyan);font-size:.6rem"></div>
+        </div>
+        <div class="field">
+          <label>Weighted Avg Efficiency <span class="tip" data-tip="TH-weighted average W/TH across your main hashrate and Greedy Machine(s). Read-only — this is the efficiency your daily fees are actually calculated on.">?</span></label>
+          <div class="field-input"><span id="inWeightedWthDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">W/TH</span></div>
         </div>
         <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
@@ -1644,15 +1647,10 @@ function recalc(){
   // Update auto-calculated token discount display
   $('inTokenDiscountDisplay').textContent=m.eTok;
 
-  // Blended efficiency: when a greedy machine is present, show the TH-weighted
-  // average W/TH across all hashrate — the value fees are actually computed on.
-  const blendHint=$('blendWthHint');
-  if(blendHint){
-    if(m.gth>0&&m.totTH>0){
-      blendHint.textContent='Blended '+fN(m.bwth,2)+' W/TH across '+fN(m.totTH,1)+' TH';
-      blendHint.style.display='';
-    }else{blendHint.textContent='';blendHint.style.display='none';}
-  }
+  // Weighted-average efficiency across all hashrate (main + greedy) — the value
+  // fees are actually computed on. Read-only; equals main W/TH when no greedy.
+  const wAvg=$('inWeightedWthDisplay');
+  if(wAvg)wAvg.textContent=fN(m.bwth,2);
 
   // Hero cards
   const dailyStakeUSD=(m.wkGMT/7)*m.gp;
