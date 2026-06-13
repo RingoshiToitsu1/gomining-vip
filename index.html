@@ -755,6 +755,7 @@ input[type=number]{-moz-appearance:textfield}
         <div class="field">
           <label>Greedy Efficiency <span class="tip" data-tip="Watts per terahash of your Greedy Machine(s) — drives their daily fees. Defaults to 15.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
+          <div class="hint" id="blendWthHint" style="color:var(--cyan);font-size:.6rem"></div>
         </div>
         <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
@@ -1628,7 +1629,7 @@ function calc(i){
   }
   const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
-  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr}
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth}
 }
 
 // ---- RENDER HELPERS ----
@@ -1642,6 +1643,16 @@ function recalc(){
 
   // Update auto-calculated token discount display
   $('inTokenDiscountDisplay').textContent=m.eTok;
+
+  // Blended efficiency: when a greedy machine is present, show the TH-weighted
+  // average W/TH across all hashrate — the value fees are actually computed on.
+  const blendHint=$('blendWthHint');
+  if(blendHint){
+    if(m.gth>0&&m.totTH>0){
+      blendHint.textContent='Blended '+fN(m.bwth,2)+' W/TH across '+fN(m.totTH,1)+' TH';
+      blendHint.style.display='';
+    }else{blendHint.textContent='';blendHint.style.display='none';}
+  }
 
   // Hero cards
   const dailyStakeUSD=(m.wkGMT/7)*m.gp;
