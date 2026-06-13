@@ -1911,12 +1911,16 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   function blendWTH(addTH){const tot=i.th+addTH+mpTH+gth0;return tot>0?(i.th*i.wth+addTH*15+mpTH*mpWth+gth0*gwth0)/tot:i.wth}
 
   let reserveNeeded=0;
-  function calcReserve(th,lockedGMT){
+  function calcReserve(vipTH,lockedGMT,greedyTot){
     if(!i.payG)return 0;
-    const feeTH=th+mpTH+gth0;
-    const bw=blendWTH(th-i.th);
+    const gT=greedyTot==null?gth0:greedyTot;
+    const newVip=Math.max(0,vipTH-i.th);
+    const feeTH=vipTH+mpTH+gT;
+    // Blend: existing farm + new VIP TH(15) + marketplace + greedy (orig @gwth0, grown @15).
+    const gNum=gth0*gwth0+Math.max(0,gT-gth0)*15;
+    const bw=feeTH>0?(i.th*i.wth+newVip*15+mpTH*mpWth+gNum)/feeTH:(i.wth||15);
     const rf=fees(feeTH||1,bw||15,bp);
-    const rd=Math.min(30,(vipOf(th,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
+    const rd=Math.min(30,(vipOf(vipTH,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
     return Math.min(reserveNeeded,gmtAvail);
@@ -1936,8 +1940,15 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
       const bonusTH=atTest-baseTH;
-      const vipTH=i.th+atTest;                 // counts toward VIP tier
-      const feeTH=vipTH+mpTH+gth0;             // total hashrate (fees + rewards)
+      // Greedy-first: the capital's TH budget fills an owned greedy machine up to
+      // 5k (non-VIP) before minting VIP-eligible TH. Total fee TH is unchanged —
+      // only the VIP tier basis shrinks by whatever went to the greedy machine.
+      const gRoom=GREEDY_CAP-gth0;
+      const addGreedy=(gth0>0&&gRoom>0)?Math.min(atTest,gRoom):0;
+      const addVip=atTest-addGreedy;
+      const greedyTot=gth0+addGreedy;
+      const vipTH=i.th+addVip;                 // counts toward VIP tier (greedy excluded)
+      const feeTH=vipTH+mpTH+greedyTot;        // total hashrate (fees + rewards)
       const totalLocked=i.gl+totalGmtLock;
       const walletAfter=reserve;
       const bwth=blendWTH(atTest);
@@ -1947,6 +1958,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
       return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:feeTH,
+        addGreedy,addVip,greedyTot,
         fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD,baseTH,bonusActive,bonusTH};
     }
     let lock=0;
@@ -1962,22 +1974,27 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     return{lock,fromPool:r.fromPool,fromUSD:r.fromUSD,usdSpentOnGMT:r.usdSpentOnGMT,
       sell:r.gmtSell,deployable,addTH:r.at,thUSD:r.thBudgetUSD,
       baseTH:r.baseTH,bonusActive:r.bonusActive,bonusTH:r.bonusTH,
-      finalTH:i.th+r.at,finalLocked:i.gl+lock};
+      addGreedy:r.addGreedy,addVip:r.addVip,greedyTot:r.greedyTot,
+      finalVipTH:i.th+r.addVip,finalTH:i.th+r.at,finalLocked:i.gl+lock};
   }
 
   // Three-pass convergence: reserve depends on final TH, final TH depends on reserve.
-  let gmtReserve=calcReserve(i.th||1,i.gl);
+  let gmtReserve=calcReserve(i.th||1,i.gl,gth0);
   let sol=solveWithReserve(gmtReserve);
-  gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
+  gmtReserve=calcReserve(sol.finalVipTH,sol.finalLocked,sol.greedyTot);
   sol=solveWithReserve(gmtReserve);
-  gmtReserve=calcReserve(sol.finalTH,sol.finalLocked);
+  gmtReserve=calcReserve(sol.finalVipTH,sol.finalLocked,sol.greedyTot);
   sol=solveWithReserve(gmtReserve);
 
-  const vipTH=i.th+sol.addTH;          // VIP-eligible hashrate (excludes marketplace + greedy)
-  const nt=vipTH+mpTH+gth0;            // total hashrate for rewards + fees
+  const greedyTot=sol.greedyTot!=null?sol.greedyTot:gth0;
+  const addGreedy=sol.addGreedy||0;
+  const greedyWthAfter=greedyTot>0?(gth0*gwth0+addGreedy*15)/greedyTot:gwth0;
+  const addVip=sol.addVip!=null?sol.addVip:sol.addTH;
+  const vipTH=i.th+addVip;             // VIP-eligible hashrate (excludes marketplace + greedy)
+  const nt=vipTH+mpTH+greedyTot;       // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(sol.addTH);      // total blended efficiency (incl. marketplace)
-  const vipWth=vipBlendWTH(sol.addTH); // VIP-only blend, for the reinvest sim
+  const bwth=blendWTH(sol.addTH);      // total blended efficiency (all new TH @15, greedy/VIP split-agnostic)
+  const vipWth=vipBlendWTH(addVip);    // VIP-only blend, for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
@@ -1996,7 +2013,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     gmtNeededNew, covAfter, ntd, td2, canCover20, gmtShortfall,
     vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
     vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
-    gth:gth0, gwth:gwth0, ggrow:i.ggrow||0
+    gth:gth0, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy
   };
 }
 
@@ -2033,6 +2050,9 @@ function renderPlanner(i,m){
     else ah+=` (from your GMT)`;
     ah+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)ah+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
+  }
+  if(a.addGreedy>0){
+    ah+=`<strong style="color:var(--cyan)">Greedy machine first:</strong> +${fN(a.addGreedy,1)} TH of new hashrate upgrades your Greedy Machine to ${fN(a.greedyTot,0)} TH${a.greedyTot>=GREEDY_CAP?' (5k cap reached — overflow mints VIP TH)':''} before any VIP TH. <span style="color:var(--text3)">Greedy TH doesn't count toward VIP tier.</span><br>`;
   }
   if(!i.payG){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
@@ -2106,7 +2126,7 @@ function renderPlanner(i,m){
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  ph+=row('New hashrate',`${fN(nt,1)} TH`+(mpTH>0||a.gth>0?`<span class="sub">${fN(vipTH,1)} TH VIP${mpTH>0?` + ${fN(mpTH,0)} TH marketplace`:''}${a.gth>0?` + ${fN(a.gth,0)} TH greedy`:''}</span>`:''));
+  ph+=row('New hashrate',`${fN(nt,1)} TH`+(mpTH>0||a.gth>0?`<span class="sub">${fN(vipTH,1)} TH VIP${mpTH>0?` + ${fN(mpTH,0)} TH marketplace`:''}${a.gth>0?` + ${fN(a.greedyTot!=null?a.greedyTot:a.gth,0)} TH greedy`:''}</span>`:''));
   if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
@@ -2240,8 +2260,8 @@ function runReinvestProjection(){
   // only grows passively. Passive growth compounds weekly on the current TH, past 5k too.
   const HAS_GREEDY=(a.gth||0)>0;
   const GGROW=(a.ggrow||0)/100;
-  let greedyTH=a.gth||0;
-  let greedyWTH=a.gwth>0?a.gwth:15;
+  let greedyTH=a.greedyTot!=null?a.greedyTot:(a.gth||0);   // initial capital may have already filled it toward 5k
+  let greedyWTH=a.gwthAfter>0?a.gwthAfter:(a.gwth>0?a.gwth:15);
   const postTH=a.nt;                         // total hashrate (VIP + marketplace), for display
   const postVipTH=a.vipTH;                   // VIP-eligible hashrate — the part that compounds
   const postLocked=a.newLocked;
@@ -2525,7 +2545,7 @@ function runReinvestProjection(){
 
   // Greedy Machine — end-of-period TH (manual upgrades to 5k + passive growth)
   if(HAS_GREEDY){
-    const greedyStart=a.gth||0;
+    const greedyStart=a.greedyTot!=null?a.greedyTot:(a.gth||0);
     const greedyGain=greedyTH-greedyStart;
     const capped=greedyTH>=GREEDY_CAP;
     h+=`<div class="ri-single-card">
