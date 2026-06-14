@@ -1152,6 +1152,10 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
+// GoMining quotes a SUBSIDY-ONLY sats/TH/day (block reward, no tx fees). Adding live
+// mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
+// subsidy-only at current difficulty ≈ 45, matching the GoMining app. Bump at each halving.
+const BLOCK_SUBSIDY   = 3.125;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passive growth compounds past this
@@ -1336,7 +1340,7 @@ async function fetchData(){
     S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
     ok=false;
   }
-  S.satsPerTHDay=((1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32))*1e8;
+  S.satsPerTHDay=((1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32))*1e8;
 
   // ---- FX (GBP, EUR) ----
   try{
@@ -1660,9 +1664,9 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 // service_per_TH = 0.0089 / BTC_price
 function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
 function dailyBTCperTH(){
-  // Floor to integer sats/TH/day — GoMining appears to use whole sats in their
-  // internal reward calc, so matching that closes the residual ~1-2% gap.
-  const raw=(1e12*86400*(3.125+S.avgTxFees))/(S.difficulty*2**32);
+  // Subsidy-only (GoMining's rated convention — see BLOCK_SUBSIDY). Floor to whole
+  // sats/TH/day to match the app's internal reward calc.
+  const raw=(1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32);
   return Math.floor(raw*1e8)/1e8;
 }
 
