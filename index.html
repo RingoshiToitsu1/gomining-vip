@@ -5,33 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMT Optimizer</title>
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700,800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0c0e1c;--bg2:#13152a;--bg-card:#14162a;--bg-card-hover:#1c1e36;--bg-input:#0e1020;
-  --border:rgba(255,255,255,.08);--border-focus:#8a5ff7;
-  --purple:#8a5ff7;--purple-glow:rgba(138,95,247,.15);--purple-soft:#b094ff;
-  --cyan:#4ecffa;--cyan-glow:rgba(78,207,250,.1);--cyan-soft:#7fdcff;
-  --text:#eef0f8;--text2:#c4cbda;--text3:#9499ab;--text4:#6b7085;
-  --green:#5ad9a8;--green-glow:rgba(90,217,168,.12);
-  --orange:#fbbf24;--orange-glow:rgba(251,191,36,.1);
-  --red:#f87171;
-  --bronze:#cd7f32;--silver:#c0c0c0;--gold:#ffd700;--platinum:#e0dfe0;--diamond:#7ee8fa;--legend:#ff4d6a;
+  /* Gold/amber brand on near-black — primary accent #F5A623 */
+  --bg:#0A0A0A;--bg2:#141414;--bg-card:#111111;--bg-card-hover:#1a1a1a;--bg-input:#0e0e0e;
+  --border:rgba(245,166,35,.16);--border-focus:#F5A623;
+  --card-border:rgba(245,166,35,.30);
+  --purple:#F5A623;--purple-glow:rgba(245,166,35,.15);--purple-soft:#F7B84E;
+  --cyan:#FFCF7A;--cyan-glow:rgba(255,207,122,.10);--cyan-soft:#FFE0A8;
+  --text:#E0E0E0;--text2:#C2C2C2;--text3:#888888;--text4:#6a6a6a;
+  --green:#F5A623;--green-glow:rgba(245,166,35,.12);
+  --orange:#F5A623;--orange-glow:rgba(245,166,35,.1);
+  --red:#FF4D4D;
+  --bronze:#cd7f32;--silver:#c0c0c0;--gold:#F5A623;--platinum:#e0dfe0;--diamond:#FFCF7A;--legend:#FF4D4D;
   --radius:32px;--radius-sm:16px;
-  --mono:'Share Tech Mono',monospace;--sans:'General Sans',system-ui,sans-serif;
+  --mono:'Share Tech Mono',monospace;--sans:'Space Grotesk',system-ui,sans-serif;
   --shadow:0 0 32px rgba(0,0,0,.04);--shadow-sm:0 2px 8px rgba(0,0,0,.2);
   --transition:all .15s ease-in-out;
 }
 html{font-size:19.8px;scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(138,95,247,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(78,207,250,.07),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(138,95,247,.05),transparent 60%);background-attachment:fixed}
-::selection{background:var(--purple);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;line-height:1.5;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(245,166,35,.05),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(245,166,35,.04),transparent 60%);background-attachment:fixed}
+::selection{background:var(--purple);color:#000}
 input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 input[type=number]{-moz-appearance:textfield}
 
 /* ---- HEADER ---- */
-.header{position:sticky;top:0;z-index:100;background:rgba(12,14,28,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:.8rem 1.5rem}
+.header{position:sticky;top:0;z-index:100;background:rgba(10,10,10,.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--card-border);padding:.8rem 1.5rem}
 .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
 .logo{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(135deg,var(--purple) 0%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .live-bar{display:flex;gap:.2rem;align-items:center;flex-wrap:wrap}
@@ -39,7 +42,7 @@ input[type=number]{-moz-appearance:textfield}
 .live-chip:hover{border-color:var(--purple);background:var(--bg-card-hover)}
 .live-chip img{height:18px;width:18px;object-fit:contain;flex-shrink:0;border-radius:50%}
 .live-chip .lbl{color:var(--text3);font-weight:500}
-.live-chip .val{font-family:var(--mono);color:var(--text);font-weight:600}
+.live-chip .val{font-family:var(--mono);color:var(--purple);font-weight:700}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.4)}50%{box-shadow:0 0 0 5px rgba(52,211,153,0)}}
 .api-err .live-dot{background:var(--red);animation:none}
@@ -52,14 +55,18 @@ input[type=number]{-moz-appearance:textfield}
 .tabs{display:flex;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:var(--bg);padding-bottom:.8rem}
 .tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
 .tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
-.tab-btn.active{color:#fff;border-color:var(--purple);background:var(--purple-glow);box-shadow:0 0 20px rgba(123,79,255,.15)}
+.tab-btn.active{color:#000;border-color:var(--purple);background:var(--purple);box-shadow:0 0 20px rgba(245,166,35,.25);font-weight:700}
+.btc-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem}
+.btc-pill{padding:.4rem .8rem;border-radius:20px;border:1px solid var(--border);background:var(--bg-input);color:var(--text2);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.btc-pill:hover{border-color:var(--purple-soft);color:var(--text)}
+.btc-pill.active{background:var(--purple);border-color:var(--purple);color:#000;font-weight:700}
 .tab-content{display:none;animation:fadeIn .3s ease}
 .tab-content.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ---- HERO CARDS ---- */
 .hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.2rem}
-.hero-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition)}
+.hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition)}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .hero-card.purple-accent::before{background:linear-gradient(90deg,var(--purple),transparent)}
@@ -67,7 +74,7 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card.green-accent::before{background:linear-gradient(90deg,var(--green),transparent)}
 .hero-card.orange-accent::before{background:linear-gradient(90deg,var(--orange),transparent)}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
-.hero-val{font-family:var(--mono);font-size:1.35rem;font-weight:700;line-height:1.2}
+.hero-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.15;letter-spacing:.01em}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}
@@ -88,20 +95,20 @@ input[type=number]{-moz-appearance:textfield}
 .hero-val.green{color:var(--green)}.hero-val.cyan{color:var(--cyan)}.hero-val.orange{color:var(--orange)}.hero-val.purple{color:var(--purple-soft)}.hero-val.red{color:var(--red)}
 
 /* ---- SECTION ---- */
-.section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;transition:var(--transition)}
+.section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;transition:var(--transition)}
 .section:hover{border-color:#232d48}
-.section-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;cursor:pointer;user-select:none;transition:var(--transition)}
-.section-header:hover{background:rgba(123,79,255,.03)}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;cursor:default;user-select:none;transition:var(--transition)}
+.section-header:hover{background:rgba(245,166,35,.04)}
 .section-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
 .section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
-.section-title .thumb{width:20px;height:20px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(138,95,247,.25))}
+.section-title .thumb{width:20px;height:20px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(245,166,35,.25))}
 .section-title .thumb rect.bg{fill:url(#thumbGrad)}
 .section-title .thumb .g{stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .icon-purple{background:var(--purple)}.icon-cyan{background:var(--cyan)}.icon-green{background:var(--green)}.icon-orange{background:var(--orange)}
-.section-toggle{width:24px;height:24px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:var(--transition);color:var(--text3);font-size:.7rem}
+.section-toggle{display:none}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
 .section-body{padding:0 1.2rem 1.2rem;transition:var(--transition)}
-.section.collapsed .section-body{display:none}
+.section.collapsed .section-body{display:block}
 
 /* ---- INPUTS ---- */
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
@@ -186,15 +193,22 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- DONATION MODAL ---- */
 .donate-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem}
-.donate-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);max-width:504px;width:100%;padding:2rem;text-align:center;animation:fadeIn .3s ease}
+.donate-box{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);max-width:504px;width:100%;padding:2rem;text-align:center;animation:fadeIn .3s ease}
 .donate-box h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
 .donate-box p{font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:1rem}
 .donate-addr{font-family:var(--mono);font-size:.68rem;color:var(--orange);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;word-break:break-all;cursor:pointer;transition:var(--transition);margin-bottom:1rem}
 .donate-addr:hover{border-color:var(--orange);background:var(--bg-card-hover)}
 .donate-copied{font-size:.7rem;color:var(--green);opacity:0;transition:opacity .2s}
 .donate-copied.show{opacity:1}
-.donate-btn{padding:.6rem 1.8rem;border-radius:1rem;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;background:var(--purple);color:#fff;border:none;transition:var(--transition)}
-.donate-btn:hover{background:#8555f5;transform:translateY(-1px)}
+.donate-btn{padding:.6rem 1.8rem;border-radius:1rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;background:var(--purple);color:#000;border:none;transition:var(--transition)}
+.donate-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.donate-row{display:flex;align-items:center;gap:.7rem;background:var(--bg-input);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.7rem .8rem;margin-bottom:.7rem;text-align:left}
+.donate-logo{width:28px;height:28px;border-radius:50%;flex-shrink:0}
+.donate-row .donate-addr-wrap{flex:1;min-width:0}
+.donate-coin{font-size:.7rem;color:var(--text3);font-weight:600;margin-bottom:.15rem}
+.donate-row .donate-addr{margin-bottom:0;border:none;background:transparent;padding:0;font-size:.64rem;color:var(--purple)}
+.donate-copy{background:var(--purple);color:#000;border:none;border-radius:8px;padding:.45rem .85rem;font-family:var(--sans);font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:var(--transition)}
+.donate-copy:hover{filter:brightness(1.1)}
 @keyframes fadeIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 
 /* ---- FOOTER ---- */
@@ -208,6 +222,15 @@ input[type=number]{-moz-appearance:textfield}
 .alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.6rem 0}
 .alloc-card{background:var(--bg-input);border-radius:var(--radius);padding:1.1rem;text-align:center;border:1px solid var(--border);transition:var(--transition)}
 .alloc-card:hover{border-color:var(--purple)}
+.alloc-split{margin:.4rem 0}
+.alloc-split-bar{display:flex;height:30px;border-radius:8px;overflow:hidden;border:1px solid var(--card-border);background:var(--bg-input)}
+.alloc-split-th{background:var(--purple);color:#000;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;font-family:var(--sans);min-width:0;transition:width .4s ease}
+.alloc-split-gmt{background:#E0E0E0;color:#000;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;font-family:var(--sans);min-width:0;transition:width .4s ease}
+.alloc-split-legend{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;font-size:.72rem;color:var(--text2)}
+.alloc-split-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:.3rem;vertical-align:middle}
+.alloc-split-legend .dot-th{background:var(--purple)}
+.alloc-split-legend .dot-gmt{background:#E0E0E0}
+.alloc-split-why{font-size:.72rem;color:var(--text3);margin-top:.5rem;line-height:1.5;font-style:italic}
 .alloc-card .a-label{font-size:.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.3rem}
 .alloc-card .a-val{font-family:var(--mono);font-size:1.5rem;font-weight:700}
 .alloc-card .a-sub{font-size:.75rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
@@ -331,7 +354,7 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- ONBOARDING MODAL ---- */
 .ob-overlay{position:fixed;inset:0;z-index:1000;background:rgba(24,25,40,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;opacity:0;animation:obFadeIn .5s ease forwards}
 @keyframes obFadeIn{to{opacity:1}}
-.ob-modal{width:min(600px,92vw);max-height:90vh;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:0 0 80px rgba(123,79,255,.12),0 0 200px rgba(0,194,255,.05);position:relative}
+.ob-modal{width:min(600px,92vw);max-height:90vh;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:0 0 80px rgba(245,166,35,.12),0 0 200px rgba(0,194,255,.05);position:relative}
 .ob-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
 .ob-dots{display:flex;justify-content:center;gap:8px;padding:1.5rem 0 0}
 .ob-dot{width:8px;height:8px;border-radius:50%;background:var(--text4);transition:all .3s}
@@ -364,8 +387,8 @@ input[type=number]{-moz-appearance:textfield}
 .ob-toggle-row span{font-size:.82rem;color:var(--text2)}
 .ob-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem;gap:1rem}
 .ob-btn{padding:.7rem 1.8rem;border-radius:8px;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:var(--transition);border:none}
-.ob-btn-primary{background:#7540ef;color:#fff;box-shadow:0 4px 20px rgba(117,64,239,.3);border-radius:1rem}
-.ob-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(117,64,239,.4);background:#8555f5}
+.ob-btn-primary{background:#7540ef;color:#fff;box-shadow:0 4px 20px rgba(245,166,35,.3);border-radius:1rem}
+.ob-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(245,166,35,.4);background:#F7B84E}
 .ob-btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text2)}
 .ob-btn-secondary:hover{border-color:var(--text3);color:var(--text)}
 .ob-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
@@ -391,6 +414,14 @@ input[type=number]{-moz-appearance:textfield}
 .ob-tutorial-img{display:block;width:100%;max-width:100%;height:auto;transition:transform .25s ease;transform-origin:center center;will-change:transform}
 .ob-tutorial-wrap:hover .ob-tutorial-img{transform:scale(2.6)}
 .ob-tutorial-cap{display:block;text-align:center;font-size:.68rem;color:var(--text4);margin:-.6rem 0 1rem;font-style:italic}
+.ob-tutorial-wrap::after{content:'\2922 tap to enlarge';position:absolute;bottom:6px;right:8px;background:rgba(10,10,10,.78);color:var(--purple);font-family:var(--sans);font-size:.6rem;font-weight:600;padding:.15rem .45rem;border-radius:6px;pointer-events:none;z-index:2}
+.lightbox-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out}
+.lightbox-img{max-width:96vw;max-height:92vh;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lightbox-close{position:absolute;top:16px;right:22px;background:none;border:none;color:#fff;font-size:2.2rem;line-height:1;cursor:pointer}
+@media(max-width:600px){
+  .ob-tutorial-wrap:hover .ob-tutorial-img{transform:none}
+  .ob-tutorial-img{max-height:150px;width:auto;max-width:100%;margin:0 auto}
+}
 @media(max-width:600px){
   .ob-body{padding:1rem 1.2rem .8rem}
   .ob-nav{padding:0 1.2rem 1.2rem}
@@ -401,7 +432,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- PLANNER INTRO ---- */
 .pi-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .3s ease}
-.pi-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:576px;width:100%;box-shadow:0 0 80px rgba(123,79,255,.12);position:relative;overflow:hidden}
+.pi-modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;max-width:576px;width:100%;box-shadow:0 0 80px rgba(245,166,35,.12);position:relative;overflow:hidden}
 .pi-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
 .pi-body{padding:2rem 2rem 1.2rem}
 .pi-title{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:.4rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -427,7 +458,7 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card:nth-child(2){animation-delay:.15s}
 .hero-card:nth-child(3){animation-delay:.2s}
 .hero-card:nth-child(4){animation-delay:.25s}
-.field input:focus{box-shadow:0 0 0 3px var(--purple-glow),0 0 20px rgba(123,79,255,.08)}
+.field input:focus{box-shadow:0 0 0 3px var(--purple-glow),0 0 20px rgba(245,166,35,.08)}
 
 /* ---- SETUP BUTTON ---- */
 .ob-reset-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);font-size:.72rem;padding:.25rem .6rem;cursor:pointer;font-family:var(--sans);transition:var(--transition);margin-left:.5rem}
@@ -457,7 +488,7 @@ input[type=number]{-moz-appearance:textfield}
 .ri-table th:last-child{border-radius:0 8px 0 0}
 .ri-table td{padding:.45rem .6rem;text-align:right;border-bottom:1px solid rgba(58,57,64,.3);font-family:var(--mono);color:var(--text2)}
 .ri-table td:first-child{text-align:left;font-family:var(--sans);font-weight:600}
-.ri-table tr:hover td{background:rgba(123,79,255,.03)}
+.ri-table tr:hover td{background:rgba(245,166,35,.03)}
 .ri-table .mode-th{color:var(--green);font-weight:600}
 .ri-table .mode-gmt{color:var(--cyan);font-weight:600}
 .ri-table .switch-row td{background:rgba(251,191,36,.06);border-bottom:1px solid rgba(251,191,36,.2)}
@@ -502,7 +533,7 @@ input[type=number]{-moz-appearance:textfield}
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
   <defs>
     <linearGradient id="thumbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8a5ff7"/>
+      <stop offset="0%" stop-color="#F5A623"/>
       <stop offset="100%" stop-color="#4ecffa"/>
     </linearGradient>
   </defs>
@@ -549,7 +580,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="2">
       <div class="ob-title ob-step-reveal">Total Hashrate</div>
       <div class="ob-subtitle ob-step-reveal">Your total computing power across all NFTs.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img"></div>
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
       <div class="ob-field">
         <label>Total Hashrate</label>
@@ -561,7 +592,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="3">
       <div class="ob-title ob-step-reveal">Energy Efficiency</div>
       <div class="ob-subtitle ob-step-reveal">Average watts per terahash across your NFTs. Lower is better.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img"></div>
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> tile</span>
       <div class="ob-field">
         <label>Efficiency</label>
@@ -573,7 +604,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="4">
       <div class="ob-title ob-step-reveal">Liquid GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">Unlocked GMT sitting in your GoMining virtual wallet.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img"></div>
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
       <div class="ob-field">
         <label>Liquid GMT</label>
@@ -585,9 +616,9 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="5">
       <div class="ob-title ob-step-reveal">Locked GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">GMT you've staked in VeGoMining. Earns yield and counts toward your VIP tier.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img"></div>
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">Governance &rarr; My lock &rarr; <b>Total Locked</b></span>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)"><img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img"></div>
+      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img"></div>
       <span class="ob-tutorial-cap">Don't have any locked yet? Wallet &rarr; More &rarr; <b>Lock</b> to stake</span>
       <div class="ob-field">
         <label>Locked GMT</label>
@@ -628,7 +659,7 @@ input[type=number]{-moz-appearance:textfield}
   <div class="ob-nav">
     <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="display:none">Back</button>
     <button class="ob-btn ob-btn-primary ob-reveal" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3);animation-delay:1.4s">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
-    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 20px rgba(16,185,129,.3);animation-delay:1.4s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#F5A623,#d98e15);color:#000;box-shadow:0 4px 20px rgba(245,166,35,.3);animation-delay:1.4s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
   </div>
 </div>
 </div>
@@ -640,12 +671,19 @@ input[type=number]{-moz-appearance:textfield}
     <button onclick="goBackFromNewUser()" style="position:absolute;top:12px;left:14px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:1.2rem;padding:.3rem;line-height:1;transition:color .2s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text3)'" title="Go back">&#8592;</button>
     <div class="ob-title" style="margin-bottom:.5rem">Welcome to GMT Optimizer!</div>
     <div class="ob-subtitle" style="margin-bottom:1.2rem">All mining values have been set to zero since you're starting fresh. Use the <strong>Capital Planner</strong> to simulate your first investment — enter a budget and see exactly how much TH and GMT to buy.</div>
-    <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem;text-align:center">
-      <div style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">Don't have a GoMining account yet?</div>
-      <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener" class="ri-btn" style="background:linear-gradient(135deg,var(--green),#059669);display:inline-block;padding:.65rem 1.5rem;font-size:.85rem;text-decoration:none;color:#fff;font-weight:700;border-radius:var(--radius-sm)">Sign Up for GoMining</a>
-      <div style="font-size:.7rem;color:var(--green);margin-top:.5rem;font-weight:600">Use code RINGO5 — 5% bonus on your first miner purchase</div>
+    <div style="background:rgba(245,166,35,.05);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem;text-align:center">
+      <div style="font-size:.75rem;color:var(--text3);margin-bottom:.6rem">Don't have a GoMining account yet?</div>
+      <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener" class="ri-btn" style="background:var(--purple);display:inline-block;padding:.65rem 1.5rem;font-size:.85rem;text-decoration:none;color:#000;font-weight:700;border-radius:var(--radius-sm)">Sign Up for GoMining</a>
+      <div style="margin-top:.9rem;background:#0e0e0e;border:1.5px solid var(--purple);border-radius:var(--radius-sm);padding:.75rem .8rem;box-shadow:0 0 16px rgba(245,166,35,.12)">
+        <div style="font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem">Promo code</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:.6rem">
+          <span style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--purple);letter-spacing:.12em">RINGO5</span>
+          <button onclick="navigator.clipboard.writeText('RINGO5').catch(()=>{});this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="background:var(--purple);color:#000;border:none;border-radius:8px;padding:.4rem .9rem;font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer">Copy</button>
+        </div>
+        <div style="font-size:.72rem;color:var(--purple-soft);margin-top:.5rem;font-weight:600">5% bonus TH on your first miner purchase</div>
+      </div>
     </div>
-    <div style="background:rgba(117,64,239,.08);border:1px solid rgba(117,64,239,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem">
+    <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem">
       <div style="font-size:.8rem;color:var(--text2);margin-bottom:.6rem;font-weight:600;text-align:center">How much are you looking to invest?</div>
       <div style="display:flex;gap:.5rem;align-items:center">
         <span style="font-size:1.1rem;color:var(--text3);font-weight:700">$</span>
@@ -666,7 +704,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="live-chip" title="Live BTC price"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live GMT price"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
-      <div class="live-chip" title="Refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="val" id="refreshTimer" style="min-width:32px;text-align:center">--</span></div>
+      <div class="live-chip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer" style="min-width:48px;text-align:left">--</span></div>
     </div>
   </div>
 </div>
@@ -677,7 +715,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="tabs">
   <button class="tab-btn active" data-tab="tab-current">Current Operation</button>
   <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="tab-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#fff;border-color:transparent;text-decoration:none;font-size:.75rem">Suggest a Feature</a>
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="tab-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;border-color:transparent;text-decoration:none;font-size:.75rem;font-weight:700">Suggest a Feature</a>
 </div>
 
 <!-- ==================== TAB 1 ==================== -->
@@ -963,7 +1001,7 @@ input[type=number]{-moz-appearance:textfield}
         </div>
         <div class="field">
           <label>BTC Price <span class="tip" data-tip="Hold BTC at this price for the entire projection. Firm options use each firm's published BTC target — match the horizon to the target year for a realistic scenario.">?</span></label>
-          <div class="field-input"><select id="inReinvestBTC" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
+          <select id="inReinvestBTC" style="display:none">
             <option value="live" selected>Live (current)</option>
             <optgroup label="Bank / Firm Forecasts">
               <option value="firm:std-chartered">Standard Chartered — 2028</option>
@@ -976,7 +1014,8 @@ input[type=number]{-moz-appearance:textfield}
               <option value="manual:200000">$200K</option>
               <option value="manual:300000">$300K</option>
             </optgroup>
-          </select></div>
+          </select>
+          <div id="btcPills" class="btc-pills"></div>
         </div>
         <div class="field">
           <label>Weekly Distribution % <span class="tip" data-tip="Set aside this percentage of the week's mining + ambassador rewards as income (not reinvested). Applied once each week; the remainder is reinvested. 0% = full compounding. Staking yield always auto-compounds locked GMT and is unaffected.">?</span></label>
@@ -1004,14 +1043,32 @@ input[type=number]{-moz-appearance:textfield}
   <div class="donate-box">
     <h3>GMT Optimizer is Free Forever</h3>
     <p>This site has no ads and never will. If you find it useful, please consider supporting development with a small donation.</p>
-    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">BTC</p>
-    <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
-    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.4rem">GoMining Token (<img src="gmt36.png" class="gmt-logo" alt="GMT">)</p>
-    <div class="donate-addr" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</div>
+    <div class="donate-row">
+      <img src="btc36.png" alt="BTC" class="donate-logo">
+      <div class="donate-addr-wrap">
+        <div class="donate-coin">Bitcoin (BTC)</div>
+        <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
+      </div>
+      <button class="donate-copy" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">Copy</button>
+    </div>
+    <div class="donate-row">
+      <img src="gmt36.png" alt="GMT" class="donate-logo">
+      <div class="donate-addr-wrap">
+        <div class="donate-coin">GoMining Token (GMT)</div>
+        <div class="donate-addr" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</div>
+      </div>
+      <button class="donate-copy" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">Copy</button>
+    </div>
     <div class="donate-copied" id="donateCopied">Copied to clipboard!</div>
     <br>
     <button class="donate-btn" onclick="closeDonate()">Continue to Dashboard</button>
   </div>
+</div>
+
+<!-- TUTORIAL LIGHTBOX -->
+<div id="lightbox" class="lightbox-overlay" style="display:none" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+  <img id="lightboxImg" src="" alt="" class="lightbox-img">
 </div>
 
 <!-- PLANNER INTRO -->
@@ -1079,7 +1136,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- FOOTER -->
 <div class="site-footer">
-  <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(117,64,239,.1);border:1px solid rgba(117,64,239,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use promo code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> <span style="color:var(--text2)">for 5% bonus TH on your first miner</span></div><br>
+  <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use promo code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> <span style="color:var(--text2)">for 5% bonus TH on your first miner</span></div><br>
   GMT Optimizer is free and ad-free forever. If you find it helpful, consider donating.<br>
   <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
   <span style="color:var(--text2)"><img src="gmt36.png" class="gmt-logo" alt="GMT">:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
@@ -1649,6 +1706,25 @@ function calc(i){
 function row(l,v,c=''){return`<div class="out-row"><span class="out-label">${l}</span><span class="out-val ${c}">${v}</span></div>`}
 function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${vip.est?' (est.)':''}</span>`}
 
+// ---- ANIMATED NUMBER COUNTER ----
+// Eases a metric from its previous value to the new one (~800ms). First render
+// counts up from 0 (el._cur undefined). Concurrent calls retarget cleanly.
+function animateMetric(el,to,fmt){
+  if(!el)return;
+  if(typeof to!=='number'||!isFinite(to)){el.textContent=fmt(to);return;}
+  const from=(typeof el._cur==='number'&&isFinite(el._cur))?el._cur:0;
+  el._cur=to;
+  if(el._raf)cancelAnimationFrame(el._raf);
+  if(Math.abs(to-from)<1e-9){el.textContent=fmt(to);el._raf=null;return;}
+  const dur=800,t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
+  function step(now){
+    const p=Math.min(1,(now-t0)/dur);
+    el.textContent=fmt(from+(to-from)*ease(p));
+    if(p<1)el._raf=requestAnimationFrame(step);else el._raf=null;
+  }
+  el._raf=requestAnimationFrame(step);
+}
+
 // ---- MAIN RENDER ----
 function recalc(){
   if(!S.loaded)return;
@@ -1670,16 +1746,16 @@ function recalc(){
   const heroAmbDaily=heroRefTH*15*24/1000*0.005;
   const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily;
   const moUSD=totalDailyUSD*30;
-  $('heroDailyNet').textContent=fU(totalDailyUSD);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
+  animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
   $('heroDailyBTC').textContent=heroSub;
-  $('heroMonthly').textContent=fU(moUSD);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
+  animateMetric($('heroMonthly'),moUSD,fU);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   $('heroMonthlyBTC').textContent=heroMoSub;
-  $('heroYearly').textContent=fU(moUSD*12)+' / yr';$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
-  $('heroDiscount').textContent=fP(m.totD);
+  animateMetric($('heroYearly'),moUSD*12,v=>fU(v)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
+  animateMetric($('heroDiscount'),m.totD,fP);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   // Reflect manual override state on the "Incorrect discount?" control.
   const ovrToggle=$('discOverrideToggle'),ovrReset=$('discOverrideReset');
@@ -2108,6 +2184,31 @@ function renderPlanner(i,m){
     ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
   }
 
+  // Visual allocation split: TH spend vs GMT lock (value terms), gold vs white
+  {
+    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,ag*gp), splitTot=thSpend+gmtSpendUSD;
+    if(splitTot>0){
+      const pctTH=thSpend/splitTot*100, pctGMT=100-pctTH;
+      let why;
+      if(!i.payG)why='GMT fee payment is off, so every dollar goes to hashrate for maximum mining output.';
+      else if(gmtLock<=0)why='You already hold enough locked GMT for the 20% token discount, so all new capital goes to hashrate.';
+      else if(canCover20)why='This maintains your 20% token discount while maximising net monthly income.';
+      else why='Your GMT can’t fully cover the 20% discount yet, so spare capital is directed to locking GMT first.';
+      ah+=`<div class="sub-title" style="margin-top:.8rem">Allocation Split</div>
+      <div class="alloc-split">
+        <div class="alloc-split-bar">
+          ${pctTH>0?`<div class="alloc-split-th" style="width:${pctTH}%">${pctTH>=14?fN(pctTH,0)+'% TH':''}</div>`:''}
+          ${pctGMT>0?`<div class="alloc-split-gmt" style="width:${pctGMT}%">${pctGMT>=14?fN(pctGMT,0)+'% GMT':''}</div>`:''}
+        </div>
+        <div class="alloc-split-legend">
+          <span><i class="dot-th"></i>${fN(pctTH,0)}% Hashrate &middot; ${fU(thSpend)}</span>
+          <span><i class="dot-gmt"></i>${fN(pctGMT,0)}% GMT Lock &middot; ${fU(gmtSpendUSD)}</span>
+        </div>
+        <div class="alloc-split-why">${why}</div>
+      </div>`;
+    }
+  }
+
   // Resource breakdown
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
   if(mpTH>0){
@@ -2510,7 +2611,7 @@ function runReinvestProjection(){
   }else{
     btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
   }
-  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(117,64,239,.06);border-color:rgba(117,64,239,.2);color:var(--text2)">
+  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
@@ -2797,7 +2898,7 @@ function shareProjection(){
   x.fillStyle=tGlow;x.fillRect(0,0,W,140);
 
   x.fillStyle='#ffffff';
-  x.font='bold 56px Orbitron,"General Sans",system-ui,sans-serif';
+  x.font='bold 56px Space Grotesk,system-ui,sans-serif';
   x.textAlign='center';
   x.shadowColor='rgba(147,51,234,0.6)';x.shadowBlur=28;
   x.fillText(`${d.days}-Day Growth Projection`,W/2,72);
@@ -2838,7 +2939,7 @@ function shareProjection(){
     x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();
     x.shadowBlur=0;
     x.fillStyle=accentHex;
-    x.font='bold 26px Orbitron,"General Sans",system-ui,sans-serif';
+    x.font='bold 26px Space Grotesk,system-ui,sans-serif';
     x.textAlign='left';
     x.fillText(title,cx+30,cy+50);
     items.forEach((item,i)=>{
@@ -2925,7 +3026,7 @@ function shareProjection(){
   x.font='bold 14px "General Sans",system-ui,sans-serif';
   x.fillText('\u25CF',pad,footY);
   x.fillStyle='rgba(255,255,255,0.7)';
-  x.font='bold 20px Orbitron,"General Sans",system-ui,sans-serif';
+  x.font='bold 20px Space Grotesk,system-ui,sans-serif';
   x.fillText('gmt-optimizer.com',pad+18,footY+1);
 
   x.textAlign='center';
@@ -2959,7 +3060,7 @@ function shareProjection(){
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});
 
 // ---- TIMER ----
-setInterval(()=>{S.timer--;if(S.timer<=0){S.timer=3600;fetchData()}const m=Math.floor(S.timer/60),s=S.timer%60;$('refreshTimer').textContent=m>0?m+'m':s+'s'},1000);
+setInterval(()=>{S.timer--;if(S.timer<=0){S.timer=3600;fetchData()}const ago=Math.max(0,3600-S.timer);const t=$('refreshTimer');if(t)t.textContent=ago<60?ago+'s ago':Math.floor(ago/60)+'m ago'},1000);
 
 // ---- TOOLTIPS (touch) ----
 document.addEventListener('click',e=>{
@@ -2975,6 +3076,13 @@ function obZoom(e,el){
   const img=el.querySelector('.ob-tutorial-img');
   if(img)img.style.transformOrigin=x+'% '+y+'%';
 }
+function openLightbox(el){
+  const img=el.querySelector('img');if(!img)return;
+  const lb=document.getElementById('lightbox'),li=document.getElementById('lightboxImg');
+  if(!lb||!li)return;
+  li.src=img.src;li.alt=img.alt||'';lb.style.display='flex';
+}
+function closeLightbox(){const lb=document.getElementById('lightbox');if(lb)lb.style.display='none';}
 let obCur=0;
 function initOnboarding(){
   try{if(localStorage.getItem('gm_onboarded'))return}catch(e){}
@@ -3121,6 +3229,27 @@ const revealObs=new IntersectionObserver((entries)=>{
   });
 },{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
+
+// ---- BTC SCENARIO PILLS ----
+function buildBtcPills(){
+  const sel=document.getElementById('inReinvestBTC'),box=document.getElementById('btcPills');
+  if(!sel||!box)return;
+  box.innerHTML='';
+  Array.from(sel.options).forEach(opt=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='btc-pill'+(opt.value===sel.value?' active':'');
+    b.textContent=opt.textContent;
+    b.dataset.value=opt.value;
+    b.onclick=()=>{
+      sel.value=opt.value;
+      box.querySelectorAll('.btc-pill').forEach(p=>p.classList.toggle('active',p.dataset.value===opt.value));
+      sel.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    box.appendChild(b);
+  });
+}
+buildBtcPills();
 
 // ---- INIT ----
 try{const sc=localStorage.getItem('gm_currency');if(sc&&sc!=='USD')setCurrency(sc)}catch(e){}
