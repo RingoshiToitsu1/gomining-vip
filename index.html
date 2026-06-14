@@ -1146,7 +1146,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <script>
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null };
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, netHashrate:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
@@ -1290,6 +1290,7 @@ function savePriceCache(){
       gbp:S.gbpRate||prev.gbp||0.79,
       eur:S.eurRate||prev.eur||0.92,
       diff:S.difficulty||prev.diff,
+      hr:S.netHashrate||prev.hr,
       fees:S.avgTxFees||prev.fees,
       t:Date.now()
     }));
@@ -1333,14 +1334,23 @@ async function fetchData(){
       fetchTO('https://mempool.space/api/v1/mining/reward-stats/144')
     ]);
     S.difficulty=h.currentDifficulty||(cached&&cached.diff)||FB.difficulty;
+    S.netHashrate=h.currentHashrate||(cached&&cached.hr)||0;
     S.avgTxFees=(parseFloat(f.totalFee||0)/144)/1e8;
     if(!S.avgTxFees)S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
   }catch(e){
     S.difficulty=(cached&&cached.diff)||FB.difficulty;
+    S.netHashrate=(cached&&cached.hr)||0;
     S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
     ok=false;
   }
-  S.satsPerTHDay=((1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32))*1e8;
+  // sats/TH/day from LIVE network hashrate — what GoMining actually uses. Difficulty
+  // assumes exactly 10-min blocks; real hashrate reflects how fast blocks are really
+  // coming (it runs above difficulty-implied when the network is growing), which is
+  // why difficulty-based overshot the app (~50 vs 45). Falls back to difficulty if
+  // the hashrate field is missing.
+  S.satsPerTHDay = S.netHashrate>0
+    ? (BLOCK_SUBSIDY*144*1e12/S.netHashrate)*1e8
+    : ((1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32))*1e8;
 
   // ---- FX (GBP, EUR) ----
   try{
@@ -1664,10 +1674,9 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 // service_per_TH = 0.0089 / BTC_price
 function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
 function dailyBTCperTH(){
-  // Subsidy-only (GoMining's rated convention — see BLOCK_SUBSIDY). Floor to whole
-  // sats/TH/day to match the app's internal reward calc.
-  const raw=(1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32);
-  return Math.floor(raw*1e8)/1e8;
+  // Derive from S.satsPerTHDay (live network-hashrate basis, set in fetchData) so the
+  // calc and the live-bar number never diverge. Floor to whole sats like the app.
+  return Math.floor(S.satsPerTHDay||0)/1e8;
 }
 
 function calc(i){
