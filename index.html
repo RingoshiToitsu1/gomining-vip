@@ -415,6 +415,37 @@ input[type=number]{-moz-appearance:textfield}
 .ob-tutorial-wrap:hover .ob-tutorial-img{transform:scale(2.6)}
 .ob-tutorial-cap{display:block;text-align:center;font-size:.68rem;color:var(--text4);margin:-.6rem 0 1rem;font-style:italic}
 .ob-tutorial-wrap::after{content:'\2922 tap to enlarge';position:absolute;bottom:6px;right:8px;background:rgba(10,10,10,.78);color:var(--purple);font-family:var(--sans);font-size:.6rem;font-weight:600;padding:.15rem .45rem;border-radius:6px;pointer-events:none;z-index:2}
+/* Inline GoMining UI mockups (replace tutorial screenshots) */
+.gm-mk{max-width:400px;margin:.6rem auto 1rem;background:#0f1020;border:1px solid #2a2c45;border-radius:14px;padding:14px;font-family:var(--sans);color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.gm-mk-head{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff;margin-bottom:12px}
+.gm-mk-head .gm-mk-dot{width:7px;height:7px;border-radius:50%;background:#7c6cf7;box-shadow:0 0 8px rgba(124,108,247,.7)}
+.gm-mk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gm-mk-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.gm-mk-tile{background:#1e2035;border-radius:10px;padding:10px 11px;min-width:0}
+.gm-mk-tile-lbl{display:flex;align-items:center;gap:5px;font-size:.6rem;color:#9a9cc0;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;white-space:nowrap}
+.gm-mk-ico{width:15px;height:15px;border-radius:5px;background:rgba(124,108,247,.18);display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;flex:0 0 auto}
+.gm-mk-tile-val{font-size:1.02rem;font-weight:700;color:#fff;line-height:1.15;letter-spacing:-.01em}
+.gm-mk-tile-val small{font-size:.6rem;color:#9a9cc0;font-weight:600}
+.gm-mk-tile-sub{font-size:.66rem;color:#6fd08a;font-weight:600;margin-top:3px}
+.gm-mk-hl{box-shadow:0 0 0 3px #FF3B3B;border-radius:8px;position:relative;z-index:1}
+.gm-mk-bal{background:#1e2035;border-radius:10px;padding:14px 13px}
+.gm-mk-bal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.gm-mk-token{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff}
+.gm-mk-token img{width:22px;height:22px;border-radius:50%}
+.gm-mk-chev{color:#6a6c8f;font-size:1.1rem;line-height:1}
+.gm-mk-bal-lbl{font-size:.62rem;color:#9a9cc0;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.gm-mk-bal-val{font-size:1.32rem;font-weight:800;color:#fff;letter-spacing:-.01em}
+.gm-mk-bal-val small{font-size:.66rem;color:#9a9cc0;font-weight:600}
+.gm-mk-bal-sub{font-size:.84rem;color:#9a9cc0;font-weight:600;margin-top:2px}
+.gm-mk-actions{display:flex;gap:6px;justify-content:space-between}
+.gm-mk-act{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.62rem;color:#c9cae6;font-weight:600;flex:1}
+.gm-mk-act-btn{width:38px;height:38px;border-radius:50%;background:#1e2035;border:1px solid #2f3252;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#7c6cf7}
+.gm-mk-menu-wrap{display:flex;align-items:flex-start;gap:10px;margin-top:14px}
+.gm-mk-menu{width:172px;background:#1e2035;border:1px solid #2f3252;border-radius:10px;padding:5px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.gm-mk-menu-row{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:.82rem;font-weight:600;color:#fff}
+.gm-mk-menu-ico{width:24px;height:24px;border-radius:7px;background:rgba(124,108,247,.16);display:flex;align-items:center;justify-content:center;font-size:.78rem}
+.gm-mk-arrow{display:flex;align-items:center;gap:4px;color:#FF3B3B;font-weight:800;font-size:.74rem;margin-top:11px;white-space:nowrap}
+.gm-mk-arrow .gm-mk-arrow-tip{font-size:1.1rem;line-height:1}
 .lightbox-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out}
 .lightbox-img{max-width:96vw;max-height:92vh;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .lightbox-close{position:absolute;top:16px;right:22px;background:none;border:none;color:#fff;font-size:2.2rem;line-height:1;cursor:pointer}
@@ -580,7 +611,15 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="2">
       <div class="ob-title ob-step-reveal">Total Hashrate</div>
       <div class="ob-subtitle ob-step-reveal">Your total computing power across all NFTs.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="THtutorial.png" alt="Where to find total hashrate" class="ob-tutorial-img"></div>
+      <div class="gm-mk" role="img" aria-label="GoMining Mining farm tiles with the Power tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Mining farm</div>
+        <div class="gm-mk-grid">
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9935;</span>Miners</div><div class="gm-mk-tile-val">6</div></div>
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9889;</span>Power</div><div class="gm-mk-tile-val">1,926.76 <small>TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#128267;</span>Efficiency</div><div class="gm-mk-tile-val">16.46 <small>W/TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">%</span>Discount</div><div class="gm-mk-tile-val">9.52<small>%</small></div></div>
+        </div>
+      </div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
       <div class="ob-field">
         <label>Total Hashrate</label>
@@ -592,7 +631,15 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="3">
       <div class="ob-title ob-step-reveal">Energy Efficiency</div>
       <div class="ob-subtitle ob-step-reveal">Average watts per terahash across your NFTs. Lower is better.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="tutorialefficiency.jpeg" alt="Where to find efficiency" class="ob-tutorial-img"></div>
+      <div class="gm-mk" role="img" aria-label="GoMining Mining farm tiles with the Efficiency tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Mining farm</div>
+        <div class="gm-mk-grid">
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9935;</span>Miners</div><div class="gm-mk-tile-val">6</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9889;</span>Power</div><div class="gm-mk-tile-val">1,926.76 <small>TH</small></div></div>
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#128267;</span>Efficiency</div><div class="gm-mk-tile-val">16.46 <small>W/TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">%</span>Discount</div><div class="gm-mk-tile-val">9.52<small>%</small></div></div>
+        </div>
+      </div>
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> tile</span>
       <div class="ob-field">
         <label>Efficiency</label>
@@ -604,7 +651,15 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="4">
       <div class="ob-title ob-step-reveal">Liquid GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">Unlocked GMT sitting in your GoMining virtual wallet.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="gmtbalance.jpeg" alt="Where to find liquid GMT balance" class="ob-tutorial-img"></div>
+      <div class="gm-mk" role="img" aria-label="GoMining wallet showing the GOMINING balance card highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Wallets</div>
+        <div class="gm-mk-bal gm-mk-hl">
+          <div class="gm-mk-bal-top"><span class="gm-mk-token"><img src="gmt36.png" alt="GMT">GOMINING</span><span class="gm-mk-chev">&rsaquo;</span></div>
+          <div class="gm-mk-bal-lbl">Balance</div>
+          <div class="gm-mk-bal-val">2,625.50 <small>GOMINING</small></div>
+          <div class="gm-mk-bal-sub">$748.26</div>
+        </div>
+      </div>
       <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
       <div class="ob-field">
         <label>Liquid GMT</label>
@@ -616,9 +671,31 @@ input[type=number]{-moz-appearance:textfield}
     <div class="ob-step" data-ob-step="5">
       <div class="ob-title ob-step-reveal">Locked GMT Balance</div>
       <div class="ob-subtitle ob-step-reveal">GMT you've staked in VeGoMining. Earns yield and counts toward your VIP tier.</div>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="totallocked.jpeg" alt="Where to find total locked GMT" class="ob-tutorial-img"></div>
+      <div class="gm-mk" role="img" aria-label="GoMining Governance My lock page with the Total Locked tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>My lock</div>
+        <div class="gm-mk-grid3">
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl">Total Locked</div><div class="gm-mk-tile-val">9,354.00</div><div class="gm-mk-tile-sub">$2,662.15</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl">Total Votes</div><div class="gm-mk-tile-val">9,304.88</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl">Total Rewards</div><div class="gm-mk-tile-val">801.51</div></div>
+        </div>
+      </div>
       <span class="ob-tutorial-cap">Governance &rarr; My lock &rarr; <b>Total Locked</b></span>
-      <div class="ob-tutorial-wrap" onmousemove="obZoom(event,this)" onclick="openLightbox(this)"><img src="lockgmt.jpeg" alt="How to lock GMT" class="ob-tutorial-img"></div>
+      <div class="gm-mk" role="img" aria-label="GoMining wallet actions with a menu showing the Lock option highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>GOMINING wallet</div>
+        <div class="gm-mk-actions">
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">+</span>Buy</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&darr;</span>Deposit</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&uarr;</span>Withdraw</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&hellip;</span>More</div>
+        </div>
+        <div class="gm-mk-menu-wrap">
+          <div class="gm-mk-menu">
+            <div class="gm-mk-menu-row gm-mk-hl"><span class="gm-mk-menu-ico">&#128274;</span>Lock</div>
+            <div class="gm-mk-menu-row"><span class="gm-mk-menu-ico">&#8646;</span>Convert</div>
+          </div>
+          <div class="gm-mk-arrow"><span class="gm-mk-arrow-tip">&#9664;</span>tap to stake</div>
+        </div>
+      </div>
       <span class="ob-tutorial-cap">Don't have any locked yet? Wallet &rarr; More &rarr; <b>Lock</b> to stake</span>
       <div class="ob-field">
         <label>Locked GMT</label>
