@@ -1343,14 +1343,11 @@ async function fetchData(){
     S.avgTxFees=(cached&&cached.fees)||FB.avgTxFees;
     ok=false;
   }
-  // sats/TH/day from LIVE network hashrate — what GoMining actually uses. Difficulty
-  // assumes exactly 10-min blocks; real hashrate reflects how fast blocks are really
-  // coming (it runs above difficulty-implied when the network is growing), which is
-  // why difficulty-based overshot the app (~50 vs 45). Falls back to difficulty if
-  // the hashrate field is missing.
-  S.satsPerTHDay = S.netHashrate>0
-    ? (BLOCK_SUBSIDY*144*1e12/S.netHashrate)*1e8
-    : ((1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32))*1e8;
+  // sats/TH/day from on-chain difficulty (the 2-week smoothed network measure —
+  // less noisy than the 3-day hashrate sample). This is the true current network
+  // issuance per TH. NOTE: a difficulty retarget moves this ~instantly while the
+  // GoMining app can lag a day or two, so they can briefly diverge.
+  S.satsPerTHDay=((1e12*86400*BLOCK_SUBSIDY)/(S.difficulty*2**32))*1e8;
 
   // ---- FX (GBP, EUR) ----
   try{
