@@ -557,9 +557,10 @@ input[type=number]{-moz-appearance:textfield}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sp-page-loading{position:fixed;inset:0;z-index:210;background:rgba(10,10,10,.86);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 /* Capital Planner: adjust-investment chip + growth-projection CTA */
-.planner-adjust-btn{display:flex;width:fit-content;max-width:100%;align-items:center;gap:.5rem;margin:0 auto .9rem;background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:.65rem 1.1rem;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition)}
-.planner-adjust-btn:hover{border-color:var(--purple);color:var(--text);background:var(--bg-card-hover)}
-.planner-adjust-btn svg{color:var(--purple-soft);flex:0 0 auto}
+.planner-adjust-btn{display:flex;width:fit-content;max-width:100%;align-items:center;gap:.55rem;margin:.3rem auto 1.1rem;background:linear-gradient(135deg,rgba(245,166,35,.18),rgba(245,166,35,.06));border:1.5px solid rgba(245,166,35,.5);border-radius:24px;padding:.72rem 1.5rem;color:var(--purple-soft);font-family:var(--sans);font-size:.88rem;font-weight:800;cursor:pointer;transition:var(--transition);box-shadow:0 2px 12px rgba(245,166,35,.12);animation:adjustPulse 2.6s ease-in-out infinite}
+.planner-adjust-btn:hover{border-color:var(--orange);color:var(--orange);background:linear-gradient(135deg,rgba(245,166,35,.26),rgba(245,166,35,.1));transform:translateY(-1px);box-shadow:0 5px 20px rgba(245,166,35,.25);animation:none}
+.planner-adjust-btn svg{color:currentColor;flex:0 0 auto}
+@keyframes adjustPulse{0%,100%{box-shadow:0 2px 12px rgba(245,166,35,.12)}50%{box-shadow:0 2px 20px rgba(245,166,35,.30)}}
 .planner-proj-btn{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;margin:.2rem 0 .8rem;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border:1px solid rgba(245,166,35,.4);border-radius:var(--radius);padding:1rem 1.2rem;cursor:pointer;transition:var(--transition);font-family:var(--sans)}
 .planner-proj-btn:hover{border-color:var(--orange);box-shadow:0 6px 24px rgba(245,166,35,.2);transform:translateY(-1px)}
 .planner-proj-ico{width:44px;height:44px;border-radius:12px;background:rgba(245,166,35,.16);display:flex;align-items:center;justify-content:center;color:var(--orange);flex:0 0 auto}
