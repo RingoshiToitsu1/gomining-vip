@@ -811,7 +811,7 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab-btn active" data-tab="tab-current">Current Operation</button>
+  <button class="tab-btn active" data-tab="tab-current">My Setup</button>
   <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
   <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="tab-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;border-color:transparent;text-decoration:none;font-size:.75rem;font-weight:700">Suggest a Feature</a>
 </div>
@@ -1030,7 +1030,7 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div id="capInGreedy" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Greedy Machine passive growth <span style="color:var(--text4);font-weight:400">(optional)</span></label>
-        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Weekly TH growth for the Greedy Machine(s) you entered in Current Operation. Compounds on the current TH every week — and is the <strong style="color:var(--text3)">only</strong> growth once a miner hits the 5,000 TH manual-upgrade cap. Until then, reinvested rewards fill it up to 5k (discount-first). Enter last week's observed growth.</div>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Weekly TH growth for the Greedy Machine(s) you entered in My Setup. Compounds on the current TH every week — and is the <strong style="color:var(--text3)">only</strong> growth once a miner hits the 5,000 TH manual-upgrade cap. Until then, reinvested rewards fill it up to 5k (discount-first). Enter last week's observed growth.</div>
         <div class="input-grid">
           <div class="field">
             <label>Weekly TH Growth</label>
@@ -1255,6 +1255,7 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
+const USD_GMT_FEE     = 0.02;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
 // GoMining quotes a SUBSIDY-ONLY sats/TH/day (block reward, no tx fees). Adding live
 // mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
 // subsidy-only at current difficulty ≈ 45, matching the GoMining app. Bump at each halving.
@@ -2085,8 +2086,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     if(refCap<=0)return null;
     const COV=360;
     function refSolve(gmtUSD){
-      const ag=gmtUSD/gp, thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget(thUSD):0;
+      const ag=gmtUSD*(1-USD_GMT_FEE)/gp, thUSD=refCap-gmtUSD;
+      const at=thUSD>0?thForBudget(thUSD*(1-USD_GMT_FEE)):0;
       const fT=fees(at||1,15,bp);
       const vT=vipOf(at,ag);
       const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
@@ -2109,7 +2110,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const gmtAvailPre=baseGmtAvail+refBonusGMT;
   // Pay for the marketplace miner: GMT on hand first, then USD capital for the shortfall.
   const gmtForMiner=Math.min(mpGmtCost,gmtAvailPre);
-  const usdForMiner=(mpGmtCost-gmtForMiner)*gp;
+  const usdForMiner=(mpGmtCost-gmtForMiner)*gp/(1-USD_GMT_FEE);
   const minerShortfallUSD=Math.max(0,usdForMiner-usdCap);
   const gmtAvail=gmtAvailPre-gmtForMiner;
   usdCap=Math.max(0,usdCap-usdForMiner);
@@ -2139,14 +2140,16 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   function solveWithReserve(reserve){
     const deployable=Math.max(0,gmtAvail-reserve);
-    const maxLockGMT=deployable+(usdCap/gp);
+    const maxLockGMT=deployable+(usdCap*(1-USD_GMT_FEE)/gp);
 
     function solveAlloc(totalGmtLock){
       const fromPool=Math.min(totalGmtLock,deployable);
       const fromUSD=totalGmtLock-fromPool;
-      const usdSpentOnGMT=fromUSD*gp;
+      const usdSpentOnGMT=fromUSD*gp/(1-USD_GMT_FEE);
       const gmtSell=deployable-fromPool;
-      const thBudgetUSD=(usdCap-usdSpentOnGMT)+(gmtSell*gp);
+      // Leftover USD routes through GMT to mint TH, so it eats the 2% fee too;
+      // existing pool GMT (gmtSell) is already GMT, so it's spent at face value.
+      const thBudgetUSD=(usdCap-usdSpentOnGMT)*(1-USD_GMT_FEE)+(gmtSell*gp);
       const baseTH=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
@@ -2284,6 +2287,7 @@ function renderPlanner(i,m){
   }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
     ah+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
   }
+  if(i.cap>0)ah+=`<br><span style="color:var(--text4);font-size:.72rem">Includes a ${fN(USD_GMT_FEE*100,0)}% fee on converting USD &rarr; GMT (locking &amp; TH minting). Existing GMT on hand is unaffected.</span>`;
   ah+='</div>';
 
   // Allocation cards
@@ -3265,7 +3269,7 @@ function obPreview(){
   syncOB();
   if(S.loaded){
     const i=inp(),m=calc(i);
-    // Mirror the Current Operation hero card: mining + staking + ambassador,
+    // Mirror the My Setup hero card: mining + staking + ambassador,
     // otherwise the preview shows a lower number than the dashboard.
     const netUSD=m.net*m.bp;
     const dailyStakeUSD=(m.wkGMT/7)*m.gp;
