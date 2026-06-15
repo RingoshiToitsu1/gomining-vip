@@ -347,6 +347,15 @@ input[type=number]{-moz-appearance:textfield}
 .proj-cell.current .pc-price,.proj-cell.current .pc-daily,.proj-cell.current .pc-yearly{color:rgba(52,211,153,.65)}
 .proj-cell .pc-price{font-size:.68rem;color:var(--text3);font-weight:600;margin-bottom:.25rem}
 .proj-cell .pc-monthly{font-family:var(--mono);font-size:1rem;font-weight:700}
+/* "New Monthly Income" headline card — make it big & inviting */
+.proj-hero{background:linear-gradient(165deg,rgba(245,166,35,.12),rgba(245,166,35,.03)),var(--bg-card);border-color:rgba(245,166,35,.4)}
+.proj-hero .section-title{color:var(--purple-soft)}
+.proj-hero .proj-cell.current{max-width:340px!important;padding:1.4rem 1.3rem 1.2rem;box-shadow:0 6px 30px rgba(52,211,153,.18)}
+.proj-hero .pc-monthly{font-size:2.5rem;line-height:1.04;letter-spacing:-.01em}
+.proj-hero .pc-monthly .gmt-logo{width:30px;height:30px}
+.proj-hero .pc-daily{font-size:.8rem}
+.proj-hero .pc-yearly{font-size:.72rem}
+@media(max-width:600px){.proj-hero .pc-monthly{font-size:2rem}}
 .proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
 .proj-cell .pc-yearly{font-size:.6rem;color:var(--text4);margin-top:.1rem;font-family:var(--mono)}
 .proj-cell .pc-monthly.green{color:var(--green)}
@@ -1080,6 +1089,17 @@ input[type=number]{-moz-appearance:textfield}
     Adjust Investment Amount
   </button>
 
+  <!-- NEW MONTHLY INCOME (headline) -->
+  <div class="section reveal proj-hero" id="secProj2">
+    <div class="section-header" onclick="toggleSection('secProj2')">
+      <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> New Monthly Income</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-body">
+      <div id="projTable"></div>
+    </div>
+  </div>
+
   <!-- CAPITAL INPUT — inputs live here (hidden); edited via the full-page form -->
   <div class="section reveal" id="secCapIn" style="display:none">
     <div class="section-header" onclick="toggleSection('secCapIn')">
@@ -1153,16 +1173,6 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
-  <!-- BTC PRICE PROJECTIONS -->
-  <div class="section reveal" id="secProj2">
-    <div class="section-header" onclick="toggleSection('secProj2')">
-      <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> Monthly Income by BTC Price</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-body">
-      <div id="projTable"></div>
-    </div>
-  </div>
 
   <!-- Growth Projection — opens the full-page forecast tool -->
   <button class="planner-proj-btn" onclick="openSetupProjection()">
@@ -3091,6 +3101,7 @@ function animatePlannerResults(){
   secs.forEach(el=>el.classList.remove('visible'));
   requestAnimationFrame(()=>requestAnimationFrame(()=>secs.forEach(el=>el.classList.add('visible'))));
   document.querySelectorAll('#allocDisplay .a-val').forEach(el=>animateCountText(el,800));
+  document.querySelectorAll('#projTable .pc-monthly').forEach(el=>animateCountText(el,900));
   // Grow the allocation split bar from 0 to its target widths.
   document.querySelectorAll('#allocDisplay .alloc-split-bar>div').forEach(el=>{
     const target=el.style.width;
