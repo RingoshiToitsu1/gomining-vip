@@ -1017,20 +1017,12 @@ input[type=number]{-moz-appearance:textfield}
           <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
         </div>
         <div class="field greedy-field">
-          <label>Greedy Machine TH <span class="tip" data-tip="Total hashrate from Greedy Machine NFTs you own. Earns rewards &amp; pays fees. Grows passively each week at the rate set in the Capital Planner (default 0.3%/wk), compounding even past the 5,000 TH manual-upgrade cap. Counts toward your VIP tier EXCEPT the initial marketplace amount below.">?</span></label>
+          <label>Greedy Machine TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — it's a SUBSET, not added on top. Earns rewards &amp; pays fees. Counts toward your VIP tier EXCEPT the initial marketplace amount below.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
         <div class="field greedy-field">
           <label>Initial Greedy (Marketplace) <span class="tip" data-tip="The TH you originally bought for this Greedy Machine on the marketplace. This portion never counts toward your VIP tier. Any growth above it — passive growth + reinvested upgrades — DOES count toward VIP. If you just bought it, set this equal to your Greedy Machine TH.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyInitial" value="0" step="1" min="0"><span class="unit">TH</span></div>
-        </div>
-        <div class="field greedy-field">
-          <label>Greedy Efficiency <span class="tip" data-tip="Watts per terahash of your Greedy Machine(s) — drives their daily fees. Defaults to 15.">?</span></label>
-          <div class="field-input"><input type="number" id="inGreedyWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
-        </div>
-        <div class="field greedy-field">
-          <label>Weighted Avg Efficiency <span class="tip" data-tip="TH-weighted average W/TH across your main hashrate and Greedy Machine(s). Read-only — this is the efficiency your daily fees are actually calculated on.">?</span></label>
-          <div class="field-input"><span id="inWeightedWthDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">W/TH</span></div>
         </div>
         <div class="field">
           <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
@@ -1719,8 +1711,16 @@ function updateHeader(){
 }
 
 // ---- INPUTS ----
-function inp(){return{
-  th:+$('inTH').value||0, wth:+$('inWTH').value||0,
+function inp(){
+  // The entered Total Hashrate is the WHOLE farm (incl. greedy), and Energy
+  // Efficiency is its weighted average. So the greedy machine is a SUBSET, not
+  // added on top: standalone = total - greedy, and greedy shares the same
+  // weighted-avg efficiency (don't re-blend it).
+  const rawTH=+$('inTH').value||0;
+  const wth=+$('inWTH').value||0;
+  const gth=+($('inGreedyTH')?$('inGreedyTH').value:0)||0;
+  return{
+  th:Math.max(0,rawTH-gth), wth:wth,
   gl:+$('inGMTLocked').value||0, gw:+$('inGMTWallet').value||0,
   apr:+$('inLockAPR').value||0,
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
@@ -1729,9 +1729,9 @@ function inp(){return{
   mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
   mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
   mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
-  gth:+($('inGreedyTH')?$('inGreedyTH').value:0)||0,
+  gth:gth,
   gInit:+($('inGreedyInitial')?$('inGreedyInitial').value:0)||0,
-  gwth:+($('inGreedyWth')?$('inGreedyWth').value:0)||0,
+  gwth:wth,
   ggrow:+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
   refCap:+$('inRefCapital').value||0
@@ -1826,7 +1826,7 @@ function readInputs(){
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
-    inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyWth:$('inGreedyWth').value, inGreedyGrowth:$('inGreedyGrowth').value,
+    inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
@@ -1845,7 +1845,7 @@ function applyInputs(d){
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
   if(d.inGreedyTH!=null)$('inGreedyTH').value=d.inGreedyTH;
   if(d.inGreedyInitial!=null)$('inGreedyInitial').value=d.inGreedyInitial;
-  if(d.inGreedyWth!=null)$('inGreedyWth').value=d.inGreedyWth;
+  if(d.inGreedyWth!=null&&$('inGreedyWth'))$('inGreedyWth').value=d.inGreedyWth;
   if(d.inGreedyGrowth!=null)$('inGreedyGrowth').value=d.inGreedyGrowth;
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
