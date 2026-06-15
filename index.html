@@ -1010,7 +1010,7 @@ input[type=number]{-moz-appearance:textfield}
           <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
       </div>
-      <div style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div id="capInMarketplace" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Buy a specific marketplace miner <span style="color:var(--text4);font-weight:400">(optional)</span></label>
         <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Eyeing a cheap miner on the GoMining marketplace? Enter it here. Its hashrate counts toward rewards &amp; fees, but <strong style="color:var(--text3)">not</strong> toward your VIP tier. The planner spends the remaining balance on locking GMT / minting TH for max discount.</div>
         <div class="input-grid">
@@ -1028,7 +1028,7 @@ input[type=number]{-moz-appearance:textfield}
           </div>
         </div>
       </div>
-      <div style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <div id="capInGreedy" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Greedy Machine passive growth <span style="color:var(--text4);font-weight:400">(optional)</span></label>
         <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Weekly TH growth for the Greedy Machine(s) you entered in Current Operation. Compounds on the current TH every week — and is the <strong style="color:var(--text3)">only</strong> growth once a miner hits the 5,000 TH manual-upgrade cap. Until then, reinvested rewards fill it up to 5k (discount-first). Enter last week's observed growth.</div>
         <div class="input-grid">
@@ -1839,8 +1839,21 @@ function animateMetric(el,to,fmt){
 }
 
 // ---- MAIN RENDER ----
+// Hide the optional marketplace-miner / greedy-machine blocks on the Investment
+// Amount screen when the user hasn't entered any such info — keeps the planner clean.
+function updateCapInVisibility(){
+  const mpEl=$('inMpTH'),gEl=$('inGreedyTH');
+  const mpOn=mpEl&&(parseFloat(mpEl.value)||0)>0;
+  const gOn=gEl&&(parseFloat(gEl.value)||0)>0;
+  const mpBlock=document.getElementById('capInMarketplace');
+  const gBlock=document.getElementById('capInGreedy');
+  // Don't yank a block out from under the user while they're typing inside it.
+  if(mpBlock&&!mpBlock.contains(document.activeElement))mpBlock.style.display=mpOn?'':'none';
+  if(gBlock&&!gBlock.contains(document.activeElement))gBlock.style.display=gOn?'':'none';
+}
 function recalc(){
   if(!S.loaded)return;
+  updateCapInVisibility();
   const i=inp(),m=calc(i);
 
   // Update auto-calculated token discount display
