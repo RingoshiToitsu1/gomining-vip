@@ -557,7 +557,7 @@ input[type=number]{-moz-appearance:textfield}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sp-page-loading{position:fixed;inset:0;z-index:210;background:rgba(10,10,10,.86);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 /* Capital Planner: adjust-investment chip + growth-projection CTA */
-.planner-adjust-btn{display:inline-flex;align-items:center;gap:.5rem;margin:0 0 .9rem;background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:.65rem 1.1rem;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition)}
+.planner-adjust-btn{display:flex;width:fit-content;max-width:100%;align-items:center;gap:.5rem;margin:0 auto .9rem;background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:.65rem 1.1rem;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition)}
 .planner-adjust-btn:hover{border-color:var(--purple);color:var(--text);background:var(--bg-card-hover)}
 .planner-adjust-btn svg{color:var(--purple-soft);flex:0 0 auto}
 .planner-proj-btn{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;margin:.2rem 0 .8rem;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border:1px solid rgba(245,166,35,.4);border-radius:var(--radius);padding:1rem 1.2rem;cursor:pointer;transition:var(--transition);font-family:var(--sans)}
@@ -1509,6 +1509,7 @@ function submitPlannerCapital(){
     document.body.style.overflow='';
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
+    animatePlannerResults();   // fresh-load feel: count the allocation up from 0
   },800);
 }
 // "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
@@ -3032,6 +3033,32 @@ function refreshMySetupAnimation(){
   ['heroDailyNet','heroMonthly','heroYearly','heroDiscount'].forEach(id=>{const e=$(id);if(e)e._cur=0;});
   document.querySelectorAll('#heroGrid .hero-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
   if(S.loaded)recalc();
+}
+// Count an element's leading number up from 0 to its rendered value, preserving
+// any currency prefix / unit suffix (e.g. "$1,234", "9,354 GMT").
+function animateCountText(el,dur){
+  if(!el)return;
+  const m=String(el.textContent).match(/^(\D*?)([\d,]+(?:\.\d+)?)(.*)$/);
+  if(!m)return;
+  const prefix=m[1],numStr=m[2],suffix=m[3];
+  const target=parseFloat(numStr.replace(/,/g,''));
+  if(!isFinite(target))return;
+  const dec=(numStr.split('.')[1]||'').length;
+  const t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
+  function step(now){
+    const p=Math.min(1,(now-t0)/(dur||800));
+    el.textContent=prefix+(target*ease(p)).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})+suffix;
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+// Fresh-load feel for the planner results: replay the section entrances and
+// count the allocation numbers up from 0.
+function animatePlannerResults(){
+  const secs=document.querySelectorAll('#tab-planner .reveal');
+  secs.forEach(el=>el.classList.remove('visible'));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>secs.forEach(el=>el.classList.add('visible'))));
+  document.querySelectorAll('#allocDisplay .a-val').forEach(el=>animateCountText(el,800));
 }
 function closeSetupProjection(){
   const m=document.getElementById('setupProjModal');
