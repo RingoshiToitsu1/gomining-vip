@@ -62,6 +62,9 @@ input[type=number]{-moz-appearance:textfield}
 .tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
 .tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
 .tab-btn.active{color:#000;border-color:var(--purple);background:var(--purple);box-shadow:0 0 20px rgba(245,166,35,.25);font-weight:700}
+.tab-edit-btn{margin-left:auto;padding:.55rem 1.25rem;cursor:pointer;border:1px solid var(--cyan);border-radius:24px;background:transparent;color:var(--cyan);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none;white-space:nowrap}
+.tab-edit-btn:hover{background:var(--cyan);color:#000}
+@media(max-width:600px){.tab-edit-btn{padding:.45rem 1rem;font-size:.8rem;border-radius:20px}}
 .btc-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem}
 .btc-pill{padding:.4rem .8rem;border-radius:20px;border:1px solid var(--border);background:var(--bg-input);color:var(--text2);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .btc-pill:hover{border-color:var(--purple-soft);color:var(--text)}
@@ -286,6 +289,8 @@ input[type=number]{-moz-appearance:textfield}
   .live-bar{gap:.15rem;width:100%;justify-content:space-between}
   .live-chip{padding:.25rem .4rem;font-size:.68rem;border-radius:14px;gap:.2rem;flex:1;justify-content:center;min-width:0}
   .live-chip .lbl{font-size:.58rem}
+  #updatedChip .lbl{display:none}
+  #updatedChip .val{white-space:nowrap}
   .container{padding:0 .5rem 3rem}
   .hero-grid{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}
   .hero-card{padding:.7rem}
@@ -575,6 +580,14 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.2rem 0;gap:.5rem}
 #secInputs .toggle-label{font-size:.76rem;line-height:1.2}
 #secInputs .ed-toggle-note{color:var(--text4);font-size:.68rem;font-weight:400}
+#secInputs .ed-saved{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.7rem}
+#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.76rem;padding:.45rem 30px .45rem 12px;outline:none;cursor:pointer;transition:var(--transition)}
+#secInputs .ed-select:focus{border-color:var(--purple)}
+#secInputs #profileSelect{min-width:150px}
+#secInputs .ed-cur{min-width:76px}
+#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.46rem .85rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
+#secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
+#secInputs #saveStatus{width:100%;text-align:center;font-size:.7rem;color:var(--green);opacity:0;transition:opacity .3s;min-height:.7rem}
 .sp-form .pi-title,.sp-form .pi-subtitle{text-align:center}
 /* Capital Planner popout: center-justify all of its data/labels */
 #plannerIntro .sp-form{text-align:center}
@@ -950,7 +963,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="live-chip" title="Live BTC price"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live GMT price"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
-      <div class="live-chip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer" style="min-width:48px;text-align:left">--</span></div>
+      <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
     </div>
   </div>
 </div>
@@ -961,20 +974,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="tabs">
   <button class="tab-btn active" data-tab="tab-current">My Setup</button>
   <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
-  <div class="tabs-saved">
-    <select id="profileSelect" onchange="onProfileChange()" title="Saved setups">
-      <option value="">— Saved setups —</option>
-    </select>
-    <button class="tabs-saved-btn primary" onclick="saveAsNewProfile()">Save as…</button>
-    <button id="btnDeleteProfile" class="tabs-saved-btn" onclick="deleteActiveProfile()" title="Delete the selected profile">Delete</button>
-    <button id="btnEditSetup" class="tabs-saved-btn" onclick="toggleEditSetup()" style="color:var(--cyan);border-color:var(--cyan)" title="Edit your farm parameters">Edit setup</button>
-    <select id="inCurrency" onchange="setCurrency(this.value)" style="min-width:84px" title="Display Currency">
-      <option value="USD">USD ($)</option>
-      <option value="GBP">GBP (&pound;)</option>
-      <option value="EUR">EUR (&euro;)</option>
-    </select>
-    <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
-  </div>
+  <button id="btnEditSetup" class="tab-edit-btn" onclick="openEditSetup()" title="Edit your setup, saved profiles &amp; currency">Edit Setup</button>
 </div>
 
 <!-- ==================== TAB 1 ==================== -->
@@ -1026,6 +1026,21 @@ input[type=number]{-moz-appearance:textfield}
       <div class="sp-form ed-form">
         <div class="pi-title">Edit Your Setup</div>
         <div class="pi-subtitle">Enter your GoMining farm details &mdash; your dashboard updates live.</div>
+
+        <div class="ed-saved">
+          <select id="profileSelect" class="ed-select" onchange="onProfileChange()" title="Switch saved setup">
+            <option value="">— Saved setups —</option>
+          </select>
+          <button class="ed-sbtn" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
+          <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+          <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
+          <select id="inCurrency" class="ed-select ed-cur" onchange="setCurrency(this.value)" title="Display currency">
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (&pound;)</option>
+            <option value="EUR">EUR (&euro;)</option>
+          </select>
+          <span id="saveStatus"></span>
+        </div>
 
         <div class="ed-group">
           <div class="ed-group-title">Your Farm</div>
@@ -1944,6 +1959,14 @@ function onProfileChange(){
   renderProfileSelect();
 }
 
+function saveActiveProfile(){
+  const state=loadProfilesState();
+  const p=state.activeId&&state.profiles.find(x=>x.id===state.activeId);
+  if(!p){saveAsNewProfile();return;}   // nothing selected yet -> save as new
+  p.data=readInputs();
+  saveProfilesState(state);
+  flashStatus('Saved to "'+p.name+'"');
+}
 function saveAsNewProfile(){
   const name=(prompt('Name this setup (e.g. "Mine", "Client - John"):','')||'').trim();
   if(!name)return;
