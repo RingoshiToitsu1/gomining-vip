@@ -530,6 +530,7 @@ input[type=number]{-moz-appearance:textfield}
 .sp-loading-txt{color:var(--text2);font-size:.86rem;font-weight:600;letter-spacing:.02em}
 @keyframes spSpin{to{transform:rotate(360deg)}}
 .ri-btn[disabled]{opacity:.6;cursor:default;transform:none!important}
+.pi-calc-loading{position:absolute;inset:0;z-index:5;background:rgba(10,10,10,.93);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 @media(max-width:600px){
   .pi-body{padding:1.2rem 1rem .8rem}
   .pi-nav{padding:0 1rem 1.2rem}
@@ -1267,7 +1268,11 @@ input[type=number]{-moz-appearance:textfield}
       </div>
     </div>
     <div class="pi-nav">
-      <button class="ob-btn ob-btn-primary" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
+      <button id="plannerCalcBtn" class="ob-btn ob-btn-primary" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
+    </div>
+    <div class="pi-calc-loading" id="plannerCalcLoading" style="display:none">
+      <div class="sp-spinner"></div>
+      <div class="sp-loading-txt">Finding your optimal split…</div>
     </div>
   </div>
 </div>
@@ -1441,19 +1446,28 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   }
 }));
 function submitPlannerCapital(){
-  const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
-  const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
-  const refCapVal=parseFloat(document.getElementById('piRefCapInput').value)||0;
-  $('inCapital').value=val;
-  if(gmtVal>0)$('inGMTWallet').value=gmtVal;
-  $('inRefCapital').value=refCapVal;
-  $('inMpTH').value=parseFloat(document.getElementById('piMpTH').value)||0;
-  $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
-  const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
-  $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
-  document.getElementById('plannerIntro').style.display='none';
-  document.body.style.overflow='';
-  recalc();
+  // Brief "calculating" state so the optimal-split solve feels tangible.
+  const btn=document.getElementById('plannerCalcBtn');
+  const load=document.getElementById('plannerCalcLoading');
+  if(btn)btn.disabled=true;
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
+    const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
+    const refCapVal=parseFloat(document.getElementById('piRefCapInput').value)||0;
+    $('inCapital').value=val;
+    if(gmtVal>0)$('inGMTWallet').value=gmtVal;
+    $('inRefCapital').value=refCapVal;
+    $('inMpTH').value=parseFloat(document.getElementById('piMpTH').value)||0;
+    $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
+    const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
+    $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
+    recalc();
+    document.getElementById('plannerIntro').style.display='none';
+    document.body.style.overflow='';
+    if(load)load.style.display='none';
+    if(btn)btn.disabled=false;
+  },800);
 }
 function closePlannerIntro(){
   document.getElementById('plannerIntro').style.display='none';
