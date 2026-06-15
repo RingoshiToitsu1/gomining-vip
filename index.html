@@ -58,7 +58,7 @@ input[type=number]{-moz-appearance:textfield}
 .tabs-saved .tabs-saved-btn:hover{border-color:var(--purple);color:var(--text)}
 .tabs-saved .tabs-saved-btn.primary{background:var(--purple);color:#000;border-color:var(--purple)}
 .tabs-saved select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);min-width:150px;outline:none;cursor:pointer}
-@media(max-width:600px){.tabs-saved{width:100%;margin-left:0;order:1}.tabs-saved select{flex:1 1 100%;min-width:0}.tabs-saved .tabs-saved-btn{flex:1 1 auto}}
+@media(max-width:600px){.tabs-saved{width:100%;margin-left:0;order:1}.tabs-saved #profileSelect{flex:1 1 100%;min-width:0}.tabs-saved .tabs-saved-btn{flex:1 1 auto}.tabs-saved #inCurrency{flex:0 0 auto;min-width:74px}}
 .tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
 .tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
 .tab-btn.active{color:#000;border-color:var(--purple);background:var(--purple);box-shadow:0 0 20px rgba(245,166,35,.25);font-weight:700}
@@ -356,6 +356,7 @@ input[type=number]{-moz-appearance:textfield}
   .field input[type="number"]{padding:.7rem .75rem;font-size:16px}
   .section-header{min-height:48px}
   .tab-btn{min-height:40px}
+  .tabs-saved .tabs-saved-btn,.tabs-saved select{min-height:38px}
   .toggle{width:44px;height:24px}
   .toggle-track::after{width:20px;height:20px}
   .toggle input:checked+.toggle-track::after{transform:translateX(20px)}
@@ -469,6 +470,7 @@ input[type=number]{-moz-appearance:textfield}
 .ob-step .ob-tutorial-cap{margin:.05rem 0 .55rem}
 .ob-step[data-ob-step="5"] .ob-subtitle{margin-bottom:.7rem}
 .ob-step[data-ob-step="5"] .ob-field{margin-bottom:.5rem}
+@media(max-width:600px){.gm-mk-grid3{gap:5px}.gm-mk-tile{padding:8px 7px}.gm-mk-tile-lbl{white-space:normal;line-height:1.1}.gm-mk-tile-val{font-size:.9rem}.ob-step .gm-mk-tile-val{font-size:.85rem}}
 /* Collapsible optional inputs in the Capital Planner popout */
 .pi-opt-toggle{width:100%;display:flex;align-items:center;gap:.5rem;background:var(--bg-input);border:1px dashed var(--border);border-radius:12px;padding:.7rem .9rem;color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--transition);text-align:left}
 .pi-opt-toggle:hover{border-color:var(--purple);color:var(--text)}
@@ -522,9 +524,12 @@ input[type=number]{-moz-appearance:textfield}
 @keyframes spSpin{to{transform:rotate(360deg)}}
 .ri-btn[disabled]{opacity:.6;cursor:default;transform:none!important}
 @media(max-width:600px){
-  .pi-body{padding:1.2rem 1.2rem .8rem}
-  .pi-nav{padding:0 1.2rem 1.2rem}
+  .pi-body{padding:1.2rem 1rem .8rem}
+  .pi-nav{padding:0 1rem 1.2rem}
   .pi-title{font-size:1.1rem}
+  .pi-overlay{padding:.6rem}
+  .ri-chart-wrap{padding:.65rem}
+  .ri-single-card{padding:.85rem .9rem;max-width:100%}
 }
 
 /* ---- CARD ANIMATIONS ---- */
