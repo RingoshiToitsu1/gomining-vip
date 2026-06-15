@@ -416,10 +416,14 @@ input[type=number]{-moz-appearance:textfield}
 .ob-field{margin-bottom:1.1rem}
 .ob-field label{display:block;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:.25rem}
 .ob-field .ob-hint{font-size:.72rem;color:var(--text3);margin-bottom:.5rem;line-height:1.5}
-.ob-field input[type=number],.ob-field input[type=text]{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.55rem .8rem;color:var(--text);font-family:var(--mono);font-size:.9rem;transition:var(--transition);text-align:right}
-.ob-field input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
-.ob-field .ob-input-wrap{display:flex;align-items:center;gap:.5rem}
-.ob-field .ob-unit{color:var(--text3);font-size:.8rem;font-family:var(--mono);min-width:36px}
+.ob-field .ob-input-wrap{display:flex;align-items:center;gap:.4rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .85rem;cursor:text;transition:var(--transition)}
+.ob-field .ob-input-wrap:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.ob-field input[type=number],.ob-field input[type=text]{flex:1;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;color:var(--text);font-family:var(--mono);font-size:.95rem;text-align:left}
+.ob-field input:focus{outline:none}
+.ob-field .ob-unit{flex:0 0 auto;display:flex;align-items:center;color:var(--purple-soft);font-size:.85rem;font-family:var(--mono);font-weight:700}
+.ob-field .ob-unit .gmt-logo{vertical-align:middle}
+.ob-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;width:100%;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.95rem;padding:.6rem 36px .6rem .85rem;outline:none;cursor:pointer;transition:var(--transition)}
+.ob-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .ob-toggle-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
 .ob-toggle-row span{font-size:.82rem;color:var(--text2)}
 .ob-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem;gap:1rem}
@@ -728,13 +732,11 @@ input[type=number]{-moz-appearance:textfield}
       <div class="ob-subtitle ob-step-reveal">Choose your preferred currency for all prices and earnings.</div>
       <div class="ob-field">
         <label>Currency</label>
-        <div class="ob-input-wrap">
-          <select id="obCurrency" style="flex:1;padding:.55rem .8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:var(--sans);font-size:.95rem;outline:none">
-            <option value="USD">USD ($)</option>
-            <option value="GBP">GBP (&pound;)</option>
-            <option value="EUR">EUR (&euro;)</option>
-          </select>
-        </div>
+        <select id="obCurrency" class="ob-select">
+          <option value="USD">USD ($)</option>
+          <option value="GBP">GBP (&pound;)</option>
+          <option value="EUR">EUR (&euro;)</option>
+        </select>
       </div>
     </div>
 
