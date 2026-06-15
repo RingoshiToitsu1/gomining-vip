@@ -52,7 +52,7 @@ input[type=number]{-moz-appearance:textfield}
 .container{max-width:1200px;margin:0 auto;padding:0 1.2rem 4rem}
 
 /* ---- TABS ---- */
-.tabs{display:flex;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:var(--bg);padding-bottom:.8rem}
+.tabs{display:flex;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:transparent;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:.8rem}
 .tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
 .tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
 .tab-btn.active{color:#000;border-color:var(--purple);background:var(--purple);box-shadow:0 0 20px rgba(245,166,35,.25);font-weight:700}
@@ -446,6 +446,27 @@ input[type=number]{-moz-appearance:textfield}
 .gm-mk-menu-ico{width:24px;height:24px;border-radius:7px;background:rgba(124,108,247,.16);display:flex;align-items:center;justify-content:center;font-size:.78rem}
 .gm-mk-arrow{display:flex;align-items:center;gap:4px;color:#FF3B3B;font-weight:800;font-size:.74rem;margin-top:11px;white-space:nowrap}
 .gm-mk-arrow .gm-mk-arrow-tip{font-size:1.1rem;line-height:1}
+/* Compact mockups inside the setup wizard so each step fits without scrolling */
+.ob-step .gm-mk{margin:.35rem auto .45rem;padding:10px 11px;max-width:344px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.ob-step .gm-mk-head{margin-bottom:9px;font-size:.78rem}
+.ob-step .gm-mk-tile{padding:8px 10px}
+.ob-step .gm-mk-tile-val{font-size:.95rem}
+.ob-step .gm-mk-bal{padding:11px 12px}
+.ob-step .gm-mk-bal-top{margin-bottom:9px}
+.ob-step .gm-mk-bal-val{font-size:1.2rem}
+.ob-step .gm-mk-menu-wrap{margin-top:9px}
+.ob-step .gm-mk-act-btn{width:34px;height:34px}
+.ob-step .ob-tutorial-cap{margin:.05rem 0 .55rem}
+.ob-step[data-ob-step="5"] .ob-subtitle{margin-bottom:.7rem}
+.ob-step[data-ob-step="5"] .ob-field{margin-bottom:.5rem}
+/* Collapsible optional inputs in the Capital Planner popout */
+.pi-opt-toggle{width:100%;display:flex;align-items:center;gap:.5rem;background:var(--bg-input);border:1px dashed var(--border);border-radius:12px;padding:.7rem .9rem;color:var(--text2);font-family:var(--sans);font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--transition);text-align:left}
+.pi-opt-toggle:hover{border-color:var(--purple);color:var(--text)}
+.pi-opt-toggle.open{border-style:solid;border-color:var(--purple);color:var(--text);background:var(--purple-glow)}
+.pi-opt-toggle::before{content:'+';display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--purple);color:#000;font-weight:800;font-size:.85rem;flex:0 0 auto;line-height:1}
+.pi-opt-toggle.open::before{content:'\2212'}
+.pi-opt{margin-top:.8rem}
+.pi-opt[hidden]{display:none}
 .lightbox-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.5rem;cursor:zoom-out}
 .lightbox-img{max-width:96vw;max-height:92vh;border-radius:12px;border:1px solid var(--card-border);box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .lightbox-close{position:absolute;top:16px;right:22px;background:none;border:none;color:#fff;font-size:2.2rem;line-height:1;cursor:pointer}
@@ -1171,7 +1192,8 @@ input[type=number]{-moz-appearance:textfield}
           </div>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem">
-          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.5rem">Specific marketplace miner <span style="color:var(--text4)">(optional)</span></label>
+          <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptMiner')">Purchasing a specific miner?</button>
+          <div id="piOptMiner" class="pi-opt" hidden>
           <div style="display:flex;gap:.5rem">
             <div style="flex:1.2">
               <input type="number" id="piMpTH" value="0" step="10" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
@@ -1187,14 +1209,18 @@ input[type=number]{-moz-appearance:textfield}
             </div>
           </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
+          </div>
         </div>
         <div>
+          <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptReferral')">Referral power options?</button>
+          <div id="piOptReferral" class="pi-opt" hidden>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Referral's Planned Capital <span style="color:var(--text4)">(optional)</span></label>
           <div style="display:flex;align-items:center;gap:.5rem">
             <input type="number" id="piRefCapInput" value="0" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
             <span style="color:var(--text3);font-size:.85rem">USD</span>
           </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. You receive <strong style="color:var(--green)">5% of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
+          </div>
         </div>
         <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
           <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin:0">
@@ -3170,6 +3196,12 @@ function openLightbox(el){
   li.src=img.src;li.alt=img.alt||'';lb.style.display='flex';
 }
 function closeLightbox(){const lb=document.getElementById('lightbox');if(lb)lb.style.display='none';}
+function togglePiOpt(btn,id){
+  const el=document.getElementById(id);if(!el)return;
+  const opening=el.hasAttribute('hidden');
+  if(opening){el.removeAttribute('hidden');btn.classList.add('open');}
+  else{el.setAttribute('hidden','');btn.classList.remove('open');}
+}
 let obCur=0;
 function initOnboarding(){
   try{if(localStorage.getItem('gm_onboarded'))return}catch(e){}
