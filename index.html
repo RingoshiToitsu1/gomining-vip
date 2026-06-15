@@ -2668,7 +2668,7 @@ function renderPlanner(i,m){
 
   // Visual allocation split (shown up top, above the cards): TH spend vs GMT lock
   {
-    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,ag*gp), splitTot=thSpend+gmtSpendUSD;
+    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,usdSpentOnGMT+gmtFromPool*gp), splitTot=thSpend+gmtSpendUSD;
     if(splitTot>0){
       const pctTH=thSpend/splitTot*100, pctGMT=100-pctTH;
       let why;
@@ -2698,7 +2698,7 @@ function renderPlanner(i,m){
   if(showReserve){
     ah+=`<div class="alloc-card"><div class="a-label">Wallet Reserve</div><div class="a-val" style="color:var(--orange)">${fN(reserveNeeded,1)} GMT</div><div class="a-sub">2-day fees at ${fN(nt,1)} TH (${fU(reserveNeeded*gp)})</div></div>`;
   }
-  ah+=`<div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(gmtLock*gp)}${gmtFromUSD>0?' ('+fN(gmtFromUSD,0)+' bought)':''}</div></div>`;
+  ah+=`<div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(usdSpentOnGMT+gmtFromPool*gp)}${gmtFromUSD>0?' ('+fN(gmtFromUSD,0)+' bought)':''}</div></div>`;
   ah+=`<div class="alloc-card"><div class="a-label">Buy TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH${sol.bonusActive?` <span style="color:var(--gold,#ffd700)">(incl. +${fN(sol.bonusTH,1)} VIP bonus)</span>`:''}</div></div>`;
   ah+=`</div>`;
 
