@@ -1554,7 +1554,7 @@ function autoFillCPT(thId,cptId){
 
 // ---- FORMAT ----
 const fB=v=>v.toFixed(8)+' BTC';
-const fU=v=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})};
+const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})};
 const fP=v=>v.toFixed(2)+'%';
 const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
 // Compact formatters for chart axis labels (keep them narrow so monthly values
@@ -1746,8 +1746,8 @@ async function fetchData(){
 
 function updateHeader(){
   const$=id=>document.getElementById(id);
-  $('btcVal').textContent=S.btcPrice?fU(S.btcPrice):'--';
-  $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice):'--';
+  $('btcVal').textContent=S.btcPrice?fU(S.btcPrice,0):'--';
+  $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice,3):'--';
   $('satsVal').textContent=S.satsPerTHDay?Math.floor(S.satsPerTHDay):'--';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
