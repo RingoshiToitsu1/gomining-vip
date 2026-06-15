@@ -562,32 +562,35 @@ input[type=number]{-moz-appearance:textfield}
 .sp-new-btn:hover{filter:brightness(1.06)}
 .sp-form{max-width:600px;margin:0 auto}
 /* Edit Setup full page: centered, compact 3-col grid that fits without scrolling */
-#secInputs .sp-page-inner{padding:.3rem 1rem 1.2rem}
-#secInputs .sp-page-head{padding:.4rem 0 .5rem}
-#secInputs .ed-form{max-width:560px;text-align:left;margin:0 auto}
-#secInputs .ed-form .pi-title{text-align:center;font-size:1.15rem;margin-bottom:.1rem}
-#secInputs .ed-form .pi-subtitle{text-align:center;font-size:.74rem;line-height:1.35;margin-bottom:.6rem}
-#secInputs .ed-group{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.55rem .8rem;margin-bottom:.5rem}
-#secInputs .ed-group-title{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.4rem;text-align:center}
-#secInputs .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .55rem}
+#secInputs .sp-page-inner{padding:.25rem 1rem .8rem}
+#secInputs .sp-page-head{padding:.35rem 0 .45rem}
+#secInputs .ed-form{max-width:520px;text-align:left;margin:0 auto}
+#secInputs .ed-form .pi-title{text-align:center;font-size:1.1rem;margin-bottom:.5rem}
+#secInputs .ed-group{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.5rem .75rem;margin-bottom:.45rem}
+#secInputs .ed-group-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.35rem;text-align:center}
+#secInputs .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .5rem}
 #secInputs .field{text-align:center}
-#secInputs .field label{display:block;text-align:center;font-size:.68rem;color:var(--text2);font-weight:600;margin-bottom:.18rem;line-height:1.2}
-#secInputs .field-input{display:flex;width:100%;max-width:none;margin:0;padding:.42rem .6rem}
-#secInputs .field input[type=number]{field-sizing:normal;width:100%;min-width:0;flex:1;text-align:center;font-size:.88rem}
-#secInputs .ed-greedy-grid{margin-top:.4rem}
-#secInputs .ed-amb-grid{margin-top:.4rem;grid-template-columns:1fr;max-width:200px;margin-left:auto;margin-right:auto}
+#secInputs .field label{display:block;text-align:center;font-size:.67rem;color:var(--text2);font-weight:600;margin-bottom:.15rem;line-height:1.15}
+#secInputs .field-input{display:flex;width:100%;max-width:none;margin:0;padding:.38rem .55rem}
+#secInputs .field input[type=number]{field-sizing:normal;width:100%;min-width:0;flex:1;text-align:center;font-size:.86rem}
+#secInputs .ed-greedy-grid{margin-top:.35rem}
+#secInputs .ed-amb-grid{margin-top:.35rem;grid-template-columns:1fr;max-width:200px;margin-left:auto;margin-right:auto}
 #secInputs .ed-toggles{display:flex;flex-direction:column;gap:0}
-#secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.2rem 0;gap:.5rem}
-#secInputs .toggle-label{font-size:.76rem;line-height:1.2}
-#secInputs .ed-toggle-note{color:var(--text4);font-size:.68rem;font-weight:400}
-#secInputs .ed-saved{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4rem;margin-bottom:.7rem}
-#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.76rem;padding:.45rem 30px .45rem 12px;outline:none;cursor:pointer;transition:var(--transition)}
+#secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.16rem 0;gap:.5rem}
+#secInputs .toggle-label{font-size:.75rem;line-height:1.15}
+#secInputs .ed-toggle-note{color:var(--text4);font-size:.67rem;font-weight:400}
+#secInputs .ed-saved{margin-bottom:.45rem}
+#secInputs .ed-saved-top{display:flex;gap:.4rem;margin-bottom:.4rem}
+#secInputs .ed-saved-top #profileSelect{flex:1;min-width:0}
+#secInputs .ed-saved-btns{display:flex;gap:.4rem}
+#secInputs .ed-saved-btns .ed-sbtn{flex:1}
+#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.78rem;padding:.45rem 30px .45rem 12px;outline:none;cursor:pointer;transition:var(--transition)}
 #secInputs .ed-select:focus{border-color:var(--purple)}
-#secInputs #profileSelect{min-width:150px}
-#secInputs .ed-cur{min-width:76px}
-#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.46rem .85rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
+#secInputs .ed-cur{flex:0 0 auto;min-width:74px}
+#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.44rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
-#secInputs #saveStatus{width:100%;text-align:center;font-size:.7rem;color:var(--green);opacity:0;transition:opacity .3s;min-height:.7rem}
+#secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
+#secInputs .sp-run-wrap{margin-top:.45rem!important}
 .sp-form .pi-title,.sp-form .pi-subtitle{text-align:center}
 /* Capital Planner popout: center-justify all of its data/labels */
 #plannerIntro .sp-form{text-align:center}
@@ -1025,20 +1028,23 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div class="sp-form ed-form">
         <div class="pi-title">Edit Your Setup</div>
-        <div class="pi-subtitle">Enter your GoMining farm details &mdash; your dashboard updates live.</div>
 
         <div class="ed-saved">
-          <select id="profileSelect" class="ed-select" onchange="onProfileChange()" title="Switch saved setup">
-            <option value="">— Saved setups —</option>
-          </select>
-          <button class="ed-sbtn" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
-          <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
-          <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
-          <select id="inCurrency" class="ed-select ed-cur" onchange="setCurrency(this.value)" title="Display currency">
-            <option value="USD">USD ($)</option>
-            <option value="GBP">GBP (&pound;)</option>
-            <option value="EUR">EUR (&euro;)</option>
-          </select>
+          <div class="ed-saved-top">
+            <select id="profileSelect" class="ed-select" onchange="onProfileChange()" title="Switch saved setup">
+              <option value="">— Saved setups —</option>
+            </select>
+            <select id="inCurrency" class="ed-select ed-cur" onchange="setCurrency(this.value)" title="Display currency">
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (&pound;)</option>
+              <option value="EUR">EUR (&euro;)</option>
+            </select>
+          </div>
+          <div class="ed-saved-btns">
+            <button class="ed-sbtn" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
+            <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+            <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
+          </div>
           <span id="saveStatus"></span>
         </div>
 
@@ -1747,7 +1753,7 @@ async function fetchData(){
 function updateHeader(){
   const$=id=>document.getElementById(id);
   $('btcVal').textContent=S.btcPrice?fU(S.btcPrice,0):'--';
-  $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice,3):'--';
+  $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice,4):'--';
   $('satsVal').textContent=S.satsPerTHDay?Math.floor(S.satsPerTHDay):'--';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
