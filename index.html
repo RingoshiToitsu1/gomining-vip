@@ -546,6 +546,16 @@ input[type=number]{-moz-appearance:textfield}
 .sp-run-wrap .ri-btn{font-size:.95rem;padding:.72rem 2.2rem}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sp-page-loading{position:fixed;inset:0;z-index:210;background:rgba(10,10,10,.86);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
+/* Capital Planner: adjust-investment chip + growth-projection CTA */
+.planner-adjust-btn{display:inline-flex;align-items:center;gap:.5rem;margin:0 0 .9rem;background:var(--bg-card);border:1px solid var(--card-border);border-radius:12px;padding:.65rem 1.1rem;color:var(--text2);font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition)}
+.planner-adjust-btn:hover{border-color:var(--purple);color:var(--text);background:var(--bg-card-hover)}
+.planner-adjust-btn svg{color:var(--purple-soft);flex:0 0 auto}
+.planner-proj-btn{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;margin:.2rem 0 .8rem;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border:1px solid rgba(245,166,35,.4);border-radius:var(--radius);padding:1rem 1.2rem;cursor:pointer;transition:var(--transition);font-family:var(--sans)}
+.planner-proj-btn:hover{border-color:var(--orange);box-shadow:0 6px 24px rgba(245,166,35,.2);transform:translateY(-1px)}
+.planner-proj-ico{width:44px;height:44px;border-radius:12px;background:rgba(245,166,35,.16);display:flex;align-items:center;justify-content:center;color:var(--orange);flex:0 0 auto}
+.planner-proj-txt{display:flex;flex-direction:column;gap:.15rem;min-width:0}
+.planner-proj-txt strong{font-size:1rem;font-weight:800;color:var(--orange)}
+.planner-proj-txt>span{font-size:.78rem;color:var(--text3)}
 @media(max-width:600px){.sp-page-inner{padding:.3rem .8rem 2.5rem}.sp-page-head{padding:.5rem 0 .6rem}.sp-form .pi-title{font-size:1.15rem;margin-bottom:.3rem}.sp-form .pi-subtitle{font-size:.76rem;line-height:1.45;margin-bottom:.5rem}.sp-form-grid{margin-top:.8rem;gap:.7rem}.sp-back-btn,.sp-new-btn{padding:.5rem .9rem;font-size:.8rem}.sp-run-wrap{margin-top:1rem}}
 /* Growth Projection: empty-state prompt + run spinner */
 .sp-prompt{text-align:center;color:var(--text3);font-size:.85rem;padding:1.6rem 1rem;line-height:1.65;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg-input)}
@@ -1053,8 +1063,14 @@ input[type=number]{-moz-appearance:textfield}
 <!-- ==================== TAB 2 ==================== -->
 <div class="tab-content" id="tab-planner">
 
-  <!-- CAPITAL INPUT -->
-  <div class="section reveal" id="secCapIn">
+  <!-- Adjust investment — reopens the full-page Capital Planner form -->
+  <button class="planner-adjust-btn" onclick="openPlannerForm()">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+    Adjust Investment Amount
+  </button>
+
+  <!-- CAPITAL INPUT — inputs live here (hidden); edited via the full-page form -->
+  <div class="section reveal" id="secCapIn" style="display:none">
     <div class="section-header" onclick="toggleSection('secCapIn')">
       <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><ellipse cx="20" cy="13" rx="10" ry="2.8"/><ellipse cx="20" cy="20" rx="10" ry="2.8"/><ellipse cx="20" cy="27" rx="10" ry="2.8"/><path d="M10 13 L10 27"/><path d="M30 13 L30 27"/></g></svg> Investment Amount</div>
       <div class="section-toggle">&#9662;</div>
@@ -1137,60 +1153,11 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
-  <!-- AUTO-REINVEST PROJECTION -->
-  <div class="section reveal" id="secReinvest">
-    <div class="section-header" onclick="toggleSection('secReinvest')">
-      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M28 11 A10 10 0 1 0 30 24"/><path d="M28 7 L30 11 L26 13"/><path d="M20 26 L20 14"/><path d="M16 18 L20 14 L24 18"/></g></svg> Reinvest Growth Projection</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-desc">Simulate reinvesting all daily rewards (mining + staking) into TH and GMT. Automatically balances TH growth with GMT locking to maintain 20% token discount.</div>
-    <div class="section-body">
-      <div class="input-grid" style="max-width:560px">
-        <div class="field">
-          <label>Projection Length <span class="tip" data-tip="Number of years to simulate reinvesting net profit into TH.">?</span></label>
-          <div class="field-input"><select id="inReinvestDays" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%">
-            <option value="365" selected>1 Year</option>
-            <option value="730">2 Years</option>
-            <option value="1095">3 Years</option>
-            <option value="1460">4 Years</option>
-            <option value="1825">5 Years</option>
-            <option value="3650">10 Years</option>
-            <option value="7300">20 Years</option>
-          </select></div>
-        </div>
-        <div class="field">
-          <label>BTC Price <span class="tip" data-tip="Hold BTC at this price for the entire projection. Firm options use each firm's published BTC target — match the horizon to the target year for a realistic scenario.">?</span></label>
-          <select id="inReinvestBTC" style="display:none">
-            <option value="live" selected>Live (current)</option>
-            <optgroup label="Bank / Firm Forecasts">
-              <option value="firm:std-chartered">Standard Chartered — 2028</option>
-              <option value="firm:bernstein">Bernstein — 2033</option>
-            </optgroup>
-            <optgroup label="Manual">
-              <option value="manual:80000">$80K</option>
-              <option value="manual:100000">$100K</option>
-              <option value="manual:150000">$150K</option>
-              <option value="manual:200000">$200K</option>
-              <option value="manual:300000">$300K</option>
-            </optgroup>
-          </select>
-          <div id="btcPills" class="btc-pills"></div>
-        </div>
-        <div class="field">
-          <label>Weekly Distribution % <span class="tip" data-tip="Set aside this percentage of the week's mining + ambassador rewards as income (not reinvested). Applied once each week; the remainder is reinvested. 0% = full compounding. Staking yield always auto-compounds locked GMT and is unaffected.">?</span></label>
-          <div class="field-input"><input type="number" id="inReinvestDistPct" value="0" min="0" max="100" step="1" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%"></div>
-        </div>
-        <div class="field">
-          <label>Weekly Distribution $ <span class="tip" data-tip="Set aside a fixed USD amount per week as income (not reinvested), in addition to any % above. Applied once each week from the week's accumulated rewards; if the week's rewards are smaller, only what's available is taken (no debt).">?</span></label>
-          <div class="field-input"><input type="number" id="inReinvestDistUSD" value="0" min="0" step="1" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem;width:100%"></div>
-        </div>
-      </div>
-      <div style="margin-top:.8rem">
-        <button class="ri-btn" onclick="runReinvestProjection()">&#8635; Run Growth Projection</button>
-      </div>
-      <div id="reinvestResult" style="margin-top:1rem"></div>
-    </div>
-  </div>
+  <!-- Growth Projection — opens the full-page forecast tool -->
+  <button class="planner-proj-btn" onclick="openSetupProjection()">
+    <span class="planner-proj-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,18 10,12 14,15 20,7"/><polyline points="15,7 20,7 20,12"/></svg></span>
+    <span class="planner-proj-txt"><strong>Growth Projection</strong><span>Forecast how your setup compounds over time &rarr;</span></span>
+  </button>
 
 
 </div>
@@ -1231,12 +1198,15 @@ input[type=number]{-moz-appearance:textfield}
 </div>
 
 <!-- PLANNER INTRO -->
-<div class="pi-overlay" id="plannerIntro" style="display:none" onclick="if(event.target===this)closePlannerIntro()">
-  <div class="pi-modal">
-    <div class="pi-body">
+<div class="sp-page" id="plannerIntro" style="display:none">
+  <div class="sp-page-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="returnToSetupFromPlanner()">&larr; Return to My Setup</button>
+    </div>
+    <div class="sp-form">
       <div class="pi-title">Capital Planner</div>
       <div class="pi-subtitle">Enter what you have to deploy. The planner will tell you how much to lock, how much to convert to TH, and keep a 2-day fee reserve.</div>
-      <div style="margin:1.5rem auto;max-width:300px;display:flex;flex-direction:column;gap:1rem">
+      <div style="margin:1.4rem auto 0;max-width:340px;display:flex;flex-direction:column;gap:1rem">
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
           <div style="display:flex;align-items:center;gap:.5rem">
@@ -1291,14 +1261,14 @@ input[type=number]{-moz-appearance:textfield}
           <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;padding-left:1.55rem">When the USD spent on TH is $10k+, GoMining adds 10% extra TH. Planner re-balances locked GMT so 20% token discount still holds at the larger farm.</div>
         </div>
       </div>
+      <div class="sp-run-wrap">
+        <button id="plannerCalcBtn" class="ri-btn" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
+      </div>
     </div>
-    <div class="pi-nav">
-      <button id="plannerCalcBtn" class="ob-btn ob-btn-primary" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
-    </div>
-    <div class="pi-calc-loading" id="plannerCalcLoading" style="display:none">
-      <div class="sp-spinner"></div>
-      <div class="sp-loading-txt">Finding your optimal split…</div>
-    </div>
+  </div>
+  <div class="sp-page-loading" id="plannerCalcLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Finding your optimal split…</div>
   </div>
 </div>
 
@@ -1487,21 +1457,29 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
-  if(b.dataset.tab==='tab-planner'){
-    document.getElementById('piCapitalInput').value=$('inCapital').value;
-    document.getElementById('piGMTInput').value=$('inGMTWallet').value;
-    document.getElementById('piRefCapInput').value=$('inRefCapital').value;
-    document.getElementById('piMpTH').value=$('inMpTH').value;
-    document.getElementById('piMpGMT').value=$('inMpGMT').value;
-    document.getElementById('piMpWth').value=$('inMpWth').value;
-    document.getElementById('plannerIntro').style.display='';
-    document.body.style.overflow='hidden';
-  }
+  // First visit to the planner auto-opens the full-page form; after a split has
+  // been calculated, the tab shows results (reopen the form via "Adjust").
+  if(b.dataset.tab==='tab-planner'&&!window._plannerCalcDone){openPlannerForm();}
 }));
+// Open the full-page Capital Planner form, seeded from the current inputs.
+function openPlannerForm(){
+  document.getElementById('piCapitalInput').value=$('inCapital').value;
+  document.getElementById('piGMTInput').value=$('inGMTWallet').value;
+  document.getElementById('piRefCapInput').value=$('inRefCapital').value;
+  document.getElementById('piMpTH').value=$('inMpTH').value;
+  document.getElementById('piMpGMT').value=$('inMpGMT').value;
+  document.getElementById('piMpWth').value=$('inMpWth').value;
+  document.getElementById('plannerIntro').style.display='';
+  document.getElementById('plannerIntro').scrollTop=0;
+  document.body.style.overflow='hidden';
+  const cb=document.getElementById('plannerCalcBtn');if(cb)cb.disabled=false;
+}
 function submitPlannerCapital(){
   // Brief "calculating" state so the optimal-split solve feels tangible.
   const btn=document.getElementById('plannerCalcBtn');
   const load=document.getElementById('plannerCalcLoading');
+  const txt=load?load.querySelector('.sp-loading-txt'):null;
+  if(txt)txt.textContent='Finding your optimal split…';
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
   setTimeout(function(){
@@ -1515,12 +1493,29 @@ function submitPlannerCapital(){
     $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
     const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
     $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
+    window._plannerCalcDone=true;
     recalc();
     document.getElementById('plannerIntro').style.display='none';
     document.body.style.overflow='';
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
   },800);
+}
+// "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
+function returnToSetupFromPlanner(){
+  const load=document.getElementById('plannerCalcLoading');
+  const txt=load?load.querySelector('.sp-loading-txt'):null;
+  if(txt)txt.textContent='Loading your setup…';
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    document.getElementById('plannerIntro').style.display='none';
+    document.body.style.overflow='';
+    if(load)load.style.display='none';
+    if(txt)txt.textContent='Finding your optimal split…';
+    const setupBtn=document.querySelector('[data-tab="tab-current"]');
+    if(setupBtn)setupBtn.click();
+    refreshMySetupAnimation();
+  },650);
 }
 function closePlannerIntro(){
   document.getElementById('plannerIntro').style.display='none';
@@ -2456,10 +2451,35 @@ function renderPlanner(i,m){
   if(i.cap>0)ah+=`<br><span style="color:var(--text4);font-size:.72rem">Includes a ${fN(USD_GMT_FEE*100,0)}% fee on converting USD &rarr; GMT (locking &amp; TH minting). Existing GMT on hand is unaffected.</span>`;
   ah+='</div>';
 
+  // Visual allocation split (shown up top, above the cards): TH spend vs GMT lock
+  {
+    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,ag*gp), splitTot=thSpend+gmtSpendUSD;
+    if(splitTot>0){
+      const pctTH=thSpend/splitTot*100, pctGMT=100-pctTH;
+      let why;
+      if(!i.payG)why='GMT fee payment is off, so every dollar goes to hashrate for maximum mining output.';
+      else if(gmtLock<=0)why='You already hold enough locked GMT for the 20% token discount, so all new capital goes to hashrate.';
+      else if(canCover20)why='This maintains your 20% token discount while maximising net monthly income.';
+      else why='Your GMT can’t fully cover the 20% discount yet, so spare capital is directed to locking GMT first.';
+      ah+=`<div class="sub-title" style="margin-top:.2rem">Allocation Split</div>
+      <div class="alloc-split">
+        <div class="alloc-split-bar">
+          ${pctTH>0?`<div class="alloc-split-th" style="width:${pctTH}%">${pctTH>=14?fN(pctTH,0)+'% TH':''}</div>`:''}
+          ${pctGMT>0?`<div class="alloc-split-gmt" style="width:${pctGMT}%">${pctGMT>=14?fN(pctGMT,0)+'% GMT':''}</div>`:''}
+        </div>
+        <div class="alloc-split-legend">
+          <span><i class="dot-th"></i>${fN(pctTH,0)}% Hashrate &middot; ${fU(thSpend)}</span>
+          <span><i class="dot-gmt"></i>${fN(pctGMT,0)}% GMT Lock &middot; ${fU(gmtSpendUSD)}</span>
+        </div>
+        <div class="alloc-split-why">${why}</div>
+      </div>`;
+    }
+  }
+
   // Allocation cards
   const hasGMT=gmtAvail>0;
   const showReserve=i.payG;
-  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(${showReserve?3:2},1fr)">`;
+  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(${showReserve?3:2},1fr);margin-top:.8rem">`;
   if(showReserve){
     ah+=`<div class="alloc-card"><div class="a-label">Wallet Reserve</div><div class="a-val" style="color:var(--orange)">${fN(reserveNeeded,1)} GMT</div><div class="a-sub">2-day fees at ${fN(nt,1)} TH (${fU(reserveNeeded*gp)})</div></div>`;
   }
@@ -2478,31 +2498,6 @@ function renderPlanner(i,m){
     ah+=row('Status','20% token discount covered','green');
   }else{
     ah+=row('Still need',`${fN(gmtShortfall,0)} GMT<span class="sub">${fU(gmtShortfall*gp)}</span>`,'orange');
-  }
-
-  // Visual allocation split: TH spend vs GMT lock (value terms), gold vs white
-  {
-    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,ag*gp), splitTot=thSpend+gmtSpendUSD;
-    if(splitTot>0){
-      const pctTH=thSpend/splitTot*100, pctGMT=100-pctTH;
-      let why;
-      if(!i.payG)why='GMT fee payment is off, so every dollar goes to hashrate for maximum mining output.';
-      else if(gmtLock<=0)why='You already hold enough locked GMT for the 20% token discount, so all new capital goes to hashrate.';
-      else if(canCover20)why='This maintains your 20% token discount while maximising net monthly income.';
-      else why='Your GMT can’t fully cover the 20% discount yet, so spare capital is directed to locking GMT first.';
-      ah+=`<div class="sub-title" style="margin-top:.8rem">Allocation Split</div>
-      <div class="alloc-split">
-        <div class="alloc-split-bar">
-          ${pctTH>0?`<div class="alloc-split-th" style="width:${pctTH}%">${pctTH>=14?fN(pctTH,0)+'% TH':''}</div>`:''}
-          ${pctGMT>0?`<div class="alloc-split-gmt" style="width:${pctGMT}%">${pctGMT>=14?fN(pctGMT,0)+'% GMT':''}</div>`:''}
-        </div>
-        <div class="alloc-split-legend">
-          <span><i class="dot-th"></i>${fN(pctTH,0)}% Hashrate &middot; ${fU(thSpend)}</span>
-          <span><i class="dot-gmt"></i>${fN(pctGMT,0)}% GMT Lock &middot; ${fU(gmtSpendUSD)}</span>
-        </div>
-        <div class="alloc-split-why">${why}</div>
-      </div>`;
-    }
   }
 
   // Resource breakdown
