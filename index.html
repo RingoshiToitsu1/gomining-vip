@@ -253,7 +253,7 @@ input[type=number]{-moz-appearance:textfield}
 .a-val.cyan{color:var(--cyan)}.a-val.purple{color:var(--purple-soft)}
 
 /* ---- SECTION SUBTITLE ---- */
-.sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.35rem}
+.sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:.35rem}
 .sub-title.centered{display:block;text-align:center;border-bottom:none;margin:1.2rem 0 .5rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
 
 /* ---- GMT TIER TABLE ---- */
@@ -351,10 +351,18 @@ input[type=number]{-moz-appearance:textfield}
 .proj-hero{background:linear-gradient(165deg,rgba(245,166,35,.12),rgba(245,166,35,.03)),var(--bg-card);border-color:rgba(245,166,35,.4)}
 .proj-hero .section-title{color:var(--purple-soft)}
 .proj-hero .section-body{text-align:center}
-.proj-hero .proj-cell.current{max-width:260px!important;padding:1.65rem 1rem .85rem;box-shadow:0 4px 18px rgba(52,211,153,.15)}
-.proj-hero .pc-monthly{font-size:1.65rem;line-height:1.05;letter-spacing:-.01em}
-.proj-hero .pc-monthly .gmt-logo{width:21px;height:21px}
-@media(max-width:600px){.proj-hero .pc-monthly{font-size:1.5rem}}
+.proj-ba{display:flex;align-items:stretch;justify-content:center;gap:.55rem;max-width:460px;margin:0 auto}
+.proj-ba .ba-cell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.proj-hero .proj-cell.current{padding:1.5rem .8rem .85rem;box-shadow:0 4px 18px rgba(52,211,153,.15)}
+.proj-hero .pc-monthly{font-size:1.4rem;line-height:1.1;letter-spacing:-.01em;margin-top:.1rem}
+.proj-hero .pc-monthly .gmt-logo{width:18px;height:18px}
+.proj-hero .pc-daily{font-size:.68rem;margin-top:.2rem}
+.ba-label{font-size:.58rem;color:var(--text4);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.proj-cell.current .ba-label{color:var(--green)}
+.ba-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1rem;flex:0 0 auto}
+.ba-arrow-ico{font-size:1.3rem;color:var(--purple-soft);line-height:1}
+.ba-uplift{font-size:.72rem;font-weight:800;color:var(--green);font-family:var(--mono);white-space:nowrap}
+@media(max-width:600px){.proj-hero .pc-monthly{font-size:1.15rem}.proj-ba{gap:.35rem}.ba-arrow-ico{font-size:1.1rem}}
 #projBtcSelect{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 36px 9px 14px;font-size:.9rem;font-family:var(--sans);outline:none;cursor:pointer;transition:var(--transition)}
 #projBtcSelect:hover{border-color:var(--text4)}
 #projBtcSelect:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
@@ -2090,7 +2098,7 @@ function recalc(){
   }
 
   // VIP section
-  let vh='<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem">'+badge(m.vip);
+  let vh='<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem">'+badge(m.vip);
   if(m.vip.rb)vh+=` <span class="badge green">+${m.vip.rb}% TH reinvest bonus</span>`;
   if(m.vip.est)vh+=` <span class="badge orange">discount estimated</span>`;
   vh+='</div>';
@@ -2161,7 +2169,7 @@ function recalc(){
   renderPlanner(i,m);
 }
 
-function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
+function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP){
   moStakingUSD=moStakingUSD||0;
   moAmbUSD=moAmbUSD||0;
   const cur=S.btcPrice;
@@ -2169,7 +2177,7 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
   // Store params for dropdown recalc
-  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp};
+  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp,curP:curP||null};
 
   const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
@@ -2186,38 +2194,35 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
   return h;
 }
 
+function moAtBTC(P,bp,gmtScale){
+  // Monthly income for state P at a given BTC price. Staking income is GMT-priced,
+  // so it scales with the GMT price (which we move with BTC, same ratio).
+  const f=fees(Math.max(0.0001,P.th),P.wth||15,bp);
+  const dfees=f.t*(1-(P.totD||0)/100);
+  const netBTC=((P.grossBTC||0)-dfees)*(1-CONVERSION_FEE);
+  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/30+(P.ambMo||0)/30;
+  return{daily,mo:daily*30};
+}
 function updateProjCell(){
   const p=window._projParams;
   if(!p)return;
   const sel=document.getElementById('projBtcSelect');
   const bp=parseFloat(sel.value);
   const isLive=bp===p.cur;
-  const f=fees(p.th,p.wth,bp);
-  const dfees=f.t*(1-p.totD/100);
-  const netBTC=(p.grossBTC-dfees)*(1-CONVERSION_FEE);
-  const miningUSD=Math.max(0,netBTC*bp);
-  const stakingDailyUSD=(p.moStakingUSD||0)/30;
-  const ambDailyUSD=(p.moAmbUSD||0)/30;
-  const dailyUSD=miningUSD+stakingDailyUSD+ambDailyUSD;
-  const moUSD=dailyUSD*30;
-  const moGMT=p.gp>0?moUSD/p.gp:0;
-  const dailyGMT=p.gp>0?dailyUSD/p.gp:0;
+  // GMT tracks BTC at the same ratio (BTC up -> GMT up proportionally), so the
+  // GMT-denominated staking income scales with the simulated BTC price.
+  const gmtScale=p.cur>0?bp/p.cur:1;
+  // After investment
+  const after=moAtBTC({th:p.th,wth:p.wth,totD:p.totD,grossBTC:p.grossBTC,stakingMo:p.moStakingUSD,ambMo:p.moAmbUSD},bp,gmtScale);
+  // Current (before)
+  const before=p.curP?moAtBTC(p.curP,bp,gmtScale):{daily:0,mo:0};
+  const uplift=before.mo>0?(after.mo-before.mo)/before.mo*100:0;
   const tag=isLive?'LIVE':'SIMULATED';
   const tagCol=isLive?'var(--green)':'var(--orange)';
-  const col=isLive?'green':'orange';
-  let h=`<div style="display:flex;flex-direction:column;align-items:center;gap:.4rem">`;
-  h+=`<div class="proj-cell current" onclick="flipProjCell(this)" data-mo-usd="${moUSD.toFixed(2)}" data-daily-usd="${dailyUSD.toFixed(2)}" data-yearly-usd="${(moUSD*12).toFixed(2)}" data-mo-gmt="${moGMT.toFixed(0)}" data-daily-gmt="${dailyGMT.toFixed(0)}" data-yearly-gmt="${(moGMT*12).toFixed(0)}" data-mode="usd" style="max-width:264px;width:100%">`;
-  h+=`<span class="pc-tag" style="background:${tagCol}">${tag}</span>`;
-  h+=`<div class="pc-monthly ${col}">${fU(moUSD)}</div>`;
-  h+=`<div class="pc-daily">${fU(dailyUSD)}/day</div>`;
-  h+=`<div class="pc-yearly">${fU(moUSD*12)}/yr</div>`;
-  h+=`<div class="pc-mode-tag">USD</div>`;
-  h+=`</div>`;
-  const moMine=miningUSD*30, moStake=stakingDailyUSD*30, moAmb=ambDailyUSD*30;
-  let parts=[`mining ${fU(moMine)}`];
-  if(moStake>0)parts.push(`staking ${fU(moStake)}`);
-  if(moAmb>0)parts.push(`ambassador ${fU(moAmb)}`);
-  h+=`<div style="font-size:.72rem;color:var(--text3);font-family:var(--mono);text-align:center">${parts.join(' + ')}</div>`;
+  let h=`<div class="proj-ba">`;
+  h+=`<div class="proj-cell ba-cell"><div class="ba-label">Current</div><div class="pc-monthly">${fU(before.mo)}</div><div class="pc-daily">${fU(before.daily)}/day</div></div>`;
+  h+=`<div class="ba-arrow"><div class="ba-arrow-ico">&rarr;</div><div class="ba-uplift">${uplift>=0?'+':''}${fN(uplift,0)}%</div></div>`;
+  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After Investment</div><div class="pc-monthly green">${fU(after.mo)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
   h+=`</div>`;
   document.getElementById('projSingleCell').innerHTML=h;
 }
@@ -2555,7 +2560,7 @@ function renderPlanner(i,m){
   const curMo=m.net*m.bp*30,imp=mo-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
-  let ph='<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
+  let ph='<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
@@ -2605,7 +2610,10 @@ function renderPlanner(i,m){
   // BTC price projections (includes mining + staking + ambassador)
   const moStakingUSD=newWkStake*gp*4.33;
   const projLabel=`Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''})`;
-  $('projTable').innerHTML=renderProjections(nt,bwth,td2,projLabel,moStakingUSD,projAmbMo);
+  // Current (pre-investment) state, for the before/after comparison.
+  const curAmbMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
+  const curP={th:m.totTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.totTH,stakingMo:curStakingMo,ambMo:curAmbMo};
+  $('projTable').innerHTML=renderProjections(nt,bwth,td2,projLabel,moStakingUSD,projAmbMo,curP);
   updateProjCell();
 
 }
