@@ -83,6 +83,8 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card-action:hover{border-color:var(--orange);box-shadow:0 4px 20px rgba(245,166,35,.18);transform:translateY(-1px)}
 .hero-card-action .hero-cta{font-size:1.05rem;font-weight:800;color:var(--orange);line-height:1.15}
 .hero-card-action .hero-cta-go{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--text3);margin-top:.25rem}
+/* Vertically center the CTA card's content on non-mobile so it doesn't leave a gap at the bottom (mobile uses the compact row layout). */
+@media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center}}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.15;letter-spacing:.01em}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
@@ -1958,13 +1960,16 @@ function recalc(){
   const heroRefTH=heroIsAmb?(+$('inReferredTH').value||0):0;
   const heroAmbDaily=heroRefTH*15*24/1000*0.005;
   const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily;
-  const moUSD=totalDailyUSD*30;
+  // Monthly must equal the "Total monthly income" breakdown below, which uses
+  // 4.33 weeks/month for staking (52/12), not daily×30/7. Compose it the same way.
+  const stakingMonthlyUSD=m.wkGMT*m.gp*4.33;
+  const moUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;
   animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
   $('heroDailyBTC').textContent=heroSub;
   animateMetric($('heroMonthly'),moUSD,fU);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
-  let heroMoSub=fU(netUSD*30)+' mining + '+fU(dailyStakeUSD*30)+' staking';
+  let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   $('heroMonthlyBTC').textContent=heroMoSub;
   animateMetric($('heroYearly'),moUSD*12,v=>fU(v)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
