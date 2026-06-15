@@ -52,7 +52,13 @@ input[type=number]{-moz-appearance:textfield}
 .container{max-width:1200px;margin:0 auto;padding:0 1.2rem 4rem}
 
 /* ---- TABS ---- */
-.tabs{display:flex;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:transparent;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:.8rem}
+.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:transparent;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:.8rem}
+.tabs-saved{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin-left:auto}
+.tabs-saved .tabs-saved-btn{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600;transition:var(--transition)}
+.tabs-saved .tabs-saved-btn:hover{border-color:var(--purple);color:var(--text)}
+.tabs-saved .tabs-saved-btn.primary{background:var(--purple);color:#000;border-color:var(--purple)}
+.tabs-saved select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);min-width:150px;outline:none;cursor:pointer}
+@media(max-width:600px){.tabs-saved{width:100%;margin-left:0;order:1}.tabs-saved select{flex:1 1 100%;min-width:0}.tabs-saved .tabs-saved-btn{flex:1 1 auto}}
 .tab-btn{padding:.55rem 1.3rem;cursor:pointer;border:1px solid var(--border);border-radius:24px;background:transparent;color:var(--text3);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none}
 .tab-btn:hover{color:var(--text2);border-color:var(--text4);background:var(--bg-card)}
 .tab-btn.active{color:#000;border-color:var(--purple);background:var(--purple);box-shadow:0 0 20px rgba(245,166,35,.25);font-weight:700}
@@ -832,6 +838,14 @@ input[type=number]{-moz-appearance:textfield}
   <button class="tab-btn active" data-tab="tab-current">My Setup</button>
   <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
   <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="tab-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;border-color:transparent;text-decoration:none;font-size:.75rem;font-weight:700">Suggest a Feature</a>
+  <div class="tabs-saved">
+    <select id="profileSelect" onchange="onProfileChange()" title="Saved setups">
+      <option value="">— Saved setups —</option>
+    </select>
+    <button class="tabs-saved-btn primary" onclick="saveAsNewProfile()">Save as…</button>
+    <button id="btnDeleteProfile" class="tabs-saved-btn" onclick="deleteActiveProfile()" title="Delete the selected profile">Delete</button>
+    <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
+  </div>
 </div>
 
 <!-- ==================== TAB 1 ==================== -->
@@ -876,18 +890,12 @@ input[type=number]{-moz-appearance:textfield}
   <!-- INPUTS -->
   <div class="section reveal" id="secInputs">
     <div style="display:flex;gap:.5rem;padding:.8rem 1rem;flex-wrap:wrap;align-items:center">
-      <select id="profileSelect" onchange="onProfileChange()" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);min-width:170px;outline:none;cursor:pointer">
-        <option value="">— No profile —</option>
-      </select>
-      <button onclick="saveAsNewProfile()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600">Save as…</button>
-      <button id="btnDeleteProfile" onclick="deleteActiveProfile()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Delete the selected profile">Delete</button>
       <button id="btnEditSetup" onclick="toggleEditSetup()" style="background:transparent;color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600" title="Edit your farm parameters">Edit setup</button>
       <select id="inCurrency" onchange="setCurrency(this.value)" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);outline:none;cursor:pointer" title="Display Currency">
         <option value="USD">USD ($)</option>
         <option value="GBP">GBP (&pound;)</option>
         <option value="EUR">EUR (&euro;)</option>
       </select>
-      <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
     </div>
     <div class="section-body" id="setupEditBody" style="display:none">
       <div style="display:flex;justify-content:flex-end;margin-bottom:.4rem">
