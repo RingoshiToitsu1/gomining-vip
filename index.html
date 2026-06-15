@@ -576,13 +576,13 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .ed-fld input[type=number]{flex:1;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;text-align:right;font-family:var(--mono);font-size:.88rem;color:var(--text);field-sizing:normal}
 #secInputs .ed-fld .unit{flex:0 0 auto;color:var(--purple-soft);font-size:.78rem;font-weight:700;font-family:var(--mono);display:inline-flex;align-items:center}
 #secInputs .ed-fld .unit .gmt-logo{width:16px;height:16px;vertical-align:middle}
-#secInputs .ed-sel-row{display:flex;gap:.45rem;align-items:stretch}
-#secInputs .ed-dd{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);border:1px solid var(--border);border-radius:9px;outline:none;color:var(--text);font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;text-align-last:left;padding:.5rem 26px .5rem .7rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s}
-#secInputs .ed-dd-setup{flex:1;min-width:0}
+#secInputs .ed-sel-row{display:flex;gap:.7rem;align-items:center}
+#secInputs .ed-dd{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:transparent;border:none;outline:none;color:var(--text);font-family:var(--sans);font-size:1.15rem;font-weight:700;cursor:pointer;text-align:left;text-align-last:left;padding:.15rem 22px .15rem 0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center;transition:color .15s}
+#secInputs .ed-dd-setup{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #secInputs .ed-dd-cur{flex:0 0 auto}
 #secInputs .ed-dd option{background:var(--bg-card);color:var(--text);font-weight:600}
-#secInputs .ed-dd:hover{border-color:var(--purple)}
-#secInputs .ed-dd:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+#secInputs .ed-dd:hover{color:var(--gold)}
+#secInputs .ed-sel-div{flex:0 0 auto;width:1px;height:1.5rem;background:linear-gradient(180deg,transparent,var(--gold),transparent);opacity:.65}
 #secInputs .ed-greedy-grid{margin-top:.35rem}
 #secInputs .ed-toggles{display:flex;flex-direction:column;gap:0}
 #secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.2rem 0;gap:.5rem}
@@ -591,12 +591,11 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .ed-amb-inline{margin-left:auto;display:inline-flex;align-items:center;gap:.25rem;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:.2rem .5rem}
 #secInputs .ed-amb-inline input{width:60px;background:none;border:none;outline:none;text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text);field-sizing:normal}
 #secInputs .ed-amb-inline .unit{color:var(--purple-soft);font-size:.72rem;font-weight:700;font-family:var(--mono)}
-#secInputs .ed-saved-btns{display:flex;gap:.4rem;margin-top:.45rem}
-#secInputs .ed-saved-btns .ed-sbtn{flex:1}
-#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.5rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
-#secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
-#secInputs .ed-sbtn-primary{background:linear-gradient(135deg,var(--purple),var(--cyan));border-color:transparent;color:#000;font-weight:800;box-shadow:0 2px 10px rgba(245,166,35,.25)}
-#secInputs .ed-sbtn-primary:hover{filter:brightness(1.07);color:#000;border-color:transparent}
+#secInputs .ed-saved-btns{display:flex;gap:1.2rem;margin-top:.55rem;align-items:center}
+#secInputs .ed-sbtn{background:none;border:none;border-radius:0;padding:0;color:var(--text2);font-family:var(--sans);font-size:.95rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;transition:color .15s;white-space:nowrap}
+#secInputs .ed-sbtn:hover{color:var(--text)}
+#secInputs .ed-sbtn-primary{background:none;border:none;box-shadow:none;color:var(--gold)}
+#secInputs .ed-sbtn-primary:hover{color:var(--diamond)}
 #secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
 @media(max-width:600px){
   #secInputs .ed-groups{column-count:1}
@@ -612,8 +611,8 @@ input[type=number]{-moz-appearance:textfield}
   #secInputs .ed-fld input[type=number],#secInputs .ed-dd{font-size:16px}
   #secInputs .toggle-row.ed-toggle{padding:.13rem 0;gap:.45rem}
   #secInputs .toggle-label{font-size:.73rem}
-  #secInputs .ed-saved-btns{margin-top:.4rem;gap:.32rem}
-  #secInputs .ed-sbtn{padding:.46rem .3rem;font-size:.72rem}
+  #secInputs .ed-saved-btns{margin-top:.45rem;gap:1rem}
+  #secInputs .ed-sbtn{padding:0;font-size:.9rem}
   #secInputs .toggle{width:38px;height:21px}
   #secInputs .toggle-track::after{width:17px;height:17px}
   #secInputs .toggle input:checked+.toggle-track::after{transform:translateX(17px)}
@@ -1062,10 +1061,11 @@ input[type=number]{-moz-appearance:textfield}
             <div class="ed-group-title">Saved Setups</div>
             <div class="ed-sel-row">
               <select id="profileSelect" class="ed-dd ed-dd-setup" onchange="onProfileChange()" title="Saved setup"><option value="">Setup</option></select>
+              <span class="ed-sel-div"></span>
               <select id="inCurrency" class="ed-dd ed-dd-cur" onchange="setCurrency(this.value)" title="Currency">
-                <option value="USD">USD ($)</option>
-                <option value="GBP">GBP (&pound;)</option>
-                <option value="EUR">EUR (&euro;)</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
               </select>
             </div>
             <div class="ed-saved-btns">
