@@ -586,6 +586,14 @@ input[type=number]{-moz-appearance:textfield}
 .planner-proj-txt{display:flex;flex-direction:column;gap:.15rem;min-width:0}
 .planner-proj-txt strong{font-size:1rem;font-weight:800;color:var(--orange)}
 .planner-proj-txt>span{font-size:.78rem;color:var(--text3)}
+/* Top row: New Monthly Income + Growth Projection card side by side */
+.planner-top-row{display:flex;gap:.8rem;align-items:stretch;margin-bottom:.8rem}
+.planner-top-row>.section,.planner-top-row>.planner-proj-btn{flex:1 1 0;min-width:0;margin:0}
+.planner-top-row .planner-proj-btn{flex-direction:column;text-align:center;justify-content:center;gap:.65rem;box-shadow:0 2px 14px rgba(245,166,35,.1)}
+.planner-top-row .planner-proj-btn:hover{box-shadow:0 6px 26px rgba(245,166,35,.24);transform:translateY(-2px)}
+.planner-top-row .planner-proj-ico{width:50px;height:50px}
+.planner-top-row .planner-proj-txt{align-items:center}
+@media(max-width:760px){.planner-top-row{flex-direction:column}.planner-top-row .planner-proj-btn{flex-direction:row;text-align:left}.planner-top-row .planner-proj-txt{align-items:flex-start}}
 @media(max-width:600px){.sp-page-inner{padding:.3rem .8rem 2.5rem}.sp-page-head{padding:.5rem 0 .6rem}.sp-form .pi-title{font-size:1.15rem;margin-bottom:.3rem}.sp-form .pi-subtitle{font-size:.76rem;line-height:1.45;margin-bottom:.5rem}.sp-form-grid{margin-top:.8rem;gap:.7rem}.sp-back-btn,.sp-new-btn{padding:.5rem .9rem;font-size:.8rem}.sp-run-wrap{margin-top:1rem}}
 /* Growth Projection: empty-state prompt + run spinner */
 .sp-prompt{text-align:center;color:var(--text3);font-size:.85rem;padding:1.6rem 1rem;line-height:1.65;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg-input)}
@@ -1099,15 +1107,21 @@ input[type=number]{-moz-appearance:textfield}
     Adjust Investment Amount
   </button>
 
-  <!-- NEW MONTHLY INCOME (headline) -->
-  <div class="section reveal proj-hero" id="secProj2">
-    <div class="section-header" onclick="toggleSection('secProj2')">
-      <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> New Monthly Income</div>
-      <div class="section-toggle">&#9662;</div>
+  <!-- TOP ROW: New Monthly Income + Growth Projection card -->
+  <div class="planner-top-row">
+    <div class="section reveal proj-hero" id="secProj2">
+      <div class="section-header" onclick="toggleSection('secProj2')">
+        <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> New Monthly Income</div>
+        <div class="section-toggle">&#9662;</div>
+      </div>
+      <div class="section-body">
+        <div id="projTable"></div>
+      </div>
     </div>
-    <div class="section-body">
-      <div id="projTable"></div>
-    </div>
+    <button class="planner-proj-btn" onclick="openSetupProjection('planner')">
+      <span class="planner-proj-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,18 10,12 14,15 20,7"/><polyline points="15,7 20,7 20,12"/></svg></span>
+      <span class="planner-proj-txt"><strong>Growth Projection</strong><span>See what your farm looks like after deploying the recommended allocation &rarr;</span></span>
+    </button>
   </div>
 
   <!-- CAPITAL INPUT — inputs live here (hidden); edited via the full-page form -->
@@ -1183,12 +1197,6 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
-
-  <!-- Growth Projection — opens the full-page forecast tool -->
-  <button class="planner-proj-btn" onclick="openSetupProjection('planner')">
-    <span class="planner-proj-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,18 10,12 14,15 20,7"/><polyline points="15,7 20,7 20,12"/></svg></span>
-    <span class="planner-proj-txt"><strong>Growth Projection</strong><span>Forecast how your setup compounds over time &rarr;</span></span>
-  </button>
 
 
 </div>
