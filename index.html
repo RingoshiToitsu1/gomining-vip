@@ -534,6 +534,12 @@ input[type=number]{-moz-appearance:textfield}
 #plannerIntro .sp-form{text-align:center}
 #plannerIntro .sp-form label{text-align:center}
 #plannerIntro .pi-opt-toggle{justify-content:center;text-align:center}
+/* Capital Planner: unit (GMT logo / USD) overlaid inside the editable cell */
+.pi-field-box{display:flex;align-items:center;gap:.4rem;width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:12px 16px;cursor:text;transition:var(--transition)}
+.pi-field-box:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.pi-field-box input[type="number"]{flex:1;width:100%;min-width:0;background:none;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:1.1rem;text-align:center;padding:0;field-sizing:normal}
+.pi-field-box .pi-unit{flex:0 0 auto;display:flex;align-items:center;color:var(--text3);font-size:.85rem;font-family:var(--mono);font-weight:600}
+.pi-field-box .pi-unit .gmt-logo{vertical-align:middle}
 .sp-form-grid{grid-template-columns:1fr;max-width:430px;margin:1.3rem auto 0;gap:.9rem}
 .sp-page select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 36px 10px 12px;font-size:.9rem;width:100%;font-family:var(--sans);outline:none;cursor:pointer;transition:var(--transition)}
 .sp-page select:hover{border-color:var(--text4)}
@@ -1213,18 +1219,18 @@ input[type=number]{-moz-appearance:textfield}
       <div style="margin:1.4rem auto 0;max-width:340px;display:flex;flex-direction:column;gap:1rem">
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <input type="number" id="piGMTInput" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
-            <span style="color:var(--text3);font-size:.85rem"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
-          </div>
+          <label class="pi-field-box" for="piGMTInput">
+            <input type="number" id="piGMTInput" value="0" step="1" min="0">
+            <span class="pi-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+          </label>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Total unlocked GMT you have on hand</div>
         </div>
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Additional USD Capital <span style="color:var(--text4)">(optional)</span></label>
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <input type="number" id="piCapitalInput" value="0" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
-            <span style="color:var(--text3);font-size:.85rem">USD</span>
-          </div>
+          <label class="pi-field-box" for="piCapitalInput">
+            <input type="number" id="piCapitalInput" value="0" step="100" min="0">
+            <span class="pi-unit">USD</span>
+          </label>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem">
           <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptMiner')">Purchasing a specific miner?</button>
@@ -1250,10 +1256,10 @@ input[type=number]{-moz-appearance:textfield}
           <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptReferral')">Referral power options?</button>
           <div id="piOptReferral" class="pi-opt" hidden>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Referral's Planned Capital <span style="color:var(--text4)">(optional)</span></label>
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <input type="number" id="piRefCapInput" value="0" step="100" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:12px 16px;font-size:1.1rem;font-family:var(--mono);width:100%;text-align:center">
-            <span style="color:var(--text3);font-size:.85rem">USD</span>
-          </div>
+          <label class="pi-field-box" for="piRefCapInput">
+            <input type="number" id="piRefCapInput" value="0" step="100" min="0">
+            <span class="pi-unit">USD</span>
+          </label>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. You receive <strong style="color:var(--green)">5% of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
           </div>
         </div>
