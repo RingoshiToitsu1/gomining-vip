@@ -587,13 +587,13 @@ input[type=number]{-moz-appearance:textfield}
 .planner-proj-txt strong{font-size:1rem;font-weight:800;color:var(--orange)}
 .planner-proj-txt>span{font-size:.78rem;color:var(--text3)}
 /* Top row: New Monthly Income + Growth Projection card side by side */
-.planner-top-row{display:flex;gap:.8rem;align-items:stretch;margin-bottom:.8rem}
-.planner-top-row>.section,.planner-top-row>.planner-proj-btn{flex:1 1 0;min-width:0;margin:0}
+.planner-top-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.8rem;align-items:stretch;margin-bottom:.8rem}
+.planner-top-row>.section,.planner-top-row>.planner-proj-btn{min-width:0;width:auto;margin:0}
 .planner-top-row .planner-proj-btn{flex-direction:column;text-align:center;justify-content:center;gap:.65rem;box-shadow:0 2px 14px rgba(245,166,35,.1)}
 .planner-top-row .planner-proj-btn:hover{box-shadow:0 6px 26px rgba(245,166,35,.24);transform:translateY(-2px)}
 .planner-top-row .planner-proj-ico{width:50px;height:50px}
 .planner-top-row .planner-proj-txt{align-items:center}
-@media(max-width:760px){.planner-top-row{flex-direction:column}.planner-top-row .planner-proj-btn{flex-direction:row;text-align:left}.planner-top-row .planner-proj-txt{align-items:flex-start}}
+@media(max-width:760px){.planner-top-row{grid-template-columns:1fr}.planner-top-row .planner-proj-btn{flex-direction:row;text-align:left}.planner-top-row .planner-proj-txt{align-items:flex-start}}
 @media(max-width:600px){.sp-page-inner{padding:.3rem .8rem 2.5rem}.sp-page-head{padding:.5rem 0 .6rem}.sp-form .pi-title{font-size:1.15rem;margin-bottom:.3rem}.sp-form .pi-subtitle{font-size:.76rem;line-height:1.45;margin-bottom:.5rem}.sp-form-grid{margin-top:.8rem;gap:.7rem}.sp-back-btn,.sp-new-btn{padding:.5rem .9rem;font-size:.8rem}.sp-run-wrap{margin-top:1rem}}
 /* Growth Projection: empty-state prompt + run spinner */
 .sp-prompt{text-align:center;color:var(--text3);font-size:.85rem;padding:1.6rem 1rem;line-height:1.65;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg-input)}
