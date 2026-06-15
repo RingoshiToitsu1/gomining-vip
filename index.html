@@ -3910,6 +3910,10 @@ function obNewUser(){
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
   // Sync zeros to main inputs
   syncOB();
+  // Zero the extras that syncOB doesn't touch, so "Current" starts at $0.
+  ['inGreedyTH','inGreedyInitial','inMpTH','inMpGMT','inReferredTH','inRefCapital'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});
+  const gw=document.getElementById('inGreedyWth');if(gw)gw.value='15';
+  if(typeof refreshGreedyVisibility==='function')refreshGreedyVisibility();
   // Close onboarding
   try{localStorage.setItem('gm_onboarded','1')}catch(e){}
   document.getElementById('onboarding').style.display='none';
