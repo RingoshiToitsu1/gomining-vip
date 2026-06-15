@@ -72,14 +72,14 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- HERO CARDS ---- */
 .hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.2rem}
-.hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition)}
+.hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .hero-card.purple-accent::before{background:linear-gradient(90deg,var(--purple),transparent)}
 .hero-card.cyan-accent::before{background:linear-gradient(90deg,var(--cyan),transparent)}
 .hero-card.green-accent::before{background:linear-gradient(90deg,var(--green),transparent)}
 .hero-card.orange-accent::before{background:linear-gradient(90deg,var(--orange),transparent)}
-.hero-card-action{cursor:pointer;display:flex;flex-direction:column;justify-content:center;text-align:left}
+.hero-card-action{cursor:pointer;text-align:center}
 .hero-card-action:hover{border-color:var(--orange);box-shadow:0 4px 20px rgba(245,166,35,.18);transform:translateY(-1px)}
 .hero-card-action .hero-cta{font-size:1.05rem;font-weight:800;color:var(--orange);line-height:1.15}
 .hero-card-action .hero-cta-go{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--text3);margin-top:.25rem}
@@ -326,6 +326,7 @@ input[type=number]{-moz-appearance:textfield}
   .hero-label{margin-bottom:0;font-size:.65rem}
   .hero-val{font-size:1rem}
   .hero-sub{display:none}
+  .hero-card-action .hero-cta-go{display:none}
   .alloc-grid{grid-template-columns:1fr}
   .gmt-tiers{grid-template-columns:1fr}
 }
