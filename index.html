@@ -592,7 +592,7 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .ed-amb-inline{margin-left:auto;display:inline-flex;align-items:center;gap:.25rem;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:.2rem .5rem}
 #secInputs .ed-amb-inline input{width:60px;background:none;border:none;outline:none;text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text);field-sizing:normal}
 #secInputs .ed-amb-inline .unit{color:var(--purple-soft);font-size:.72rem;font-weight:700;font-family:var(--mono)}
-#secInputs .ed-saved-btns{display:flex;gap:.5rem;margin-top:.55rem}
+#secInputs .ed-saved-btns{display:flex;gap:.5rem;margin-top:.55rem;justify-content:center}
 #secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:.5rem .85rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
 #secInputs .ed-sbtn-primary{background:linear-gradient(135deg,var(--purple),var(--cyan));border-color:transparent;color:#000;font-weight:800;box-shadow:0 2px 10px rgba(245,166,35,.25)}
@@ -1159,7 +1159,7 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="sp-page-loading" id="edLoading" style="display:none">
       <div class="sp-spinner"></div>
-      <div class="sp-loading-txt">Updating your setup…</div>
+      <div class="sp-loading-txt" id="edLoadingTxt">Updating your setup…</div>
     </div>
   </div>
 
@@ -2003,6 +2003,7 @@ function saveActiveProfile(){
   p.data=readInputs();
   saveProfilesState(state);
   flashStatus('Saved to "'+p.name+'"');
+  editLoadClose('Saved to "'+p.name+'"');
 }
 function saveAsNewProfile(){
   const name=(prompt('Name this setup (e.g. "Mine", "Client - John"):','')||'').trim();
@@ -2021,6 +2022,7 @@ function saveAsNewProfile(){
   saveProfilesState(state);
   renderProfileSelect();
   flashStatus('Saved as "'+name+'"');
+  editLoadClose('Saved to "'+name+'"');
 }
 
 function toggleEditSetup(){openEditSetup();}   // back-compat
@@ -2035,17 +2037,21 @@ function closeEditSetup(){
   document.body.style.overflow='';
   refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
 }
-// "Enter": brief load, then apply and return to My Setup with the count-up.
-function submitEditSetup(){
-  const btn=$('edEnterBtn'),load=$('edLoading');
+// Brief load spinner (optionally with a status message), then return to My
+// Setup with the count-up. Shared by the save buttons and the legacy Enter btn.
+function editLoadClose(msg){
+  const btn=$('edEnterBtn'),load=$('edLoading'),txt=$('edLoadingTxt');
+  if(txt)txt.textContent=msg||'Updating your setup…';
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
   setTimeout(function(){
     if(load)load.style.display='none';
+    if(txt)txt.textContent='Updating your setup…';
     if(btn)btn.disabled=false;
     closeEditSetup();
   },750);
 }
+function submitEditSetup(){editLoadClose();}
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
 function toggleGreedyFields(){
   const cb=$('inHasGreedy');const on=cb&&cb.checked;
