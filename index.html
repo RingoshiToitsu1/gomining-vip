@@ -535,11 +535,13 @@ input[type=number]{-moz-appearance:textfield}
 .sp-page select:hover{border-color:var(--text4)}
 .sp-page select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .sp-selwrap{padding:0!important;border:none!important;background:none!important}
-.sp-payout-val{display:flex;align-items:center;gap:.4rem;width:100%;margin-top:.55rem;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:text;transition:var(--transition)}
+.sp-payout-row{display:flex;gap:.5rem;align-items:stretch}
+.sp-payout-type{flex:1.35;min-width:0}
+.sp-payout-val{flex:1;min-width:0;display:flex;align-items:center;gap:.35rem;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:text;transition:var(--transition)}
 .sp-payout-val:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
-.sp-payout-val input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:.95rem;padding:0}
-.sp-payout-val input::placeholder{color:var(--text4);font-family:var(--sans);font-size:.85rem}
-.sp-payout-val .unit{color:var(--purple-soft);font-size:.9rem;font-family:var(--mono);font-weight:700;flex:0 0 auto;min-width:0}
+.sp-payout-val input[type="number"]{flex:1;width:100%;min-width:0;background:none;border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:.95rem;padding:0;text-align:left;field-sizing:normal}
+.sp-payout-val input::placeholder{color:var(--text4)}
+.sp-payout-val .unit{color:var(--purple-soft);font-size:.9rem;font-family:var(--mono);font-weight:700;flex:0 0 auto}
 .sp-run-wrap{text-align:center;margin-top:1.5rem}
 .sp-run-wrap .ri-btn{font-size:.95rem;padding:.72rem 2.2rem}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -1344,14 +1346,16 @@ input[type=number]{-moz-appearance:textfield}
           </div>
           <div class="field">
             <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
-            <div class="field-input sp-selwrap"><select id="spPayoutType" onchange="syncPayoutUnit()">
-              <option value="pct" selected>% of rewards</option>
-              <option value="usd">$ per week</option>
-            </select></div>
-            <label class="sp-payout-val" for="spPayoutVal">
-              <input type="number" id="spPayoutVal" value="0" min="0" step="1" inputmode="decimal" placeholder="Enter amount">
-              <span class="unit" id="spPayoutUnit">%</span>
-            </label>
+            <div class="sp-payout-row">
+              <div class="field-input sp-selwrap sp-payout-type"><select id="spPayoutType" onchange="syncPayoutUnit()">
+                <option value="pct" selected>% of rewards</option>
+                <option value="usd">$ per week</option>
+              </select></div>
+              <label class="sp-payout-val" for="spPayoutVal">
+                <input type="number" id="spPayoutVal" value="0" min="0" step="1" inputmode="decimal" placeholder="0">
+                <span class="unit" id="spPayoutUnit">%</span>
+              </label>
+            </div>
           </div>
         </div>
         <div class="sp-run-wrap">
