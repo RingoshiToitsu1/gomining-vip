@@ -1374,6 +1374,10 @@ input[type=number]{-moz-appearance:textfield}
 </div>
 
 <script>
+// Always load at the top — don't let the browser restore a stale scroll position.
+if('scrollRestoration' in history){history.scrollRestoration='manual';}
+window.scrollTo(0,0);
+window.addEventListener('load',()=>window.scrollTo(0,0));
 // ---- STATE ----
 const S = { btcPrice:0, gmtPrice:0, difficulty:0, netHashrate:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
@@ -3042,19 +3046,43 @@ function refreshMySetupAnimation(){
 // any currency prefix / unit suffix (e.g. "$1,234", "9,354 GMT").
 function animateCountText(el,dur){
   if(!el)return;
-  const m=String(el.textContent).match(/^(\D*?)([\d,]+(?:\.\d+)?)(.*)$/);
+  // Use innerHTML so trailing markup (e.g. a GMT logo <img>) survives the animation.
+  const m=String(el.innerHTML).match(/^(\D*?)([\d,]+(?:\.\d+)?)([\s\S]*)$/);
   if(!m)return;
-  const prefix=m[1],numStr=m[2],suffix=m[3];
+  const prefix=m[1],numStr=m[2],rest=m[3];
   const target=parseFloat(numStr.replace(/,/g,''));
   if(!isFinite(target))return;
   const dec=(numStr.split('.')[1]||'').length;
   const t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
   function step(now){
     const p=Math.min(1,(now-t0)/(dur||800));
-    el.textContent=prefix+(target*ease(p)).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})+suffix;
+    el.innerHTML=prefix+(target*ease(p)).toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})+rest;
     if(p<1)requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
+}
+// Growth Projection results: count the headline values up + draw the chart line
+// from left to right (slow "to the moon" climb).
+function animateSetupResults(){
+  document.querySelectorAll('#spResult .ri-headline,#spResult .ri-gain').forEach(el=>animateCountText(el,900));
+  const line=document.getElementById('riChartLine');
+  if(line&&line.getTotalLength){
+    const len=line.getTotalLength();
+    if(len){
+      line.style.transition='none';
+      line.style.strokeDasharray=len;line.style.strokeDashoffset=len;
+      void line.getBoundingClientRect();
+      line.style.transition='stroke-dashoffset 2.1s cubic-bezier(.16,.84,.44,1)';
+      requestAnimationFrame(()=>{line.style.strokeDashoffset='0';});
+    }
+  }
+  const area=document.getElementById('riChartArea');
+  if(area){
+    area.style.transition='none';area.style.opacity='0';
+    void area.getBoundingClientRect();
+    area.style.transition='opacity 2.1s ease';
+    requestAnimationFrame(()=>{area.style.opacity='1';});
+  }
 }
 // Fresh-load feel for the planner results: replay the section entrances and
 // count the allocation numbers up from 0.
@@ -3102,7 +3130,7 @@ function runSetupProjection(){
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
   setTimeout(function(){
-    try{computeSetupProjection();spShowResults();}
+    try{computeSetupProjection();spShowResults();animateSetupResults();}
     finally{if(load)load.style.display='none';if(btn)btn.disabled=false;}
   },750);
 }
