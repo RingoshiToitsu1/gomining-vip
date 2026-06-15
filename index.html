@@ -558,18 +558,23 @@ input[type=number]{-moz-appearance:textfield}
 .sp-form{max-width:600px;margin:0 auto}
 /* Edit Setup full page: centered, compact 3-col grid that fits without scrolling */
 #secInputs .sp-page-inner{padding-bottom:1.5rem}
-#secInputs .sp-form{max-width:900px;text-align:center}
-#secInputs .sp-form .pi-title{margin-bottom:.25rem}
-#secInputs .sp-form .pi-subtitle{margin-bottom:.7rem}
-#secInputs .input-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem .8rem;max-width:840px;margin:.6rem auto 0}
+#secInputs .ed-form{max-width:540px;text-align:left}
+#secInputs .ed-form .pi-title{text-align:center;margin-bottom:.25rem}
+#secInputs .ed-form .pi-subtitle{text-align:center;margin-bottom:1rem}
+#secInputs .ed-group{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.85rem 1rem;margin-bottom:.7rem}
+#secInputs .ed-group-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--purple-soft);margin-bottom:.65rem;text-align:center}
+#secInputs .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem .75rem}
 #secInputs .field{text-align:center}
-#secInputs .field label{display:block;text-align:center;font-size:.78rem;margin-bottom:.25rem}
-#secInputs .field-input{margin:0 auto}
-#secInputs .toggle-row{justify-content:center}
-#secInputs #edToggles{justify-content:center;margin-top:.7rem}
-#secInputs #ambassadorFields{margin-left:auto;margin-right:auto}
-@media(max-width:820px){#secInputs .input-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:520px){#secInputs .input-grid{grid-template-columns:1fr}}
+#secInputs .field label{display:block;text-align:center;font-size:.74rem;color:var(--text2);font-weight:600;margin-bottom:.28rem}
+#secInputs .field-input{display:flex;width:100%;max-width:none;margin:0}
+#secInputs .field input[type=number]{field-sizing:normal;width:100%;min-width:0;flex:1;text-align:center}
+#secInputs .ed-greedy-grid{margin-top:.65rem}
+#secInputs .ed-amb-grid{margin-top:.65rem;grid-template-columns:1fr;max-width:240px;margin-left:auto;margin-right:auto}
+#secInputs .ed-toggles{display:flex;flex-direction:column;gap:.1rem}
+#secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.3rem 0;gap:.55rem}
+#secInputs .toggle-label{font-size:.82rem}
+#secInputs .ed-toggle-note{color:var(--text4);font-size:.72rem;font-weight:400}
+@media(max-width:520px){#secInputs .ed-grid{grid-template-columns:1fr}}
 .sp-form .pi-title,.sp-form .pi-subtitle{text-align:center}
 /* Capital Planner popout: center-justify all of its data/labels */
 #plannerIntro .sp-form{text-align:center}
@@ -1018,76 +1023,82 @@ input[type=number]{-moz-appearance:textfield}
         <button class="sp-back-btn" onclick="closeEditSetup()">&larr; Return to My Setup</button>
         <button class="sp-back-btn" onclick="clearInputs()" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
-      <div class="sp-form" style="max-width:640px">
+      <div class="sp-form ed-form">
         <div class="pi-title">Edit Your Setup</div>
-        <div class="pi-subtitle">Enter your GoMining farm details &mdash; your dashboard updates live as you type.</div>
-        <div class="input-grid">
-        <div class="field">
-          <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
-          <div class="field-input"><input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
+        <div class="pi-subtitle">Enter your GoMining farm details &mdash; your dashboard updates live.</div>
+
+        <div class="ed-group">
+          <div class="ed-group-title">Your Farm</div>
+          <div class="ed-grid">
+            <div class="field">
+              <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates — the Power tile in the GoMining app. Includes your Greedy Machine.">?</span></label>
+              <div class="field-input"><input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
+            </div>
+            <div class="field">
+              <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash across your whole farm (the weighted average from your GoMining stats). Lower is better.">?</span></label>
+              <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
+            </div>
+            <div class="field">
+              <label>Locked GMT <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
+              <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
+            </div>
+            <div class="field">
+              <label>Liquid GMT <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
+              <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash. Lower is better. Found on each NFT detail card.">?</span></label>
-          <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
+
+        <div class="ed-group">
+          <div class="ed-group-title">Greedy Machine</div>
+          <div class="toggle-row ed-toggle">
+            <label class="toggle"><input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()"><span class="toggle-track"></span></label>
+            <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
+          </div>
+          <div class="ed-grid ed-greedy-grid">
+            <div class="field greedy-field">
+              <label>Greedy Machine TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></label>
+              <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+            </div>
+            <div class="field greedy-field">
+              <label>Initial (Marketplace) <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. This portion never counts toward VIP; all growth above it does. If just bought, set equal to Greedy Machine TH.">?</span></label>
+              <div class="field-input"><input type="number" id="inGreedyInitial" value="0" step="1" min="0"><span class="unit">TH</span></div>
+            </div>
+          </div>
         </div>
-        <div class="toggle-row" style="grid-column:1/-1">
-          <label class="toggle"><input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()"><span class="toggle-track"></span></label>
-          <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
+
+        <div class="ed-group">
+          <div class="ed-group-title">Options</div>
+          <div class="ed-toggles">
+            <div class="toggle-row ed-toggle">
+              <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
+              <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak <span class="ed-toggle-note">(10+ days = 3% discount)</span></span>
+            </div>
+            <div class="toggle-row ed-toggle">
+              <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
+              <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT <span class="ed-toggle-note">(enables token discount)</span></span>
+            </div>
+            <div class="toggle-row ed-toggle">
+              <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
+              <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(earn from referred TH)</span></span>
+            </div>
+          </div>
+          <div id="ambassadorFields" class="ed-grid ed-amb-grid" style="display:none">
+            <div class="field">
+              <label>Referred TH <span class="tip" data-tip="Total TH from users you've referred. You earn a daily reward based on their power consumption.">?</span></label>
+              <div class="field-input"><input type="number" id="inReferredTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+            </div>
+          </div>
         </div>
-        <div class="field greedy-field">
-          <label>Greedy Machine TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — it's a SUBSET, not added on top. Earns rewards &amp; pays fees. Counts toward your VIP tier EXCEPT the initial marketplace amount below.">?</span></label>
-          <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+
+        <!-- Advanced inputs kept for the math, hidden from the form -->
+        <div style="display:none">
+          <input type="number" id="inLockAPR" value="21.85">
+          <input type="number" id="inCostPerTH" value="12.77">
+          <input type="number" id="inMiningMode" value="0.83">
+          <span id="inTokenDiscountDisplay"></span>
+          <span id="cptAutoHint"></span>
         </div>
-        <div class="field greedy-field">
-          <label>Initial Greedy (Marketplace) <span class="tip" data-tip="The TH you originally bought for this Greedy Machine on the marketplace. This portion never counts toward your VIP tier. Any growth above it — passive growth + reinvested upgrades — DOES count toward VIP. If you just bought it, set this equal to your Greedy Machine TH.">?</span></label>
-          <div class="field-input"><input type="number" id="inGreedyInitial" value="0" step="1" min="0"><span class="unit">TH</span></div>
-        </div>
-        <div class="field">
-          <label>Locked GMT (VeGoMining) <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
-        </div>
-        <div class="field">
-          <label>Liquid GMT Balance <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
-          <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
-        </div>
-        <div class="field">
-          <label>Token Discount <span class="tip" data-tip="Auto-calculated from your GMT holdings. More GMT held = higher discount, up to 20%.">?</span></label>
-          <div class="field-input"><span id="inTokenDiscountDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">%</span></div>
-        </div>
-        <div class="field">
-          <label>Staking APR <span class="tip" data-tip="Annual yield on your locked GMT. Paid weekly in GMT. Check the VeGoMining section.">?</span></label>
-          <div class="field-input"><input type="number" id="inLockAPR" value="21.85" step="0.01" min="0"><span class="unit">%</span></div>
-        </div>
-        <div class="field">
-          <label>TH Market Price <span class="tip" data-tip="Avg cost/TH by NFT: 5000=$11.67 · 2560=$11.90 · 1024=$12.14 · 512=$12.39 · 192=$12.77 · 64=$13.16 · 16=$13.56 · 1=$14.99">?</span></label>
-          <div class="field-input"><input type="number" id="inCostPerTH" value="12.77" step="0.01" min="0"><span class="unit">USD</span></div>
-          <div class="hint" id="cptAutoHint" style="color:var(--cyan);font-size:.6rem"></div>
-        </div>
-        <div class="field">
-          <label>Mining Mode Discount <span class="tip" data-tip="DAO governance-voted discount applied to all miners. Changes with community votes.">?</span></label>
-          <div class="field-input"><input type="number" id="inMiningMode" value="0.83" step="0.01" min="0"><span class="unit">%</span></div>
-        </div>
-      </div>
-      <div id="edToggles" style="display:flex;flex-wrap:wrap;gap:1rem 1.4rem;margin-top:.8rem">
-        <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
-          <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak active (10+ consecutive days = 3% discount)</span>
-        </div>
-        <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
-          <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT (enables token discount)</span>
-        </div>
-        <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
-          <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador (earn rewards from referred TH)</span>
-        </div>
-      </div>
-      <div id="ambassadorFields" class="input-grid" style="max-width:300px;margin-top:.8rem;display:none">
-        <div class="field">
-          <label>Referred TH <span class="tip" data-tip="Total TH from users you've referred. You earn a daily reward based on their power consumption.">?</span></label>
-          <div class="field-input"><input type="number" id="inReferredTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
-        </div>
-      </div>
       </div>
     </div>
   </div>
