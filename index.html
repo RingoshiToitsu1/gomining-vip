@@ -501,6 +501,12 @@ input[type=number]{-moz-appearance:textfield}
 .pi-step-text{font-size:.8rem;color:var(--text2);line-height:1.5}
 .pi-step-text strong{color:var(--text);font-weight:700}
 .pi-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem}
+/* Themed scrollbar for the Growth Projection popup */
+#setupProjModal .pi-body{scrollbar-width:thin;scrollbar-color:var(--purple) transparent}
+#setupProjModal .pi-body::-webkit-scrollbar{width:10px}
+#setupProjModal .pi-body::-webkit-scrollbar-track{background:transparent;margin:6px 0}
+#setupProjModal .pi-body::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--cyan));border-radius:8px;border:2px solid var(--bg-card);background-clip:padding-box}
+#setupProjModal .pi-body::-webkit-scrollbar-thumb:hover{background:var(--purple-soft);border:2px solid var(--bg-card);background-clip:padding-box}
 @media(max-width:600px){
   .pi-body{padding:1.2rem 1.2rem .8rem}
   .pi-nav{padding:0 1.2rem 1.2rem}
