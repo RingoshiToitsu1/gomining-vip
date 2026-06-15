@@ -3018,11 +3018,27 @@ function openSetupProjection(){
   const btn=document.getElementById('spRunBtn');
   if(btn)btn.disabled=false;
 }
+// Re-run the fresh-load feel for the My Setup dashboard: hero values count up
+// from 0 again and the cards re-enter, just like a page refresh.
+function refreshMySetupAnimation(){
+  ['heroDailyNet','heroMonthly','heroYearly','heroDiscount'].forEach(id=>{const e=$(id);if(e)e._cur=0;});
+  document.querySelectorAll('#heroGrid .hero-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
+  if(S.loaded)recalc();
+}
 function closeSetupProjection(){
   const m=document.getElementById('setupProjModal');
-  if(m)m.style.display='none';
-  document.body.style.overflow='';
-  spShowForm();   // reset for next open
+  const load=document.getElementById('spPageLoading');
+  const txt=load?load.querySelector('.sp-loading-txt'):null;
+  if(txt)txt.textContent='Loading your setup…';
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    if(m)m.style.display='none';
+    document.body.style.overflow='';
+    spShowForm();   // reset for next open
+    if(load)load.style.display='none';
+    if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
+    refreshMySetupAnimation();
+  },650);
 }
 function newSetupProjection(){
   spShowForm();
