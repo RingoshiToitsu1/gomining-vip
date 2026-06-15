@@ -1185,7 +1185,7 @@ input[type=number]{-moz-appearance:textfield}
 
 
   <!-- Growth Projection — opens the full-page forecast tool -->
-  <button class="planner-proj-btn" onclick="openSetupProjection()">
+  <button class="planner-proj-btn" onclick="openSetupProjection('planner')">
     <span class="planner-proj-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,18 10,12 14,15 20,7"/><polyline points="15,7 20,7 20,12"/></svg></span>
     <span class="planner-proj-txt"><strong>Growth Projection</strong><span>Forecast how your setup compounds over time &rarr;</span></span>
   </button>
@@ -1314,7 +1314,7 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div class="sp-form">
         <div class="pi-title">Growth Projection</div>
-        <div class="pi-subtitle">Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
+        <div class="pi-subtitle" id="spSubtitle">Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
         <div class="input-grid sp-form-grid">
           <div class="field">
             <label>Projection Length</label>
@@ -3054,9 +3054,15 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
-function openSetupProjection(){
+function openSetupProjection(mode){
+  // 'planner' = project the post-investment allocation; otherwise the current My Setup.
+  window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
+  const sub=document.getElementById('spSubtitle');
+  if(sub)sub.innerHTML=(mode==='planner')
+    ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
+    : 'Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   syncPayoutUnit();
   m.style.display='';
@@ -3179,19 +3185,40 @@ function computeSetupProjection(){
   const gp=S.gmtPrice,dbt=dailyBTCperTH();
   if(!bpStart||!bpEnd||!gp||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
 
-  // ---- Seed directly from the current setup; no new capital deployed ----
-  const MP_TH=0,MP_WTH=15;                         // no fresh marketplace miner here
-  const HAS_GREEDY=(i.gth||0)>0;
-  const GGROW=(i.ggrow||0)/100;
-  const GINIT=Math.min(Math.max(0,i.gInit||0),Math.max(0,i.gth||0));
-  let greedyTH=Math.max(0,i.gth||0);
-  let greedyWTH=i.gwth>0?i.gwth:15;
-  let th=Math.max(0,i.th||0);                       // standalone (VIP-eligible) hashrate that compounds
-  let curWTH=i.wth>0?i.wth:15;
-  let gmtLocked=Math.max(0,i.gl||0);
-  let gmtW=Math.max(0,i.gw||0);
+  // ---- Seed: post-investment allocation when launched from the Capital Planner,
+  //      otherwise the current My Setup state (no new capital deployed). ----
+  const fromPlanner=(window._spMode==='planner');
+  let MP_TH,MP_WTH,HAS_GREEDY,GGROW,GINIT,greedyTH,greedyWTH,th,curWTH,gmtLocked,gmtW,startTH,startLocked;
   const apr=i.apr||0;
-  const startTH=th+MP_TH+greedyTH,startLocked=gmtLocked;
+  if(fromPlanner){
+    const a=solvePlannerAllocation(i,bpStart,gp,dbt);
+    if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital Planner</strong> first, then project.</div>';return;}
+    MP_TH=a.mpTH||0; MP_WTH=a.mpWth>0?a.mpWth:15;
+    HAS_GREEDY=(a.gth||0)>0;
+    GGROW=(a.ggrow||0)/100;
+    GINIT=a.gInit||0;
+    greedyTH=a.greedyTot!=null?a.greedyTot:(a.gth||0);
+    greedyWTH=a.gwthAfter>0?a.gwthAfter:(a.gwth>0?a.gwth:15);
+    th=a.vipStandalone!=null?a.vipStandalone:a.vipTH;     // post-investment standalone VIP TH
+    curWTH=a.vipWth>0?a.vipWth:15;
+    gmtLocked=a.newLocked;
+    gmtW=a.gmtReserve;
+    startTH=a.nt;                                          // total post-investment hashrate
+    startLocked=a.newLocked;
+  }else{
+    MP_TH=0; MP_WTH=15;
+    HAS_GREEDY=(i.gth||0)>0;
+    GGROW=(i.ggrow||0)/100;
+    GINIT=Math.min(Math.max(0,i.gInit||0),Math.max(0,i.gth||0));
+    greedyTH=Math.max(0,i.gth||0);
+    greedyWTH=i.gwth>0?i.gwth:15;
+    th=Math.max(0,i.th||0);
+    curWTH=i.wth>0?i.wth:15;
+    gmtLocked=Math.max(0,i.gl||0);
+    gmtW=Math.max(0,i.gw||0);
+    startTH=th+MP_TH+greedyTH;
+    startLocked=gmtLocked;
+  }
   if(startTH<=0&&gmtLocked<=0){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Add your hashrate and locked GMT in <strong>My Setup</strong> first, then project.</div>';return;}
 
   // Existing referred TH pays flat ambassador USDT (no referral-reinvest sim here).
@@ -3298,7 +3325,7 @@ function computeSetupProjection(){
 
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
-    <strong style="color:var(--purple-soft)">Starting from your current setup:</strong>
+    <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
     <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
   h+=buildReinvestChart(daily,days,gp);
