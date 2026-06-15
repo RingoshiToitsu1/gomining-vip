@@ -564,50 +564,51 @@ input[type=number]{-moz-appearance:textfield}
 /* Edit Setup full page: centered, compact 3-col grid that fits without scrolling */
 #secInputs .sp-page-inner{padding:.25rem 1rem .8rem}
 #secInputs .sp-page-head{padding:.35rem 0 .45rem}
-#secInputs .ed-form{max-width:520px;text-align:left;margin:0 auto}
-#secInputs .ed-form .pi-title{text-align:center;font-size:1.1rem;margin-bottom:.5rem}
-#secInputs .ed-group{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.5rem .75rem;margin-bottom:.45rem}
-#secInputs .ed-group-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.35rem;text-align:center}
-#secInputs .ed-grid{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .5rem}
-#secInputs .field{text-align:center}
-#secInputs .field label{display:block;text-align:center;font-size:.67rem;color:var(--text2);font-weight:600;margin-bottom:.15rem;line-height:1.15}
-#secInputs .field-input{display:flex;width:100%;max-width:none;margin:0;padding:.38rem .55rem}
-#secInputs .field input[type=number]{field-sizing:normal;width:100%;min-width:0;flex:1;text-align:center;font-size:.86rem}
+#secInputs .ed-form{max-width:680px;text-align:left;margin:0 auto}
+#secInputs .ed-form .pi-title{text-align:center;font-size:1.15rem;margin-bottom:.55rem}
+#secInputs .ed-groups{column-count:2;column-gap:.6rem}
+#secInputs .ed-group{break-inside:avoid;display:inline-block;width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.6rem .8rem;margin-bottom:.6rem}
+#secInputs .ed-group-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.45rem;text-align:center}
+#secInputs .ed-fields{display:flex;flex-direction:column;gap:.35rem}
+#secInputs .ed-fld{display:flex;align-items:center;gap:.4rem;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:.42rem .65rem;cursor:text;transition:var(--transition)}
+#secInputs .ed-fld:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+#secInputs .ed-fld-lbl{flex:0 0 auto;font-size:.72rem;color:var(--text2);font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:.25rem}
+#secInputs .ed-fld input[type=number]{flex:1;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;text-align:right;font-family:var(--mono);font-size:.88rem;color:var(--text);field-sizing:normal}
+#secInputs .ed-fld .unit{flex:0 0 auto;color:var(--purple-soft);font-size:.78rem;font-weight:700;font-family:var(--mono);display:inline-flex;align-items:center}
+#secInputs .ed-fld .unit .gmt-logo{width:16px;height:16px;vertical-align:middle}
+#secInputs .ed-fld-sel{cursor:pointer}
+#secInputs .ed-fld-sel-input{flex:1;min-width:0;appearance:none;-webkit-appearance:none;-moz-appearance:none;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--sans);font-size:.8rem;cursor:pointer;text-align:right;text-align-last:right;padding-right:16px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right center}
 #secInputs .ed-greedy-grid{margin-top:.35rem}
-#secInputs .ed-amb-grid{margin-top:.35rem;grid-template-columns:1fr;max-width:200px;margin-left:auto;margin-right:auto}
 #secInputs .ed-toggles{display:flex;flex-direction:column;gap:0}
-#secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.16rem 0;gap:.5rem}
+#secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.2rem 0;gap:.5rem}
 #secInputs .toggle-label{font-size:.75rem;line-height:1.15}
 #secInputs .ed-toggle-note{color:var(--text4);font-size:.67rem;font-weight:400}
-#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;display:block;width:100%;box-sizing:border-box;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.82rem;padding:.4rem 28px .4rem 12px;outline:none;cursor:pointer;transition:var(--transition);text-align:left;text-align-last:left}
-#secInputs .ed-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+#secInputs .ed-amb-inline{margin-left:auto;display:inline-flex;align-items:center;gap:.25rem;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:.2rem .5rem}
+#secInputs .ed-amb-inline input{width:60px;background:none;border:none;outline:none;text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text);field-sizing:normal}
+#secInputs .ed-amb-inline .unit{color:var(--purple-soft);font-size:.72rem;font-weight:700;font-family:var(--mono)}
 #secInputs .ed-saved-btns{display:flex;gap:.4rem;margin-top:.45rem}
 #secInputs .ed-saved-btns .ed-sbtn{flex:1}
-#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.46rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
+#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.5rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
+#secInputs .ed-sbtn-primary{background:linear-gradient(135deg,var(--purple),var(--cyan));border-color:transparent;color:#000;font-weight:800;box-shadow:0 2px 10px rgba(245,166,35,.25)}
+#secInputs .ed-sbtn-primary:hover{filter:brightness(1.07);color:#000;border-color:transparent}
 #secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
-#secInputs .sp-run-wrap{margin-top:.45rem!important}
-/* Mobile: compact hard so Edit Setup fits without scrolling */
 @media(max-width:600px){
+  #secInputs .ed-groups{column-count:1}
   #secInputs .sp-page-inner{padding:.15rem .7rem .5rem}
   #secInputs .sp-page-head{padding:.25rem 0 .3rem}
   #secInputs .sp-back-btn{padding:.4rem .7rem;font-size:.74rem}
-  #secInputs .ed-form .pi-title{font-size:1rem;margin-bottom:.3rem}
-  #secInputs .ed-group{padding:.4rem .6rem;margin-bottom:.32rem}
-  #secInputs .ed-group-title{font-size:.6rem;margin-bottom:.28rem}
-  #secInputs .ed-grid{gap:.28rem .4rem}
-  #secInputs .field label{font-size:.64rem;margin-bottom:.1rem}
-  #secInputs .field-input{padding:.3rem .5rem}
-  #secInputs .field input[type=number]{font-size:16px}
-  #secInputs .ed-select{padding:.32rem 24px .32rem 10px;font-size:.76rem}
-  #secInputs .ed-greedy-grid,#secInputs .ed-amb-grid{margin-top:.28rem}
-  #secInputs .toggle-row.ed-toggle{padding:.1rem 0;gap:.45rem}
-  #secInputs .toggle-label{font-size:.72rem}
-  #secInputs .ed-toggle-note{font-size:.64rem}
-  #secInputs .ed-saved-btns{margin-top:.35rem;gap:.32rem}
-  #secInputs .ed-saved-btns .ed-sbtn{padding:.36rem .3rem;font-size:.7rem}
-  #secInputs .sp-run-wrap{margin-top:.35rem!important}
-  #secInputs .sp-run-wrap .ri-btn{padding:.5rem 1.6rem}
+  #secInputs .ed-form .pi-title{font-size:1rem;margin-bottom:.35rem}
+  #secInputs .ed-group{padding:.45rem .6rem;margin-bottom:.4rem}
+  #secInputs .ed-group-title{font-size:.6rem;margin-bottom:.3rem}
+  #secInputs .ed-fields{gap:.3rem}
+  #secInputs .ed-fld{padding:.4rem .55rem}
+  #secInputs .ed-fld-lbl{font-size:.7rem}
+  #secInputs .ed-fld input[type=number],#secInputs .ed-fld-sel-input{font-size:16px}
+  #secInputs .toggle-row.ed-toggle{padding:.13rem 0;gap:.45rem}
+  #secInputs .toggle-label{font-size:.73rem}
+  #secInputs .ed-saved-btns{margin-top:.4rem;gap:.32rem}
+  #secInputs .ed-sbtn{padding:.46rem .3rem;font-size:.72rem}
   #secInputs .toggle{width:38px;height:21px}
   #secInputs .toggle-track::after{width:17px;height:17px}
   #secInputs .toggle input:checked+.toggle-track::after{transform:translateX(17px)}
@@ -1050,96 +1051,100 @@ input[type=number]{-moz-appearance:textfield}
       <div class="sp-form ed-form">
         <div class="pi-title">Edit Your Setup</div>
 
-        <div class="ed-group">
-          <div class="ed-group-title">Saved Setups</div>
-          <div class="ed-grid">
-            <div class="field">
-              <label>Setup</label>
-              <select id="profileSelect" class="ed-select" onchange="onProfileChange()"><option value="">— No profile —</option></select>
-            </div>
-            <div class="field">
-              <label>Currency</label>
-              <select id="inCurrency" class="ed-select" onchange="setCurrency(this.value)">
-                <option value="USD">USD ($)</option>
-                <option value="GBP">GBP (&pound;)</option>
-                <option value="EUR">EUR (&euro;)</option>
-              </select>
-            </div>
-          </div>
-          <div class="ed-saved-btns">
-            <button class="ed-sbtn" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
-            <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
-            <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
-          </div>
-          <span id="saveStatus"></span>
-        </div>
+        <div class="ed-groups">
 
-        <div class="ed-group">
-          <div class="ed-group-title">Your Farm</div>
-          <div class="ed-grid">
-            <div class="field">
-              <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates — the Power tile in the GoMining app. Includes your Greedy Machine.">?</span></label>
-              <div class="field-input"><input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
+          <div class="ed-group">
+            <div class="ed-group-title">Saved Setups</div>
+            <div class="ed-fields">
+              <label class="ed-fld ed-fld-sel">
+                <span class="ed-fld-lbl">Setup</span>
+                <select id="profileSelect" class="ed-fld-sel-input" onchange="onProfileChange()"><option value="">— No profile —</option></select>
+              </label>
+              <label class="ed-fld ed-fld-sel">
+                <span class="ed-fld-lbl">Currency</span>
+                <select id="inCurrency" class="ed-fld-sel-input" onchange="setCurrency(this.value)">
+                  <option value="USD">USD ($)</option>
+                  <option value="GBP">GBP (&pound;)</option>
+                  <option value="EUR">EUR (&euro;)</option>
+                </select>
+              </label>
             </div>
-            <div class="field">
-              <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash across your whole farm (the weighted average from your GoMining stats). Lower is better.">?</span></label>
-              <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
+            <div class="ed-saved-btns">
+              <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
+              <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+              <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
             </div>
-            <div class="field">
-              <label>Locked GMT <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></label>
-              <div class="field-input"><input type="number" id="inGMTLocked" value="0" step="1" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
-            </div>
-            <div class="field">
-              <label>Liquid GMT <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></label>
-              <div class="field-input"><input type="number" id="inGMTWallet" value="0" step="0.01" min="0"><span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
-            </div>
+            <span id="saveStatus"></span>
           </div>
-        </div>
 
-        <div class="ed-group">
-          <div class="ed-group-title">Greedy Machine</div>
-          <div class="toggle-row ed-toggle">
-            <label class="toggle"><input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()"><span class="toggle-track"></span></label>
-            <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
-          </div>
-          <div class="ed-grid ed-greedy-grid">
-            <div class="field greedy-field">
-              <label>Greedy Machine TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></label>
-              <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+          <div class="ed-group">
+            <div class="ed-group-title">Your Farm</div>
+            <div class="ed-fields">
+              <label class="ed-fld" for="inTH">
+                <span class="ed-fld-lbl">Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates — the Power tile in the GoMining app. Includes your Greedy Machine.">?</span></span>
+                <input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')">
+                <span class="unit">TH</span>
+              </label>
+              <label class="ed-fld" for="inWTH">
+                <span class="ed-fld-lbl">Efficiency <span class="tip" data-tip="Average watts per terahash across your whole farm (the weighted average from your GoMining stats). Lower is better.">?</span></span>
+                <input type="number" id="inWTH" value="15" step="0.01" min="0">
+                <span class="unit">W/TH</span>
+              </label>
+              <label class="ed-fld" for="inGMTLocked">
+                <span class="ed-fld-lbl">Locked GMT <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></span>
+                <input type="number" id="inGMTLocked" value="0" step="1" min="0">
+                <span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+              </label>
+              <label class="ed-fld" for="inGMTWallet">
+                <span class="ed-fld-lbl">Liquid GMT <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></span>
+                <input type="number" id="inGMTWallet" value="0" step="0.01" min="0">
+                <span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+              </label>
             </div>
-            <div class="field greedy-field">
-              <label>Initial (Marketplace) <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. This portion never counts toward VIP; all growth above it does. If just bought, set equal to Greedy Machine TH.">?</span></label>
-              <div class="field-input"><input type="number" id="inGreedyInitial" value="0" step="1" min="0"><span class="unit">TH</span></div>
-            </div>
           </div>
-        </div>
 
-        <div class="ed-group">
-          <div class="ed-group-title">Options</div>
-          <div class="ed-toggles">
+          <div class="ed-group">
+            <div class="ed-group-title">Greedy Machine</div>
             <div class="toggle-row ed-toggle">
-              <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
-              <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak <span class="ed-toggle-note">(10+ days = 3% discount)</span></span>
+              <label class="toggle"><input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()"><span class="toggle-track"></span></label>
+              <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
             </div>
-            <div class="toggle-row ed-toggle">
-              <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
-              <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT <span class="ed-toggle-note">(enables token discount)</span></span>
-            </div>
-            <div class="toggle-row ed-toggle">
-              <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
-              <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(earn from referred TH)</span></span>
-            </div>
-          </div>
-          <div id="ambassadorFields" class="ed-grid ed-amb-grid" style="display:none">
-            <div class="field">
-              <label>Referred TH <span class="tip" data-tip="Total TH from users you've referred. You earn a daily reward based on their power consumption.">?</span></label>
-              <div class="field-input"><input type="number" id="inReferredTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+            <div class="ed-fields ed-greedy-grid">
+              <label class="ed-fld greedy-field" for="inGreedyTH">
+                <span class="ed-fld-lbl">Greedy TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></span>
+                <input type="number" id="inGreedyTH" value="0" step="1" min="0">
+                <span class="unit">TH</span>
+              </label>
+              <label class="ed-fld greedy-field" for="inGreedyInitial">
+                <span class="ed-fld-lbl">Initial <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. This portion never counts toward VIP; all growth above it does. If just bought, set equal to Greedy Machine TH.">?</span></span>
+                <input type="number" id="inGreedyInitial" value="0" step="1" min="0">
+                <span class="unit">TH</span>
+              </label>
             </div>
           </div>
-        </div>
 
-        <div class="sp-run-wrap" style="margin-top:.5rem">
-          <button class="ri-btn" id="edEnterBtn" onclick="submitEditSetup()">&#10003; Enter</button>
+          <div class="ed-group">
+            <div class="ed-group-title">Options</div>
+            <div class="ed-toggles">
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak <span class="ed-toggle-note">(10+ days = 3%)</span></span>
+              </div>
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT</span>
+              </div>
+              <div class="toggle-row ed-toggle ed-amb-row">
+                <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(referred TH)</span></span>
+                <span class="ed-amb-inline" id="ambassadorFields" style="display:none">
+                  <input type="number" id="inReferredTH" value="0" step="1" min="0" placeholder="0" title="Referred TH — total TH from users you've referred">
+                  <span class="unit">TH</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <!-- Advanced inputs kept for the math, hidden from the form -->
