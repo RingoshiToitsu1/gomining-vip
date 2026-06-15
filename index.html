@@ -79,12 +79,16 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card.cyan-accent::before{background:linear-gradient(90deg,var(--cyan),transparent)}
 .hero-card.green-accent::before{background:linear-gradient(90deg,var(--green),transparent)}
 .hero-card.orange-accent::before{background:linear-gradient(90deg,var(--orange),transparent)}
-.hero-card-action{cursor:pointer;text-align:center}
-.hero-card-action:hover{border-color:var(--orange);box-shadow:0 4px 20px rgba(245,166,35,.18);transform:translateY(-1px)}
-.hero-card-action .hero-cta{font-size:1.05rem;font-weight:800;color:var(--orange);line-height:1.15}
-.hero-card-action .hero-cta-go{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--text3);margin-top:.25rem}
+.hero-card-action{cursor:pointer;text-align:center;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border-color:rgba(245,166,35,.42)}
+.hero-card-action:hover{border-color:var(--orange);box-shadow:0 6px 26px rgba(245,166,35,.28);transform:translateY(-2px)}
+.hero-card-action:hover .hero-cta-btn{filter:brightness(1.06)}
+.hero-card-action .hero-cta{font-size:1.05rem;font-weight:800;color:var(--orange);line-height:1.15;display:flex;align-items:center;justify-content:center;gap:.4rem}
+.hero-cta-ico{flex:0 0 auto}
+.hero-card-action .hero-cta-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;font-weight:800;font-size:.72rem;letter-spacing:.02em;padding:.42rem .95rem;border-radius:20px;box-shadow:0 3px 12px rgba(245,166,35,.3)}
+.hero-cta-arrow{transition:transform .25s ease}
+.hero-card-action:hover .hero-cta-arrow{transform:translateX(4px)}
 /* Vertically center the CTA card's content on non-mobile so it doesn't leave a gap at the bottom (mobile uses the compact row layout). */
-@media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center}}
+@media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center;align-items:center}}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.15;letter-spacing:.01em}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
@@ -328,7 +332,7 @@ input[type=number]{-moz-appearance:textfield}
   .hero-label{margin-bottom:0;font-size:.65rem}
   .hero-val{font-size:1rem}
   .hero-sub{display:none}
-  .hero-card-action .hero-cta-go{display:none}
+  .hero-card-action .hero-cta-btn{display:none}
   .alloc-grid{grid-template-columns:1fr}
   .gmt-tiers{grid-template-columns:1fr}
 }
@@ -895,8 +899,8 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="hero-card orange-accent reveal hero-card-action" onclick="openSetupProjection()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetupProjection()}" title="Project your farm's growth over time">
       <div class="hero-label">Plan Ahead</div>
-      <div class="hero-cta">Growth Projection</div>
-      <div class="hero-cta-go">See your setup compound &rarr;</div>
+      <div class="hero-cta"><svg class="hero-cta-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
+      <div class="hero-cta-btn">Run projection <span class="hero-cta-arrow">&rarr;</span></div>
     </div>
   </div>
 
