@@ -3062,6 +3062,16 @@ function animatePlannerResults(){
   secs.forEach(el=>el.classList.remove('visible'));
   requestAnimationFrame(()=>requestAnimationFrame(()=>secs.forEach(el=>el.classList.add('visible'))));
   document.querySelectorAll('#allocDisplay .a-val').forEach(el=>animateCountText(el,800));
+  // Grow the allocation split bar from 0 to its target widths.
+  document.querySelectorAll('#allocDisplay .alloc-split-bar>div').forEach(el=>{
+    const target=el.style.width;
+    if(!target)return;
+    el.style.transition='none';
+    el.style.width='0%';
+    void el.offsetWidth;
+    el.style.transition='width .8s cubic-bezier(.22,1,.36,1)';
+    requestAnimationFrame(()=>{el.style.width=target;});
+  });
 }
 function closeSetupProjection(){
   const m=document.getElementById('setupProjModal');
