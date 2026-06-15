@@ -133,6 +133,9 @@ input[type=number]{-moz-appearance:textfield}
 .field-input{position:relative}
 .field-input:has(input[type="number"]),.field-input:has(#inTokenDiscountDisplay){display:inline-flex;align-items:center;gap:.4rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.5rem .7rem;transition:var(--transition);max-width:100%}
 .field-input:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.greedy-check{display:flex;align-items:center;gap:.55rem;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--text2);padding:.55rem .8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);transition:var(--transition)}
+.greedy-check:hover{border-color:var(--purple);color:var(--text)}
+.greedy-check input{width:18px;height:18px;accent-color:var(--purple);cursor:pointer;flex:0 0 auto;margin:0}
 .field input[type="number"]{background:transparent;border:none;padding:0;color:var(--text);font-family:var(--mono);font-size:.88rem;outline:none;text-align:right;field-sizing:content;width:auto;min-width:4ch}
 .field input:focus{outline:none}
 .field .unit{font-size:.78rem;color:var(--text3);font-weight:600;font-family:var(--mono);flex-shrink:0}
@@ -1008,19 +1011,23 @@ input[type=number]{-moz-appearance:textfield}
           <label>Energy Efficiency <span class="tip" data-tip="Average watts per terahash. Lower is better. Found on each NFT detail card.">?</span></label>
           <div class="field-input"><input type="number" id="inWTH" value="15" step="0.01" min="0"><span class="unit">W/TH</span></div>
         </div>
-        <div class="field">
+        <label class="greedy-check" style="grid-column:1/-1">
+          <input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()">
+          <span>I own a Greedy Machine</span>
+        </label>
+        <div class="field greedy-field">
           <label>Greedy Machine TH <span class="tip" data-tip="Total hashrate from Greedy Machine NFTs you own. Earns rewards &amp; pays fees. Grows passively each week at the rate set in the Capital Planner (default 0.3%/wk), compounding even past the 5,000 TH manual-upgrade cap. Counts toward your VIP tier EXCEPT the initial marketplace amount below.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
-        <div class="field">
+        <div class="field greedy-field">
           <label>Initial Greedy (Marketplace) <span class="tip" data-tip="The TH you originally bought for this Greedy Machine on the marketplace. This portion never counts toward your VIP tier. Any growth above it — passive growth + reinvested upgrades — DOES count toward VIP. If you just bought it, set this equal to your Greedy Machine TH.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyInitial" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
-        <div class="field">
+        <div class="field greedy-field">
           <label>Greedy Efficiency <span class="tip" data-tip="Watts per terahash of your Greedy Machine(s) — drives their daily fees. Defaults to 15.">?</span></label>
           <div class="field-input"><input type="number" id="inGreedyWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
         </div>
-        <div class="field">
+        <div class="field greedy-field">
           <label>Weighted Avg Efficiency <span class="tip" data-tip="TH-weighted average W/TH across your main hashrate and Greedy Machine(s). Read-only — this is the efficiency your daily fees are actually calculated on.">?</span></label>
           <div class="field-input"><span id="inWeightedWthDisplay" style="font-family:var(--mono);color:var(--cyan);font-size:1rem">--</span><span class="unit">W/TH</span></div>
         </div>
@@ -1847,6 +1854,7 @@ function applyInputs(d){
   if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=!!d.piVipBonus;
   if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
   autoFillCPT('inTH','inCostPerTH');
+  refreshGreedyVisibility();
 }
 
 function migrateLegacySetup(){
@@ -1923,7 +1931,21 @@ function toggleEditSetup(){
   const open=sec.style.display==='none';
   sec.style.display=open?'':'none';
   btn.textContent=open?'Done':'Edit setup';
-  if(open)sec.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(open){refreshGreedyVisibility();sec.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+// "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
+function toggleGreedyFields(){
+  const cb=$('inHasGreedy');const on=cb&&cb.checked;
+  document.querySelectorAll('.greedy-field').forEach(el=>el.style.display=on?'':'none');
+  if(!on){['inGreedyTH','inGreedyInitial'].forEach(id=>{const e=$(id);if(e)e.value=0;});}
+  autoSave();
+  if(S.loaded)recalc();
+}
+// Sync the checkbox + field visibility from the current data (greedy on iff TH>0).
+function refreshGreedyVisibility(){
+  const cb=$('inHasGreedy');if(!cb)return;
+  cb.checked=(+($('inGreedyTH')&&$('inGreedyTH').value)||0)>0;
+  document.querySelectorAll('.greedy-field').forEach(el=>el.style.display=cb.checked?'':'none');
 }
 
 function clearInputs(){
