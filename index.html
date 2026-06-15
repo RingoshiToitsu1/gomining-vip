@@ -3293,12 +3293,13 @@ function computeSetupProjection(){
     <div class="ri-breakdown">${breakdownDaily}</div>
     <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
-  if(manualRefTH>0){
+  {
+    const yrs=days/365;
+    const roiYr=yrs>0?ssPct/yrs:0;
     h+=`<div class="ri-single-card">
-      <div class="ri-label">Ambassador Rewards (USDT)</div>
-      <div class="ri-headline green">${fU(ambDaily)}</div>
-      <div class="ri-mo-yr">${fU(ambDaily*30)}/mo<span class="ri-sep">&bull;</span>${fU(ambDaily*365)}/yr</div>
-      <div class="ri-breakdown">${fN(manualRefTH,0)} referred TH &middot; total over ${days}d: ${fU(totalAmbUSD)}</div>
+      <div class="ri-label">Projected ROI</div>
+      <div class="ri-headline green">${roiYr>=0?'+':''}${fN(roiYr,1)}%<span style="font-size:.95rem;color:var(--text3);font-weight:600"> / yr</span></div>
+      <div class="ri-breakdown">${ssPct>=0?'+':''}${fN(ssPct,1)}% reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
     </div>`;
   }
   if(HAS_GREEDY){
