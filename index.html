@@ -125,6 +125,8 @@ input[type=number]{-moz-appearance:textfield}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
 .section-body{padding:0 1.2rem 1.2rem;transition:var(--transition)}
 .section.collapsed .section-body{display:block}
+/* Let tooltips overflow the Edit Setup card instead of being clipped */
+#secInputs{overflow:visible}
 
 /* ---- INPUTS ---- */
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
@@ -154,7 +156,7 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- TOOLTIP ---- */
 .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--text3);font-size:.6rem;font-weight:700;cursor:help;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);max-width:264px;white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s;text-align:left}
+.tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);width:max-content;max-width:min(264px,80vw);white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s;text-align:left}
 .tip:hover::after,.tip.show::after{opacity:1}
 
 /* ---- OUTPUT ROWS ---- */
