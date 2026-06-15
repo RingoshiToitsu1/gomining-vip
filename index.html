@@ -125,8 +125,6 @@ input[type=number]{-moz-appearance:textfield}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
 .section-body{padding:0 1.2rem 1.2rem;transition:var(--transition)}
 .section.collapsed .section-body{display:block}
-/* Let tooltips overflow the Edit Setup card instead of being clipped */
-#secInputs{overflow:visible}
 
 /* ---- INPUTS ---- */
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
@@ -1000,12 +998,16 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- INPUTS -->
-  <div class="section reveal" id="secInputs" style="display:none">
-    <div class="section-body" id="setupEditBody">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:.4rem">
-        <button onclick="clearInputs()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
+  <div class="sp-page" id="secInputs" style="display:none">
+    <div class="sp-page-inner">
+      <div class="sp-page-head">
+        <button class="sp-back-btn" onclick="closeEditSetup()">&larr; Return to My Setup</button>
+        <button class="sp-back-btn" onclick="clearInputs()" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
-      <div class="input-grid">
+      <div class="sp-form" style="max-width:640px">
+        <div class="pi-title">Edit Your Setup</div>
+        <div class="pi-subtitle">Enter your GoMining farm details &mdash; your dashboard updates live as you type.</div>
+        <div class="input-grid">
         <div class="field">
           <label>Total Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates. Find under My NFTs in the GoMining app.">?</span></label>
           <div class="field-input"><input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')"><span class="unit">TH</span></div>
@@ -1071,6 +1073,7 @@ input[type=number]{-moz-appearance:textfield}
           <label>Referred TH <span class="tip" data-tip="Total TH from users you've referred. You earn a daily reward based on their power consumption.">?</span></label>
           <div class="field-input"><input type="number" id="inReferredTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -1927,14 +1930,17 @@ function saveAsNewProfile(){
   flashStatus('Saved as "'+name+'"');
 }
 
-function toggleEditSetup(){
-  const sec=$('secInputs');
-  const btn=$('btnEditSetup');
-  if(!sec||!btn)return;
-  const open=sec.style.display==='none';
-  sec.style.display=open?'':'none';
-  btn.textContent=open?'Done':'Edit setup';
-  if(open){refreshGreedyVisibility();sec.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function toggleEditSetup(){openEditSetup();}   // back-compat
+function openEditSetup(){
+  const sec=$('secInputs');if(!sec)return;
+  sec.style.display='';sec.scrollTop=0;
+  document.body.style.overflow='hidden';
+  refreshGreedyVisibility();
+}
+function closeEditSetup(){
+  const sec=$('secInputs');if(sec)sec.style.display='none';
+  document.body.style.overflow='';
+  refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
 }
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
 function toggleGreedyFields(){
