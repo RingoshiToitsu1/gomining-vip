@@ -2562,13 +2562,13 @@ function renderPlanner(i,m){
       : refInitTH>0 ? `${fN(refInitTH,1)} TH from referral plan` : `${fN(i.refTH,0)} referred TH`;
     ph+=row('↳ Ambassador uplift',`+${fU(projAmbMo)}/mo<span class="sub">${ambSub}</span>`,'green');
   }
-  ph+=row('Monthly improvement',`${imp>=0?'+':''}${fU(imp)}<span class="sub">mining only</span>`,imp>=0?'green':'red');
-  ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
-  ph+=`<div class="divider"></div>`;
   const newWkStake=(newLocked*i.apr/100)/52;
   const newStakingMo=newWkStake*gp*4.33;
   const curStakingMo=m.wkGMT*m.gp*4.33;
   const totalImp=imp+(newStakingMo-curStakingMo);
+  ph+=row('Monthly improvement',`${totalImp>=0?'+':''}${fU(totalImp)}<span class="sub">mining + staking</span>`,totalImp>=0?'green':'red');
+  ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
+  ph+=`<div class="divider"></div>`;
   const recAdj=totalImp>0?cap/totalImp:Infinity;
   ph+=row('New locked GMT',`${fU(newLocked*gp)}`+(gmtReserve>0?`<span class="sub">+${fU(gmtReserve*gp)} reserve</span>`:''));
   ph+=row('Months to recoup',recAdj===Infinity?'N/A':`${fN(recAdj,1)} months`,recAdj<12?'green':recAdj<24?'orange':'red');
