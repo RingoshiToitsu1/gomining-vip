@@ -113,7 +113,7 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- SECTION ---- */
 .section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;transition:var(--transition)}
 .section:hover{border-color:#232d48}
-.section-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.2rem;cursor:default;user-select:none;transition:var(--transition)}
+.section-header{display:flex;align-items:center;justify-content:center;padding:1rem 1.2rem;cursor:default;user-select:none;transition:var(--transition)}
 .section-header:hover{background:rgba(245,166,35,.04)}
 .section-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
 .section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
@@ -351,10 +351,13 @@ input[type=number]{-moz-appearance:textfield}
 .proj-hero{background:linear-gradient(165deg,rgba(245,166,35,.12),rgba(245,166,35,.03)),var(--bg-card);border-color:rgba(245,166,35,.4)}
 .proj-hero .section-title{color:var(--purple-soft)}
 .proj-hero .section-body{text-align:center}
-.proj-hero .proj-cell.current{max-width:260px!important;padding:.85rem 1rem .75rem;box-shadow:0 4px 18px rgba(52,211,153,.15)}
+.proj-hero .proj-cell.current{max-width:260px!important;padding:1.65rem 1rem .85rem;box-shadow:0 4px 18px rgba(52,211,153,.15)}
 .proj-hero .pc-monthly{font-size:1.65rem;line-height:1.05;letter-spacing:-.01em}
 .proj-hero .pc-monthly .gmt-logo{width:21px;height:21px}
 @media(max-width:600px){.proj-hero .pc-monthly{font-size:1.5rem}}
+#projBtcSelect{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 36px 9px 14px;font-size:.9rem;font-family:var(--sans);outline:none;cursor:pointer;transition:var(--transition)}
+#projBtcSelect:hover{border-color:var(--text4)}
+#projBtcSelect:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .proj-cell .pc-daily{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--mono)}
 .proj-cell .pc-yearly{font-size:.6rem;color:var(--text4);margin-top:.1rem;font-family:var(--mono)}
 .proj-cell .pc-monthly.green{color:var(--green)}
@@ -2171,10 +2174,9 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD){
   const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
 
-  let h=`<div style="font-size:.72rem;color:var(--text4);margin-bottom:.5rem">${label}</div>`;
-  h+=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
+  let h=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
   h+=`<label style="font-size:.75rem;color:var(--text3)">BTC Price</label>`;
-  h+=`<select id="projBtcSelect" onchange="updateProjCell()" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:8px 12px;font-size:.9rem">`;
+  h+=`<select id="projBtcSelect" onchange="updateProjCell()">`;
   for(const p of opts){
     const lbl=p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
     h+=`<option value="${p}"${p===cur?' selected':''}>${lbl}</option>`;
