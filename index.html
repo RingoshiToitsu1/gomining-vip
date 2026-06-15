@@ -579,15 +579,11 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.16rem 0;gap:.5rem}
 #secInputs .toggle-label{font-size:.75rem;line-height:1.15}
 #secInputs .ed-toggle-note{color:var(--text4);font-size:.67rem;font-weight:400}
-#secInputs .ed-saved{margin-bottom:.45rem}
-#secInputs .ed-saved-top{display:flex;gap:.4rem;margin-bottom:.4rem}
-#secInputs .ed-saved-top #profileSelect{flex:1;min-width:0}
-#secInputs .ed-saved-btns{display:flex;gap:.4rem}
+#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;display:block;width:100%;box-sizing:border-box;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.82rem;padding:.4rem 28px .4rem 12px;outline:none;cursor:pointer;transition:var(--transition);text-align:left;text-align-last:left}
+#secInputs .ed-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+#secInputs .ed-saved-btns{display:flex;gap:.4rem;margin-top:.45rem}
 #secInputs .ed-saved-btns .ed-sbtn{flex:1}
-#secInputs .ed-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:.78rem;padding:.45rem 30px .45rem 12px;outline:none;cursor:pointer;transition:var(--transition)}
-#secInputs .ed-select:focus{border-color:var(--purple)}
-#secInputs .ed-cur{flex:0 0 auto;min-width:74px}
-#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.44rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
+#secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:600;padding:.46rem .6rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
 #secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
 #secInputs .sp-run-wrap{margin-top:.45rem!important}
@@ -1029,16 +1025,21 @@ input[type=number]{-moz-appearance:textfield}
       <div class="sp-form ed-form">
         <div class="pi-title">Edit Your Setup</div>
 
-        <div class="ed-saved">
-          <div class="ed-saved-top">
-            <select id="profileSelect" class="ed-select" onchange="onProfileChange()" title="Switch saved setup">
-              <option value="">— Saved setups —</option>
-            </select>
-            <select id="inCurrency" class="ed-select ed-cur" onchange="setCurrency(this.value)" title="Display currency">
-              <option value="USD">USD ($)</option>
-              <option value="GBP">GBP (&pound;)</option>
-              <option value="EUR">EUR (&euro;)</option>
-            </select>
+        <div class="ed-group">
+          <div class="ed-group-title">Saved Setups</div>
+          <div class="ed-grid">
+            <div class="field">
+              <label>Setup</label>
+              <select id="profileSelect" class="ed-select" onchange="onProfileChange()"><option value="">— No profile —</option></select>
+            </div>
+            <div class="field">
+              <label>Currency</label>
+              <select id="inCurrency" class="ed-select" onchange="setCurrency(this.value)">
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (&pound;)</option>
+                <option value="EUR">EUR (&euro;)</option>
+              </select>
+            </div>
           </div>
           <div class="ed-saved-btns">
             <button class="ed-sbtn" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
