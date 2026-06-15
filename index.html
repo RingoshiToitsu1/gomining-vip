@@ -844,6 +844,12 @@ input[type=number]{-moz-appearance:textfield}
     </select>
     <button class="tabs-saved-btn primary" onclick="saveAsNewProfile()">Save as…</button>
     <button id="btnDeleteProfile" class="tabs-saved-btn" onclick="deleteActiveProfile()" title="Delete the selected profile">Delete</button>
+    <button id="btnEditSetup" class="tabs-saved-btn" onclick="toggleEditSetup()" style="color:var(--cyan);border-color:var(--cyan)" title="Edit your farm parameters">Edit setup</button>
+    <select id="inCurrency" onchange="setCurrency(this.value)" style="min-width:84px" title="Display Currency">
+      <option value="USD">USD ($)</option>
+      <option value="GBP">GBP (&pound;)</option>
+      <option value="EUR">EUR (&euro;)</option>
+    </select>
     <span id="saveStatus" style="font-size:.7rem;color:var(--green);align-self:center;opacity:0;transition:opacity .3s"></span>
   </div>
 </div>
@@ -888,16 +894,8 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- INPUTS -->
-  <div class="section reveal" id="secInputs">
-    <div style="display:flex;gap:.5rem;padding:.8rem 1rem;flex-wrap:wrap;align-items:center">
-      <button id="btnEditSetup" onclick="toggleEditSetup()" style="background:transparent;color:var(--cyan);border:1px solid var(--cyan);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer;font-weight:600" title="Edit your farm parameters">Edit setup</button>
-      <select id="inCurrency" onchange="setCurrency(this.value)" style="background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:.75rem;font-family:var(--sans);outline:none;cursor:pointer" title="Display Currency">
-        <option value="USD">USD ($)</option>
-        <option value="GBP">GBP (&pound;)</option>
-        <option value="EUR">EUR (&euro;)</option>
-      </select>
-    </div>
-    <div class="section-body" id="setupEditBody" style="display:none">
+  <div class="section reveal" id="secInputs" style="display:none">
+    <div class="section-body" id="setupEditBody">
       <div style="display:flex;justify-content:flex-end;margin-bottom:.4rem">
         <button onclick="clearInputs()" style="background:transparent;color:var(--text4);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:.75rem;font-family:var(--sans);cursor:pointer" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
@@ -1780,12 +1778,13 @@ function saveAsNewProfile(){
 }
 
 function toggleEditSetup(){
-  const body=$('setupEditBody');
+  const sec=$('secInputs');
   const btn=$('btnEditSetup');
-  if(!body||!btn)return;
-  const open=body.style.display==='none';
-  body.style.display=open?'':'none';
+  if(!sec||!btn)return;
+  const open=sec.style.display==='none';
+  sec.style.display=open?'':'none';
   btn.textContent=open?'Done':'Edit setup';
+  if(open)sec.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function clearInputs(){
