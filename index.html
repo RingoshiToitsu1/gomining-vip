@@ -587,6 +587,31 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
 #secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
 #secInputs .sp-run-wrap{margin-top:.45rem!important}
+/* Mobile: compact hard so Edit Setup fits without scrolling */
+@media(max-width:600px){
+  #secInputs .sp-page-inner{padding:.15rem .7rem .5rem}
+  #secInputs .sp-page-head{padding:.25rem 0 .3rem}
+  #secInputs .sp-back-btn{padding:.4rem .7rem;font-size:.74rem}
+  #secInputs .ed-form .pi-title{font-size:1rem;margin-bottom:.3rem}
+  #secInputs .ed-group{padding:.4rem .6rem;margin-bottom:.32rem}
+  #secInputs .ed-group-title{font-size:.6rem;margin-bottom:.28rem}
+  #secInputs .ed-grid{gap:.28rem .4rem}
+  #secInputs .field label{font-size:.64rem;margin-bottom:.1rem}
+  #secInputs .field-input{padding:.3rem .5rem}
+  #secInputs .field input[type=number]{font-size:16px}
+  #secInputs .ed-select{padding:.32rem 24px .32rem 10px;font-size:.76rem}
+  #secInputs .ed-greedy-grid,#secInputs .ed-amb-grid{margin-top:.28rem}
+  #secInputs .toggle-row.ed-toggle{padding:.1rem 0;gap:.45rem}
+  #secInputs .toggle-label{font-size:.72rem}
+  #secInputs .ed-toggle-note{font-size:.64rem}
+  #secInputs .ed-saved-btns{margin-top:.35rem;gap:.32rem}
+  #secInputs .ed-saved-btns .ed-sbtn{padding:.36rem .3rem;font-size:.7rem}
+  #secInputs .sp-run-wrap{margin-top:.35rem!important}
+  #secInputs .sp-run-wrap .ri-btn{padding:.5rem 1.6rem}
+  #secInputs .toggle{width:38px;height:21px}
+  #secInputs .toggle-track::after{width:17px;height:17px}
+  #secInputs .toggle input:checked+.toggle-track::after{transform:translateX(17px)}
+}
 .sp-form .pi-title,.sp-form .pi-subtitle{text-align:center}
 /* Capital Planner popout: center-justify all of its data/labels */
 #plannerIntro .sp-form{text-align:center}
