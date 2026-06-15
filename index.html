@@ -1406,6 +1406,10 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
 const CONVERSION_FEE  = 0.02;    // BTC → GMT conversion skim, applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
 const USD_GMT_FEE     = 0.02;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
+// GMT tracks BTC. Calibration anchor from observed history: BTC $120k ↔ GMT $0.52.
+// The New Monthly Income sim fits a line through (live BTC, live GMT) and this anchor.
+const GMT_ANCHOR_BTC  = 120000;
+const GMT_ANCHOR_GMT  = 0.52;
 // GoMining quotes a SUBSIDY-ONLY sats/TH/day (block reward, no tx fees). Adding live
 // mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
 // subsidy-only at current difficulty ≈ 45, matching the GoMining app. Bump at each halving.
@@ -2209,9 +2213,15 @@ function updateProjCell(){
   const sel=document.getElementById('projBtcSelect');
   const bp=parseFloat(sel.value);
   const isLive=bp===p.cur;
-  // GMT tracks BTC at the same ratio (BTC up -> GMT up proportionally), so the
-  // GMT-denominated staking income scales with the simulated BTC price.
-  const gmtScale=p.cur>0?bp/p.cur:1;
+  // GMT tracks BTC. Fit a line through (live BTC, live GMT) and the observed
+  // anchor (BTC $120k -> GMT $0.52); GMT-denominated staking scales by that.
+  let gmtScale=1;
+  if(p.gp>0&&p.cur>0){
+    if(Math.abs(GMT_ANCHOR_BTC-p.cur)>1){
+      const slope=(GMT_ANCHOR_GMT-p.gp)/(GMT_ANCHOR_BTC-p.cur);
+      gmtScale=Math.max(0,p.gp+(bp-p.cur)*slope)/p.gp;
+    }else{gmtScale=bp/p.cur;}
+  }
   // After investment
   const after=moAtBTC({th:p.th,wth:p.wth,totD:p.totD,grossBTC:p.grossBTC,stakingMo:p.moStakingUSD,ambMo:p.moAmbUSD},bp,gmtScale);
   // Current (before)
