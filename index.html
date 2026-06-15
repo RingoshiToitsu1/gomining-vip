@@ -556,6 +556,20 @@ input[type=number]{-moz-appearance:textfield}
 .sp-new-btn{background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;border:none;box-shadow:0 3px 12px rgba(245,166,35,.25)}
 .sp-new-btn:hover{filter:brightness(1.06)}
 .sp-form{max-width:600px;margin:0 auto}
+/* Edit Setup full page: centered, compact 3-col grid that fits without scrolling */
+#secInputs .sp-page-inner{padding-bottom:1.5rem}
+#secInputs .sp-form{max-width:900px;text-align:center}
+#secInputs .sp-form .pi-title{margin-bottom:.25rem}
+#secInputs .sp-form .pi-subtitle{margin-bottom:.7rem}
+#secInputs .input-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem .8rem;max-width:840px;margin:.6rem auto 0}
+#secInputs .field{text-align:center}
+#secInputs .field label{display:block;text-align:center;font-size:.78rem;margin-bottom:.25rem}
+#secInputs .field-input{margin:0 auto}
+#secInputs .toggle-row{justify-content:center}
+#secInputs #edToggles{justify-content:center;margin-top:.7rem}
+#secInputs #ambassadorFields{margin-left:auto;margin-right:auto}
+@media(max-width:820px){#secInputs .input-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){#secInputs .input-grid{grid-template-columns:1fr}}
 .sp-form .pi-title,.sp-form .pi-subtitle{text-align:center}
 /* Capital Planner popout: center-justify all of its data/labels */
 #plannerIntro .sp-form{text-align:center}
@@ -1054,7 +1068,7 @@ input[type=number]{-moz-appearance:textfield}
           <div class="field-input"><input type="number" id="inMiningMode" value="0.83" step="0.01" min="0"><span class="unit">%</span></div>
         </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:1.2rem;margin-top:.8rem">
+      <div id="edToggles" style="display:flex;flex-wrap:wrap;gap:1rem 1.4rem;margin-top:.8rem">
         <div class="toggle-row">
           <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
           <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak active (10+ consecutive days = 3% discount)</span>
