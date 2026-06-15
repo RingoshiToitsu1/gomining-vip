@@ -576,10 +576,13 @@ input[type=number]{-moz-appearance:textfield}
 #secInputs .ed-fld input[type=number]{flex:1;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;text-align:right;font-family:var(--mono);font-size:.88rem;color:var(--text);field-sizing:normal}
 #secInputs .ed-fld .unit{flex:0 0 auto;color:var(--purple-soft);font-size:.78rem;font-weight:700;font-family:var(--mono);display:inline-flex;align-items:center}
 #secInputs .ed-fld .unit .gmt-logo{width:16px;height:16px;vertical-align:middle}
-#secInputs .ed-fld-sel{cursor:pointer}
-#secInputs .ed-fld-sel-input{flex:1;min-width:0;appearance:none;-webkit-appearance:none;-moz-appearance:none;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;text-align:right;text-align-last:right;padding-right:20px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 2px center}
-#secInputs .ed-fld-sel-input option{background:var(--bg-card);color:var(--text);font-weight:600}
-#secInputs .ed-fld-sel:hover{border-color:var(--purple)}
+#secInputs .ed-sel-row{display:flex;gap:.45rem;align-items:stretch}
+#secInputs .ed-dd{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-color:var(--bg-input);border:1px solid var(--border);border-radius:9px;outline:none;color:var(--text);font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;text-align:left;text-align-last:left;padding:.5rem 26px .5rem .7rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F7B84E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;transition:border-color .15s}
+#secInputs .ed-dd-setup{flex:1;min-width:0}
+#secInputs .ed-dd-cur{flex:0 0 auto}
+#secInputs .ed-dd option{background:var(--bg-card);color:var(--text);font-weight:600}
+#secInputs .ed-dd:hover{border-color:var(--purple)}
+#secInputs .ed-dd:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 #secInputs .ed-greedy-grid{margin-top:.35rem}
 #secInputs .ed-toggles{display:flex;flex-direction:column;gap:0}
 #secInputs .toggle-row.ed-toggle{justify-content:flex-start;padding:.2rem 0;gap:.5rem}
@@ -606,7 +609,7 @@ input[type=number]{-moz-appearance:textfield}
   #secInputs .ed-fields{gap:.3rem}
   #secInputs .ed-fld{padding:.4rem .55rem}
   #secInputs .ed-fld-lbl{font-size:.7rem}
-  #secInputs .ed-fld input[type=number],#secInputs .ed-fld-sel-input{font-size:16px}
+  #secInputs .ed-fld input[type=number],#secInputs .ed-dd{font-size:16px}
   #secInputs .toggle-row.ed-toggle{padding:.13rem 0;gap:.45rem}
   #secInputs .toggle-label{font-size:.73rem}
   #secInputs .ed-saved-btns{margin-top:.4rem;gap:.32rem}
@@ -1057,19 +1060,13 @@ input[type=number]{-moz-appearance:textfield}
 
           <div class="ed-group">
             <div class="ed-group-title">Saved Setups</div>
-            <div class="ed-fields">
-              <label class="ed-fld ed-fld-sel">
-                <span class="ed-fld-lbl">Setup</span>
-                <select id="profileSelect" class="ed-fld-sel-input" onchange="onProfileChange()"><option value="">— No profile —</option></select>
-              </label>
-              <label class="ed-fld ed-fld-sel">
-                <span class="ed-fld-lbl">Currency</span>
-                <select id="inCurrency" class="ed-fld-sel-input" onchange="setCurrency(this.value)">
-                  <option value="USD">USD ($)</option>
-                  <option value="GBP">GBP (&pound;)</option>
-                  <option value="EUR">EUR (&euro;)</option>
-                </select>
-              </label>
+            <div class="ed-sel-row">
+              <select id="profileSelect" class="ed-dd ed-dd-setup" onchange="onProfileChange()" title="Saved setup"><option value="">Setup</option></select>
+              <select id="inCurrency" class="ed-dd ed-dd-cur" onchange="setCurrency(this.value)" title="Currency">
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (&pound;)</option>
+                <option value="EUR">EUR (&euro;)</option>
+              </select>
             </div>
             <div class="ed-saved-btns">
               <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
@@ -1974,7 +1971,7 @@ function renderProfileSelect(){
   const sel=$('profileSelect');if(!sel)return;
   const state=loadProfilesState();
   const cur=state.activeId||'';
-  sel.innerHTML='<option value="">— No profile —</option>'+
+  sel.innerHTML='<option value="">Setup</option>'+
     state.profiles.map(p=>`<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(p.name)}</option>`).join('');
   const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
 }
