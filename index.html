@@ -2440,7 +2440,7 @@ function renderPlanner(i,m){
     if(minerShortfallUSD>0)ah+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
   if(a.addGreedy>0){
-    ah+=`<strong style="color:var(--cyan)">Greedy machine first:</strong> +${fN(a.addGreedy,1)} TH of new hashrate upgrades your Greedy Machine to ${fN(a.greedyTot,0)} TH${a.greedyTot>=GREEDY_CAP?' (5k cap reached — overflow mints standalone TH)':''} before standalone TH. <span style="color:var(--text3)">This growth counts toward VIP; only the initial ${fN(a.gInit||0,0)} TH marketplace purchase doesn't.</span><br>`;
+    ah+=`<strong style="color:var(--cyan)">Greedy machine first:</strong> +${fN(a.addGreedy,1)} TH of new hashrate upgrades your Greedy Machine to ${fN(a.greedyTot,0)} TH${a.greedyTot>=GREEDY_CAP?' (5k cap reached — overflow mints standalone TH)':''} before standalone TH.<br>`;
   }
   if(!i.payG){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
@@ -2458,7 +2458,6 @@ function renderPlanner(i,m){
   }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
     ah+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
   }
-  if(i.cap>0)ah+=`<br><span style="color:var(--text4);font-size:.72rem">Includes a ${fN(USD_GMT_FEE*100,0)}% fee on converting USD &rarr; GMT (locking &amp; TH minting). Existing GMT on hand is unaffected.</span>`;
   ah+='</div>';
 
   // Visual allocation split (shown up top, above the cards): TH spend vs GMT lock
