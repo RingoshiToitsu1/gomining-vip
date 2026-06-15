@@ -1423,6 +1423,10 @@ const fB=v=>v.toFixed(8)+' BTC';
 const fU=v=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})};
 const fP=v=>v.toFixed(2)+'%';
 const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+// Compact formatters for chart axis labels (keep them narrow so monthly values
+// don't overflow the y-axis gutter).
+function fAxisUSD(v){const sym=({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$';const a=Math.abs(v*S.fxRate);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:a>=10?1:2);return (v<0?'-':'')+sym+s;}
+function fAxisGMT(v){const a=Math.abs(v);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:2);return s+' GMT';}
 
 // ---- SECTIONS ----
 function toggleSection(id){document.getElementById(id).classList.toggle('collapsed')}
@@ -3150,6 +3154,9 @@ function computeSetupProjection(){
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
   </div>`;
   out.innerHTML=h;
+  // Chart renders in Daily/USD by default — keep the toggle state in sync.
+  window._reinvestUnit='usd';
+  window._reinvestPeriod='day';
 }
 
 function buildReinvestXLabels(days){
@@ -3218,8 +3225,8 @@ function buildReinvestChart(daily,days,gp){
       <path d="${line}" id="riChartLine" fill="none" stroke="#4ecffa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#4ecffa" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
       <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#fff" stroke-width="1.5" opacity="0"/>
-      <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMax">${fU(yMax)}</text>
-      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMid">${fU(yMax/2)}</text>
+      <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMax">${fAxisUSD(yMax)}</text>
+      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
       <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace">0</text>
       ${xLabelHtml}
     </svg>
@@ -3237,7 +3244,7 @@ function riChartUpdateAxis(){
   const ys=c.pts.map(p=>p.v);
   const yMax=Math.max(...ys,1e-9);
   const scaled=unit==='gmt'?(yMax/c.gp)*mult:yMax*mult;
-  const fmt=v=>unit==='gmt'?fN(v,v>=1000?0:2)+' GMT':fU(v);
+  const fmt=v=>unit==='gmt'?fAxisGMT(v):fAxisUSD(v);
   const aMax=document.getElementById('riAxisMax');
   const aMid=document.getElementById('riAxisMid');
   if(aMax)aMax.textContent=fmt(scaled);
@@ -3256,16 +3263,16 @@ function riChartUpdateAxis(){
 
 function setReinvestUnit(unit){
   window._reinvestUnit=unit;
-  document.querySelectorAll('#reinvestResult [data-reinvest-unit]').forEach(el=>{
+  document.querySelectorAll('#reinvestResult [data-reinvest-unit],#spResult [data-reinvest-unit]').forEach(el=>{
     el.style.display=el.dataset.reinvestUnit===unit?'':'none';
   });
-  document.querySelectorAll('#reinvestResult [data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
+  document.querySelectorAll('#reinvestResult [data-unit],#spResult [data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit));
   riChartUpdateAxis();
 }
 
 function setReinvestPeriod(period){
   window._reinvestPeriod=period;
-  document.querySelectorAll('#reinvestResult [data-period]').forEach(b=>b.classList.toggle('active',b.dataset.period===period));
+  document.querySelectorAll('#reinvestResult [data-period],#spResult [data-period]').forEach(b=>b.classList.toggle('active',b.dataset.period===period));
   riChartUpdateAxis();
 }
 
