@@ -1091,6 +1091,10 @@ input[type=number]{-moz-appearance:textfield}
           </div>
         </div>
 
+        <div class="sp-run-wrap" style="margin-top:.5rem">
+          <button class="ri-btn" id="edEnterBtn" onclick="submitEditSetup()">&#10003; Enter</button>
+        </div>
+
         <!-- Advanced inputs kept for the math, hidden from the form -->
         <div style="display:none">
           <input type="number" id="inLockAPR" value="21.85">
@@ -1100,6 +1104,10 @@ input[type=number]{-moz-appearance:textfield}
           <span id="cptAutoHint"></span>
         </div>
       </div>
+    </div>
+    <div class="sp-page-loading" id="edLoading" style="display:none">
+      <div class="sp-spinner"></div>
+      <div class="sp-loading-txt">Updating your setup…</div>
     </div>
   </div>
 
@@ -1966,6 +1974,17 @@ function closeEditSetup(){
   const sec=$('secInputs');if(sec)sec.style.display='none';
   document.body.style.overflow='';
   refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
+}
+// "Enter": brief load, then apply and return to My Setup with the count-up.
+function submitEditSetup(){
+  const btn=$('edEnterBtn'),load=$('edLoading');
+  if(btn)btn.disabled=true;
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    if(load)load.style.display='none';
+    if(btn)btn.disabled=false;
+    closeEditSetup();
+  },750);
 }
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
 function toggleGreedyFields(){
