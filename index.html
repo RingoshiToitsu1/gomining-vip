@@ -2894,34 +2894,31 @@ function renderPlanner(i,m){
   // --- Display ---
   let ah='';
 
-  // Explanation
+  // Explanation — only noteworthy states (the split itself is shown in the cards below).
+  // The greedy-machine-first allocation is computed in `a` and used by the projections, but
+  // not surfaced here (backend detail). The box is omitted entirely when there's nothing to say.
   const usdToTH=usdCapAfter-usdSpentOnGMT;
-  ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">`;
+  let exp='';
   if(mpTH>0){
-    ah+=`<strong style="color:var(--purple-soft)">Marketplace miner:</strong> +${fN(mpTH,0)} TH for ${fN(mpGmtCost,0)} GMT`;
-    if(usdForMiner>0)ah+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
-    else ah+=` (from your GMT)`;
-    ah+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
-    if(minerShortfallUSD>0)ah+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
-  }
-  if(a.addGreedy>0){
-    ah+=`<strong style="color:var(--cyan)">Greedy machine first:</strong> +${fN(a.addGreedy,1)} TH of new hashrate upgrades your Greedy Machine to ${fN(a.greedyTot,0)} TH${a.greedyTot>=GREEDY_CAP?' (5k cap reached — overflow mints standalone TH)':''} before standalone TH.<br>`;
+    exp+=`<strong style="color:var(--purple-soft)">Marketplace miner:</strong> +${fN(mpTH,0)} TH for ${fN(mpGmtCost,0)} GMT`;
+    if(usdForMiner>0)exp+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
+    else exp+=` (from your GMT)`;
+    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
+    if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
   if(!i.payG){
-    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
+    exp+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
   }else if(!canCover20){
-    ah+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
+    exp+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
   }else if(gmtLock<=0){
-    ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
-  }else{
-    ah+=`<strong style="color:var(--cyan)">Optimal split below.</strong> Capital is balanced across locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — see the breakdown.`;
+    exp+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
   }
   if(sol.bonusActive){
-    ah+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
+    exp+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
   }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
-    ah+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
+    exp+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
   }
-  ah+='</div>';
+  if(exp.trim())ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">${exp}</div>`;
 
   // Optimal allocation split — efficiency vs hashrate vs discount (greedy marginal allocator).
   // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee. The per-miner
