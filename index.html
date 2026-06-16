@@ -262,6 +262,26 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- SECTION SUBTITLE ---- */
 .sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:.35rem}
 .sub-title.centered{display:block;text-align:center;border-bottom:none;margin:1.2rem 0 .5rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+/* Efficiency vs hashrate vs discount comparison */
+.eff-verdict{background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.03));border:1px solid var(--purple);border-radius:var(--radius-sm);padding:.7rem .9rem;margin-bottom:.7rem}
+.eff-verdict-main{font-size:.9rem;font-weight:700;color:var(--text)}
+.eff-verdict-main strong{color:var(--purple-soft)}
+.eff-verdict-roi{color:var(--green);font-weight:800;font-size:.82rem;white-space:nowrap}
+.eff-verdict-sub{font-size:.74rem;color:var(--text3);line-height:1.5;margin-top:.35rem}
+.eff-verdict-sub strong{color:var(--text)}
+.eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
+.eff-card{position:relative;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .65rem}
+.eff-card.eff-best{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 2px 14px rgba(80,220,140,.12)}
+.eff-tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--green);color:#062;font-size:.58rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.12rem .5rem;border-radius:8px;white-space:nowrap}
+.eff-card-h{font-size:.74rem;font-weight:700;color:var(--text2);text-align:center;margin-bottom:.3rem;min-height:2em;display:flex;align-items:center;justify-content:center}
+.eff-card-mo{font-size:1.05rem;font-weight:800;text-align:center;margin-bottom:.5rem;font-family:var(--mono)}
+.eff-card-mo.pos{color:var(--green)}.eff-card-mo.neg{color:var(--text4)}
+.eff-card-rows{display:flex;flex-direction:column;gap:.3rem}
+.eff-row{display:flex;justify-content:space-between;gap:.4rem;font-size:.68rem;color:var(--text3)}
+.eff-row span:last-child{color:var(--text);font-weight:600;text-align:right}
+.eff-sub{color:var(--text4);font-weight:400}
+.eff-foot{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.6rem;padding:.5rem .7rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)}
+@media(max-width:600px){.eff-grid{grid-template-columns:1fr;gap:.45rem}.eff-card{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.3rem .7rem;padding:.6rem .7rem}.eff-card .eff-tag{position:static;transform:none;justify-self:start;grid-column:1/-1}.eff-card-h{min-height:0;text-align:left;justify-content:flex-start;margin:0}.eff-card-mo{text-align:right;margin:0;font-size:.95rem}.eff-card-rows{grid-column:1/-1;margin-top:.2rem}}
 
 /* ---- GMT TIER TABLE ---- */
 .gmt-tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin:.5rem 0}
@@ -540,6 +560,8 @@ input[type=number]{-moz-appearance:textfield}
 .pi-body{padding:2rem 2rem 1.2rem}
 .pi-title{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:.4rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .pi-subtitle{text-align:center;color:var(--text2);font-size:.82rem;line-height:1.6;margin-bottom:1.5rem}
+.pi-note-12w{max-width:420px;margin:-.6rem auto 1.4rem;background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.03));border:1px solid var(--purple);border-radius:var(--radius-sm);padding:.6rem .85rem;font-size:.72rem;line-height:1.55;color:var(--text2);text-align:left}
+.pi-note-12w strong{color:var(--purple-soft)}
 .pi-steps{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem}
 .pi-step{display:flex;align-items:flex-start;gap:.8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;transition:var(--transition)}
 .pi-step:hover{border-color:var(--purple);transform:translateY(-1px)}
@@ -1350,6 +1372,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="sp-form">
       <div class="pi-title">Capital Planner</div>
       <div class="pi-subtitle">Enter what you have to deploy. The planner will tell you how much to lock, how much to convert to TH, and keep a 2-day fee reserve.</div>
+      <div class="pi-note-12w">⚡ <strong>New: 12 W/TH miners.</strong> New machines are now 12 W/TH. The planner weighs <strong>upgrading efficiency</strong>, <strong>buying hashrate</strong> (cheap 15 W upgrades to the 5,000 TH cap, or new 12 W machines), and <strong>locking GMT</strong> — and tells you which wins at today's BTC price in the results.</div>
       <div style="margin:1.4rem auto 0;max-width:340px;display:flex;flex-direction:column;gap:1rem">
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
@@ -1577,6 +1600,97 @@ function thForBudget(budget){
     if(mid*estimateCPT(mid)<budget)lo=mid;else hi=mid;
   }
   return(lo+hi)/2;
+}
+
+/* ============================================================
+   12 W/TH economics — new-miner pricing & efficiency upgrades
+   ============================================================ */
+// New miners can ONLY be created at 12 W/TH now, at this tiered $/TH (tiers down with block size).
+const TH_TIERS_12W=[
+  {th:1,cpt:21.99},{th:2,cpt:21.50},{th:4,cpt:21.00},{th:8,cpt:20.75},
+  {th:16,cpt:20.50},{th:32,cpt:20.28},{th:48,cpt:20.06},{th:64,cpt:19.86},
+  {th:96,cpt:19.66},{th:128,cpt:19.46},{th:192,cpt:19.27},{th:256,cpt:19.07},
+  {th:384,cpt:18.88},{th:512,cpt:18.69},{th:768,cpt:18.51},{th:1024,cpt:18.32},
+  {th:1536,cpt:18.14},{th:2560,cpt:17.96},{th:3584,cpt:17.78},{th:5000,cpt:17.60}
+];
+const EFF_UPGRADE_STEP=2.67;  // $/TH to improve efficiency by 1 W/TH toward 12
+const EFF_BEST=12;            // best efficiency available now
+const EFF_BASE_MAX=15;        // ≥15 W/TH is priced as 15 for upgrades; also the marketplace-machine baseline
+const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
+
+// Interpolate any tiered $/TH price table.
+function cptTier(tiers,th){
+  if(th<=0)return tiers[0].cpt;
+  if(th>=tiers[tiers.length-1].th)return tiers[tiers.length-1].cpt;
+  for(let i=0;i<tiers.length-1;i++){const lo=tiers[i],hi=tiers[i+1];
+    if(th>=lo.th&&th<=hi.th)return lo.cpt+(hi.cpt-lo.cpt)*((th-lo.th)/(hi.th-lo.th));}
+  return tiers[0].cpt;
+}
+function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+function thForBudgetTiers(budget,tiers){
+  if(budget<=0)return 0;
+  let lo=0,hi=budget/tiers[tiers.length-1].cpt;
+  for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(mid*cptTier(tiers,mid)<budget)lo=mid;else hi=mid;}
+  return(lo+hi)/2;
+}
+// One-time $/TH to upgrade existing hashrate's efficiency down to 12 W/TH.
+// A farm at/above 15 W/TH is priced as 15 → 3 steps × $2.67 = $8.01/TH.
+function effUpgradeCostPerTH(curW){return EFF_UPGRADE_STEP*Math.max(0,Math.min(curW,EFF_BASE_MAX)-EFF_BEST);}
+
+// Net monthly USD for a setup, optionally at a hypothetical BTC price (always restores S.btcPrice).
+function netMonthlyAt(i,bpOverride){
+  const save=S.btcPrice;
+  if(bpOverride!=null&&isFinite(bpOverride))S.btcPrice=bpOverride;
+  let mo=0;try{const c=calc(i);mo=c.net*c.bp*30;}finally{S.btcPrice=save;}
+  return mo;
+}
+
+// Marginal net-monthly impact of deploying budget K (USD) down each capital path, at price bp.
+// Returns {base, th15, th12, upg, gmt} where each path has {mo, usd, ...}. mo = Δ net monthly USD.
+function evalPaths(i,K,bp){
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, eff=K*(1-fee), curW=i.wth;
+  const base=netMonthlyAt(i,bp), out={base};
+  // 15 W TH — upgrade an existing machine up to the 5,000 TH cap
+  {
+    const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
+    let dth=Math.min(room,want), usd=K, capped=false;
+    if(want>room&&room>0){capped=true;usd=(room*cptTier(TH_TIERS,i.th+room/2))/(1-fee);}
+    if(room<=0){dth=0;usd=0;}
+    const nth=i.th+dth, nwth=nth>0?(i.th*curW+dth*EFF_BASE_MAX)/nth:curW;
+    out.th15={dth,usd,room,capped,mo:netMonthlyAt({...i,th:nth,wth:nwth},bp)-base};
+  }
+  // 12 W TH — create a new machine (no cap)
+  {
+    const dth=thForBudgetTiers(eff,TH_TIERS_12W), nth=i.th+dth;
+    const nwth=nth>0?(i.th*curW+dth*EFF_BEST)/nth:curW;
+    out.th12={dth,usd:K,mo:netMonthlyAt({...i,th:nth,wth:nwth},bp)-base};
+  }
+  // Upgrade efficiency of existing TH down to 12 W
+  {
+    const cpt=effUpgradeCostPerTH(curW);let dth=0,nwth=curW,usd=0;
+    if(cpt>0&&i.th>0){dth=Math.min(i.th,eff/cpt);nwth=((i.th-dth)*curW+dth*EFF_BEST)/i.th;usd=(dth*cpt)/(1-fee);}
+    out.upg={dth,cpt,usd,na:cpt<=0,newWth:nwth,mo:netMonthlyAt({...i,wth:nwth},bp)-base};
+  }
+  // Lock GMT for token discount (+ staking yield on the new lock)
+  {
+    const dgmt=eff/gp, staking=dgmt*(i.apr||0)/100/12*gp;
+    out.gmt={dgmt,usd:K,staking,mo:(netMonthlyAt({...i,gl:i.gl+dgmt},bp)-base)+staking};
+  }
+  return out;
+}
+
+// BTC price where creating new 12 W machines starts to beat buying+upgrading a 15 W machine.
+// Below this price the lower maintenance of 12 W wins; above it, cheaper raw 15 W hashrate wins.
+// Analytic (holds discount fixed): ΔTH15·(g−m15) = ΔTH12·(g−m12) ⇒ g, then bp = g / dbt.
+function btcCrossover(i,K){
+  const fee=USD_GMT_FEE, eff=K*(1-fee), room=Math.max(0,MINER_CAP-i.th);
+  const dth15=thForBudget(eff), dth12=thForBudgetTiers(eff,TH_TIERS_12W);
+  if(room<dth15)return{capped:true,bp:null};      // existing machine can't absorb the budget at 15 W
+  if(dth15<=dth12)return{capped:false,bp:null};    // 15 W not actually cheaper (shouldn't happen)
+  const d=(calc(i).totD)/100, dbt=dailyBTCperTH();
+  const m15=(0.0012*EFF_BASE_MAX+0.0089)*(1-d), m12=(0.0012*EFF_BEST+0.0089)*(1-d);
+  const g=(dth15*m15-dth12*m12)/(dth15-dth12), bp=dbt>0?g/dbt:null;
+  return{capped:false,bp:(bp&&bp>0&&isFinite(bp))?bp:null};
 }
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
@@ -2611,6 +2725,60 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   };
 }
 
+// Side-by-side comparison: spend the next chunk of capital on efficiency vs hashrate vs discount.
+function renderEfficiencyComparison(i,K){
+  if(!i||!(K>0))return '';
+  const bp=S.btcPrice, p=evalPaths(i,K,bp), cross=btcCrossover(i,K);
+  const fmtMo=v=>(v>=0?'+':'−')+fU(Math.abs(v),0)+'/mo';
+  const roi=x=>x.usd>0&&x.mo>0?(x.mo*12/x.usd*100):0;
+  const payback=x=>x.mo>0?x.usd/x.mo:Infinity;
+  const pbTxt=x=>{const m=payback(x);return isFinite(m)?(m<24?fN(m,1)+' mo':fN(m/12,1)+' yr'):'—';};
+
+  // Choose the "Buy More TH" source: cheaper 15 W machine upgrade vs a new 12 W machine.
+  let th,thW,thNote;
+  if(p.th15.dth<=0){th=p.th12;thW=12;thNote=`New 12 W machine — your machine is at the ${fN(MINER_CAP,0)} TH cap.`;}
+  else if(p.th12.mo>p.th15.mo){th=p.th12;thW=12;thNote=`Creating new 12 W machines wins at today's BTC (${fU(bp,0)}) — lower maintenance outweighs the higher price.`;}
+  else{th=p.th15;thW=15;thNote=p.th15.capped?`Upgrade a 15 W machine to the ${fN(MINER_CAP,0)} TH cap (${fU(th.usd,0)}), then create 12 W machines for any remainder.`:`Upgrade a 15 W marketplace machine — the most hashrate per dollar at today's BTC.`;}
+
+  const cards=[{key:'upg',obj:p.upg,label:'Upgrade to 12 W/TH'},{key:'th',obj:th,label:'Buy More TH'},{key:'gmt',obj:p.gmt,label:'Lock GMT'}]
+    .filter(c=>!(c.key==='upg'&&p.upg.na));
+  let best=null;cards.forEach(c=>{const r=roi(c.obj);if(c.obj.mo>0&&(!best||r>best.r))best={key:c.key,label:c.label,r};});
+
+  let h=`<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div>`;
+  h+=`<div class="eff-verdict">`;
+  if(best)h+=`<div class="eff-verdict-main">Best return on your next ${fU(K,0)}: <strong>${best.label}</strong> <span class="eff-verdict-roi">≈ ${fN(best.r,0)}%/yr</span></div>`;
+  else h+=`<div class="eff-verdict-main">No path adds net income at today's prices.</div>`;
+  if(cross.bp)h+=`<div class="eff-verdict-sub">New 12 W machines beat buying &amp; upgrading a 15 W machine once BTC falls below <strong>${fU(cross.bp,0)}</strong> (today ${fU(bp,0)}). Above that, cheaper raw 15 W hashrate wins.</div>`;
+  else if(cross.capped)h+=`<div class="eff-verdict-sub">Your machine is near the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.</div>`;
+  h+=`</div>`;
+
+  const card=(label,obj,subs,isBest)=>{
+    let s=`<div class="eff-card${isBest?' eff-best':''}">`;
+    if(isBest)s+=`<div class="eff-tag">Best ROI</div>`;
+    s+=`<div class="eff-card-h">${label}</div><div class="eff-card-mo ${obj.mo>=0?'pos':'neg'}">${fmtMo(obj.mo)}</div><div class="eff-card-rows">`;
+    subs.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
+    return s+`</div></div>`;
+  };
+  let g=`<div class="eff-grid">`;
+  if(!p.upg.na)g+=card('Upgrade to 12 W/TH',p.upg,[
+    ['Efficiency',`${fN(i.wth,2)} → ${fN(p.upg.newWth,2)}`],
+    ['Cost',`${fU(p.upg.usd,0)} <span class="eff-sub">(${fU(p.upg.cpt)}/TH)</span>`],
+    ['ROI · payback',`${fN(roi(p.upg),0)}%/yr · ${pbTxt(p.upg)}`]
+  ],best&&best.key==='upg');
+  g+=card('Buy More TH',th,[
+    ['Adds',`+${fN(th.dth,1)} TH @ ${thW}W`],
+    ['Cost',`${fU(th.usd,0)} <span class="eff-sub">(${fU(thW===12?estimateCPT12(th.dth):estimateCPT(i.th+th.dth))}/TH)</span>`],
+    ['ROI · payback',`${fN(roi(th),0)}%/yr · ${pbTxt(th)}`]
+  ],best&&best.key==='th');
+  g+=card('Lock GMT',p.gmt,[
+    ['Locks',`+${fN(p.gmt.dgmt,0)} GMT`],
+    ['Benefit',`discount + ${fU(p.gmt.staking,0)}/mo stake`],
+    ['ROI · payback',`${fN(roi(p.gmt),0)}%/yr · ${pbTxt(p.gmt)}`]
+  ],best&&best.key==='gmt');
+  g+=`</div><div class="eff-foot">${thNote}</div>`;
+  return h+g;
+}
+
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
   const a=solvePlannerAllocation(i,bp,gp,dbt);
@@ -2733,6 +2901,9 @@ function renderPlanner(i,m){
     if(usdSpentOnGMT>0)ah+=row('→ Buy GMT to lock',`${fU(usdSpentOnGMT)}<span class="sub">${fN(gmtFromUSD,0)} GMT</span>`,'purple');
     if(usdToTH>0)ah+=row('→ Buy TH',`${fU(usdToTH)}`,'cyan');
   }
+
+  // Efficiency-upgrade vs hashrate vs discount, for the deployable capital.
+  ah+=renderEfficiencyComparison(i,totalValue);
 
   $('allocDisplay').innerHTML=ah;
 
