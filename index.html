@@ -272,12 +272,16 @@ input[type=number]{-moz-appearance:textfield}
 .eff-control{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.45rem;font-size:.76rem;color:var(--text3);margin:-.1rem 0 .7rem}
 .eff-control input{width:88px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.82rem;font-weight:700;text-align:center;padding:.4rem .5rem;outline:none}
 .eff-control input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.eff-splitbar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:.7rem;border:1px solid var(--border)}
+.eff-splitbar>div{display:flex;align-items:center;justify-content:center;color:#06121f;font-size:.66rem;font-weight:800;min-width:0;white-space:nowrap}
+.eff-card-sub2{text-align:center;font-size:.74rem;color:var(--text3);margin:-.35rem 0 .5rem;font-family:var(--mono)}
+.eff-card-dim{opacity:.45}
 .eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
 .eff-card{position:relative;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .65rem}
 .eff-card.eff-best{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 2px 14px rgba(80,220,140,.12)}
 .eff-tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--green);color:#062;font-size:.58rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.12rem .5rem;border-radius:8px;white-space:nowrap}
 .eff-card-h{font-size:.74rem;font-weight:700;color:var(--text2);text-align:center;margin-bottom:.3rem;min-height:2em;display:flex;align-items:center;justify-content:center}
-.eff-card-mo{font-size:1.05rem;font-weight:800;text-align:center;margin-bottom:.5rem;font-family:var(--mono)}
+.eff-card-mo{font-size:1.25rem;font-weight:800;text-align:center;margin-bottom:.2rem;font-family:var(--mono);color:var(--purple-soft)}
 .eff-card-mo.pos{color:var(--green)}.eff-card-mo.neg{color:var(--text4)}
 .eff-card-rows{display:flex;flex-direction:column;gap:.3rem}
 .eff-row{display:flex;justify-content:space-between;gap:.4rem;font-size:.68rem;color:var(--text3)}
@@ -1709,6 +1713,61 @@ function btcCrossover(i,eff){
   const g=(dth15*m15-dth12*m12)/(dth15-dth12), bp=dbt>0?g/dbt:null;
   return{capped:want>room,bp:(bp&&bp>0&&isFinite(bp))?bp:null};
 }
+
+// Greedy marginal allocator: spends capital where the NEXT dollar earns most, re-running the real
+// calc() each step so the token discount is ALWAYS respected — adding TH erodes coverage, which
+// raises the value of locking GMT, so locks and TH interleave to HOLD the 20% discount. Returns the
+// optimal split across {lock GMT, buy TH (15 W upgrade / 12 W new), upgrade efficiency}.
+function optimalSplit(i,gmtUSD,usdUSD,bp,minerTH){
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, aprMo=(i.apr||0)/100/12;
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD, eff=gmtUSD+usdUSD*(1-fee), ppRate=K>0?eff/K:1-fee;
+  if(eff<=0)return null;
+  const minerCap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th)), cptU=effUpgradeCostPerTH(i.wth);
+  const STEPS=60, incr=eff/STEPS;
+  const s={gl:0,th15:0,th12:0,effTH:0};   // amounts ADDED (gl in GMT, th/eff in TH)
+  const spent={lock:0,th:0,eff:0};        // eff-USD allocated per category
+  const setupOf=st=>{
+    const totStand=i.th+st.th15+st.th12;
+    const wsum=(i.th-st.effTH)*i.wth+st.effTH*EFF_BEST+st.th15*EFF_BASE_MAX+st.th12*EFF_BEST;
+    return {...i,th:totStand,wth:totStand>0?wsum/totStand:i.wth,gl:i.gl+st.gl};
+  };
+  const objOf=st=>{const c=calc(setupOf(st));return c.net*c.bp*30+st.gl*aprMo*gp;};
+  const base=objOf(s); let cur=base;
+  for(let step=0;step<STEPS;step++){
+    const c=calc(setupOf(s));
+    // Lock GMT: forward ROI to the next discount step; pure staking once at the 20% cap.
+    let lockROI;
+    if(c.eTok>=20){lockROI=aprMo*12;}
+    else{
+      const targetCov=(c.eTok+1)*18, needGMT=Math.max(incr/gp,targetCov*c.feesGMT-(i.gl+s.gl+i.gw));
+      const stepSaveMo=c.f.t*0.01*(1-cf)*bp*30;
+      lockROI=(stepSaveMo*12)/(needGMT*gp)+aprMo*12;
+    }
+    // Buy TH: 15 W upgrade while the machine has room, else a new 12 W machine.
+    const room=Math.max(0,MINER_CAP-(i.th+s.th15)), th15Mode=room>0.01;
+    const thDth=th15Mode?Math.min(room,thForBudget(incr)):thForBudgetTiers(incr,TH_TIERS_12W);
+    const thState={...s};if(th15Mode)thState.th15+=thDth;else thState.th12+=thDth;
+    const thROI=thDth>0?(objOf(thState)-cur)*12/incr:-Infinity;
+    // Upgrade efficiency of the chosen miner.
+    let effROI=-Infinity,effDth=0;
+    if(cptU>0&&s.effTH<minerCap-0.01){
+      effDth=Math.min(minerCap-s.effTH,incr/cptU);
+      const effState={...s};effState.effTH+=effDth;
+      effROI=(objOf(effState)-cur)*12/incr;
+    }
+    const opts=[['lock',lockROI],['th',thROI],['eff',effROI]].sort((a,b)=>b[1]-a[1]);
+    const winner=opts[0][0];
+    if(winner==='lock'){s.gl+=incr/gp;spent.lock+=incr;}
+    else if(winner==='th'){if(th15Mode)s.th15+=thDth;else s.th12+=thDth;spent.th+=incr;}
+    else{s.effTH+=effDth;spent.eff+=incr;}
+    cur=objOf(s);
+  }
+  const fin=setupOf(s);
+  return {spent,eff,K,ppRate,gp,totalMo:cur-base,baseMo:base,
+    lockPct:spent.lock/eff*100,thPct:spent.th/eff*100,effPct:spent.eff/eff*100,
+    th15:s.th15,th12:s.th12,effTH:s.effTH,glAdd:s.gl,finWth:fin.wth,finTH:fin.th};
+}
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
   const el=document.getElementById(cptId);
@@ -2312,7 +2371,7 @@ function calc(i){
   }
   const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
-  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth,vipTH}
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth,vipTH,feesGMT,nonTokD,cov}
 }
 
 // ---- RENDER HELPERS ----
@@ -2761,64 +2820,54 @@ function updateEffCompare(){
   if(body)body.innerHTML=renderEfficiencyComparison(st.i,st.gmtUSD,st.usdUSD,m);
 }
 
-// Body of the comparison (verdict + 3 cards + footnote). minerTH = TH of the one miner to upgrade.
+// Body of the comparison: the OPTIMAL SPLIT of the capital + a breakdown card per bucket.
+// minerTH = TH of the one miner to upgrade (efficiency upgrades are per-machine).
 function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
   gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
   const K=gmtUSD+usdUSD;
   if(!i||!(K>0))return '';
-  const bp=S.btcPrice, fee=USD_GMT_FEE, eff=gmtUSD+usdUSD*(1-fee);
-  const p=evalPaths(i,gmtUSD,usdUSD,bp,minerTH), cross=btcCrossover(i,eff);
-  const allGMT=usdUSD<=0;   // funded entirely from GMT on hand → no conversion fee
-  const fmtMo=v=>(v>=0?'+':'−')+fU(Math.abs(v),0)+'/mo';
-  const roi=x=>x.usd>0&&x.mo>0?(x.mo*12/x.usd*100):0;
-  const payback=x=>x.mo>0?x.usd/x.mo:Infinity;
-  const pbTxt=x=>{const m=payback(x);return isFinite(m)?(m<24?fN(m,1)+' mo':fN(m/12,1)+' yr'):'—';};
-
-  // Choose the hashrate source: cheaper 15 W machine upgrade vs a new 12 W machine.
-  // A farm already above 12 W/TH with room under the cap upgrades its existing 15 W machine.
-  let th,thW,thLabel,thNote;
-  if(p.th15.dth<=0){th=p.th12;thW=12;thLabel='New 12 W Machine';thNote=`Your machine is at the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.`;}
-  else if(p.th12.mo>p.th15.mo){th=p.th12;thW=12;thLabel='New 12 W Machine';thNote=`At today's BTC (${fU(bp,0)}) a new 12 W machine wins — its lower maintenance protects your token discount and net margin. Upgrading your existing 15 W machine wins again above ${cross.bp?fU(cross.bp,0):'the crossover'}.`;}
-  else{th=p.th15;thW=15;thLabel='Upgrade Existing Machine';thNote=p.th15.capped?`Upgrade your existing 15 W machine to the ${fN(MINER_CAP,0)} TH cap (${fU(th.usd,0)}), then create 12 W machines for any remainder.`:`Your farm is ${fN(i.wth,2)} W/TH — the cheapest hashrate is upgrading your existing 15 W machine (up to the ${fN(MINER_CAP,0)} TH cap).`;}
-
-  const cards=[{key:'upg',obj:p.upg},{key:'th',obj:th},{key:'gmt',obj:p.gmt}]
-    .filter(c=>!(c.key==='upg'&&p.upg.na));
-  const labelOf={upg:'Upgrade Efficiency',th:thLabel,gmt:'Lock GMT'};
-  let best=null;cards.forEach(c=>{const r=roi(c.obj);if(c.obj.mo>0&&(!best||r>best.r))best={key:c.key,r};});
+  const bp=S.btcPrice, allGMT=usdUSD<=0;
+  const a=optimalSplit(i,gmtUSD,usdUSD,bp,minerTH);
+  if(!a)return '';
+  const cross=btcCrossover(i,a.eff);
+  const nom=v=>v/a.ppRate;                          // eff-USD → nominal capital deployed
+  const roiB=a.totalMo>0?a.totalMo*12/K*100:0;
+  const thW=a.th12>a.th15?12:15, thTot=a.th15+a.th12;
 
   let h=`<div class="eff-verdict">`;
-  if(best)h+=`<div class="eff-verdict-main">Put your ${fU(K,0)} into &rarr; <strong>${labelOf[best.key]}</strong> <span class="eff-verdict-roi">${fmtMo(best.key==='upg'?p.upg.mo:best.key==='th'?th.mo:p.gmt.mo)} · ${fN(best.r,0)}%/yr</span></div>`;
-  else h+=`<div class="eff-verdict-main">No growth path adds net income at today's prices — hold or lock for staking.</div>`;
-  if(cross.bp)h+=`<div class="eff-verdict-sub">Crossover &asymp; <strong>${fU(cross.bp,0)}</strong> (today ${fU(bp,0)}): above it, upgrading your existing 15 W machine wins (cheaper hashrate); below it, new 12 W machines win (lower maintenance).</div>`;
-  else if(cross.capped)h+=`<div class="eff-verdict-sub">Your machine is near the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.</div>`;
-  h+=`<div class="eff-verdict-sub">Assumes your 20% token discount is maintained (the allocation above secures it), so this is purely where growth capital earns most.${allGMT?' Funded from GMT on hand — no 2% conversion fee.':''}</div>`;
+  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(a.totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-sub">Allocated to maximise net income <strong>while holding your token discount</strong> — adding hashrate without locking GMT would drop coverage, so locks and TH are balanced automatically.${allGMT?' Funded from GMT on hand — no 2% conversion fee.':''}</div>`;
+  if(cross.bp)h+=`<div class="eff-verdict-sub">Hashrate goes into ${thW===12?'new 12 W machines':'your 15 W machine upgrade'} (crossover &asymp; ${fU(cross.bp,0)}, today ${fU(bp,0)} — above it 15 W wins, below it 12 W).</div>`;
   h+=`</div>`;
 
-  const card=(label,obj,subs,isBest)=>{
-    let s=`<div class="eff-card${isBest?' eff-best':''}">`;
-    if(isBest)s+=`<div class="eff-tag">Best ROI</div>`;
-    s+=`<div class="eff-card-h">${label}</div><div class="eff-card-mo ${obj.mo>=0?'pos':'neg'}">${fmtMo(obj.mo)}</div><div class="eff-card-rows">`;
-    subs.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
+  // Split bar
+  const segs=[[a.lockPct,'Lock GMT','var(--purple)'],[a.thPct,'Buy TH','var(--cyan)'],[a.effPct,'Upgrade Eff','var(--green)']];
+  let bar=`<div class="eff-splitbar">`;
+  segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
+  bar+=`</div>`;
+
+  const card=(label,p,amt,rows)=>{
+    let s=`<div class="eff-card${p<0.5?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
+    s+=`<div class="eff-card-mo">${fN(p,0)}%</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
+    rows.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
     return s+`</div></div>`;
   };
   let g=`<div class="eff-grid">`;
-  if(!p.upg.na)g+=card('Upgrade Efficiency',p.upg,[
-    ['Upgrades',`${fN(p.upg.dth,0)} TH &rarr; 12 W`],
-    ['Farm avg',`${fN(i.wth,2)} → ${fN(p.upg.newWth,2)} <span class="eff-sub">(${fU(p.upg.cpt)}/TH)</span>`],
-    ['ROI · payback',`${fN(roi(p.upg),0)}%/yr · ${pbTxt(p.upg)}`]
-  ],best&&best.key==='upg');
-  g+=card(thLabel,th,[
-    ['Adds',`+${fN(th.dth,1)} TH @ ${thW}W`],
-    ['Cost',`${fU(th.usd,0)} <span class="eff-sub">(${fU(thW===12?estimateCPT12(th.dth):estimateCPT(i.th+th.dth))}/TH)</span>`],
-    ['ROI · payback',`${fN(roi(th),0)}%/yr · ${pbTxt(th)}`]
-  ],best&&best.key==='th');
-  g+=card('Lock GMT',p.gmt,[
-    ['Locks',`+${fN(p.gmt.dgmt,0)} GMT`],
-    ['Benefit',`${fU(p.gmt.staking,0)}/mo staking yield`],
-    ['ROI · payback',`${fN(roi(p.gmt),0)}%/yr · ${pbTxt(p.gmt)}`]
-  ],best&&best.key==='gmt');
-  g+=`</div><div class="eff-foot">${thNote}</div>`;
-  return h+g;
+  g+=card('Lock GMT',a.lockPct,nom(a.spent.lock),[
+    ['Locks',a.glAdd>0?`+${fN(a.glAdd,0)} GMT`:'—'],
+    ['Effect',a.lockPct>0.5?'holds 20% discount':'—']
+  ]);
+  g+=card('Buy TH',a.thPct,nom(a.spent.th),[
+    ['Adds',thTot>0?`+${fN(thTot,1)} TH @ ${thW}W`:'—'],
+    ['Source',thTot>0?(thW===15?'15 W upgrade':'new 12 W machine'):'—']
+  ]);
+  g+=card('Upgrade Efficiency',a.effPct,nom(a.spent.eff),[
+    ['Upgrades',a.effTH>0?`${fN(a.effTH,0)} TH → 12 W`:'—'],
+    ['Farm avg',a.effTH>0?`${fN(i.wth,2)} → ${fN(a.finWth,2)}`:'—']
+  ]);
+  g+=`</div>`;
+  g+=`<div class="eff-foot">Result: <strong>${fN(a.finTH,0)} TH</strong> @ ${fN(a.finWth,2)} W/TH${a.glAdd>0?`, +${fN(a.glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(a.totalMo,0)}/mo</strong> net.</div>`;
+  return h+bar+g;
 }
 
 function renderPlanner(i,m){
