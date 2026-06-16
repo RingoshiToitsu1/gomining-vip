@@ -262,6 +262,33 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- SECTION SUBTITLE ---- */
 .sub-title{font-size:.82rem;font-weight:600;color:var(--cyan);margin:1rem 0 .4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:.35rem}
 .sub-title.centered{display:block;text-align:center;border-bottom:none;margin:1.2rem 0 .5rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+/* Efficiency vs hashrate vs discount comparison */
+.eff-verdict{background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.03));border:1px solid var(--purple);border-radius:var(--radius-sm);padding:.7rem .9rem;margin-bottom:.7rem}
+.eff-verdict-main{font-size:.9rem;font-weight:700;color:var(--text)}
+.eff-verdict-main strong{color:var(--purple-soft)}
+.eff-verdict-roi{color:var(--green);font-weight:800;font-size:.82rem;white-space:nowrap}
+.eff-verdict-sub{font-size:.74rem;color:var(--text3);line-height:1.5;margin-top:.35rem}
+.eff-verdict-sub strong{color:var(--text)}
+.eff-control{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.45rem;font-size:.76rem;color:var(--text3);margin:-.1rem 0 .7rem}
+.eff-control input{width:88px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.82rem;font-weight:700;text-align:center;padding:.4rem .5rem;outline:none}
+.eff-control input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.eff-splitbar{display:flex;height:28px;border-radius:8px;overflow:hidden;margin-bottom:.7rem;border:1px solid var(--border)}
+.eff-splitbar>div{display:flex;align-items:center;justify-content:center;color:#06121f;font-size:.66rem;font-weight:800;min-width:0;white-space:nowrap}
+.eff-card-sub2{text-align:center;font-size:.74rem;color:var(--text3);margin:-.35rem 0 .5rem;font-family:var(--mono)}
+.eff-card-dim{opacity:.45}
+.eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
+.eff-card{position:relative;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .65rem}
+.eff-card.eff-best{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 2px 14px rgba(80,220,140,.12)}
+.eff-tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--green);color:#062;font-size:.58rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.12rem .5rem;border-radius:8px;white-space:nowrap}
+.eff-card-h{font-size:.74rem;font-weight:700;color:var(--text2);text-align:center;margin-bottom:.3rem;min-height:2em;display:flex;align-items:center;justify-content:center}
+.eff-card-mo{font-size:1.25rem;font-weight:800;text-align:center;margin-bottom:.2rem;font-family:var(--mono);color:var(--purple-soft)}
+.eff-card-mo.pos{color:var(--green)}.eff-card-mo.neg{color:var(--text4)}
+.eff-card-rows{display:flex;flex-direction:column;gap:.3rem}
+.eff-row{display:flex;justify-content:space-between;gap:.4rem;font-size:.68rem;color:var(--text3)}
+.eff-row span:last-child{color:var(--text);font-weight:600;text-align:right}
+.eff-sub{color:var(--text4);font-weight:400}
+.eff-foot{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.6rem;padding:.5rem .7rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)}
+@media(max-width:600px){.eff-grid{grid-template-columns:1fr;gap:.45rem}.eff-card{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.3rem .7rem;padding:.6rem .7rem}.eff-card .eff-tag{position:static;transform:none;justify-self:start;grid-column:1/-1}.eff-card-h{min-height:0;text-align:left;justify-content:flex-start;margin:0}.eff-card-mo{text-align:right;margin:0;font-size:.95rem}.eff-card-rows{grid-column:1/-1;margin-top:.2rem}}
 
 /* ---- GMT TIER TABLE ---- */
 .gmt-tiers{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin:.5rem 0}
@@ -540,6 +567,8 @@ input[type=number]{-moz-appearance:textfield}
 .pi-body{padding:2rem 2rem 1.2rem}
 .pi-title{font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:.4rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .pi-subtitle{text-align:center;color:var(--text2);font-size:.82rem;line-height:1.6;margin-bottom:1.5rem}
+.pi-note-12w{max-width:420px;margin:-.6rem auto 1.4rem;background:linear-gradient(135deg,rgba(245,166,35,.1),rgba(245,166,35,.03));border:1px solid var(--purple);border-radius:var(--radius-sm);padding:.6rem .85rem;font-size:.72rem;line-height:1.55;color:var(--text2);text-align:left}
+.pi-note-12w strong{color:var(--purple-soft)}
 .pi-steps{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.5rem}
 .pi-step{display:flex;align-items:flex-start;gap:.8rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;transition:var(--transition)}
 .pi-step:hover{border-color:var(--purple);transform:translateY(-1px)}
@@ -1350,6 +1379,7 @@ input[type=number]{-moz-appearance:textfield}
     <div class="sp-form">
       <div class="pi-title">Capital Planner</div>
       <div class="pi-subtitle">Enter what you have to deploy. The planner will tell you how much to lock, how much to convert to TH, and keep a 2-day fee reserve.</div>
+      <div class="pi-note-12w">⚡ <strong>New: 12 W/TH miners.</strong> New machines are now 12 W/TH. The planner weighs <strong>upgrading efficiency</strong>, <strong>buying hashrate</strong> (cheap 15 W upgrades to the 5,000 TH cap, or new 12 W machines), and <strong>locking GMT</strong> — and tells you which wins at today's BTC price in the results.</div>
       <div style="margin:1.4rem auto 0;max-width:340px;display:flex;flex-direction:column;gap:1rem">
         <div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
@@ -1579,6 +1609,165 @@ function thForBudget(budget){
   return(lo+hi)/2;
 }
 
+/* ============================================================
+   12 W/TH economics — new-miner pricing & efficiency upgrades
+   ============================================================ */
+// New miners can ONLY be created at 12 W/TH now, at this tiered $/TH (tiers down with block size).
+const TH_TIERS_12W=[
+  {th:1,cpt:21.99},{th:2,cpt:21.50},{th:4,cpt:21.00},{th:8,cpt:20.75},
+  {th:16,cpt:20.50},{th:32,cpt:20.28},{th:48,cpt:20.06},{th:64,cpt:19.86},
+  {th:96,cpt:19.66},{th:128,cpt:19.46},{th:192,cpt:19.27},{th:256,cpt:19.07},
+  {th:384,cpt:18.88},{th:512,cpt:18.69},{th:768,cpt:18.51},{th:1024,cpt:18.32},
+  {th:1536,cpt:18.14},{th:2560,cpt:17.96},{th:3584,cpt:17.78},{th:5000,cpt:17.60}
+];
+const EFF_UPGRADE_STEP=2.67;  // $/TH to improve efficiency by 1 W/TH toward 12
+const EFF_BEST=12;            // best efficiency available now
+const EFF_BASE_MAX=15;        // ≥15 W/TH is priced as 15 for upgrades; also the marketplace-machine baseline
+const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
+
+// Interpolate any tiered $/TH price table.
+function cptTier(tiers,th){
+  if(th<=0)return tiers[0].cpt;
+  if(th>=tiers[tiers.length-1].th)return tiers[tiers.length-1].cpt;
+  for(let i=0;i<tiers.length-1;i++){const lo=tiers[i],hi=tiers[i+1];
+    if(th>=lo.th&&th<=hi.th)return lo.cpt+(hi.cpt-lo.cpt)*((th-lo.th)/(hi.th-lo.th));}
+  return tiers[0].cpt;
+}
+function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+function thForBudgetTiers(budget,tiers){
+  if(budget<=0)return 0;
+  let lo=0,hi=budget/tiers[tiers.length-1].cpt;
+  for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(mid*cptTier(tiers,mid)<budget)lo=mid;else hi=mid;}
+  return(lo+hi)/2;
+}
+// One-time $/TH to upgrade existing hashrate's efficiency down to 12 W/TH.
+// A farm at/above 15 W/TH is priced as 15 → 3 steps × $2.67 = $8.01/TH.
+function effUpgradeCostPerTH(curW){return EFF_UPGRADE_STEP*Math.max(0,Math.min(curW,EFF_BASE_MAX)-EFF_BEST);}
+
+// Net monthly USD for a setup, optionally at a hypothetical BTC price (always restores S.btcPrice).
+function netMonthlyAt(i,bpOverride){
+  const save=S.btcPrice;
+  if(bpOverride!=null&&isFinite(bpOverride))S.btcPrice=bpOverride;
+  let mo=0;try{const c=calc(i);mo=c.net*c.bp*30;}finally{S.btcPrice=save;}
+  return mo;
+}
+
+// Marginal net-monthly impact of deploying GROWTH capital down each path, at price bp.
+// Capital split: gmtUSD = USD value of existing GMT (no conversion fee — upgrades/TH are paid
+// in GMT directly), usdUSD = USD cash (pays the 2% USD→GMT fee).
+// Discount is held FIXED at the current level: this answers "best use of growth capital while
+// you MAINTAIN your token discount" (securing the discount is the main allocation's job). So
+// TH never shows a phantom loss from coverage dipping, and Lock GMT here is staking-yield only.
+function evalPaths(i,gmtUSD,usdUSD,bp,minerTH){
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, curW=i.wth, dbt=dailyBTCperTH();
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD;                 // nominal capital deployed (for ROI / display)
+  const eff=gmtUSD+usdUSD*(1-fee);       // effective GMT purchasing power in USD terms
+  const ppRate=K>0?eff/K:1-fee;          // GMT-USD per nominal-USD; convert a GMT cost → nominal
+  const toNominal=gmtCost=>gmtCost/ppRate;
+  const d=(calc(i).totD)/100;            // current discount, held fixed (greedy TH cancels in deltas)
+  const netFix=(th,w)=>((dbt*th-((0.0012*w+0.0089)/bp)*th*(1-d))*(1-cf))*bp*30;
+  const base=netFix(i.th,curW), out={base,K};
+  // 15 W TH — upgrade an existing machine up to the 5,000 TH cap (cheap raw hashrate)
+  {
+    const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
+    let dth=Math.min(room,want), usd=K, capped=false;
+    if(want>room&&room>0){capped=true;usd=toNominal(room*cptTier(TH_TIERS,i.th+room/2));}
+    if(room<=0){dth=0;usd=0;}
+    const nth=i.th+dth, nwth=nth>0?(i.th*curW+dth*EFF_BASE_MAX)/nth:curW;
+    out.th15={dth,usd,room,capped,mo:netFix(nth,nwth)-base};
+  }
+  // 12 W TH — create a new machine (no cap)
+  {
+    const dth=thForBudgetTiers(eff,TH_TIERS_12W), nth=i.th+dth;
+    const nwth=nth>0?(i.th*curW+dth*EFF_BEST)/nth:curW;
+    out.th12={dth,usd:K,mo:netFix(nth,nwth)-base};
+  }
+  // Upgrade efficiency of a SPECIFIC machine (minerTH of hashrate) down to 12 W.
+  // Upgrades are per-machine: minerTH defaults to the whole standalone farm but the user
+  // can point it at one miner. Cost = upgraded TH × $2.67 per 1 W/TH step toward 12.
+  {
+    const cap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th));
+    const cpt=effUpgradeCostPerTH(curW);let dth=0,nwth=curW,usd=0;
+    if(cpt>0&&cap>0){dth=Math.min(cap,eff/cpt);nwth=i.th>0?((i.th-dth)*curW+dth*EFF_BEST)/i.th:curW;usd=toNominal(dth*cpt);}
+    out.upg={dth,cpt,usd,minerTH:cap,na:cpt<=0,newWth:nwth,mo:netFix(i.th,nwth)-base};
+  }
+  // Lock GMT — staking yield only here (securing the 20% discount is handled in the allocation above).
+  {
+    const dgmt=eff/gp, staking=dgmt*(i.apr||0)/100/12*gp;
+    out.gmt={dgmt,usd:K,staking,mo:staking};
+  }
+  return out;
+}
+
+// BTC price where upgrading the existing 15 W machine starts to beat creating a new 12 W machine.
+// Analytic, at a FIXED discount (consistent with the cards): ΔTH15·(g−m15) = ΔTH12·(g−m12) ⇒ g,
+// bp = g/dbt. Above it, cheaper raw 15 W hashrate wins; below it, 12 W's lower maintenance wins.
+function btcCrossover(i,eff){
+  const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
+  const dth15=Math.min(room,want), dth12=thForBudgetTiers(eff,TH_TIERS_12W);
+  if(dth15<=0)return{capped:true,bp:null};
+  if(dth15<=dth12)return{capped:want>room,bp:null};
+  const d=(calc(i).totD)/100, dbt=dailyBTCperTH();
+  const m15=(0.0012*EFF_BASE_MAX+0.0089)*(1-d), m12=(0.0012*EFF_BEST+0.0089)*(1-d);
+  const g=(dth15*m15-dth12*m12)/(dth15-dth12), bp=dbt>0?g/dbt:null;
+  return{capped:want>room,bp:(bp&&bp>0&&isFinite(bp))?bp:null};
+}
+
+// Greedy marginal allocator: spends capital where the NEXT dollar earns most, re-running the real
+// calc() each step so the token discount is ALWAYS respected — adding TH erodes coverage, which
+// raises the value of locking GMT, so locks and TH interleave to HOLD the 20% discount. Returns the
+// optimal split across {lock GMT, buy TH (15 W upgrade / 12 W new), upgrade efficiency}.
+function optimalSplit(i,gmtUSD,usdUSD,bp,minerTH){
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, aprMo=(i.apr||0)/100/12;
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD, eff=gmtUSD+usdUSD*(1-fee), ppRate=K>0?eff/K:1-fee;
+  if(eff<=0)return null;
+  const minerCap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th)), cptU=effUpgradeCostPerTH(i.wth);
+  const STEPS=60, incr=eff/STEPS;
+  const s={gl:0,th15:0,th12:0,effTH:0};   // amounts ADDED (gl in GMT, th/eff in TH)
+  const spent={lock:0,th:0,eff:0};        // eff-USD allocated per category
+  const setupOf=st=>{
+    const totStand=i.th+st.th15+st.th12;
+    const wsum=(i.th-st.effTH)*i.wth+st.effTH*EFF_BEST+st.th15*EFF_BASE_MAX+st.th12*EFF_BEST;
+    return {...i,th:totStand,wth:totStand>0?wsum/totStand:i.wth,gl:i.gl+st.gl};
+  };
+  const objOf=st=>{const c=calc(setupOf(st));return c.net*c.bp*30+st.gl*aprMo*gp;};
+  const base=objOf(s); let cur=base;
+  for(let step=0;step<STEPS;step++){
+    const c=calc(setupOf(s));
+    // Lock GMT: forward ROI to the next discount step; pure staking once at the 20% cap.
+    let lockROI;
+    if(c.eTok>=20){lockROI=aprMo*12;}
+    else{
+      const targetCov=(c.eTok+1)*18, needGMT=Math.max(incr/gp,targetCov*c.feesGMT-(i.gl+s.gl+i.gw));
+      const stepSaveMo=c.f.t*0.01*(1-cf)*bp*30;
+      lockROI=(stepSaveMo*12)/(needGMT*gp)+aprMo*12;
+    }
+    // Buy TH: 15 W upgrade while the machine has room, else a new 12 W machine.
+    const room=Math.max(0,MINER_CAP-(i.th+s.th15)), th15Mode=room>0.01;
+    const thDth=th15Mode?Math.min(room,thForBudget(incr)):thForBudgetTiers(incr,TH_TIERS_12W);
+    const thState={...s};if(th15Mode)thState.th15+=thDth;else thState.th12+=thDth;
+    const thROI=thDth>0?(objOf(thState)-cur)*12/incr:-Infinity;
+    // Upgrade efficiency of the chosen miner.
+    let effROI=-Infinity,effDth=0;
+    if(cptU>0&&s.effTH<minerCap-0.01){
+      effDth=Math.min(minerCap-s.effTH,incr/cptU);
+      const effState={...s};effState.effTH+=effDth;
+      effROI=(objOf(effState)-cur)*12/incr;
+    }
+    const opts=[['lock',lockROI],['th',thROI],['eff',effROI]].sort((a,b)=>b[1]-a[1]);
+    const winner=opts[0][0];
+    if(winner==='lock'){s.gl+=incr/gp;spent.lock+=incr;}
+    else if(winner==='th'){if(th15Mode)s.th15+=thDth;else s.th12+=thDth;spent.th+=incr;}
+    else{s.effTH+=effDth;spent.eff+=incr;}
+    cur=objOf(s);
+  }
+  const fin=setupOf(s);
+  return {spent,eff,K,ppRate,gp,totalMo:cur-base,baseMo:base,
+    lockPct:spent.lock/eff*100,thPct:spent.th/eff*100,effPct:spent.eff/eff*100,
+    th15:s.th15,th12:s.th12,effTH:s.effTH,glAdd:s.gl,finWth:fin.wth,finTH:fin.th};
+}
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
   const el=document.getElementById(cptId);
@@ -2182,7 +2371,7 @@ function calc(i){
   }
   const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
-  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth,vipTH}
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth,vipTH,feesGMT,nonTokD,cov}
 }
 
 // ---- RENDER HELPERS ----
@@ -2612,6 +2801,75 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   };
 }
 
+// Side-by-side comparison: spend the next chunk of capital on efficiency vs hashrate vs discount.
+// Persistent shell: title + the per-miner upgrade input + an empty body the input refreshes.
+function effCompareShell(i){
+  const def=Math.max(1,Math.round(Math.min(i.th||0,MINER_CAP)));
+  const max=Math.max(1,Math.round(i.th||0));
+  return `<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div>
+  <div class="eff-control"><span>Upgrade efficiency on</span><input type="number" id="effMinerTH" value="${def}" min="1" max="${max}" step="10" oninput="updateEffCompare()"><span>TH (one miner) &rarr; 12 W/TH</span></div>
+  <div id="effCompareBody"></div>`;
+}
+// Re-render only the comparison body when the miner-TH input changes (keeps input focus).
+function updateEffCompare(){
+  const st=window._effCmp;if(!st)return;
+  const el=document.getElementById('effMinerTH');
+  let m=el?(parseFloat(el.value)||0):st.i.th;
+  m=Math.max(0,Math.min(st.i.th,m));
+  const body=document.getElementById('effCompareBody');
+  if(body)body.innerHTML=renderEfficiencyComparison(st.i,st.gmtUSD,st.usdUSD,m);
+}
+
+// Body of the comparison: the OPTIMAL SPLIT of the capital + a breakdown card per bucket.
+// minerTH = TH of the one miner to upgrade (efficiency upgrades are per-machine).
+function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD;
+  if(!i||!(K>0))return '';
+  const bp=S.btcPrice, allGMT=usdUSD<=0;
+  const a=optimalSplit(i,gmtUSD,usdUSD,bp,minerTH);
+  if(!a)return '';
+  const cross=btcCrossover(i,a.eff);
+  const nom=v=>v/a.ppRate;                          // eff-USD → nominal capital deployed
+  const roiB=a.totalMo>0?a.totalMo*12/K*100:0;
+  const thW=a.th12>a.th15?12:15, thTot=a.th15+a.th12;
+
+  let h=`<div class="eff-verdict">`;
+  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(a.totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-sub">Allocated to maximise net income <strong>while holding your token discount</strong> — adding hashrate without locking GMT would drop coverage, so locks and TH are balanced automatically.${allGMT?' Funded from GMT on hand — no 2% conversion fee.':''}</div>`;
+  if(cross.bp)h+=`<div class="eff-verdict-sub">Hashrate goes into ${thW===12?'new 12 W machines':'your 15 W machine upgrade'} (crossover &asymp; ${fU(cross.bp,0)}, today ${fU(bp,0)} — above it 15 W wins, below it 12 W).</div>`;
+  h+=`</div>`;
+
+  // Split bar
+  const segs=[[a.lockPct,'Lock GMT','var(--purple)'],[a.thPct,'Buy TH','var(--cyan)'],[a.effPct,'Upgrade Eff','var(--green)']];
+  let bar=`<div class="eff-splitbar">`;
+  segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
+  bar+=`</div>`;
+
+  const card=(label,p,amt,rows)=>{
+    let s=`<div class="eff-card${p<0.5?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
+    s+=`<div class="eff-card-mo">${fN(p,0)}%</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
+    rows.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
+    return s+`</div></div>`;
+  };
+  let g=`<div class="eff-grid">`;
+  g+=card('Lock GMT',a.lockPct,nom(a.spent.lock),[
+    ['Locks',a.glAdd>0?`+${fN(a.glAdd,0)} GMT`:'—'],
+    ['Effect',a.lockPct>0.5?'holds 20% discount':'—']
+  ]);
+  g+=card('Buy TH',a.thPct,nom(a.spent.th),[
+    ['Adds',thTot>0?`+${fN(thTot,1)} TH @ ${thW}W`:'—'],
+    ['Source',thTot>0?(thW===15?'15 W upgrade':'new 12 W machine'):'—']
+  ]);
+  g+=card('Upgrade Efficiency',a.effPct,nom(a.spent.eff),[
+    ['Upgrades',a.effTH>0?`${fN(a.effTH,0)} TH → 12 W`:'—'],
+    ['Farm avg',a.effTH>0?`${fN(i.wth,2)} → ${fN(a.finWth,2)}`:'—']
+  ]);
+  g+=`</div>`;
+  g+=`<div class="eff-foot">Result: <strong>${fN(a.finTH,0)} TH</strong> @ ${fN(a.finWth,2)} W/TH${a.glAdd>0?`, +${fN(a.glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(a.totalMo,0)}/mo</strong> net.</div>`;
+  return h+bar+g;
+}
+
 function renderPlanner(i,m){
   const bp=m.bp,gp=m.gp,usdCap=i.cap,dbt=dailyBTCperTH();
   const a=solvePlannerAllocation(i,bp,gp,dbt);
@@ -2655,10 +2913,8 @@ function renderPlanner(i,m){
     ah+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
   }else if(gmtLock<=0){
     ah+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
-  }else if(gmtFromUSD>0){
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT (${fN(gmtFromPool,0)} from pool + ${fN(gmtFromUSD,0)} bought with ${fU(usdSpentOnGMT)}) for 20% discount. Remaining ${fU(usdToTH)}${gmtSell>0?' + '+fN(gmtSell,0)+' GMT':''} buys +${fN(at,1)} TH.`;
   }else{
-    ah+=`<strong style="color:var(--cyan)">Optimized split.</strong> Lock ${fN(gmtLock,0)} GMT for 20% discount at ${fN(nt,1)} TH.${gmtSell>0?' Sell '+fN(gmtSell,0)+' GMT ('+fU(gmtSell*gp)+')':''} ${usdToTH>0?'+ '+fU(usdToTH)+' USD':''} → +${fN(at,1)} TH.`;
+    ah+=`<strong style="color:var(--cyan)">Optimal split below.</strong> Capital is balanced across locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — see the breakdown.`;
   }
   if(sol.bonusActive){
     ah+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
@@ -2667,41 +2923,12 @@ function renderPlanner(i,m){
   }
   ah+='</div>';
 
-  // Visual allocation split (shown up top, above the cards): TH spend vs GMT lock
-  {
-    const thSpend=Math.max(0,tu||0), gmtSpendUSD=Math.max(0,usdSpentOnGMT+gmtFromPool*gp), splitTot=thSpend+gmtSpendUSD;
-    if(splitTot>0){
-      const pctTH=thSpend/splitTot*100, pctGMT=100-pctTH;
-      let why;
-      if(!i.payG)why='GMT fee payment is off, so every dollar goes to hashrate for maximum mining output.';
-      else if(gmtLock<=0)why='You already hold enough locked GMT for the 20% token discount, so all new capital goes to hashrate.';
-      else if(canCover20)why='This maintains your 20% token discount while maximising net monthly income.';
-      else why='Your GMT can’t fully cover the 20% discount yet, so spare capital is directed to locking GMT first.';
-      ah+=`<div class="sub-title" style="margin-top:.2rem">Allocation Split</div>
-      <div class="alloc-split">
-        <div class="alloc-split-bar">
-          ${pctTH>0?`<div class="alloc-split-th" style="width:${pctTH}%">${pctTH>=14?fN(pctTH,0)+'% TH':''}</div>`:''}
-          ${pctGMT>0?`<div class="alloc-split-gmt" style="width:${pctGMT}%">${pctGMT>=14?fN(pctGMT,0)+'% GMT':''}</div>`:''}
-        </div>
-        <div class="alloc-split-legend">
-          <span><i class="dot-th"></i>${fN(pctTH,0)}% Hashrate &middot; ${fU(thSpend)}</span>
-          <span><i class="dot-gmt"></i>${fN(pctGMT,0)}% GMT Lock &middot; ${fU(gmtSpendUSD)}</span>
-        </div>
-        <div class="alloc-split-why">${why}</div>
-      </div>`;
-    }
-  }
-
-  // Allocation cards
+  // Optimal allocation split — efficiency vs hashrate vs discount (greedy marginal allocator).
+  // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee. The per-miner
+  // upgrade input re-renders just the comparison body via updateEffCompare().
   const hasGMT=gmtAvail>0;
-  const showReserve=i.payG;
-  ah+=`<div class="alloc-grid" style="grid-template-columns:repeat(${showReserve?3:2},1fr);margin-top:.8rem">`;
-  if(showReserve){
-    ah+=`<div class="alloc-card"><div class="a-label">Wallet Reserve</div><div class="a-val" style="color:var(--orange)">${fN(reserveNeeded,1)} GMT</div><div class="a-sub">2-day fees at ${fN(nt,1)} TH (${fU(reserveNeeded*gp)})</div></div>`;
-  }
-  ah+=`<div class="alloc-card"><div class="a-label">Lock for Discount</div><div class="a-val purple">${fN(gmtLock,0)} GMT</div><div class="a-sub">${fU(usdSpentOnGMT+gmtFromPool*gp)}${gmtFromUSD>0?' ('+fN(gmtFromUSD,0)+' bought)':''}</div></div>`;
-  ah+=`<div class="alloc-card"><div class="a-label">Buy TH</div><div class="a-val cyan">${fU(tu)}</div><div class="a-sub">+${fN(at,1)} TH${sol.bonusActive?` <span style="color:var(--gold,#ffd700)">(incl. +${fN(sol.bonusTH,1)} VIP bonus)</span>`:''}</div></div>`;
-  ah+=`</div>`;
+  window._effCmp={i,gmtUSD:gmtAvail*gp,usdUSD:usdCapAfter};
+  ah+=effCompareShell(i);
 
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
@@ -2736,6 +2963,7 @@ function renderPlanner(i,m){
   }
 
   $('allocDisplay').innerHTML=ah;
+  updateEffCompare();
 
   // --- Post-investment projections ---
   const ov=vipOf(i.th,i.gl),tc=nv.n!==ov.n;
