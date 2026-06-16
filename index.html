@@ -1648,18 +1648,22 @@ function netMonthlyAt(i,bpOverride){
   return mo;
 }
 
-// Marginal net-monthly impact of deploying capital down each path, at price bp.
-// Capital is split: gmtUSD = USD value of existing GMT (no conversion fee — upgrades/TH are
-// paid in GMT directly), usdUSD = USD cash (pays the 2% USD→GMT fee). All TH purchases,
-// efficiency upgrades and GMT locks are funded in GMT, so existing GMT spends fee-free.
+// Marginal net-monthly impact of deploying GROWTH capital down each path, at price bp.
+// Capital split: gmtUSD = USD value of existing GMT (no conversion fee — upgrades/TH are paid
+// in GMT directly), usdUSD = USD cash (pays the 2% USD→GMT fee).
+// Discount is held FIXED at the current level: this answers "best use of growth capital while
+// you MAINTAIN your token discount" (securing the discount is the main allocation's job). So
+// TH never shows a phantom loss from coverage dipping, and Lock GMT here is staking-yield only.
 function evalPaths(i,gmtUSD,usdUSD,bp,minerTH){
-  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, curW=i.wth;
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, curW=i.wth, dbt=dailyBTCperTH();
   gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
   const K=gmtUSD+usdUSD;                 // nominal capital deployed (for ROI / display)
   const eff=gmtUSD+usdUSD*(1-fee);       // effective GMT purchasing power in USD terms
   const ppRate=K>0?eff/K:1-fee;          // GMT-USD per nominal-USD; convert a GMT cost → nominal
   const toNominal=gmtCost=>gmtCost/ppRate;
-  const base=netMonthlyAt(i,bp), out={base,K};
+  const d=(calc(i).totD)/100;            // current discount, held fixed (greedy TH cancels in deltas)
+  const netFix=(th,w)=>((dbt*th-((0.0012*w+0.0089)/bp)*th*(1-d))*(1-cf))*bp*30;
+  const base=netFix(i.th,curW), out={base,K};
   // 15 W TH — upgrade an existing machine up to the 5,000 TH cap (cheap raw hashrate)
   {
     const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
@@ -1667,13 +1671,13 @@ function evalPaths(i,gmtUSD,usdUSD,bp,minerTH){
     if(want>room&&room>0){capped=true;usd=toNominal(room*cptTier(TH_TIERS,i.th+room/2));}
     if(room<=0){dth=0;usd=0;}
     const nth=i.th+dth, nwth=nth>0?(i.th*curW+dth*EFF_BASE_MAX)/nth:curW;
-    out.th15={dth,usd,room,capped,mo:netMonthlyAt({...i,th:nth,wth:nwth},bp)-base};
+    out.th15={dth,usd,room,capped,mo:netFix(nth,nwth)-base};
   }
   // 12 W TH — create a new machine (no cap)
   {
     const dth=thForBudgetTiers(eff,TH_TIERS_12W), nth=i.th+dth;
     const nwth=nth>0?(i.th*curW+dth*EFF_BEST)/nth:curW;
-    out.th12={dth,usd:K,mo:netMonthlyAt({...i,th:nth,wth:nwth},bp)-base};
+    out.th12={dth,usd:K,mo:netFix(nth,nwth)-base};
   }
   // Upgrade efficiency of a SPECIFIC machine (minerTH of hashrate) down to 12 W.
   // Upgrades are per-machine: minerTH defaults to the whole standalone farm but the user
@@ -1682,37 +1686,28 @@ function evalPaths(i,gmtUSD,usdUSD,bp,minerTH){
     const cap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th));
     const cpt=effUpgradeCostPerTH(curW);let dth=0,nwth=curW,usd=0;
     if(cpt>0&&cap>0){dth=Math.min(cap,eff/cpt);nwth=i.th>0?((i.th-dth)*curW+dth*EFF_BEST)/i.th:curW;usd=toNominal(dth*cpt);}
-    out.upg={dth,cpt,usd,minerTH:cap,na:cpt<=0,newWth:nwth,mo:netMonthlyAt({...i,wth:nwth},bp)-base};
+    out.upg={dth,cpt,usd,minerTH:cap,na:cpt<=0,newWth:nwth,mo:netFix(i.th,nwth)-base};
   }
-  // Lock GMT for token discount (+ staking yield on the new lock)
+  // Lock GMT — staking yield only here (securing the 20% discount is handled in the allocation above).
   {
     const dgmt=eff/gp, staking=dgmt*(i.apr||0)/100/12*gp;
-    out.gmt={dgmt,usd:K,staking,mo:(netMonthlyAt({...i,gl:i.gl+dgmt},bp)-base)+staking};
+    out.gmt={dgmt,usd:K,staking,mo:staking};
   }
   return out;
 }
 
 // BTC price where upgrading the existing 15 W machine starts to beat creating a new 12 W machine.
-// Scans with the REAL calc() engine (same as the cards) so the crossover can never contradict the
-// card verdict — this captures discount erosion (more/higher-maintenance TH lowers token coverage),
-// which the naive fixed-discount formula ignored. Above the crossover the cheaper raw 15 W hashrate
-// wins; below it, the lower maintenance of 12 W protects net margin and wins.
+// Analytic, at a FIXED discount (consistent with the cards): ΔTH15·(g−m15) = ΔTH12·(g−m12) ⇒ g,
+// bp = g/dbt. Above it, cheaper raw 15 W hashrate wins; below it, 12 W's lower maintenance wins.
 function btcCrossover(i,eff){
   const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
   const dth15=Math.min(room,want), dth12=thForBudgetTiers(eff,TH_TIERS_12W);
   if(dth15<=0)return{capped:true,bp:null};
-  const s15={...i,th:i.th+dth15,wth:(i.th*i.wth+dth15*EFF_BASE_MAX)/(i.th+dth15)};
-  const s12={...i,th:i.th+dth12,wth:(i.th*i.wth+dth12*EFF_BEST)/(i.th+dth12)};
-  let prevBp=null,prevDiff=null;
-  for(let bp=20000;bp<=400000;bp+=2500){
-    const diff=netMonthlyAt(s15,bp)-netMonthlyAt(s12,bp); // >0 → 15 W upgrade better
-    if(prevDiff!=null&&(prevDiff<0)!==(diff<0)&&prevDiff!==diff){
-      const t=prevDiff/(prevDiff-diff);
-      return{capped:want>room,bp:prevBp+(bp-prevBp)*t};
-    }
-    prevBp=bp;prevDiff=diff;
-  }
-  return{capped:want>room,bp:null};   // no sign change in range
+  if(dth15<=dth12)return{capped:want>room,bp:null};
+  const d=(calc(i).totD)/100, dbt=dailyBTCperTH();
+  const m15=(0.0012*EFF_BASE_MAX+0.0089)*(1-d), m12=(0.0012*EFF_BEST+0.0089)*(1-d);
+  const g=(dth15*m15-dth12*m12)/(dth15-dth12), bp=dbt>0?g/dbt:null;
+  return{capped:want>room,bp:(bp&&bp>0&&isFinite(bp))?bp:null};
 }
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
@@ -2792,11 +2787,11 @@ function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
   let best=null;cards.forEach(c=>{const r=roi(c.obj);if(c.obj.mo>0&&(!best||r>best.r))best={key:c.key,r};});
 
   let h=`<div class="eff-verdict">`;
-  if(best)h+=`<div class="eff-verdict-main">Best return on your ${fU(K,0)}: <strong>${labelOf[best.key]}</strong> <span class="eff-verdict-roi">≈ ${fN(best.r,0)}%/yr</span></div>`;
-  else h+=`<div class="eff-verdict-main">No path adds net income at today's prices.</div>`;
+  if(best)h+=`<div class="eff-verdict-main">Put your ${fU(K,0)} into &rarr; <strong>${labelOf[best.key]}</strong> <span class="eff-verdict-roi">${fmtMo(best.key==='upg'?p.upg.mo:best.key==='th'?th.mo:p.gmt.mo)} · ${fN(best.r,0)}%/yr</span></div>`;
+  else h+=`<div class="eff-verdict-main">No growth path adds net income at today's prices — hold or lock for staking.</div>`;
   if(cross.bp)h+=`<div class="eff-verdict-sub">Crossover &asymp; <strong>${fU(cross.bp,0)}</strong> (today ${fU(bp,0)}): above it, upgrading your existing 15 W machine wins (cheaper hashrate); below it, new 12 W machines win (lower maintenance).</div>`;
   else if(cross.capped)h+=`<div class="eff-verdict-sub">Your machine is near the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.</div>`;
-  if(allGMT)h+=`<div class="eff-verdict-sub">Funded from your GMT on hand — no 2% conversion fee applied.</div>`;
+  h+=`<div class="eff-verdict-sub">Assumes your 20% token discount is maintained (the allocation above secures it), so this is purely where growth capital earns most.${allGMT?' Funded from GMT on hand — no 2% conversion fee.':''}</div>`;
   h+=`</div>`;
 
   const card=(label,obj,subs,isBest)=>{
@@ -2819,7 +2814,7 @@ function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
   ],best&&best.key==='th');
   g+=card('Lock GMT',p.gmt,[
     ['Locks',`+${fN(p.gmt.dgmt,0)} GMT`],
-    ['Benefit',`discount + ${fU(p.gmt.staking,0)}/mo stake`],
+    ['Benefit',`${fU(p.gmt.staking,0)}/mo staking yield`],
     ['ROI · payback',`${fN(roi(p.gmt),0)}%/yr · ${pbTxt(p.gmt)}`]
   ],best&&best.key==='gmt');
   g+=`</div><div class="eff-foot">${thNote}</div>`;
