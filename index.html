@@ -1645,16 +1645,23 @@ function netMonthlyAt(i,bpOverride){
   return mo;
 }
 
-// Marginal net-monthly impact of deploying budget K (USD) down each capital path, at price bp.
-// Returns {base, th15, th12, upg, gmt} where each path has {mo, usd, ...}. mo = Δ net monthly USD.
-function evalPaths(i,K,bp){
-  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, eff=K*(1-fee), curW=i.wth;
-  const base=netMonthlyAt(i,bp), out={base};
-  // 15 W TH — upgrade an existing machine up to the 5,000 TH cap
+// Marginal net-monthly impact of deploying capital down each path, at price bp.
+// Capital is split: gmtUSD = USD value of existing GMT (no conversion fee — upgrades/TH are
+// paid in GMT directly), usdUSD = USD cash (pays the 2% USD→GMT fee). All TH purchases,
+// efficiency upgrades and GMT locks are funded in GMT, so existing GMT spends fee-free.
+function evalPaths(i,gmtUSD,usdUSD,bp){
+  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, curW=i.wth;
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD;                 // nominal capital deployed (for ROI / display)
+  const eff=gmtUSD+usdUSD*(1-fee);       // effective GMT purchasing power in USD terms
+  const ppRate=K>0?eff/K:1-fee;          // GMT-USD per nominal-USD; convert a GMT cost → nominal
+  const toNominal=gmtCost=>gmtCost/ppRate;
+  const base=netMonthlyAt(i,bp), out={base,K};
+  // 15 W TH — upgrade an existing machine up to the 5,000 TH cap (cheap raw hashrate)
   {
     const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
     let dth=Math.min(room,want), usd=K, capped=false;
-    if(want>room&&room>0){capped=true;usd=(room*cptTier(TH_TIERS,i.th+room/2))/(1-fee);}
+    if(want>room&&room>0){capped=true;usd=toNominal(room*cptTier(TH_TIERS,i.th+room/2));}
     if(room<=0){dth=0;usd=0;}
     const nth=i.th+dth, nwth=nth>0?(i.th*curW+dth*EFF_BASE_MAX)/nth:curW;
     out.th15={dth,usd,room,capped,mo:netMonthlyAt({...i,th:nth,wth:nwth},bp)-base};
@@ -1668,7 +1675,7 @@ function evalPaths(i,K,bp){
   // Upgrade efficiency of existing TH down to 12 W
   {
     const cpt=effUpgradeCostPerTH(curW);let dth=0,nwth=curW,usd=0;
-    if(cpt>0&&i.th>0){dth=Math.min(i.th,eff/cpt);nwth=((i.th-dth)*curW+dth*EFF_BEST)/i.th;usd=(dth*cpt)/(1-fee);}
+    if(cpt>0&&i.th>0){dth=Math.min(i.th,eff/cpt);nwth=((i.th-dth)*curW+dth*EFF_BEST)/i.th;usd=toNominal(dth*cpt);}
     out.upg={dth,cpt,usd,na:cpt<=0,newWth:nwth,mo:netMonthlyAt({...i,wth:nwth},bp)-base};
   }
   // Lock GMT for token discount (+ staking yield on the new lock)
@@ -1682,8 +1689,8 @@ function evalPaths(i,K,bp){
 // BTC price where creating new 12 W machines starts to beat buying+upgrading a 15 W machine.
 // Below this price the lower maintenance of 12 W wins; above it, cheaper raw 15 W hashrate wins.
 // Analytic (holds discount fixed): ΔTH15·(g−m15) = ΔTH12·(g−m12) ⇒ g, then bp = g / dbt.
-function btcCrossover(i,K){
-  const fee=USD_GMT_FEE, eff=K*(1-fee), room=Math.max(0,MINER_CAP-i.th);
+function btcCrossover(i,eff){
+  const room=Math.max(0,MINER_CAP-i.th);
   const dth15=thForBudget(eff), dth12=thForBudgetTiers(eff,TH_TIERS_12W);
   if(room<dth15)return{capped:true,bp:null};      // existing machine can't absorb the budget at 15 W
   if(dth15<=dth12)return{capped:false,bp:null};    // 15 W not actually cheaper (shouldn't happen)
@@ -2726,30 +2733,37 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 }
 
 // Side-by-side comparison: spend the next chunk of capital on efficiency vs hashrate vs discount.
-function renderEfficiencyComparison(i,K){
+function renderEfficiencyComparison(i,gmtUSD,usdUSD){
+  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
+  const K=gmtUSD+usdUSD;
   if(!i||!(K>0))return '';
-  const bp=S.btcPrice, p=evalPaths(i,K,bp), cross=btcCrossover(i,K);
+  const bp=S.btcPrice, fee=USD_GMT_FEE, eff=gmtUSD+usdUSD*(1-fee);
+  const p=evalPaths(i,gmtUSD,usdUSD,bp), cross=btcCrossover(i,eff);
+  const allGMT=usdUSD<=0;   // funded entirely from GMT on hand → no conversion fee
   const fmtMo=v=>(v>=0?'+':'−')+fU(Math.abs(v),0)+'/mo';
   const roi=x=>x.usd>0&&x.mo>0?(x.mo*12/x.usd*100):0;
   const payback=x=>x.mo>0?x.usd/x.mo:Infinity;
   const pbTxt=x=>{const m=payback(x);return isFinite(m)?(m<24?fN(m,1)+' mo':fN(m/12,1)+' yr'):'—';};
 
-  // Choose the "Buy More TH" source: cheaper 15 W machine upgrade vs a new 12 W machine.
-  let th,thW,thNote;
-  if(p.th15.dth<=0){th=p.th12;thW=12;thNote=`New 12 W machine — your machine is at the ${fN(MINER_CAP,0)} TH cap.`;}
-  else if(p.th12.mo>p.th15.mo){th=p.th12;thW=12;thNote=`Creating new 12 W machines wins at today's BTC (${fU(bp,0)}) — lower maintenance outweighs the higher price.`;}
-  else{th=p.th15;thW=15;thNote=p.th15.capped?`Upgrade a 15 W machine to the ${fN(MINER_CAP,0)} TH cap (${fU(th.usd,0)}), then create 12 W machines for any remainder.`:`Upgrade a 15 W marketplace machine — the most hashrate per dollar at today's BTC.`;}
+  // Choose the hashrate source: cheaper 15 W machine upgrade vs a new 12 W machine.
+  // A farm already above 12 W/TH with room under the cap upgrades its existing 15 W machine.
+  let th,thW,thLabel,thNote;
+  if(p.th15.dth<=0){th=p.th12;thW=12;thLabel='New 12 W Machine';thNote=`Your machine is at the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.`;}
+  else if(p.th12.mo>p.th15.mo){th=p.th12;thW=12;thLabel='New 12 W Machine';thNote=`At today's BTC (${fU(bp,0)}) creating new 12 W machines wins — lower maintenance outweighs the higher price. Upgrading your existing machine wins again above ${cross.bp?fU(cross.bp,0):'the crossover'}.`;}
+  else{th=p.th15;thW=15;thLabel='Upgrade Existing Machine';thNote=p.th15.capped?`Upgrade your existing 15 W machine to the ${fN(MINER_CAP,0)} TH cap (${fU(th.usd,0)}), then create 12 W machines for any remainder.`:`Your farm is ${fN(i.wth,2)} W/TH — add the cheapest hashrate by upgrading your existing 15 W machine (up to the ${fN(MINER_CAP,0)} TH cap).`;}
 
-  const cards=[{key:'upg',obj:p.upg,label:'Upgrade to 12 W/TH'},{key:'th',obj:th,label:'Buy More TH'},{key:'gmt',obj:p.gmt,label:'Lock GMT'}]
+  const cards=[{key:'upg',obj:p.upg},{key:'th',obj:th,label:thLabel},{key:'gmt',obj:p.gmt}]
     .filter(c=>!(c.key==='upg'&&p.upg.na));
-  let best=null;cards.forEach(c=>{const r=roi(c.obj);if(c.obj.mo>0&&(!best||r>best.r))best={key:c.key,label:c.label,r};});
+  const labelOf={upg:'Upgrade Efficiency',th:thLabel,gmt:'Lock GMT'};
+  let best=null;cards.forEach(c=>{const r=roi(c.obj);if(c.obj.mo>0&&(!best||r>best.r))best={key:c.key,r};});
 
   let h=`<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div>`;
   h+=`<div class="eff-verdict">`;
-  if(best)h+=`<div class="eff-verdict-main">Best return on your next ${fU(K,0)}: <strong>${best.label}</strong> <span class="eff-verdict-roi">≈ ${fN(best.r,0)}%/yr</span></div>`;
+  if(best)h+=`<div class="eff-verdict-main">Best return on your ${fU(K,0)}: <strong>${labelOf[best.key]}</strong> <span class="eff-verdict-roi">≈ ${fN(best.r,0)}%/yr</span></div>`;
   else h+=`<div class="eff-verdict-main">No path adds net income at today's prices.</div>`;
-  if(cross.bp)h+=`<div class="eff-verdict-sub">New 12 W machines beat buying &amp; upgrading a 15 W machine once BTC falls below <strong>${fU(cross.bp,0)}</strong> (today ${fU(bp,0)}). Above that, cheaper raw 15 W hashrate wins.</div>`;
+  if(cross.bp)h+=`<div class="eff-verdict-sub">Upgrading your existing 15 W machine wins while BTC stays above <strong>${fU(cross.bp,0)}</strong> (today ${fU(bp,0)}); below it, new 12 W machines win on lower maintenance.</div>`;
   else if(cross.capped)h+=`<div class="eff-verdict-sub">Your machine is near the ${fN(MINER_CAP,0)} TH cap, so added hashrate must be a new 12 W machine.</div>`;
+  if(allGMT)h+=`<div class="eff-verdict-sub">Funded from your GMT on hand — no 2% conversion fee applied.</div>`;
   h+=`</div>`;
 
   const card=(label,obj,subs,isBest)=>{
@@ -2760,12 +2774,12 @@ function renderEfficiencyComparison(i,K){
     return s+`</div></div>`;
   };
   let g=`<div class="eff-grid">`;
-  if(!p.upg.na)g+=card('Upgrade to 12 W/TH',p.upg,[
-    ['Efficiency',`${fN(i.wth,2)} → ${fN(p.upg.newWth,2)}`],
+  if(!p.upg.na)g+=card('Upgrade Efficiency',p.upg,[
+    ['Efficiency',`${fN(i.wth,2)} → ${fN(p.upg.newWth,2)} W/TH`],
     ['Cost',`${fU(p.upg.usd,0)} <span class="eff-sub">(${fU(p.upg.cpt)}/TH)</span>`],
     ['ROI · payback',`${fN(roi(p.upg),0)}%/yr · ${pbTxt(p.upg)}`]
   ],best&&best.key==='upg');
-  g+=card('Buy More TH',th,[
+  g+=card(thLabel,th,[
     ['Adds',`+${fN(th.dth,1)} TH @ ${thW}W`],
     ['Cost',`${fU(th.usd,0)} <span class="eff-sub">(${fU(thW===12?estimateCPT12(th.dth):estimateCPT(i.th+th.dth))}/TH)</span>`],
     ['ROI · payback',`${fN(roi(th),0)}%/yr · ${pbTxt(th)}`]
@@ -2903,7 +2917,8 @@ function renderPlanner(i,m){
   }
 
   // Efficiency-upgrade vs hashrate vs discount, for the deployable capital.
-  ah+=renderEfficiencyComparison(i,totalValue);
+  // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee.
+  ah+=renderEfficiencyComparison(i,gmtAvail*gp,usdCapAfter);
 
   $('allocDisplay').innerHTML=ah;
 
