@@ -1147,12 +1147,12 @@ input[type=number]{-moz-appearance:textfield}
             </div>
             <div class="ed-fields ed-greedy-grid">
               <label class="ed-fld greedy-field" for="inGreedyTH">
-                <span class="ed-fld-lbl">Greedy TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></span>
+                <span class="ed-fld-lbl">Greedy TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top.">?</span></span>
                 <input type="number" id="inGreedyTH" value="0" step="1" min="0">
                 <span class="unit">TH</span>
               </label>
               <label class="ed-fld greedy-field" for="inGreedyInitial">
-                <span class="ed-fld-lbl">Initial <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. This portion never counts toward VIP; all growth above it does. If just bought, set equal to Greedy Machine TH.">?</span></span>
+                <span class="ed-fld-lbl">Initial <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. If just bought, set equal to Greedy Machine TH.">?</span></span>
                 <input type="number" id="inGreedyInitial" value="0" step="1" min="0">
                 <span class="unit">TH</span>
               </label>
@@ -1205,7 +1205,7 @@ input[type=number]{-moz-appearance:textfield}
       <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M9 27 L11 16 L17 22 L20 12 L23 22 L29 16 L31 27 Z"/><path d="M11 30 L29 30"/></g></svg> VIP Level &amp; Discount Stack</div>
       <div class="section-toggle">&#9662;</div>
     </div>
-    <div class="section-desc">Your VIP tier is determined by TH owned or GMT locked -- whichever qualifies you higher.</div>
+    <div class="section-desc">Your VIP tier is determined by how much GMT you have locked.</div>
     <div class="section-body">
       <div id="vipDisplay"></div>
       <div id="discountDisplay"></div>
@@ -1285,7 +1285,7 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div id="capInMarketplace" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Buy a specific marketplace miner <span style="color:var(--text4);font-weight:400">(optional)</span></label>
-        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Eyeing a cheap miner on the GoMining marketplace? Enter it here. Its hashrate counts toward rewards &amp; fees, but <strong style="color:var(--text3)">not</strong> toward your VIP tier. The planner spends the remaining balance on locking GMT / minting TH for max discount.</div>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Eyeing a cheap miner on the GoMining marketplace? Enter it here. Its hashrate counts toward rewards &amp; fees. The planner spends the remaining balance on locking GMT / minting TH for max discount.</div>
         <div class="input-grid">
           <div class="field">
             <label>Miner Hashrate</label>
@@ -1420,7 +1420,7 @@ input[type=number]{-moz-appearance:textfield}
               <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">W/TH</div>
             </div>
           </div>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards &amp; fees. The planner allocates the rest for max discount.</div>
           </div>
         </div>
         <div>
@@ -2956,7 +2956,7 @@ function renderPlanner(i,m){
     exp+=`<strong style="color:var(--purple-soft)">Marketplace miner:</strong> +${fN(mpTH,0)} TH for ${fN(mpGmtCost,0)} GMT`;
     if(usdForMiner>0)exp+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
     else exp+=` (from your GMT)`;
-    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
+    exp+=`. Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
   if(!i.payG){
@@ -3000,7 +3000,7 @@ function renderPlanner(i,m){
   // Resource breakdown
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
   if(mpTH>0){
-    ah+=row('Marketplace miner',`+${fN(mpTH,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWth,1)} W/TH · non-VIP</span>`,'purple');
+    ah+=row('Marketplace miner',`+${fN(mpTH,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWth,1)} W/TH</span>`,'purple');
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
@@ -3028,8 +3028,7 @@ function renderPlanner(i,m){
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  const nonVipTH=(a.gInit||0)+mpTH;
-  ph+=row('New hashrate',`${fN(nt,1)} TH`+(nonVipTH>0?`<span class="sub">${fN(vipTH,1)} TH counts toward VIP &middot; ${fN(nonVipTH,0)} TH marketplace (non-VIP)</span>`:`<span class="sub">all counts toward VIP</span>`));
+  ph+=row('New hashrate',`${fN(nt,1)} TH`);
   if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
