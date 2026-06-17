@@ -276,6 +276,13 @@ input[type=number]{-moz-appearance:textfield}
 .eff-splitbar>div{display:flex;align-items:center;justify-content:center;color:#06121f;font-size:.66rem;font-weight:800;min-width:0;white-space:nowrap}
 .eff-card-sub2{text-align:center;font-size:.74rem;color:var(--text3);margin:-.35rem 0 .5rem;font-family:var(--mono)}
 .eff-card-dim{opacity:.45}
+.eff-gauge{margin-top:.55rem}
+.eff-gauge-bar{position:relative;height:8px;border-radius:5px;background:var(--bg-card);border:1px solid var(--border)}
+.eff-gauge-win{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(80,220,140,.5),var(--green));border-radius:4px 0 0 4px}
+.eff-gauge-now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);border-radius:1px}
+.eff-gauge-now span{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:.54rem;font-weight:700;color:var(--text2);white-space:nowrap}
+.eff-gauge-lbl{font-size:.6rem;color:var(--text3);margin-top:1.05rem;line-height:1.3;text-align:center}
+.eff-gauge-lbl b{color:var(--text)}
 .eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
 .eff-card{position:relative;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .65rem}
 .eff-card.eff-best{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 2px 14px rgba(80,220,140,.12)}
@@ -2438,11 +2445,11 @@ function recalc(){
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
   $('heroDailyBTC').textContent=heroSub;
-  animateMetric($('heroMonthly'),moUSD,fU);$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
+  animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   $('heroMonthlyBTC').textContent=heroMoSub;
-  animateMetric($('heroYearly'),moUSD*12,v=>fU(v)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
+  animateMetric($('heroYearly'),moUSD*12,v=>fU(v,0)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   animateMetric($('heroDiscount'),m.totD,fP);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   // Reflect manual override state on the "Incorrect discount?" control.
@@ -2591,9 +2598,9 @@ function updateProjCell(){
   const tag=isLive?'LIVE':'SIMULATED';
   const tagCol=isLive?'var(--green)':'var(--orange)';
   let h=`<div class="proj-ba">`;
-  h+=`<div class="proj-cell ba-cell"><div class="ba-label">Current</div><div class="pc-monthly">${fU(before.mo)}</div><div class="pc-daily">${fU(before.daily)}/day</div></div>`;
+  h+=`<div class="proj-cell ba-cell"><div class="ba-label">Current</div><div class="pc-monthly">${fU(before.mo,0)}</div><div class="pc-daily">${fU(before.daily)}/day</div></div>`;
   h+=`<div class="ba-arrow"><div class="ba-arrow-ico">&rarr;</div><div class="ba-uplift">${uplift>=0?'+':''}${fN(uplift,0)}%</div></div>`;
-  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After Investment</div><div class="pc-monthly green">${fU(after.mo)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
+  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After Investment</div><div class="pc-monthly green">${fU(after.mo,0)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
   h+=`</div>`;
   document.getElementById('projSingleCell').innerHTML=h;
 }
@@ -2856,6 +2863,25 @@ function renderEfficiencyComparison(st){
   const newMo=calc({...i,th:finTH,wth:finWth,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
+  // BTC-price threshold below which upgrading efficiency out-yields buying TH. Upgrade ROI is
+  // BTC-independent; new-TH ROI rises with BTC — so below this price the upgrade wins.
+  // newThROI(bp*) = upgradeROI ⇒ bp* = [M(1-d) + cptTH·0.0012·(wth-12)(1-d)/cptU] / dbt.
+  let effThreshBp=null;
+  if(i.th>0 && i.wth>EFF_BEST){
+    const cptU=effUpgradeCostPerTH(i.wth);
+    if(cptU>0){
+      const M=0.0012*EFF_BASE_MAX+0.0089, cptTH=estimateCPT((i.th+addTH)||1);
+      const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
+      if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
+    }
+  }
+  const effGauge=(thresh,now)=>{
+    const hi=Math.max(thresh,now)*1.4||1;
+    const tPos=Math.min(100,thresh/hi*100), nPos=Math.max(2,Math.min(98,now/hi*100)), winning=now<=thresh;
+    return `<div class="eff-gauge"><div class="eff-gauge-bar"><div class="eff-gauge-win" style="width:${tPos}%"></div><div class="eff-gauge-now" style="left:${nPos}%"><span>now ${fU(now,0)}</span></div></div>`
+      +`<div class="eff-gauge-lbl">${winning?'<b style="color:var(--green)">Worth it now</b> &middot; ':''}upgrade wins under <b>${fU(thresh,0)}</b> BTC</div></div>`;
+  };
+
   let h=`<div class="eff-verdict">`;
   h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
   h+=`<div class="eff-verdict-sub">Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.</div>`;
@@ -2866,11 +2892,13 @@ function renderEfficiencyComparison(st){
   segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
   bar+=`</div>`;
 
-  const card=(label,p,amt,rows)=>{
-    let s=`<div class="eff-card${p<0.5?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
+  const card=(label,p,amt,rows,extra)=>{
+    let s=`<div class="eff-card${(p<0.5&&!extra)?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
     s+=`<div class="eff-card-mo">${fN(p,0)}%</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
     rows.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
-    return s+`</div></div>`;
+    s+=`</div>`;
+    if(extra)s+=extra;
+    return s+`</div>`;
   };
   let g=`<div class="eff-grid">`;
   g+=card('Lock GMT',lockPct,lockUSD,[
@@ -2884,7 +2912,7 @@ function renderEfficiencyComparison(st){
   g+=card('Upgrade Efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
     ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
-  ]);
+  ],effThreshBp?effGauge(effThreshBp,bp):'');
   g+=`</div>`;
   g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
   return h+bar+g;
