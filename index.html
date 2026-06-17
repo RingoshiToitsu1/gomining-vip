@@ -1900,10 +1900,6 @@ function sharePlan(btn){
   const data=readInputs();
   const enc=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
   const url=location.origin+location.pathname+'?p='+encodeURIComponent(enc);
-  if(navigator.share){
-    navigator.share({title:'GMT Optimizer — my plan',text:'My GoMining setup & projected income',url}).catch(()=>{});
-    return;
-  }
   const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copy this link:',url));}
   else prompt('Copy this link:',url);
