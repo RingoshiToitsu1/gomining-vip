@@ -1810,6 +1810,9 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+  // The Capital Planner tab relabels to "Adjust Amount" while you're on it (re-clicking adjusts).
+  const pBtn=document.querySelector('[data-tab="tab-planner"]');
+  if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
   // First visit to the planner auto-opens the full-page form; navigating in from another tab
