@@ -691,6 +691,9 @@ input[type=number]{-moz-appearance:textfield}
 .planner-adjust-btn:hover{border-color:var(--orange);color:var(--orange);background:linear-gradient(135deg,rgba(245,166,35,.26),rgba(245,166,35,.1));transform:translateY(-1px);box-shadow:0 5px 20px rgba(245,166,35,.25);animation:none}
 .planner-adjust-btn svg{color:currentColor;flex:0 0 auto}
 @keyframes adjustPulse{0%,100%{box-shadow:0 2px 12px rgba(245,166,35,.12)}50%{box-shadow:0 2px 20px rgba(245,166,35,.30)}}
+.share-plan-btn{display:inline-flex;align-items:center;gap:.45rem;background:var(--bg-input);border:1px solid var(--purple);border-radius:9px;color:var(--purple-soft);font-family:var(--sans);font-size:.78rem;font-weight:700;padding:.5rem 1rem;cursor:pointer;transition:var(--transition)}
+.share-plan-btn:hover{background:rgba(245,166,35,.12);color:var(--text)}
+.share-plan-btn svg{flex:0 0 auto}
 .planner-proj-btn{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;margin:.2rem 0 .8rem;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border:1px solid rgba(245,166,35,.4);border-radius:var(--radius);padding:1rem 1.2rem;cursor:pointer;transition:var(--transition);font-family:var(--sans)}
 .planner-proj-btn:hover{border-color:var(--orange);box-shadow:0 6px 24px rgba(245,166,35,.2);transform:translateY(-1px)}
 .planner-proj-ico{width:44px;height:44px;border-radius:12px;background:rgba(245,166,35,.16);display:flex;align-items:center;justify-content:center;color:var(--orange);flex:0 0 auto}
@@ -1257,6 +1260,9 @@ input[type=number]{-moz-appearance:textfield}
       </div>
       <div class="section-body">
         <div id="projTable"></div>
+        <div style="text-align:center;margin-top:.8rem">
+          <button class="share-plan-btn" onclick="sharePlan(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this plan</button>
+        </div>
       </div>
     </div>
     <button class="planner-proj-btn" onclick="openSetupProjection('planner')">
@@ -1887,6 +1893,37 @@ function closePlannerIntro(){
   document.body.style.overflow='';
 }
 
+// Share the current plan as a link that re-creates the same view for the recipient. The setup
+// (readInputs) is packed into a ?p=<base64 JSON> URL. Uses the native share sheet (email / message
+// / etc.) on supporting devices, else copies the link to the clipboard.
+function sharePlan(btn){
+  const data=readInputs();
+  const enc=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const url=location.origin+location.pathname+'?p='+encodeURIComponent(enc);
+  if(navigator.share){
+    navigator.share({title:'GMT Optimizer — my plan',text:'My GoMining setup & projected income',url}).catch(()=>{});
+    return;
+  }
+  const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copy this link:',url));}
+  else prompt('Copy this link:',url);
+}
+// Load a shared plan from a ?p=<base64 JSON> link, overriding the local inputs (view-only — not
+// saved to the visitor's profile). Returns true if a link was applied.
+function applySharedPlan(){
+  try{
+    const raw=new URLSearchParams(location.search).get('p');
+    if(!raw)return false;
+    const data=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if(data&&typeof data==='object'){
+      applyInputs(data);
+      history.replaceState({},'',location.pathname);   // clean URL so the tool behaves normally afterward
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
 // ---- API ----
 // fetch with hard timeout — default fetch() can hang for ages on slow/dead endpoints
 function fetchTO(url,ms=8000){
@@ -1987,7 +2024,14 @@ async function fetchData(){
   savePriceCache();
   if(!S.setupLoaded){S.setupLoaded=true;loadSetup();}
   S.loaded=true;
+  const sharedPlan=!S.sharedApplied&&applySharedPlan();
+  if(sharedPlan)S.sharedApplied=true;
   updateHeader();recalc();
+  if(sharedPlan){
+    // Land the recipient on the Capital Planner results (already populated by recalc).
+    window._plannerCalcDone=true;
+    const pBtn=document.querySelector('[data-tab="tab-planner"]');if(pBtn)pBtn.click();
+  }
 }
 
 function updateHeader(){
