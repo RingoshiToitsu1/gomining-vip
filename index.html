@@ -2464,12 +2464,19 @@ function recalc(){
     else if($('discOverridePanel')&&$('discOverridePanel').style.display==='none')ovrToggle.classList.remove('active');
   }
   if(ovrReset)ovrReset.style.display=m.ovr?'':'none';
+  // VIP next-tier progress: the tier qualifies on TH OR locked GMT, so show whichever path is
+  // CLOSER to the next tier (e.g. a GMT-qualified user sees "X GMT to next", not the TH path).
+  let vipNext=null;
+  if(m.nxt){
+    const thP=m.nxt.th>0?m.vipTH/m.nxt.th:0, gP=m.nxt.veg>0?i.gl/m.nxt.veg:0, useG=gP>=thP;
+    const cur=useG?i.gl:m.vipTH, tgt=useG?m.nxt.veg:m.nxt.th;
+    vipNext={unit:useG?'GMT':'TH',cur,tgt,need:Math.max(0,tgt-cur),pct:tgt>0?Math.min(100,cur/tgt*100):0,dec:useG?0:1};
+  }
   // VIP Level hero card was replaced by the Growth Projection button; VIP tier
   // detail still renders in the VIP section below. Guarded in case it returns.
   if($('heroVip')){
     $('heroVip').innerHTML=badge(m.vip);
-    if(m.nxt){const need=m.nxt.th-m.vipTH;$('heroVipSub').textContent=fN(need,0)+' TH to '+m.nxt.n}
-    else $('heroVipSub').textContent='Max tier reached';
+    $('heroVipSub').textContent=vipNext?fN(vipNext.need,0)+' '+vipNext.unit+' to '+m.nxt.n:'Max tier reached';
   }
 
   // VIP section
@@ -2477,13 +2484,12 @@ function recalc(){
   if(m.vip.rb)vh+=` <span class="badge green">+${m.vip.rb}% TH reinvest bonus</span>`;
   if(m.vip.est)vh+=` <span class="badge orange">discount estimated</span>`;
   vh+='</div>';
-  if(m.nxt){
-    const need=m.nxt.th-m.vipTH, pct=Math.min(100,(m.vipTH/m.nxt.th)*100);
+  if(vipNext){
     vh+=`<div class="tier-progress"><div style="display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:.78rem;color:var(--text2)">Next: ${badge(m.nxt)}</span>
-      <span style="font-size:.78rem;color:var(--text3)">${fN(need,0)} TH needed</span></div>
-      <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:${pct}%"></div></div>
-      <div class="tier-info"><span>${fN(m.vipTH,1)} TH</span><span>${fN(m.nxt.th,0)} TH</span></div></div>`;
+      <span style="font-size:.78rem;color:var(--text3)">${fN(vipNext.need,0)} ${vipNext.unit} needed</span></div>
+      <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:${vipNext.pct}%"></div></div>
+      <div class="tier-info"><span>${fN(vipNext.cur,vipNext.dec)} ${vipNext.unit}</span><span>${fN(vipNext.tgt,0)} ${vipNext.unit}</span></div></div>`;
   }
   $('vipDisplay').innerHTML=vh;
 
