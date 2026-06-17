@@ -4349,8 +4349,18 @@ function obPreview(){
 function obFinish(){
   syncOB();
   try{localStorage.setItem('gm_onboarded','1')}catch(e){}
-  document.getElementById('onboarding').style.display='none';
-  document.getElementById('donateModal').style.display='';
+  // Brief "launching" spinner, then reveal the dashboard with the count-up, then the donate prompt.
+  const load=document.getElementById('newUserLoading');
+  const txt=load?load.querySelector('.sp-loading-txt'):null, prev=txt?txt.textContent:'';
+  if(txt)txt.textContent='Launching your dashboard…';
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    document.getElementById('onboarding').style.display='none';
+    if(load)load.style.display='none';
+    if(txt)txt.textContent=prev;
+    refreshMySetupAnimation();   // reveal My Setup with the numbers counting up from 0
+    setTimeout(function(){document.getElementById('donateModal').style.display='';},1200);
+  },850);
 }
 function closeDonate(){
   document.getElementById('donateModal').style.display='none';
