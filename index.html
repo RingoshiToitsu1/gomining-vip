@@ -1582,8 +1582,11 @@ const TIERS=[
   {n:'Legend III',th:250000,veg:2500000,d:5.1,rb:0},{n:'Legend IV',th:400000,veg:4000000,d:5.4,rb:0},
   {n:'Legend V',th:750000,veg:7500000,d:5.7,rb:0},{n:'Elite',th:1000000,veg:10000000,d:6.0,rb:0}
 ];
-const vipOf=(th,veg)=>{let t=TIERS[0];for(const x of TIERS)if(th>=x.th||veg>=x.veg)t=x;return t};
-const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;return null};
+// VIP tier (and its discount) is driven ONLY by locked GMT — qualifying via hashrate would take
+// far more USD of TH than the equivalent GMT, so it's never the optimal path. The `th` arg is
+// kept for call-site compatibility but ignored.
+const vipOf=(th,veg)=>{let t=TIERS[0];for(const x of TIERS)if(veg>=x.veg)t=x;return t};
+const nextVip=(th,veg)=>{for(const x of TIERS)if(veg<x.veg)return x;return null};
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
 
 // ---- TH COST TIERS ----
@@ -2465,7 +2468,7 @@ function recalc(){
   // detail still renders in the VIP section below. Guarded in case it returns.
   if($('heroVip')){
     $('heroVip').innerHTML=badge(m.vip);
-    if(m.nxt){const need=m.nxt.th-m.vipTH;$('heroVipSub').textContent=fN(need,0)+' TH to '+m.nxt.n}
+    if(m.nxt){const need=Math.max(0,m.nxt.veg-i.gl);$('heroVipSub').textContent=fN(need,0)+' GMT to '+m.nxt.n}
     else $('heroVipSub').textContent='Max tier reached';
   }
 
@@ -2475,12 +2478,12 @@ function recalc(){
   if(m.vip.est)vh+=` <span class="badge orange">discount estimated</span>`;
   vh+='</div>';
   if(m.nxt){
-    const need=m.nxt.th-m.vipTH, pct=Math.min(100,(m.vipTH/m.nxt.th)*100);
+    const need=Math.max(0,m.nxt.veg-i.gl), pct=m.nxt.veg>0?Math.min(100,(i.gl/m.nxt.veg)*100):0;
     vh+=`<div class="tier-progress"><div style="display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:.78rem;color:var(--text2)">Next: ${badge(m.nxt)}</span>
-      <span style="font-size:.78rem;color:var(--text3)">${fN(need,0)} TH needed</span></div>
+      <span style="font-size:.78rem;color:var(--text3)">${fN(need,0)} GMT needed</span></div>
       <div class="tier-bar-bg"><div class="tier-bar-fill" style="width:${pct}%"></div></div>
-      <div class="tier-info"><span>${fN(m.vipTH,1)} TH</span><span>${fN(m.nxt.th,0)} TH</span></div></div>`;
+      <div class="tier-info"><span>${fN(i.gl,0)} GMT</span><span>${fN(m.nxt.veg,0)} GMT</span></div></div>`;
   }
   $('vipDisplay').innerHTML=vh;
 
@@ -2498,6 +2501,7 @@ function recalc(){
   }
   dh+=row('Total Discount',fP(m.totD),'cyan');
   dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
+  dh+=row('Yearly savings',`${fU(m.save*m.bp*30*12)}/yr`,'green');
   $('discountDisplay').innerHTML=dh;
 
   // Combined: Daily Operation & Rewards
@@ -2519,6 +2523,7 @@ function recalc(){
   }
   g+=`<div class="divider"></div>`;
   g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
+  g+=row('Total yearly income',fU(totalMonthly*12),totalMonthly>=0?'green':'red');
 
   $('gmtCoverage').innerHTML=g;
 
