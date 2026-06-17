@@ -2387,6 +2387,31 @@ function autoSave(){
 ['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
+
+// Platform-wide field UX: focusing any value field clears it so you can type instantly (the old
+// value becomes a placeholder hint). Leaving it blank — or pressing Escape — reverts to the old
+// value. Delegated on document so it covers every number/text input, current or added later.
+function _isClearable(el){return el&&el.tagName==='INPUT'&&(el.type==='number'||el.type==='text')&&!el.readOnly&&!el.disabled&&el.dataset.noClear==null;}
+document.addEventListener('focusin',e=>{
+  const el=e.target;if(!_isClearable(el))return;
+  el.dataset.prevVal=el.value;
+  el.dataset.prevPh=el.getAttribute('placeholder')||'';
+  if(el.value!==''){el.setAttribute('placeholder',el.value);el.value='';}
+});
+document.addEventListener('focusout',e=>{
+  const el=e.target;if(!_isClearable(el)||el.dataset.prevVal===undefined)return;
+  if(el.value.trim()===''&&el.dataset.prevVal!==''){
+    el.value=el.dataset.prevVal;
+    el.dispatchEvent(new Event('input',{bubbles:true}));   // resync (value reverted to its prior state)
+  }
+  el.setAttribute('placeholder',el.dataset.prevPh);
+  delete el.dataset.prevVal;delete el.dataset.prevPh;
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  const el=e.target;if(!_isClearable(el)||el.dataset.prevVal===undefined)return;
+  el.value=el.dataset.prevVal;el.blur();   // cancel the edit, revert
+});
 ['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 {const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
