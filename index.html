@@ -2804,44 +2804,70 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 // Side-by-side comparison: spend the next chunk of capital on efficiency vs hashrate vs discount.
 // Persistent shell: title + the per-miner upgrade input + an empty body the input refreshes.
 function effCompareShell(i){
+  const can=(i.th>0)&&(i.wth>12);   // efficiency upgrade only applies to an existing farm above 12 W/TH
   const def=Math.max(1,Math.round(Math.min(i.th||0,MINER_CAP)));
   const max=Math.max(1,Math.round(i.th||0));
-  return `<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div>
-  <div class="eff-control"><span>Upgrade efficiency on</span><input type="number" id="effMinerTH" value="${def}" min="1" max="${max}" step="10" oninput="updateEffCompare()"><span>TH (one miner) &rarr; 12 W/TH</span></div>
-  <div id="effCompareBody"></div>`;
+  const ctrl=can?`<div class="eff-control"><span>Upgrade efficiency on</span><input type="number" id="effMinerTH" value="${def}" min="1" max="${max}" step="10" oninput="updateEffCompare()"><span>TH (one miner) &rarr; 12 W/TH</span></div>`:'';
+  return `<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div>${ctrl}<div id="effCompareBody"></div>`;
 }
 // Re-render only the comparison body when the miner-TH input changes (keeps input focus).
 function updateEffCompare(){
   const st=window._effCmp;if(!st)return;
   const el=document.getElementById('effMinerTH');
-  let m=el?(parseFloat(el.value)||0):st.i.th;
-  m=Math.max(0,Math.min(st.i.th,m));
+  let m=el?(parseFloat(el.value)||0):(st.i.th||0);
+  m=Math.max(0,Math.min(st.i.th||0,m));
   const body=document.getElementById('effCompareBody');
-  if(body)body.innerHTML=renderEfficiencyComparison(st.i,st.gmtUSD,st.usdUSD,m);
+  if(body)body.innerHTML=renderEfficiencyComparison(st,m);
 }
 
-// Body of the comparison: the OPTIMAL SPLIT of the capital + a breakdown card per bucket.
-// minerTH = TH of the one miner to upgrade (efficiency upgrades are per-machine).
-function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
-  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
-  const K=gmtUSD+usdUSD;
+// Capital split — driven by the planner's solver (Lock GMT vs Buy TH, consistent with the
+// Resource Breakdown), with an Upgrade-Efficiency overlay for existing farms above 12 W/TH.
+function renderEfficiencyComparison(st,minerTH){
+  if(!st)return '';
+  const i=st.i, K=st.K, gp=st.gp, bp=st.bp;
   if(!i||!(K>0))return '';
-  const bp=S.btcPrice, allGMT=usdUSD<=0;
-  const a=optimalSplit(i,gmtUSD,usdUSD,bp,minerTH);
-  if(!a)return '';
-  const cross=btcCrossover(i,a.eff);
-  const nom=v=>v/a.ppRate;                          // eff-USD → nominal capital deployed
-  const roiB=a.totalMo>0?a.totalMo*12/K*100:0;
-  const thW=a.th12>a.th15?12:15, thTot=a.th15+a.th12;
+  const cf=CONVERSION_FEE, dbt=dailyBTCperTH(), d=(calc(i).totD)/100;
+  let lockUSD=Math.max(0,st.lockUSD||0), thUSD=Math.max(0,st.thUSD||0);
+  const thUSD0=thUSD, glAdd=Math.max(0,st.glAdd||0);
+  let addTH=Math.max(0,st.addTH||0);
+
+  // Efficiency overlay: if the existing farm is above 12 W/TH, upgrading the chosen miner may
+  // beat buying new hashrate — if so, divert that slice of the TH budget into the upgrade.
+  let effUSD=0, effTHupg=0, upgradeROI=0, newThROI=0;
+  if(i.th>0 && i.wth>12 && thUSD>0){
+    const cptU=effUpgradeCostPerTH(i.wth);
+    const cap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th));
+    if(cptU>0 && cap>0){
+      const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*bp*30;
+      const upgradeCost=cap*cptU;
+      upgradeROI=upgradeCost>0?savedMo*12/upgradeCost:0;
+      const cptTH=estimateCPT((i.th+addTH)||1);
+      const thNetMo=(dbt*bp-(0.0012*EFF_BASE_MAX+0.0089)*(1-d))*(1-cf)*30;
+      newThROI=cptTH>0?thNetMo*12/cptTH:0;
+      if(upgradeROI>newThROI){
+        effUSD=Math.min(thUSD,upgradeCost);
+        effTHupg=effUSD/cptU;
+        thUSD-=effUSD;
+      }
+    }
+  }
+  if(thUSD0>0)addTH=addTH*thUSD/thUSD0;   // fewer TH bought once efficiency takes a slice
+
+  const tot=lockUSD+thUSD+effUSD;
+  if(tot<=0)return '';
+  const lockPct=lockUSD/tot*100, thPct=thUSD/tot*100, effPct=effUSD/tot*100;
+  const finTH=i.th+addTH;
+  const finWth=finTH>0?((i.th-effTHupg)*i.wth+effTHupg*EFF_BEST+addTH*EFF_BASE_MAX)/finTH:i.wth;
+  const baseMo=calc(i).net*bp*30;
+  const newMo=calc({...i,th:finTH,wth:finWth,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
+  const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
   let h=`<div class="eff-verdict">`;
-  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(a.totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
-  h+=`<div class="eff-verdict-sub">Allocated to maximise net income <strong>while holding your token discount</strong> — adding hashrate without locking GMT would drop coverage, so locks and TH are balanced automatically.${allGMT?' Funded from GMT on hand — no 2% conversion fee.':''}</div>`;
-  if(cross.bp)h+=`<div class="eff-verdict-sub">Hashrate goes into ${thW===12?'new 12 W machines':'your 15 W machine upgrade'} (crossover &asymp; ${fU(cross.bp,0)}, today ${fU(bp,0)} — above it 15 W wins, below it 12 W).</div>`;
+  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-sub">Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.</div>`;
   h+=`</div>`;
 
-  // Split bar
-  const segs=[[a.lockPct,'Lock GMT','var(--purple)'],[a.thPct,'Buy TH','var(--cyan)'],[a.effPct,'Upgrade Eff','var(--green)']];
+  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)'],[effPct,'Upgrade Eff','var(--green)']];
   let bar=`<div class="eff-splitbar">`;
   segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
   bar+=`</div>`;
@@ -2853,20 +2879,20 @@ function renderEfficiencyComparison(i,gmtUSD,usdUSD,minerTH){
     return s+`</div></div>`;
   };
   let g=`<div class="eff-grid">`;
-  g+=card('Lock GMT',a.lockPct,nom(a.spent.lock),[
-    ['Locks',a.glAdd>0?`+${fN(a.glAdd,0)} GMT`:'—'],
-    ['Effect',a.lockPct>0.5?'holds 20% discount':'—']
+  g+=card('Lock GMT',lockPct,lockUSD,[
+    ['Locks',glAdd>0?`+${fN(glAdd,0)} GMT`:'—'],
+    ['Effect',lockPct>0.5?'holds 20% discount':'—']
   ]);
-  g+=card('Buy TH',a.thPct,nom(a.spent.th),[
-    ['Adds',thTot>0?`+${fN(thTot,1)} TH @ ${thW}W`:'—'],
-    ['Source',thTot>0?(thW===15?'15 W upgrade':'new 12 W machine'):'—']
+  g+=card('Buy TH',thPct,thUSD,[
+    ['Adds',addTH>0?`+${fN(addTH,1)} TH @ 15W`:'—'],
+    ['Source',addTH>0?'15 W machine upgrade':'—']
   ]);
-  g+=card('Upgrade Efficiency',a.effPct,nom(a.spent.eff),[
-    ['Upgrades',a.effTH>0?`${fN(a.effTH,0)} TH → 12 W`:'—'],
-    ['Farm avg',a.effTH>0?`${fN(i.wth,2)} → ${fN(a.finWth,2)}`:'—']
+  g+=card('Upgrade Efficiency',effPct,effUSD,[
+    ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
+    ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
   ]);
   g+=`</div>`;
-  g+=`<div class="eff-foot">Result: <strong>${fN(a.finTH,0)} TH</strong> @ ${fN(a.finWth,2)} W/TH${a.glAdd>0?`, +${fN(a.glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(a.totalMo,0)}/mo</strong> net.</div>`;
+  g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
   return h+bar+g;
 }
 
@@ -2924,7 +2950,11 @@ function renderPlanner(i,m){
   // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee. The per-miner
   // upgrade input re-renders just the comparison body via updateEffCompare().
   const hasGMT=gmtAvail>0;
-  window._effCmp={i,gmtUSD:gmtAvail*gp,usdUSD:usdCapAfter};
+  // Split is driven by the SAME solver as Path-to-20% / Resource Breakdown (consistent + unbounded
+  // — no 5,000 TH cap on the farm total). Efficiency upgrade is layered on as an overlay.
+  window._effCmp={i,K:totalValue,gp,bp,
+    lockUSD:usdSpentOnGMT+gmtFromPool*gp, glAdd:gmtLock,
+    thUSD:usdToTH+gmtSell*gp, addTH:at};
   ah+=effCompareShell(i);
 
   // Path to 20%
