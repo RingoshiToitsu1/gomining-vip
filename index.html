@@ -1245,11 +1245,6 @@ input[type=number]{-moz-appearance:textfield}
 <!-- ==================== TAB 2 ==================== -->
 <div class="tab-content" id="tab-planner">
 
-  <!-- Adjust investment — reopens the full-page Capital Planner form -->
-  <button class="planner-adjust-btn" onclick="openPlannerForm()">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
-    Adjust Investment Amount
-  </button>
 
   <!-- TOP ROW: New Monthly Income + Growth Projection card -->
   <div class="planner-top-row">
@@ -1817,9 +1812,10 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
-  // First visit to the planner auto-opens the full-page form; after a split has
-  // been calculated, the tab shows results (reopen the form via "Adjust").
-  if(b.dataset.tab==='tab-planner'&&!window._plannerCalcDone){openPlannerForm();}
+  // First visit to the planner auto-opens the full-page form; navigating in from another tab
+  // shows the results. Re-clicking "Capital Planner" while already on it reopens the form to
+  // adjust (replaces the old "Adjust Investment Amount" button).
+  if(b.dataset.tab==='tab-planner'&&(!window._plannerCalcDone||(prev&&prev.id==='tab-planner'))){openPlannerForm();}
   // Switching to My Setup from another tab replays the count-up animation.
   if(b.dataset.tab==='tab-current'&&(!prev||prev.id!=='tab-current')){refreshMySetupAnimation();}
 }));
