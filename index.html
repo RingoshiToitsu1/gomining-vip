@@ -1382,6 +1382,7 @@ input[type=number]{-moz-appearance:textfield}
   <div class="sp-page-inner">
     <div class="sp-page-head">
       <button class="sp-back-btn" onclick="returnToSetupFromPlanner()">&larr; Return to My Setup</button>
+      <button class="sp-back-btn" id="piReturnResults" onclick="returnToPlannerResults()" style="display:none">&larr; Return to Capital Planner</button>
     </div>
     <div class="sp-form">
       <div class="pi-title">Capital Planner</div>
@@ -1828,6 +1829,14 @@ function openPlannerForm(){
   document.getElementById('plannerIntro').scrollTop=0;
   document.body.style.overflow='hidden';
   const cb=document.getElementById('plannerCalcBtn');if(cb)cb.disabled=false;
+  // "Return to Capital Planner" only makes sense once a plan has been calculated to go back to.
+  const rr=document.getElementById('piReturnResults');if(rr)rr.style.display=window._plannerCalcDone?'':'none';
+}
+// Dismiss the form back to the already-computed Capital Planner results (no recalculation).
+function returnToPlannerResults(){
+  closePlannerIntro();
+  const pBtn=document.querySelector('[data-tab="tab-planner"]');
+  if(pBtn&&!pBtn.classList.contains('active'))pBtn.click();
 }
 function submitPlannerCapital(){
   // Brief "calculating" state so the optimal-split solve feels tangible.
