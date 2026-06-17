@@ -596,6 +596,11 @@ input[type=number]{-moz-appearance:textfield}
 .sp-page::-webkit-scrollbar-track{background:transparent}
 .sp-page::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--cyan));border-radius:8px;border:3px solid #0a0a0a;background-clip:padding-box}
 .sp-page-inner{max-width:920px;margin:0 auto;padding:.6rem 1.2rem 3rem}
+.live-chip-btn{cursor:pointer}
+.live-chip-btn:hover{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+#btcChartPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
+.btc-chart-title{font-size:.92rem;font-weight:700;color:var(--text2);display:flex;align-items:center;white-space:nowrap}
+.btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card)}
 .sp-page-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem 0 .9rem;position:sticky;top:0;z-index:2;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sp-back-btn,.sp-new-btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:10px;padding:.55rem 1.05rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .sp-back-btn{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -1035,7 +1040,7 @@ input[type=number]{-moz-appearance:textfield}
   <div class="header-inner">
     <div class="logo"><img src="gmt-optimizer-logo.svg?v=2" alt="" style="height:24px;width:24px;vertical-align:middle;margin-right:6px">GMT Optimizer <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button><a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="ob-reset-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;-webkit-text-fill-color:#000;border-color:transparent;font-weight:700;text-decoration:none">Suggest a Feature</a></div>
     <div class="live-bar" id="liveBar">
-      <div class="live-chip" title="Live BTC price"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip live-chip-btn" title="Open live BTC chart" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live GMT price"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
@@ -1458,6 +1463,17 @@ input[type=number]{-moz-appearance:textfield}
   <div class="sp-page-loading" id="plannerCalcLoading" style="display:none">
     <div class="sp-spinner"></div>
     <div class="sp-loading-txt">Finding your optimal split…</div>
+  </div>
+</div>
+
+<!-- LIVE BTC CHART — full page (TradingView advanced chart with drawing tools) -->
+<div class="sp-page" id="btcChartPage" style="display:none">
+  <div class="sp-page-inner btc-chart-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="closeBtcChart()">&larr; Return to My Setup</button>
+      <span class="btc-chart-title"><img src="btc36.png" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">Bitcoin — Live Chart</span>
+    </div>
+    <div class="btc-chart-wrap"><div id="btcChartWidget" style="height:100%;width:100%"></div></div>
   </div>
 </div>
 
@@ -1896,6 +1912,38 @@ function returnToSetupFromPlanner(){
 function closePlannerIntro(){
   document.getElementById('plannerIntro').style.display='none';
   document.body.style.overflow='';
+}
+
+// Live BTC chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
+let _btcChartLoaded=false;
+function openBtcChart(){
+  document.getElementById('btcChartPage').style.display='';
+  document.getElementById('btcChartPage').scrollTop=0;
+  document.body.style.overflow='hidden';
+  buildBtcChart();
+}
+function closeBtcChart(){
+  document.getElementById('btcChartPage').style.display='none';
+  document.body.style.overflow='';
+}
+function buildBtcChart(){
+  if(_btcChartLoaded)return;
+  const make=()=>{
+    if(!window.TradingView||!window.TradingView.widget)return;
+    _btcChartLoaded=true;
+    new TradingView.widget({
+      container_id:'btcChartWidget', autosize:true,
+      symbol:'COINBASE:BTCUSD', interval:'60', timezone:'Etc/UTC',
+      theme:'dark', style:'1', locale:'en',
+      hide_side_toolbar:false,   // shows the drawing / TA toolbar
+      allow_symbol_change:false, withdateranges:true, details:false,
+      backgroundColor:'rgba(10,10,10,1)', gridColor:'rgba(245,166,35,0.06)'
+    });
+  };
+  if(window.TradingView){make();return;}
+  const s=document.createElement('script');
+  s.src='https://s3.tradingview.com/tv.js';s.async=true;s.onload=make;
+  document.head.appendChild(s);
 }
 
 // Share the current plan as a link that re-creates the same view for the recipient. The setup
