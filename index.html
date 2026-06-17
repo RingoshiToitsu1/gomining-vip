@@ -1475,6 +1475,10 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div class="btc-chart-wrap"><div id="btcChartWidget" style="height:100%;width:100%"></div></div>
   </div>
+  <div class="sp-page-loading" id="btcChartLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Loading your setup…</div>
+  </div>
 </div>
 
 <!-- GROWTH PROJECTION (existing setup) — full page -->
@@ -1920,8 +1924,16 @@ let _chartSym=null;
 function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','btc36.png',false);}
 function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','gmt36.png',true);}
 function closeBtcChart(){
-  document.getElementById('btcChartPage').style.display='none';
-  document.body.style.overflow='';
+  const load=document.getElementById('btcChartLoading');
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    document.getElementById('btcChartPage').style.display='none';
+    if(load)load.style.display='none';
+    document.body.style.overflow='';
+    const setupBtn=document.querySelector('[data-tab="tab-current"]');
+    if(setupBtn)setupBtn.click();        // return to My Setup
+    refreshMySetupAnimation();            // replay the count-up on all the numbers
+  },650);
 }
 function openChart(symbol,title,icon,allowChange){
   document.getElementById('btcChartPage').style.display='';
