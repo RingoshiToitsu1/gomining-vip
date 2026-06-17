@@ -432,15 +432,19 @@ input[type=number]{-moz-appearance:textfield}
 }
 
 /* ---- ONBOARDING MODAL ---- */
-.ob-overlay{position:fixed;inset:0;z-index:1000;background:rgba(24,25,40,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;opacity:0;animation:obFadeIn .5s ease forwards}
+/* New-user onboarding — full page (same look as Capital Planner / Projection pages) */
+.ob-overlay{position:fixed;inset:0;z-index:1000;background:#0a0a0a;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(245,166,35,.05),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(245,166,35,.04),transparent 60%);background-attachment:fixed;display:flex;flex-direction:column;opacity:0;animation:obFadeIn .5s ease forwards}
 @keyframes obFadeIn{to{opacity:1}}
-.ob-modal{width:min(600px,92vw);max-height:90vh;overflow-y:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;box-shadow:0 0 80px rgba(245,166,35,.12),0 0 200px rgba(0,194,255,.05);position:relative}
-.ob-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:16px 16px 0 0}
-.ob-dots{display:flex;justify-content:center;gap:8px;padding:1.5rem 0 0}
+.ob-modal{width:100%;max-width:600px;height:100%;margin:0 auto;display:flex;flex-direction:column;background:none;border:none;border-radius:0;box-shadow:none;position:relative;padding:0 1.2rem}
+.ob-modal::before{display:none}
+.ob-dots{display:flex;justify-content:center;gap:8px;padding:1.1rem 0 .2rem;flex:0 0 auto}
 .ob-dot{width:8px;height:8px;border-radius:50%;background:var(--text4);transition:all .3s}
 .ob-dot.active{background:var(--purple);box-shadow:0 0 10px var(--purple)}
 .ob-dot.done{background:var(--cyan)}
-.ob-body{padding:1.5rem 2rem 1rem;min-height:320px;position:relative;overflow:hidden}
+.ob-body{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:.8rem 0 .5rem;position:relative;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:var(--purple) transparent}
+.ob-body::-webkit-scrollbar{width:8px}
+.ob-body::-webkit-scrollbar-thumb{background:var(--purple);border-radius:4px}
+.ob-step{width:100%;margin:auto 0}   /* auto margins center the step when it fits, collapse to scroll when it doesn't */
 .ob-step{display:none;animation:obSlideIn .35s ease}
 .ob-step.active{display:block}
 @keyframes obSlideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
@@ -469,7 +473,7 @@ input[type=number]{-moz-appearance:textfield}
 .ob-select:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
 .ob-toggle-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.8rem}
 .ob-toggle-row span{font-size:.82rem;color:var(--text2)}
-.ob-nav{display:flex;justify-content:center;padding:0 2rem 1.5rem;gap:1rem}
+.ob-nav{display:flex;justify-content:center;padding:.5rem 0 1.2rem;gap:1rem;flex:0 0 auto}
 .ob-btn{padding:.7rem 1.8rem;border-radius:8px;font-family:var(--sans);font-size:.88rem;font-weight:600;cursor:pointer;transition:var(--transition);border:none}
 .ob-btn-primary{background:#7540ef;color:#fff;box-shadow:0 4px 20px rgba(245,166,35,.3);border-radius:1rem}
 .ob-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 30px rgba(245,166,35,.4);background:#F7B84E}
@@ -560,11 +564,13 @@ input[type=number]{-moz-appearance:textfield}
   .ob-tutorial-img{max-height:150px;width:auto;max-width:100%;margin:0 auto}
 }
 @media(max-width:600px){
-  .ob-body{padding:1rem 1.2rem .8rem}
-  .ob-nav{padding:0 1.2rem 1.2rem}
-  .ob-features{grid-template-columns:1fr}
-  .ob-title{font-size:1.2rem}
-  .ob-preview-grid{grid-template-columns:1fr}
+  .ob-modal{padding:0 1rem}
+  .ob-body{padding:.6rem 0 .4rem}
+  .ob-nav{padding:.4rem 0 1rem}
+  .ob-title{font-size:1.2rem;margin-bottom:.35rem}
+  .ob-subtitle{font-size:.8rem;line-height:1.45;margin-bottom:.9rem}
+  .ob-preview-grid{grid-template-columns:1fr 1fr}
+  .ob-field{margin-bottom:.7rem}
 }
 
 /* ---- PLANNER INTRO ---- */
