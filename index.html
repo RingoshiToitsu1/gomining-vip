@@ -434,7 +434,10 @@ input[type=number]{-moz-appearance:textfield}
 
 /* ---- ONBOARDING MODAL ---- */
 /* New-user onboarding — full page (same look as Capital Planner / Projection pages) */
-.ob-overlay{position:fixed;inset:0;z-index:1000;background:#0a0a0a;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(245,166,35,.05),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(245,166,35,.04),transparent 60%);background-attachment:fixed;display:flex;flex-direction:column;opacity:0;animation:obFadeIn .5s ease forwards}
+.ob-overlay{position:fixed;inset:0;z-index:1000;background:#0a0a0a;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 10%,rgba(245,166,35,.05),transparent 60%),radial-gradient(ellipse 100% 50% at 50% 110%,rgba(245,166,35,.04),transparent 60%);background-attachment:fixed;display:flex;flex-direction:column}
+/* The overlay itself stays fully opaque from frame 1 (so the dashboard never shows through);
+   fade only the inner content for a soft entrance. */
+#onboarding .ob-modal{animation:obFadeIn .45s ease}
 @keyframes obFadeIn{to{opacity:1}}
 .ob-modal{width:100%;max-width:600px;height:100%;margin:0 auto;display:flex;flex-direction:column;background:none;border:none;border-radius:0;box-shadow:none;position:relative;padding:0 1.2rem}
 .ob-modal::before{display:none}
