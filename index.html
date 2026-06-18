@@ -4031,6 +4031,15 @@ function computeSetupProjection(){
       <div class="ri-breakdown">${ssPct>=0?'+':''}${fN(ssPct,1)}% reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
     </div>`;
   }
+  if(totalDistributionUSD>0){
+    const wks=days/7, payRate=ptype==='pct'?fP(pval)+' of weekly rewards':fU(pval)+'/wk';
+    h+=`<div class="ri-single-card">
+      <div class="ri-label">Income Paid Out (over period)</div>
+      <div class="ri-headline green">${fU(totalDistributionUSD)}</div>
+      <div class="ri-mo-yr">${fU(totalDistributionUSD/(days/30))}/mo avg<span class="ri-sep">&bull;</span>${payRate}</div>
+      <div class="ri-gain">taken as income instead of reinvested</div>
+    </div>`;
+  }
   if(HAS_GREEDY){
     const greedyGain=greedyTH-Math.max(0,i.gth||0);
     const capped=greedyTH>=GREEDY_CAP;
