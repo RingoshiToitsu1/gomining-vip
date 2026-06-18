@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMT Optimizer</title>
+<script>/* New users: flag before paint so the landing covers the dashboard immediately (no flash). */try{if(!localStorage.getItem('gm_onboarded'))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -450,6 +451,10 @@ input[type=number]{-moz-appearance:textfield}
 .lp-art{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;display:none}
 #onboarding.lp-active .lp-art{display:block}
 #onboarding .ob-modal{position:relative;z-index:1}
+/* Onboarding visibility: hidden by default; shown immediately (pre-paint) only for new users. */
+#onboarding{display:none}
+html.show-onboarding #onboarding{display:flex}
+#onboarding.lp-active .ob-dots,#onboarding.lp-active .ob-nav{display:none}
 .lp-aurora{position:absolute;border-radius:50%;filter:blur(64px);opacity:.55;will-change:transform}
 .lp-aurora-1{width:52vmax;height:52vmax;left:-12vmax;top:-16vmax;background:radial-gradient(circle,rgba(245,166,35,.34),transparent 70%);animation:lpDrift1 19s ease-in-out infinite}
 .lp-aurora-2{width:46vmax;height:46vmax;right:-13vmax;bottom:-13vmax;background:radial-gradient(circle,rgba(255,207,122,.26),transparent 70%);animation:lpDrift2 23s ease-in-out infinite}
@@ -459,8 +464,20 @@ input[type=number]{-moz-appearance:textfield}
 @keyframes lpDrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vmax,7vmax) scale(1.2)}}
 .lp-rings{position:absolute;width:min(135vh,1100px);height:min(135vh,1100px);left:50%;top:46%;transform:translate(-50%,-50%);opacity:.14;animation:lpSpin 75s linear infinite;will-change:transform}
 @keyframes lpSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.lp-aurora,.lp-rings,.lp-headline{animation:none}}
+@media(prefers-reduced-motion:reduce){.lp-aurora,.lp-rings,.ob-step.lp .lp-logo,.ob-step.lp .lp-headline,.ob-step.lp .lp-sub,.ob-step.lp .lp-ctas,.ob-step.lp .lp-chips,.ob-step.lp .lp-quote,.ob-step.lp .lp-trust{animation:none;opacity:1}}
 .ob-step.lp{text-align:center;padding:1rem 0;position:relative;z-index:1}
+/* Faint dark scrim behind the landing copy so text stays crisp over the aurora */
+.ob-step.lp::before{content:'';position:absolute;inset:-12% -25%;z-index:-1;background:radial-gradient(ellipse 58% 66% at 50% 46%,rgba(8,8,10,.6),rgba(8,8,10,.25) 55%,transparent 78%)}
+/* Composed staggered entrance for the landing */
+@keyframes lpRise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.ob-step.lp .lp-logo,.ob-step.lp .lp-sub,.ob-step.lp .lp-ctas,.ob-step.lp .lp-chips,.ob-step.lp .lp-quote,.ob-step.lp .lp-trust{opacity:0;animation:lpRise .65s cubic-bezier(.22,1,.36,1) forwards}
+.ob-step.lp .lp-logo{animation-delay:.06s}
+.ob-step.lp .lp-headline{animation:lpRise .75s cubic-bezier(.22,1,.36,1) .18s both,lpShimmer 6.5s linear 1.1s infinite}
+.ob-step.lp .lp-sub{animation-delay:.34s}
+.ob-step.lp .lp-ctas{animation-delay:.48s}
+.ob-step.lp .lp-chips{animation-delay:.62s}
+.ob-step.lp .lp-quote{animation-delay:.74s}
+.ob-step.lp .lp-trust{animation-delay:.84s}
 .lp-logo{display:flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--mono);font-size:1.05rem;font-weight:700;color:var(--purple-soft);letter-spacing:1px;margin-bottom:1.1rem}
 .lp-logo img{height:34px;width:34px;border-radius:9px}
 .lp-headline{font-size:2.7rem;font-weight:900;line-height:1.04;margin:0 0 .7rem;background:linear-gradient(110deg,var(--purple) 0%,var(--diamond) 28%,#fff6e0 50%,var(--diamond) 72%,var(--purple) 100%);background-size:230% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:lpShimmer 6.5s linear infinite}
@@ -861,7 +878,7 @@ input[type=number]{-moz-appearance:textfield}
 </svg>
 
 <!-- ONBOARDING -->
-<div class="ob-overlay" id="onboarding" style="display:none">
+<div class="ob-overlay lp-active" id="onboarding">
 <div class="lp-art" aria-hidden="true">
   <span class="lp-aurora lp-aurora-1"></span>
   <span class="lp-aurora lp-aurora-2"></span>
@@ -905,16 +922,16 @@ input[type=number]{-moz-appearance:textfield}
 
     <!-- STEP 0: Welcome -->
     <div class="ob-step lp active" data-ob-step="0">
-      <div class="lp-logo ob-step-reveal"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</div>
-      <h1 class="lp-headline ob-step-reveal">Plan your work.<br>Work your plan.</h1>
-      <p class="lp-sub ob-step-reveal">The free, ad-free GoMining profit optimizer that finds your perfect capital split &mdash; then tracks it live, sat by sat.</p>
-      <div class="lp-ctas ob-step-reveal">
+      <div class="lp-logo"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</div>
+      <h1 class="lp-headline">Plan your work.<br>Work your plan.</h1>
+      <p class="lp-sub">The free, ad-free GoMining profit optimizer that finds your perfect capital split &mdash; then tracks it live, sat by sat.</p>
+      <div class="lp-ctas">
         <button class="lp-cta lp-cta-primary" onclick="obNext()">I'm already mining<small>Enter my GoMining setup</small></button>
         <button class="lp-cta lp-cta-alt" onclick="obNewUser()">New to GoMining<small>No computing power yet</small></button>
       </div>
-      <div class="lp-chips ob-step-reveal"><span>Capital Planner</span><span>Live P&amp;L</span><span>Growth Projection</span><span>VIP &amp; Discount</span></div>
-      <div class="lp-quote ob-step-reveal">Growing up, my parents always told me to <b>&ldquo;plan your work, and work your plan.&rdquo;</b> That&rsquo;s exactly what this tool does for your GoMining farm.</div>
-      <div class="lp-trust ob-step-reveal">100% free &middot; No login &middot; Live network data &middot; No ads, ever</div>
+      <div class="lp-chips"><span>Capital Planner</span><span>Live P&amp;L</span><span>Growth Projection</span><span>VIP &amp; Discount</span></div>
+      <div class="lp-quote">Growing up, my parents always told me to <b>&ldquo;plan your work, and work your plan.&rdquo;</b> That&rsquo;s exactly what this tool does for your GoMining farm.</div>
+      <div class="lp-trust">100% free &middot; No login &middot; Live network data &middot; No ads, ever</div>
     </div>
 
     <!-- STEP 1: Display Currency -->
@@ -4460,11 +4477,8 @@ function obGoStep(n){
   // Stagger reveal delays for children within the step
   const revealEls=step.querySelectorAll('.ob-step-reveal,.ob-field,.ob-toggle-row,.ob-preview-card');
   revealEls.forEach((el,i)=>{el.style.transitionDelay=(0.15+i*0.12)+'s'});
-  // Step 0 is the marketing landing page — it has its own CTAs, so hide the wizard dots + nav there,
-  // and switch on the artistic background (aurora + loupe rings) only for the landing.
-  const nav=document.querySelector('.ob-nav'),dots=document.querySelector('.ob-dots');
-  if(nav)nav.style.display=n===0?'none':'flex';
-  if(dots)dots.style.display=n===0?'none':'flex';
+  // Step 0 is the marketing landing page — the `lp-active` class (CSS) hides the wizard dots + nav
+  // and switches on the artistic background (aurora + loupe rings) only for the landing.
   document.getElementById('onboarding').classList.toggle('lp-active',n===0);
   document.getElementById('obBack').style.display=n===0?'none':'';
   const newBtn=document.getElementById('obNewBtn'),nextBtn=document.getElementById('obNext');
