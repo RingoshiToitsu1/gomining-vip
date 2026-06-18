@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GMT Optimizer</title>
+<script>/* New users: flag before paint so the landing covers the dashboard immediately (no flash). */try{if(!localStorage.getItem('gm_onboarded'))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -450,6 +451,11 @@ input[type=number]{-moz-appearance:textfield}
 .lp-art{position:absolute;inset:0;pointer-events:none;z-index:0;display:none}
 #onboarding.lp-active .lp-art{display:block}
 #onboarding .ob-modal{position:relative;z-index:1}
+/* Onboarding visibility: hidden by default; shown immediately (pre-paint) only for new users, so
+   the opaque landing covers the dashboard from the first frame (no ghost flash of the setup data). */
+#onboarding{display:none}
+html.show-onboarding #onboarding{display:flex}
+#onboarding.lp-active .ob-dots,#onboarding.lp-active .ob-nav{display:none}
 .lp-aurora{position:absolute;border-radius:50%;filter:blur(64px);opacity:.55;will-change:transform}
 .lp-aurora-1{width:52vmax;height:52vmax;left:-12vmax;top:-16vmax;background:radial-gradient(circle,rgba(245,166,35,.34),transparent 70%);animation:lpDrift1 19s ease-in-out infinite}
 .lp-aurora-2{width:46vmax;height:46vmax;right:-13vmax;bottom:-13vmax;background:radial-gradient(circle,rgba(255,207,122,.26),transparent 70%);animation:lpDrift2 23s ease-in-out infinite}
@@ -861,7 +867,7 @@ input[type=number]{-moz-appearance:textfield}
 </svg>
 
 <!-- ONBOARDING -->
-<div class="ob-overlay" id="onboarding" style="display:none">
+<div class="ob-overlay lp-active" id="onboarding">
 <div class="lp-art" aria-hidden="true">
   <span class="lp-aurora lp-aurora-1"></span>
   <span class="lp-aurora lp-aurora-2"></span>
