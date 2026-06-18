@@ -601,8 +601,6 @@ input[type=number]{-moz-appearance:textfield}
 #btcChartPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
 .btc-chart-title{font-size:.92rem;font-weight:700;color:var(--text2);display:flex;align-items:center;white-space:nowrap}
 .btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card)}
-.greedy-bonus{margin:.9rem 0 .2rem;padding:.6rem .85rem;background:linear-gradient(135deg,rgba(80,220,140,.10),rgba(80,220,140,.03));border:1px solid var(--green);border-radius:var(--radius-sm);font-size:.8rem;line-height:1.5;color:var(--text2);text-align:center}
-.greedy-bonus strong{color:var(--text)}
 .sp-page-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem 0 .9rem;position:sticky;top:0;z-index:2;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sp-back-btn,.sp-new-btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:10px;padding:.55rem 1.05rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .sp-back-btn{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -3136,17 +3134,6 @@ function renderPlanner(i,m){
     thUSD:usdToTH+gmtSell*gp, addTH:at};
   ah+=effCompareShell(i);
 
-  // Greedy Machine passive-growth bonus — the free hashrate it generates, valued in $.
-  {
-    const gTot=a.greedyTot||0, gg=(a.ggrow||0)/100;
-    if(gTot>0&&gg>0){
-      const wkMo=52/12;
-      const moTH=gTot*(Math.pow(1+gg,wkMo)-1), yrTH=gTot*(Math.pow(1+gg,52)-1);
-      const cpt=estimateCPT(gTot);
-      ah+=`<div class="greedy-bonus">&#127793; <strong>Greedy passive growth</strong> &mdash; +${fN(moTH,1)} TH/mo of free hashrate at ${fP(i.ggrow)}/wk, worth ~<strong>${fU(moTH*cpt,0)}/mo</strong> (${fU(yrTH*cpt,0)}/yr) at today's TH price.</div>`;
-    }
-  }
-
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
   ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
@@ -3625,7 +3612,7 @@ function runReinvestProjection(){
       <div class="ri-label">Greedy Machine TH (End of Period)</div>
       <div class="ri-headline cyan">${fN(greedyTH,1)} TH</div>
       <div class="ri-usd-value">from ${fN(greedyStart,1)} TH start &middot; ${fP(i.ggrow)}/wk passive${capped?' &middot; at 5k cap, passive only':''}</div>
-      <div class="ri-gain">+${fN(greedyGain,1)} TH${greedyStart>0?` (+${fN(greedyGain/greedyStart*100,0)}%)`:''}</div>
+      <div class="ri-gain">+${fN(greedyGain,1)} TH${greedyStart>0?` (+${fN(greedyGain/greedyStart*100,0)}%)`:''} &middot; ~${fU(greedyGain*estimateCPT(greedyTH),0)} free hashrate</div>
     </div>`;
   }
 
@@ -3972,7 +3959,7 @@ function computeSetupProjection(){
       <div class="ri-label">Greedy Machine TH (End of Period)</div>
       <div class="ri-headline cyan">${fN(greedyTH,1)} TH</div>
       <div class="ri-usd-value">from ${fN(Math.max(0,i.gth||0),1)} TH start &middot; ${fP(i.ggrow)}/wk passive${capped?' &middot; at 5k cap, passive only':''}</div>
-      <div class="ri-gain">+${fN(greedyGain,1)} TH</div>
+      <div class="ri-gain">+${fN(greedyGain,1)} TH &middot; ~${fU(greedyGain*estimateCPT(greedyTH),0)} free hashrate</div>
     </div>`;
   }
   h+=`<div class="ri-single-card">
