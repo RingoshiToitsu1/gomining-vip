@@ -446,10 +446,25 @@ input[type=number]{-moz-appearance:textfield}
 .ob-body::-webkit-scrollbar-thumb{background:var(--purple);border-radius:4px}
 .ob-step{width:100%;margin:auto 0}   /* auto margins center the step when it fits, collapse to scroll when it doesn't */
 /* New-user landing page (onboarding step 0) */
-.ob-step.lp{text-align:center;padding:1rem 0}
+/* Artistic background — drifting gold aurora + slowly-rotating loupe rings. Only on the landing. */
+.lp-art{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;display:none}
+#onboarding.lp-active .lp-art{display:block}
+#onboarding .ob-modal{position:relative;z-index:1}
+.lp-aurora{position:absolute;border-radius:50%;filter:blur(64px);opacity:.55;will-change:transform}
+.lp-aurora-1{width:52vmax;height:52vmax;left:-12vmax;top:-16vmax;background:radial-gradient(circle,rgba(245,166,35,.34),transparent 70%);animation:lpDrift1 19s ease-in-out infinite}
+.lp-aurora-2{width:46vmax;height:46vmax;right:-13vmax;bottom:-13vmax;background:radial-gradient(circle,rgba(255,207,122,.26),transparent 70%);animation:lpDrift2 23s ease-in-out infinite}
+.lp-aurora-3{width:38vmax;height:38vmax;left:34%;top:28%;background:radial-gradient(circle,rgba(245,166,35,.16),transparent 70%);animation:lpDrift3 27s ease-in-out infinite}
+@keyframes lpDrift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vmax,6vmax) scale(1.15)}}
+@keyframes lpDrift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7vmax,-5vmax) scale(1.1)}}
+@keyframes lpDrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vmax,7vmax) scale(1.2)}}
+.lp-rings{position:absolute;width:min(135vh,1100px);height:min(135vh,1100px);left:50%;top:46%;transform:translate(-50%,-50%);opacity:.14;animation:lpSpin 75s linear infinite;will-change:transform}
+@keyframes lpSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.lp-aurora,.lp-rings,.lp-headline{animation:none}}
+.ob-step.lp{text-align:center;padding:1rem 0;position:relative;z-index:1}
 .lp-logo{display:flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--mono);font-size:1.05rem;font-weight:700;color:var(--purple-soft);letter-spacing:1px;margin-bottom:1.1rem}
 .lp-logo img{height:34px;width:34px;border-radius:9px}
-.lp-headline{font-size:2.7rem;font-weight:900;line-height:1.04;margin:0 0 .7rem;background:linear-gradient(135deg,var(--purple),var(--diamond));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lp-headline{font-size:2.7rem;font-weight:900;line-height:1.04;margin:0 0 .7rem;background:linear-gradient(110deg,var(--purple) 0%,var(--diamond) 28%,#fff6e0 50%,var(--diamond) 72%,var(--purple) 100%);background-size:230% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:lpShimmer 6.5s linear infinite}
+@keyframes lpShimmer{to{background-position:-230% center}}
 .lp-sub{font-size:.95rem;color:var(--text2);line-height:1.55;max-width:470px;margin:0 auto 1.5rem}
 .lp-ctas{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.3rem}
 .lp-cta{display:flex;flex-direction:column;align-items:center;gap:.15rem;border:none;border-radius:14px;padding:.85rem 1.5rem;font-family:var(--sans);font-size:1rem;font-weight:800;cursor:pointer;transition:var(--transition);min-width:210px}
@@ -847,6 +862,35 @@ input[type=number]{-moz-appearance:textfield}
 
 <!-- ONBOARDING -->
 <div class="ob-overlay" id="onboarding" style="display:none">
+<div class="lp-art" aria-hidden="true">
+  <span class="lp-aurora lp-aurora-1"></span>
+  <span class="lp-aurora lp-aurora-2"></span>
+  <span class="lp-aurora lp-aurora-3"></span>
+  <svg class="lp-rings" viewBox="-340 -340 680 680" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="lpRingGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#F5A623"/><stop offset="1" stop-color="#FFCF7A"/>
+      </linearGradient>
+      <radialGradient id="lpNode" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#FFE0A8"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <g fill="none" stroke="url(#lpRingGrad)" stroke-linecap="round">
+      <circle r="70" stroke-width="1.5" opacity=".9"/>
+      <circle r="130" stroke-width="1.2" opacity=".7"/>
+      <circle r="130" stroke-width="3" stroke-dasharray="6 26" opacity=".6"/>
+      <circle r="200" stroke-width="1" opacity=".5"/>
+      <circle r="275" stroke-width="1" stroke-dasharray="2 22" opacity=".55"/>
+      <circle r="330" stroke-width="1" opacity=".35"/>
+      <path d="M-70 0 A70 70 0 0 1 0 -70" stroke-width="4" opacity=".95"/>
+      <path d="M200 0 A200 200 0 0 1 141 141" stroke-width="3" opacity=".5"/>
+    </g>
+    <circle cx="0" cy="-130" r="26" fill="url(#lpNode)"/>
+    <circle cx="0" cy="-130" r="4.5" fill="#FFE0A8"/>
+    <circle cx="194" cy="50" r="20" fill="url(#lpNode)"/>
+    <circle cx="194" cy="50" r="3.5" fill="#FFCF7A"/>
+  </svg>
+</div>
 <div class="ob-modal">
   <div class="ob-dots">
     <div class="ob-dot active" id="obDot0"></div>
@@ -4416,10 +4460,12 @@ function obGoStep(n){
   // Stagger reveal delays for children within the step
   const revealEls=step.querySelectorAll('.ob-step-reveal,.ob-field,.ob-toggle-row,.ob-preview-card');
   revealEls.forEach((el,i)=>{el.style.transitionDelay=(0.15+i*0.12)+'s'});
-  // Step 0 is the marketing landing page — it has its own CTAs, so hide the wizard dots + nav there.
+  // Step 0 is the marketing landing page — it has its own CTAs, so hide the wizard dots + nav there,
+  // and switch on the artistic background (aurora + loupe rings) only for the landing.
   const nav=document.querySelector('.ob-nav'),dots=document.querySelector('.ob-dots');
   if(nav)nav.style.display=n===0?'none':'flex';
   if(dots)dots.style.display=n===0?'none':'flex';
+  document.getElementById('onboarding').classList.toggle('lp-active',n===0);
   document.getElementById('obBack').style.display=n===0?'none':'';
   const newBtn=document.getElementById('obNewBtn'),nextBtn=document.getElementById('obNext');
   newBtn.style.display=n===0?'':'none';
