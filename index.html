@@ -447,13 +447,13 @@ input[type=number]{-moz-appearance:textfield}
 .ob-step{width:100%;margin:auto 0}   /* auto margins center the step when it fits, collapse to scroll when it doesn't */
 /* New-user landing page (onboarding step 0) */
 /* Artistic background — drifting gold aurora + slowly-rotating loupe rings. Only on the landing. */
-.lp-art{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;display:none}
+.lp-art{position:absolute;inset:0;pointer-events:none;z-index:0;display:none}
 #onboarding.lp-active .lp-art{display:block}
 #onboarding .ob-modal{position:relative;z-index:1}
 .lp-aurora{position:absolute;border-radius:50%;filter:blur(64px);opacity:.55;will-change:transform}
 .lp-aurora-1{width:52vmax;height:52vmax;left:-12vmax;top:-16vmax;background:radial-gradient(circle,rgba(245,166,35,.34),transparent 70%);animation:lpDrift1 19s ease-in-out infinite}
 .lp-aurora-2{width:46vmax;height:46vmax;right:-13vmax;bottom:-13vmax;background:radial-gradient(circle,rgba(255,207,122,.26),transparent 70%);animation:lpDrift2 23s ease-in-out infinite}
-.lp-aurora-3{width:38vmax;height:38vmax;left:34%;top:28%;background:radial-gradient(circle,rgba(245,166,35,.16),transparent 70%);animation:lpDrift3 27s ease-in-out infinite}
+.lp-aurora-3{width:46vmax;height:46vmax;left:calc(50% - 23vmax);top:calc(46% - 23vmax);background:radial-gradient(circle,rgba(245,166,35,.2),transparent 72%);animation:lpDrift3 27s ease-in-out infinite}
 @keyframes lpDrift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(8vmax,6vmax) scale(1.15)}}
 @keyframes lpDrift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7vmax,-5vmax) scale(1.1)}}
 @keyframes lpDrift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vmax,7vmax) scale(1.2)}}
