@@ -1644,7 +1644,7 @@ html.show-onboarding #onboarding{display:flex}
       <div class="sp-results-title">Your Growth Forecast</div>
       <div id="spResult"></div>
       <div style="text-align:center;margin-top:.9rem">
-        <button class="share-plan-btn" onclick="shareProjection(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this projection</button>
+        <button class="share-plan-btn" onclick="copyProjectionImage(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg> Copy projection image</button>
       </div>
     </div>
 
@@ -2097,17 +2097,6 @@ function sharePlan(btn){
   const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
   copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
 }
-// Share the growth projection: the setup (?s=) plus the projection settings (&pj=mode~years~btc~payoutType~payoutVal).
-function shareProjection(btn){
-  const d=readInputs();
-  const parts=SHARE_FIELDS.map(([k,t])=>t==='b'?(d[k]?'1':'0'):(d[k]==null?'':String(d[k])));
-  while(parts.length&&parts[parts.length-1]==='')parts.pop();
-  const g=id=>{const e=document.getElementById(id);return e?e.value:'';};
-  const pj=[(window._spMode==='planner'?'p':'s'),g('spYears'),g('spBTC'),g('spPayoutType'),g('spPayoutVal')].join('~');
-  const url='https://'+location.host+location.pathname+'?s='+parts.join('~')+'&pj='+encodeURIComponent(pj);
-  const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
-  copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
-}
 // Load a shared plan from a link (compact ?s= , or legacy base64-JSON ?p=), overriding the local
 // inputs (view-only — not saved to the visitor's profile). Returns true if a link was applied.
 function applySharedPlan(){
@@ -2124,20 +2113,84 @@ function applySharedPlan(){
     }
     if(data&&typeof data==='object'&&Object.keys(data).length){
       applyInputs(data);
-      // Shared growth projection: stash the projection settings so the boot opens straight to it.
-      const pjRaw=sp.get('pj');
-      if(pjRaw){
-        const pj=decodeURIComponent(pjRaw).split('~');
-        const setV=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null&&v!=='')e.value=v;};
-        setV('spYears',pj[1]);setV('spBTC',pj[2]);setV('spPayoutType',pj[3]);setV('spPayoutVal',pj[4]);
-        if(typeof syncPayoutUnit==='function')syncPayoutUnit();
-        window._sharedProjection=(pj[0]==='p')?'planner':'setup';
-      }
       history.replaceState({},'',location.pathname);   // clean URL so the tool behaves normally afterward
       return true;
     }
   }catch(e){}
   return false;
+}
+
+// ---- Projection share image (client-side, copied to clipboard) ----
+function svgToBlob(svg,w,h){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{try{const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);c.toBlob(b=>b?res(b):rej(new Error('toBlob null')),'image/png');}catch(e){rej(e);}};
+    img.onerror=()=>rej(new Error('svg image load failed'));
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  });
+}
+function downloadBlob(blob,name){
+  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name||'gmt-projection.png';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);
+}
+// Build a branded, self-contained (no external refs) projection card SVG from the stashed results.
+function buildProjectionCardSVG(p){
+  const W=1000,H=560;
+  const horizon=p.days>=365?(fN(p.days/365,(p.days/365)>=2?0:1)+' yr'):(p.days+' days');
+  const roi=(p.roiYr>=0?'+':'')+fN(p.roiYr,0)+'%';
+  const S=p.series||[];let chart='';
+  if(S.length>1){
+    const cx=64,cy=350,cw=872,ch=126,step=Math.max(1,Math.floor(S.length/180));
+    const pts=[];for(let i=0;i<S.length;i+=step)pts.push(S[i]);if(pts[pts.length-1]!==S[S.length-1])pts.push(S[S.length-1]);
+    const mx=Math.max.apply(null,pts),mn=Math.min.apply(null,pts),rg=(mx-mn)||1,m=pts.length;
+    const line=pts.map((v,i)=>(cx+(i/(m-1))*cw).toFixed(1)+','+(cy+ch-((v-mn)/rg)*ch).toFixed(1)).join(' ');
+    chart=`<polygon points="${cx},${cy+ch} ${line} ${cx+cw},${cy+ch}" fill="url(#area)"/><polyline points="${line}" fill="none" stroke="url(#gold)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  const stat=(x,label,val,color)=>`<g transform="translate(${x},150)"><text y="0" font-size="15" font-weight="700" fill="#9a8b66" letter-spacing="1">${label}</text><text y="40" font-size="33" font-weight="900" fill="${color}">${val}</text></g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a0a0a"/><stop offset="1" stop-color="#15110a"/></linearGradient>
+    <radialGradient id="orbA" cx="12%" cy="10%" r="55%"><stop offset="0" stop-color="#F5A623" stop-opacity=".22"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/></radialGradient>
+    <radialGradient id="orbB" cx="95%" cy="98%" r="60%"><stop offset="0" stop-color="#FFCF7A" stop-opacity=".13"/><stop offset="1" stop-color="#FFCF7A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F5A623"/><stop offset="1" stop-color="#FFE0A8"/></linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5A623" stop-opacity=".34"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#bg)"/><rect width="${W}" height="${H}" fill="url(#orbA)"/><rect width="${W}" height="${H}" fill="url(#orbB)"/>
+  <rect x="7" y="7" width="${W-14}" height="${H-14}" rx="22" fill="none" stroke="#F5A623" stroke-opacity=".18" stroke-width="2"/>
+  <g transform="translate(50,42)">
+    <rect width="52" height="52" rx="14" fill="url(#gold)"/>
+    <g transform="translate(26,26) scale(1.3) translate(-20,-20)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M 13 26 A 10 10 0 1 1 26 13"/><path d="M 23 16 A 5 5 0 1 0 16 22"/><path d="M 22 13 L 26 13 L 26 17"/></g>
+    <text x="66" y="22" font-size="23" font-weight="800" fill="url(#gold)">GMT Optimizer</text>
+    <text x="67" y="44" font-size="14" font-weight="600" fill="#9a8b66" letter-spacing="1">Growth Projection</text>
+  </g>
+  <text x="${W-50}" y="58" text-anchor="end" font-size="17" font-weight="700" fill="#cfc7b6">over ${horizon} &#183; BTC ${p.btcLabel}</text>
+  ${stat(60,'MONTHLY REWARD',fU(p.finalMonthly,0),'#5ad19a')}
+  ${stat(300,'YEARLY REWARD',fU(p.finalYearly,0),'#5ad19a')}
+  ${stat(555,'END HASHRATE',fN(p.totEndTH,0)+' TH','#7fd8ff')}
+  ${stat(800,'ROI / YR',roi,'#F7B84E')}
+  <text x="64" y="326" font-size="14" font-weight="600" fill="#9a8b66" letter-spacing="1">PROJECTED DAILY REWARD</text>
+  ${chart}
+  <text x="64" y="${H-32}" font-size="18" font-weight="800" fill="url(#gold)" letter-spacing="1">gmt-optimizer.com</text>
+  <text x="${W-50}" y="${H-32}" text-anchor="end" font-size="16" font-weight="700" fill="#cfc7b6">Code <tspan fill="#F7B84E" font-weight="900">RINGO5</tspan> &#8212; we&#8217;ll fund your first TH</text>
+  </svg>`;
+}
+// Generate the projection card and copy it to the clipboard (download fallback). Shows a loading state.
+async function copyProjectionImage(btn){
+  const p=window._projImg;if(!p){return;}
+  const load=document.getElementById('spPageLoading');
+  const txt=load?load.querySelector('.sp-loading-txt'):null,prev=txt?txt.textContent:'';
+  if(txt)txt.textContent='Generating pastable image…';
+  if(load)load.style.display='flex';
+  const done=(msg)=>{if(load)load.style.display='none';if(txt)txt.textContent=prev;if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML=msg;setTimeout(()=>btn.innerHTML=t,2000);}};
+  const W=1000,H=560;
+  // blob promise carries a brief delay so the "generating" state is visible; passed to ClipboardItem
+  // so write() is still called within the click gesture (required by browsers).
+  const blobP=(async()=>{await new Promise(r=>setTimeout(r,650));return svgToBlob(buildProjectionCardSVG(p),W,H);})();
+  if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
+    try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);done('✓ Image copied!');return;}catch(e){}
+  }
+  try{downloadBlob(await blobP,'gmt-projection.png');done('⬇ Image saved');}
+  catch(e){done('Couldn’t make image');}
 }
 
 // ---- API ----
@@ -2244,13 +2297,9 @@ async function fetchData(){
   if(sharedPlan)S.sharedApplied=true;
   updateHeader();recalc();
   if(sharedPlan){
+    // Land the recipient on the Capital Planner results (already populated by recalc).
     window._plannerCalcDone=true;
     const pBtn=document.querySelector('[data-tab="tab-planner"]');if(pBtn)pBtn.click();
-    if(window._sharedProjection){
-      // Shared a growth projection — open straight to the computed forecast.
-      try{openSetupProjection(window._sharedProjection);computeSetupProjection();spShowResults();}catch(e){}
-      window._sharedProjection=null;
-    }
   }
 }
 
@@ -4138,6 +4187,14 @@ function computeSetupProjection(){
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
   </div>`;
   out.innerHTML=h;
+  // Stash the key results so "Copy projection image" can render a shareable card.
+  window._projImg={
+    days, btcLabel:btcSel.label, mode:fromPlanner?'planner':'setup', cur:S.currency,
+    startTH, totEndTH, thPct, finalSS, finalMonthly, finalYearly, ssPct,
+    roiYr:(days/365>0?ssPct/(days/365):0),
+    greedyTH:HAS_GREEDY?greedyTH:0, gmtLocked, lockedUSD, totalDistributionUSD,
+    series:daily.map(x=>x.ssNet)
+  };
   // Chart renders in Daily/USD by default — keep the toggle state in sync.
   window._reinvestUnit='usd';
   window._reinvestPeriod='day';
