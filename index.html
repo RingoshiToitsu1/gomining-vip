@@ -2178,19 +2178,26 @@ function buildProjectionCardSVG(p){
 async function copyProjectionImage(btn){
   const p=window._projImg;if(!p){return;}
   const load=document.getElementById('spPageLoading');
+  const spin=load?load.querySelector('.sp-spinner'):null;
   const txt=load?load.querySelector('.sp-loading-txt'):null,prev=txt?txt.textContent:'';
+  if(spin)spin.style.display='';
   if(txt)txt.textContent='Generating pastable image…';
   if(load)load.style.display='flex';
-  const done=(msg)=>{if(load)load.style.display='none';if(txt)txt.textContent=prev;if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML=msg;setTimeout(()=>btn.innerHTML=t,2000);}};
+  // When done, swap the spinner for a confirmation message in the same region, then dismiss.
+  const finish=(msg)=>{
+    if(spin)spin.style.display='none';
+    if(txt)txt.textContent=msg;
+    setTimeout(()=>{if(load)load.style.display='none';if(spin)spin.style.display='';if(txt)txt.textContent=prev;},2200);
+  };
   const W=1000,H=560;
-  // blob promise carries a brief delay so the "generating" state is visible; passed to ClipboardItem
-  // so write() is still called within the click gesture (required by browsers).
-  const blobP=(async()=>{await new Promise(r=>setTimeout(r,650));return svgToBlob(buildProjectionCardSVG(p),W,H);})();
+  // blob promise carries a delay so the "generating" state is visible; passed to ClipboardItem so
+  // write() is still called within the click gesture (required by browsers).
+  const blobP=(async()=>{await new Promise(r=>setTimeout(r,1400));return svgToBlob(buildProjectionCardSVG(p),W,H);})();
   if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
-    try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);done('✓ Image copied!');return;}catch(e){}
+    try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);finish('✓ Paste the image anywhere you like');return;}catch(e){}
   }
-  try{downloadBlob(await blobP,'gmt-projection.png');done('⬇ Image saved');}
-  catch(e){done('Couldn’t make image');}
+  try{downloadBlob(await blobP,'gmt-projection.png');finish('⬇ Image saved — paste or attach it anywhere');}
+  catch(e){finish('Couldn’t make image');}
 }
 
 // ---- API ----
