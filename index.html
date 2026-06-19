@@ -1643,6 +1643,9 @@ html.show-onboarding #onboarding{display:flex}
       </div>
       <div class="sp-results-title">Your Growth Forecast</div>
       <div id="spResult"></div>
+      <div style="text-align:center;margin-top:.9rem">
+        <button class="share-plan-btn" onclick="shareProjection(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this projection</button>
+      </div>
     </div>
 
   </div>
@@ -2094,6 +2097,17 @@ function sharePlan(btn){
   const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
   copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
 }
+// Share the growth projection: the setup (?s=) plus the projection settings (&pj=mode~years~btc~payoutType~payoutVal).
+function shareProjection(btn){
+  const d=readInputs();
+  const parts=SHARE_FIELDS.map(([k,t])=>t==='b'?(d[k]?'1':'0'):(d[k]==null?'':String(d[k])));
+  while(parts.length&&parts[parts.length-1]==='')parts.pop();
+  const g=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const pj=[(window._spMode==='planner'?'p':'s'),g('spYears'),g('spBTC'),g('spPayoutType'),g('spPayoutVal')].join('~');
+  const url='https://'+location.host+location.pathname+'?s='+parts.join('~')+'&pj='+encodeURIComponent(pj);
+  const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
+  copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
+}
 // Load a shared plan from a link (compact ?s= , or legacy base64-JSON ?p=), overriding the local
 // inputs (view-only — not saved to the visitor's profile). Returns true if a link was applied.
 function applySharedPlan(){
@@ -2110,6 +2124,15 @@ function applySharedPlan(){
     }
     if(data&&typeof data==='object'&&Object.keys(data).length){
       applyInputs(data);
+      // Shared growth projection: stash the projection settings so the boot opens straight to it.
+      const pjRaw=sp.get('pj');
+      if(pjRaw){
+        const pj=decodeURIComponent(pjRaw).split('~');
+        const setV=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null&&v!=='')e.value=v;};
+        setV('spYears',pj[1]);setV('spBTC',pj[2]);setV('spPayoutType',pj[3]);setV('spPayoutVal',pj[4]);
+        if(typeof syncPayoutUnit==='function')syncPayoutUnit();
+        window._sharedProjection=(pj[0]==='p')?'planner':'setup';
+      }
       history.replaceState({},'',location.pathname);   // clean URL so the tool behaves normally afterward
       return true;
     }
@@ -2221,9 +2244,13 @@ async function fetchData(){
   if(sharedPlan)S.sharedApplied=true;
   updateHeader();recalc();
   if(sharedPlan){
-    // Land the recipient on the Capital Planner results (already populated by recalc).
     window._plannerCalcDone=true;
     const pBtn=document.querySelector('[data-tab="tab-planner"]');if(pBtn)pBtn.click();
+    if(window._sharedProjection){
+      // Shared a growth projection — open straight to the computed forecast.
+      try{openSetupProjection(window._sharedProjection);computeSetupProjection();spShowResults();}catch(e){}
+      window._sharedProjection=null;
+    }
   }
 }
 
