@@ -2045,22 +2045,56 @@ function buildChart(symbol,allowChange){
 // Share the current plan as a link that re-creates the same view for the recipient. The setup
 // (readInputs) is packed into a ?p=<base64 JSON> URL. Uses the native share sheet (email / message
 // / etc.) on supporting devices, else copies the link to the clipboard.
-function sharePlan(btn){
-  const data=readInputs();
-  const enc=btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const url=location.origin+location.pathname+'?p='+encodeURIComponent(enc);
-  const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>prompt('Copy this link:',url));}
-  else prompt('Copy this link:',url);
+// Compact share encoding: a fixed-order, '~'-delimited value string (all chars URL-safe, no
+// base64/JSON keys) — ~3x shorter than the old base64-JSON links. Trailing defaults are trimmed.
+const SHARE_FIELDS=[
+  ['inTH'],['inWTH'],['inGMTLocked'],['inGMTWallet'],['inCapital'],
+  ['inMpTH'],['inMpGMT'],['inMpWth'],['inGreedyTH'],['inGreedyInitial'],['inGreedyGrowth'],
+  ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],
+  ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b']
+];
+// Copy text without the ugly prompt: clipboard API on https, else a silent textarea+execCommand
+// fallback (works on http / insecure contexts, e.g. mobile). Returns a Promise.
+function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext){
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve,reject)=>{
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text;ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;top:0;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();ta.select();ta.setSelectionRange(0,text.length);
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok?resolve():reject(new Error('execCommand failed'));
+    }catch(e){reject(e);}
+  });
 }
-// Load a shared plan from a ?p=<base64 JSON> link, overriding the local inputs (view-only — not
-// saved to the visitor's profile). Returns true if a link was applied.
+function sharePlan(btn){
+  const d=readInputs();
+  const parts=SHARE_FIELDS.map(([k,t])=>t==='b'?(d[k]?'1':'0'):(d[k]==null?'':String(d[k])));
+  while(parts.length&&parts[parts.length-1]==='')parts.pop();
+  const url='https://'+location.host+location.pathname+'?s='+parts.join('~');   // always share the https link
+  const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
+  copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
+}
+// Load a shared plan from a link (compact ?s= , or legacy base64-JSON ?p=), overriding the local
+// inputs (view-only — not saved to the visitor's profile). Returns true if a link was applied.
 function applySharedPlan(){
   try{
-    const raw=new URLSearchParams(location.search).get('p');
-    if(!raw)return false;
-    const data=JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if(data&&typeof data==='object'){
+    const sp=new URLSearchParams(location.search);
+    let data=null;
+    const s=sp.get('s');
+    if(s!=null){
+      const parts=s.split('~');data={};
+      SHARE_FIELDS.forEach(([k,t],i)=>{const v=parts[i];if(v===undefined||v==='')return;data[k]=t==='b'?(v==='1'||v==='true'):v;});
+    }else{
+      const raw=sp.get('p');   // legacy full-JSON links
+      if(raw)data=JSON.parse(decodeURIComponent(escape(atob(raw))));
+    }
+    if(data&&typeof data==='object'&&Object.keys(data).length){
       applyInputs(data);
       history.replaceState({},'',location.pathname);   // clean URL so the tool behaves normally afterward
       return true;
