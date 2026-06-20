@@ -2121,82 +2121,33 @@ function applySharedPlan(){
 }
 
 // ---- Projection share image (client-side, copied to clipboard) ----
-function svgToBlob(svg,w,h){
-  return new Promise((res,rej)=>{
-    const img=new Image();
-    img.onload=()=>{try{const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);c.toBlob(b=>b?res(b):rej(new Error('toBlob null')),'image/png');}catch(e){rej(e);}};
-    img.onerror=()=>rej(new Error('svg image load failed'));
-    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-  });
-}
 function downloadBlob(blob,name){
-  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name||'gmt-projection.png';
+  const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name||'gmt-optimizer-projection.png';
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);
 }
-// Build a branded, self-contained (no external refs) projection card SVG from the stashed results.
-function buildProjectionCardSVG(p){
-  const W=1000,H=560;
-  const horizon=p.days>=365?(fN(p.days/365,(p.days/365)>=2?0:1)+' yr'):(p.days+' days');
-  const roi=(p.roiYr>=0?'+':'')+fN(p.roiYr,0)+'%';
-  const S=p.series||[];let chart='';
-  if(S.length>1){
-    const cx=64,cy=350,cw=872,ch=126,step=Math.max(1,Math.floor(S.length/180));
-    const pts=[];for(let i=0;i<S.length;i+=step)pts.push(S[i]);if(pts[pts.length-1]!==S[S.length-1])pts.push(S[S.length-1]);
-    const mx=Math.max.apply(null,pts),mn=Math.min.apply(null,pts),rg=(mx-mn)||1,m=pts.length;
-    const line=pts.map((v,i)=>(cx+(i/(m-1))*cw).toFixed(1)+','+(cy+ch-((v-mn)/rg)*ch).toFixed(1)).join(' ');
-    chart=`<polygon points="${cx},${cy+ch} ${line} ${cx+cw},${cy+ch}" fill="url(#area)"/><polyline points="${line}" fill="none" stroke="url(#gold)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  }
-  const stat=(x,label,val,color)=>`<g transform="translate(${x},150)"><text y="0" font-size="15" font-weight="700" fill="#9a8b66" letter-spacing="1">${label}</text><text y="40" font-size="33" font-weight="900" fill="${color}">${val}</text></g>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0a0a0a"/><stop offset="1" stop-color="#15110a"/></linearGradient>
-    <radialGradient id="orbA" cx="12%" cy="10%" r="55%"><stop offset="0" stop-color="#F5A623" stop-opacity=".22"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/></radialGradient>
-    <radialGradient id="orbB" cx="95%" cy="98%" r="60%"><stop offset="0" stop-color="#FFCF7A" stop-opacity=".13"/><stop offset="1" stop-color="#FFCF7A" stop-opacity="0"/></radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F5A623"/><stop offset="1" stop-color="#FFE0A8"/></linearGradient>
-    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5A623" stop-opacity=".34"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/></linearGradient>
-  </defs>
-  <rect width="${W}" height="${H}" fill="url(#bg)"/><rect width="${W}" height="${H}" fill="url(#orbA)"/><rect width="${W}" height="${H}" fill="url(#orbB)"/>
-  <rect x="7" y="7" width="${W-14}" height="${H-14}" rx="22" fill="none" stroke="#F5A623" stroke-opacity=".18" stroke-width="2"/>
-  <g transform="translate(50,42)">
-    <rect width="52" height="52" rx="14" fill="url(#gold)"/>
-    <g transform="translate(26,26) scale(1.3) translate(-20,-20)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M 13 26 A 10 10 0 1 1 26 13"/><path d="M 23 16 A 5 5 0 1 0 16 22"/><path d="M 22 13 L 26 13 L 26 17"/></g>
-    <text x="66" y="22" font-size="23" font-weight="800" fill="url(#gold)">GMT Optimizer</text>
-    <text x="67" y="44" font-size="14" font-weight="600" fill="#9a8b66" letter-spacing="1">Growth Projection</text>
-  </g>
-  <text x="${W-50}" y="58" text-anchor="end" font-size="17" font-weight="700" fill="#cfc7b6">over ${horizon} &#183; BTC ${p.btcLabel}</text>
-  ${stat(60,'MONTHLY REWARD',fU(p.finalMonthly,0),'#5ad19a')}
-  ${stat(300,'YEARLY REWARD',fU(p.finalYearly,0),'#5ad19a')}
-  ${stat(555,'END HASHRATE',fN(p.totEndTH,0)+' TH','#7fd8ff')}
-  ${stat(800,'ROI / YR',roi,'#F7B84E')}
-  <text x="64" y="326" font-size="14" font-weight="600" fill="#9a8b66" letter-spacing="1">PROJECTED DAILY REWARD</text>
-  ${chart}
-  <text x="64" y="${H-32}" font-size="18" font-weight="800" fill="url(#gold)" letter-spacing="1">gmt-optimizer.com</text>
-  <text x="${W-50}" y="${H-32}" text-anchor="end" font-size="16" font-weight="700" fill="#cfc7b6">Code <tspan fill="#F7B84E" font-weight="900">RINGO5</tspan> &#8212; we&#8217;ll fund your first TH</text>
-  </svg>`;
-}
-// Generate the projection card and copy it to the clipboard (download fallback). Shows a loading state.
+function canvasToBlob(c){return new Promise(res=>c.toBlob(res,'image/png'));}
+// Generate the rich projection card (buildShareCanvas) and copy it to the clipboard (download
+// fallback), with a 'Generating…' loading state that ends with a paste hint in the same region.
 async function copyProjectionImage(btn){
-  const p=window._projImg;if(!p){return;}
+  const d=window._shareData;if(!d){return;}
   const load=document.getElementById('spPageLoading');
   const spin=load?load.querySelector('.sp-spinner'):null;
   const txt=load?load.querySelector('.sp-loading-txt'):null,prev=txt?txt.textContent:'';
   if(spin)spin.style.display='';
   if(txt)txt.textContent='Generating pastable image…';
   if(load)load.style.display='flex';
-  // When done, swap the spinner for a confirmation message in the same region, then dismiss.
   const finish=(msg)=>{
     if(spin)spin.style.display='none';
     if(txt)txt.textContent=msg;
     setTimeout(()=>{if(load)load.style.display='none';if(spin)spin.style.display='';if(txt)txt.textContent=prev;},2200);
   };
-  const W=1000,H=560;
   // blob promise carries a delay so the "generating" state is visible; passed to ClipboardItem so
   // write() is still called within the click gesture (required by browsers).
-  const blobP=(async()=>{await new Promise(r=>setTimeout(r,1400));return svgToBlob(buildProjectionCardSVG(p),W,H);})();
+  const blobP=(async()=>{await new Promise(r=>setTimeout(r,1400));return canvasToBlob(buildShareCanvas(d));})();
   if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
     try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);finish('✓ Paste the image anywhere you like');return;}catch(e){}
   }
-  try{downloadBlob(await blobP,'gmt-projection.png');finish('⬇ Image saved — paste or attach it anywhere');}
+  try{downloadBlob(await blobP,'gmt-optimizer-projection.png');finish('⬇ Image saved — paste or attach it anywhere');}
   catch(e){finish('Couldn’t make image');}
 }
 
@@ -3836,7 +3787,7 @@ function runReinvestProjection(){
 
   // Share button
   h+=`<div style="text-align:center;margin-top:1rem">
-    <button class="ri-btn" onclick="shareProjection()" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan))">Share Projection</button>
+    <button class="ri-btn" onclick="copyProjectionImage(this)" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan))">Share Projection</button>
   </div>`;
 
   $('reinvestResult').innerHTML=h;
@@ -4195,12 +4146,10 @@ function computeSetupProjection(){
   </div>`;
   out.innerHTML=h;
   // Stash the key results so "Copy projection image" can render a shareable card.
-  window._projImg={
-    days, btcLabel:btcSel.label, mode:fromPlanner?'planner':'setup', cur:S.currency,
-    startTH, totEndTH, thPct, finalSS, finalMonthly, finalYearly, ssPct,
-    roiYr:(days/365>0?ssPct/(days/365):0),
-    greedyTH:HAS_GREEDY?greedyTH:0, gmtLocked, lockedUSD, totalDistributionUSD,
-    series:daily.map(x=>x.ssNet)
+  window._shareData={
+    days, startTH, startSS, startLocked, th:totEndTH, finalSS, gmtLocked, gp,
+    cap:(i.cap||0), thPct, ssPct, disc:finalEntry.disc, vip:finalEntry.vip,
+    roiYr:(days/365>0?ssPct/(days/365):0), btcMode:btcSel.mode, bpStart, bpAtEnd
   };
   // Chart renders in Daily/USD by default — keep the toggle state in sync.
   window._reinvestUnit='usd';
@@ -4368,202 +4317,98 @@ function riChartLeave(){
   if(tip)tip.style.opacity='0';
 }
 
-function shareProjection(){
-  const d=window._shareData;
-  if(!d)return;
-  const S=3,W=1200,H=675;
+function buildShareCanvas(d){
+  const S=2,W=1200,H=675;
   const c=document.createElement('canvas');
   c.width=W*S;c.height=H*S;
-  c.style.width=W+'px';c.style.height=H+'px';
-  const x=c.getContext('2d');
-  x.scale(S,S);
+  const x=c.getContext('2d');x.scale(S,S);
   const pad=50;
-
-  // --- BACKGROUND ---
+  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A';
+  // background — site gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#080e1c');bgG.addColorStop(0.5,'#0a1020');bgG.addColorStop(1,'#060c18');
-  x.fillStyle=bgG;
-  x.fillRect(0,0,W,H);
-
-  // Atmospheric orbs — bright
-  const orb=(cx,cy,r,color)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,color);g.addColorStop(0.5,color.replace(/[\d.]+\)$/,v=>parseFloat(v)*0.4+')'));g.addColorStop(1,'transparent');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)};
-  orb(120,100,360,'rgba(147,51,234,0.25)');
-  orb(880,220,300,'rgba(6,182,212,0.18)');
-  orb(500,780,360,'rgba(16,185,129,0.12)');
-  orb(W/2,0,450,'rgba(147,51,234,0.10)');
-
-  // Grid lines
-  x.strokeStyle='rgba(147,51,234,0.07)';
-  x.lineWidth=0.5;
-  for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke()}
-  for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke()}
-
-  // Scan lines
-  x.fillStyle='rgba(0,0,0,0.02)';
-  for(let sy=0;sy<H;sy+=2){x.fillRect(0,sy,W,1)}
-
-  // --- HEADER ---
-  const tGlow=x.createRadialGradient(W/2,55,0,W/2,55,360);
-  tGlow.addColorStop(0,'rgba(147,51,234,0.14)');tGlow.addColorStop(1,'transparent');
-  x.fillStyle=tGlow;x.fillRect(0,0,W,140);
-
-  x.fillStyle='#ffffff';
-  x.font='bold 56px Space Grotesk,system-ui,sans-serif';
-  x.textAlign='center';
-  x.shadowColor='rgba(147,51,234,0.6)';x.shadowBlur=28;
-  x.fillText(`${d.days}-Day Growth Projection`,W/2,72);
-  x.shadowBlur=0;
-
-  // Subtitle
-  x.fillStyle='rgba(190,155,255,0.92)';
-  x.font='22px "Share Tech Mono","General Sans",monospace';
-  const btcSubLabel=d.btcMode==='live'?'':'  \u2022  BTC '+fmtBTCPrice(d.bpStart)+' \u2192 '+fmtBTCPrice(d.bpAtEnd)+' (linear)';
-  x.fillText('Auto-Reinvest Compound Strategy'+btcSubLabel+'  \u2022  powered by gmt-optimizer.com',W/2,108);
-
-  // Decorative line
+  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  x.fillStyle=bgG;x.fillRect(0,0,W,H);
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  orb(140,90,380,0.18);orb(1060,230,320,0.12);orb(600,770,380,0.07);orb(W/2,-40,460,0.10);
+  x.strokeStyle='rgba(245,166,35,0.05)';x.lineWidth=0.5;
+  for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
+  for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
+  // header
+  x.fillStyle='#ffffff';x.font='bold 56px Space Grotesk,system-ui,sans-serif';x.textAlign='center';
+  x.shadowColor='rgba(245,166,35,0.55)';x.shadowBlur=28;
+  x.fillText(d.days+'-Day Growth Projection',W/2,72);x.shadowBlur=0;
+  x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Share Tech Mono",monospace';
+  const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (linear)';
+  x.fillText('Auto-Reinvest Compound Strategy'+btcSub+'  •  powered by gmt-optimizer.com',W/2,108);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.15,'rgba(147,51,234,0.6)');
-  lg.addColorStop(0.5,'rgba(190,155,255,0.4)');
-  lg.addColorStop(0.85,'rgba(6,182,212,0.6)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=2;
-  x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
-
-  // --- COMPARISON CARDS ---
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.6)');lg.addColorStop(1,'transparent');
+  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
+  // comparison cards
   const cardW=510,cardH=350,cardY=150,gap=80;
-  const leftX=(W-cardW*2-gap)/2, rightX=leftX+cardW+gap;
-
-  const drawCard=(cx,cy,title,titleColor,accentHex,items)=>{
+  const leftX=(W-cardW*2-gap)/2,rightX=leftX+cardW+gap;
+  const drawCard=(cx,cy,title,accent,items)=>{
     const cbg=x.createLinearGradient(cx,cy,cx,cy+cardH);
-    cbg.addColorStop(0,'rgba(255,255,255,0.07)');cbg.addColorStop(1,'rgba(255,255,255,0.02)');
-    x.fillStyle=cbg;
-    x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
-    x.strokeStyle='rgba(255,255,255,0.16)';
-    x.lineWidth=1.5;
-    x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
-    const ag=x.createLinearGradient(cx,0,cx+cardW,0);
-    ag.addColorStop(0,accentHex);ag.addColorStop(0.7,titleColor);ag.addColorStop(1,'transparent');
-    x.strokeStyle=ag;x.lineWidth=4;
-    x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();
-    x.shadowColor=accentHex;x.shadowBlur=18;
-    x.strokeStyle=ag;x.lineWidth=1.5;
-    x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();
-    x.shadowBlur=0;
-    x.fillStyle=accentHex;
-    x.font='bold 26px Space Grotesk,system-ui,sans-serif';
-    x.textAlign='left';
+    cbg.addColorStop(0,'rgba(245,166,35,0.06)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
+    x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
+    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
+    x.shadowColor=accent;x.shadowBlur=16;x.strokeStyle=accent;x.lineWidth=3;
+    x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();x.shadowBlur=0;
+    x.fillStyle=accent;x.font='bold 26px Space Grotesk,system-ui,sans-serif';x.textAlign='left';
     x.fillText(title,cx+30,cy+50);
-    items.forEach((item,i)=>{
-      const iy=cy+105+i*68;
-      x.fillStyle='rgba(255,255,255,0.6)';
-      x.font='20px "Share Tech Mono","General Sans",monospace';
-      x.textAlign='left';
-      x.fillText(item.label,cx+30,iy);
-      x.fillStyle=item.color||'#ffffff';
-      x.font='bold 38px "Share Tech Mono","General Sans",monospace';
-      x.fillText(item.val,cx+30,iy+38);
+    items.forEach((it,i)=>{const iy=cy+105+i*68;
+      x.fillStyle='rgba(255,255,255,0.55)';x.font='20px "Share Tech Mono",monospace';x.textAlign='left';x.fillText(it.label,cx+30,iy);
+      x.fillStyle=accent;x.font='bold 38px "Share Tech Mono",monospace';x.fillText(it.val,cx+30,iy+38);
     });
   };
-
-  drawCard(leftX,cardY,'STARTING POSITION','rgba(6,182,212,0.8)','#22d3ee',[
-    {label:'HASHRATE',val:fN(d.startTH,1)+' TH',color:'#22d3ee'},
-    {label:'DAILY REWARD',val:fU(d.startSS),color:'#22d3ee'},
-    {label:'MONTHLY INCOME',val:fU(d.startSS*30),color:'#22d3ee'},
-    {label:'GMT Value',val:fU((d.postLocked||0)*d.gp),color:'#22d3ee'},
+  drawCard(leftX,cardY,'STARTING POSITION',GLT,[
+    {label:'HASHRATE',val:fN(d.startTH,0)+' TH'},
+    {label:'DAILY REWARD',val:fU(d.startSS,0)},
+    {label:'MONTHLY INCOME',val:fU(d.startSS*30,0)},
+    {label:'GMT Value',val:fU((d.startLocked||0)*d.gp,0)},
   ]);
-
-  drawCard(rightX,cardY,'AFTER '+d.days+' DAYS','rgba(16,185,129,0.8)','#34d399',[
-    {label:'HASHRATE',val:fN(d.th,1)+' TH',color:'#34d399'},
-    {label:'DAILY REWARD',val:fU(d.finalSS),color:'#34d399'},
-    {label:'MONTHLY INCOME',val:fU(d.finalSS*30),color:'#34d399'},
-    {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp),color:'#34d399'},
+  drawCard(rightX,cardY,'AFTER '+d.days+' DAYS',GSOFT,[
+    {label:'HASHRATE',val:fN(d.th,0)+' TH'},
+    {label:'DAILY REWARD',val:fU(d.finalSS,0)},
+    {label:'MONTHLY INCOME',val:fU(d.finalSS*30,0)},
+    {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
-
-  // Arrow between cards
-  x.fillStyle='rgba(210,180,255,0.92)';
-  x.shadowColor='rgba(147,51,234,0.7)';x.shadowBlur=24;
-  x.font='bold 56px "General Sans",system-ui,sans-serif';
-  x.textAlign='center';
-  x.fillText('\u27A4',W/2,cardY+cardH/2+10);
-  x.shadowBlur=0;
-
-  // --- STAT PILLS ROW ---
+  x.fillStyle=GSOFT;x.shadowColor='rgba(245,166,35,0.7)';x.shadowBlur=22;
+  x.font='bold 56px "General Sans",system-ui,sans-serif';x.textAlign='center';
+  x.fillText('➤',W/2,cardY+cardH/2+10);x.shadowBlur=0;
+  // stat pills (incl. ROI)
   const pillY=cardY+cardH+25;
+  const vip=(d.vip&&d.vip.n)?d.vip.n:(d.vip||'—');
   const pills=[
-    {label:'INVESTED',val:fU(d.cap),color:'#c084fc'},
-    {label:'TH GROWTH',val:'+'+fN(d.thPct,1)+'%',color:'#34d399'},
-    {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,1)+'%',color:'#34d399'},
-    {label:'DISCOUNT',val:fP(d.finalTokD),color:'#22d3ee'},
-    {label:'VIP',val:d.finalVip,color:'#c084fc'},
+    {label:'INVESTED',val:fU(d.cap,0)},
+    {label:'ROI',val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'},
+    {label:'TH GROWTH',val:'+'+fN(d.thPct,0)+'%'},
+    {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
+    {label:'DISCOUNT',val:fN(d.disc,0)+'%'},
+    {label:'VIP',val:vip},
   ];
-
-  const pillPad=22,pillGap=14,pillH=70;
-  const pillWidths=pills.map(p=>{
-    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
-    const lw=x.measureText(p.label).width;
-    x.font='bold 28px "Share Tech Mono","General Sans",monospace';
-    const vw=x.measureText(p.val).width;
-    return Math.max(lw,vw)+pillPad*2;
+  const pillPad=20,pillGap=12,pillH=70;
+  const pwArr=pills.map(p=>{x.font='bold 15px "Share Tech Mono",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Share Tech Mono",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
+  const totalW=pwArr.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
+  let pxp=(W-totalW)/2;
+  pills.forEach((p,i)=>{const w=pwArr[i];
+    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.fill();
+    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.6)';x.font='bold 15px "Share Tech Mono",monospace';x.textAlign='center';x.fillText(p.label,pxp+w/2,pillY+26);
+    x.fillStyle=GSOFT;x.font='bold 26px "Share Tech Mono",monospace';x.fillText(p.val,pxp+w/2,pillY+58);
+    pxp+=w+pillGap;
   });
-  const totalPillW=pillWidths.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
-  let px=(W-totalPillW)/2;
-
-  pills.forEach((p,pi)=>{
-    const pw=pillWidths[pi];
-    x.fillStyle='rgba(255,255,255,0.06)';
-    x.beginPath();x.roundRect(px,pillY,pw,pillH,12);x.fill();
-    x.strokeStyle='rgba(255,255,255,0.15)';
-    x.beginPath();x.roundRect(px,pillY,pw,pillH,12);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.7)';
-    x.font='bold 16px "Share Tech Mono","General Sans",monospace';
-    x.textAlign='center';
-    x.fillText(p.label,px+pw/2,pillY+26);
-    x.fillStyle=p.color;
-    x.font='bold 28px "Share Tech Mono","General Sans",monospace';
-    x.fillText(p.val,px+pw/2,pillY+58);
-    px+=pw+pillGap;
-  });
-
-  // --- FOOTER ---
+  // footer
   const footY=H-38;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.2,'rgba(147,51,234,0.4)');
-  fg.addColorStop(0.8,'rgba(6,182,212,0.4)');fg.addColorStop(1,'transparent');
-  x.strokeStyle=fg;x.lineWidth=1.2;
-  x.beginPath();x.moveTo(pad,footY-22);x.lineTo(W-pad,footY-22);x.stroke();
-
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-22);x.lineTo(W-pad,footY-22);x.stroke();
+  x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "General Sans",system-ui,sans-serif';x.fillText('●',pad,footY);
+  x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Space Grotesk,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Share Tech Mono",monospace';
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
+  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Share Tech Mono",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
   x.textAlign='left';
-  x.fillStyle='rgba(147,51,234,0.9)';
-  x.font='bold 14px "General Sans",system-ui,sans-serif';
-  x.fillText('\u25CF',pad,footY);
-  x.fillStyle='rgba(255,255,255,0.7)';
-  x.font='bold 20px Space Grotesk,system-ui,sans-serif';
-  x.fillText('gmt-optimizer.com',pad+18,footY+1);
-
-  x.textAlign='center';
-  x.fillStyle='rgba(255,255,255,0.4)';
-  x.font='15px "Share Tech Mono","General Sans",monospace';
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now,W/2,footY+1);
-
-  x.textAlign='right';
-  x.fillStyle='rgba(6,182,212,0.85)';
-  x.font='bold 17px "Share Tech Mono","General Sans",monospace';
-  x.fillText('use code RINGO5',W-pad,footY+1);
-
-  x.textAlign='left';
-
-  // --- DOWNLOAD ---
-  c.toBlob(blob=>{
-    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([blob],'gmt-optimizer-projection.png',{type:'image/png'})]})){
-      navigator.share({files:[new File([blob],'gmt-optimizer-projection.png',{type:'image/png'})],title:'GMT Optimizer Projection'}).catch(()=>{});
-    }else{
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download='gmt-optimizer-projection.png';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-  },'image/png');
+  return c;
 }
 
 // ---- REACTIVE ----
