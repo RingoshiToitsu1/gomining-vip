@@ -2567,6 +2567,14 @@ function saveAsNewProfile(){
 function toggleEditSetup(){openEditSetup();}   // back-compat
 function openEditSetup(){
   const sec=$('secInputs');if(!sec)return;
+  // The edit overlay lives inside the My Setup tab; on another tab (e.g. Capital Planner)
+  // that tab is display:none, so the overlay's ancestor is hidden and nothing renders.
+  // Make My Setup the active tab first so the editor actually shows.
+  const cur=document.getElementById('tab-current');
+  if(cur&&!cur.classList.contains('active')){
+    const setupBtn=document.querySelector('[data-tab="tab-current"]');
+    if(setupBtn)setupBtn.click();
+  }
   sec.style.display='';sec.scrollTop=0;
   document.body.style.overflow='hidden';
   refreshGreedyVisibility();
