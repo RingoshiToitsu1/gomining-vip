@@ -2118,6 +2118,7 @@ function applySharedPlan(){
     }
     if(data&&typeof data==='object'&&Object.keys(data).length){
       applyInputs(data);
+      applyDiscountOverrideFor(null);   // a shared setup is auto-calc; don't inherit the viewer's override
       history.replaceState({},'',location.pathname);   // clean URL so the tool behaves normally afterward
       return true;
     }
@@ -2375,6 +2376,7 @@ function applyDiscountOverride(){
   v=Math.max(0,Math.min(30,v));
   S.discountOverride=v;
   try{localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v))}catch(e){}
+  autoSave();   // persist the override into the active setup so it stays tied to THIS setup
   $('discOverridePanel').style.display='none';
   $('discOverrideToggle').classList.remove('active');
   if(S.loaded)recalc();
@@ -2383,6 +2385,7 @@ function applyDiscountOverride(){
 function resetDiscountOverride(){
   S.discountOverride=null;
   try{localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
+  autoSave();   // clear it from the active setup too
   $('discOverridePanel').style.display='none';
   $('discOverrideToggle').classList.remove('active');
   if(S.loaded)recalc();
@@ -2409,8 +2412,18 @@ function readInputs(){
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
     inCurrency:$('inCurrency').value,
-    piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false
+    piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false,
+    // Manual discount override travels WITH the setup so it never leaks across profiles.
+    discountOverride:(S.discountOverride!=null&&isFinite(S.discountOverride))?S.discountOverride:null
   };
+}
+// Apply a setup's saved discount override (or clear it). Keeps the global persistence key
+// in sync so a page reload of the same setup restores the same override.
+function applyDiscountOverrideFor(d){
+  const raw=d?d.discountOverride:undefined;
+  const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(30,Number(raw))):null;
+  S.discountOverride=v;
+  try{v!=null?localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v)):localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
 }
 function applyInputs(d){
   if(d.inTH!=null)$('inTH').value=d.inTH;
@@ -2478,8 +2491,11 @@ function onProfileChange(){
   saveProfilesState(state);
   if(id){
     const p=state.profiles.find(x=>x.id===id);
-    if(p){applyInputs(p.data);if(S.loaded)recalc();}
+    if(p){applyInputs(p.data);applyDiscountOverrideFor(p.data);if(S.loaded)recalc();}
     flashStatus('Loaded "'+(p?p.name:'')+'"');
+  }else{
+    // Switched to demo / no setup — drop any override carried over from a previous setup.
+    applyDiscountOverrideFor(null);if(S.loaded)recalc();
   }
   renderProfileSelect();
 }
@@ -2601,7 +2617,13 @@ function loadSetup(){
   renderProfileSelect();
   if(state.activeId){
     const p=state.profiles.find(x=>x.id===state.activeId);
-    if(p){applyInputs(p.data);return true;}
+    if(p){
+      applyInputs(p.data);
+      // New profiles store their own override; legacy ones (field absent) keep the
+      // global value loadDiscountOverride() already restored above.
+      if(p.data&&p.data.discountOverride!==undefined)applyDiscountOverrideFor(p.data);
+      return true;
+    }
   }
   return false;
 }
