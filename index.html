@@ -2044,13 +2044,18 @@ function projectedMonthlyForCapital(capUSD){
   const i=inp();i.cap=Math.max(0,capUSD||0);
   const m=calc(i),bp=m.bp,gp=m.gp,dbt=dailyBTCperTH();
   const a=solvePlannerAllocation(i,bp,gp,dbt);
-  if(!a)return null;
-  const gr=dbt*a.nt,df=a.newF.t*(1-a.td2/100),net=gr-df,mo=net*bp*30;
-  const projMoStaking=a.newLocked*(i.apr/100)/52*gp*4.33;
-  const refInitTH=a.ref?a.ref.at:0;
-  const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
-  const projAmbMo=projTotalRefTH*15*24/1000*0.005*30;
-  return mo+projMoStaking+projAmbMo;
+  let mineMo,locked,refInitTH;
+  if(a){
+    const gr=dbt*a.nt,df=a.newF.t*(1-a.td2/100);
+    mineMo=(gr-df)*bp*30;locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
+  }else{
+    // Nothing to allocate (e.g. zero capital on a blank/empty setup): the farm just
+    // earns its current income — a $0 baseline on a blank setup, not an error.
+    mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;
+  }
+  const stakingMo=locked*(i.apr/100)/52*gp*4.33;
+  const ambMo=((i.amb?i.refTH:0)+refInitTH)*15*24/1000*0.005*30;
+  return mineMo+stakingMo+ambMo;
 }
 // Binary-search the smallest USD capital whose projected monthly income reaches targetUSD.
 function solveCapitalForIncome(targetUSD){
