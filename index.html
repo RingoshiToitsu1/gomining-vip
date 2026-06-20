@@ -4340,7 +4340,8 @@ function computeSetupProjection(){
   // Stash the key results so "Copy projection image" can render a shareable card.
   window._shareData={
     days, startTH, startSS, startLocked, th:totEndTH, finalSS, gmtLocked, gp,
-    cap:(i.cap||0), thPct, ssPct, disc:finalEntry.disc, vip:finalEntry.vip,
+    // Only a Capital-Planner projection deploys new capital; a My Setup projection invests nothing.
+    cap:(fromPlanner?(i.cap||0):0), thPct, ssPct, disc:finalEntry.disc, vip:finalEntry.vip,
     roiYr:(days/365>0?ssPct/(days/365):0), btcMode:btcSel.mode, bpStart, bpAtEnd
   };
   // Chart renders in Daily/USD by default — keep the toggle state in sync.
@@ -4570,14 +4571,19 @@ function buildShareCanvas(d){
   // stat pills (incl. ROI)
   const pillY=cardY+cardH+25;
   const vip=(d.vip&&d.vip.n)?d.vip.n:(d.vip||'—');
-  const pills=[
-    {label:'INVESTED',val:fU(d.cap,0)},
-    {label:'ROI',val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'},
+  const pills=[];
+  // INVESTED + ROI are capital-deployment metrics — only show them when capital was actually
+  // deployed (a Capital Planner projection). A My Setup projection invests nothing, so omit them.
+  if(d.cap>0){
+    pills.push({label:'INVESTED',val:fU(d.cap,0)});
+    pills.push({label:'ROI',val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'});
+  }
+  pills.push(
     {label:'TH GROWTH',val:'+'+fN(d.thPct,0)+'%'},
     {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
     {label:'DISCOUNT',val:fN(d.disc,0)+'%'},
-    {label:'VIP',val:vip},
-  ];
+    {label:'VIP',val:vip}
+  );
   const pillPad=20,pillGap=12,pillH=70;
   const pwArr=pills.map(p=>{x.font='bold 15px "Share Tech Mono",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Share Tech Mono",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
   const totalW=pwArr.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
