@@ -2075,6 +2075,38 @@ const SHARE_FIELDS=[
   ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],
   ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b']
 ];
+// Compact v2 share encoding (?s2=). Shorter than v1 (?s=) because:
+//  • the rarely-filled marketplace/greedy/referral fields sit at the TAIL, so they're
+//    trimmed entirely when empty (the common case);
+//  • all four toggles collapse into ONE base-36 digit;
+//  • currency is a single char, and the default (USD) is omitted.
+// A basic setup goes from ~18 tilde-segments down to ~6.
+const SHARE_CUR={USD:'',GBP:'G',EUR:'E'};
+function encodeShareV2(d){
+  const v=x=>(x==null||x==='')?'':String(x);
+  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0);
+  const parts=[
+    v(d.inTH),v(d.inWTH),v(d.inGMTLocked),v(d.inGMTWallet),v(d.inCapital),
+    flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
+    v(d.inMpTH),v(d.inMpGMT),v(d.inMpWth),
+    v(d.inGreedyTH),v(d.inGreedyInitial),v(d.inGreedyGrowth),
+    v(d.inReferredTH),v(d.inRefCapital)
+  ];
+  while(parts.length&&parts[parts.length-1]==='')parts.pop();
+  return parts.join('~');
+}
+function decodeShareV2(s){
+  const p=s.split('~'),g=i=>(p[i]!==undefined&&p[i]!=='')?p[i]:undefined,d={};
+  const set=(k,i)=>{const x=g(i);if(x!==undefined)d[k]=x;};
+  set('inTH',0);set('inWTH',1);set('inGMTLocked',2);set('inGMTWallet',3);set('inCapital',4);
+  const flags=g(5)?(parseInt(g(5),36)||0):0;
+  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);
+  const cur=g(6);d.inCurrency=cur==='G'?'GBP':cur==='E'?'EUR':'USD';
+  set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
+  set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
+  set('inReferredTH',13);set('inRefCapital',14);
+  return d;
+}
 // Copy text without the ugly prompt: clipboard API on https, else a silent textarea+execCommand
 // fallback (works on http / insecure contexts, e.g. mobile). Returns a Promise.
 function copyText(text){
@@ -2096,9 +2128,7 @@ function copyText(text){
 }
 function sharePlan(btn){
   const d=readInputs();
-  const parts=SHARE_FIELDS.map(([k,t])=>t==='b'?(d[k]?'1':'0'):(d[k]==null?'':String(d[k])));
-  while(parts.length&&parts[parts.length-1]==='')parts.pop();
-  const url='https://'+location.host+location.pathname+'?s='+parts.join('~');   // always share the https link
+  const url='https://'+location.host+location.pathname+'?s2='+encodeShareV2(d);   // always share the https link
   const done=()=>{if(btn){const t=btn.getAttribute('data-lbl')||btn.innerHTML;btn.setAttribute('data-lbl',t);btn.innerHTML='✓ Link copied!';setTimeout(()=>btn.innerHTML=t,1800);}};
   copyText(url).then(done).catch(()=>prompt('Copy this link:',url));
 }
@@ -2108,13 +2138,18 @@ function applySharedPlan(){
   try{
     const sp=new URLSearchParams(location.search);
     let data=null;
-    const s=sp.get('s');
-    if(s!=null){
-      const parts=s.split('~');data={};
-      SHARE_FIELDS.forEach(([k,t],i)=>{const v=parts[i];if(v===undefined||v==='')return;data[k]=t==='b'?(v==='1'||v==='true'):v;});
+    const s2=sp.get('s2');
+    if(s2!=null){
+      data=decodeShareV2(s2);
     }else{
-      const raw=sp.get('p');   // legacy full-JSON links
-      if(raw)data=JSON.parse(decodeURIComponent(escape(atob(raw))));
+      const s=sp.get('s');   // legacy v1 compact links
+      if(s!=null){
+        const parts=s.split('~');data={};
+        SHARE_FIELDS.forEach(([k,t],i)=>{const v=parts[i];if(v===undefined||v==='')return;data[k]=t==='b'?(v==='1'||v==='true'):v;});
+      }else{
+        const raw=sp.get('p');   // legacy full-JSON links
+        if(raw)data=JSON.parse(decodeURIComponent(escape(atob(raw))));
+      }
     }
     if(data&&typeof data==='object'&&Object.keys(data).length){
       applyInputs(data);
