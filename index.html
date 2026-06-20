@@ -781,9 +781,9 @@ html.show-onboarding #onboarding{display:flex}
 .sp-prompt{text-align:center;color:var(--text3);font-size:.85rem;padding:1.6rem 1rem;line-height:1.65;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg-input)}
 .sp-prompt strong{color:var(--purple-soft)}
 .sp-loading{display:flex;flex-direction:column;align-items:center;gap:.9rem;padding:2.4rem 1rem;animation:fadeIn .2s ease}
-.sp-spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--purple);border-right-color:var(--purple-soft);animation:spSpin .7s linear infinite}
+.sp-spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--purple);border-right-color:var(--purple-soft);animation:spSpin .7s linear infinite;will-change:transform;transform:translateZ(0)}
 .sp-loading-txt{color:var(--text2);font-size:.86rem;font-weight:600;letter-spacing:.02em}
-@keyframes spSpin{to{transform:rotate(360deg)}}
+@keyframes spSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .ri-btn[disabled]{opacity:.6;cursor:default;transform:none!important}
 .pi-calc-loading{position:absolute;inset:0;z-index:5;background:rgba(10,10,10,.93);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 @media(max-width:600px){
@@ -2136,6 +2136,9 @@ async function copyProjectionImage(btn){
   if(spin)spin.style.display='';
   if(txt)txt.textContent='Generating pastable image…';
   if(load)load.style.display='flex';
+  // iOS Safari won't always start a CSS animation on an element revealed from a display:none
+  // ancestor — force a reflow-driven restart so the spinner actually spins on mobile.
+  if(spin){spin.style.animation='none';void spin.offsetWidth;spin.style.animation='';}
   const finish=(msg)=>{
     if(spin)spin.style.display='none';
     if(txt)txt.textContent=msg;
