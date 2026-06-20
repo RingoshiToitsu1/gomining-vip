@@ -727,6 +727,12 @@ html.show-onboarding #onboarding{display:flex}
 #plannerIntro .sp-form{text-align:center}
 #plannerIntro .sp-form label{text-align:center}
 #plannerIntro .pi-opt-toggle{justify-content:center;text-align:center}
+/* Capital Planner: choose between investing an amount vs targeting a monthly income */
+.pi-mode-seg{display:flex;gap:.35rem;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:.3rem;margin-bottom:.4rem}
+.pi-mode-btn{flex:1;background:none;border:none;border-radius:9px;color:var(--text3);font-family:var(--sans);font-size:.76rem;font-weight:700;padding:.55rem .35rem;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.pi-mode-btn.active{background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;box-shadow:0 2px 8px rgba(245,166,35,.25)}
+.goal-banner{background:linear-gradient(135deg,rgba(245,166,35,.15),rgba(255,207,122,.05));border:1px solid var(--purple);border-radius:var(--radius-sm);padding:.75rem 1rem;margin-bottom:.85rem;font-size:.86rem;color:var(--text);line-height:1.55;text-align:center}
+.goal-banner.warn{border-color:var(--orange);background:rgba(245,166,35,.08)}
 /* Capital Planner: unit (GMT logo / USD) overlaid inside the editable cell */
 .pi-field-box{position:relative;display:block;width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:12px 16px;cursor:text;transition:var(--transition)}
 .pi-field-box:focus-within{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
@@ -1507,11 +1513,25 @@ html.show-onboarding #onboarding{display:flex}
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Total unlocked GMT you have on hand</div>
         </div>
         <div>
-          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Additional USD Capital <span style="color:var(--text4)">(optional)</span></label>
-          <label class="pi-field-box" for="piCapitalInput">
-            <input type="number" id="piCapitalInput" value="0" step="100" min="0">
-            <span class="pi-unit">USD</span>
-          </label>
+          <div class="pi-mode-seg" role="tablist">
+            <button type="button" class="pi-mode-btn active" id="piModeAmount" onclick="setPlannerMode('amount')">Invest an amount</button>
+            <button type="button" class="pi-mode-btn" id="piModeGoal" onclick="setPlannerMode('goal')">Target an income</button>
+          </div>
+          <div id="piAmountBlock">
+            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Additional USD Capital <span style="color:var(--text4)">(optional)</span></label>
+            <label class="pi-field-box" for="piCapitalInput">
+              <input type="number" id="piCapitalInput" value="0" step="100" min="0">
+              <span class="pi-unit">USD</span>
+            </label>
+          </div>
+          <div id="piGoalBlock" hidden>
+            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Target Monthly Income</label>
+            <label class="pi-field-box" for="piTargetInput">
+              <input type="number" id="piTargetInput" value="200" step="10" min="0">
+              <span class="pi-unit" id="piTargetUnit">$/mo</span>
+            </label>
+            <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">We'll find the smallest capital that grows your farm to this monthly net income.</div>
+          </div>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem">
           <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptMiner')">Purchasing a specific miner?</button>
@@ -1553,7 +1573,7 @@ html.show-onboarding #onboarding{display:flex}
         </div>
       </div>
       <div class="sp-run-wrap">
-        <button id="plannerCalcBtn" class="ri-btn" onclick="submitPlannerCapital()">Calculate Optimal Split</button>
+        <button id="plannerCalcBtn" class="ri-btn" onclick="submitPlanner()">Calculate Optimal Split</button>
       </div>
     </div>
   </div>
@@ -1956,6 +1976,8 @@ function openPlannerForm(){
   document.getElementById('piMpTH').value=$('inMpTH').value;
   document.getElementById('piMpGMT').value=$('inMpGMT').value;
   document.getElementById('piMpWth').value=$('inMpWth').value;
+  if(window._incomeGoal&&isFinite(window._incomeGoal.targetDisp))document.getElementById('piTargetInput').value=Math.round(window._incomeGoal.targetDisp);
+  setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
   document.getElementById('plannerIntro').style.display='';
   document.getElementById('plannerIntro').scrollTop=0;
   document.body.style.overflow='hidden';
@@ -1989,12 +2011,91 @@ function submitPlannerCapital(){
     const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
     $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
     window._plannerCalcDone=true;
+    window._incomeGoal=null;   // amount mode: drop any prior income-goal banner
     recalc();
     document.getElementById('plannerIntro').style.display='none';
     document.body.style.overflow='';
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
     animatePlannerResults();   // fresh-load feel: count the allocation up from 0
+  },800);
+}
+// The Calculate button runs whichever planner mode is active.
+function submitPlanner(){
+  if(window._plannerMode==='goal')submitPlannerTarget();
+  else submitPlannerCapital();
+}
+// Toggle the planner form between "invest an amount" and "target a monthly income".
+function setPlannerMode(mode){
+  window._plannerMode=mode;
+  const amt=$('piAmountBlock'),goal=$('piGoalBlock');
+  const bA=$('piModeAmount'),bG=$('piModeGoal'),btn=$('plannerCalcBtn'),unit=$('piTargetUnit');
+  const isGoal=mode==='goal';
+  if(amt)amt.hidden=isGoal;
+  if(goal)goal.hidden=!isGoal;
+  if(bA)bA.classList.toggle('active',!isGoal);
+  if(bG)bG.classList.toggle('active',isGoal);
+  if(btn)btn.textContent=isGoal?'Find Required Capital':'Calculate Optimal Split';
+  if(unit)unit.textContent=(({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$')+'/mo';
+}
+// Project the farm's total monthly income (mining + staking + ambassador) for a hypothetical
+// USD capital, mirroring renderPlanner's "Projected monthly" — used to goal-seek a target income.
+function projectedMonthlyForCapital(capUSD){
+  const i=inp();i.cap=Math.max(0,capUSD||0);
+  const m=calc(i),bp=m.bp,gp=m.gp,dbt=dailyBTCperTH();
+  const a=solvePlannerAllocation(i,bp,gp,dbt);
+  if(!a)return null;
+  const gr=dbt*a.nt,df=a.newF.t*(1-a.td2/100),net=gr-df,mo=net*bp*30;
+  const projMoStaking=a.newLocked*(i.apr/100)/52*gp*4.33;
+  const refInitTH=a.ref?a.ref.at:0;
+  const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
+  const projAmbMo=projTotalRefTH*15*24/1000*0.005*30;
+  return mo+projMoStaking+projAmbMo;
+}
+// Binary-search the smallest USD capital whose projected monthly income reaches targetUSD.
+function solveCapitalForIncome(targetUSD){
+  if(!(targetUSD>0))return null;
+  const f=projectedMonthlyForCapital;
+  const base=f(0);
+  if(base==null)return {cap:null,error:true};
+  if(base>=targetUSD)return {cap:0,mo:base,already:true};
+  let hi=1000,hiMo=f(hi),iter=0;
+  while((hiMo==null||hiMo<targetUSD)&&hi<1e8&&iter<40){hi*=2;hiMo=f(hi);iter++;}
+  if(hiMo==null||hiMo<targetUSD)return {cap:null,mo:hiMo,maxTried:hi,unreachable:true};
+  let lo=0;
+  for(let k=0;k<44;k++){const mid=(lo+hi)/2,mo=f(mid);if(mo==null){lo=mid;continue;}mo<targetUSD?lo=mid:hi=mid;}
+  return {cap:hi,mo:f(hi),base};
+}
+// Target-income mode: solve for the capital needed, fill it in, then show the normal results.
+function submitPlannerTarget(){
+  const btn=$('plannerCalcBtn'),load=$('plannerCalcLoading'),txt=load?load.querySelector('.sp-loading-txt'):null;
+  if(txt)txt.textContent='Finding the capital you need…';
+  if(btn)btn.disabled=true;
+  if(load)load.style.display='flex';
+  setTimeout(function(){
+    // Apply the form's non-capital fields first so the goal-seek accounts for them.
+    const gmtVal=parseFloat($('piGMTInput').value)||0;
+    const refCapVal=parseFloat($('piRefCapInput').value)||0;
+    if(gmtVal>0)$('inGMTWallet').value=gmtVal;
+    $('inRefCapital').value=refCapVal;
+    $('inMpTH').value=parseFloat($('piMpTH').value)||0;
+    $('inMpGMT').value=parseFloat($('piMpGMT').value)||0;
+    const mpWthVal=parseFloat($('piMpWth').value);$('inMpWth').value=(mpWthVal>0?mpWthVal:15);
+    // Target income is entered in the display currency; solve in USD.
+    const targetDisp=parseFloat($('piTargetInput').value)||0;
+    const targetUSD=targetDisp/(S.fxRate||1);
+    const res=solveCapitalForIncome(targetUSD);
+    let cap=0;
+    if(res&&res.cap!=null)cap=Math.ceil(res.cap/10)*10;   // round up to a tidy $10
+    $('inCapital').value=cap;
+    window._plannerCalcDone=true;
+    window._incomeGoal={targetUSD,targetDisp,cap,res};
+    recalc();
+    $('plannerIntro').style.display='none';
+    document.body.style.overflow='';
+    if(load)load.style.display='none';
+    if(btn)btn.disabled=false;
+    animatePlannerResults();
   },800);
 }
 // "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
@@ -3330,6 +3431,19 @@ function renderPlanner(i,m){
 
   // --- Display ---
   let ah='';
+
+  // Income-goal banner: when the user planned via a target monthly income, surface the
+  // capital we solved for (only while the displayed capital still matches that solve).
+  const G=window._incomeGoal;
+  if(G&&G.res&&Math.abs((i.cap||0)-(G.cap||0))<0.5){
+    if(G.res.already){
+      ah+=`<div class="goal-banner">🎯 You're already earning <strong>${fU(G.targetUSD)}/mo</strong> or more — no new capital needed to hit this goal.</div>`;
+    }else if(G.res.unreachable){
+      ah+=`<div class="goal-banner warn">🎯 Couldn't reach <strong>${fU(G.targetUSD)}/mo</strong> even at ${fU(G.res.maxTried)} of capital — try a lower goal.</div>`;
+    }else{
+      ah+=`<div class="goal-banner">🎯 To earn about <strong>${fU(G.targetUSD)}/mo</strong>, invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
+    }
+  }
 
   // Explanation — only noteworthy states (the split itself is shown in the cards below).
   // The greedy-machine-first allocation is computed in `a` and used by the projections, but
