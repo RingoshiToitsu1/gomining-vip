@@ -1054,7 +1054,7 @@ html.show-onboarding #onboarding{display:flex}
         <label>Locked GMT</label>
         <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
-      <input type="hidden" id="obLockAPR" value="21.78">
+      <input type="hidden" id="obLockAPR" value="21.68">
       <input type="hidden" id="obCPT" value="12.77">
       <label class="toggle" style="display:none"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
       <label class="toggle" style="display:none"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
@@ -1283,6 +1283,10 @@ html.show-onboarding #onboarding{display:flex}
                 <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
                 <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT</span>
               </div>
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inAvatarDisc"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inAvatarDisc').click()">Avatar TH discount <span class="ed-toggle-note">(5% off upgrades &amp; creation)</span></span>
+              </div>
               <div class="toggle-row ed-toggle ed-amb-row">
                 <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
                 <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(referred TH)</span></span>
@@ -1298,7 +1302,7 @@ html.show-onboarding #onboarding{display:flex}
 
         <!-- Advanced inputs kept for the math, hidden from the form -->
         <div style="display:none">
-          <input type="number" id="inLockAPR" value="21.78">
+          <input type="number" id="inLockAPR" value="21.68">
           <input type="number" id="inCostPerTH" value="12.77">
           <input type="number" id="inMiningMode" value="0.88">
           <span id="inTokenDiscountDisplay"></span>
@@ -1745,21 +1749,23 @@ const TH_TIERS=[
   {th:384,cpt:12.51},{th:512,cpt:12.39},{th:768,cpt:12.27},{th:1024,cpt:12.14},
   {th:1536,cpt:12.02},{th:2560,cpt:11.90},{th:3584,cpt:11.78},{th:5000,cpt:11.67}
 ];
+function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
 function estimateCPT(th){
-  if(th<=0)return TH_TIERS[0].cpt;
-  if(th>=TH_TIERS[TH_TIERS.length-1].th)return TH_TIERS[TH_TIERS.length-1].cpt;
+  const disc=avatarDiscMult();
+  if(th<=0)return TH_TIERS[0].cpt*disc;
+  if(th>=TH_TIERS[TH_TIERS.length-1].th)return TH_TIERS[TH_TIERS.length-1].cpt*disc;
   for(let i=0;i<TH_TIERS.length-1;i++){
     const lo=TH_TIERS[i],hi=TH_TIERS[i+1];
     if(th>=lo.th&&th<=hi.th){
       const pct=(th-lo.th)/(hi.th-lo.th);
-      return lo.cpt+(hi.cpt-lo.cpt)*pct;
+      return (lo.cpt+(hi.cpt-lo.cpt)*pct)*disc;
     }
   }
-  return TH_TIERS[0].cpt;
+  return TH_TIERS[0].cpt*disc;
 }
 function thForBudget(budget){
   if(budget<=0)return 0;
-  let lo=0,hi=budget/TH_TIERS[TH_TIERS.length-1].cpt;
+  let lo=0,hi=budget/(TH_TIERS[TH_TIERS.length-1].cpt*avatarDiscMult());
   for(let k=0;k<50;k++){
     const mid=(lo+hi)/2;
     if(mid*estimateCPT(mid)<budget)lo=mid;else hi=mid;
@@ -1785,16 +1791,17 @@ const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W m
 
 // Interpolate any tiered $/TH price table.
 function cptTier(tiers,th){
-  if(th<=0)return tiers[0].cpt;
-  if(th>=tiers[tiers.length-1].th)return tiers[tiers.length-1].cpt;
+  const disc=avatarDiscMult();
+  if(th<=0)return tiers[0].cpt*disc;
+  if(th>=tiers[tiers.length-1].th)return tiers[tiers.length-1].cpt*disc;
   for(let i=0;i<tiers.length-1;i++){const lo=tiers[i],hi=tiers[i+1];
-    if(th>=lo.th&&th<=hi.th)return lo.cpt+(hi.cpt-lo.cpt)*((th-lo.th)/(hi.th-lo.th));}
-  return tiers[0].cpt;
+    if(th>=lo.th&&th<=hi.th)return (lo.cpt+(hi.cpt-lo.cpt)*((th-lo.th)/(hi.th-lo.th)))*disc;}
+  return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
 function thForBudgetTiers(budget,tiers){
   if(budget<=0)return 0;
-  let lo=0,hi=budget/tiers[tiers.length-1].cpt;
+  let lo=0,hi=budget/(tiers[tiers.length-1].cpt*avatarDiscMult());
   for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(mid*cptTier(tiers,mid)<budget)lo=mid;else hi=mid;}
   return(lo+hi)/2;
 }
@@ -2178,7 +2185,7 @@ function buildChart(symbol,allowChange){
 const SHARE_FIELDS=[
   ['inTH'],['inWTH'],['inGMTLocked'],['inGMTWallet'],['inCapital'],
   ['inMpTH'],['inMpGMT'],['inMpWth'],['inGreedyTH'],['inGreedyInitial'],['inGreedyGrowth'],
-  ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],
+  ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],['inAvatarDisc','b'],
   ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b']
 ];
 // Compact v2 share encoding (?s2=). Shorter than v1 (?s=) because:
@@ -2190,7 +2197,7 @@ const SHARE_FIELDS=[
 const SHARE_CUR={USD:'',GBP:'G',EUR:'E'};
 function encodeShareV2(d){
   const v=x=>(x==null||x==='')?'':String(x);
-  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0);
+  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0);
   const parts=[
     v(d.inTH),v(d.inWTH),v(d.inGMTLocked),v(d.inGMTWallet),v(d.inCapital),
     flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
@@ -2206,7 +2213,7 @@ function decodeShareV2(s){
   const set=(k,i)=>{const x=g(i);if(x!==undefined)d[k]=x;};
   set('inTH',0);set('inWTH',1);set('inGMTLocked',2);set('inGMTWallet',3);set('inCapital',4);
   const flags=g(5)?(parseInt(g(5),36)||0):0;
-  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);
+  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);
   const cur=g(6);d.inCurrency=cur==='G'?'GBP':cur==='E'?'EUR':'USD';
   set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
   set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
@@ -2550,6 +2557,7 @@ function readInputs(){
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
+    inAvatarDisc:$('inAvatarDisc').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
     inCurrency:$('inCurrency').value,
@@ -2581,6 +2589,7 @@ function applyInputs(d){
   if(d.inGreedyGrowth!=null)$('inGreedyGrowth').value=d.inGreedyGrowth;
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
+  if(d.inAvatarDisc!==undefined)$('inAvatarDisc').checked=!!d.inAvatarDisc;
   if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
   if(d.inReferredTH!=null)$('inReferredTH').value=d.inReferredTH;
   if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
@@ -2732,7 +2741,7 @@ function clearInputs(){
   // until a profile is loaded or "Save as…" is used.
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
-    inCapital:'5000',inClickStreak:false,inPayGMT:true,
+    inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'15',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
@@ -2817,7 +2826,8 @@ document.addEventListener('keydown',e=>{
   const el=e.target;if(!_isClearable(el)||el.dataset.prevVal===undefined)return;
   el.value=el.dataset.prevVal;el.blur();   // cancel the edit, revert
 });
-['inClickStreak','inPayGMT','inAmbassador'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+$('inAvatarDisc').addEventListener('change',()=>autoFillCPT('inTH','inCostPerTH'));
 {const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
 
@@ -4751,7 +4761,7 @@ function obNewUser(){
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
   const wth=document.getElementById('obWTH');if(wth)wth.value='15';
   const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
-  const apr=document.getElementById('obLockAPR');if(apr)apr.value='21.78';
+  const apr=document.getElementById('obLockAPR');if(apr)apr.value='21.68';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
   // Sync zeros to main inputs
