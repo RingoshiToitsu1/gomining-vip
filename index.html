@@ -1054,7 +1054,7 @@ html.show-onboarding #onboarding{display:flex}
         <label>Locked GMT</label>
         <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
-      <input type="hidden" id="obLockAPR" value="21.68">
+      <input type="hidden" id="obLockAPR" value="23.1">
       <input type="hidden" id="obCPT" value="12.77">
       <label class="toggle" style="display:none"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
       <label class="toggle" style="display:none"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
@@ -1302,9 +1302,9 @@ html.show-onboarding #onboarding{display:flex}
 
         <!-- Advanced inputs kept for the math, hidden from the form -->
         <div style="display:none">
-          <input type="number" id="inLockAPR" value="21.68">
+          <input type="number" id="inLockAPR" value="23.1">
           <input type="number" id="inCostPerTH" value="12.77">
-          <input type="number" id="inMiningMode" value="0.88">
+          <input type="number" id="inMiningMode" value="0.9">
           <span id="inTokenDiscountDisplay"></span>
           <span id="cptAutoHint"></span>
         </div>
@@ -2476,7 +2476,7 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=0.88;
+const MINING_MODE_DEFAULT=0.9;
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
@@ -4761,7 +4761,7 @@ function obNewUser(){
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
   const wth=document.getElementById('obWTH');if(wth)wth.value='15';
   const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
-  const apr=document.getElementById('obLockAPR');if(apr)apr.value='21.68';
+  const apr=document.getElementById('obLockAPR');if(apr)apr.value='23.1';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
   // Sync zeros to main inputs
