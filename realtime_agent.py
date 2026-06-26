@@ -180,7 +180,7 @@ def score(ind: dict) -> tuple[str, int, list[str]]:
 
     # High conviction: ±6+; Medium: ±4-5; Low/Neutral: <4
     # Note: oversold reversals can hit 6+ with RSI < 25 + BB penetration
-    direction = "LONG" if pts >= 6 else "SHORT" if pts <= -6 else "NEUTRAL"
+    direction = "LONG" if pts >= 5 else "SHORT" if pts <= -5 else "NEUTRAL"
     return direction, pts, why
 
 # ── Trade tracking ────────────────────────────────────────────────────────────
@@ -214,7 +214,7 @@ def validate_setup(direction: str, lvls: dict, ind: dict, score_pts: int) -> boo
         return False
 
     # OBVIOUS signals only: ±6 or ±7 conviction
-    if abs(score_pts) < 6:
+    if abs(score_pts) < 5:
         return False
 
     # Require good R:R (at least 1:1.5)
