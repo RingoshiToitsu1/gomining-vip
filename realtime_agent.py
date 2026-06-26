@@ -60,13 +60,9 @@ def fetch_hl_candles(symbol: str = "BTC", interval: str = "5m", lookback: int = 
 TICKER        = os.getenv("RT_TICKER", "BTC-USD")
 POLL_SEC      = int(os.getenv("RT_POLL_SEC", "5"))
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "")
-GITHUB_REPO   = os.getenv("GITHUB_REPO", "RingoshiToitsu1/daily_stock_analysis")
-GITHUB_PATH   = "docs/data/realtime.json"
 MODEL         = "claude-sonnet-4-6"
 DATA_FILE     = Path("/home/ubuntu/realtime_data.json")
 TRADES_FILE   = Path("/home/ubuntu/realtime_trades.json")
-GITHUB_PUSH_INTERVAL = 10  # Only push to GitHub every 10s (even if signals faster)
 
 # ── Indicators ────────────────────────────────────────────────────────────────
 def rsi(s: pd.Series, n=14) -> pd.Series:
@@ -315,35 +311,6 @@ def trade_stats() -> dict:
         "recent":      _trade_history[-10:][::-1],  # last 10, newest first
     }
 
-# ── GitHub publish ────────────────────────────────────────────────────────────
-_gh_sha: str = ""
-
-def push_to_github(data: dict) -> bool:
-    global _gh_sha
-    if not GITHUB_TOKEN:
-        return False
-    url  = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_PATH}"
-    hdrs = {"Authorization": f"Bearer {GITHUB_TOKEN}", "X-GitHub-Api-Version": "2022-11-28"}
-    if not _gh_sha:
-        r = requests.get(url, headers=hdrs, timeout=10)
-        if r.ok:
-            _gh_sha = r.json().get("sha", "")
-    content = base64.b64encode(json.dumps(data, ensure_ascii=False).encode()).decode()
-    payload: dict = {
-        "message":    f"realtime: {data.get('updated_at','')[:19]}",
-        "content":    content,
-        "committer":  {"name": "realtime-agent", "email": "agent@noreply.github.com"},
-    }
-    if _gh_sha:
-        payload["sha"] = _gh_sha
-    r = requests.put(url, json=payload, headers=hdrs, timeout=15)
-    if r.ok:
-        _gh_sha = r.json().get("content", {}).get("sha", _gh_sha)
-        return True
-    print(f"[github] {r.status_code} {r.text[:120]}")
-    _gh_sha = ""
-    return False
-
 # ── Claude ────────────────────────────────────────────────────────────────────
 async def call_claude(ind: dict, direction: str, pts: int, why: list,
                       lvls: dict, trade_result: str | None) -> str:
@@ -373,10 +340,9 @@ State the bias, one key level to watch, and the main risk to the trade."""
 # ── Main loop ─────────────────────────────────────────────────────────────────
 _state: dict = {}
 _last_candle_time: int = 0  # Track last candle timestamp to detect new data
-_last_github_push: float = 0  # Rate limit GitHub pushes
 
 async def poll():
-    global _state, _current_direction, _last_candle_time, _last_github_push
+    global _state, _current_direction, _last_candle_time
 
     while True:
         try:
@@ -471,17 +437,10 @@ async def poll():
             tmp.write_text(json.dumps(out, ensure_ascii=False))
             tmp.rename(DATA_FILE)
 
-            # Rate limit GitHub pushes to avoid quota exhaustion
-            now = time.time()
-            should_push = (now - _last_github_push) >= GITHUB_PUSH_INTERVAL
-            pushed = push_to_github(out) if should_push else False
-            if should_push:
-                _last_github_push = now
-
             wr = stats.get("win_rate")
             wr_str = f"WR {wr}%" if wr is not None else "no trades yet"
             print(f"[{datetime.now().strftime('%H:%M:%S')}] {TICKER} {direction} {pts:+d} "
-                  f"@ ${ind['close']:,.0f}  {wr_str}  {'→ github ✓' if pushed else '(local)'}")
+                  f"@ ${ind['close']:,.0f}  {wr_str}")
 
         except Exception as e:
             print(f"[poll error] {e}")
@@ -490,7 +449,7 @@ async def poll():
 
 async def main():
     load_trades()
-    print(f"Starting — {TICKER}, fast poll {POLL_SEC}s (signals on candle change), GitHub push every {GITHUB_PUSH_INTERVAL}s")
+    print(f"Starting — {TICKER}, fast poll {POLL_SEC}s (signals on candle change), local only")
     await poll()
 
 if __name__ == "__main__":
