@@ -58,7 +58,7 @@ def fetch_hl_candles(symbol: str = "BTC", interval: str = "5m", lookback: int = 
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TICKER        = os.getenv("RT_TICKER", "BTC-USD")
-POLL_SEC      = int(os.getenv("RT_POLL_SEC", "60"))
+POLL_SEC      = int(os.getenv("RT_POLL_SEC", "5"))
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 GITHUB_TOKEN  = os.getenv("GITHUB_TOKEN", "")
 GITHUB_REPO   = os.getenv("GITHUB_REPO", "RingoshiToitsu1/daily_stock_analysis")
@@ -66,6 +66,7 @@ GITHUB_PATH   = "docs/data/realtime.json"
 MODEL         = "claude-sonnet-4-6"
 DATA_FILE     = Path("/home/ubuntu/realtime_data.json")
 TRADES_FILE   = Path("/home/ubuntu/realtime_trades.json")
+GITHUB_PUSH_INTERVAL = 10  # Only push to GitHub every 10s (even if signals faster)
 
 # ── Indicators ────────────────────────────────────────────────────────────────
 def rsi(s: pd.Series, n=14) -> pd.Series:
@@ -371,9 +372,11 @@ State the bias, one key level to watch, and the main risk to the trade."""
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
 _state: dict = {}
+_last_candle_time: int = 0  # Track last candle timestamp to detect new data
+_last_github_push: float = 0  # Rate limit GitHub pushes
 
 async def poll():
-    global _state, _current_direction
+    global _state, _current_direction, _last_candle_time, _last_github_push
 
     while True:
         try:
@@ -384,6 +387,25 @@ async def poll():
                                  progress=False, auto_adjust=True)
             if df is None or df.empty:
                 raise ValueError("empty dataframe")
+
+            # Detect if candle data actually changed
+            current_candle_time = int(df.index[-1].timestamp() * 1000)
+            candle_changed = current_candle_time > _last_candle_time
+
+            if not candle_changed:
+                # No new data yet, just check open trade TP/SL
+                if _open_trade:
+                    ind = indicators(df)
+                    outcome = check_open_trade(ind)
+                    if outcome:
+                        close_price = (_open_trade["take_profit"] if outcome == "win"
+                                       else _open_trade["stop_loss"])
+                        close_trade(outcome, close_price, "tp_hit" if outcome == "win" else "stop_hit")
+                        print(f"[{datetime.now().strftime('%H:%M:%S')}] TRADE {outcome.upper()} at ${close_price:,.0f}")
+                await asyncio.sleep(POLL_SEC)
+                continue
+
+            _last_candle_time = current_candle_time
 
             ind    = indicators(df)
             direction, pts, why = score(ind)
@@ -449,7 +471,13 @@ async def poll():
             tmp.write_text(json.dumps(out, ensure_ascii=False))
             tmp.rename(DATA_FILE)
 
-            pushed = push_to_github(out)
+            # Rate limit GitHub pushes to avoid quota exhaustion
+            now = time.time()
+            should_push = (now - _last_github_push) >= GITHUB_PUSH_INTERVAL
+            pushed = push_to_github(out) if should_push else False
+            if should_push:
+                _last_github_push = now
+
             wr = stats.get("win_rate")
             wr_str = f"WR {wr}%" if wr is not None else "no trades yet"
             print(f"[{datetime.now().strftime('%H:%M:%S')}] {TICKER} {direction} {pts:+d} "
@@ -462,7 +490,7 @@ async def poll():
 
 async def main():
     load_trades()
-    print(f"Starting — {TICKER}, poll {POLL_SEC}s, GitHub {'on' if GITHUB_TOKEN else 'OFF'}")
+    print(f"Starting — {TICKER}, fast poll {POLL_SEC}s (signals on candle change), GitHub push every {GITHUB_PUSH_INTERVAL}s")
     await poll()
 
 if __name__ == "__main__":
