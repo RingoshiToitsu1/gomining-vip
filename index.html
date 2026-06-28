@@ -4086,7 +4086,7 @@ function runReinvestProjection(){
     const cv=fc2>0?tg2/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE);
+    const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
     // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
     // startSS*30 lines up with the BTC-projection card. Daily here is cosmetic —
     // the real accrual happens weekly via the d%7 block.
@@ -4113,7 +4113,7 @@ function runReinvestProjection(){
     const cv=fc>0?rLocked/fc:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE);
+    const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
     const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
   }
@@ -4598,7 +4598,7 @@ function computeSetupProjection(){
     const cv=fc2>0?tg2/fc2:Infinity;
     const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
     const fd=Math.min(30,td+ntd);
-    const miningUSD=(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE);
+    const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
     const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
