@@ -3078,14 +3078,17 @@ function renderTHModeAdvisor(i,m){
   let h=`<div style="margin-top:1rem;padding:.75rem .9rem;background:rgba(126,232,250,.06);border:1px solid rgba(126,232,250,.2);border-radius:10px">`;
   h+=`<div style="font-weight:700;color:var(--cyan);font-size:.85rem;margin-bottom:.5rem">TH Reinvest Mode — ${m.vip.n} (+${rb}% bonus)</div>`;
 
-  if(!covFinite||curCov<360){
+  if(!covFinite||curCov<18){
     const msg=!covFinite?'You have infinite coverage (no fees/GMT).':
-      `Your current coverage is ${fN(curCov,0)} days — already under 360 days (20% token discount). Lock more GMT first.`;
+      `Your current coverage is ${fN(curCov,0)} days — no token discount. Lock more GMT first.`;
     h+=`<div style="font-size:.78rem;color:var(--text3)">${msg}</div></div>`;
     return h;
   }
 
-  // Simulate TH-only reinvestment; track whether coverage ever drops below 360
+  // Current token discount step — stop the moment this would tick down by 1%
+  const curTokD=Math.min(20,Math.floor(curCov/18));
+
+  // Simulate TH-only reinvestment; stop when token discount would drop even 1%
   let th=i.th, wth=i.wth||15;
   let gmtLocked=i.gl;
   const gmtW=i.gw;
@@ -3107,7 +3110,7 @@ function renderTHModeAdvisor(i,m){
     const dailyFeeGMT=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;
     const cov=dailyFeeGMT>0?(gmtLocked+gmtW)/dailyFeeGMT:Infinity;
     if(weeks===52)cov1yr=cov;
-    if(!isFinite(cov)||cov<360)break;
+    if(!isFinite(cov)||Math.floor(cov/18)<curTokD)break;
     const tokD=Math.min(20,Math.floor(cov/18));
     const totD=Math.min(30,tokD+ntd);
     const weeklyMiningBTC=dbt*totTH*7;
@@ -3160,7 +3163,7 @@ function renderTHModeAdvisor(i,m){
 
     h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
     if(sustainable){
-      h+=`Your ${fP(apr)} staking APR compounds locked GMT faster than TH-mode fee obligations — coverage is self-sustaining. <strong style="color:var(--text2)">Run TH mode indefinitely.</strong>`;
+      h+=`Your ${fP(apr)} staking APR compounds locked GMT faster than TH-mode fee obligations — your ${curTokD}% token discount is self-sustaining. <strong style="color:var(--text2)">Run TH mode indefinitely.</strong>`;
     }else{
       const finalTotTH=th+gth;
       const finalBW=finalTotTH>0?(th*wth+gth*gwth)/finalTotTH:wth;
@@ -3169,7 +3172,7 @@ function renderTHModeAdvisor(i,m){
       const finalF=fees(finalTotTH,finalBW,bp);
       const finalDailyFeeGMT=finalF.t>0?(finalF.t*(1-finalNtd/100)*bp)/gp:0;
       const neededGMT=Math.max(0,finalDailyFeeGMT*360-(gmtLocked+gmtW));
-      h+=`Coverage: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> → drops to 360 after ${weeks*7} days of TH mode.`;
+      h+=`Coverage: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> (${curTokD}% token discount) → drops by 1% after ${weeks*7} days of TH mode.`;
       if(neededGMT>1)h+=` To restore: lock <strong style="color:var(--text2)">${fN(neededGMT,0)} GMT</strong> (~${fU(neededGMT*gp)}) after switching back.`;
     }
     h+=`</div></div>`;
