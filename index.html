@@ -335,9 +335,10 @@ input[type=number]{-moz-appearance:textfield}
   .header{padding:.5rem .7rem}
   .header-inner{gap:.4rem}
   .logo{font-size:1.1rem}
-  .live-bar{gap:.15rem;width:100%;justify-content:space-between}
-  .live-chip{padding:.25rem .4rem;font-size:.68rem;border-radius:14px;gap:.2rem;flex:1;justify-content:center;min-width:0}
-  .live-chip .lbl{font-size:.58rem}
+  .live-bar{gap:.3rem;width:100%;justify-content:center}
+  .live-chip{padding:.3rem .55rem;font-size:.72rem;border-radius:16px;gap:.25rem;flex:0 0 auto;min-width:0;white-space:nowrap}
+  .live-chip .lbl{font-size:.6rem}
+  .live-chip .val{white-space:nowrap}
   #updatedChip .lbl{display:none}
   #updatedChip .val{white-space:nowrap}
   .container{padding:0 .5rem 3rem}
@@ -670,6 +671,18 @@ html.show-onboarding #onboarding{display:flex}
 .rb-pill{font-size:.66rem;font-weight:600;color:var(--text3);background:var(--bg-input);border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:.25rem .55rem;white-space:nowrap;line-height:1.2}
 .rb-pill.active{color:var(--text);border-color:var(--text2);box-shadow:0 0 0 1px var(--text3);font-weight:800}
 .btc-rainbow-tip{position:absolute;z-index:5;pointer-events:none;background:rgba(12,12,16,0.95);border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;font-size:.68rem;min-width:172px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+@media(max-width:600px){
+  .btc-chart-title{font-size:.8rem}
+  .btc-chart-mode button{font-size:.72rem;padding:.35rem .6rem}
+  /* legend becomes a single horizontally-scrollable row so it doesn't eat chart height */
+  .btc-rainbow-legend{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:.4rem .3rem .1rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .btc-rainbow-legend::-webkit-scrollbar{display:none}
+  .rb-pill{font-size:.6rem;padding:.2rem .45rem}
+  .btc-rainbow-tip{min-width:134px;font-size:.62rem;padding:.4rem .45rem}
+  .rb-tip-date{font-size:.66rem}
+  .btc-rainbow-foot{font-size:.55rem;padding:.25rem .4rem .35rem}
+  #btcChartPage .sp-page-inner{padding:.5rem .6rem .8rem}
+}
 .rb-tip-date{font-weight:800;color:var(--text);font-size:.72rem;margin-bottom:.15rem}
 .rb-tip-actual{font-family:var(--mono);color:var(--text2);margin-bottom:.35rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
 .rb-tip-row{display:flex;align-items:center;gap:.4rem;padding:.05rem 0}
@@ -2281,7 +2294,9 @@ const RB_HALVINGS=[
   {t:Date.UTC(2028,3,15),label:'Halving 2028 (Est)',est:true},
   {t:Date.UTC(2032,3,15),label:'Halving 2032 (Est)',est:true}
 ];
-const RB_PADL=8, RB_PADR=74, RB_PADT=12, RB_PADB=46;
+// Plot padding adapts to width so the axis/labels stay readable on phones.
+function rbPads(W){return W<480?{l:6,r:52,t:10,b:44}:{l:8,r:74,t:12,b:46};}
+function rbAxisLabel(val,sm){if(!sm)return rbFmtUSD(val);return val>=1e6?'$'+(val/1e6)+'M':val>=1e3?'$'+(val/1e3)+'K':'$'+val;}
 let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null, _rbHover=null, _rbRaf=null;
 function rbRequestDraw(){if(_rbRaf)return;_rbRaf=requestAnimationFrame(()=>{_rbRaf=null;drawBtcRainbow();});}
 function rbHideTip(){const t=document.getElementById('btcRainbowTip');if(t)t.style.display='none';}
@@ -2366,7 +2381,8 @@ function drawBtcRainbow(){
   let yLo=centerAt(v.t0)+RB_OFFSETS[9]-0.08;
   let yHi=centerAt(v.t1)+RB_OFFSETS[0]+0.08;
   for(const p of series){if(p.t>=v.t0&&p.t<=v.t1&&p.v>0){const l=Math.log10(p.v);if(l<yLo)yLo=l;if(l>yHi)yHi=l;}}
-  const plotL=RB_PADL, plotR=W-RB_PADR, plotT=RB_PADT, plotB=H-RB_PADB;
+  const sm=W<480, P=rbPads(W);
+  const plotL=P.l, plotR=W-P.r, plotT=P.t, plotB=H-P.b;
   const plotW=plotR-plotL, plotH=plotB-plotT;
   const X=t=>plotL+plotW*((t-v.t0)/((v.t1-v.t0)||1));
   const Y=lv=>plotT+plotH*(1-((lv-yLo)/((yHi-yLo)||1)));
@@ -2408,20 +2424,22 @@ function drawBtcRainbow(){
   x.restore();
 
   // ---- Right-side $ axis labels (powers of 10) ----
-  x.font='10px '+(getComputedStyle(document.body).getPropertyValue('--mono')||'monospace');
+  x.font=(sm?'9px ':'10px ')+(getComputedStyle(document.body).getPropertyValue('--mono')||'monospace');
   x.textBaseline='middle';x.textAlign='left';x.fillStyle='rgba(255,255,255,0.6)';
-  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){const yy=Y(e);if(yy<plotT-2||yy>plotB+2)continue;x.fillText(rbFmtUSD(Math.pow(10,e)),plotR+6,yy);}
-  // ---- Year labels ----
+  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){const yy=Y(e);if(yy<plotT-2||yy>plotB+2)continue;x.fillText(rbAxisLabel(Math.pow(10,e),sm),plotR+5,yy);}
+  // ---- Year labels (abbreviate to 'YY on phones) ----
   x.textAlign='center';x.textBaseline='top';x.fillStyle='rgba(255,255,255,0.6)';
-  const span=v.t1-v.t0, yrStep=span>RB_DAY*365*12?2:1;
-  for(let yr=yr0;yr<=yr1+1;yr++){if(yr%yrStep!==0)continue;const t=Date.UTC(yr,0,1);if(t<v.t0||t>v.t1)continue;x.fillText(String(yr),X(t),plotB+16);}
-  // ---- Halving labels ----
+  x.font=(sm?'9px ':'10px ')+(getComputedStyle(document.body).getPropertyValue('--sans')||'sans-serif');
+  const span=v.t1-v.t0, yrStep=span>RB_DAY*365*(sm?6:12)?2:1;
+  for(let yr=yr0;yr<=yr1+1;yr++){if(yr%yrStep!==0)continue;const t=Date.UTC(yr,0,1);if(t<v.t0||t>v.t1)continue;x.fillText(sm?"'"+String(yr).slice(2):String(yr),X(t),plotB+16);}
+  // ---- Halving labels (shortened on phones to avoid clutter) ----
   for(const h of RB_HALVINGS){if(h.t<v.t0||h.t>v.t1)continue;const xx=X(h.t);
-    x.font=(h.est?'bold ':'')+'9px '+(getComputedStyle(document.body).getPropertyValue('--sans')||'sans-serif');
-    const tw=x.measureText(h.label).width;
-    if(h.est){x.fillStyle='rgba(244,143,177,0.18)';x.fillRect(xx-tw/2-4,plotB+1,tw+8,13);x.fillStyle='#f48fb1';}
+    const lab=sm?(h.est?String(new Date(h.t).getUTCFullYear()):'⌗'):h.label;
+    x.font=(h.est?'bold ':'')+(sm?'8px ':'9px ')+(getComputedStyle(document.body).getPropertyValue('--sans')||'sans-serif');
+    const tw=x.measureText(lab).width;
+    if(h.est){x.fillStyle='rgba(244,143,177,0.18)';x.fillRect(xx-tw/2-4,plotB+1,tw+8,12);x.fillStyle='#f48fb1';}
     else x.fillStyle='rgba(255,255,255,0.55)';
-    x.textAlign='center';x.textBaseline='top';x.fillText(h.label,xx,plotB+2);}
+    x.textAlign='center';x.textBaseline='top';x.fillText(lab,xx,plotB+2);}
 
   // ---- Hover crosshair ----
   if(_rbHover!=null&&_rbHover>=v.t0&&_rbHover<=v.t1){
@@ -2445,8 +2463,8 @@ function rbBindInteractions(cv){
   cv.style.cursor='grab';
   cv.addEventListener('wheel',e=>{
     e.preventDefault();
-    const r=cv.getBoundingClientRect(),W=cv.clientWidth;
-    const frac=Math.max(0,Math.min(1,((e.clientX-r.left)-RB_PADL)/((W-RB_PADL-RB_PADR)||1)));
+    const r=cv.getBoundingClientRect(),W=cv.clientWidth,P=rbPads(W);
+    const frac=Math.max(0,Math.min(1,((e.clientX-r.left)-P.l)/((W-P.l-P.r)||1)));
     const v=rbView(),anchor=v.t0+(v.t1-v.t0)*frac;
     const f=e.deltaY<0?0.82:1/0.82;
     _rbView=rbClamp(anchor-(anchor-v.t0)*f, anchor+(v.t1-anchor)*f);
@@ -2454,8 +2472,8 @@ function rbBindInteractions(cv){
   },{passive:false});
   cv.addEventListener('mousemove',e=>{
     if(_rbDrag){rbHideTip();return;}     // dragging is handled by the window listener
-    const cr=cv.getBoundingClientRect(),W=cv.clientWidth;
-    const frac=((e.clientX-cr.left)-RB_PADL)/((W-RB_PADL-RB_PADR)||1);
+    const cr=cv.getBoundingClientRect(),W=cv.clientWidth,P=rbPads(W);
+    const frac=((e.clientX-cr.left)-P.l)/((W-P.l-P.r)||1);
     if(frac<0||frac>1){_rbHover=null;rbHideTip();rbRequestDraw();return;}
     const v=rbView();_rbHover=v.t0+(v.t1-v.t0)*frac;
     const wrap=document.getElementById('btcRainbowWrap'),wr=wrap.getBoundingClientRect();
@@ -2465,7 +2483,7 @@ function rbBindInteractions(cv){
   cv.addEventListener('mouseleave',()=>{_rbHover=null;rbHideTip();rbRequestDraw();});
   cv.addEventListener('mousedown',e=>{_rbDrag={x:e.clientX,v:rbView()};cv.style.cursor='grabbing';_rbHover=null;rbHideTip();});
   window.addEventListener('mousemove',e=>{
-    if(!_rbDrag)return;const W=cv.clientWidth,pw=(W-RB_PADL-RB_PADR)||1;
+    if(!_rbDrag)return;const W=cv.clientWidth,P=rbPads(W),pw=(W-P.l-P.r)||1;
     const span=_rbDrag.v.t1-_rbDrag.v.t0,dt=((e.clientX-_rbDrag.x)/pw)*span;
     _rbView=rbClamp(_rbDrag.v.t0-dt,_rbDrag.v.t1-dt);drawBtcRainbow();
   });
@@ -2477,10 +2495,10 @@ function rbBindInteractions(cv){
     else if(e.touches.length===2){const a=e.touches[0],c=e.touches[1];_rbPinch={d:Math.abs(a.clientX-c.clientX)||1,v:rbView(),mx:(a.clientX+c.clientX)/2};_rbDrag=null;}
   },{passive:true});
   cv.addEventListener('touchmove',e=>{
-    const W=cv.clientWidth,pw=(W-RB_PADL-RB_PADR)||1,r=cv.getBoundingClientRect();
+    const W=cv.clientWidth,P=rbPads(W),pw=(W-P.l-P.r)||1,r=cv.getBoundingClientRect();
     if(e.touches.length===2&&_rbPinch){e.preventDefault();
       const a=e.touches[0],c=e.touches[1],d=Math.abs(a.clientX-c.clientX)||1;
-      const frac=Math.max(0,Math.min(1,((_rbPinch.mx-r.left)-RB_PADL)/pw));
+      const frac=Math.max(0,Math.min(1,((_rbPinch.mx-r.left)-P.l)/pw));
       const vv=_rbPinch.v,anchor=vv.t0+(vv.t1-vv.t0)*frac,f=_rbPinch.d/d;
       _rbView=rbClamp(anchor-(anchor-vv.t0)*f,anchor+(vv.t1-anchor)*f);drawBtcRainbow();
     }else if(e.touches.length===1&&_rbDrag){e.preventDefault();
