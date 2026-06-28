@@ -3075,9 +3075,8 @@ function renderTHModeAdvisor(i,m){
   const curCov=m.cov;
   const covFinite=isFinite(curCov);
 
-  // Panel header
   let h=`<div style="margin-top:1rem;padding:.75rem .9rem;background:rgba(126,232,250,.06);border:1px solid rgba(126,232,250,.2);border-radius:10px">`;
-  h+=`<div style="font-weight:700;color:var(--cyan);font-size:.85rem;margin-bottom:.5rem">TH Reinvest Mode Window &mdash; ${m.vip.n} (+${rb}% bonus)</div>`;
+  h+=`<div style="font-weight:700;color:var(--cyan);font-size:.85rem;margin-bottom:.5rem">TH Reinvest Mode — ${m.vip.n} (+${rb}% bonus)</div>`;
 
   if(!covFinite||curCov<360){
     const msg=!covFinite?'You have infinite coverage (no fees/GMT).':
@@ -3086,7 +3085,7 @@ function renderTHModeAdvisor(i,m){
     return h;
   }
 
-  // Simulate TH-only reinvestment until coverage drops below 360 days
+  // Simulate TH-only reinvestment; track whether coverage ever drops below 360
   let th=i.th, wth=i.wth||15;
   let gmtLocked=i.gl;
   const gmtW=i.gw;
@@ -3094,14 +3093,12 @@ function renderTHModeAdvisor(i,m){
   const cb=i.click?3:0, mm=i.mm||0;
   const gth=Math.max(0,i.gth||0), gwth=i.gwth||wth;
   const GINIT=Math.min(Math.max(0,i.gInit||0),gth);
-  const startTH=th;
   let weeks=0;
-  const MAX_WEEKS=260; // 5yr ceiling
+  let cov1yr=null;
+  const MAX_WEEKS=520; // 10yr ceiling — detect sustainable before claiming erosion
 
   while(weeks<MAX_WEEKS){
-    // Weekly staking yield auto-compounds on locked GMT
     gmtLocked*=(1+apr/100/52);
-
     const totTH=th+gth;
     const bw=totTH>0?(th*wth+gth*gwth)/totTH:wth;
     const vip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
@@ -3109,10 +3106,8 @@ function renderTHModeAdvisor(i,m){
     const f=fees(totTH,bw,bp);
     const dailyFeeGMT=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;
     const cov=dailyFeeGMT>0?(gmtLocked+gmtW)/dailyFeeGMT:Infinity;
-
+    if(weeks===52)cov1yr=cov;
     if(!isFinite(cov)||cov<360)break;
-
-    // Mining rewards → all to TH with rb% bonus
     const tokD=Math.min(20,Math.floor(cov/18));
     const totD=Math.min(30,tokD+ntd);
     const weeklyMiningBTC=dbt*totTH*7;
@@ -3126,41 +3121,59 @@ function renderTHModeAdvisor(i,m){
     weeks++;
   }
 
-  const days=weeks*7;
-  const thGained=th-startTH;
-  // Extra TH vs not having the rb bonus (avatar discount already baked in)
-  const thGainedNoBonus=thGained/(1+rb/100);
-  const extraTH=Math.max(0,thGained-thGainedNoBonus);
+  // Sustainable = hit ceiling AND coverage after 1yr was not dropping toward 360
+  const hitCeiling=weeks>=MAX_WEEKS;
+  const sustainable=hitCeiling&&(cov1yr===null||cov1yr>=curCov);
 
-  // GMT needed to restore 20% coverage after TH mode
-  const finalTotTH=th+gth;
-  const finalBW=finalTotTH>0?(th*wth+gth*gwth)/finalTotTH:wth;
-  const finalVip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
-  const finalNtd=Math.min(30,finalVip.d+cb+mm);
-  const finalF=fees(finalTotTH,finalBW,bp);
-  const finalDailyFeeGMT=finalF.t>0?(finalF.t*(1-finalNtd/100)*bp)/gp:0;
-  const neededGMT=Math.max(0,finalDailyFeeGMT*360-(gmtLocked+gmtW));
-  const neededUSD=neededGMT*gp;
+  // Per-week TH gain from initial state — more actionable than cumulative total
+  {
+    const iTotTH=i.th+gth;
+    const iBW=iTotTH>0?(i.th*(i.wth||15)+gth*(i.gwth||i.wth||15))/iTotTH:(i.wth||15);
+    const iVip=vipOf(i.th+Math.max(0,gth-GINIT),i.gl);
+    const iNtd=Math.min(30,iVip.d+cb+mm);
+    const iF=fees(iTotTH,iBW,bp);
+    const iTokD=Math.min(20,Math.floor(curCov/18));
+    const iTotD=Math.min(30,iTokD+iNtd);
+    const wkMine=dbt*iTotTH*7;
+    const wkFees=iF.t*(1-iTotD/100)*7;
+    const wkNet=Math.max(0,(wkMine-wkFees)*bp*(1-CONVERSION_FEE));
+    const wkTHbonus=wkNet>0?thForBudget(wkNet)*(1+rb/100):0;
+    const wkTHbase=wkNet>0?thForBudget(wkNet):0;
+    const wkExtra=wkTHbonus-wkTHbase;
 
-  if(weeks===0){
-    h+=`<div style="font-size:.78rem;color:var(--text3)">Your coverage buffer (${fN(curCov,0)} days) is too slim for even one week of TH mode. Build more GMT coverage first.</div></div>`;
-    return h;
+    if(weeks===0){
+      h+=`<div style="font-size:.78rem;color:var(--text3)">Coverage buffer too slim (${fN(curCov,0)} days) — lock more GMT before running TH mode.</div></div>`;
+      return h;
+    }
+
+    h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
+    if(sustainable){
+      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">&#8734;</div><div style="font-size:.68rem;color:var(--text3)">sustainable<br>indefinitely</div></div>`;
+    }else{
+      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${weeks*7}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>20% erodes</div></div>`;
+    }
+    if(wkTHbonus>0){
+      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(wkTHbonus,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/week<br>in TH mode</div></div>`;
+      if(wkExtra>0.005)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(wkExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/wk<br>vs normal</div></div>`;
+    }
+    h+=`</div>`;
+
+    h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
+    if(sustainable){
+      h+=`Your ${fP(apr)} staking APR compounds locked GMT faster than TH-mode fee obligations — coverage is self-sustaining. <strong style="color:var(--text2)">Run TH mode indefinitely.</strong>`;
+    }else{
+      const finalTotTH=th+gth;
+      const finalBW=finalTotTH>0?(th*wth+gth*gwth)/finalTotTH:wth;
+      const finalVip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
+      const finalNtd=Math.min(30,finalVip.d+cb+mm);
+      const finalF=fees(finalTotTH,finalBW,bp);
+      const finalDailyFeeGMT=finalF.t>0?(finalF.t*(1-finalNtd/100)*bp)/gp:0;
+      const neededGMT=Math.max(0,finalDailyFeeGMT*360-(gmtLocked+gmtW));
+      h+=`Coverage: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> → drops to 360 after ${weeks*7} days of TH mode.`;
+      if(neededGMT>1)h+=` To restore: lock <strong style="color:var(--text2)">${fN(neededGMT,0)} GMT</strong> (~${fU(neededGMT*gp)}) after switching back.`;
+    }
+    h+=`</div></div>`;
   }
-
-  h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
-  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${days}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>20% erodes</div></div>`;
-  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(thGained,1)}</div><div style="font-size:.68rem;color:var(--text3)">total TH<br>gained</div></div>`;
-  if(extraTH>0.05)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(extraTH,1)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH<br>vs normal</div></div>`;
-  h+=`</div>`;
-
-  h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
-  h+=`Coverage buffer: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> today &rarr; drops to 360 after ${days} days of TH mode. `;
-  if(neededGMT>1){
-    h+=`To restore 20%: lock <strong style="color:var(--text2)">${fN(neededGMT,0)} GMT</strong> (~${fU(neededUSD)}) after switching back.`;
-  }else{
-    h+=`Staking yield alone maintains coverage &mdash; no extra GMT lock needed.`;
-  }
-  h+=`</div></div>`;
   return h;
 }
 
