@@ -3143,6 +3143,9 @@ function renderTHModeAdvisor(i,m){
     const wkTHbonus=wkNet>0?thForBudget(wkNet)*(1+rb/100):0;
     const wkTHbase=wkNet>0?thForBudget(wkNet):0;
     const wkExtra=wkTHbonus-wkTHbase;
+    // Per-day figures to match GoMining's app display
+    const dayTH=wkTHbonus/7;
+    const dayExtra=wkExtra/7;
 
     if(weeks===0){
       h+=`<div style="font-size:.78rem;color:var(--text3)">Coverage buffer too slim (${fN(curCov,0)} days) — lock more GMT before running TH mode.</div></div>`;
@@ -3153,11 +3156,11 @@ function renderTHModeAdvisor(i,m){
     if(sustainable){
       h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">&#8734;</div><div style="font-size:.68rem;color:var(--text3)">sustainable<br>indefinitely</div></div>`;
     }else{
-      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${weeks*7}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>20% erodes</div></div>`;
+      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${weeks*7}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>1% discount drop</div></div>`;
     }
-    if(wkTHbonus>0){
-      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(wkTHbonus,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/week<br>in TH mode</div></div>`;
-      if(wkExtra>0.005)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(wkExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/wk<br>vs normal</div></div>`;
+    if(dayTH>0){
+      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(dayTH,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/day<br>in TH mode</div></div>`;
+      if(dayExtra>0.001)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(dayExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/day<br>from +${rb}% bonus</div></div>`;
     }
     h+=`</div>`;
 
