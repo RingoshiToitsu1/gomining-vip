@@ -1670,14 +1670,14 @@ html.show-onboarding #onboarding{display:flex}
         <div class="sp-model-banner">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
           <div>
-            <div class="sp-model-title"><span class="nu-badge">NEW</span>Power-Law projection model</div>
-            <div class="sp-model-desc">Pick a halving and we project to it. BTC price auto-scales along the rainbow chart's <strong style="color:var(--text2)">HODL fair-value curve</strong> &mdash; from today's price, converging onto the curve by the halving &mdash; and mining reward <strong style="color:var(--text2)">halves</strong> at each halving. No more guessing a price or a number of years.</div>
+            <div class="sp-model-title"><span class="nu-badge">NEW</span>Worst-case projection model</div>
+            <div class="sp-model-desc">Pick a halving and we project to it &mdash; conservatively. BTC price scales along the rainbow chart's <strong style="color:var(--text2)">Fire-Sale band</strong> (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also <strong style="color:var(--text2)">halves</strong> at each halving. If it still grows here, it grows almost anywhere.</div>
           </div>
         </div>
 
         <div class="input-grid sp-form-grid">
           <div class="field">
-            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving. BTC price auto-scales along the rainbow chart's Power-Law (HODL) fair-value curve — starting at today's real price and converging onto the fair-value line by the halving date. Mining reward halves at each halving crossed.">?</span></label>
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using a WORST-CASE price: BTC scales along the rainbow chart's bottom Fire-Sale band (the historical cyclical-bottom valuation), starting from today's real price and converging onto that band by the halving. Mining reward also halves at each halving crossed.">?</span></label>
             <div class="field-input sp-selwrap"><select id="spTarget" onchange="updateSpTargetPreview()"><option value="">Loading fair-value model…</option></select></div>
           </div>
           <div class="field">
@@ -2341,6 +2341,9 @@ function rbComputeFit(series){
 }
 // HODL (Power-Law center) fair value at time t — the rainbow chart's center line.
 function rbCenterPrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b):0;}
+// Worst-case "Basically a Fire Sale" price — the bottom rainbow band (cyclical-bottom valuation).
+const RB_FIRESALE_OFF=(RB_OFFSETS[RB_OFFSETS.length-2]+RB_OFFSETS[RB_OFFSETS.length-1])/2;
+function rbFireSalePrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b+RB_FIRESALE_OFF):0;}
 // Ensure the Power-Law fit exists (load history once if needed), then run cb. Lets the
 // Growth Projection reference HODL fair values even before the rainbow chart is opened.
 function ensureRainbowFit(cb){
@@ -4014,8 +4017,8 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
-// Populate the "Project To" dropdown with each upcoming halving and its projected HODL
-// (Power-Law center) fair value, so the user sees the target price the projection will reach.
+// Populate the "Project To" dropdown with each upcoming halving and its projected worst-case
+// (Fire-Sale band) price, so the user sees the conservative target the projection will reach.
 function populateSpTargets(){
   const sel=document.getElementById('spTarget');
   if(!sel)return;
@@ -4025,8 +4028,8 @@ function populateSpTargets(){
   const prev=sel.value;
   sel.innerHTML=future.map((h,idx)=>{
     const yr=new Date(h).getUTCFullYear();
-    const fv=rbCenterPrice(h);
-    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; HODL '+fmtBTCPrice(fv);
+    const fv=rbFireSalePrice(h);
+    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; worst-case '+fmtBTCPrice(fv);
     return `<option value="${h}">${label}</option>`;
   }).join('');
   if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
@@ -4040,11 +4043,11 @@ function updateSpTargetPreview(){
   const targetMs=parseFloat(sel.value);
   if(!_rbFit||!(targetMs>Date.now())){el.innerHTML='';return;}
   const now=Date.now(), days=Math.round((targetMs-now)/86400000), yrs=days/365;
-  const P0=S.btcPrice||0, target=rbCenterPrice(targetMs);
+  const P0=S.btcPrice||0, target=rbFireSalePrice(targetMs);
   const hv=halvingsInWindow(days);
   el.innerHTML=
     `<div class="sp-prev-chip"><div class="sp-prev-val">${yrs.toFixed(1)} yr</div><div class="sp-prev-lbl">horizon (${days} days)</div></div>`+
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; HODL fair value</div></div>`+
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; worst-case (Fire Sale)</div></div>`+
     `<div class="sp-prev-chip"><div class="sp-prev-val">${hv.length?hv.join(' &amp; '):'—'}</div><div class="sp-prev-lbl">halving${hv.length===1?'':'s'} crossed${hv.length?' (−50% reward each)':''}</div></div>`;
 }
 function openSetupProjection(mode){
@@ -4183,11 +4186,11 @@ function computeSetupProjection(){
   let targetMs=selEl?parseFloat(selEl.value):0;
   if(!(targetMs>nowMs)){const fut=HALVING_DATES.filter(h=>h>nowMs);targetMs=fut.length?fut[0]:nowMs+1095*86400000;}
   const days=Math.min(7300,Math.max(1,Math.round((targetMs-nowMs)/86400000)));
-  const centerNow=rbCenterPrice(nowMs), bpEnd=rbCenterPrice(targetMs);
+  const centerNow=rbFireSalePrice(nowMs), bpEnd=rbFireSalePrice(targetMs);
   if(!bpStart||!bpEnd||!centerNow||!gp||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
-  // Power-Law convergence: start at today's real price, converge onto the HODL center by the target.
-  const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from fair value
-  const btcSel={mode:'powerlaw',label:'HODL '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
+  // Worst-case convergence: start at today's real price, converge onto the Fire-Sale band by the target.
+  const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from the worst-case band
+  const btcSel={mode:'powerlaw',label:'Fire-sale '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
@@ -4233,12 +4236,12 @@ function computeSetupProjection(){
   let bpToday=bpStart;
   const projStartMs=Date.now();
   let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
-  // Power-Law convergence to HODL fair value: price = center(t) · e^(offset0·(1−progress)).
-  // At d=1 → today's real price; at the target halving → exactly the HODL center.
+  // Worst-case convergence to the Fire-Sale band: price = fireSale(t) · e^(offset0·(1−progress)).
+  // At d=1 → today's real price; at the target halving → exactly the Fire-Sale band price.
   function bpForDay(d){
     const t=projStartMs+(d-1)*86400000;
     const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
-    const c=rbCenterPrice(t)||bpEnd;
+    const c=rbFireSalePrice(t)||bpEnd;
     return c*Math.exp(offset0*(1-progress));
   }
 
@@ -4326,8 +4329,8 @@ function computeSetupProjection(){
   const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*30,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
-  const btcModeBadge='<span class="badge" style="background:rgba(126,232,250,.18);color:#7ee8fa;font-size:.65rem;margin-left:.4rem">POWER-LAW</span>';
-  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to HODL fair value <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)}</strong> at the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
+  const btcModeBadge='<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">WORST CASE</span>';
+  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the worst-case <strong style="color:var(--text2)">Fire-Sale ${fmtBTCPrice(bpEnd)}</strong> at the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
   const halvingNoteS=hwS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''} (modeled).</div>`:'';
