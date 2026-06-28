@@ -1659,34 +1659,9 @@ html.show-onboarding #onboarding{display:flex}
         <div class="pi-title">Growth Projection</div>
         <div class="pi-subtitle" id="spSubtitle">Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
         <div class="input-grid sp-form-grid">
-          <div class="field">
-            <label>Projection Length</label>
-            <div class="field-input sp-selwrap"><select id="spYears">
-              <option value="365">1 Year</option>
-              <option value="730">2 Years</option>
-              <option value="1095" selected>3 Years</option>
-              <option value="1460">4 Years</option>
-              <option value="1825">5 Years</option>
-              <option value="3650">10 Years</option>
-              <option value="7300">20 Years</option>
-            </select></div>
-          </div>
-          <div class="field">
-            <label>BTC Price</label>
-            <div class="field-input sp-selwrap"><select id="spBTC">
-              <option value="live" selected>Live (current)</option>
-              <optgroup label="Firm Forecasts">
-                <option value="firm:std-chartered">Standard Chartered &mdash; 2028</option>
-                <option value="firm:bernstein">Bernstein &mdash; 2033</option>
-              </optgroup>
-              <optgroup label="Manual">
-                <option value="manual:80000">$80K</option>
-                <option value="manual:100000">$100K</option>
-                <option value="manual:150000">$150K</option>
-                <option value="manual:200000">$200K</option>
-                <option value="manual:300000">$300K</option>
-              </optgroup>
-            </select></div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving. BTC price auto-scales along the rainbow chart's Power-Law (HODL) fair-value curve — starting at today's real price and converging onto the fair-value line by the halving date.">?</span></label>
+            <div class="field-input sp-selwrap"><select id="spTarget"><option value="">Loading fair-value model…</option></select></div>
           </div>
           <div class="field">
             <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
@@ -2343,6 +2318,22 @@ function rbComputeFit(series){
   for(const p of series){if(p.v>0){const lx=Math.log(rbDayOf(p.t)),ly=Math.log10(p.v);const pred=m*lx+b;ssr+=(ly-pred)*(ly-pred);sst+=(ly-meanY)*(ly-meanY);}}
   const r2=sst>0?1-ssr/sst:0;
   return{m,b,r2};
+}
+// HODL (Power-Law center) fair value at time t — the rainbow chart's center line.
+function rbCenterPrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b):0;}
+// Ensure the Power-Law fit exists (load history once if needed), then run cb. Lets the
+// Growth Projection reference HODL fair values even before the rainbow chart is opened.
+function ensureRainbowFit(cb){
+  if(_rbFit){cb&&cb();return;}
+  if(_rainbowData){_rbFit=rbComputeFit(_rainbowData);cb&&cb();return;}
+  if(_rainbowLoading){return;}
+  _rainbowLoading=true;
+  fetchRainbowHistory().then(data=>{
+    const trimmed=data.filter(p=>p.t>=Date.UTC(2012,0,1));
+    _rainbowData=(trimmed.length>50?trimmed:data).sort((a,b)=>a.t-b.t);
+    _rbFit=rbComputeFit(_rainbowData);
+    _rainbowLoading=false;cb&&cb();
+  }).catch(()=>{_rainbowLoading=false;cb&&cb();});
 }
 function rbPriceAt(series,t){
   if(t<=series[0].t)return null;
@@ -3986,7 +3977,6 @@ function btcSelectionFrom(selId){
   return{price:S.btcPrice,label:'Live',mode:'live'};
 }
 function reinvestBTCSelection(){return btcSelectionFrom('inReinvestBTC');}
-function setupBTCSelection(){return btcSelectionFrom('spBTC');}
 
 function runReinvestProjection(){
   if(!S.loaded)return;
@@ -4387,29 +4377,30 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
-// Mirror the Capital Planner's BTC price dropdown into the Growth Projection's BTC selector,
-// so the projection ramps toward whatever price you picked in the planner.
-function syncSpBtcToPlanner(){
-  const ps=document.getElementById('projBtcSelect'), sp=document.getElementById('spBTC');
-  if(!ps||!sp)return;
-  const bp=parseFloat(ps.value);
-  if(!(bp>0))return;
-  if(Math.abs(bp-(S.btcPrice||0))<1){sp.value='live';return;}   // planner is on Live
-  const val='manual:'+bp;
-  if(![...sp.options].some(o=>o.value===val)){
-    const og=sp.querySelector('optgroup[label="Manual"]')||sp;
-    const o=document.createElement('option');
-    o.value=val;o.textContent=fmtBTCPrice(bp)+' (from planner)';
-    og.appendChild(o);
-  }
-  sp.value=val;
+// Populate the "Project To" dropdown with each upcoming halving and its projected HODL
+// (Power-Law center) fair value, so the user sees the target price the projection will reach.
+function populateSpTargets(){
+  const sel=document.getElementById('spTarget');
+  if(!sel)return;
+  const now=Date.now();
+  const future=HALVING_DATES.filter(h=>h>now);
+  if(!_rbFit||!future.length){sel.innerHTML='<option value="">Loading fair-value model…</option>';return;}
+  const prev=sel.value;
+  sel.innerHTML=future.map((h,idx)=>{
+    const yr=new Date(h).getUTCFullYear();
+    const fv=rbCenterPrice(h);
+    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; HODL '+fmtBTCPrice(fv);
+    return `<option value="${h}">${label}</option>`;
+  }).join('');
+  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
 }
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
   window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
-  syncSpBtcToPlanner();   // carry the planner's chosen BTC price into the projection
+  ensureRainbowFit(populateSpTargets);   // load the HODL fair-value model, then fill the targets
+  populateSpTargets();
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
     ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
@@ -4526,15 +4517,24 @@ function computeSetupProjection(){
   const out=document.getElementById('spResult');
   if(!out)return;
   const i=inp();
-  const days=Math.min(7300,Math.max(1,+($('spYears')&&$('spYears').value)||365));
   const ptype=($('spPayoutType')&&$('spPayoutType').value)||'pct';
   const pval=Math.max(0,+($('spPayoutVal')&&$('spPayoutVal').value||0));
   const distPct=(ptype==='pct'?Math.min(100,pval):0)/100;
   const distWeeklyUSD=ptype==='usd'?pval:0;
-  const btcSel=setupBTCSelection();
-  const bpStart=S.btcPrice,bpEnd=btcSel.price,useRamp=btcSel.mode!=='live';
   const gp=S.gmtPrice,dbt=dailyBTCperTH();
-  if(!bpStart||!bpEnd||!gp||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
+  const bpStart=S.btcPrice;
+  // Need the HODL (Power-Law) fit and a target halving to auto-scale the price.
+  if(!_rbFit){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Loading the fair-value model…</div>';ensureRainbowFit(()=>runSetupProjection());return;}
+  const nowMs=Date.now();
+  const selEl=$('spTarget');
+  let targetMs=selEl?parseFloat(selEl.value):0;
+  if(!(targetMs>nowMs)){const fut=HALVING_DATES.filter(h=>h>nowMs);targetMs=fut.length?fut[0]:nowMs+1095*86400000;}
+  const days=Math.min(7300,Math.max(1,Math.round((targetMs-nowMs)/86400000)));
+  const centerNow=rbCenterPrice(nowMs), bpEnd=rbCenterPrice(targetMs);
+  if(!bpStart||!bpEnd||!centerNow||!gp||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
+  // Power-Law convergence: start at today's real price, converge onto the HODL center by the target.
+  const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from fair value
+  const btcSel={mode:'powerlaw',label:'HODL '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
@@ -4577,15 +4577,17 @@ function computeSetupProjection(){
   const ambDaily=manualRefTH*15*24/1000*0.005;
   let totalAmbUSD=0;
 
-  let daysToTarget=days;
-  if(btcSel.mode==='firm'&&btcSel.targetYear){
-    const targetMs=new Date(btcSel.targetYear,0,1).getTime();
-    daysToTarget=Math.max(1,(targetMs-Date.now())/86400000);
-  }
   let bpToday=bpStart;
   const projStartMs=Date.now();
   let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
-  function bpForDay(d){if(!useRamp)return bpEnd;const fr=Math.min(1,(d-1)/Math.max(1,daysToTarget));return bpStart+(bpEnd-bpStart)*fr;}
+  // Power-Law convergence to HODL fair value: price = center(t) · e^(offset0·(1−progress)).
+  // At d=1 → today's real price; at the target halving → exactly the HODL center.
+  function bpForDay(d){
+    const t=projStartMs+(d-1)*86400000;
+    const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
+    const c=rbCenterPrice(t)||bpEnd;
+    return c*Math.exp(offset0*(1-progress));
+  }
 
   function dailyNet(curTH,curLocked){
     const totTH=curTH+MP_TH+greedyTH;
@@ -4671,11 +4673,8 @@ function computeSetupProjection(){
   const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*30,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
-  const btcModeBadge=btcSel.mode==='firm'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">FIRM FORECAST</span>':btcSel.mode==='manual'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
-  let btcRangeLine;
-  if(btcSel.mode==='live')btcRangeLine=`BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> throughout`;
-  else if(btcSel.mode==='firm'){const reached=bpAtEnd>=bpEnd?'reaches target':`reaches <strong style="color:var(--text2)">${fmtBTCPrice(bpAtEnd)}</strong> (${(bpAtEnd/bpEnd*100).toFixed(1)}% of way)`;btcRangeLine=`BTC ramps linearly toward <strong style="color:var(--text2)">${btcSel.label}</strong> &mdash; over ${days}d ${reached}`;}
-  else btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
+  const btcModeBadge='<span class="badge" style="background:rgba(126,232,250,.18);color:#7ee8fa;font-size:.65rem;margin-left:.4rem">POWER-LAW</span>';
+  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to HODL fair value <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)}</strong> at the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
   const halvingNoteS=hwS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''} (modeled).</div>`:'';
