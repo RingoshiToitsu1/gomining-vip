@@ -666,6 +666,9 @@ html.show-onboarding #onboarding{display:flex}
 .btc-rainbow-wrap canvas{flex:1 1 auto;width:100%;min-height:0;display:block}
 .btc-rainbow-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text4);font-size:.85rem;text-align:center;padding:1rem}
 .btc-rainbow-foot{font-size:.62rem;color:var(--text4);text-align:center;padding:.3rem .5rem .45rem;line-height:1.4}
+.btc-rainbow-legend{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;padding:.55rem .4rem .15rem}
+.rb-pill{font-size:.66rem;font-weight:600;color:var(--text3);background:var(--bg-input);border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:.25rem .55rem;white-space:nowrap;line-height:1.2}
+.rb-pill.active{color:var(--text);border-color:var(--text2);box-shadow:0 0 0 1px var(--text3);font-weight:800}
 .sp-page-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem 0 .9rem;position:sticky;top:0;z-index:2;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sp-back-btn,.sp-new-btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:10px;padding:.55rem 1.05rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .sp-back-btn{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -1609,8 +1612,9 @@ html.show-onboarding #onboarding{display:flex}
     <div class="btc-chart-wrap">
       <div id="btcChartWidget" style="height:100%;width:100%"></div>
       <div class="btc-rainbow-wrap" id="btcRainbowWrap">
+        <div class="btc-rainbow-legend" id="btcRainbowLegend"></div>
         <canvas id="btcRainbowCanvas"></canvas>
-        <div class="btc-rainbow-foot">Logarithmic-regression "rainbow" bands fitted to BTC daily history — a long-term valuation guide, not financial advice.</div>
+        <div class="btc-rainbow-foot" id="btcRainbowFoot">Power-Law regression fitted to BTC price history — a long-term valuation guide, not financial advice. Scroll to zoom, drag to pan, double-click to reset.</div>
         <div class="btc-rainbow-msg" id="btcRainbowMsg" style="display:none">Loading price history…</div>
       </div>
     </div>
@@ -2177,6 +2181,7 @@ function openChart(symbol,title,icon,allowChange,isBtc){
   // The Rainbow Chart toggle is BTC-only; reset to the live view each open.
   const mode=document.getElementById('btcChartMode');
   if(mode)mode.style.display=isBtc?'':'none';
+  _rbView=null;                       // reset rainbow zoom/pan on each open
   setBtcChartView('live',true);
   buildChart(symbol,allowChange);
 }
@@ -2233,6 +2238,7 @@ function loadBtcRainbow(){
   fetchRainbowHistory()
     .then(data=>{
       _rainbowData=data.sort((a,b)=>a.t-b.t);
+      _rbFit=null;                    // recompute Power-Law fit for the new dataset
       _rainbowLoading=false;
       if(msg)msg.style.display='none';
       drawBtcRainbow();
@@ -2243,96 +2249,188 @@ function loadBtcRainbow(){
       drawBtcRainbow();
     });
 }
+// ---- Rainbow chart constants (9 Power-Law bands, red overvalued → blue undervalued) ----
+const RB_COLORS=['#b11717','#e23b25','#ef7b2a','#f3a93a','#ecd24b','#bcd64a','#5fb85a','#2fa39a','#3f7cc4'];
+const RB_LABELS=['Maximum Bubble Territory','Sell. Seriously, SELL!','FOMO intensifies','Is this a bubble?','HODL!','Still cheap','Accumulate','BUY!','Basically a Fire Sale'];
+const RB_OFFSETS=[0.45,0.35,0.25,0.15,0.05,-0.05,-0.15,-0.25,-0.35,-0.45]; // 10 boundaries → 9 bands
+const RB_DAY=86400000;
+const RB_GEN=Date.UTC(2009,0,3);                 // genesis-era reference for the log-time axis
+const RB_T0=Date.UTC(2012,0,1), RB_T1=Date.UTC(2033,5,1);  // full view: 2012 → past the 2032 halving
+const RB_HALVINGS=[
+  {t:Date.UTC(2012,10,28),label:'Halving',est:false},
+  {t:Date.UTC(2016,6,9),label:'Halving',est:false},
+  {t:Date.UTC(2020,4,11),label:'Halving',est:false},
+  {t:Date.UTC(2024,3,20),label:'Halving',est:false},
+  {t:Date.UTC(2028,3,15),label:'Halving 2028 (Est)',est:true},
+  {t:Date.UTC(2032,3,15),label:'Halving 2032 (Est)',est:true}
+];
+const RB_PADL=8, RB_PADR=74, RB_PADT=12, RB_PADB=46;
+let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null;
+
+function rbDayOf(t){return Math.max(1,(t-RB_GEN)/RB_DAY);}
+function rbView(){return _rbView||{t0:RB_T0,t1:RB_T1};}
+function rbClamp(t0,t1){
+  let span=t1-t0; const full=RB_T1-RB_T0;
+  if(span>=full)return{t0:RB_T0,t1:RB_T1};
+  if(span<RB_DAY*60)span=RB_DAY*60;       // min ~2-month window
+  if(t0<RB_T0){t0=RB_T0;t1=t0+span;}
+  if(t1>RB_T1){t1=RB_T1;t0=t1-span;}
+  if(t0<RB_T0)t0=RB_T0;
+  return{t0,t1};
+}
+// Least-squares Power-Law fit (log10 price vs ln days) + R², cached per dataset.
+function rbComputeFit(series){
+  let n=0,sx=0,sy=0,sxx=0,sxy=0;
+  for(const p of series){if(p.v>0){const lx=Math.log(rbDayOf(p.t)),ly=Math.log10(p.v);n++;sx+=lx;sy+=ly;sxx+=lx*lx;sxy+=lx*ly;}}
+  let m=2.9,b=-19.0;
+  if(n>2&&(n*sxx-sx*sx)!==0){m=(n*sxy-sx*sy)/(n*sxx-sx*sx);b=(sy-m*sx)/n;}
+  const meanY=sy/n; let ssr=0,sst=0;
+  for(const p of series){if(p.v>0){const lx=Math.log(rbDayOf(p.t)),ly=Math.log10(p.v);const pred=m*lx+b;ssr+=(ly-pred)*(ly-pred);sst+=(ly-meanY)*(ly-meanY);}}
+  const r2=sst>0?1-ssr/sst:0;
+  return{m,b,r2};
+}
+function rbPriceAt(series,t){
+  if(t<=series[0].t)return null;
+  if(t>=series[series.length-1].t)return series[series.length-1].v;
+  let lo=0,hi=series.length-1;
+  while(hi-lo>1){const mid=(lo+hi)>>1;if(series[mid].t<t)lo=mid;else hi=mid;}
+  const a=series[lo],c=series[hi],f=(t-a.t)/((c.t-a.t)||1);
+  return a.v*Math.pow(c.v/a.v,f);
+}
+function rbFmtUSD(v){return '$'+Math.round(v).toLocaleString('en-US');}
+function renderRainbowLegend(active){
+  const el=document.getElementById('btcRainbowLegend');if(!el)return;
+  el.innerHTML=RB_LABELS.map((l,i)=>`<span class="rb-pill${i===active?' active':''}" style="border-left-color:${RB_COLORS[i]}">${l}</span>`).join('');
+}
+
 function drawBtcRainbow(){
   const wrap=document.getElementById('btcRainbowWrap');
   const cv=document.getElementById('btcRainbowCanvas');
   if(!cv||!wrap||!wrap.classList.contains('show'))return;
   const dpr=window.devicePixelRatio||1;
-  const W=cv.clientWidth||wrap.clientWidth, H=cv.clientHeight||(wrap.clientHeight-40);
+  const W=cv.clientWidth||wrap.clientWidth, H=cv.clientHeight;
   if(W<10||H<10){requestAnimationFrame(drawBtcRainbow);return;}
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
   const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
   x.clearRect(0,0,W,H);
 
-  // Genesis reference for the log-time axis (Bitcoin's first block era).
-  const GEN=new Date('2009-01-03').getTime();
-  const DAY=86400000;
-  const dayOf=t=>Math.max(1,(t-GEN)/DAY);
-
-  // Need real history to fit the regression and plot bands; otherwise leave the message.
   const series=_rainbowData;
-  if(!series||series.length<2){x.clearRect(0,0,W,H);return;}
-  const tMin=series[0].t, tMax=Math.max(series[series.length-1].t,Date.now());
-  // Fit log10(price) = m*ln(days) + b via least squares (the rainbow's center line).
-  let n=0,sx=0,sy=0,sxx=0,sxy=0;
-  for(const p of series){if(p.v>0){const lx=Math.log(dayOf(p.t)),ly=Math.log10(p.v);n++;sx+=lx;sy+=ly;sxx+=lx*lx;sxy+=lx*ly;}}
-  let m,b;
-  if(n>2&&(n*sxx-sx*sx)!==0){m=(n*sxy-sx*sy)/(n*sxx-sx*sx);b=(sy-m*sx)/n;}
-  else{m=2.9;b=-19.0;}            // fallback to canonical-ish coefficients
+  if(!series||series.length<2){return;}      // message overlay covers the no-data case
+  if(!_rbFit)_rbFit=rbComputeFit(series);
+  const {m,b,r2}=_rbFit;
+  const centerAt=t=>m*Math.log(rbDayOf(t))+b;
+  const dataT0=series[0].t, dataT1=series[series.length-1].t;
+  const v=rbView();
 
-  // Plot geometry (log price on Y, linear time on X).
-  const padL=54,padR=12,padT=14,padB=26;
-  const plotW=W-padL-padR, plotH=H-padT-padB;
-  // Y range: from the band extremes across the visible window, with margin.
-  const bandOffsets=[0.40,0.30,0.20,0.10,0.00,-0.10,-0.20,-0.30,-0.40]; // top(red)→bottom(blue)
-  const centerAt=t=>m*Math.log(dayOf(t))+b;                 // log10 price of center line
-  const loLog=centerAt(tMax)+bandOffsets[bandOffsets.length-1]-0.12;
-  const hiLog=centerAt(tMax)+bandOffsets[0]+0.12;
-  // Also ensure historical price fits.
-  let pMinLog=hiLog,pMaxLog=loLog;
-  for(const p of series){if(p.v>0){const l=Math.log10(p.v);if(l<pMinLog)pMinLog=l;if(l>pMaxLog)pMaxLog=l;}}
-  const yLo=Math.min(loLog,pMinLog)-0.1, yHi=Math.max(hiLog,pMaxLog)+0.1;
-  const sxX=t=>padL+plotW*((t-tMin)/(tMax-tMin||1));
-  const syY=logv=>padT+plotH*(1-((logv-yLo)/((yHi-yLo)||1)));
+  // Y auto-fits to the visible window: band extremes + any visible price.
+  let yLo=centerAt(v.t0)+RB_OFFSETS[9]-0.08;
+  let yHi=centerAt(v.t1)+RB_OFFSETS[0]+0.08;
+  for(const p of series){if(p.t>=v.t0&&p.t<=v.t1&&p.v>0){const l=Math.log10(p.v);if(l<yLo)yLo=l;if(l>yHi)yHi=l;}}
+  const plotL=RB_PADL, plotR=W-RB_PADR, plotT=RB_PADT, plotB=H-RB_PADB;
+  const plotW=plotR-plotL, plotH=plotB-plotT;
+  const X=t=>plotL+plotW*((t-v.t0)/((v.t1-v.t0)||1));
+  const Y=lv=>plotT+plotH*(1-((lv-yLo)/((yHi-yLo)||1)));
 
-  // Colors: red (overvalued) → violet/blue (undervalued).
-  const colors=['#e53935','#fb8c00','#fdd835','#c0ca33','#7cb342','#26a69a','#29b6f6','#5c6bc0','#7e57c0'];
-  const labels=['Max bubble','Sell','FOMO','Bubble?','HODL','Cheap','Accumulate','Buy','Fire sale'];
-  const steps=80;
-  // Fill each band between consecutive offset curves.
-  for(let bi=0;bi<bandOffsets.length-1;bi++){
+  // ---- Bands (clipped to the plot) ----
+  x.save();x.beginPath();x.rect(plotL,plotT,plotW,plotH);x.clip();
+  const steps=140;
+  for(let bi=0;bi<RB_OFFSETS.length-1;bi++){
     x.beginPath();
-    for(let s=0;s<=steps;s++){const t=tMin+(tMax-tMin)*s/steps;x.lineTo(sxX(t),syY(centerAt(t)+bandOffsets[bi]));}
-    for(let s=steps;s>=0;s--){const t=tMin+(tMax-tMin)*s/steps;x.lineTo(sxX(t),syY(centerAt(t)+bandOffsets[bi+1]));}
-    x.closePath();x.fillStyle=hexA(colors[bi],0.55);x.fill();
+    for(let s=0;s<=steps;s++){const t=v.t0+(v.t1-v.t0)*s/steps;x.lineTo(X(t),Y(centerAt(t)+RB_OFFSETS[bi]));}
+    for(let s=steps;s>=0;s--){const t=v.t0+(v.t1-v.t0)*s/steps;x.lineTo(X(t),Y(centerAt(t)+RB_OFFSETS[bi+1]));}
+    x.closePath();x.fillStyle=hexA(RB_COLORS[bi],0.82);x.fill();
   }
+  // horizontal $ gridlines
+  x.lineWidth=1;
+  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){const yy=Y(e);x.strokeStyle='rgba(255,255,255,0.10)';x.beginPath();x.moveTo(plotL,yy);x.lineTo(plotR,yy);x.stroke();}
+  // year + halving vertical lines
+  const yr0=new Date(v.t0).getUTCFullYear(), yr1=new Date(v.t1).getUTCFullYear();
+  for(let yr=yr0;yr<=yr1+1;yr++){const t=Date.UTC(yr,0,1);if(t<v.t0||t>v.t1)continue;const xx=X(t);x.strokeStyle='rgba(255,255,255,0.06)';x.beginPath();x.moveTo(xx,plotT);x.lineTo(xx,plotB);x.stroke();}
+  for(const h of RB_HALVINGS){if(h.t<v.t0||h.t>v.t1)continue;const xx=X(h.t);
+    x.strokeStyle=h.est?'rgba(244,143,177,0.7)':'rgba(255,255,255,0.45)';x.lineWidth=1;x.setLineDash(h.est?[5,4]:[2,3]);
+    x.beginPath();x.moveTo(xx,plotT);x.lineTo(xx,plotB);x.stroke();x.setLineDash([]);}
+  // price line (black)
+  x.beginPath();let first=true;
+  for(const p of series){if(p.v<=0)continue;const xx=X(p.t),yy=Y(Math.log10(p.v));if(first){x.moveTo(xx,yy);first=false;}else x.lineTo(xx,yy);}
+  x.strokeStyle='rgba(10,10,12,0.92)';x.lineWidth=1.6;x.stroke();
+  // yellow halving circles on the price line (past halvings within data)
+  for(const h of RB_HALVINGS){if(h.est||h.t<dataT0||h.t>dataT1||h.t<v.t0||h.t>v.t1)continue;
+    const pv=rbPriceAt(series,h.t);if(!pv)continue;const xx=X(h.t),yy=Y(Math.log10(pv));
+    x.fillStyle='#ffd54a';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#7a5c00';x.lineWidth=1.4;x.stroke();}
+  // current price dot
+  const cur=S.btcPrice||series[series.length-1].v;
+  let curBand=8;
+  if(cur>0){const tNow=Math.min(Date.now(),dataT1);const xx=X(tNow),yy=Y(Math.log10(cur));
+    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle='#fff';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#0a0a0a';x.lineWidth=1.6;x.stroke();}
+    const cl=Math.log10(cur)-centerAt(tNow);
+    if(cl>=RB_OFFSETS[0])curBand=0;else{curBand=8;for(let bi=0;bi<RB_OFFSETS.length-1;bi++){if(cl<RB_OFFSETS[bi]&&cl>=RB_OFFSETS[bi+1]){curBand=bi;break;}}}
+  }
+  x.restore();
 
-  // Y axis: $ gridlines at powers of 10.
-  x.font='10px '+getComputedStyle(document.body).getPropertyValue('--mono');
-  x.textBaseline='middle';
-  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){
-    const yy=syY(e);
-    x.strokeStyle='rgba(255,255,255,0.07)';x.beginPath();x.moveTo(padL,yy);x.lineTo(W-padR,yy);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.5)';x.textAlign='right';
-    const val=Math.pow(10,e);x.fillText(val>=1000?'$'+(val/1000)+'k':'$'+val,padL-6,yy);
-  }
-  // X axis: year ticks.
-  x.textAlign='center';x.textBaseline='top';
-  const y0=new Date(tMin).getFullYear(), y1=new Date(tMax).getFullYear();
-  for(let yr=y0;yr<=y1;yr++){const t=new Date(yr+'-01-01').getTime();if(t<tMin||t>tMax)continue;const xx=sxX(t);
-    x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(xx,padT);x.lineTo(xx,H-padB);x.stroke();
-    if(yr%2===0){x.fillStyle='rgba(255,255,255,0.5)';x.fillText("'"+String(yr).slice(2),xx,H-padB+4);}
-  }
+  // ---- Right-side $ axis labels (powers of 10) ----
+  x.font='10px '+(getComputedStyle(document.body).getPropertyValue('--mono')||'monospace');
+  x.textBaseline='middle';x.textAlign='left';x.fillStyle='rgba(255,255,255,0.6)';
+  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){const yy=Y(e);if(yy<plotT-2||yy>plotB+2)continue;x.fillText(rbFmtUSD(Math.pow(10,e)),plotR+6,yy);}
+  // ---- Year labels ----
+  x.textAlign='center';x.textBaseline='top';x.fillStyle='rgba(255,255,255,0.6)';
+  const span=v.t1-v.t0, yrStep=span>RB_DAY*365*12?2:1;
+  for(let yr=yr0;yr<=yr1+1;yr++){if(yr%yrStep!==0)continue;const t=Date.UTC(yr,0,1);if(t<v.t0||t>v.t1)continue;x.fillText(String(yr),X(t),plotB+16);}
+  // ---- Halving labels ----
+  for(const h of RB_HALVINGS){if(h.t<v.t0||h.t>v.t1)continue;const xx=X(h.t);
+    x.font=(h.est?'bold ':'')+'9px '+(getComputedStyle(document.body).getPropertyValue('--sans')||'sans-serif');
+    const tw=x.measureText(h.label).width;
+    if(h.est){x.fillStyle='rgba(244,143,177,0.18)';x.fillRect(xx-tw/2-4,plotB+1,tw+8,13);x.fillStyle='#f48fb1';}
+    else x.fillStyle='rgba(255,255,255,0.55)';
+    x.textAlign='center';x.textBaseline='top';x.fillText(h.label,xx,plotB+2);}
 
-  // Price line.
-  if(series.length>1){
-    x.beginPath();let first=true;
-    for(const p of series){if(p.v<=0)continue;const xx=sxX(p.t),yy=syY(Math.log10(p.v));if(first){x.moveTo(xx,yy);first=false;}else x.lineTo(xx,yy);}
-    x.strokeStyle='rgba(255,255,255,0.92)';x.lineWidth=1.4;x.stroke();
-  }
-  // Current price marker.
-  const cur=S.btcPrice||(series[series.length-1]&&series[series.length-1].v);
-  if(cur>0){const xx=sxX(tMax),yy=syY(Math.log10(cur));
-    x.fillStyle='#fff';x.beginPath();x.arc(xx,yy,4,0,7);x.fill();
-    x.strokeStyle='#0a0a0a';x.lineWidth=1.5;x.stroke();
-    // current-band label
-    const cl=Math.log10(cur)-centerAt(tMax);let band=labels.length-1;
-    for(let bi=0;bi<bandOffsets.length-1;bi++){if(cl<=bandOffsets[bi]&&cl>bandOffsets[bi+1]){band=bi;break;}}
-    x.fillStyle='#fff';x.font='bold 11px '+getComputedStyle(document.body).getPropertyValue('--sans');
-    x.textAlign='right';x.textBaseline='bottom';x.fillText(labels[band]+' • $'+fN(cur,0),W-padR,padT+12);
-  }
+  renderRainbowLegend(curBand);
+  const foot=document.getElementById('btcRainbowFoot');
+  if(foot)foot.textContent=`Power-Law regression fitted to BTC since ${new Date(dataT0).getUTCFullYear()} (R² ${(r2*100).toFixed(1)}% fit strength). Scroll to zoom, drag to pan, double-click to reset.`;
+
+  rbBindInteractions(cv);
 }
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+
+// ---- Zoom / pan (TradingView-style: wheel to zoom at cursor, drag to pan, dbl-click reset) ----
+function rbBindInteractions(cv){
+  if(_rbBound)return;_rbBound=true;
+  cv.style.cursor='grab';
+  cv.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const r=cv.getBoundingClientRect(),W=cv.clientWidth;
+    const frac=Math.max(0,Math.min(1,((e.clientX-r.left)-RB_PADL)/((W-RB_PADL-RB_PADR)||1)));
+    const v=rbView(),anchor=v.t0+(v.t1-v.t0)*frac;
+    const f=e.deltaY<0?0.82:1/0.82;
+    _rbView=rbClamp(anchor-(anchor-v.t0)*f, anchor+(v.t1-anchor)*f);
+    drawBtcRainbow();
+  },{passive:false});
+  cv.addEventListener('mousedown',e=>{_rbDrag={x:e.clientX,v:rbView()};cv.style.cursor='grabbing';});
+  window.addEventListener('mousemove',e=>{
+    if(!_rbDrag)return;const W=cv.clientWidth,pw=(W-RB_PADL-RB_PADR)||1;
+    const span=_rbDrag.v.t1-_rbDrag.v.t0,dt=((e.clientX-_rbDrag.x)/pw)*span;
+    _rbView=rbClamp(_rbDrag.v.t0-dt,_rbDrag.v.t1-dt);drawBtcRainbow();
+  });
+  window.addEventListener('mouseup',()=>{if(_rbDrag){_rbDrag=null;cv.style.cursor='grab';}});
+  cv.addEventListener('dblclick',e=>{e.preventDefault();_rbView=null;drawBtcRainbow();});
+  // touch: 1-finger pan, 2-finger pinch zoom
+  cv.addEventListener('touchstart',e=>{
+    if(e.touches.length===1)_rbDrag={x:e.touches[0].clientX,v:rbView()};
+    else if(e.touches.length===2){const a=e.touches[0],c=e.touches[1];_rbPinch={d:Math.abs(a.clientX-c.clientX)||1,v:rbView(),mx:(a.clientX+c.clientX)/2};_rbDrag=null;}
+  },{passive:true});
+  cv.addEventListener('touchmove',e=>{
+    const W=cv.clientWidth,pw=(W-RB_PADL-RB_PADR)||1,r=cv.getBoundingClientRect();
+    if(e.touches.length===2&&_rbPinch){e.preventDefault();
+      const a=e.touches[0],c=e.touches[1],d=Math.abs(a.clientX-c.clientX)||1;
+      const frac=Math.max(0,Math.min(1,((_rbPinch.mx-r.left)-RB_PADL)/pw));
+      const vv=_rbPinch.v,anchor=vv.t0+(vv.t1-vv.t0)*frac,f=_rbPinch.d/d;
+      _rbView=rbClamp(anchor-(anchor-vv.t0)*f,anchor+(vv.t1-anchor)*f);drawBtcRainbow();
+    }else if(e.touches.length===1&&_rbDrag){e.preventDefault();
+      const span=_rbDrag.v.t1-_rbDrag.v.t0,dt=((e.touches[0].clientX-_rbDrag.x)/pw)*span;
+      _rbView=rbClamp(_rbDrag.v.t0-dt,_rbDrag.v.t1-dt);drawBtcRainbow();
+    }
+  },{passive:false});
+  cv.addEventListener('touchend',e=>{if(e.touches.length===0){_rbDrag=null;_rbPinch=null;}});
+}
 window.addEventListener('resize',()=>{const w=document.getElementById('btcRainbowWrap');if(w&&w.classList.contains('show'))drawBtcRainbow();});
 function buildChart(symbol,allowChange){
   const make=()=>{
