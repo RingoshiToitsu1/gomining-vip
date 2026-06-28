@@ -3079,106 +3079,108 @@ function renderTHModeAdvisor(i,m){
 
   if(!covFinite||curCov<18){
     const msg=!covFinite?'You have infinite coverage (no fees/GMT).':
-      `Your current coverage is ${fN(curCov,0)} days — no token discount. Lock more GMT first.`;
+      `Your current coverage is ${fN(curCov,0)} days — no token discount yet. Lock more GMT first.`;
     h+=`<div style="font-size:.78rem;color:var(--text3)">${msg}</div></div>`;
     return h;
   }
 
-  // Current token discount step — stop the moment this would tick down by 1%
+  // The token discount step we must not drop below (1% = one 18-day coverage step)
   const curTokD=Math.min(20,Math.floor(curCov/18));
 
-  // Simulate TH-only reinvestment; stop when token discount would drop even 1%
-  let th=i.th, wth=i.wth||15;
-  let gmtLocked=i.gl;
-  const gmtW=i.gw;
+  // Fixed (non-coverage) farm params
   const apr=i.apr||0;
   const cb=i.click?3:0, mm=i.mm||0;
-  const gth=Math.max(0,i.gth||0), gwth=i.gwth||wth;
+  const gth=Math.max(0,i.gth||0), gwth=i.gwth||(i.wth||15);
   const GINIT=Math.min(Math.max(0,i.gInit||0),gth);
-  let weeks=0;
-  let cov1yr=null;
-  const MAX_WEEKS=520; // 10yr ceiling — detect sustainable before claiming erosion
 
-  while(weeks<MAX_WEEKS){
-    gmtLocked*=(1+apr/100/52);
-    const totTH=th+gth;
-    const bw=totTH>0?(th*wth+gth*gwth)/totTH:wth;
-    const vip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
-    const ntd=Math.min(30,vip.d+cb+mm);
+  // --- One simulated day in AGGRESSIVE TH mode (gross reward → TH ×bonus; maintenance
+  //     drawn from wallet GMT, then netted from reward once wallet runs dry). Mutates state. ---
+  function dayState(s){
+    const totTH=s.th+gth;
+    const bw=totTH>0?(s.th*s.wth+gth*gwth)/totTH:s.wth;
+    const ntd=Math.min(30,vipOf(s.th+Math.max(0,gth-GINIT),s.locked).d+cb+mm);
     const f=fees(totTH,bw,bp);
-    const dailyFeeGMT=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;
-    const cov=dailyFeeGMT>0?(gmtLocked+gmtW)/dailyFeeGMT:Infinity;
-    if(weeks===52)cov1yr=cov;
-    if(!isFinite(cov)||Math.floor(cov/18)<curTokD)break;
+    const feeGMTcov=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;          // coverage basis (calc() convention)
+    const cov=feeGMTcov>0?(s.locked+s.wallet)/feeGMTcov:Infinity;
     const tokD=Math.min(20,Math.floor(cov/18));
     const totD=Math.min(30,tokD+ntd);
-    const weeklyMiningBTC=dbt*totTH*7;
-    const weeklyFeesBTC=f.t*(1-totD/100)*7;
-    const weeklyNetUSD=Math.max(0,(weeklyMiningBTC-weeklyFeesBTC)*bp*(1-CONVERSION_FEE));
-    if(weeklyNetUSD>0){
-      const addTH=thForBudget(weeklyNetUSD)*(1+rb/100);
-      wth=(th*wth+addTH*15)/(th+addTH);
-      th+=addTH;
-    }
-    weeks++;
+    const maintGMT=f.t>0?(f.t*(1-totD/100)*bp)/gp:0;          // GMT actually spent on maintenance
+    const grossUSD=dbt*totTH*bp;                              // full mining reward, pre-fee
+    return{totTH,bw,ntd,f,cov,tokD,totD,maintGMT,grossUSD};
+  }
+  function stepTHMode(s){
+    const d=dayState(s);
+    // Gross reward (mining + the maintenance it covers) → TH with bonus. This matches the
+    // GoMining app, which reinvests the gross daily value into TH at the +bonus rate.
+    const addTH=d.grossUSD>0?thForBudget(d.grossUSD)*(1+rb/100):0;
+    if(addTH>0){s.wth=(s.th*s.wth+addTH*15)/(s.th+addTH);s.th+=addTH;}
+    // Maintenance is drawn from the GMT buffer (wallet first, then locked) — this is what
+    // erodes coverage over the window, on top of TH growth raising the daily fee.
+    let pay=d.maintGMT;
+    if(s.wallet>=pay){s.wallet-=pay;}else{pay-=s.wallet;s.wallet=0;s.locked=Math.max(0,s.locked-pay);}
+    s.day++;
+    if(s.day%7===0)s.locked*=(1+apr/100/52);                 // staking paid weekly to locked
+    return addTH;
   }
 
-  // Sustainable = hit ceiling AND coverage after 1yr was not dropping toward 360
-  const hitCeiling=weeks>=MAX_WEEKS;
-  const sustainable=hitCeiling&&(cov1yr===null||cov1yr>=curCov);
-
-  // Per-week TH gain from initial state — more actionable than cumulative total
-  {
-    const iTotTH=i.th+gth;
-    const iBW=iTotTH>0?(i.th*(i.wth||15)+gth*(i.gwth||i.wth||15))/iTotTH:(i.wth||15);
-    const iVip=vipOf(i.th+Math.max(0,gth-GINIT),i.gl);
-    const iNtd=Math.min(30,iVip.d+cb+mm);
-    const iF=fees(iTotTH,iBW,bp);
-    const iTokD=Math.min(20,Math.floor(curCov/18));
-    const iTotD=Math.min(30,iTokD+iNtd);
-    const wkMine=dbt*iTotTH*7;
-    const wkFees=iF.t*(1-iTotD/100)*7;
-    const wkNet=Math.max(0,(wkMine-wkFees)*bp*(1-CONVERSION_FEE));
-    const wkTHbonus=wkNet>0?thForBudget(wkNet)*(1+rb/100):0;
-    const wkTHbase=wkNet>0?thForBudget(wkNet):0;
-    const wkExtra=wkTHbonus-wkTHbase;
-    // Per-day figures to match GoMining's app display
-    const dayTH=wkTHbonus/7;
-    const dayExtra=wkExtra/7;
-
-    if(weeks===0){
-      h+=`<div style="font-size:.78rem;color:var(--text3)">Coverage buffer too slim (${fN(curCov,0)} days) — lock more GMT before running TH mode.</div></div>`;
-      return h;
-    }
-
-    h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
-    if(sustainable){
-      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">&#8734;</div><div style="font-size:.68rem;color:var(--text3)">sustainable<br>indefinitely</div></div>`;
-    }else{
-      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${weeks*7}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>1% discount drop</div></div>`;
-    }
-    if(dayTH>0){
-      h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(dayTH,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/day<br>in TH mode</div></div>`;
-      if(dayExtra>0.001)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(dayExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/day<br>from +${rb}% bonus</div></div>`;
-    }
-    h+=`</div>`;
-
-    h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
-    if(sustainable){
-      h+=`Your ${fP(apr)} staking APR compounds locked GMT faster than TH-mode fee obligations — your ${curTokD}% token discount is self-sustaining. <strong style="color:var(--text2)">Run TH mode indefinitely.</strong>`;
-    }else{
-      const finalTotTH=th+gth;
-      const finalBW=finalTotTH>0?(th*wth+gth*gwth)/finalTotTH:wth;
-      const finalVip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
-      const finalNtd=Math.min(30,finalVip.d+cb+mm);
-      const finalF=fees(finalTotTH,finalBW,bp);
-      const finalDailyFeeGMT=finalF.t>0?(finalF.t*(1-finalNtd/100)*bp)/gp:0;
-      const neededGMT=Math.max(0,finalDailyFeeGMT*360-(gmtLocked+gmtW));
-      h+=`Coverage: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> (${curTokD}% token discount) → drops by 1% after ${weeks*7} days of TH mode.`;
-      if(neededGMT>1)h+=` To restore: lock <strong style="color:var(--text2)">${fN(neededGMT,0)} GMT</strong> (~${fU(neededGMT*gp)}) after switching back.`;
-    }
-    h+=`</div></div>`;
+  // Phase 1: run aggressive TH mode until the token discount would tick down 1%.
+  let s={th:i.th,wth:i.wth||15,locked:i.gl,wallet:i.gw,day:0};
+  let firstDayTH=0;
+  const MAX_DAYS=3650;
+  while(s.day<MAX_DAYS){
+    const d=dayState(s);
+    if(!isFinite(d.cov)||Math.floor(d.cov/18)<curTokD)break;  // would drop below current discount
+    const added=stepTHMode(s);
+    if(s.day===1)firstDayTH=added;
   }
+  const thDays=s.day;
+  const thGained=s.th-i.th;
+
+  // Per-day bonus split (first day, representative of the app's daily figure)
+  const d0=dayState({th:i.th,wth:i.wth||15,locked:i.gl,wallet:i.gw,day:0});
+  const dayTHbonus=d0.grossUSD>0?thForBudget(d0.grossUSD)*(1+rb/100):0;
+  const dayTHbase=d0.grossUSD>0?thForBudget(d0.grossUSD):0;
+  const dayExtra=dayTHbonus-dayTHbase;
+
+  if(thDays===0){
+    h+=`<div style="font-size:.78rem;color:var(--text3)">You're right at the ${curTokD}% discount threshold — even one day of TH mode would drop it. Lock more GMT to build a buffer first.</div></div>`;
+    return h;
+  }
+
+  // Phase 2: rebuild — switch to GMT reinvest (TH frozen) until coverage climbs back to today's level.
+  let r={th:s.th,wth:s.wth,locked:s.locked,wallet:s.wallet,day:0};
+  while(r.day<MAX_DAYS){
+    const totTH=r.th+gth;
+    const bw=totTH>0?(r.th*r.wth+gth*gwth)/totTH:r.wth;
+    const ntd=Math.min(30,vipOf(r.th+Math.max(0,gth-GINIT),r.locked).d+cb+mm);
+    const f=fees(totTH,bw,bp);
+    const feeGMTcov=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;
+    const cov=feeGMTcov>0?(r.locked+r.wallet)/feeGMTcov:Infinity;
+    if(!isFinite(cov)||cov>=curCov)break;                     // buffer reestablished
+    const tokD=Math.min(20,Math.floor(cov/18));
+    const totD=Math.min(30,tokD+ntd);
+    const netUSD=Math.max(0,(dbt*totTH-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE));
+    r.locked+=netUSD/gp;                                       // reward → GMT (rebuild)
+    r.day++;
+    if(r.day%7===0)r.locked*=(1+apr/100/52);
+  }
+  const rebuildDays=r.day>=MAX_DAYS?null:r.day;
+
+  // ---- Render metrics ----
+  h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
+  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${thDays}</div><div style="font-size:.68rem;color:var(--text3)">days in TH mode<br>before −1% discount</div></div>`;
+  if(dayTHbonus>0){
+    h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(dayTHbonus,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/day<br>in TH mode</div></div>`;
+    if(dayExtra>0.001)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(dayExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/day<br>from +${rb}% bonus</div></div>`;
+  }
+  h+=`</div>`;
+
+  h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
+  h+=`Run TH Reinvest for up to <strong style="color:var(--text2)">${thDays} days</strong> (+${fN(thGained,1)} TH), then your coverage drops from ${fN(curCov,0)} to 360 days and you'd lose 1% (${curTokD}%→${curTokD-1}%). `;
+  h+=`<strong style="color:var(--text2)">Switch back to GMT reinvest</strong> at that point`;
+  if(rebuildDays!=null)h+=` for ~${rebuildDays} days to rebuild the buffer, then repeat.`;
+  else h+=` to rebuild the buffer before resuming.`;
+  h+=`</div></div>`;
   return h;
 }
 
@@ -3976,51 +3978,31 @@ function runReinvestProjection(){
       weeklyGrossUSD=0;
 
       if(netUSD>0){
-        const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
-        // Use TH mode only when adding all rewards as TH (with bonus) still keeps 20% coverage.
-        // If coverage would drop below 360 days, fall back to GMT-first to protect the discount.
-        const useTHMode=i.reinvestTH&&curRB>0&&
-          gmtDeficit(th+thForBudget(netUSD)*(1+curRB/100),gmtLocked)<=0;
-        if(useTHMode){
-          // TH Reinvest Mode: all rewards → TH with rb% bonus; 20% discount confirmed safe
-          const addTH=thForBudget(netUSD)*(1+curRB/100);
-          let addGreedy=0;
-          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
-            addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);
-            greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);
-            greedyTH+=addGreedy;
-          }
-          const addVip=addTH-addGreedy;
-          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
-        }else{
-        // --- Discount-first allocation: same solver as capital planner ---
-        // Binary search: find minimum GMT spend so 20% holds at resulting TH
+        // Discount-first allocation ALWAYS holds the 20% token discount: lock the minimum
+        // GMT needed, then put the remainder into TH. TH Reinvest Mode adds the rb% bonus on
+        // the TH portion (auto-reinvest into TH); OFF models the manual-upgrade path (no bonus).
+        const curRB=(i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0);
+        const thMult=1+curRB/100;
         let gmtSpend=0;
         if(i.payG){
-          // Check if 100% to TH still maintains discount
-          const allTH=th+thForBudget(netUSD);
+          const allTH=th+thForBudget(netUSD)*thMult;
           if(gmtDeficit(allTH,gmtLocked)>0){
-            // Need some GMT — binary search for minimum
             let lo=0,hi=netUSD;
             for(let k=0;k<40;k++){
               const mid=(lo+hi)/2;
               const agT=mid/gp;
               const thRem=netUSD-mid;
-              const atT=thRem>0?thForBudget(thRem):0;
+              const atT=thRem>0?thForBudget(thRem)*thMult:0;
               if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;
             }
             gmtSpend=hi;
           }
         }
-
-        // Apply: GMT first (discount priority), remainder to TH.
         const gmtBuy=gmtSpend/gp;
         const thBudget=netUSD-gmtSpend;
         gmtLocked+=gmtBuy;
         if(thBudget>0){
-          const addTH=thForBudget(thBudget);
-          // Discount-first done; now fill the greedy machine up to 5k (manual upgrades),
-          // then mint the overflow as VIP-eligible TH. Past 5k, greedy grows only passively.
+          const addTH=thForBudget(thBudget)*thMult;
           let addGreedy=0;
           if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
             addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);
@@ -4029,7 +4011,6 @@ function runReinvestProjection(){
           }
           const addVip=addTH-addGreedy;
           if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
-        }
         }
       }
 
@@ -4404,37 +4385,27 @@ function computeSetupProjection(){
       const netUSD=weeklyGrossUSD-distributionUSD;
       weeklyGrossUSD=0;
       if(netUSD>0){
-        const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
-        // Use TH mode only when adding all rewards as TH (with bonus) keeps 20% coverage.
-        const useTHMode=i.reinvestTH&&curRB>0&&
-          gmtDeficit(th+thForBudget(netUSD)*(1+curRB/100),gmtLocked)<=0;
-        if(useTHMode){
-          // TH Reinvest Mode: all rewards → TH with rb% bonus; 20% discount confirmed safe
-          const addTH=thForBudget(netUSD)*(1+curRB/100);
-          let addGreedy=0;
-          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
-          const addVip=addTH-addGreedy;
-          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
-        }else{
-        // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
+        // Discount-first allocation ALWAYS holds 20%: lock minimum GMT, remainder to TH.
+        // TH Reinvest Mode adds rb% bonus on the TH portion; OFF = manual-upgrade path (no bonus).
+        const curRB=(i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0);
+        const thMult=1+curRB/100;
         let gmtSpend=0;
         if(i.payG){
-          const allTH=th+thForBudget(netUSD);
+          const allTH=th+thForBudget(netUSD)*thMult;
           if(gmtDeficit(allTH,gmtLocked)>0){
             let lo=0,hi=netUSD;
-            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudget(thRem):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
+            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudget(thRem)*thMult:0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
             gmtSpend=hi;
           }
         }
         const gmtBuy=gmtSpend/gp,thBudget=netUSD-gmtSpend;
         gmtLocked+=gmtBuy;
         if(thBudget>0){
-          const addTH=thForBudget(thBudget);
+          const addTH=thForBudget(thBudget)*thMult;
           let addGreedy=0;
           if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
           const addVip=addTH-addGreedy;
           if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
-        }
         }
       }
       postDN=dailyNet(th,gmtLocked);
