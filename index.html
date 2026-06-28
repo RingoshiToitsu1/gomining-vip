@@ -1287,6 +1287,10 @@ html.show-onboarding #onboarding{display:flex}
                 <label class="toggle"><input type="checkbox" id="inAvatarDisc"><span class="toggle-track"></span></label>
                 <span class="toggle-label" onclick="document.getElementById('inAvatarDisc').click()">Avatar TH discount <span class="ed-toggle-note">(5% off upgrades &amp; creation)</span></span>
               </div>
+              <div class="toggle-row ed-toggle" id="thReinvestRow" style="display:none">
+                <label class="toggle"><input type="checkbox" id="inTHReinvest"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inTHReinvest').click()">TH Reinvest Mode <span class="ed-toggle-note" id="thReinvestNote">(+10% bonus TH, skips GMT lock)</span></span>
+              </div>
               <div class="toggle-row ed-toggle ed-amb-row">
                 <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
                 <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(referred TH)</span></span>
@@ -2197,7 +2201,7 @@ const SHARE_FIELDS=[
 const SHARE_CUR={USD:'',GBP:'G',EUR:'E'};
 function encodeShareV2(d){
   const v=x=>(x==null||x==='')?'':String(x);
-  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0);
+  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0)|(d.inTHReinvest?32:0);
   const parts=[
     v(d.inTH),v(d.inWTH),v(d.inGMTLocked),v(d.inGMTWallet),v(d.inCapital),
     flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
@@ -2213,7 +2217,7 @@ function decodeShareV2(s){
   const set=(k,i)=>{const x=g(i);if(x!==undefined)d[k]=x;};
   set('inTH',0);set('inWTH',1);set('inGMTLocked',2);set('inGMTWallet',3);set('inCapital',4);
   const flags=g(5)?(parseInt(g(5),36)||0):0;
-  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);
+  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);d.inTHReinvest=!!(flags&32);
   const cur=g(6);d.inCurrency=cur==='G'?'GBP':cur==='E'?'EUR':'USD';
   set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
   set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
@@ -2461,7 +2465,8 @@ function inp(){
   gwth:wth,
   ggrow:+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
-  refCap:+$('inRefCapital').value||0
+  refCap:+$('inRefCapital').value||0,
+  reinvestTH:!!($('inTHReinvest')&&$('inTHReinvest').checked)
 }}
 function $(id){return document.getElementById(id)}
 
@@ -2558,6 +2563,7 @@ function readInputs(){
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAvatarDisc:$('inAvatarDisc').checked,
+    inTHReinvest:!!($('inTHReinvest')&&$('inTHReinvest').checked),
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
     inCurrency:$('inCurrency').value,
@@ -2590,6 +2596,7 @@ function applyInputs(d){
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
   if(d.inAvatarDisc!==undefined)$('inAvatarDisc').checked=!!d.inAvatarDisc;
+  if(d.inTHReinvest!==undefined&&$('inTHReinvest'))$('inTHReinvest').checked=!!d.inTHReinvest;
   if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
   if(d.inReferredTH!=null)$('inReferredTH').value=d.inReferredTH;
   if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
@@ -2741,7 +2748,7 @@ function clearInputs(){
   // until a profile is loaded or "Save as…" is used.
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
-    inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
+    inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,inTHReinvest:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'15',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
@@ -2826,7 +2833,7 @@ document.addEventListener('keydown',e=>{
   const el=e.target;if(!_isClearable(el)||el.dataset.prevVal===undefined)return;
   el.value=el.dataset.prevVal;el.blur();   // cancel the edit, revert
 });
-['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc','inTHReinvest'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 $('inAvatarDisc').addEventListener('change',()=>autoFillCPT('inTH','inCostPerTH'));
 {const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
@@ -2918,6 +2925,15 @@ function recalc(){
   if(!S.loaded)return;
   updateCapInVisibility();
   const i=inp(),m=calc(i);
+
+  // Show TH Reinvest Mode toggle only for Diamond I+ users (rb > 0)
+  const trRow=$('thReinvestRow');
+  if(trRow){
+    const show=m.vip.rb>0;
+    trRow.style.display=show?'':'none';
+    const note=$('thReinvestNote');
+    if(note&&show)note.textContent=`(+${m.vip.rb}% bonus TH, skips GMT lock)`;
+  }
 
   // Update auto-calculated token discount display
   $('inTokenDiscountDisplay').textContent=m.eTok;
@@ -3040,10 +3056,107 @@ function recalc(){
   }else{
     sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (below $60K). Accumulate GMT while cheap. Discount savings outweigh TH growth since hashrate ROI compresses at lower prices.</div></div>`;
   }
+  if(m.vip.rb>0)sg+=renderTHModeAdvisor(i,m);
   $('reinvestSignal').innerHTML=sg;
 
   // Capital planner (includes projections)
   renderPlanner(i,m);
+}
+
+function renderTHModeAdvisor(i,m){
+  const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH();
+  if(!bp||!gp||!dbt)return'';
+  const rb=m.vip.rb;
+  const curCov=m.cov;
+  const covFinite=isFinite(curCov);
+
+  // Panel header
+  let h=`<div style="margin-top:1rem;padding:.75rem .9rem;background:rgba(126,232,250,.06);border:1px solid rgba(126,232,250,.2);border-radius:10px">`;
+  h+=`<div style="font-weight:700;color:var(--cyan);font-size:.85rem;margin-bottom:.5rem">TH Reinvest Mode Window &mdash; ${m.vip.n} (+${rb}% bonus)</div>`;
+
+  if(!covFinite||curCov<360){
+    const msg=!covFinite?'You have infinite coverage (no fees/GMT).':
+      `Your current coverage is ${fN(curCov,0)} days — already under 360 days (20% token discount). Lock more GMT first.`;
+    h+=`<div style="font-size:.78rem;color:var(--text3)">${msg}</div></div>`;
+    return h;
+  }
+
+  // Simulate TH-only reinvestment until coverage drops below 360 days
+  let th=i.th, wth=i.wth||15;
+  let gmtLocked=i.gl;
+  const gmtW=i.gw;
+  const apr=i.apr||0;
+  const cb=i.click?3:0, mm=i.mm||0;
+  const gth=Math.max(0,i.gth||0), gwth=i.gwth||wth;
+  const GINIT=Math.min(Math.max(0,i.gInit||0),gth);
+  const startTH=th;
+  let weeks=0;
+  const MAX_WEEKS=260; // 5yr ceiling
+
+  while(weeks<MAX_WEEKS){
+    // Weekly staking yield auto-compounds on locked GMT
+    gmtLocked*=(1+apr/100/52);
+
+    const totTH=th+gth;
+    const bw=totTH>0?(th*wth+gth*gwth)/totTH:wth;
+    const vip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
+    const ntd=Math.min(30,vip.d+cb+mm);
+    const f=fees(totTH,bw,bp);
+    const dailyFeeGMT=f.t>0?(f.t*(1-ntd/100)*bp)/gp:0;
+    const cov=dailyFeeGMT>0?(gmtLocked+gmtW)/dailyFeeGMT:Infinity;
+
+    if(!isFinite(cov)||cov<360)break;
+
+    // Mining rewards → all to TH with rb% bonus
+    const tokD=Math.min(20,Math.floor(cov/18));
+    const totD=Math.min(30,tokD+ntd);
+    const weeklyMiningBTC=dbt*totTH*7;
+    const weeklyFeesBTC=f.t*(1-totD/100)*7;
+    const weeklyNetUSD=Math.max(0,(weeklyMiningBTC-weeklyFeesBTC)*bp*(1-CONVERSION_FEE));
+    if(weeklyNetUSD>0){
+      const addTH=thForBudget(weeklyNetUSD)*(1+rb/100);
+      wth=(th*wth+addTH*15)/(th+addTH);
+      th+=addTH;
+    }
+    weeks++;
+  }
+
+  const days=weeks*7;
+  const thGained=th-startTH;
+  // Extra TH vs not having the rb bonus (avatar discount already baked in)
+  const thGainedNoBonus=thGained/(1+rb/100);
+  const extraTH=Math.max(0,thGained-thGainedNoBonus);
+
+  // GMT needed to restore 20% coverage after TH mode
+  const finalTotTH=th+gth;
+  const finalBW=finalTotTH>0?(th*wth+gth*gwth)/finalTotTH:wth;
+  const finalVip=vipOf(th+Math.max(0,gth-GINIT),gmtLocked);
+  const finalNtd=Math.min(30,finalVip.d+cb+mm);
+  const finalF=fees(finalTotTH,finalBW,bp);
+  const finalDailyFeeGMT=finalF.t>0?(finalF.t*(1-finalNtd/100)*bp)/gp:0;
+  const neededGMT=Math.max(0,finalDailyFeeGMT*360-(gmtLocked+gmtW));
+  const neededUSD=neededGMT*gp;
+
+  if(weeks===0){
+    h+=`<div style="font-size:.78rem;color:var(--text3)">Your coverage buffer (${fN(curCov,0)} days) is too slim for even one week of TH mode. Build more GMT coverage first.</div></div>`;
+    return h;
+  }
+
+  h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
+  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${days}</div><div style="font-size:.68rem;color:var(--text3)">days before<br>20% erodes</div></div>`;
+  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(thGained,1)}</div><div style="font-size:.68rem;color:var(--text3)">total TH<br>gained</div></div>`;
+  if(extraTH>0.05)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(extraTH,1)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH<br>vs normal</div></div>`;
+  h+=`</div>`;
+
+  h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
+  h+=`Coverage buffer: <strong style="color:var(--text2)">${fN(curCov,0)} days</strong> today &rarr; drops to 360 after ${days} days of TH mode. `;
+  if(neededGMT>1){
+    h+=`To restore 20%: lock <strong style="color:var(--text2)">${fN(neededGMT,0)} GMT</strong> (~${fU(neededUSD)}) after switching back.`;
+  }else{
+    h+=`Staking yield alone maintains coverage &mdash; no extra GMT lock needed.`;
+  }
+  h+=`</div></div>`;
+  return h;
 }
 
 function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP){
@@ -3837,6 +3950,19 @@ function runReinvestProjection(){
       weeklyGrossUSD=0;
 
       if(netUSD>0){
+        const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
+        if(i.reinvestTH&&curRB>0){
+          // TH Reinvest Mode: all rewards → TH with rb% bonus, no GMT locking
+          const addTH=thForBudget(netUSD)*(1+curRB/100);
+          let addGreedy=0;
+          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
+            addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);
+            greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);
+            greedyTH+=addGreedy;
+          }
+          const addVip=addTH-addGreedy;
+          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        }else{
         // --- Discount-first allocation: same solver as capital planner ---
         // Binary search: find minimum GMT spend so 20% holds at resulting TH
         let gmtSpend=0;
@@ -3873,6 +3999,7 @@ function runReinvestProjection(){
           }
           const addVip=addTH-addGreedy;
           if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        }
         }
       }
 
@@ -4247,6 +4374,15 @@ function computeSetupProjection(){
       const netUSD=weeklyGrossUSD-distributionUSD;
       weeklyGrossUSD=0;
       if(netUSD>0){
+        const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
+        if(i.reinvestTH&&curRB>0){
+          // TH Reinvest Mode: all rewards → TH with rb% bonus, no GMT locking
+          const addTH=thForBudget(netUSD)*(1+curRB/100);
+          let addGreedy=0;
+          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
+          const addVip=addTH-addGreedy;
+          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        }else{
         // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
         let gmtSpend=0;
         if(i.payG){
@@ -4265,6 +4401,7 @@ function computeSetupProjection(){
           if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
           const addVip=addTH-addGreedy;
           if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        }
         }
       }
       postDN=dailyNet(th,gmtLocked);
