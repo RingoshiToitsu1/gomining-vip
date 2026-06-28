@@ -3196,6 +3196,13 @@ function dailyBTCperTH(){
   return Math.round(S.satsPerTHDay||0)/1e8;
 }
 
+// Block subsidy (and thus mining reward per TH) halves at each halving. Dates are estimates
+// (~every 210k blocks). Used to make long projections shed reward at each future halving.
+const HALVING_DATES=[Date.UTC(2028,3,15),Date.UTC(2032,3,15),Date.UTC(2036,3,15),Date.UTC(2040,3,15)];
+function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}return m;}
+// Halving years that fall within [now, now+days] — for projection notes.
+function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
+
 function calc(i){
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH();
   // Greedy Machine TH earns rewards + pays fees. It counts toward the VIP tier
@@ -4006,6 +4013,8 @@ function runReinvestProjection(){
   // of the way to $1B, not the full target. Once the target year is reached,
   // price flatlines at bpEnd. Manual picks ramp over the projection length.
   let bpToday=bpStart;
+  const projStartMs=Date.now();
+  let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
   let daysToTarget=days;     // default for manual: ramp over projection length
   if(btcSel.mode==='firm'&&btcSel.targetYear){
     const todayMs=Date.now();
@@ -4068,7 +4077,7 @@ function runReinvestProjection(){
     const gTH=curGreedy==null?greedyTH:curGreedy;
     const totTH=curTH+MP_TH+gTH;
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+gTH*greedyWTH)/totTH:curWTH;
-    const g=dbt*totTH,f=fees(totTH,bw,bpToday);
+    const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
     // VIP basis: standalone TH + greedy growth above the initial marketplace amount.
     const v=vipOf(curTH+Math.max(0,gTH-GINIT),curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
@@ -4097,7 +4106,7 @@ function runReinvestProjection(){
   }
 
   function refDailyNet(rTH,rLocked){
-    const g=dbt*rTH,f=fees(rTH,refCurWTH,bpToday);
+    const g=dbtToday*rTH,f=fees(rTH,refCurWTH,bpToday);
     const v=vipOf(rTH,rLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const fc=(f.t*(1-ntd/100)*bpToday)/gp;
@@ -4151,6 +4160,7 @@ function runReinvestProjection(){
 
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);  // linear ramp from bpStart (d=1) to bpEnd (d=days)
+    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
     // First-day baseline must be captured BEFORE referral compounds (else inflates start vs end comparison)
     if(d===1){startSS_capture=dailyNet(th,gmtLocked).net;}
 
@@ -4272,12 +4282,14 @@ function runReinvestProjection(){
   }else{
     btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
   }
+  const hwR=halvingsInWindow(days);
+  const halvingNoteR=hwR.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwR.join(' &amp; ')} halving${hwR.length>1?'s':''} (modeled).</div>`:'';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
     <strong>${fN(postTH,1)} TH</strong> starting hashrate,
     <strong>${fN(postLocked,0)} GMT</strong> locked
-    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
+    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteR}</div>`;
 
   // End-of-period values
   const finalDailyGMT=finalSS/gp;
@@ -4571,12 +4583,14 @@ function computeSetupProjection(){
     daysToTarget=Math.max(1,(targetMs-Date.now())/86400000);
   }
   let bpToday=bpStart;
+  const projStartMs=Date.now();
+  let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
   function bpForDay(d){if(!useRamp)return bpEnd;const fr=Math.min(1,(d-1)/Math.max(1,daysToTarget));return bpStart+(bpEnd-bpStart)*fr;}
 
   function dailyNet(curTH,curLocked){
     const totTH=curTH+MP_TH+greedyTH;
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
-    const g=dbt*totTH,f=fees(totTH,bw,bpToday);
+    const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
     const v=vipOf(curTH+Math.max(0,greedyTH-GINIT),curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
@@ -4602,6 +4616,7 @@ function computeSetupProjection(){
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
+    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
     if(d%7===0){
@@ -4662,11 +4677,13 @@ function computeSetupProjection(){
   else if(btcSel.mode==='firm'){const reached=bpAtEnd>=bpEnd?'reaches target':`reaches <strong style="color:var(--text2)">${fmtBTCPrice(bpAtEnd)}</strong> (${(bpAtEnd/bpEnd*100).toFixed(1)}% of way)`;btcRangeLine=`BTC ramps linearly toward <strong style="color:var(--text2)">${btcSel.label}</strong> &mdash; over ${days}d ${reached}`;}
   else btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
 
+  const hwS=halvingsInWindow(days);
+  const halvingNoteS=hwS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''} (modeled).</div>`:'';
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
     <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked
-    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div></div>`;
+    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
 
   const fb=dailyNet(th,gmtLocked);
