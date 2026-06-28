@@ -669,6 +669,13 @@ html.show-onboarding #onboarding{display:flex}
 .btc-rainbow-legend{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;padding:.55rem .4rem .15rem}
 .rb-pill{font-size:.66rem;font-weight:600;color:var(--text3);background:var(--bg-input);border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:.25rem .55rem;white-space:nowrap;line-height:1.2}
 .rb-pill.active{color:var(--text);border-color:var(--text2);box-shadow:0 0 0 1px var(--text3);font-weight:800}
+.btc-rainbow-tip{position:absolute;z-index:5;pointer-events:none;background:rgba(12,12,16,0.95);border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;font-size:.68rem;min-width:172px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.rb-tip-date{font-weight:800;color:var(--text);font-size:.72rem;margin-bottom:.15rem}
+.rb-tip-actual{font-family:var(--mono);color:var(--text2);margin-bottom:.35rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
+.rb-tip-row{display:flex;align-items:center;gap:.4rem;padding:.05rem 0}
+.rb-tip-sw{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+.rb-tip-lbl{color:var(--text3);flex:1 1 auto;white-space:nowrap}
+.rb-tip-px{font-family:var(--mono);color:var(--text);font-weight:700}
 .sp-page-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem 0 .9rem;position:sticky;top:0;z-index:2;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sp-back-btn,.sp-new-btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:10px;padding:.55rem 1.05rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .sp-back-btn{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -1614,6 +1621,7 @@ html.show-onboarding #onboarding{display:flex}
       <div class="btc-rainbow-wrap" id="btcRainbowWrap">
         <div class="btc-rainbow-legend" id="btcRainbowLegend"></div>
         <canvas id="btcRainbowCanvas"></canvas>
+        <div class="btc-rainbow-tip" id="btcRainbowTip" style="display:none"></div>
         <div class="btc-rainbow-foot" id="btcRainbowFoot">Power-Law regression fitted to BTC price history — a long-term valuation guide, not financial advice. Scroll to zoom, drag to pan, double-click to reset.</div>
         <div class="btc-rainbow-msg" id="btcRainbowMsg" style="display:none">Loading price history…</div>
       </div>
@@ -2274,7 +2282,30 @@ const RB_HALVINGS=[
   {t:Date.UTC(2032,3,15),label:'Halving 2032 (Est)',est:true}
 ];
 const RB_PADL=8, RB_PADR=74, RB_PADT=12, RB_PADB=46;
-let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null;
+let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null, _rbHover=null, _rbRaf=null;
+function rbRequestDraw(){if(_rbRaf)return;_rbRaf=requestAnimationFrame(()=>{_rbRaf=null;drawBtcRainbow();});}
+function rbHideTip(){const t=document.getElementById('btcRainbowTip');if(t)t.style.display='none';}
+// Tooltip: date + each rainbow band's price at the hovered time (+ actual BTC price if known).
+function rbShowTip(t,wx,wy){
+  const tip=document.getElementById('btcRainbowTip'),wrap=document.getElementById('btcRainbowWrap');
+  if(!tip||!wrap||!_rbFit||!_rainbowData)return;
+  const center=_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b;
+  const ds=new Date(t).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  const last=_rainbowData[_rainbowData.length-1];
+  const actual=(t<=last.t)?rbPriceAt(_rainbowData,t):null;
+  let html=`<div class="rb-tip-date">${ds}</div>`;
+  html+=actual?`<div class="rb-tip-actual">BTC price: ${rbFmtUSD(actual)}</div>`
+              :`<div class="rb-tip-actual" style="color:var(--text4)">Projected band prices</div>`;
+  for(let i=0;i<RB_LABELS.length;i++){
+    const mid=(RB_OFFSETS[i]+RB_OFFSETS[i+1])/2;
+    html+=`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${RB_COLORS[i]}"></span><span class="rb-tip-lbl">${RB_LABELS[i]}</span><span class="rb-tip-px">${rbFmtUSD(Math.pow(10,center+mid))}</span></div>`;
+  }
+  tip.innerHTML=html;tip.style.display='block';
+  const ww=wrap.clientWidth, wh=wrap.clientHeight, tw=tip.offsetWidth, th=tip.offsetHeight;
+  let lx=wx+14; if(lx+tw>ww-6)lx=wx-tw-14; if(lx<6)lx=6;
+  let ty=wy+12; if(ty+th>wh-6)ty=wh-th-6; if(ty<6)ty=6;
+  tip.style.left=lx+'px';tip.style.top=ty+'px';
+}
 
 function rbDayOf(t){return Math.max(1,(t-RB_GEN)/RB_DAY);}
 function rbView(){return _rbView||{t0:RB_T0,t1:RB_T1};}
@@ -2392,6 +2423,14 @@ function drawBtcRainbow(){
     else x.fillStyle='rgba(255,255,255,0.55)';
     x.textAlign='center';x.textBaseline='top';x.fillText(h.label,xx,plotB+2);}
 
+  // ---- Hover crosshair ----
+  if(_rbHover!=null&&_rbHover>=v.t0&&_rbHover<=v.t1){
+    const xx=X(_rbHover);
+    x.save();x.beginPath();x.rect(plotL,plotT,plotW,plotH);x.clip();
+    x.strokeStyle='rgba(255,255,255,0.55)';x.setLineDash([4,4]);x.lineWidth=1;
+    x.beginPath();x.moveTo(xx,plotT);x.lineTo(xx,plotB);x.stroke();x.setLineDash([]);x.restore();
+  }
+
   renderRainbowLegend(curBand);
   const foot=document.getElementById('btcRainbowFoot');
   if(foot)foot.textContent=`Power-Law regression fitted to BTC since ${new Date(dataT0).getUTCFullYear()} (R² ${(r2*100).toFixed(1)}% fit strength). Scroll to zoom, drag to pan, double-click to reset.`;
@@ -2413,7 +2452,18 @@ function rbBindInteractions(cv){
     _rbView=rbClamp(anchor-(anchor-v.t0)*f, anchor+(v.t1-anchor)*f);
     drawBtcRainbow();
   },{passive:false});
-  cv.addEventListener('mousedown',e=>{_rbDrag={x:e.clientX,v:rbView()};cv.style.cursor='grabbing';});
+  cv.addEventListener('mousemove',e=>{
+    if(_rbDrag){rbHideTip();return;}     // dragging is handled by the window listener
+    const cr=cv.getBoundingClientRect(),W=cv.clientWidth;
+    const frac=((e.clientX-cr.left)-RB_PADL)/((W-RB_PADL-RB_PADR)||1);
+    if(frac<0||frac>1){_rbHover=null;rbHideTip();rbRequestDraw();return;}
+    const v=rbView();_rbHover=v.t0+(v.t1-v.t0)*frac;
+    const wrap=document.getElementById('btcRainbowWrap'),wr=wrap.getBoundingClientRect();
+    rbShowTip(_rbHover,e.clientX-wr.left,e.clientY-wr.top);
+    rbRequestDraw();
+  });
+  cv.addEventListener('mouseleave',()=>{_rbHover=null;rbHideTip();rbRequestDraw();});
+  cv.addEventListener('mousedown',e=>{_rbDrag={x:e.clientX,v:rbView()};cv.style.cursor='grabbing';_rbHover=null;rbHideTip();});
   window.addEventListener('mousemove',e=>{
     if(!_rbDrag)return;const W=cv.clientWidth,pw=(W-RB_PADL-RB_PADR)||1;
     const span=_rbDrag.v.t1-_rbDrag.v.t0,dt=((e.clientX-_rbDrag.x)/pw)*span;
