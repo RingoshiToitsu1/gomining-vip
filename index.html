@@ -4357,11 +4357,29 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
+// Mirror the Capital Planner's BTC price dropdown into the Growth Projection's BTC selector,
+// so the projection ramps toward whatever price you picked in the planner.
+function syncSpBtcToPlanner(){
+  const ps=document.getElementById('projBtcSelect'), sp=document.getElementById('spBTC');
+  if(!ps||!sp)return;
+  const bp=parseFloat(ps.value);
+  if(!(bp>0))return;
+  if(Math.abs(bp-(S.btcPrice||0))<1){sp.value='live';return;}   // planner is on Live
+  const val='manual:'+bp;
+  if(![...sp.options].some(o=>o.value===val)){
+    const og=sp.querySelector('optgroup[label="Manual"]')||sp;
+    const o=document.createElement('option');
+    o.value=val;o.textContent=fmtBTCPrice(bp)+' (from planner)';
+    og.appendChild(o);
+  }
+  sp.value=val;
+}
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
   window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
+  syncSpBtcToPlanner();   // carry the planner's chosen BTC price into the projection
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
     ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
