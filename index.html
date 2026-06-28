@@ -2329,6 +2329,22 @@ function rbComputeFit(series){
   const r2=sst>0?1-ssr/sst:0;
   return{m,b,r2};
 }
+// HODL (center-line) fair value at a given time from the Power-Law fit.
+function rbCenterPrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b):0;}
+// Ensure the Power-Law fit exists (load history once if needed), then run cb.
+// Lets the Capital Planner reference HODL fair values even before the chart is opened.
+function ensureRainbowFit(cb){
+  if(_rbFit){cb&&cb();return;}
+  if(_rainbowData){_rbFit=rbComputeFit(_rainbowData);cb&&cb();return;}
+  if(_rainbowLoading)return;
+  _rainbowLoading=true;
+  fetchRainbowHistory().then(data=>{
+    const trimmed=data.filter(p=>p.t>=Date.UTC(2012,0,1));
+    _rainbowData=(trimmed.length>50?trimmed:data).sort((a,b)=>a.t-b.t);
+    _rbFit=rbComputeFit(_rainbowData);
+    _rainbowLoading=false;cb&&cb();
+  }).catch(()=>{_rainbowLoading=false;});
+}
 function rbPriceAt(series,t){
   if(t<=series[0].t)return null;
   if(t>=series[series.length-1].t)return series[series.length-1].v;
@@ -3392,16 +3408,31 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP){
   // Store params for dropdown recalc
   window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp,curP:curP||null};
 
-  const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
-  const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
+  // BTC price options reference the Rainbow chart's Power-Law center (HODL fair value)
+  // at upcoming milestones. Live stays the default; the fit loads lazily if not ready.
+  const DAYMS=86400000;
+  const optList=[{p:cur,label:'$'+(cur/1000).toFixed(1)+'K (Live)'}];
+  if(_rbFit){
+    const ms=[
+      {t:Date.now(),name:'fair value now'},
+      {t:Date.UTC(2028,3,15),name:'2028 halving'},
+      {t:Date.UTC(2030,0,1),name:'2030'},
+      {t:Date.UTC(2032,3,15),name:'2032 halving'}
+    ];
+    for(const x of ms){
+      if(x.t<Date.now()-30*DAYMS)continue;        // skip milestones already passed
+      const pr=rbCenterPrice(x.t);
+      if(pr>0)optList.push({p:Math.round(pr),label:'HODL '+x.name+' — '+fmtBTCPrice(pr)});
+    }
+  }else{
+    ensureRainbowFit(()=>{if(S.loaded)recalc();}); // load the fit, then re-render with HODL prices
+    [80000,100000,150000,200000].forEach(p=>optList.push({p,label:fmtBTCPrice(p)}));
+  }
 
   let h=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
   h+=`<label style="font-size:.75rem;color:var(--text3)">BTC Price</label>`;
   h+=`<select id="projBtcSelect" onchange="updateProjCell()">`;
-  for(const p of opts){
-    const lbl=p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
-    h+=`<option value="${p}"${p===cur?' selected':''}>${lbl}</option>`;
-  }
+  optList.forEach((o,idx)=>{h+=`<option value="${o.p}"${idx===0?' selected':''}>${o.label}</option>`;});
   h+=`</select></div>`;
   h+=`<div id="projSingleCell" style="display:flex;justify-content:center"></div>`;
   return h;
