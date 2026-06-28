@@ -2926,18 +2926,17 @@ function recalc(){
   updateCapInVisibility();
   const i=inp(),m=calc(i);
 
-  // TH Reinvest Mode toggle: always visible, but greyed out below Diamond I
+  // TH Reinvest Mode toggle: only visible when Avatar is on AND Diamond I+
   const trRow=$('thReinvestRow');
+  const avatarOn=$('inAvatarDisc')&&$('inAvatarDisc').checked;
   if(trRow){
-    trRow.style.display='';
-    const note=$('thReinvestNote');
-    if(note){
-      if(m.vip.rb>0)note.textContent=`(+${m.vip.rb}% bonus TH, skips GMT lock)`;
-      else note.textContent='(Diamond I required — 5,000 TH or 50,000 GMT locked)';
+    const showTR=avatarOn&&m.vip.rb>0;
+    trRow.style.display=showTR?'':'none';
+    if(!showTR){const cb=trRow.querySelector('input');if(cb)cb.checked=false;}
+    else{
+      const note=$('thReinvestNote');
+      if(note)note.textContent=`(+${m.vip.rb}% bonus TH, skips GMT lock)`;
     }
-    const cb=trRow.querySelector('input');
-    if(cb){cb.disabled=m.vip.rb===0;if(m.vip.rb===0)cb.checked=false;}
-    trRow.style.opacity=m.vip.rb>0?'1':'0.45';
   }
 
   // Update auto-calculated token discount display
@@ -3061,7 +3060,7 @@ function recalc(){
   }else{
     sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (below $60K). Accumulate GMT while cheap. Discount savings outweigh TH growth since hashrate ROI compresses at lower prices.</div></div>`;
   }
-  if(m.vip.rb>0)sg+=renderTHModeAdvisor(i,m);
+  if(i.reinvestTH&&m.vip.rb>0)sg+=renderTHModeAdvisor(i,m);
   $('reinvestSignal').innerHTML=sg;
 
   // Capital planner (includes projections)
@@ -3615,7 +3614,7 @@ function renderPlanner(i,m){
     exp+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
   }else if(gmtLock<=0){
     exp+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have 20% token discount — all new capital goes to hashrate.`;
-    if(m.vip.rb>0)exp+=` <strong style="color:var(--cyan)">Diamond ${m.vip.n.split(' ')[1]} perk:</strong> your ongoing mining rewards can earn +${m.vip.rb}% bonus TH via TH Reinvest Mode — see the advisor below.`;
+    if(i.reinvestTH&&m.vip.rb>0)exp+=` <strong style="color:var(--cyan)">TH Reinvest Mode on:</strong> ongoing rewards earn +${m.vip.rb}% bonus TH — see advisor below.`;
   }
   if(sol.bonusActive){
     exp+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
@@ -3624,7 +3623,7 @@ function renderPlanner(i,m){
   }
   if(exp.trim())ah+=`<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin-bottom:.8rem;font-size:.8rem;color:var(--text2);line-height:1.6">${exp}</div>`;
   // Inline TH Reinvest Mode advisor when at 20% cap and Diamond I+
-  if(canCover20&&gmtLock<=0&&m.vip.rb>0)ah+=renderTHModeAdvisor(i,m);
+  if(canCover20&&gmtLock<=0&&i.reinvestTH&&m.vip.rb>0)ah+=renderTHModeAdvisor(i,m);
 
   // Optimal allocation split — efficiency vs hashrate vs discount (greedy marginal allocator).
   // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee. The per-miner
