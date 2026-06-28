@@ -3978,8 +3978,12 @@ function runReinvestProjection(){
 
       if(netUSD>0){
         const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
-        if(i.reinvestTH&&curRB>0){
-          // TH Reinvest Mode: all rewards → TH with rb% bonus, no GMT locking
+        // Use TH mode only when adding all rewards as TH (with bonus) still keeps 20% coverage.
+        // If coverage would drop below 360 days, fall back to GMT-first to protect the discount.
+        const useTHMode=i.reinvestTH&&curRB>0&&
+          gmtDeficit(th+thForBudget(netUSD)*(1+curRB/100),gmtLocked)<=0;
+        if(useTHMode){
+          // TH Reinvest Mode: all rewards → TH with rb% bonus; 20% discount confirmed safe
           const addTH=thForBudget(netUSD)*(1+curRB/100);
           let addGreedy=0;
           if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
@@ -4402,8 +4406,11 @@ function computeSetupProjection(){
       weeklyGrossUSD=0;
       if(netUSD>0){
         const curRB=i.reinvestTH?vipOf(th+Math.max(0,greedyTH-GINIT),gmtLocked).rb:0;
-        if(i.reinvestTH&&curRB>0){
-          // TH Reinvest Mode: all rewards → TH with rb% bonus, no GMT locking
+        // Use TH mode only when adding all rewards as TH (with bonus) keeps 20% coverage.
+        const useTHMode=i.reinvestTH&&curRB>0&&
+          gmtDeficit(th+thForBudget(netUSD)*(1+curRB/100),gmtLocked)<=0;
+        if(useTHMode){
+          // TH Reinvest Mode: all rewards → TH with rb% bonus; 20% discount confirmed safe
           const addTH=thForBudget(netUSD)*(1+curRB/100);
           let addGreedy=0;
           if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
