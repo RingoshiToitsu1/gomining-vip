@@ -80,10 +80,6 @@ input[type=number]{-moz-appearance:textfield}
 .tab-edit-btn{margin-left:auto;padding:.55rem 1.25rem;cursor:pointer;border:1px solid var(--cyan);border-radius:24px;background:transparent;color:var(--cyan);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none;white-space:nowrap}
 .tab-edit-btn:hover{background:var(--cyan);color:#000}
 @media(max-width:600px){.tab-edit-btn{padding:.45rem 1rem;font-size:.8rem;border-radius:20px}}
-.btc-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem}
-.btc-pill{padding:.4rem .8rem;border-radius:20px;border:1px solid var(--border);background:var(--bg-input);color:var(--text2);font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap}
-.btc-pill:hover{border-color:var(--purple-soft);color:var(--text)}
-.btc-pill.active{background:var(--purple);border-color:var(--purple);color:#000;font-weight:700}
 .tab-content{display:none;animation:fadeIn .3s ease}
 .tab-content.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -789,6 +785,18 @@ html.show-onboarding #onboarding{display:flex}
 .sp-payout-val .unit{color:var(--purple-soft);font-size:.9rem;font-family:var(--mono);font-weight:700;flex:0 0 auto}
 .sp-run-wrap{text-align:center;margin-top:1.5rem}
 .sp-run-wrap .ri-btn{font-size:.95rem;padding:.72rem 2.2rem}
+/* Growth Projection — new Power-Law model banner + live target preview */
+.sp-model-banner{display:flex;gap:.7rem;align-items:flex-start;max-width:520px;margin:0 auto 1.1rem;padding:.75rem .9rem;background:linear-gradient(135deg,rgba(126,232,250,.09),rgba(167,139,250,.06));border:1px solid rgba(126,232,250,.25);border-radius:12px;text-align:left}
+.sp-model-banner svg{flex:0 0 auto;color:var(--cyan);margin-top:2px}
+.sp-model-title{font-size:.82rem;font-weight:800;color:var(--text)}
+.sp-model-title .nu-badge{font-size:.58rem;font-weight:800;color:#06222b;background:var(--cyan);border-radius:5px;padding:.08rem .38rem;margin-right:.45rem;vertical-align:middle;letter-spacing:.04em}
+.sp-model-desc{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.25rem}
+.sp-target-preview{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;max-width:430px;margin:.9rem auto 0}
+.sp-target-preview:empty{display:none}
+.sp-prev-chip{flex:1 1 0;min-width:92px;text-align:center;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:.55rem .45rem}
+.sp-prev-val{font-size:.92rem;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1.15;word-break:break-word}
+.sp-prev-lbl{font-size:.58rem;color:var(--text4);margin-top:.2rem;line-height:1.25}
+@media(max-width:600px){.sp-model-banner{padding:.65rem .7rem;gap:.55rem}.sp-model-desc{font-size:.68rem}.sp-prev-val{font-size:.82rem}}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sp-page-loading{position:fixed;inset:0;z-index:210;background:rgba(10,10,10,.86);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 /* Capital Planner: adjust-investment chip + growth-projection CTA */
@@ -1657,11 +1665,20 @@ html.show-onboarding #onboarding{display:flex}
       </div>
       <div class="sp-form">
         <div class="pi-title">Growth Projection</div>
-        <div class="pi-subtitle" id="spSubtitle">Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
+        <div class="pi-subtitle" id="spSubtitle">Project your farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
+
+        <div class="sp-model-banner">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
+          <div>
+            <div class="sp-model-title"><span class="nu-badge">NEW</span>Power-Law projection model</div>
+            <div class="sp-model-desc">Pick a halving and we project to it. BTC price auto-scales along the rainbow chart's <strong style="color:var(--text2)">HODL fair-value curve</strong> &mdash; from today's price, converging onto the curve by the halving &mdash; and mining reward <strong style="color:var(--text2)">halves</strong> at each halving. No more guessing a price or a number of years.</div>
+          </div>
+        </div>
+
         <div class="input-grid sp-form-grid">
-          <div class="field" style="grid-column:1/-1">
-            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving. BTC price auto-scales along the rainbow chart's Power-Law (HODL) fair-value curve — starting at today's real price and converging onto the fair-value line by the halving date.">?</span></label>
-            <div class="field-input sp-selwrap"><select id="spTarget"><option value="">Loading fair-value model…</option></select></div>
+          <div class="field">
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving. BTC price auto-scales along the rainbow chart's Power-Law (HODL) fair-value curve — starting at today's real price and converging onto the fair-value line by the halving date. Mining reward halves at each halving crossed.">?</span></label>
+            <div class="field-input sp-selwrap"><select id="spTarget" onchange="updateSpTargetPreview()"><option value="">Loading fair-value model…</option></select></div>
           </div>
           <div class="field">
             <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
@@ -1677,6 +1694,9 @@ html.show-onboarding #onboarding{display:flex}
             </div>
           </div>
         </div>
+
+        <div class="sp-target-preview" id="spTargetPreview"></div>
+
         <div class="sp-run-wrap">
           <button class="ri-btn" id="spRunBtn" onclick="runSetupProjection()">&#8635; Run Projection</button>
         </div>
@@ -3976,389 +3996,6 @@ function btcSelectionFrom(selId){
   }
   return{price:S.btcPrice,label:'Live',mode:'live'};
 }
-function reinvestBTCSelection(){return btcSelectionFrom('inReinvestBTC');}
-
-function runReinvestProjection(){
-  if(!S.loaded)return;
-  const i=inp();
-  const days=Math.min(7300,Math.max(1,+$('inReinvestDays').value||365));
-  const distPct=Math.min(100,Math.max(0,+$('inReinvestDistPct').value||0))/100;
-  const distWeeklyUSD=Math.max(0,+$('inReinvestDistUSD').value||0);
-  const btcSel=reinvestBTCSelection();
-  const bpStart=S.btcPrice;
-  const bpEnd=btcSel.price;
-  const useRamp=btcSel.mode!=='live';   // firm/manual ramp; live stays flat
-  const gp=S.gmtPrice,dbt=dailyBTCperTH(),cap=i.cap;
-  if(!bpStart||!bpEnd||!gp||!dbt){
-    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load...</div>';
-    return;
-  }
-  if(!cap||cap<=0){
-    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter a capital investment amount above first.</div>';
-    return;
-  }
-
-  // Linear ramp. For firm picks, the ramp is anchored to the firm's PUBLISHED
-  // target year — so a 1Y run with Fidelity ($1B by 2038) reaches only ~1/12th
-  // of the way to $1B, not the full target. Once the target year is reached,
-  // price flatlines at bpEnd. Manual picks ramp over the projection length.
-  let bpToday=bpStart;
-  const projStartMs=Date.now();
-  let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
-  let daysToTarget=days;     // default for manual: ramp over projection length
-  if(btcSel.mode==='firm'&&btcSel.targetYear){
-    const todayMs=Date.now();
-    const targetMs=new Date(btcSel.targetYear,0,1).getTime();
-    daysToTarget=Math.max(1,(targetMs-todayMs)/86400000);
-  }
-  function bpForDay(d){
-    if(!useRamp)return bpEnd;
-    const fraction=Math.min(1,(d-1)/Math.max(1,daysToTarget));
-    return bpStart+(bpEnd-bpStart)*fraction;
-  }
-
-  // Initial allocation runs at TODAY'S price — that's when the user actually buys.
-  const a=solvePlannerAllocation(i,bpStart,gp,dbt);
-  if(!a){
-    $('reinvestResult').innerHTML='<div style="color:var(--text4);padding:.5rem">Enter GMT or USD capital to see projection.</div>';
-    return;
-  }
-  const REF_GMT_BONUS=0.05;
-  const refInit=a.ref;
-  const refInitBonusGMT=a.refBonusGMT;
-
-  // Post-investment starting values — identical to Capital Planner's post-state
-  const MP_TH=a.mpTH||0;                     // marketplace miner — constant, non-VIP hashrate
-  const MP_WTH=a.mpWth>0?a.mpWth:15;
-  // Greedy Machine — non-VIP. Reinvestment fills it to 5k (discount-first), then it
-  // only grows passively. Passive growth compounds weekly on the current TH, past 5k too.
-  const HAS_GREEDY=(a.gth||0)>0;
-  const GGROW=(a.ggrow||0)/100;
-  const GINIT=a.gInit||0;                                   // initial marketplace greedy — constant, never VIP
-  let greedyTH=a.greedyTot!=null?a.greedyTot:(a.gth||0);   // initial capital may have already filled it toward 5k
-  let greedyWTH=a.gwthAfter>0?a.gwthAfter:(a.gwth>0?a.gwth:15);
-  const postTH=a.nt;                         // total hashrate (VIP + marketplace + greedy), for display
-  const postVipTH=a.vipStandalone!=null?a.vipStandalone:a.vipTH; // non-greedy VIP TH — the standalone part that compounds
-  const postLocked=a.newLocked;
-  const postWallet=a.gmtReserve;             // wallet GMT remaining after planner's allocation
-  const postWTH=a.vipWth;                     // VIP-only blended efficiency (marketplace added per-day)
-  const best={tu:a.sol.thUSD,ag:a.sol.lock,at:a.sol.addTH,nt:a.nt};
-  const apr=i.apr||0;
-
-  let th=postVipTH,gmtW=postWallet,gmtLocked=postLocked;
-  const startTH=postTH;                       // display baseline = total hashrate
-  let curWTH=postWTH;
-  const daily=[];
-
-  // ---- Referral parallel simulation: refInit was solved above to seed the 5% bonus ----
-  let refTH=refInit?refInit.at:0, refLocked=refInit?refInit.ag:0, refCurWTH=15;
-  const refStartTH=refTH, refStartLocked=refLocked;
-  const manualRefTH=i.amb?i.refTH:0;
-  let ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
-  let totalAmbUSD=0;
-  let totalRefBonusGMT=refInitBonusGMT;       // user's cumulative 5% GMT (initial + ongoing)
-  let totalDistributionUSD=0;                 // cumulative USD paid out (not reinvested) via distribution
-  let totalDollarPaidUSD=0;                   // cumulative USD from the $/wk floor portion only (for shortfall check)
-  let weeklyGrossUSD=0;                       // accumulator of daily reinvestable rewards; settled every 7th day
-  let weeklySettlements=0;                    // count of weekly settlements that actually fired (for $-floor shortfall expectation)
-  let startSS_capture=0;  // captured at d===1 BEFORE referral steps, so it reflects true day-0 baseline
-
-  function dailyNet(curTH,curLocked,curGreedy){
-    const gTH=curGreedy==null?greedyTH:curGreedy;
-    const totTH=curTH+MP_TH+gTH;
-    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+gTH*greedyWTH)/totTH:curWTH;
-    const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
-    // VIP basis: standalone TH + greedy growth above the initial marketplace amount.
-    const v=vipOf(curTH+Math.max(0,gTH-GINIT),curLocked);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const tg2=curLocked+gmtW;
-    const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
-    const cv=fc2>0?tg2/fc2:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
-    const fd=Math.min(30,td+ntd);
-    const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
-    // Match Capital Planner's monthly staking convention (4.33 weeks/month) so
-    // startSS*30 lines up with the BTC-projection card. Daily here is cosmetic —
-    // the real accrual happens weekly via the d%7 block.
-    const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
-    return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
-  }
-
-  function gmtDeficit(curTH,curLocked,curGreedy){
-    const gTH=curGreedy==null?greedyTH:curGreedy;
-    const totTH=curTH+MP_TH+gTH;
-    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+gTH*greedyWTH)/totTH:curWTH;
-    const f=fees(totTH,bw,bpToday);
-    const v=vipOf(curTH+Math.max(0,gTH-GINIT),curLocked);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    return Math.max(0,burn*360-(curLocked+gmtW));
-  }
-
-  function refDailyNet(rTH,rLocked){
-    const g=dbtToday*rTH,f=fees(rTH,refCurWTH,bpToday);
-    const v=vipOf(rTH,rLocked);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const fc=(f.t*(1-ntd/100)*bpToday)/gp;
-    const cv=fc>0?rLocked/fc:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
-    const fd=Math.min(30,td+ntd);
-    const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
-    const stakingUSD=(rLocked*(apr/100)/52)*4.33/30*gp;
-    return{net:miningUSD+stakingUSD,reinvest:miningUSD,disc:fd};
-  }
-  function refDeficit(rTH,rLocked){
-    const f=fees(rTH,refCurWTH,bpToday);
-    const v=vipOf(rTH,rLocked);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
-    const burn=(f.t*(1-ntd/100)*bpToday)/gp;
-    return Math.max(0,burn*360-rLocked);
-  }
-  function stepReferral(){
-    if(refTH<=0)return;
-    const rdn=refDailyNet(refTH,refLocked);
-    const rRein=rdn.reinvest;
-    if(rRein<=0)return;
-    let rGmtSpend=0;
-    if(i.payG){
-      const allTH=refTH+thForBudget(rRein);
-      if(refDeficit(allTH,refLocked)>0){
-        let lo=0,hi=rRein;
-        for(let k=0;k<40;k++){
-          const mid=(lo+hi)/2;
-          const agT=mid/gp;
-          const thRem=rRein-mid;
-          const atT=thRem>0?thForBudget(thRem):0;
-          if(refDeficit(refTH+atT,refLocked+agT)<=0)hi=mid;else lo=mid;
-        }
-        rGmtSpend=hi;
-      }
-    }
-    const rGmtBuy=rGmtSpend/gp;
-    const rThBudget=rRein-rGmtSpend;
-    refLocked+=rGmtBuy;
-    if(rThBudget>0){
-      const addTH=thForBudget(rThBudget);
-      refCurWTH=(refTH*refCurWTH+addTH*15)/(refTH+addTH);
-      refTH+=addTH;
-      // 5% of the referral's daily TH spend is paid to the user as fresh GMT
-      const dailyBonusGMT=(rThBudget*REF_GMT_BONUS)/gp;
-      gmtW+=dailyBonusGMT;
-      totalRefBonusGMT+=dailyBonusGMT;
-    }
-  }
-
-  for(let d=1;d<=days;d++){
-    bpToday=bpForDay(d);  // linear ramp from bpStart (d=1) to bpEnd (d=days)
-    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
-    // First-day baseline must be captured BEFORE referral compounds (else inflates start vs end comparison)
-    if(d===1){startSS_capture=dailyNet(th,gmtLocked).net;}
-
-    // --- Referral's day (run first so user's ambDaily reflects updated refTH) ---
-    if(refTH>0&&d%7===0){
-      const rWk=refLocked*(apr/100)/52;
-      refLocked+=rWk;
-    }
-    stepReferral();
-    ambDaily=(manualRefTH+refTH)*15*24/1000*0.005;
-    totalAmbUSD+=ambDaily;
-
-    // --- Staking yield: paid weekly (every 7th day) ---
-    if(d%7===0){
-      const weeklyGMT=gmtLocked*(apr/100)/52;
-      gmtLocked+=weeklyGMT;
-      // Greedy Machine passive growth: compounds on the current TH, even past the 5k cap.
-      if(greedyTH>0&&GGROW>0)greedyTH*=(1+GGROW);
-    }
-
-    // --- Accumulate today's reinvestable reward (mining + ambassador) into the weekly bucket.
-    // Distribution + reinvestment happen once per week (on every 7th day), not daily.
-    const dn=dailyNet(th,gmtLocked);
-    weeklyGrossUSD+=Math.max(0,dn.reinvest);
-
-    // Default: no TH/GMT change today, so post-state == pre-state.
-    let postDN=dn;
-
-    if(d%7===0){
-      // --- Weekly settlement: distribute first, reinvest the remainder ---
-      weeklySettlements++;
-      const pctPortion=weeklyGrossUSD*distPct;
-      const dollarPortion=Math.min(distWeeklyUSD,Math.max(0,weeklyGrossUSD-pctPortion));
-      const distributionUSD=pctPortion+dollarPortion;
-      if(distributionUSD>0)totalDistributionUSD+=distributionUSD;
-      if(dollarPortion>0)totalDollarPaidUSD+=dollarPortion;
-      const netUSD=weeklyGrossUSD-distributionUSD;
-      weeklyGrossUSD=0;
-
-      if(netUSD>0){
-        // --- Discount-first allocation: same solver as capital planner ---
-        // Binary search: find minimum GMT spend so 20% holds at resulting TH
-        let gmtSpend=0;
-        if(i.payG){
-          // Check if 100% to TH still maintains discount
-          const allTH=th+thForBudget(netUSD);
-          if(gmtDeficit(allTH,gmtLocked)>0){
-            // Need some GMT — binary search for minimum
-            let lo=0,hi=netUSD;
-            for(let k=0;k<40;k++){
-              const mid=(lo+hi)/2;
-              const agT=mid/gp;
-              const thRem=netUSD-mid;
-              const atT=thRem>0?thForBudget(thRem):0;
-              if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;
-            }
-            gmtSpend=hi;
-          }
-        }
-
-        // Apply: GMT first (discount priority), remainder to TH.
-        const gmtBuy=gmtSpend/gp;
-        const thBudget=netUSD-gmtSpend;
-        gmtLocked+=gmtBuy;
-        if(thBudget>0){
-          const addTH=thForBudget(thBudget);
-          // Discount-first done; now fill the greedy machine up to 5k (manual upgrades),
-          // then mint the overflow as VIP-eligible TH. Past 5k, greedy grows only passively.
-          let addGreedy=0;
-          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){
-            addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);
-            greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);
-            greedyTH+=addGreedy;
-          }
-          const addVip=addTH-addGreedy;
-          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
-        }
-      }
-
-      // Recompute post-purchase daily rate for the snapshot
-      postDN=dailyNet(th,gmtLocked);
-    }
-    daily.push({d,th:th+MP_TH+greedyTH,greedy:greedyTH,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
-
-    // Defensive: extreme BTC targets can push compounding past JS number range.
-    // Bail with a friendly error rather than render NaN/Infinity in the result.
-    if(!isFinite(th)||!isFinite(greedyTH)||!isFinite(gmtLocked)||!isFinite(postDN.net)){
-      $('reinvestResult').innerHTML='<div class="warn" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5"><strong>Numbers exceeded simulation precision.</strong> The selected BTC target is so high that compounding TH growth overflows after day '+d+'. Pick a more conservative BTC target or shorter horizon.</div>';
-      return;
-    }
-  }
-
-  // Select snapshot days: first, last, every 30d
-  const snapSet=new Set([0,daily.length-1]);
-  const snapInterval=days<=365?30:days<=1095?90:days<=3650?180:365;
-  for(let j=snapInterval-1;j<daily.length;j+=snapInterval)snapSet.add(j);
-  const snaps=Array.from(snapSet).sort((a,b)=>a-b).map(j=>daily[j]).filter(Boolean);
-
-  // Final state discount
-  const finalEntry=daily[daily.length-1];
-  const thGain=(th+MP_TH+greedyTH)-startTH,thPct=startTH>0?thGain/startTH*100:0;
-  // True baseline: captured during the loop at d===1, BEFORE referral compounded (so ambDaily reflects initial state)
-  const startSS=startSS_capture;
-  const finalSS=finalEntry.ssNet;
-  const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
-  const gmtGain=gmtLocked-postLocked;
-  const bpAtEnd=bpForDay(days);  // BTC price actually reached at end of projection
-
-  let h='';
-
-  // Show post-investment starting point
-  const btcModeBadge=btcSel.mode==='firm'?'<span class="badge" style="background:rgba(167,139,250,.18);color:#c4b5fd;font-size:.65rem;margin-left:.4rem">FIRM FORECAST</span>':btcSel.mode==='manual'?'<span class="badge" style="background:rgba(251,146,60,.18);color:#fb923c;font-size:.65rem;margin-left:.4rem">SIMULATED</span>':'';
-  let btcRangeLine;
-  if(btcSel.mode==='live'){
-    btcRangeLine=`BTC held at <strong style="color:var(--text2)">${btcSel.label}</strong> throughout`;
-  }else if(btcSel.mode==='firm'){
-    const reached=bpAtEnd>=bpEnd?'reaches target':`reaches <strong style="color:var(--text2)">${fmtBTCPrice(bpAtEnd)}</strong> (${(bpAtEnd/bpEnd*100).toFixed(1)}% of way)`;
-    btcRangeLine=`BTC ramps linearly toward <strong style="color:var(--text2)">${btcSel.label}</strong> &mdash; over ${days}d ${reached}`;
-  }else{
-    btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
-  }
-  const hwR=halvingsInWindow(days);
-  const halvingNoteR=hwR.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwR.join(' &amp; ')} halving${hwR.length>1?'s':''} (modeled).</div>`:'';
-  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
-    <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
-    ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
-    <strong>${fN(postTH,1)} TH</strong> starting hashrate,
-    <strong>${fN(postLocked,0)} GMT</strong> locked
-    <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteR}</div>`;
-
-  // End-of-period values
-  const finalDailyGMT=finalSS/gp;
-  const finalMonthly=finalSS*30;
-  const finalYearly=finalSS*365;
-  const finalMonthlyGMT=finalMonthly/gp;
-  const finalYearlyGMT=finalYearly/gp;
-  const lockedUSD=gmtLocked*gp;
-
-  // Build chart (USD + GMT series, both rendered, USD visible)
-  h+=buildReinvestChart(daily,days,gp);
-
-  // End-of-period breakdown (mining / staking / ambassador)
-  const finalBreakdown=dailyNet(th,gmtLocked);
-  const breakdownDaily=`mining ${fU(finalBreakdown.mining)} + staking ${fU(finalBreakdown.staking)}${ambDaily>0?` + ambassador ${fU(finalBreakdown.amb)}`:''}`;
-
-  // Daily reward card (USD + GMT versions, swappable via toggle)
-  h+=`<div class="ri-single-card">
-    <div class="ri-label">Daily Reward (End of Period)</div>
-    <div class="ri-headline cyan" data-reinvest-unit="usd">${fU(finalSS)}</div>
-    <div class="ri-headline green" data-reinvest-unit="gmt" style="display:none">${fN(finalDailyGMT,2)} <img src="gmt36.png" class="gmt-logo" alt="GMT"></div>
-    <div class="ri-mo-yr">
-      <span data-reinvest-unit="usd">${fU(finalMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalYearly)}/yr</span>
-      <span data-reinvest-unit="gmt" style="display:none">${fN(finalMonthlyGMT,0)} GMT/mo<span class="ri-sep">&bull;</span>${fN(finalYearlyGMT,0)} GMT/yr</span>
-    </div>
-    <div class="ri-breakdown">${breakdownDaily}</div>
-    <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
-  </div>`;
-
-  // Ambassador rewards — kept when ambassador option engaged
-  if(manualRefTH>0||refTH>0){
-    const finalAmbMonthly=ambDaily*30;
-    const finalAmbYearly=ambDaily*365;
-    const totalRefTH=manualRefTH+refTH;
-    h+=`<div class="ri-single-card">
-      <div class="ri-label">Ambassador Rewards (USDT)</div>
-      <div class="ri-headline green">${fU(ambDaily)}</div>
-      <div class="ri-mo-yr">${fU(finalAmbMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalAmbYearly)}/yr</div>
-      <div class="ri-breakdown">${fN(totalRefTH,0)} referred TH &middot; total over ${days}d: ${fU(totalAmbUSD)}</div>
-    </div>`;
-  }
-
-  // Greedy Machine — end-of-period TH (manual upgrades to 5k + passive growth)
-  if(HAS_GREEDY){
-    const greedyStart=a.greedyTot!=null?a.greedyTot:(a.gth||0);
-    const greedyGain=greedyTH-greedyStart;
-    const capped=greedyTH>=GREEDY_CAP;
-    h+=`<div class="ri-single-card">
-      <div class="ri-label">Greedy Machine TH (End of Period)</div>
-      <div class="ri-headline cyan">${fN(greedyTH,1)} TH</div>
-      <div class="ri-usd-value">from ${fN(greedyStart,1)} TH start &middot; ${fP(i.ggrow)}/wk passive${capped?' &middot; at 5k cap, passive only':''}</div>
-      <div class="ri-gain">+${fN(greedyGain,1)} TH${greedyStart>0?` (+${fN(greedyGain/greedyStart*100,0)}%)`:''} &middot; ~${fU(greedyGain*estimateCPT(greedyTH),0)} free hashrate</div>
-    </div>`;
-  }
-
-  // Locked GMT — count + USD value (both green)
-  h+=`<div class="ri-single-card">
-    <div class="ri-label">Locked GMT (End of Period)</div>
-    <div class="ri-headline green">${fN(gmtLocked,0)} <img src="gmt36.png" class="gmt-logo" alt="GMT"></div>
-    <div class="ri-usd-value">${fU(lockedUSD)} USD value</div>
-    <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
-  </div>`;
-
-  // Share button
-  h+=`<div style="text-align:center;margin-top:1rem">
-    <button class="ri-btn" onclick="copyProjectionImage(this)" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan))">Share Projection</button>
-  </div>`;
-
-  $('reinvestResult').innerHTML=h;
-  // Reset toggles whenever the projection re-renders
-  window._reinvestUnit='usd';
-  window._reinvestPeriod='day';
-
-  // Store data for share image
-  window._shareData={days,startTH,postLocked,postWallet,cap,th,gmtLocked:gmtLocked,gp,
-    thGain,thPct,startSS,finalSS,ssPct,targetTokD:20,finalDisc:finalEntry.disc,
-    finalTokD:finalEntry.tokD,finalVip:finalEntry.vip,snaps,gmtGain,
-    btcLabel:btcSel.label,btcMode:btcSel.mode,bpStart,bpEnd,bpAtEnd};
-}
 
 // ===== Growth Projection popup (for users who already invested) =====
 // Seeds the same compounding-reinvest engine from the CURRENT setup (no new
@@ -4393,6 +4030,22 @@ function populateSpTargets(){
     return `<option value="${h}">${label}</option>`;
   }).join('');
   if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
+  updateSpTargetPreview();
+}
+// Live preview under the dropdown: horizon, the BTC price path (today → HODL fair value),
+// and which halving(s) the projection crosses.
+function updateSpTargetPreview(){
+  const el=document.getElementById('spTargetPreview'),sel=document.getElementById('spTarget');
+  if(!el||!sel)return;
+  const targetMs=parseFloat(sel.value);
+  if(!_rbFit||!(targetMs>Date.now())){el.innerHTML='';return;}
+  const now=Date.now(), days=Math.round((targetMs-now)/86400000), yrs=days/365;
+  const P0=S.btcPrice||0, target=rbCenterPrice(targetMs);
+  const hv=halvingsInWindow(days);
+  el.innerHTML=
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${yrs.toFixed(1)} yr</div><div class="sp-prev-lbl">horizon (${days} days)</div></div>`+
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; HODL fair value</div></div>`+
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${hv.length?hv.join(' &amp; '):'—'}</div><div class="sp-prev-lbl">halving${hv.length===1?'':'s'} crossed${hv.length?' (−50% reward each)':''}</div></div>`;
 }
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
@@ -5219,26 +4872,6 @@ const revealObs=new IntersectionObserver((entries)=>{
 },{threshold:0.1});
 document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 
-// ---- BTC SCENARIO PILLS ----
-function buildBtcPills(){
-  const sel=document.getElementById('inReinvestBTC'),box=document.getElementById('btcPills');
-  if(!sel||!box)return;
-  box.innerHTML='';
-  Array.from(sel.options).forEach(opt=>{
-    const b=document.createElement('button');
-    b.type='button';
-    b.className='btc-pill'+(opt.value===sel.value?' active':'');
-    b.textContent=opt.textContent;
-    b.dataset.value=opt.value;
-    b.onclick=()=>{
-      sel.value=opt.value;
-      box.querySelectorAll('.btc-pill').forEach(p=>p.classList.toggle('active',p.dataset.value===opt.value));
-      sel.dispatchEvent(new Event('change',{bubbles:true}));
-    };
-    box.appendChild(b);
-  });
-}
-buildBtcPills();
 
 // ---- INIT ----
 try{const sc=localStorage.getItem('gm_currency');if(sc&&sc!=='USD')setCurrency(sc)}catch(e){}
