@@ -2970,9 +2970,14 @@ function recalc(){
   // value of the hashrate you accumulate, not extra income — mirrors GoMining's TH figure.
   const heroReinvestEl=$('heroDailyReinvest');
   if(heroReinvestEl){
-    if(i.reinvestTH&&m.vip.rb>0&&netUSD>0){
-      const thPerDay=thForBudget(netUSD)*(1+m.vip.rb/100);
-      const valueUSD=netUSD*(1+m.vip.rb/100);
+    if(i.reinvestTH&&m.vip.rb>0&&m.gross>0){
+      // GoMining reinvests the GROSS daily mining reward into TH (maintenance is paid
+      // separately from GMT), at the MARGINAL $/TH for your current farm size — not the
+      // from-scratch tier price. cptMarginal includes the avatar discount.
+      const grossUSD=m.gross*m.bp;
+      const cptMarginal=estimateCPT(m.totTH);
+      const thPerDay=cptMarginal>0?grossUSD/cptMarginal*(1+m.vip.rb/100):0;
+      const valueUSD=cptMarginal>0?thPerDay*(cptMarginal/avatarDiscMult()):grossUSD; // market value of that TH
       heroReinvestEl.textContent=`↳ Reinvest to TH: +${fN(thPerDay,2)} TH/day (~${fU(valueUSD)}, +${m.vip.rb}% bonus)`;
       heroReinvestEl.style.display='';
     }else{
