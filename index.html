@@ -3039,7 +3039,8 @@ function recalc(){
   g+=row('TH mining income',`${fU(miningMonthly)}/mo`,miningMonthly>=0?'green':'red');
   g+=row('Staking income',`${fU(stakingMonthly)}/mo`,'green');
   if(isAmb&&refTH>0){
-    g+=row('Ambassador rewards',`${fU(ambMonthly)}/mo<span class="sub">${fU(ambDaily)}/day USDT &middot; ${fN(refTH,0)} referred TH</span>`,'green');
+    const ambDailyGMT=m.gp>0?ambDaily/m.gp:0;
+    g+=row('Ambassador rewards',`${fU(ambMonthly)}/mo<span class="sub">${fN(ambDailyGMT,0)} GMT/day (${fU(ambDaily)}) &middot; ${fN(refTH,0)} referred TH &middot; counts toward coverage</span>`,'green');
   }
   g+=`<div class="divider"></div>`;
   g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
@@ -3092,6 +3093,9 @@ function renderTHModeAdvisor(i,m){
   const cb=i.click?3:0, mm=i.mm||0;
   const gth=Math.max(0,i.gth||0), gwth=i.gwth||(i.wth||15);
   const GINIT=Math.min(Math.max(0,i.gInit||0),gth);
+  // Ambassador rewards arrive daily as GMT and count toward coverage, offsetting the
+  // maintenance drain — so they extend how long TH mode can run.
+  const ambGMTday=(i.amb?(i.refTH||0):0)*15*24/1000*0.005/gp;
 
   // --- One simulated day in AGGRESSIVE TH mode (gross reward → TH ×bonus; maintenance
   //     drawn from wallet GMT, then netted from reward once wallet runs dry). Mutates state. ---
@@ -3118,6 +3122,7 @@ function renderTHModeAdvisor(i,m){
     // erodes coverage over the window, on top of TH growth raising the daily fee.
     let pay=d.maintGMT;
     if(s.wallet>=pay){s.wallet-=pay;}else{pay-=s.wallet;s.wallet=0;s.locked=Math.max(0,s.locked-pay);}
+    s.wallet+=ambGMTday;                                      // ambassador GMT income tops up the buffer
     s.day++;
     if(s.day%7===0)s.locked*=(1+apr/100/52);                 // staking paid weekly to locked
     return addTH;
@@ -3160,15 +3165,22 @@ function renderTHModeAdvisor(i,m){
     const tokD=Math.min(20,Math.floor(cov/18));
     const totD=Math.min(30,tokD+ntd);
     const netUSD=Math.max(0,(dbt*totTH-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE));
-    r.locked+=netUSD/gp;                                       // reward → GMT (rebuild)
+    r.locked+=netUSD/gp+ambGMTday;                            // reward + ambassador GMT → buffer (rebuild)
     r.day++;
     if(r.day%7===0)r.locked*=(1+apr/100/52);
   }
   const rebuildDays=r.day>=MAX_DAYS?null:r.day;
+  // If ambassador + staking GMT income outpaces the maintenance/TH-growth drain, the
+  // discount never erodes — TH mode can run indefinitely.
+  const thSustained=s.day>=MAX_DAYS;
 
   // ---- Render metrics ----
   h+=`<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem">`;
-  h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${thDays}</div><div style="font-size:.68rem;color:var(--text3)">days in TH mode<br>before −1% discount</div></div>`;
+  if(thSustained){
+    h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">&#8734;</div><div style="font-size:.68rem;color:var(--text3)">indefinitely<br>(income covers drain)</div></div>`;
+  }else{
+    h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--cyan)">${thDays}</div><div style="font-size:.68rem;color:var(--text3)">days in TH mode<br>before −1% discount</div></div>`;
+  }
   if(dayTHbonus>0){
     h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--green)">+${fN(dayTHbonus,2)}</div><div style="font-size:.68rem;color:var(--text3)">TH/day<br>in TH mode</div></div>`;
     if(dayExtra>0.001)h+=`<div style="text-align:center"><div style="font-size:1.4rem;font-weight:800;color:var(--gold)">+${fN(dayExtra,2)}</div><div style="font-size:.68rem;color:var(--text3)">extra TH/day<br>from +${rb}% bonus</div></div>`;
@@ -3176,10 +3188,15 @@ function renderTHModeAdvisor(i,m){
   h+=`</div>`;
 
   h+=`<div style="font-size:.75rem;color:var(--text3);border-top:1px solid rgba(255,255,255,.07);padding-top:.45rem">`;
-  h+=`Run TH Reinvest for up to <strong style="color:var(--text2)">${thDays} days</strong> (+${fN(thGained,1)} TH), then your coverage drops from ${fN(curCov,0)} to 360 days and you'd lose 1% (${curTokD}%→${curTokD-1}%). `;
-  h+=`<strong style="color:var(--text2)">Switch back to GMT reinvest</strong> at that point`;
-  if(rebuildDays!=null)h+=` for ~${rebuildDays} days to rebuild the buffer, then repeat.`;
-  else h+=` to rebuild the buffer before resuming.`;
+  if(thSustained){
+    h+=`Your ambassador GMT (${fN(ambGMTday,0)} GMT/day) plus ${fP(apr)} staking yield cover the maintenance drain, so coverage holds at ${curTokD}%. <strong style="color:var(--text2)">You can leave TH Reinvest on indefinitely.</strong>`;
+  }else{
+    h+=`Run TH Reinvest for up to <strong style="color:var(--text2)">${thDays} days</strong> (+${fN(thGained,1)} TH), then your coverage drops from ${fN(curCov,0)} to 360 days and you'd lose 1% (${curTokD}%→${curTokD-1}%). `;
+    h+=`<strong style="color:var(--text2)">Switch back to GMT reinvest</strong> at that point`;
+    if(rebuildDays!=null)h+=` for ~${rebuildDays} days to rebuild the buffer, then repeat.`;
+    else h+=` to rebuild the buffer before resuming.`;
+    if(ambGMTday>0)h+=` <span style="color:var(--text4)">(includes ${fN(ambGMTday,0)} GMT/day ambassador income.)</span>`;
+  }
   h+=`</div></div>`;
   return h;
 }
