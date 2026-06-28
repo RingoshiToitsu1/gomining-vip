@@ -2201,23 +2201,45 @@ function setBtcChartView(view,silent){
 
 // ---- Bitcoin Rainbow Chart (log-regression bands fitted to daily history) ----
 let _rainbowData=null, _rainbowLoading=false;
+// Pull long BTC daily/weekly history from whichever public source answers (CORS-friendly,
+// no API key). Returns a normalized [{t:ms, v:usd}] array sorted ascending.
+async function fetchRainbowHistory(){
+  // 1. Kraken weekly OHLC — global, CORS-enabled, ~13yr of history (720 weekly candles)
+  try{
+    const r=await fetchTO('https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=10080',15000);
+    const res=r&&r.result;
+    if(res){const key=Object.keys(res).find(k=>k!=='last');const arr=res[key];
+      if(arr&&arr.length>20)return arr.map(c=>({t:c[0]*1000,v:+c[4]})).filter(p=>p.v>0);}
+  }catch(e){}
+  // 2. Binance weekly klines — long history, CORS ok (may be geo-blocked in some regions)
+  try{
+    const r=await fetchTO('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000',15000);
+    if(Array.isArray(r)&&r.length>20)return r.map(c=>({t:c[0],v:+c[4]})).filter(p=>p.v>0);
+  }catch(e){}
+  // 3. CoinGecko market_chart — may require a key / rate-limit, kept as last resort
+  try{
+    const r=await fetchTO('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max',15000);
+    const pr=(r&&r.prices)||[];
+    if(pr.length>20)return pr.map(p=>({t:p[0],v:p[1]})).filter(p=>p.v>0);
+  }catch(e){}
+  throw new Error('no rainbow source');
+}
 function loadBtcRainbow(){
   drawBtcRainbow();                 // draw immediately (bands render even before data)
   if(_rainbowData||_rainbowLoading)return;
   _rainbowLoading=true;
   const msg=document.getElementById('btcRainbowMsg');
   if(msg){msg.textContent='Loading price history…';msg.style.display='';}
-  fetchTO('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max',15000)
-    .then(r=>{
-      const pr=(r&&r.prices)||[];
-      _rainbowData=pr.filter(p=>p&&p[1]>0).map(p=>({t:p[0],v:p[1]}));
+  fetchRainbowHistory()
+    .then(data=>{
+      _rainbowData=data.sort((a,b)=>a.t-b.t);
       _rainbowLoading=false;
       if(msg)msg.style.display='none';
       drawBtcRainbow();
     })
     .catch(()=>{
       _rainbowLoading=false;
-      if(msg){msg.textContent='Couldn’t load full price history — showing valuation bands with today’s price only.';setTimeout(()=>{if(msg)msg.style.display='none';},3500);}
+      if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
       drawBtcRainbow();
     });
 }
@@ -2237,12 +2259,9 @@ function drawBtcRainbow(){
   const DAY=86400000;
   const dayOf=t=>Math.max(1,(t-GEN)/DAY);
 
-  // Build the series: fetched history if available, else just today's point.
-  let series=_rainbowData;
-  if(!series||!series.length){
-    const now=Date.now();
-    series=[{t:now,v:(S.btcPrice||0)}];
-  }
+  // Need real history to fit the regression and plot bands; otherwise leave the message.
+  const series=_rainbowData;
+  if(!series||series.length<2){x.clearRect(0,0,W,H);return;}
   const tMin=series[0].t, tMax=Math.max(series[series.length-1].t,Date.now());
   // Fit log10(price) = m*ln(days) + b via least squares (the rainbow's center line).
   let n=0,sx=0,sy=0,sxx=0,sxy=0;
