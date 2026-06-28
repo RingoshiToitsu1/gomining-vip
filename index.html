@@ -657,7 +657,15 @@ html.show-onboarding #onboarding{display:flex}
 .live-chip-btn:hover{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
 #btcChartPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
 .btc-chart-title{font-size:.92rem;font-weight:700;color:var(--text2);display:flex;align-items:center;white-space:nowrap}
-.btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card)}
+.btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card);position:relative}
+.btc-chart-mode{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px}
+.btc-chart-mode button{background:none;border:none;color:var(--text3);font-family:var(--sans);font-size:.78rem;font-weight:700;padding:.4rem .8rem;border-radius:7px;cursor:pointer;transition:var(--transition);white-space:nowrap}
+.btc-chart-mode button.active{background:var(--purple);color:#fff}
+.btc-rainbow-wrap{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg-card)}
+.btc-rainbow-wrap.show{display:flex}
+.btc-rainbow-wrap canvas{flex:1 1 auto;width:100%;min-height:0;display:block}
+.btc-rainbow-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text4);font-size:.85rem;text-align:center;padding:1rem}
+.btc-rainbow-foot{font-size:.62rem;color:var(--text4);text-align:center;padding:.3rem .5rem .45rem;line-height:1.4}
 .sp-page-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:.7rem 0 .9rem;position:sticky;top:0;z-index:2;background:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sp-back-btn,.sp-new-btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:10px;padding:.55rem 1.05rem;font-family:var(--sans);font-size:.85rem;font-weight:700;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .sp-back-btn{background:transparent;color:var(--text2);border:1px solid var(--border)}
@@ -1593,8 +1601,19 @@ html.show-onboarding #onboarding{display:flex}
     <div class="sp-page-head">
       <button class="sp-back-btn" onclick="closeBtcChart()">&larr; Return to My Setup</button>
       <span class="btc-chart-title" id="btcChartTitle"><img src="btc36.png" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">Bitcoin — Live Chart</span>
+      <div class="btc-chart-mode" id="btcChartMode" style="display:none">
+        <button id="btcModeLive" class="active" onclick="setBtcChartView('live')">Live Chart</button>
+        <button id="btcModeRainbow" onclick="setBtcChartView('rainbow')">Rainbow Chart</button>
+      </div>
     </div>
-    <div class="btc-chart-wrap"><div id="btcChartWidget" style="height:100%;width:100%"></div></div>
+    <div class="btc-chart-wrap">
+      <div id="btcChartWidget" style="height:100%;width:100%"></div>
+      <div class="btc-rainbow-wrap" id="btcRainbowWrap">
+        <canvas id="btcRainbowCanvas"></canvas>
+        <div class="btc-rainbow-foot">Logarithmic-regression "rainbow" bands fitted to BTC daily history — a long-term valuation guide, not financial advice.</div>
+        <div class="btc-rainbow-msg" id="btcRainbowMsg" style="display:none">Loading price history…</div>
+      </div>
+    </div>
   </div>
   <div class="sp-page-loading" id="btcChartLoading" style="display:none">
     <div class="sp-spinner"></div>
@@ -2135,8 +2154,8 @@ function closePlannerIntro(){
 // Live price chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
 // Reused for BTC and the GoMining token; the widget is rebuilt when the symbol changes.
 let _chartSym=null;
-function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','btc36.png',false);}
-function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','gmt36.png',true);}
+function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','btc36.png',false,true);}
+function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','gmt36.png',true,false);}
 function closeBtcChart(){
   const load=document.getElementById('btcChartLoading');
   if(load)load.style.display='flex';
@@ -2149,14 +2168,153 @@ function closeBtcChart(){
     refreshMySetupAnimation();            // replay the count-up on all the numbers
   },650);
 }
-function openChart(symbol,title,icon,allowChange){
+function openChart(symbol,title,icon,allowChange,isBtc){
   document.getElementById('btcChartPage').style.display='';
   document.getElementById('btcChartPage').scrollTop=0;
   document.body.style.overflow='hidden';
   const t=document.getElementById('btcChartTitle');
   if(t)t.innerHTML='<img src="'+icon+'" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">'+title;
+  // The Rainbow Chart toggle is BTC-only; reset to the live view each open.
+  const mode=document.getElementById('btcChartMode');
+  if(mode)mode.style.display=isBtc?'':'none';
+  setBtcChartView('live',true);
   buildChart(symbol,allowChange);
 }
+
+// ---- Live vs Rainbow view toggle (BTC) ----
+function setBtcChartView(view,silent){
+  const wrap=document.getElementById('btcRainbowWrap');
+  const live=document.getElementById('btcModeLive');
+  const rain=document.getElementById('btcModeRainbow');
+  if(!wrap)return;
+  if(view==='rainbow'){
+    wrap.classList.add('show');
+    if(live)live.classList.remove('active');
+    if(rain)rain.classList.add('active');
+    loadBtcRainbow();
+  }else{
+    wrap.classList.remove('show');
+    if(live)live.classList.add('active');
+    if(rain)rain.classList.remove('active');
+  }
+}
+
+// ---- Bitcoin Rainbow Chart (log-regression bands fitted to daily history) ----
+let _rainbowData=null, _rainbowLoading=false;
+function loadBtcRainbow(){
+  drawBtcRainbow();                 // draw immediately (bands render even before data)
+  if(_rainbowData||_rainbowLoading)return;
+  _rainbowLoading=true;
+  const msg=document.getElementById('btcRainbowMsg');
+  if(msg){msg.textContent='Loading price history…';msg.style.display='';}
+  fetchTO('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max',15000)
+    .then(r=>{
+      const pr=(r&&r.prices)||[];
+      _rainbowData=pr.filter(p=>p&&p[1]>0).map(p=>({t:p[0],v:p[1]}));
+      _rainbowLoading=false;
+      if(msg)msg.style.display='none';
+      drawBtcRainbow();
+    })
+    .catch(()=>{
+      _rainbowLoading=false;
+      if(msg){msg.textContent='Couldn’t load full price history — showing valuation bands with today’s price only.';setTimeout(()=>{if(msg)msg.style.display='none';},3500);}
+      drawBtcRainbow();
+    });
+}
+function drawBtcRainbow(){
+  const wrap=document.getElementById('btcRainbowWrap');
+  const cv=document.getElementById('btcRainbowCanvas');
+  if(!cv||!wrap||!wrap.classList.contains('show'))return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||wrap.clientWidth, H=cv.clientHeight||(wrap.clientHeight-40);
+  if(W<10||H<10){requestAnimationFrame(drawBtcRainbow);return;}
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  x.clearRect(0,0,W,H);
+
+  // Genesis reference for the log-time axis (Bitcoin's first block era).
+  const GEN=new Date('2009-01-03').getTime();
+  const DAY=86400000;
+  const dayOf=t=>Math.max(1,(t-GEN)/DAY);
+
+  // Build the series: fetched history if available, else just today's point.
+  let series=_rainbowData;
+  if(!series||!series.length){
+    const now=Date.now();
+    series=[{t:now,v:(S.btcPrice||0)}];
+  }
+  const tMin=series[0].t, tMax=Math.max(series[series.length-1].t,Date.now());
+  // Fit log10(price) = m*ln(days) + b via least squares (the rainbow's center line).
+  let n=0,sx=0,sy=0,sxx=0,sxy=0;
+  for(const p of series){if(p.v>0){const lx=Math.log(dayOf(p.t)),ly=Math.log10(p.v);n++;sx+=lx;sy+=ly;sxx+=lx*lx;sxy+=lx*ly;}}
+  let m,b;
+  if(n>2&&(n*sxx-sx*sx)!==0){m=(n*sxy-sx*sy)/(n*sxx-sx*sx);b=(sy-m*sx)/n;}
+  else{m=2.9;b=-19.0;}            // fallback to canonical-ish coefficients
+
+  // Plot geometry (log price on Y, linear time on X).
+  const padL=54,padR=12,padT=14,padB=26;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  // Y range: from the band extremes across the visible window, with margin.
+  const bandOffsets=[0.40,0.30,0.20,0.10,0.00,-0.10,-0.20,-0.30,-0.40]; // top(red)→bottom(blue)
+  const centerAt=t=>m*Math.log(dayOf(t))+b;                 // log10 price of center line
+  const loLog=centerAt(tMax)+bandOffsets[bandOffsets.length-1]-0.12;
+  const hiLog=centerAt(tMax)+bandOffsets[0]+0.12;
+  // Also ensure historical price fits.
+  let pMinLog=hiLog,pMaxLog=loLog;
+  for(const p of series){if(p.v>0){const l=Math.log10(p.v);if(l<pMinLog)pMinLog=l;if(l>pMaxLog)pMaxLog=l;}}
+  const yLo=Math.min(loLog,pMinLog)-0.1, yHi=Math.max(hiLog,pMaxLog)+0.1;
+  const sxX=t=>padL+plotW*((t-tMin)/(tMax-tMin||1));
+  const syY=logv=>padT+plotH*(1-((logv-yLo)/((yHi-yLo)||1)));
+
+  // Colors: red (overvalued) → violet/blue (undervalued).
+  const colors=['#e53935','#fb8c00','#fdd835','#c0ca33','#7cb342','#26a69a','#29b6f6','#5c6bc0','#7e57c0'];
+  const labels=['Max bubble','Sell','FOMO','Bubble?','HODL','Cheap','Accumulate','Buy','Fire sale'];
+  const steps=80;
+  // Fill each band between consecutive offset curves.
+  for(let bi=0;bi<bandOffsets.length-1;bi++){
+    x.beginPath();
+    for(let s=0;s<=steps;s++){const t=tMin+(tMax-tMin)*s/steps;x.lineTo(sxX(t),syY(centerAt(t)+bandOffsets[bi]));}
+    for(let s=steps;s>=0;s--){const t=tMin+(tMax-tMin)*s/steps;x.lineTo(sxX(t),syY(centerAt(t)+bandOffsets[bi+1]));}
+    x.closePath();x.fillStyle=hexA(colors[bi],0.55);x.fill();
+  }
+
+  // Y axis: $ gridlines at powers of 10.
+  x.font='10px '+getComputedStyle(document.body).getPropertyValue('--mono');
+  x.textBaseline='middle';
+  for(let e=Math.ceil(yLo);e<=Math.floor(yHi);e++){
+    const yy=syY(e);
+    x.strokeStyle='rgba(255,255,255,0.07)';x.beginPath();x.moveTo(padL,yy);x.lineTo(W-padR,yy);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.5)';x.textAlign='right';
+    const val=Math.pow(10,e);x.fillText(val>=1000?'$'+(val/1000)+'k':'$'+val,padL-6,yy);
+  }
+  // X axis: year ticks.
+  x.textAlign='center';x.textBaseline='top';
+  const y0=new Date(tMin).getFullYear(), y1=new Date(tMax).getFullYear();
+  for(let yr=y0;yr<=y1;yr++){const t=new Date(yr+'-01-01').getTime();if(t<tMin||t>tMax)continue;const xx=sxX(t);
+    x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(xx,padT);x.lineTo(xx,H-padB);x.stroke();
+    if(yr%2===0){x.fillStyle='rgba(255,255,255,0.5)';x.fillText("'"+String(yr).slice(2),xx,H-padB+4);}
+  }
+
+  // Price line.
+  if(series.length>1){
+    x.beginPath();let first=true;
+    for(const p of series){if(p.v<=0)continue;const xx=sxX(p.t),yy=syY(Math.log10(p.v));if(first){x.moveTo(xx,yy);first=false;}else x.lineTo(xx,yy);}
+    x.strokeStyle='rgba(255,255,255,0.92)';x.lineWidth=1.4;x.stroke();
+  }
+  // Current price marker.
+  const cur=S.btcPrice||(series[series.length-1]&&series[series.length-1].v);
+  if(cur>0){const xx=sxX(tMax),yy=syY(Math.log10(cur));
+    x.fillStyle='#fff';x.beginPath();x.arc(xx,yy,4,0,7);x.fill();
+    x.strokeStyle='#0a0a0a';x.lineWidth=1.5;x.stroke();
+    // current-band label
+    const cl=Math.log10(cur)-centerAt(tMax);let band=labels.length-1;
+    for(let bi=0;bi<bandOffsets.length-1;bi++){if(cl<=bandOffsets[bi]&&cl>bandOffsets[bi+1]){band=bi;break;}}
+    x.fillStyle='#fff';x.font='bold 11px '+getComputedStyle(document.body).getPropertyValue('--sans');
+    x.textAlign='right';x.textBaseline='bottom';x.fillText(labels[band]+' • $'+fN(cur,0),W-padR,padT+12);
+  }
+}
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+window.addEventListener('resize',()=>{const w=document.getElementById('btcRainbowWrap');if(w&&w.classList.contains('show'))drawBtcRainbow();});
 function buildChart(symbol,allowChange){
   const make=()=>{
     if(!window.TradingView||!window.TradingView.widget)return;
