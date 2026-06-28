@@ -1165,6 +1165,7 @@ html.show-onboarding #onboarding{display:flex}
       <div class="hero-label">Daily Net Profit</div>
       <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDailyBTC">--</div>
+      <div class="hero-sub" id="heroDailyReinvest" style="display:none;color:var(--cyan)"></div>
     </div>
     <div class="hero-card cyan-accent reveal">
       <div class="hero-label">Monthly Earnings</div>
@@ -2964,6 +2965,20 @@ function recalc(){
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
   $('heroDailyBTC').textContent=heroSub;
+  // App-style "reinvest to TH" value: when TH Reinvest Mode is on, the daily mining reward
+  // buys TH at the +rb% bonus (avatar discount already baked into thForBudget). This is the
+  // value of the hashrate you accumulate, not extra income — mirrors GoMining's TH figure.
+  const heroReinvestEl=$('heroDailyReinvest');
+  if(heroReinvestEl){
+    if(i.reinvestTH&&m.vip.rb>0&&netUSD>0){
+      const thPerDay=thForBudget(netUSD)*(1+m.vip.rb/100);
+      const valueUSD=netUSD*(1+m.vip.rb/100);
+      heroReinvestEl.textContent=`↳ Reinvest to TH: +${fN(thPerDay,2)} TH/day (~${fU(valueUSD)}, +${m.vip.rb}% bonus)`;
+      heroReinvestEl.style.display='';
+    }else{
+      heroReinvestEl.style.display='none';
+    }
+  }
   animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
