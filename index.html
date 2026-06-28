@@ -1689,13 +1689,6 @@ html.show-onboarding #onboarding{display:flex}
             </select></div>
           </div>
           <div class="field">
-            <label>Network Growth <span class="tip" data-tip="Assumed Bitcoin network difficulty growth (%/yr), which steadily reduces your sats/TH/day. Calibrated to recent history (~22%/yr over the last 2yr) and decelerates over time. Set 0 to ignore difficulty growth. Halvings are always modeled separately.">?</span></label>
-            <label class="sp-payout-val" for="inDiffGrowth" style="width:100%">
-              <input type="number" id="inDiffGrowth" value="25" min="0" max="100" step="1" inputmode="decimal" placeholder="25">
-              <span class="unit">%/yr difficulty</span>
-            </label>
-          </div>
-          <div class="field">
             <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
             <div class="sp-payout-row">
               <div class="field-input sp-selwrap sp-payout-type"><select id="spPayoutType" onchange="syncPayoutUnit()">
@@ -3210,23 +3203,6 @@ function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}
 // Halving years that fall within [now, now+days] — for projection notes.
 function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
 
-// ---- Network difficulty growth model (the dominant long-run drag on sats/TH/day) ----
-// Empirically calibrated against blockchain.com difficulty history (2013-2026):
-//  • A price→difficulty coupling is NOT statistically usable in the mature market (2020+):
-//    elasticity ~0, R²~1-5%, and it loses to a constant out-of-sample. So we DON'T couple to price.
-//  • Difficulty growth has clearly DECELERATED (trailing CAGR: 8yr 49% → 3yr 34% → 2yr 22% → ~0% last yr).
-// So difficulty grows at a decaying annual rate g(Y)=floor+(g0-floor)·e^(-Y/τ), anchored to the
-// most-recent regime (g0=25%/yr matches the actual 2yr CAGR of ~22%). Closed-form cumulative factor.
-const DIFF_FLOOR=0.06, DIFF_TAU=4;          // long-run floor growth, and deceleration timescale (yrs)
-const DIFF_GROWTH_DEFAULT=25;               // default starting growth %/yr (user-adjustable)
-function diffFactorAt(yearsAhead,g0){
-  const Y=Math.max(0,yearsAhead), g=Math.max(0,g0);
-  if(g<=DIFF_FLOOR)return Math.exp(g*Y);    // no deceleration below the floor
-  return Math.exp(DIFF_FLOOR*Y+(g-DIFF_FLOOR)*DIFF_TAU*(1-Math.exp(-Y/DIFF_TAU)));
-}
-// Read the user's difficulty-growth assumption (%/yr) from the projection form; default if absent.
-function diffGrowthPct(){const el=document.getElementById('inDiffGrowth');const v=el?parseFloat(el.value):NaN;return isFinite(v)&&v>=0?v:DIFF_GROWTH_DEFAULT;}
-
 function calc(i){
   const bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH();
   // Greedy Machine TH earns rewards + pays fees. It counts toward the VIP tier
@@ -4038,8 +4014,7 @@ function runReinvestProjection(){
   // price flatlines at bpEnd. Manual picks ramp over the projection length.
   let bpToday=bpStart;
   const projStartMs=Date.now();
-  const dgPct=diffGrowthPct();     // network difficulty growth assumption (%/yr, decaying)
-  let dbtToday=dbt;                // daily BTC/TH; sheds reward at halvings and as difficulty grows
+  let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
   let daysToTarget=days;     // default for manual: ramp over projection length
   if(btcSel.mode==='firm'&&btcSel.targetYear){
     const todayMs=Date.now();
@@ -4185,7 +4160,7 @@ function runReinvestProjection(){
 
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);  // linear ramp from bpStart (d=1) to bpEnd (d=days)
-    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000)/diffFactorAt((d-1)/365,dgPct);  // halvings + difficulty growth
+    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
     // First-day baseline must be captured BEFORE referral compounds (else inflates start vs end comparison)
     if(d===1){startSS_capture=dailyNet(th,gmtLocked).net;}
 
@@ -4308,10 +4283,7 @@ function runReinvestProjection(){
     btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
   }
   const hwR=halvingsInWindow(days);
-  const realismBitsR=[];
-  if(hwR.length)realismBitsR.push(`reward halves at the ${hwR.join(' &amp; ')} halving${hwR.length>1?'s':''}`);
-  if(dgPct>0)realismBitsR.push(`difficulty grows ~${fN(dgPct,0)}%/yr (decaying), shedding sats/TH`);
-  const halvingNoteR=realismBitsR.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Realism: ${realismBitsR.join('; ')}.</div>`:'';
+  const halvingNoteR=hwR.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwR.join(' &amp; ')} halving${hwR.length>1?'s':''} (modeled).</div>`:'';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from planned investment:</strong>
     ${fU(cap)} capital &rarr; +${fN(best.at,1)} TH + ${fN(best.ag,0)} GMT &rarr;
@@ -4612,8 +4584,7 @@ function computeSetupProjection(){
   }
   let bpToday=bpStart;
   const projStartMs=Date.now();
-  const dgPct=diffGrowthPct();     // network difficulty growth assumption (%/yr, decaying)
-  let dbtToday=dbt;                // daily BTC/TH; sheds reward at halvings and as difficulty grows
+  let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
   function bpForDay(d){if(!useRamp)return bpEnd;const fr=Math.min(1,(d-1)/Math.max(1,daysToTarget));return bpStart+(bpEnd-bpStart)*fr;}
 
   function dailyNet(curTH,curLocked){
@@ -4645,7 +4616,7 @@ function computeSetupProjection(){
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
-    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000)/diffFactorAt((d-1)/365,dgPct);  // halvings + difficulty growth
+    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
     if(d%7===0){
@@ -4707,10 +4678,7 @@ function computeSetupProjection(){
   else btcRangeLine=`BTC ramps linearly from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> &rarr; <strong style="color:var(--text2)">${btcSel.label}</strong> over ${days}d`;
 
   const hwS=halvingsInWindow(days);
-  const realismBitsS=[];
-  if(hwS.length)realismBitsS.push(`reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}`);
-  if(dgPct>0)realismBitsS.push(`difficulty grows ~${fN(dgPct,0)}%/yr (decaying), shedding sats/TH`);
-  const halvingNoteS=realismBitsS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Realism: ${realismBitsS.join('; ')}.</div>`:'';
+  const halvingNoteS=hwS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''} (modeled).</div>`:'';
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
