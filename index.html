@@ -1714,7 +1714,8 @@ const GMT_ANCHOR_BTC  = 120000;
 const GMT_ANCHOR_GMT  = 0.52;
 // GoMining quotes a SUBSIDY-ONLY sats/TH/day (block reward, no tx fees). Adding live
 // mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
-// subsidy-only at current difficulty ≈ 45, matching the GoMining app. Bump at each halving.
+// subsidy-only at current difficulty ≈ 45, matching the GoMining app. The app rounds to the
+// nearest whole sat (not floor) — see dailyBTCperTH. Bump at each halving.
 const BLOCK_SUBSIDY   = 3.125;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
 const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
@@ -2422,7 +2423,7 @@ function updateHeader(){
   const$=id=>document.getElementById(id);
   $('btcVal').textContent=S.btcPrice?fU(S.btcPrice,0):'--';
   $('gmtVal').textContent=S.gmtPrice?fU(S.gmtPrice,4):'--';
-  $('satsVal').textContent=S.satsPerTHDay?Math.floor(S.satsPerTHDay):'--';
+  $('satsVal').textContent=S.satsPerTHDay?Math.round(S.satsPerTHDay):'--';
   const bar=$('liveBar');
   if(S.apiOk){bar.classList.remove('api-err');bar.removeAttribute('title');}
   else{
@@ -2838,8 +2839,9 @@ $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').sty
 function fees(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return{e,s,t:e+s}}
 function dailyBTCperTH(){
   // Derive from S.satsPerTHDay (live network-hashrate basis, set in fetchData) so the
-  // calc and the live-bar number never diverge. Floor to whole sats like the app.
-  return Math.floor(S.satsPerTHDay||0)/1e8;
+  // calc and the live-bar number never diverge. Round to whole sats like the app
+  // (GoMining rounds to nearest, not floor — verified 2026-06-27: app 47 vs our floored 46).
+  return Math.round(S.satsPerTHDay||0)/1e8;
 }
 
 function calc(i){
