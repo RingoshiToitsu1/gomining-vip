@@ -4334,12 +4334,13 @@ function computeSetupProjection(){
         }
         gmtLocked+=gmtSpend/gp;                 // discount-first lock
         let budget=netUSD-gmtSpend;
-        // Marginal allocator (mirrors optimalSplit): each step spend `incr` on whichever of
-        // {buy TH @12W, upgrade efficiency toward 12, lock GMT for staking} yields the highest
-        // resulting daily net. Crucially this never sinks capital into hashrate that's underwater:
-        // when mining nets $0 the TH/upgrade options show no marginal gain, so the allocator routes
-        // the money into GMT staking (and an efficiency upgrade only wins if it lifts mining back
-        // above break-even). New VIP TH is priced as a 12 W/TH machine; greedy fills first @15W.
+        // Marginal allocator (mirrors optimalSplit): each step spend `incr` on buy TH @12W /
+        // upgrade efficiency toward 12 / lock GMT for staking. Efficiency is PREFERRED over staking
+        // while mining is alive or rescuable — a lower W/TH lowers break-even and keeps the miner
+        // earning longer, which the myopic daily-ROI of staking ignores. Staking only wins once the
+        // farm is fully efficient (12 W) or mining is truly dead (even a 12 W farm nets $0) — we never
+        // bank GMT while a cheaper miner could still be saved, nor fund hashrate that can't earn.
+        // New VIP TH is priced as a 12 W/TH machine; greedy fills first @15W.
         if(budget>0){
           const STEPS=12, incr=budget/STEPS;
           for(let s=0;s<STEPS;s++){
@@ -4355,20 +4356,33 @@ function computeSetupProjection(){
               const vAdd=thForBudgetTiers(incr,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
-            // --- option EFF: drive VIP fleet efficiency down toward 12 ($2.67/TH per 1 W/TH) ---
-            let effNet=-Infinity,newW=curWTH;
-            if(curWTH>EFF_BEST+1e-6&&th>0){
-              const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));
-              newW=curWTH-dW;effNet=dailyNet(th,gmtLocked,{wth:newW}).net;
+            // --- option EFF: drive efficiency toward 12 W/TH ($2.67/TH per W-step), upgrading whichever
+            // fleet (greedy or VIP) currently has the HIGHER W/TH so the FARM BLENDED falls fastest. ---
+            let effNet=-Infinity, effApply=null;
+            const vipRoom=(curWTH>EFF_BEST+1e-6&&th>0), grdRoom=(HAS_GREEDY&&greedyTH>0&&greedyWTH>EFF_BEST+1e-6);
+            if(grdRoom&&(!vipRoom||greedyWTH>=curWTH)){
+              const dW=Math.min(greedyWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*greedyTH));const gw2=greedyWTH-dW;
+              effNet=dailyNet(th,gmtLocked,{greedyWTH:gw2}).net;effApply=()=>{greedyWTH=gw2;};
+            }else if(vipRoom){
+              const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));const cw2=curWTH-dW;
+              effNet=dailyNet(th,gmtLocked,{wth:cw2}).net;effApply=()=>{curWTH=cw2;};
             }
-            // --- option LOCK: stake extra GMT (the underwater fallback / default) ---
+            // --- option LOCK: stake extra GMT ---
             const addG=incr/gp,lockNet=dailyNet(th,gmtLocked+addG).net;
-            // Pick the winner. TH/efficiency must beat locking STRICTLY — so when mining is
-            // underwater (buy & upgrade add nothing) capital defaults to GMT, never dead hashrate.
-            const eps=1e-9;
-            if(Math.max(buyNet,effNet)>lockNet+eps){
+            // Selection. KEY RULE: don't idle money into staking while mining can still be kept alive by
+            // a cheaper miner. While the farm has efficiency headroom AND mining is earning now OR could
+            // be revived by reaching the 12 W floor (rescuable), spend only on buying TH or upgrading
+            // efficiency. Staking is reserved for when mining is genuinely dead (even a 12 W farm nets
+            // $0) or the farm is already fully efficient.
+            const eps=1e-9, base=dailyNet(th,gmtLocked).net;
+            const headroom=effApply!=null;
+            const rescuable=dailyNet(th,gmtLocked,{wth:EFF_BEST,greedyWTH:Math.min(greedyWTH,EFF_BEST)}).mining>0;
+            if(headroom&&(dn.mining>0||rescuable)){
+              if(buyNet>=effNet&&buyNet>base+eps){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              else{effApply();}
+            }else if(Math.max(buyNet,effNet)>lockNet+eps){
               if(buyNet>=effNet){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
-              else{curWTH=newW;}
+              else{effApply();}
             }else{gmtLocked+=addG;}
           }
         }
