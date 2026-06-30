@@ -4322,9 +4322,12 @@ function computeSetupProjection(){
       const netUSD=weeklyGrossUSD-distributionUSD;
       weeklyGrossUSD=0;
       if(netUSD>0){
-        // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
+        // Discount-FIRST while the miner is actually earning: holding the token discount is the
+        // priority (it ranks above efficiency/TH). But a maintenance discount on a miner that nets
+        // $0 saves nothing real — so once mining is underwater we STOP funding the discount and let
+        // the allocator below redirect that capital to an efficiency rescue or GMT staking instead.
         let gmtSpend=0;
-        if(i.payG){
+        if(i.payG&&dn.mining>0){
           const allTH=th+thForBudget(netUSD);
           if(gmtDeficit(allTH,gmtLocked)>0){
             let lo=0,hi=netUSD;
