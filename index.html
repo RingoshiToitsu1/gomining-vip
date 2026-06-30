@@ -4250,6 +4250,8 @@ function computeSetupProjection(){
     startLocked=gmtLocked;
   }
   if(startTH<=0&&gmtLocked<=0){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Add your hashrate and locked GMT in <strong>My Setup</strong> first, then project.</div>';return;}
+  // Starting blended efficiency (across VIP + marketplace + greedy) — to show any reinvested upgrade.
+  const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
 
   // Existing referred TH pays flat ambassador USDT (no referral-reinvest sim here).
   const manualRefTH=i.amb?Math.max(0,i.refTH||0):0;
@@ -4268,11 +4270,16 @@ function computeSetupProjection(){
     return c*Math.exp(offset0*(1-progress));
   }
 
-  function dailyNet(curTH,curLocked){
-    const totTH=curTH+MP_TH+greedyTH;
-    const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
+  // ov (optional) overrides closure state for trial evaluation in the reinvest allocator:
+  // {wth} = VIP blended efficiency, {greedyTH,greedyWTH} = greedy fleet. Defaults to live state.
+  function dailyNet(curTH,curLocked,ov){
+    const cW=ov&&ov.wth!=null?ov.wth:curWTH;
+    const gTH=ov&&ov.greedyTH!=null?ov.greedyTH:greedyTH;
+    const gW=ov&&ov.greedyWTH!=null?ov.greedyWTH:greedyWTH;
+    const totTH=curTH+MP_TH+gTH;
+    const bw=totTH>0?(curTH*cW+MP_TH*MP_WTH+gTH*gW)/totTH:cW;
     const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
-    const v=vipOf(curTH+Math.max(0,greedyTH-GINIT),curLocked);
+    const v=vipOf(curTH+Math.max(0,gTH-GINIT),curLocked);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
@@ -4325,14 +4332,45 @@ function computeSetupProjection(){
             gmtSpend=hi;
           }
         }
-        const gmtBuy=gmtSpend/gp,thBudget=netUSD-gmtSpend;
-        gmtLocked+=gmtBuy;
-        if(thBudget>0){
-          const addTH=thForBudget(thBudget);
-          let addGreedy=0;
-          if(HAS_GREEDY&&greedyTH<GREEDY_CAP){addGreedy=Math.min(addTH,GREEDY_CAP-greedyTH);greedyWTH=(greedyTH*greedyWTH+addGreedy*15)/(greedyTH+addGreedy);greedyTH+=addGreedy;}
-          const addVip=addTH-addGreedy;
-          if(addVip>0){curWTH=(th*curWTH+addVip*15)/(th+addVip);th+=addVip;}
+        gmtLocked+=gmtSpend/gp;                 // discount-first lock
+        let budget=netUSD-gmtSpend;
+        // Marginal allocator (mirrors optimalSplit): each step spend `incr` on whichever of
+        // {buy TH @12W, upgrade efficiency toward 12, lock GMT for staking} yields the highest
+        // resulting daily net. Crucially this never sinks capital into hashrate that's underwater:
+        // when mining nets $0 the TH/upgrade options show no marginal gain, so the allocator routes
+        // the money into GMT staking (and an efficiency upgrade only wins if it lifts mining back
+        // above break-even). New VIP TH is priced as a 12 W/TH machine; greedy fills first @15W.
+        if(budget>0){
+          const STEPS=12, incr=budget/STEPS;
+          for(let s=0;s<STEPS;s++){
+            // --- option BUY: greedy-fill first @15W, remainder a new 12W VIP machine ---
+            let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH;
+            const t15=thForBudget(incr);
+            if(HAS_GREEDY&&greedyTH<GREEDY_CAP&&t15>0){
+              const gAdd=Math.min(t15,GREEDY_CAP-greedyTH);
+              gW2=(greedyTH*greedyWTH+gAdd*15)/(greedyTH+gAdd);gTH2=greedyTH+gAdd;
+              const rem=incr*(1-gAdd/t15);
+              if(rem>0){const vAdd=thForBudgetTiers(rem,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
+            }else{
+              const vAdd=thForBudgetTiers(incr,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
+            }
+            const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
+            // --- option EFF: drive VIP fleet efficiency down toward 12 ($2.67/TH per 1 W/TH) ---
+            let effNet=-Infinity,newW=curWTH;
+            if(curWTH>EFF_BEST+1e-6&&th>0){
+              const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));
+              newW=curWTH-dW;effNet=dailyNet(th,gmtLocked,{wth:newW}).net;
+            }
+            // --- option LOCK: stake extra GMT (the underwater fallback / default) ---
+            const addG=incr/gp,lockNet=dailyNet(th,gmtLocked+addG).net;
+            // Pick the winner. TH/efficiency must beat locking STRICTLY — so when mining is
+            // underwater (buy & upgrade add nothing) capital defaults to GMT, never dead hashrate.
+            const eps=1e-9;
+            if(Math.max(buyNet,effNet)>lockNet+eps){
+              if(buyNet>=effNet){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              else{curWTH=newW;}
+            }else{gmtLocked+=addG;}
+          }
         }
       }
       postDN=dailyNet(th,gmtLocked);
@@ -4357,7 +4395,9 @@ function computeSetupProjection(){
 
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);
-  const halvingNoteS=`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}a worst-case <strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`;
+  const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
+  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
+  const halvingNoteS=`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`+effNoteS;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
