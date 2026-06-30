@@ -2280,14 +2280,16 @@ const RB_LABELS=['Maximum Bubble Territory','Sell. Seriously, SELL!','FOMO inten
 const RB_OFFSETS=[0.45,0.35,0.25,0.15,0.05,-0.05,-0.15,-0.25,-0.35,-0.45]; // 10 boundaries → 9 bands
 const RB_DAY=86400000;
 const RB_GEN=Date.UTC(2009,0,3);                 // genesis-era reference for the log-time axis
-const RB_T0=Date.UTC(2012,0,1), RB_T1=Date.UTC(2033,5,1);  // full view: 2012 → past the 2032 halving
+const RB_T0=Date.UTC(2012,0,1), RB_T1=Date.UTC(2041,5,1);  // full view: 2012 → past the 2040 halving (covers every projection target)
 const RB_HALVINGS=[
   {t:Date.UTC(2012,10,28),label:'Halving',est:false},
   {t:Date.UTC(2016,6,9),label:'Halving',est:false},
   {t:Date.UTC(2020,4,11),label:'Halving',est:false},
   {t:Date.UTC(2024,3,20),label:'Halving',est:false},
   {t:Date.UTC(2028,3,15),label:'Halving 2028 (Est)',est:true},
-  {t:Date.UTC(2032,3,15),label:'Halving 2032 (Est)',est:true}
+  {t:Date.UTC(2032,3,15),label:'Halving 2032 (Est)',est:true},
+  {t:Date.UTC(2036,3,15),label:'Halving 2036 (Est)',est:true},
+  {t:Date.UTC(2040,3,15),label:'Halving 2040 (Est)',est:true}
 ];
 // Plot padding adapts to width so the axis/labels stay readable on phones.
 function rbPads(W){return W<480?{l:6,r:52,t:10,b:44}:{l:8,r:74,t:12,b:46};}
@@ -3217,11 +3219,13 @@ function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}
 // Beyond halvings, network difficulty grinds upward and erodes sats/TH/day continuously.
 // Calibrated to the DECAYING trailing difficulty CAGR (8yr 50% → 5yr 46% → 3yr 37% → 2yr 26%):
 //   g(Y) = floor + (g0−floor)·e^(−Y/τ)   (Y = years from now), cumulative growth = exp(∫₀^Y g dY).
-// Reward factor = 1/that. WORST-CASE params (difficulty keeps climbing fast) to match the Fire-Sale
-// ethos. Deliberately NOT price-coupled: price→difficulty is collinear-with-time and OOS-invalid
-// (validated +2346% OOS error); the only real price signal is downward miner capitulation, which is
-// unpredictable. Returns a multiplicative reward factor vs today (≤1).
-const DIFF_G0=0.35, DIFF_FLOOR=0.12, DIFF_TAU=6;   // worst-case difficulty-growth decay
+// Reward factor = 1/that. Params are the EXPECTED (decelerated) trajectory, chosen to stay coherent
+// with the projection's worst-case Fire-Sale PRICE: a low-price world starves miners, so difficulty
+// growth decelerates rather than racing (pairing low price with worst-case difficulty would double-
+// stack two anti-correlated pessimisms). Not flat though — ASIC efficiency keeps difficulty grinding
+// up even in bears (2022 bear: +45%). NO quantitative price→difficulty regression (that's OOS-invalid,
+// +2346% error); this is only the qualitative scenario-coherence choice. Reward factor vs today (≤1).
+const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;   // expected decay, coherent with worst-case price
 function difficultyMultAt(t){
   const yrs=(t-Date.now())/(365.25*86400000);
   if(yrs<=0)return 1;
