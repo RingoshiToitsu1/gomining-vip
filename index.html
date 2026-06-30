@@ -2341,8 +2341,8 @@ function rbComputeFit(series){
 }
 // HODL (Power-Law center) fair value at time t — the rainbow chart's center line.
 function rbCenterPrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b):0;}
-// Worst-case "Basically a Fire Sale" price — the bottom rainbow band (cyclical-bottom valuation).
-const RB_FIRESALE_OFF=(RB_OFFSETS[RB_OFFSETS.length-2]+RB_OFFSETS[RB_OFFSETS.length-1])/2;
+// Worst-case "Basically a Fire Sale" price — the chart's absolute bottom edge (most conservative valuation).
+const RB_FIRESALE_OFF=RB_OFFSETS[RB_OFFSETS.length-1];
 function rbFireSalePrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b+RB_FIRESALE_OFF):0;}
 // Ensure the Power-Law fit exists (load history once if needed), then run cb. Lets the
 // Growth Projection reference HODL fair values even before the rainbow chart is opened.
