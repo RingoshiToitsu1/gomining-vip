@@ -1671,7 +1671,7 @@ html.show-onboarding #onboarding{display:flex}
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
           <div>
             <div class="sp-model-title"><span class="nu-badge">NEW</span>Worst-case projection model</div>
-            <div class="sp-model-desc">Pick a halving and we project to it &mdash; conservatively. BTC price scales along the rainbow chart's <strong style="color:var(--text2)">Fire-Sale band</strong> (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also <strong style="color:var(--text2)">halves</strong> at each halving. If it still grows here, it grows almost anywhere.</div>
+            <div class="sp-model-desc">Pick a halving and we project to it &mdash; conservatively. BTC price scales along the rainbow chart's <strong style="color:var(--text2)">Fire-Sale band</strong> (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also <strong style="color:var(--text2)">halves</strong> at each halving and erodes as <strong style="color:var(--text2)">network difficulty grinds upward</strong> (worst-case decay). If it still grows here, it grows almost anywhere.</div>
           </div>
         </div>
 
@@ -3214,6 +3214,20 @@ function dailyBTCperTH(){
 // (~every 210k blocks). Used to make long projections shed reward at each future halving.
 const HALVING_DATES=[Date.UTC(2028,3,15),Date.UTC(2032,3,15),Date.UTC(2036,3,15),Date.UTC(2040,3,15)];
 function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}return m;}
+// Beyond halvings, network difficulty grinds upward and erodes sats/TH/day continuously.
+// Calibrated to the DECAYING trailing difficulty CAGR (8yr 50% → 5yr 46% → 3yr 37% → 2yr 26%):
+//   g(Y) = floor + (g0−floor)·e^(−Y/τ)   (Y = years from now), cumulative growth = exp(∫₀^Y g dY).
+// Reward factor = 1/that. WORST-CASE params (difficulty keeps climbing fast) to match the Fire-Sale
+// ethos. Deliberately NOT price-coupled: price→difficulty is collinear-with-time and OOS-invalid
+// (validated +2346% OOS error); the only real price signal is downward miner capitulation, which is
+// unpredictable. Returns a multiplicative reward factor vs today (≤1).
+const DIFF_G0=0.35, DIFF_FLOOR=0.12, DIFF_TAU=6;   // worst-case difficulty-growth decay
+function difficultyMultAt(t){
+  const yrs=(t-Date.now())/(365.25*86400000);
+  if(yrs<=0)return 1;
+  const integral=DIFF_FLOOR*yrs+(DIFF_G0-DIFF_FLOOR)*DIFF_TAU*(1-Math.exp(-yrs/DIFF_TAU));
+  return 1/Math.exp(integral);
+}
 // Halving years that fall within [now, now+days] — for projection notes.
 function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
 
@@ -4274,7 +4288,7 @@ function computeSetupProjection(){
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
-    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving
+    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*difficultyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving + continuous difficulty grind
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
     if(d%7===0){
@@ -4333,7 +4347,8 @@ function computeSetupProjection(){
   const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the worst-case <strong style="color:var(--text2)">Fire-Sale ${fmtBTCPrice(bpEnd)}</strong> at the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
-  const halvingNoteS=hwS.length?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''} (modeled).</div>`:'';
+  const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);
+  const halvingNoteS=`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}a worst-case <strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
