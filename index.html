@@ -4252,6 +4252,7 @@ function computeSetupProjection(){
   if(startTH<=0&&gmtLocked<=0){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Add your hashrate and locked GMT in <strong>My Setup</strong> first, then project.</div>';return;}
   // Starting blended efficiency (across VIP + marketplace + greedy) — to show any reinvested upgrade.
   const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
+  const _gwStart=greedyWTH;   // Greedy machine's starting efficiency (upgraded first; it grows forever)
 
   // Existing referred TH pays flat ambassador USDT (no referral-reinvest sim here).
   const manualRefTH=i.amb?Math.max(0,i.refTH||0):0;
@@ -4335,43 +4336,59 @@ function computeSetupProjection(){
             gmtSpend=hi;
           }
         }
-        gmtLocked+=gmtSpend/gp;                 // discount-first lock
+        gmtLocked+=gmtSpend/gp;                 // (1) discount-first lock, while the miner earns
         let budget=netUSD-gmtSpend;
-        // Marginal allocator (mirrors optimalSplit): each step spend `incr` on whichever of
-        // {buy TH @12W, upgrade efficiency toward 12, lock GMT for staking} yields the highest
-        // resulting daily net. Crucially this never sinks capital into hashrate that's underwater:
-        // when mining nets $0 the TH/upgrade options show no marginal gain, so the allocator routes
-        // the money into GMT staking (and an efficiency upgrade only wins if it lifts mining back
-        // above break-even). New VIP TH is priced as a 12 W/TH machine; greedy fills first @15W.
+        // Reinvestment priority after the discount:
+        //   (2) drive the GREEDY machine to 12 W/TH BEFORE any TH growth — it compounds free hashrate
+        //       forever, so locking in its lowest efficiency early pays off across all future growth;
+        //   (3) then a marginal allocator spends the rest on buy TH @12W / VIP efficiency / lock GMT.
+        // Underwater guard throughout: while the miner nets $0 we don't fund greedy upgrades or TH (a
+        // 12 W greedy still earning $0 helps nothing) — capital goes to GMT staking, unless an
+        // efficiency upgrade can actually lift mining back above break-even.
+        const profitable=dn.mining>0;
+        // (2) Greedy → 12 W/TH: the first claim on capital while profitable, ahead of any TH buy.
+        if(profitable&&HAS_GREEDY&&greedyTH>0&&greedyWTH>EFF_BEST+1e-6&&budget>0){
+          const costFull=EFF_UPGRADE_STEP*(greedyWTH-EFF_BEST)*greedyTH;   // $ to take greedy fully to 12
+          const spend=Math.min(budget,costFull);
+          greedyWTH=Math.max(EFF_BEST,greedyWTH-spend/(EFF_UPGRADE_STEP*greedyTH));
+          budget-=spend;
+        }
+        // (3) Marginal allocator on the remainder (only runs once greedy is at 12, or when underwater).
         if(budget>0){
           const STEPS=12, incr=budget/STEPS;
           for(let s=0;s<STEPS;s++){
-            // --- option BUY: greedy-fill first @15W, remainder a new 12W VIP machine ---
+            // --- option BUY: greedy-fill first (at greedy's W/TH), remainder a new 12W VIP machine ---
             let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH;
             const t15=thForBudget(incr);
             if(HAS_GREEDY&&greedyTH<GREEDY_CAP&&t15>0){
               const gAdd=Math.min(t15,GREEDY_CAP-greedyTH);
-              gW2=(greedyTH*greedyWTH+gAdd*15)/(greedyTH+gAdd);gTH2=greedyTH+gAdd;
+              gW2=(greedyTH*greedyWTH+gAdd*greedyWTH)/(greedyTH+gAdd);gTH2=greedyTH+gAdd;
               const rem=incr*(1-gAdd/t15);
               if(rem>0){const vAdd=thForBudgetTiers(rem,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
             }else{
               const vAdd=thForBudgetTiers(incr,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
-            // --- option EFF: drive VIP fleet efficiency down toward 12 ($2.67/TH per 1 W/TH) ---
-            let effNet=-Infinity,newW=curWTH;
-            if(curWTH>EFF_BEST+1e-6&&th>0){
+            // --- option EFF: efficiency rescue — greedy first (any room left), else VIP fleet ---
+            let effNet=-Infinity, effApply=null;
+            if(HAS_GREEDY&&greedyTH>0&&greedyWTH>EFF_BEST+1e-6){
+              const dW=Math.min(greedyWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*greedyTH));
+              const gw2=greedyWTH-dW;
+              effNet=dailyNet(th,gmtLocked,{greedyWTH:gw2}).net;
+              effApply=()=>{greedyWTH=gw2;};
+            }else if(curWTH>EFF_BEST+1e-6&&th>0){
               const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));
-              newW=curWTH-dW;effNet=dailyNet(th,gmtLocked,{wth:newW}).net;
+              const cw2=curWTH-dW;
+              effNet=dailyNet(th,gmtLocked,{wth:cw2}).net;
+              effApply=()=>{curWTH=cw2;};
             }
             // --- option LOCK: stake extra GMT (the underwater fallback / default) ---
             const addG=incr/gp,lockNet=dailyNet(th,gmtLocked+addG).net;
-            // Pick the winner. TH/efficiency must beat locking STRICTLY — so when mining is
-            // underwater (buy & upgrade add nothing) capital defaults to GMT, never dead hashrate.
+            // TH/efficiency must beat locking STRICTLY → underwater, capital defaults to GMT staking.
             const eps=1e-9;
             if(Math.max(buyNet,effNet)>lockNet+eps){
               if(buyNet>=effNet){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
-              else{curWTH=newW;}
+              else{effApply();}
             }else{gmtLocked+=addG;}
           }
         }
@@ -4399,7 +4416,10 @@ function computeSetupProjection(){
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
-  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
+  const greedyUp=(HAS_GREEDY&&greedyTH>0&&_gwStart-greedyWTH>0.05);
+  const effNoteS=greedyUp
+    ?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded the <strong style="color:var(--text2)">Greedy machine ${_gwStart.toFixed(1)} &rarr; ${greedyWTH.toFixed(1)} W/TH</strong> (farm blended ${_bwEnd.toFixed(1)} W/TH) &mdash; its free weekly growth makes low greedy efficiency the priority.</div>`
+    :((_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'');
   const halvingNoteS=`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`+effNoteS;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
