@@ -3237,6 +3237,15 @@ function difficultyMultAt(t){
   const integral=DIFF_FLOOR*yrs+(DIFF_G0-DIFF_FLOOR)*DIFF_TAU*(1-Math.exp(-yrs/DIFF_TAU));
   return 1/Math.exp(integral);
 }
+// No-arbitrage reward floor: difficulty is an EQUILIBRIUM, not an exogenous grind. If the reward fell
+// below where the marginal miner covers costs, hashrate would capitulate and difficulty would drop
+// until it didn't — the network can't run at a loss (Bitcoin would halt first). So sats/TH/day can't
+// decay past a 12 W/TH miner's break-even at the projected price. This is an economic CONSTRAINT, NOT
+// a price→difficulty forecast (that regression is OOS-invalid — see project_difficulty_model). Floor
+// uses the undiscounted 12 W cost, so a GoMining user keeps a thin margin via their GMT discount.
+// MINER_FLOOR_WTH is tunable: lower it if you think the marginal global miner is more efficient/cheaper.
+const MINER_FLOOR_WTH=EFF_BEST;   // efficiency (W/TH) of the price-setting marginal network miner
+function rewardFloorBTC(price){return price>0?(0.0012*MINER_FLOOR_WTH+0.0089)/price:0;}  // BTC/TH/day
 // Halving years that fall within [now, now+days] — for projection notes.
 function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
 
@@ -4304,7 +4313,7 @@ function computeSetupProjection(){
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
-    dbtToday=dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*difficultyMultAt(projStartMs+(d-1)*86400000);  // shed reward at each halving + continuous difficulty grind
+    dbtToday=Math.max(dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*difficultyMultAt(projStartMs+(d-1)*86400000), rewardFloorBTC(bpToday));  // halving + difficulty grind, floored at the network no-arbitrage break-even
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
     if(d%7===0){
