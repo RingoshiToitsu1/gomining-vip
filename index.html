@@ -170,6 +170,11 @@ input[type=number]{-moz-appearance:textfield}
 .tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--border);color:var(--text3);font-size:.6rem;font-weight:700;cursor:help;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-card-hover);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.7rem;font-weight:400;color:var(--text2);width:max-content;max-width:min(264px,80vw);white-space:normal;z-index:200;box-shadow:var(--shadow);font-family:var(--sans);opacity:0;pointer-events:none;transition:opacity .15s;text-align:left}
 .tip:hover::after,.tip.show::after{opacity:1}
+/* Downward-opening variant (for tips near the top of a panel) */
+.tip.tip-down::after{bottom:auto;top:calc(100% + 6px)}
+/* Inline "Read more" text affordance that reuses the .tip click/tap bubble */
+.tip.sp-readmore{width:auto;height:auto;border-radius:0;background:none;color:var(--purple-soft);font-size:.72rem;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.tip.sp-readmore::after{max-width:min(300px,84vw)}
 
 /* ---- OUTPUT ROWS ---- */
 .out-group{margin-top:.6rem}
@@ -1671,7 +1676,7 @@ html.show-onboarding #onboarding{display:flex}
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
           <div>
             <div class="sp-model-title"><span class="nu-badge">NEW</span>Worst-case projection model</div>
-            <div class="sp-model-desc">Pick a halving and we project to it &mdash; conservatively. BTC price scales along the rainbow chart's <strong style="color:var(--text2)">Fire-Sale band</strong> (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also <strong style="color:var(--text2)">halves</strong> at each halving and erodes as <strong style="color:var(--text2)">network difficulty grinds upward</strong> (worst-case decay). If it still grows here, it grows almost anywhere.</div>
+            <div class="sp-model-desc"><span class="tip tip-down sp-readmore" data-tip="Pick a halving and we project to it conservatively. BTC price scales along the rainbow chart's Fire-Sale band (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also halves at each halving and erodes as network difficulty grinds upward (expected decay, kept coherent with the worst-case price). If it still grows here, it grows almost anywhere.">How this works &middot; read more</span></div>
           </div>
         </div>
 
