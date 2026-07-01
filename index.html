@@ -1868,6 +1868,7 @@ html.show-onboarding #onboarding{display:flex}
       <label for="claimMsg">Anything else? (optional)</label>
       <textarea id="claimMsg" name="message"></textarea>
       <button type="submit" class="claim-btn">Send my claim</button>
+      <div style="margin-top:.7rem;font-size:.72rem;color:var(--text3);text-align:center">By submitting, you agree to our <a href="/privacy.html" style="color:var(--purple-soft)">Privacy Policy</a> and <a href="/terms.html" style="color:var(--purple-soft)">Terms of Use</a>.</div>
       <div class="claim-status" id="claimStatus" role="status"></div>
     </form>
   </div>
@@ -1919,7 +1920,8 @@ async function submitClaim(e){
   <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
   <span style="color:var(--text2)"><img src="gmt36.png" class="gmt-logo" alt="GMT">:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
   <div class="donate-copied" id="footerCopied">Copied to clipboard!</div>
-  <div style="margin-top:1rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
+  <div style="margin-top:1rem;font-size:.75rem"><a href="/privacy.html" style="color:var(--text3);text-decoration:none">Privacy Policy</a> <span style="color:var(--text4)">&middot;</span> <a href="/terms.html" style="color:var(--text3);text-decoration:none">Terms of Use</a></div>
+  <div style="margin-top:.6rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
 </div>
 
 <script>
