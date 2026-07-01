@@ -98,7 +98,9 @@
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500,600,700,800&display=swap" rel="stylesheet">
+<!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1795,6 +1797,12 @@ html.show-onboarding #onboarding{display:flex}
       <div style="text-align:center;margin-top:.9rem">
         <button class="share-plan-btn" onclick="copyProjectionImage(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg> Copy projection image</button>
       </div>
+      <!-- Conversion CTA: peak-intent moment, right after seeing the growth forecast -->
+      <div style="margin:1.6rem auto 0;max-width:520px;padding:1.3rem;text-align:center;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:var(--radius-sm)">
+        <div style="color:var(--text);font-weight:700;font-size:1.05rem;margin-bottom:.4rem">Like what you see? Make it real.</div>
+        <div style="color:var(--text2);font-size:.9rem">New to GoMining? Sign up with code <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> for <strong style="color:var(--text)">+5% bonus TH</strong> — and I'll personally fund your first TH to get you started.</div>
+        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.hash='#claim';},60)">Claim your funded TH &rarr;</button>
+      </div>
     </div>
 
   </div>
@@ -1888,6 +1896,8 @@ html.show-onboarding #onboarding{display:flex}
     <li><a href="/is-gomining-worth-it.html" style="color:var(--gold2)">Is GoMining worth it in 2026? An honest breakdown</a></li>
     <li><a href="/gomining-promo-code.html" style="color:var(--gold2)">GoMining promo code (RINGO5) — bonus explained</a></li>
     <li><a href="/gomining-roi-calculator.html" style="color:var(--gold2)">GoMining ROI &amp; break-even, explained</a></li>
+    <li><a href="/how-gomining-works.html" style="color:var(--gold2)">How does GoMining work? A beginner's guide</a></li>
+    <li><a href="/gomining-discount-explained.html" style="color:var(--gold2)">GoMining discount &amp; GMT locking explained</a></li>
   </ul>
 </section>
 <script>

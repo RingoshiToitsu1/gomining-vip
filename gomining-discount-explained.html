@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining Discount & GMT Locking Explained (2026)</title>
+<meta name="description" content="How the GoMining discount works: lock GMT to cut your electricity fee in steps up to 20%. Learn coverage, VIP tiers and the optimal amount to lock — with a free tool.">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-discount-explained.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GoMining Discount & GMT Locking Explained (2026)">
+<meta property="og:description" content="How the GoMining discount works: lock GMT to cut your electricity fee in steps up to 20%. Coverage, VIP tiers and the optimal amount to lock.">
+<meta property="og:url" content="https://gmt-optimizer.com/gomining-discount-explained.html">
+<meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How does the GoMining discount work?","acceptedAnswer":{"@type":"Answer","text":"Holding or locking GMT builds coverage against your electricity fee. That coverage discounts your daily fee in 1% steps, up to a maximum of 20%. More GMT coverage means a bigger discount, which directly increases your net mining earnings."}},
+    {"@type":"Question","name":"How much GMT should I lock?","acceptedAnswer":{"@type":"Answer","text":"Enough to reach the discount level that maximises your net return without over-committing capital that would earn more as hashrate or efficiency. A planner that compares locking GMT against buying TH or upgrading efficiency finds the optimal split."}},
+    {"@type":"Question","name":"What are GoMining VIP tiers?","acceptedAnswer":{"@type":"Answer","text":"VIP tiers are status levels in GoMining that unlock additional benefits. You typically qualify by your total hashrate or your locked GMT, whichever is higher."}}
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
+body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
+.brand img{height:28px;width:28px}
+h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
+.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
+h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
+p{margin:0 0 .9rem}
+ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
+strong{color:var(--text)}
+a{color:var(--gold2)}
+.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
+.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
+.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
+.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
+.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
+.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
+.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
+.faq details p{margin:.7rem 0 0}
+.related{margin-top:2.5rem;font-size:.92rem}
+.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
+.foot a{color:var(--text3);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+  <h1>GoMining Discount &amp; GMT Locking Explained</h1>
+  <p class="lead">The GMT discount is the single biggest lever you directly control in GoMining. Lock GMT, cut your electricity fee, keep more of what you mine. Here's exactly how it works.</p>
+
+  <h2>What the discount is</h2>
+  <p>Every day you pay an electricity fee on your hashrate. By holding or locking <strong>GMT</strong> — GoMining's token — you build <strong>coverage</strong> against that fee. The more coverage you have relative to your fee, the larger your discount:</p>
+  <div class="formula">discount = min( 20%, floor( coverage ÷ threshold ) × 1% )</div>
+  <p>In practice the discount rises in <strong>1% steps up to a 20% cap</strong>. A miner running at a 20% discount keeps meaningfully more BTC than an identical one paying full price.</p>
+
+  <h2>Why it matters so much</h2>
+  <p>The discount applies to your fee <em>every single day</em>, so it compounds. Cutting a recurring cost is often a better use of capital than buying more hashrate that itself carries a fee — which is exactly the trade-off worth optimizing.</p>
+
+  <h2>How much GMT should you lock?</h2>
+  <p>There's a sweet spot. Lock too little and you leave discount on the table; lock too much and that capital might have earned more as efficient hashrate. The right answer depends on your fee, your miner efficiency, and GMT's price. This is the core question our planner solves — it compares <strong>locking GMT</strong> against <strong>buying TH</strong> and <strong>upgrading efficiency</strong>, then shows the split that maximises your net return.</p>
+
+  <h2>VIP tiers</h2>
+  <p>Beyond the fee discount, GMT and hashrate feed into <strong>VIP tiers</strong> — status levels that unlock extra benefits. You generally qualify by your total hashrate or your locked GMT, whichever is higher.</p>
+
+  <div class="cta">
+    <h3>Find your optimal GMT lock — free</h3>
+    <p>GMT Optimizer calculates the exact discount you'll reach and the best split of your capital. Live data, no login.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to start you off.</p>
+    <a href="/#claim" class="btn">Open the calculator →</a>
+  </div>
+
+  <h2>Frequently asked questions</h2>
+  <div class="faq">
+    <details><summary>How does the GoMining discount work?</summary><p>Holding or locking GMT builds coverage against your electricity fee. That coverage discounts your daily fee in 1% steps, up to a maximum of 20%. More GMT coverage means a bigger discount, which directly increases your net mining earnings.</p></details>
+    <details><summary>How much GMT should I lock?</summary><p>Enough to reach the discount level that maximises your net return without over-committing capital that would earn more as hashrate or efficiency. A planner that compares locking GMT against buying TH or upgrading efficiency finds the optimal split.</p></details>
+    <details><summary>What are GoMining VIP tiers?</summary><p>VIP tiers are status levels in GoMining that unlock additional benefits. You typically qualify by your total hashrate or your locked GMT, whichever is higher.</p></details>
+  </div>
+
+  <div class="related">Read next: <a href="/how-gomining-works.html">How does GoMining work?</a> &middot; <a href="/gomining-roi-calculator.html">GoMining ROI &amp; break-even</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a></div>
+
+  <div class="foot">
+    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
+    This guide is for informational purposes only and is not financial advice. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
+  </div>
+</div>
+</body>
+</html>
