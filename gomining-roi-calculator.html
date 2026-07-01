@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining ROI & Break-Even Calculator (2026)</title>
+<meta name="description" content="How GoMining ROI and break-even are actually calculated — the variables that matter and a free calculator that projects your payback with live BTC data.">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-roi-calculator.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GoMining ROI & Break-Even Calculator (2026)">
+<meta property="og:description" content="How GoMining ROI and break-even are actually calculated — and a free calculator that projects your payback with live BTC data.">
+<meta property="og:url" content="https://gmt-optimizer.com/gomining-roi-calculator.html">
+<meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How is GoMining ROI calculated?","acceptedAnswer":{"@type":"Answer","text":"GoMining ROI is your net earnings divided by what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount. A good calculator projects that forward through halvings and rising difficulty to estimate payback time."}},
+    {"@type":"Question","name":"What is the break-even point in GoMining?","acceptedAnswer":{"@type":"Answer","text":"Break-even is when your cumulative net mining earnings equal what you paid for the hashrate. It arrives sooner with efficient miners and a larger GMT discount, and later if difficulty rises quickly or Bitcoin's price falls."}},
+    {"@type":"Question","name":"What affects GoMining profitability the most?","acceptedAnswer":{"@type":"Answer","text":"Three variables dominate: the Bitcoin price, network difficulty, and your miner's efficiency in watts per TH. The GMT discount on your electricity fee is the main lever you directly control."}}
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
+body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
+.brand img{height:28px;width:28px}
+h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
+.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
+h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
+p{margin:0 0 .9rem}
+ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
+strong{color:var(--text)}
+a{color:var(--gold2)}
+.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
+.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
+.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
+.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
+.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
+.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
+.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
+.faq details p{margin:.7rem 0 0}
+.related{margin-top:2.5rem;font-size:.92rem}
+.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
+.foot a{color:var(--text3);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+  <h1>GoMining ROI &amp; Break-Even Calculator</h1>
+  <p class="lead">Most "calculators" show a flat monthly figure that never happens in reality. Here's how GoMining ROI is <em>actually</em> calculated — and a free tool that projects your real payback.</p>
+
+  <h2>How GoMining ROI works</h2>
+  <p>Return on investment is simply your net earnings over what you put in. For GoMining, net earnings come from daily mining rewards minus your electricity fee:</p>
+  <div class="formula">daily net = (sats/TH/day × your TH × BTC price) − (electricity fee × (1 − GMT discount))</div>
+  <p>Break-even is the day your cumulative net earnings finally equal what you paid for the hashrate.</p>
+
+  <h2>The variables that actually move it</h2>
+  <ul>
+    <li><strong>Bitcoin price</strong> — sets the dollar value of every sat you mine.</li>
+    <li><strong>Network difficulty</strong> — rises over time, steadily reducing sats earned per TH. Ignoring this is why flat calculators mislead.</li>
+    <li><strong>Miner efficiency (W/TH)</strong> — lower watts-per-TH means a smaller electricity fee for the same power. The biggest long-term lever.</li>
+    <li><strong>GMT discount</strong> — locking GMT cuts your electricity fee in steps up to 20%, directly improving net earnings.</li>
+  </ul>
+
+  <h2>Why a projection beats a flat estimate</h2>
+  <p>A realistic model has to erode rewards over time — through Bitcoin halvings and the steady grind of rising difficulty — otherwise it dramatically overstates your returns. GMT Optimizer pulls live BTC price and difficulty, then projects forward with that decay so your break-even reflects reality, not a best-case straight line.</p>
+
+  <div class="cta">
+    <h3>Calculate your real ROI — free</h3>
+    <p>Enter your hashrate and efficiency; get live P&amp;L and a multi-year projection with your break-even.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to start you off.</p>
+    <a href="/#claim" class="btn">Open the calculator →</a>
+  </div>
+
+  <h2>Frequently asked questions</h2>
+  <div class="faq">
+    <details><summary>How is GoMining ROI calculated?</summary><p>GoMining ROI is your net earnings divided by what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount. A good calculator projects that forward through halvings and rising difficulty to estimate payback time.</p></details>
+    <details><summary>What is the break-even point in GoMining?</summary><p>Break-even is when your cumulative net mining earnings equal what you paid for the hashrate. It arrives sooner with efficient miners and a larger GMT discount, and later if difficulty rises quickly or Bitcoin's price falls.</p></details>
+    <details><summary>What affects GoMining profitability the most?</summary><p>Three variables dominate: the Bitcoin price, network difficulty, and your miner's efficiency in watts per TH. The GMT discount on your electricity fee is the main lever you directly control.</p></details>
+  </div>
+
+  <div class="related">Read next: <a href="/is-gomining-worth-it.html">Is GoMining worth it in 2026?</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
+
+  <div class="foot">
+    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
+    This page is for informational purposes only and is not financial advice. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
+  </div>
+</div>
+</body>
+</html>
