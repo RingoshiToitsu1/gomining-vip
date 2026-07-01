@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gmt-optimizer.com/sitemap.xml
