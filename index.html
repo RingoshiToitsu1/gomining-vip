@@ -735,9 +735,12 @@ html.show-onboarding #onboarding{display:flex}
 .sp-page-inner{max-width:920px;margin:0 auto;padding:.6rem 1.2rem 3rem}
 .live-chip-btn{cursor:pointer}
 .live-chip-btn:hover{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+/* chart page fills the viewport exactly — kill page-level scroll so touch-drag pans the chart instead of scrolling/rubber-banding the page on mobile */
+#btcChartPage{overflow:hidden;overscroll-behavior:none}
 #btcChartPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
 .btc-chart-title{font-size:.92rem;font-weight:700;color:var(--text2);display:flex;align-items:center;white-space:nowrap}
-.btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card);position:relative}
+.btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card);position:relative;touch-action:none;overscroll-behavior:contain}
+.btc-chart-wrap #btcChartWidget iframe{touch-action:none}
 .btc-chart-mode{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:2px;gap:2px}
 .btc-chart-mode button{background:none;border:none;color:var(--text3);font-family:var(--sans);font-size:.78rem;font-weight:700;padding:.4rem .8rem;border-radius:7px;cursor:pointer;transition:var(--transition);white-space:nowrap}
 .btc-chart-mode button.active{background:var(--purple);color:#fff}
