@@ -23,8 +23,9 @@ const BLOCK_SUBSIDY   = 3.125;   // BTC/block (→ 1.5625 at 2028 halving)
 const ELECTRICITY_RATE= 0.05;    // $/kWh on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 const CONVERSION_FEE  = 0.02;    // BTC→GMT payout skim
-const EFF_BEST        = 12;      // W/TH — new miners are minted at 12 W/TH
-const MINER_FLOOR_WTH = EFF_BEST;
+const EFF_BEST        = 12;      // W/TH — freshly-minted new miners
+const EFF_BASE_MAX    = 15;      // W/TH — cheaper marketplace hashrate; the base + reinvest assumption here
+const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage reward floor (stays 12)
 const STAKING_APR     = 23.1;    // % — GMT locked-staking APR (matches the calculator default)
 const COV_DAYS_PER_PCT= 18;      // 18 days of fee coverage per 1% token discount (360d = 20% cap)
 // Citable analyst price milestones (same forecasts the live tool offers). Used ONLY for the
@@ -54,11 +55,20 @@ const TH_TIERS_12W=[
   {th:384,cpt:18.88},{th:512,cpt:18.69},{th:768,cpt:18.51},{th:1024,cpt:18.32},
   {th:1536,cpt:18.14},{th:2560,cpt:17.96},{th:3584,cpt:17.78},{th:5000,cpt:17.60}
 ];
+// Cheaper 15 W/TH marketplace hashrate (used for the base farm AND weekly reinvestment here).
+const TH_TIERS_15W=[
+  {th:1,cpt:14.99},{th:2,cpt:14.00},{th:4,cpt:14.00},{th:8,cpt:13.75},
+  {th:16,cpt:13.56},{th:32,cpt:13.44},{th:48,cpt:13.29},{th:64,cpt:13.16},
+  {th:96,cpt:13.03},{th:128,cpt:12.90},{th:192,cpt:12.77},{th:256,cpt:12.64},
+  {th:384,cpt:12.51},{th:512,cpt:12.39},{th:768,cpt:12.27},{th:1024,cpt:12.14},
+  {th:1536,cpt:12.02},{th:2560,cpt:11.90},{th:3584,cpt:11.78},{th:5000,cpt:11.67}
+];
 const FB = { btcPrice:84000, difficulty:113e12 };
 
 /* ===== engine ===== */
-function cptTier(th){
-  const T=TH_TIERS_12W;
+// Interpolated $/TH for a size on a given tier table (defaults to the 12 W new-miner table —
+// 12 W nets more per TH long-term because its lower maintenance fee is a fixed $ saving).
+function cptTier(th, T=TH_TIERS_12W){
   if(th<=T[0].th)return T[0].cpt;
   if(th>=T[T.length-1].th)return T[T.length-1].cpt;
   for(let i=0;i<T.length-1;i++){
@@ -67,6 +77,8 @@ function cptTier(th){
   }
   return T[0].cpt;
 }
+// USD maintenance fee per TH per day at a given efficiency (price-independent).
+function feePerTHDay(wth){return (ELECTRICITY_RATE*24*wth)/1000 + SERVICE_RATE;}
 function satsPerTHDay(diff){return ((1e12*86400*BLOCK_SUBSIDY)/(diff*2**32))*1e8;}
 function dailyBTCperTH(diff){return Math.round(satsPerTHDay(diff))/1e8;}
 function feesBTC(th,wth,bp){const e=(ELECTRICITY_RATE*24*wth)/bp/1000*th,s=(SERVICE_RATE/bp)*th;return e+s;}
@@ -90,7 +102,7 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
   const dfees=fee*(1-disc/100);
   const netBTC=(gross-dfees)*(1-CONVERSION_FEE);
   const miningUSD=netBTC*bp;                    // mining net, $/day
-  const hashCost=th*cptTier(th);                // USD to mint this hashrate at 12 W/TH
+  const hashCost=th*cptTier(th);                // USD for this hashrate at 12 W/TH new-miner pricing
   // GMT you must lock to hold this discount. Coverage = 18 days of fee per 1%, so disc%
   // needs 18·disc days of the (undiscounted) fee. GMT price cancels: lock$ = days · dailyFee$.
   const gmtLockUSD = disc>0 ? COV_DAYS_PER_PCT*disc*fee*bp : 0;
@@ -114,8 +126,38 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
     return null;
   }
   const beMonths=breakEven(false), beMonthsFcast=breakEven(true);
-  return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,
+
+  // Weekly reinvest projection — same signal as the site's allocator: HOLD the 20% discount
+  // (top up GMT coverage as the farm grows) and put the rest into 12 W hashrate. Each
+  // added TH costs cptTier(12W) to buy PLUS L$ of GMT to keep 360-day coverage, so the all-in
+  // cost per incremental TH bundles both. Staking on the growing lock compounds too.
+  function reinvest(years, pricePath){
+    if(disc<=0)return null;
+    const L = COV_DAYS_PER_PCT*disc*feePerTHDay(wth);   // GMT lock $ required per TH to hold discount
+    let cTH=th, lock=L*th;
+    const weeks=Math.round(years*52.1786);
+    for(let w=1;w<=weeks;w++){
+      const t=now+w*7*86400000;
+      const price_t=pricePath?priceAt(t,now,bp):bp;
+      const dbt_t=Math.max(dbt*subsidyMultAt(t)*difficultyMultAt(t,now), rewardFloorBTC(price_t));
+      const feeDay=feePerTHDay(wth)*cTH;                // undiscounted $/day
+      const miningWk=Math.max(0,(dbt_t*cTH*price_t-feeDay*(1-disc/100)))*(1-CONVERSION_FEE)*7;
+      const stakingWk=lock*(STAKING_APR/100)/52.1786;
+      const income=miningWk+stakingWk;
+      const dTH=income/(cptTier(cTH)+L);                // buy TH + keep coverage, in one step
+      cTH+=dTH; lock=L*cTH;                             // recompute lock for the larger farm
+    }
+    const tE=now+years*365.25*86400000, pE=pricePath?priceAt(tE,now,bp):bp;
+    const dbtE=Math.max(dbt*subsidyMultAt(tE)*difficultyMultAt(tE,now), rewardFloorBTC(pE));
+    const miningMo=Math.max(0,(dbtE*cTH*pE-feePerTHDay(wth)*cTH*(1-disc/100)))*(1-CONVERSION_FEE)*30.44;
+    const stakingMo=lock*(STAKING_APR/100)/12;
+    return {years, endTH:cTH, endLockUSD:lock, endMonthlyUSD:miningMo+stakingMo};
+  }
+  const reinvest3=reinvest(3,false), reinvest3f=reinvest(3,true);
+
+  return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,
           hashCost,gmtLockUSD,totalCapital,cost:totalCapital,beMonths,beMonthsFcast,
+          reinvest3,reinvest3f,
           monthlyUSD:netUSD*30.44, yearlyUSD:netUSD*365.25,
           miningMonthlyUSD:miningUSD*30.44, stakingMonthlyUSD:stakingUSD*30.44};
 }
@@ -199,6 +241,8 @@ a{color:var(--gold2)}
 .related{margin-top:2.5rem;font-size:.92rem}
 .foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
 .foot a{color:var(--text3);text-decoration:none}
+#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -210,6 +254,8 @@ ${body}
 ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
+  <button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
+  <script>(function(){var b=document.getElementById('toTop');if(!b)return;function o(){b.classList.toggle('show',(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener('scroll',o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};})();</script>
   <div class="foot">
     <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
     This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
@@ -234,6 +280,17 @@ function scenarioBox(m){
   return `  <div class="scenario">
     <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in ${flat}. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">${fcast}</span>
     <span class="src">Forecast path: ${BTC_ANCHORS.map(a=>a.src).join(', ')}, interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
+  </div>`;
+}
+
+// Weekly-reinvest growth callout — kept separate from break-even so payback stays honest.
+const th0=n=>n>=100?Math.round(n):n.toFixed(1);
+function reinvestBox(m){
+  if(!m.reinvest3)return '';
+  const r=m.reinvest3, rf=m.reinvest3f;
+  return `  <div class="scenario">
+    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~${th0(rf.endTH)} TH earning ~${usd(rf.endMonthlyUSD)}/mo in ${rf.years} years</span>
+    <span class="src">Floor case: at a flat Bitcoin price it holds ~${th0(r.endTH)} TH earning ~${usd(r.endMonthlyUSD)}/month — rising difficulty caps per-TH income, so growth mostly offsets decay. Compounding at ${STAKING_APR}% GMT staking plus reinvested mining. A growth path, not a promise.</span>
   </div>`;
 }
 
@@ -265,6 +322,7 @@ function hashratePage(th, live, dateStr){
   </div>
   <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the 2% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. On total capital, ${verdict(full.beMonths)}.</p>
 ${scenarioBox(full)}
+${reinvestBox(full)}
   <h2>Why the locked GMT is not a normal cost</h2>
   <p>Unlike the hashrate, the ${usd(full.gmtLockUSD)} in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns ${STAKING_APR}% staking. Without any discount, ${th} TH nets only about <strong>${usd(none.monthlyUSD)}/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
   <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × ${th} TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365\ntotal capital = hashrate + GMT locked for the discount</div>
@@ -272,7 +330,7 @@ ${scenarioBox(full)}
   <p>Break-even holds Bitcoin and GMT flat (BTC at ${usd(live.bp)}), erodes mining rewards over time through halvings and rising network difficulty, and keeps staking income steady. If Bitcoin appreciates, payback comes sooner; if difficulty spikes, GMT falls, or the staking rate drops, later. Run your exact setup in the calculator for a projection you can adjust.</p>
 ${CTA}`;
   const faq=[
-    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} to mint ${th} TH at the 12 W/TH price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
+    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 12 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
     {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
     {q:`What is the break-even for ${th} TH?`,a:`Counting both the hashrate and the GMT locked for the discount as capital (about ${usd(full.totalCapital)}), and both mining and staking as income, break-even is ${be(full.beMonths)} at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it.`}
   ];
@@ -303,6 +361,7 @@ function pricePage(price, live, dateStr){
   </div>
   <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $${pk},000, the 100 TH hashrate nets about ${usd(m.miningMonthlyUSD)}/month, and the ${usd(m.gmtLockUSD)} of GMT you lock for the 20% discount adds roughly ${usd(m.stakingMonthlyUSD)}/month in staking — about ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital. Based on that, ${verdict(m.beMonths)}.</p>
 ${scenarioBox(m)}
+${reinvestBox(m)}
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
 ${CTA}`;
   const faq=[
@@ -336,6 +395,7 @@ function monthlyPage(live, dateStr){
   </div>
   <p>As of ${dateStr.full}, Bitcoin trades near ${usd(live.bp)} and the network mines about ${Math.round(satsPerTHDay(live.diff))} sats per TH per day. On those numbers a 100 TH GoMining farm nets roughly <strong>${usd(m.miningMonthlyUSD)}/month</strong> from mining, and the ${usd(m.gmtLockUSD)} of GMT locked for the 20% discount adds about ${usd(m.stakingMonthlyUSD)}/month in staking — around ${usd(m.monthlyUSD)} combined, for a break-even of ${be(m.beMonths)} on ${usd(m.totalCapital)} of committed capital. In short, ${verdict(m.beMonths)}.</p>
 ${scenarioBox(m)}
+${reinvestBox(m)}
   <h2>What would change this</h2>
   <p>These figures move constantly. A rising Bitcoin price improves margin (fees are fixed in dollars); rising difficulty erodes sats per TH; and letting your GMT coverage lapse can wipe out the discount and gut your net. That's why it pays to check current numbers rather than trust a static estimate — run yours below.</p>
 ${CTA}`;

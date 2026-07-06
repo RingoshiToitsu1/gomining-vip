@@ -81,6 +81,8 @@ a{color:var(--gold2)}
 .related{margin-top:2.5rem;font-size:.92rem}
 .foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
 .foot a{color:var(--text3);text-decoration:none}
+#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -100,6 +102,10 @@ a{color:var(--gold2)}
     <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in about 1.8 years. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">around 1.2 years</span>
     <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
   </div>
+  <div class="scenario">
+    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~1385 TH earning ~$2,395/mo in 3 years</span>
+    <span class="src">Floor case: at a flat Bitcoin price it holds ~326 TH earning ~$98/month — rising difficulty caps per-TH income, so growth mostly offsets decay. Compounding at 23.1% GMT staking plus reinvested mining. A growth path, not a promise.</span>
+  </div>
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
   <div class="cta">
     <h3>Run your own numbers — free</h3>
@@ -114,6 +120,8 @@ a{color:var(--gold2)}
     <details><summary>Does difficulty change these numbers?</summary><p>Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.</p></details>
   </div>
   <div class="related">Read next: <a href="/is-gomining-worth-it.html">Is GoMining worth it?</a> &middot; <a href="/gomining-roi-calculator.html">How ROI is calculated</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
+  <button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
+  <script>(function(){var b=document.getElementById('toTop');if(!b)return;function o(){b.classList.toggle('show',(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener('scroll',o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};})();</script>
   <div class="foot">
     <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
     This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.

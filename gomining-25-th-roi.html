@@ -22,7 +22,7 @@
       "name": "How much capital do you really need for 25 TH on GoMining?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "About $719 in total: roughly $509 to mint 25 TH at the 12 W/TH price (~$20.38/TH), plus about $210 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend."
+        "text": "About $719 in total: roughly $509 for 25 TH at the 12 W/TH new-miner price (~$20.38/TH), plus about $210 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend."
       }
     },
     {
@@ -30,7 +30,7 @@
       "name": "How much does 25 TH earn per month?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "At today's Bitcoin price of $63,470 and current difficulty, 25 TH nets about $8 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $4 from staking the locked GMT at 23.1% APR — about $12 combined. Without the discount, mining alone is closer to $5."
+        "text": "At today's Bitcoin price of $63,412 and current difficulty, 25 TH nets about $8 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $4 from staking the locked GMT at 23.1% APR — about $12 combined. Without the discount, mining alone is closer to $5."
       }
     },
     {
@@ -81,6 +81,8 @@ a{color:var(--gold2)}
 .related{margin-top:2.5rem;font-size:.92rem}
 .foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
 .foot a{color:var(--text3);text-decoration:none}
+#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -88,7 +90,7 @@ a{color:var(--gold2)}
   <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
   <h1>GoMining 25 TH: ROI &amp; Break-Even</h1>
   <p class="lead">Exactly what a 25 TH GoMining setup costs, earns, and takes to pay back — counting the GMT you must lock for the discount and the staking it earns, not just the hashrate.</p>
-  <p class="updated">Live figures &middot; Bitcoin $63,470 &middot; 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 5, 2026</p>
+  <p class="updated">Live figures &middot; Bitcoin $63,412 &middot; 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 5, 2026</p>
   <div class="stats">
     <div class="stat"><div class="k">Total capital</div><div class="v">$719</div><div class="s">$509 hashrate + $210 GMT lock</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">$12</div><div class="s">$8 mining + $4 staking</div></div>
@@ -100,12 +102,16 @@ a{color:var(--gold2)}
     <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in about 7.8 years. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">around 2.0 years</span>
     <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
   </div>
+  <div class="scenario">
+    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~134 TH earning ~$231/mo in 3 years</span>
+    <span class="src">Floor case: at a flat Bitcoin price it holds ~38.0 TH earning ~$11/month — rising difficulty caps per-TH income, so growth mostly offsets decay. Compounding at 23.1% GMT staking plus reinvested mining. A growth path, not a promise.</span>
+  </div>
   <h2>Why the locked GMT is not a normal cost</h2>
   <p>Unlike the hashrate, the $210 in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns 23.1% staking. Without any discount, 25 TH nets only about <strong>$5/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
   <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × 25 TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365
 total capital = hashrate + GMT locked for the discount</div>
   <h2>What the projection assumes</h2>
-  <p>Break-even holds Bitcoin and GMT flat (BTC at $63,470), erodes mining rewards over time through halvings and rising network difficulty, and keeps staking income steady. If Bitcoin appreciates, payback comes sooner; if difficulty spikes, GMT falls, or the staking rate drops, later. Run your exact setup in the calculator for a projection you can adjust.</p>
+  <p>Break-even holds Bitcoin and GMT flat (BTC at $63,412), erodes mining rewards over time through halvings and rising network difficulty, and keeps staking income steady. If Bitcoin appreciates, payback comes sooner; if difficulty spikes, GMT falls, or the staking rate drops, later. Run your exact setup in the calculator for a projection you can adjust.</p>
   <div class="cta">
     <h3>Run your own numbers — free</h3>
     <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection with your break-even.</p>
@@ -114,11 +120,13 @@ total capital = hashrate + GMT locked for the discount</div>
   </div>
   <h2>Frequently asked questions</h2>
   <div class="faq">
-    <details><summary>How much capital do you really need for 25 TH on GoMining?</summary><p>About $719 in total: roughly $509 to mint 25 TH at the 12 W/TH price (~$20.38/TH), plus about $210 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.</p></details>
-    <details><summary>How much does 25 TH earn per month?</summary><p>At today's Bitcoin price of $63,470 and current difficulty, 25 TH nets about $8 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $4 from staking the locked GMT at 23.1% APR — about $12 combined. Without the discount, mining alone is closer to $5.</p></details>
+    <details><summary>How much capital do you really need for 25 TH on GoMining?</summary><p>About $719 in total: roughly $509 for 25 TH at the 12 W/TH new-miner price (~$20.38/TH), plus about $210 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.</p></details>
+    <details><summary>How much does 25 TH earn per month?</summary><p>At today's Bitcoin price of $63,412 and current difficulty, 25 TH nets about $8 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $4 from staking the locked GMT at 23.1% APR — about $12 combined. Without the discount, mining alone is closer to $5.</p></details>
     <details><summary>What is the break-even for 25 TH?</summary><p>Counting both the hashrate and the GMT locked for the discount as capital (about $719), and both mining and staking as income, break-even is about 7.8 years at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it.</p></details>
   </div>
   <div class="related">Read next: <a href="/gomining-roi-calculator.html">How ROI is calculated</a> &middot; <a href="/gomining-discount-explained.html">The GMT discount explained</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
+  <button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
+  <script>(function(){var b=document.getElementById('toTop');if(!b)return;function o(){b.classList.toggle('show',(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener('scroll',o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};})();</script>
   <div class="foot">
     <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
     This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
