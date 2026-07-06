@@ -2848,19 +2848,15 @@ async function fetchBtcCandles(hours){
   return null;
 }
 async function fetchGmtCandles(hours){
-  // Gate.io — true 1h; [ts(s),quoteVol,close,high,low,open,baseVol,closed]
+  // Bitget — true 1h, CORS *, lists GoMining as GOMININGUSDT.
+  // [ts(ms),open,high,low,close,baseVol,quoteVol,usdtVol]
   try{
-    const r=await fetchTO('https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=GOMINING_USDT&interval=1h&limit=200',12000);
-    if(Array.isArray(r)&&r.length>8)
-      return {rows:_csTrim(r.map(c=>({t:+c[0]*1000,c:+c[2],h:+c[3],l:+c[4],o:+c[5]})),hours),interval:'1H'};
+    const r=await fetchTO('https://api.bitget.com/api/v2/spot/market/candles?symbol=GOMININGUSDT&granularity=1h&limit=200',12000);
+    const d=r&&r.data;
+    if(Array.isArray(d)&&d.length>8)
+      return {rows:_csTrim(d.map(c=>({t:+c[0],o:+c[1],h:+c[2],l:+c[3],c:+c[4]})),hours),interval:'1H'};
   }catch(e){}
-  // MEXC — [openTime(ms),open,high,low,close,vol,closeTime,quoteVol]
-  try{
-    const r=await fetchTO('https://api.mexc.com/api/v3/klines?symbol=GOMININGUSDT&interval=60m&limit=200',12000);
-    if(Array.isArray(r)&&r.length>8)
-      return {rows:_csTrim(r.map(c=>({t:+c[0],o:+c[1],h:+c[2],l:+c[3],c:+c[4]})),hours),interval:'1H'};
-  }catch(e){}
-  // CoinGecko OHLC (4h buckets for a 7-day window) — last resort
+  // CoinGecko OHLC (4h buckets for a 7-day window) — CORS-friendly last resort
   try{
     const r=await fetchTO('https://api.coingecko.com/api/v3/coins/gmt-token/ohlc?vs_currency=usd&days=7',12000);
     if(Array.isArray(r)&&r.length>6)
@@ -2880,15 +2876,14 @@ async function createChartShot(){
   modal.style.display='flex';document.body.style.overflow='hidden';
   const HOURS=120; // ~5 days of hourly candles
   try{
-    const [data,logoOpt,logoGM,coin,token]=await Promise.all([
+    const [data,logoOpt,coin,token]=await Promise.all([
       asset.kind==='btc'?fetchBtcCandles(HOURS):fetchGmtCandles(HOURS),
       _csImg('gmt-optimizer-logo.svg?v=2'),
-      _csImg('gomining-logo.png'),
       _csImg(asset.icon),
       _csImg('gmt36.png')
     ]);
     if(!data||!data.rows||data.rows.length<4)throw new Error('no data');
-    _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,logoGM,coin,token});
+    _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,coin,token});
     img.src=_chartShotCanvas.toDataURL('image/png');
     img.style.display='';load.style.display='none';actions.style.display='flex';
   }catch(e){
@@ -2932,33 +2927,33 @@ function buildChartShotCanvas(asset,data,imgs){
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
   const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(150,50,360,0.16);orb(1080,110,300,0.10);orb(600,760,440,0.06);
-  // ---- brand row ----
+  // ---- top-left: GMT Optimizer brand, url beneath it ----
   let bx=44;
-  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,28,30,30);bx+=38;}
+  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
   x.textAlign='left';x.fillStyle='#fff';x.font='800 26px "Space Grotesk",system-ui,sans-serif';
-  x.fillText('GMT Optimizer',bx,50);
-  x.textAlign='right';x.fillStyle='rgba(247,184,78,0.92)';x.font='700 18px "Share Tech Mono",monospace';
-  x.fillText('gmt-optimizer.com',W-44,48);
-  // ---- asset + price row ----
-  const titleY=104;let tx=44;
-  if(imgs.coin){x.save();x.beginPath();x.arc(44+18,titleY-11,18,0,7);x.closePath();x.clip();x.drawImage(imgs.coin,44,titleY-29,36,36);x.restore();tx=44+46;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='800 33px "Space Grotesk",system-ui,sans-serif';
-  x.fillText(asset.name,tx,titleY);
+  x.fillText('GMT Optimizer',bx,48);
+  x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px "Share Tech Mono",monospace';
+  x.fillText('gmt-optimizer.com',44,74);
+  // ---- top-right: asset name (+ coin), pair/interval, price + change ----
   const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
-  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 17px "Share Tech Mono",monospace';
-  x.fillText(asset.pair+'   ·   '+data.interval+' candles   ·   last '+daysSpan+' days',tx+x.measureText(asset.name).width+18,titleY-1);
-  // last price + change over the window
+  x.textAlign='right';x.fillStyle='#fff';x.font='800 26px "Space Grotesk",system-ui,sans-serif';
+  x.fillText(asset.name,W-44,46);
+  const nameW=x.measureText(asset.name).width;
+  if(imgs.coin){const cxb=W-44-nameW-22,cyb=37;x.save();x.beginPath();x.arc(cxb,cyb,15,0,7);x.closePath();x.clip();x.drawImage(imgs.coin,cxb-15,cyb-15,30,30);x.restore();}
+  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px "Share Tech Mono",monospace';
+  x.fillText(asset.pair+'   ·   '+data.interval+' candles   ·   last '+daysSpan+' days',W-44,70);
   const first=rows[0].o||rows[0].c,last=rows[n-1].c,chg=first?(last-first)/first*100:0,pos=chg>=0;
-  x.textAlign='right';x.fillStyle='#fff';x.font='800 30px "Share Tech Mono",monospace';
-  x.fillText(price(last),W-44,96);
-  x.fillStyle=pos?UP:DN;x.font='700 18px "Share Tech Mono",monospace';
-  x.fillText((pos?'▲ +':'▼ ')+chg.toFixed(2)+'%   ('+daysSpan+'d)',W-44,120);
+  x.fillStyle='#fff';x.font='800 24px "Share Tech Mono",monospace';
+  const pStr=price(last);x.fillText(pStr,W-44,100);
+  const pW=x.measureText(pStr).width;
+  x.fillStyle=pos?UP:DN;x.font='700 16px "Share Tech Mono",monospace';
+  x.fillText((pos?'▲ +':'▼ ')+chg.toFixed(2)+'% ('+daysSpan+'d)',W-44-pW-16,100);
   // divider
   const lg=x.createLinearGradient(44,0,W-44,0);
   lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(44,140);x.lineTo(W-44,140);x.stroke();
+  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(44,120);x.lineTo(W-44,120);x.stroke();
   // ---- plot area ----
-  const PL=60,PR=W-96,PT=166,PB=596;
+  const PL=60,PR=W-96,PT=150,PB=596;
   let lo=Infinity,hi=-Infinity;rows.forEach(r=>{if(r.l<lo)lo=r.l;if(r.h>hi)hi=r.h;});
   const padv=(hi-lo)*0.08||hi*0.02;lo-=padv;hi+=padv;
   const py=p=>PB-(p-lo)/((hi-lo)||1)*(PB-PT);
@@ -2998,7 +2993,6 @@ function buildChartShotCanvas(asset,data,imgs){
   fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
   x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(44,footY-30);x.lineTo(W-44,footY-30);x.stroke();
   let fx=44;
-  if(imgs.logoGM&&imgs.logoGM.width){const ih=22,iw=ih*(imgs.logoGM.width/imgs.logoGM.height);x.drawImage(imgs.logoGM,fx,footY-18,iw,ih);fx+=iw+12;}
   if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-7,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-18,22,22);x.restore();fx+=30;}
   x.textAlign='left';x.fillStyle='rgba(255,255,255,0.75)';x.font='700 17px "Space Grotesk",system-ui,sans-serif';
   x.fillText('Free GoMining ROI & discount optimizer',fx,footY-2);
