@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining 1 TH ROI &amp; Break-Even (2026)</title>
+<meta name="description" content="What 1 TH on GoMining truly costs (hashrate + the GMT you lock for the discount) and earns (mining + staking) at today's price: $0/mo, break-even about 8.2 years.">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-1-th-roi.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GoMining 1 TH ROI &amp; Break-Even (2026)">
+<meta property="og:description" content="What 1 TH on GoMining truly costs (hashrate + the GMT you lock for the discount) and earns (mining + staking) at today's price: $0/mo, break-even about 8.2 years.">
+<meta property="og:url" content="https://gmt-optimizer.com/gomining-1-th-roi.html">
+<meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much capital do you really need for 1 TH on GoMining?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "About $30 in total: roughly $22 to mint 1 TH at the 12 W/TH price (~$21.99/TH), plus about $8 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does 1 TH earn per month?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "At today's Bitcoin price of $63,470 and current difficulty, 1 TH nets about $0 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $0 from staking the locked GMT at 23.1% APR — about $0 combined. Without the discount, mining alone is closer to $0."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the break-even for 1 TH?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Counting both the hashrate and the GMT locked for the discount as capital (about $30), and both mining and staking as income, break-even is about 8.2 years at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it."
+      }
+    }
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
+body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
+.brand img{height:28px;width:28px}
+h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
+.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
+h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
+p{margin:0 0 .9rem}
+ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
+strong{color:var(--text)}
+a{color:var(--gold2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:1.4rem 0}
+.stat{background:#111;border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem}
+.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.3rem}
+.stat .v{font-family:var(--mono);font-size:1.35rem;color:var(--gold2);line-height:1.2}
+.stat .s{font-size:.72rem;color:var(--text4);margin-top:.2rem}
+.updated{font-size:.78rem;color:var(--text4);margin-bottom:1.2rem}
+.scenario{margin:1.4rem 0;padding:1.1rem 1.3rem;background:rgba(245,166,35,.06);border-left:3px solid var(--gold);border-radius:0 12px 12px 0}
+.scenario .big{font-family:var(--mono);font-size:1.25rem;color:var(--gold2);display:block;margin:.2rem 0 .4rem}
+.scenario .src{font-size:.78rem;color:var(--text4);margin-top:.5rem}
+.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
+.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
+.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
+.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
+.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
+.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
+.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
+.faq details p{margin:.7rem 0 0}
+.related{margin-top:2.5rem;font-size:.92rem}
+.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
+.foot a{color:var(--text3);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+  <h1>GoMining 1 TH: ROI &amp; Break-Even</h1>
+  <p class="lead">Exactly what a 1 TH GoMining setup costs, earns, and takes to pay back — counting the GMT you must lock for the discount and the staking it earns, not just the hashrate.</p>
+  <p class="updated">Live figures &middot; Bitcoin $63,470 &middot; 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 5, 2026</p>
+  <div class="stats">
+    <div class="stat"><div class="k">Total capital</div><div class="v">$30</div><div class="s">$22 hashrate + $8 GMT lock</div></div>
+    <div class="stat"><div class="k">Net / month</div><div class="v">$0</div><div class="s">$0 mining + $0 staking</div></div>
+    <div class="stat"><div class="k">GMT to lock</div><div class="v">$8</div><div class="s">for the 20% discount</div></div>
+    <div class="stat"><div class="k">Break-even</div><div class="v">about 8.2 years</div><div class="s">on total capital</div></div>
+  </div>
+  <p>Two things get bought here, and most calculators only count the first. You mint 1 TH for about <strong>$22</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>$8 of GMT</strong> (360 days of fee coverage) — <strong>$30</strong> of capital committed in total. On the income side, the hashrate nets about $0/month after fees and the 2% conversion, and the locked GMT earns roughly $0/month staking at 23.1% APR — about $0 combined. On total capital, that is a long payback at a flat price, so the case rests largely on Bitcoin appreciating from here.</p>
+  <div class="scenario">
+    <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in about 8.2 years. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">around 2.2 years</span>
+    <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
+  </div>
+  <h2>Why the locked GMT is not a normal cost</h2>
+  <p>Unlike the hashrate, the $8 in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns 23.1% staking. Without any discount, 1 TH nets only about <strong>$0/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
+  <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × 1 TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365
+total capital = hashrate + GMT locked for the discount</div>
+  <h2>What the projection assumes</h2>
+  <p>Break-even holds Bitcoin and GMT flat (BTC at $63,470), erodes mining rewards over time through halvings and rising network difficulty, and keeps staking income steady. If Bitcoin appreciates, payback comes sooner; if difficulty spikes, GMT falls, or the staking rate drops, later. Run your exact setup in the calculator for a projection you can adjust.</p>
+  <div class="cta">
+    <h3>Run your own numbers — free</h3>
+    <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection with your break-even.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
+    <a href="/#claim" class="btn">Open the calculator →</a>
+  </div>
+  <h2>Frequently asked questions</h2>
+  <div class="faq">
+    <details><summary>How much capital do you really need for 1 TH on GoMining?</summary><p>About $30 in total: roughly $22 to mint 1 TH at the 12 W/TH price (~$21.99/TH), plus about $8 of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.</p></details>
+    <details><summary>How much does 1 TH earn per month?</summary><p>At today's Bitcoin price of $63,470 and current difficulty, 1 TH nets about $0 per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly $0 from staking the locked GMT at 23.1% APR — about $0 combined. Without the discount, mining alone is closer to $0.</p></details>
+    <details><summary>What is the break-even for 1 TH?</summary><p>Counting both the hashrate and the GMT locked for the discount as capital (about $30), and both mining and staking as income, break-even is about 8.2 years at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it.</p></details>
+  </div>
+  <div class="related">Read next: <a href="/gomining-roi-calculator.html">How ROI is calculated</a> &middot; <a href="/gomining-discount-explained.html">The GMT discount explained</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
+  <div class="foot">
+    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
+    This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is GoMining Profitable if Bitcoin Hits $75k? (2026)</title>
+<meta name="description" content="Modeling GoMining returns at a $75,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $66/month, break-even in about 6.8 years. Live difficulty.">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-profit-btc-75k.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Is GoMining Profitable if Bitcoin Hits $75k? (2026)">
+<meta property="og:description" content="Modeling GoMining returns at a $75,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $66/month, break-even in about 6.8 years. Live difficulty.">
+<meta property="og:url" content="https://gmt-optimizer.com/gomining-profit-btc-75k.html">
+<meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is GoMining profitable at $75k Bitcoin?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "At a $75,000 price and current difficulty, a 100 TH GoMining farm nets about $50/month from mining plus $16 from staking the GMT locked for the 20% discount — around $66 combined — paying back the full $2,802 of capital in about 6.8 years. Profitability scales with your hashrate."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does the Bitcoin price matter so much for GoMining?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — improving margin and shortening break-even. A falling price does the opposite."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does difficulty change these numbers?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for."
+      }
+    }
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
+body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
+.wrap{max-width:760px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
+.brand img{height:28px;width:28px}
+h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
+.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
+h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
+p{margin:0 0 .9rem}
+ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
+strong{color:var(--text)}
+a{color:var(--gold2)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:1.4rem 0}
+.stat{background:#111;border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem}
+.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.3rem}
+.stat .v{font-family:var(--mono);font-size:1.35rem;color:var(--gold2);line-height:1.2}
+.stat .s{font-size:.72rem;color:var(--text4);margin-top:.2rem}
+.updated{font-size:.78rem;color:var(--text4);margin-bottom:1.2rem}
+.scenario{margin:1.4rem 0;padding:1.1rem 1.3rem;background:rgba(245,166,35,.06);border-left:3px solid var(--gold);border-radius:0 12px 12px 0}
+.scenario .big{font-family:var(--mono);font-size:1.25rem;color:var(--gold2);display:block;margin:.2rem 0 .4rem}
+.scenario .src{font-size:.78rem;color:var(--text4);margin-top:.5rem}
+.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
+.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
+.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
+.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
+.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
+.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
+.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
+.faq details p{margin:.7rem 0 0}
+.related{margin-top:2.5rem;font-size:.92rem}
+.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
+.foot a{color:var(--text3);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+  <h1>GoMining Profitability at $75k Bitcoin</h1>
+  <p class="lead">What a GoMining farm would earn if Bitcoin traded at $75,000 — counting the GMT locked for the discount and its staking, on a reference 100 TH setup at live difficulty.</p>
+  <p class="updated">Scenario price $75,000 &middot; live difficulty 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 5, 2026</p>
+  <div class="stats">
+    <div class="stat"><div class="k">BTC price</div><div class="v">$75k</div><div class="s">scenario</div></div>
+    <div class="stat"><div class="k">Net / month</div><div class="v">$66</div><div class="s">$50 mining + $16 staking</div></div>
+    <div class="stat"><div class="k">Total capital</div><div class="v">$2,802</div><div class="s">$1,964 hashrate + $839 GMT</div></div>
+    <div class="stat"><div class="k">Break-even</div><div class="v">about 6.8 years</div><div class="s">on total capital</div></div>
+  </div>
+  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $75,000, the 100 TH hashrate nets about $50/month, and the $839 of GMT you lock for the 20% discount adds roughly $16/month in staking — about $66 combined on $2,802 of committed capital. Based on that, that is a long payback at a flat price, so the case rests largely on Bitcoin appreciating from here.</p>
+  <div class="scenario">
+    <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in about 6.8 years. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">around 1.8 years</span>
+    <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
+  </div>
+  <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
+  <div class="cta">
+    <h3>Run your own numbers — free</h3>
+    <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection with your break-even.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
+    <a href="/#claim" class="btn">Open the calculator →</a>
+  </div>
+  <h2>Frequently asked questions</h2>
+  <div class="faq">
+    <details><summary>Is GoMining profitable at $75k Bitcoin?</summary><p>At a $75,000 price and current difficulty, a 100 TH GoMining farm nets about $50/month from mining plus $16 from staking the GMT locked for the 20% discount — around $66 combined — paying back the full $2,802 of capital in about 6.8 years. Profitability scales with your hashrate.</p></details>
+    <details><summary>Why does the Bitcoin price matter so much for GoMining?</summary><p>Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — improving margin and shortening break-even. A falling price does the opposite.</p></details>
+    <details><summary>Does difficulty change these numbers?</summary><p>Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.</p></details>
+  </div>
+  <div class="related">Read next: <a href="/is-gomining-worth-it.html">Is GoMining worth it?</a> &middot; <a href="/gomining-roi-calculator.html">How ROI is calculated</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
+  <div class="foot">
+    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
+    This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
+  </div>
+</div>
+</body>
+</html>
