@@ -893,6 +893,19 @@ html.show-onboarding #onboarding{display:flex}
 .share-plan-btn{display:inline-flex;align-items:center;gap:.45rem;background:var(--bg-input);border:1px solid var(--purple);border-radius:9px;color:var(--purple-soft);font-family:var(--sans);font-size:.78rem;font-weight:700;padding:.5rem 1rem;cursor:pointer;transition:var(--transition)}
 .share-plan-btn:hover{background:rgba(245,166,35,.12);color:var(--text)}
 .share-plan-btn svg{flex:0 0 auto}
+/* Chart screenshot button + preview modal */
+.chart-shot-btn{white-space:nowrap}
+.cshot-overlay{position:fixed;inset:0;z-index:9999;background:rgba(6,6,8,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.2rem}
+.cshot-box{background:var(--bg-card,#111);border:1px solid var(--card-border,rgba(245,166,35,.25));border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);width:min(880px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.cshot-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border-bottom:1px solid var(--card-border,rgba(245,166,35,.15));font-weight:800;font-size:.95rem;color:var(--text,#fff)}
+.cshot-x{background:none;border:none;color:var(--text3,#999);font-size:1.5rem;line-height:1;cursor:pointer;padding:0 .2rem}
+.cshot-x:hover{color:var(--text,#fff)}
+.cshot-body{position:relative;padding:1.1rem;overflow:auto;min-height:180px;display:flex;align-items:center;justify-content:center}
+.cshot-body img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--card-border,rgba(245,166,35,.15));display:block}
+.cshot-loading{display:flex;flex-direction:column;align-items:center;gap:.8rem;color:var(--text3,#999);font-size:.85rem;padding:2.4rem 1rem}
+.cshot-actions{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;padding:.2rem 1.1rem 1.1rem}
+.cshot-copy{display:inline-flex;align-items:center;gap:.45rem}
+@media(max-width:600px){.cshot-head{font-size:.85rem}.cshot-actions .ri-btn,.cshot-actions .share-plan-btn{flex:1 1 auto;justify-content:center}}
 .planner-proj-btn{display:flex;align-items:center;gap:.9rem;width:100%;text-align:left;margin:.2rem 0 .8rem;background:linear-gradient(165deg,rgba(245,166,35,.13),rgba(245,166,35,.02));border:1px solid rgba(245,166,35,.4);border-radius:var(--radius);padding:1rem 1.2rem;cursor:pointer;transition:var(--transition);font-family:var(--sans)}
 .planner-proj-btn:hover{border-color:var(--orange);box-shadow:0 6px 24px rgba(245,166,35,.2);transform:translateY(-1px)}
 .planner-proj-ico{width:44px;height:44px;border-radius:12px;background:rgba(245,166,35,.16);display:flex;align-items:center;justify-content:center;color:var(--orange);flex:0 0 auto}
@@ -1722,6 +1735,7 @@ html.show-onboarding #onboarding{display:flex}
         <button id="btcModeLive" class="active" onclick="setBtcChartView('live')">Live Chart</button>
         <button id="btcModeRainbow" onclick="setBtcChartView('rainbow')">Rainbow Chart</button>
       </div>
+      <button class="share-plan-btn chart-shot-btn" onclick="createChartShot(this)" title="Generate a branded, shareable snapshot of the 1-hour candles from the last few days"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg> Create chart screenshot</button>
     </div>
     <div class="btc-chart-wrap">
       <div id="btcChartWidget" style="height:100%;width:100%"></div>
@@ -1737,6 +1751,27 @@ html.show-onboarding #onboarding{display:flex}
   <div class="sp-page-loading" id="btcChartLoading" style="display:none">
     <div class="sp-spinner"></div>
     <div class="sp-loading-txt">Loading your setup…</div>
+  </div>
+</div>
+
+<!-- CHART SCREENSHOT — branded, shareable snapshot of the 1h candles -->
+<div class="cshot-overlay" id="chartShotModal" style="display:none" onclick="if(event.target===this)closeChartShot()">
+  <div class="cshot-box">
+    <div class="cshot-head">
+      <span id="chartShotTitle">Chart snapshot</span>
+      <button class="cshot-x" onclick="closeChartShot()" aria-label="Close">&times;</button>
+    </div>
+    <div class="cshot-body" id="chartShotBody">
+      <div class="cshot-loading" id="chartShotLoading">
+        <div class="sp-spinner"></div>
+        <div class="sp-loading-txt" id="chartShotLoadTxt">Pulling the latest 1-hour candles…</div>
+      </div>
+      <img id="chartShotImg" alt="Branded chart snapshot" style="display:none">
+    </div>
+    <div class="cshot-actions" id="chartShotActions" style="display:none">
+      <button class="ri-btn cshot-copy" onclick="copyChartShot(this)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg> Copy image</button>
+      <button class="share-plan-btn cshot-dl" onclick="downloadChartShot(this)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Download PNG</button>
+    </div>
   </div>
 </div>
 
@@ -2416,6 +2451,10 @@ function closeBtcChart(){
   },650);
 }
 function openChart(symbol,title,icon,allowChange,isBtc){
+  // remember which asset is on screen so the screenshot button knows what to render
+  window._chartAsset=isBtc
+    ? {kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'btc36.png'}
+    : {kind:'gmt',name:'GoMining Token',pair:'GMT / USD',icon:'gmt36.png'};
   document.getElementById('btcChartPage').style.display='';
   document.getElementById('btcChartPage').scrollTop=0;
   document.body.style.overflow='hidden';
@@ -2771,6 +2810,203 @@ function buildChart(symbol,allowChange){
   const s=document.createElement('script');
   s.src='https://s3.tradingview.com/tv.js';s.async=true;s.onload=make;
   document.head.appendChild(s);
+}
+
+// ============================================================
+// CHART SCREENSHOT — branded, shareable candlestick snapshot
+// The live chart is a cross-origin TradingView iframe and can't be captured, so we
+// rebuild our own 1-hour candlestick image from public OHLC data and stamp it with
+// GMT-Optimizer + GoMining branding (deliberately NO promo code).
+// ============================================================
+let _chartShotCanvas=null;
+const _csImgCache={};
+function _csImg(src){
+  if(_csImgCache[src])return _csImgCache[src];
+  const p=new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=src;});
+  _csImgCache[src]=p;return p;
+}
+// Normalize into ascending [{t(ms),o,h,l,c}] and trim to (about) the last `hours`.
+function _csTrim(rows,hours){
+  rows=rows.filter(r=>r&&isFinite(r.o)&&isFinite(r.c)&&r.h>0&&r.l>0).sort((a,b)=>a.t-b.t);
+  const win=rows.filter(r=>r.t>=Date.now()-hours*3600e3);
+  return (win.length>=8?win:rows).slice(-Math.max(24,Math.ceil(hours)));
+}
+async function fetchBtcCandles(hours){
+  // Coinbase Exchange — CORS *, rows are [time(s),low,high,open,close,vol]
+  try{
+    const r=await fetchTO('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600',12000);
+    if(Array.isArray(r)&&r.length>8)
+      return {rows:_csTrim(r.map(c=>({t:c[0]*1000,l:+c[1],h:+c[2],o:+c[3],c:+c[4]})),hours),interval:'1H'};
+  }catch(e){}
+  // Kraken hourly OHLC — [time(s),open,high,low,close,...]
+  try{
+    const r=await fetchTO('https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60',12000);
+    const res=r&&r.result,key=res&&Object.keys(res).find(k=>k!=='last');
+    if(key&&res[key].length>8)
+      return {rows:_csTrim(res[key].map(c=>({t:c[0]*1000,o:+c[1],h:+c[2],l:+c[3],c:+c[4]})),hours),interval:'1H'};
+  }catch(e){}
+  return null;
+}
+async function fetchGmtCandles(hours){
+  // Gate.io — true 1h; [ts(s),quoteVol,close,high,low,open,baseVol,closed]
+  try{
+    const r=await fetchTO('https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=GOMINING_USDT&interval=1h&limit=200',12000);
+    if(Array.isArray(r)&&r.length>8)
+      return {rows:_csTrim(r.map(c=>({t:+c[0]*1000,c:+c[2],h:+c[3],l:+c[4],o:+c[5]})),hours),interval:'1H'};
+  }catch(e){}
+  // MEXC — [openTime(ms),open,high,low,close,vol,closeTime,quoteVol]
+  try{
+    const r=await fetchTO('https://api.mexc.com/api/v3/klines?symbol=GOMININGUSDT&interval=60m&limit=200',12000);
+    if(Array.isArray(r)&&r.length>8)
+      return {rows:_csTrim(r.map(c=>({t:+c[0],o:+c[1],h:+c[2],l:+c[3],c:+c[4]})),hours),interval:'1H'};
+  }catch(e){}
+  // CoinGecko OHLC (4h buckets for a 7-day window) — last resort
+  try{
+    const r=await fetchTO('https://api.coingecko.com/api/v3/coins/gmt-token/ohlc?vs_currency=usd&days=7',12000);
+    if(Array.isArray(r)&&r.length>6)
+      return {rows:_csTrim(r.map(c=>({t:+c[0],o:+c[1],h:+c[2],l:+c[3],c:+c[4]})),hours),interval:'4H'};
+  }catch(e){}
+  return null;
+}
+async function createChartShot(){
+  const asset=window._chartAsset||{kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'btc36.png'};
+  const modal=document.getElementById('chartShotModal');
+  const load=document.getElementById('chartShotLoading');
+  const img=document.getElementById('chartShotImg');
+  const actions=document.getElementById('chartShotActions');
+  document.getElementById('chartShotTitle').textContent=asset.name+' — 1H chart snapshot';
+  document.getElementById('chartShotLoadTxt').textContent='Pulling the latest 1-hour candles…';
+  img.style.display='none';actions.style.display='none';load.style.display='flex';
+  modal.style.display='flex';document.body.style.overflow='hidden';
+  const HOURS=120; // ~5 days of hourly candles
+  try{
+    const [data,logoOpt,logoGM,coin,token]=await Promise.all([
+      asset.kind==='btc'?fetchBtcCandles(HOURS):fetchGmtCandles(HOURS),
+      _csImg('gmt-optimizer-logo.svg?v=2'),
+      _csImg('gomining-logo.png'),
+      _csImg(asset.icon),
+      _csImg('gmt36.png')
+    ]);
+    if(!data||!data.rows||data.rows.length<4)throw new Error('no data');
+    _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,logoGM,coin,token});
+    img.src=_chartShotCanvas.toDataURL('image/png');
+    img.style.display='';load.style.display='none';actions.style.display='flex';
+  }catch(e){
+    document.getElementById('chartShotLoadTxt').textContent='Couldn’t load price data right now — please try again in a moment.';
+  }
+}
+function closeChartShot(){
+  document.getElementById('chartShotModal').style.display='none';
+  document.body.style.overflow='hidden'; // the chart page underneath still locks scroll
+}
+async function copyChartShot(btn){
+  if(!_chartShotCanvas)return;const orig=btn.innerHTML;
+  try{
+    if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
+      await navigator.clipboard.write([new ClipboardItem({'image/png':canvasToBlob(_chartShotCanvas)})]);
+      btn.innerHTML='✓ Copied — paste anywhere';setTimeout(()=>{btn.innerHTML=orig;},2200);return;
+    }
+  }catch(e){}
+  downloadChartShot(btn);
+}
+async function downloadChartShot(btn){
+  if(!_chartShotCanvas)return;
+  const asset=window._chartAsset||{kind:'btc'};
+  try{
+    downloadBlob(await canvasToBlob(_chartShotCanvas),'gmt-optimizer-'+(asset.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png');
+    if(btn){const orig=btn.innerHTML;btn.innerHTML='⬇ Saved';setTimeout(()=>{btn.innerHTML=orig;},2000);}
+  }catch(e){}
+}
+function buildChartShotCanvas(asset,data,imgs){
+  const rows=data.rows,n=rows.length;
+  const SC=2,W=1200,H=675;
+  const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
+  const x=c.getContext('2d');x.scale(SC,SC);
+  const GOLD='#F5A623',GSOFT='#F7B84E',UP='#16c784',DN='#ea3943';
+  const price=p=>p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
+    :p>=1?'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+    :'$'+p.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
+  // background
+  const bgG=x.createLinearGradient(0,0,W,H);
+  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  x.fillStyle=bgG;x.fillRect(0,0,W,H);
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  orb(150,50,360,0.16);orb(1080,110,300,0.10);orb(600,760,440,0.06);
+  // ---- brand row ----
+  let bx=44;
+  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,28,30,30);bx+=38;}
+  x.textAlign='left';x.fillStyle='#fff';x.font='800 26px "Space Grotesk",system-ui,sans-serif';
+  x.fillText('GMT Optimizer',bx,50);
+  x.textAlign='right';x.fillStyle='rgba(247,184,78,0.92)';x.font='700 18px "Share Tech Mono",monospace';
+  x.fillText('gmt-optimizer.com',W-44,48);
+  // ---- asset + price row ----
+  const titleY=104;let tx=44;
+  if(imgs.coin){x.save();x.beginPath();x.arc(44+18,titleY-11,18,0,7);x.closePath();x.clip();x.drawImage(imgs.coin,44,titleY-29,36,36);x.restore();tx=44+46;}
+  x.textAlign='left';x.fillStyle='#fff';x.font='800 33px "Space Grotesk",system-ui,sans-serif';
+  x.fillText(asset.name,tx,titleY);
+  const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
+  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 17px "Share Tech Mono",monospace';
+  x.fillText(asset.pair+'   ·   '+data.interval+' candles   ·   last '+daysSpan+' days',tx+x.measureText(asset.name).width+18,titleY-1);
+  // last price + change over the window
+  const first=rows[0].o||rows[0].c,last=rows[n-1].c,chg=first?(last-first)/first*100:0,pos=chg>=0;
+  x.textAlign='right';x.fillStyle='#fff';x.font='800 30px "Share Tech Mono",monospace';
+  x.fillText(price(last),W-44,96);
+  x.fillStyle=pos?UP:DN;x.font='700 18px "Share Tech Mono",monospace';
+  x.fillText((pos?'▲ +':'▼ ')+chg.toFixed(2)+'%   ('+daysSpan+'d)',W-44,120);
+  // divider
+  const lg=x.createLinearGradient(44,0,W-44,0);
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
+  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(44,140);x.lineTo(W-44,140);x.stroke();
+  // ---- plot area ----
+  const PL=60,PR=W-96,PT=166,PB=596;
+  let lo=Infinity,hi=-Infinity;rows.forEach(r=>{if(r.l<lo)lo=r.l;if(r.h>hi)hi=r.h;});
+  const padv=(hi-lo)*0.08||hi*0.02;lo-=padv;hi+=padv;
+  const py=p=>PB-(p-lo)/((hi-lo)||1)*(PB-PT);
+  // horizontal price grid + right-axis labels
+  x.font='13px "Share Tech Mono",monospace';x.textAlign='left';
+  for(let k=0;k<=4;k++){
+    const p=lo+(hi-lo)*k/4,gy=py(p);
+    x.strokeStyle='rgba(245,166,35,0.08)';x.lineWidth=1;x.beginPath();x.moveTo(PL,gy);x.lineTo(PR,gy);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.42)';x.fillText(price(p),PR+8,gy+4);
+  }
+  // vertical day gridlines + date labels
+  const slot=(PR-PL)/n;
+  let lastDay=null;
+  x.textAlign='center';
+  rows.forEach((r,i)=>{
+    const d=new Date(r.t),day=d.getUTCFullYear()+'-'+d.getUTCMonth()+'-'+d.getUTCDate();
+    if(day!==lastDay){lastDay=day;const gx=PL+i*slot;
+      x.strokeStyle='rgba(255,255,255,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(gx,PT);x.lineTo(gx,PB);x.stroke();
+      x.fillStyle='rgba(255,255,255,0.42)';x.font='13px "Share Tech Mono",monospace';
+      x.fillText(d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}),gx+slot*2.2,PB+22);
+    }
+  });
+  // candles
+  const bw=Math.max(1.5,Math.min(15,slot*0.62));
+  rows.forEach((r,i)=>{
+    const cx=PL+(i+0.5)*slot,up=r.c>=r.o,col=up?UP:DN;
+    x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(1,slot*0.12);
+    x.beginPath();x.moveTo(cx,py(r.h));x.lineTo(cx,py(r.l));x.stroke();
+    const yo=py(r.o),yc=py(r.c),top=Math.min(yo,yc),bh=Math.max(1.5,Math.abs(yc-yo));
+    x.fillRect(cx-bw/2,top,bw,bh);
+  });
+  // plot border
+  x.strokeStyle='rgba(245,166,35,0.14)';x.lineWidth=1;x.strokeRect(PL,PT,PR-PL,PB-PT);
+  // ---- footer / marketing ----
+  const footY=H-26;
+  const fg=x.createLinearGradient(44,0,W-44,0);
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(44,footY-30);x.lineTo(W-44,footY-30);x.stroke();
+  let fx=44;
+  if(imgs.logoGM&&imgs.logoGM.width){const ih=22,iw=ih*(imgs.logoGM.width/imgs.logoGM.height);x.drawImage(imgs.logoGM,fx,footY-18,iw,ih);fx+=iw+12;}
+  if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-7,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-18,22,22);x.restore();fx+=30;}
+  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.75)';x.font='700 17px "Space Grotesk",system-ui,sans-serif';
+  x.fillText('Free GoMining ROI & discount optimizer',fx,footY-2);
+  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px "Share Tech Mono",monospace';
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  x.fillText(now+'   ·   not financial advice',W-44,footY-2);
+  x.textAlign='left';
+  return c;
 }
 
 // Share the current plan as a link that re-creates the same view for the recipient. The setup
