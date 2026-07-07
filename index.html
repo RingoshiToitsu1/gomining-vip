@@ -2859,7 +2859,7 @@ function buildChart(symbol,allowChange){
 // rebuild our own 1-hour candlestick image from public OHLC data and stamp it with
 // GMT-Optimizer + GoMining branding (deliberately NO promo code).
 // ============================================================
-let _chartShotCanvas=null;
+let _chartShotCanvas=null, _chartShotBlob=null;
 const _csImgCache={};
 function _csImg(src){
   if(_csImgCache[src])return _csImgCache[src];
@@ -2915,6 +2915,7 @@ async function createChartShot(){
   document.getElementById('chartShotLoadTxt').textContent='Pulling the latest 1-hour candles…';
   img.style.display='none';actions.style.display='none';load.style.display='flex';
   modal.style.display='flex';document.body.style.overflow='hidden';
+  _chartShotCanvas=null;_chartShotBlob=null;   // clear any prior shot so we never share stale image
   const HOURS=120; // ~5 days of hourly candles
   try{
     const [data,logoOpt,coin,token]=await Promise.all([
@@ -2926,6 +2927,7 @@ async function createChartShot(){
     if(!data||!data.rows||data.rows.length<4)throw new Error('no data');
     _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,coin,token});
     img.src=_chartShotCanvas.toDataURL('image/png');
+    _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cache so Share can fire inside the click gesture
     img.style.display='';load.style.display='none';actions.style.display='flex';
   }catch(e){
     document.getElementById('chartShotLoadTxt').textContent='Couldn’t load price data right now — please try again in a moment.';
@@ -2942,55 +2944,77 @@ function _csShareText(){
   const a=window._chartAsset||{name:'Bitcoin'};
   return 'Live '+a.name+' chart — plan your GoMining ROI, discount & break-even free at GMT-Optimizer.com';
 }
-function openChartShare(){if(!_chartShotCanvas)return;document.getElementById('chartShareSheet').style.display='flex';}
+// Build a File from the cached PNG blob (present once the shot is rendered).
+function _chartShotFile(){
+  if(!_chartShotBlob)return null;
+  const a=window._chartAsset||{kind:'btc'};
+  return new File([_chartShotBlob],'gmt-optimizer-'+(a.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png',{type:'image/png'});
+}
+function _canShareImage(){const f=_chartShotFile();return !!(f&&navigator.canShare&&navigator.canShare({files:[f]}));}
+// "Share": share the GENERATED IMAGE via the native OS sheet (Telegram/X/Messages/…), which
+// carries the PNG. Called straight from the click so the share gesture stays valid. Browsers
+// without file-sharing (mostly desktop) fall back to our custom sheet.
+function openChartShare(){
+  if(!_chartShotBlob)return;
+  const f=_chartShotFile();
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){
+    const a=window._chartAsset||{name:'Bitcoin'};
+    navigator.share({files:[f],title:a.name+' — 1H chart',text:_csShareText()}).catch(()=>{});
+    return;
+  }
+  document.getElementById('chartShareSheet').style.display='flex';   // desktop fallback
+}
 function closeChartShare(){const s=document.getElementById('chartShareSheet');if(s)s.style.display='none';}
 let _csToastT=null;
 function csToast(msg){
   const el=document.getElementById('chartShareToast');if(!el)return;
   el.textContent=msg;el.classList.add('show');
-  clearTimeout(_csToastT);_csToastT=setTimeout(()=>el.classList.remove('show'),2200);
+  clearTimeout(_csToastT);_csToastT=setTimeout(()=>el.classList.remove('show'),2600);
 }
-function chartShareTo(net){
-  const u=encodeURIComponent(CHART_SHARE_URL),t=_csShareText(),te=encodeURIComponent(t);
+// Fallback-sheet app buttons can't attach a file to a web intent, so copy the image to the
+// clipboard first and open the app's composer — the user pastes the ready image into the post.
+const _CS_NET={telegram:'Telegram',x:'X',whatsapp:'WhatsApp',facebook:'Facebook',reddit:'Reddit'};
+async function chartShareTo(net){
+  await copyChartShot(true);   // silent copy
+  const u=encodeURIComponent(CHART_SHARE_URL),te=encodeURIComponent(_csShareText());
   const urls={
     telegram:'https://t.me/share/url?url='+u+'&text='+te,
     x:'https://twitter.com/intent/tweet?text='+te+'&url='+u,
-    whatsapp:'https://wa.me/?text='+encodeURIComponent(t+' '+CHART_SHARE_URL),
+    whatsapp:'https://wa.me/?text='+encodeURIComponent(_csShareText()+' '+CHART_SHARE_URL),
     facebook:'https://www.facebook.com/sharer/sharer.php?u='+u,
     reddit:'https://www.reddit.com/submit?url='+u+'&title='+te
   };
-  const url=urls[net];if(url)window.open(url,'_blank','noopener,noreferrer');
+  if(urls[net])window.open(urls[net],'_blank','noopener,noreferrer');
+  csToast('✓ Image copied — paste it into '+(_CS_NET[net]||'the post'));
 }
-// Native OS share sheet — carries the actual PNG image where the platform supports files.
+// "Share with other apps" row — native image share, else save the PNG.
 async function chartShareNative(){
-  if(!_chartShotCanvas)return;
-  const asset=window._chartAsset||{kind:'btc',name:'Bitcoin'};
+  const f=_chartShotFile();if(!f)return;
   try{
-    const blob=await canvasToBlob(_chartShotCanvas);
-    const file=new File([blob],'gmt-optimizer-'+(asset.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png',{type:'image/png'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:asset.name+' — 1H chart',text:_csShareText()});return;
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      await navigator.share({files:[f],title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()});return;
     }
-    if(navigator.share){await navigator.share({title:asset.name+' — 1H chart',text:_csShareText()+' '+CHART_SHARE_URL});return;}
+    if(navigator.share){await navigator.share({title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+CHART_SHARE_URL});return;}
   }catch(e){if(e&&e.name==='AbortError')return;}
-  // no Web Share support (most desktops): fall back to saving the image
   downloadChartShot();csToast('⬇ Image saved — attach it anywhere');
 }
-async function copyChartShot(){
-  if(!_chartShotCanvas)return;
+async function copyChartShot(silent){
+  if(!_chartShotCanvas&&!_chartShotBlob)return;
   try{
     if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
-      await navigator.clipboard.write([new ClipboardItem({'image/png':canvasToBlob(_chartShotCanvas)})]);
-      csToast('✓ Image copied — paste anywhere');return;
+      const blobP=_chartShotBlob?Promise.resolve(_chartShotBlob):canvasToBlob(_chartShotCanvas);
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);
+      if(silent!==true)csToast('✓ Image copied — paste anywhere');return;
     }
   }catch(e){}
-  downloadChartShot();csToast('⬇ Image saved');
+  if(silent!==true){downloadChartShot();csToast('⬇ Image saved');}
 }
 async function downloadChartShot(btn){
-  if(!_chartShotCanvas)return;
+  if(!_chartShotCanvas&&!_chartShotBlob)return;
   const asset=window._chartAsset||{kind:'btc'};
   try{
-    downloadBlob(await canvasToBlob(_chartShotCanvas),'gmt-optimizer-'+(asset.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png');
+    const blob=_chartShotBlob||await canvasToBlob(_chartShotCanvas);
+    downloadBlob(blob,'gmt-optimizer-'+(asset.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png');
     if(btn){const orig=btn.innerHTML;btn.innerHTML='⬇ Saved';setTimeout(()=>{btn.innerHTML=orig;},2000);}
   }catch(e){}
 }
