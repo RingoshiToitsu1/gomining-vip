@@ -2479,7 +2479,16 @@ function closePlannerIntro(){
 let _chartSym=null;
 function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','btc36.png',false,true);}
 function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','gmt36.png',true,false);}
+// Deep-link: /bitcoin and /gmt (served by the redirect pages as /?chart=…, or hit directly)
+// auto-open the matching chart on first load.
+function maybeOpenChartFromURL(){
+  let which=new URLSearchParams(location.search).get('chart');
+  if(!which){const seg=location.pathname.replace(/\/+$/,'').split('/').pop();if(seg==='bitcoin'||seg==='gmt')which=seg;}
+  if(which==='bitcoin')openBtcChart();
+  else if(which==='gmt')openGmtChart();
+}
 function closeBtcChart(){
+  try{history.replaceState({},'','/'+location.search+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
   const load=document.getElementById('btcChartLoading');
   if(load)load.style.display='flex';
   setTimeout(function(){
@@ -2496,6 +2505,8 @@ function openChart(symbol,title,icon,allowChange,isBtc){
   window._chartAsset=isBtc
     ? {kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'btc36.png'}
     : {kind:'gmt',name:'GoMining Token',pair:'GMT / USD',icon:'gmt36.png'};
+  // reflect the chart in the URL so it's shareable / bookmarkable (gmt-optimizer.com/bitcoin|/gmt)
+  try{history.replaceState({},'',(isBtc?'/bitcoin':'/gmt')+location.hash);}catch(e){}
   document.getElementById('btcChartPage').style.display='';
   document.getElementById('btcChartPage').scrollTop=0;
   document.body.style.overflow='hidden';
@@ -2939,7 +2950,12 @@ function closeChartShot(){
   document.body.style.overflow='hidden'; // the chart page underneath still locks scroll
 }
 // ---- share sheet (YouTube-Music style) ----
-const CHART_SHARE_URL='https://gmt-optimizer.com';
+const CHART_SHARE_BASE='https://gmt-optimizer.com';
+// Per-asset shareable link — gmt-optimizer.com/bitcoin or /gmt.
+function _csChartUrl(){
+  const a=window._chartAsset||{kind:'btc'};
+  return CHART_SHARE_BASE+(a.kind==='gmt'?'/gmt':'/bitcoin');
+}
 function _csShareText(){
   const a=window._chartAsset||{name:'Bitcoin'};
   return 'Live '+a.name+' chart — plan your GoMining ROI, discount & break-even free at GMT-Optimizer.com';
@@ -2970,11 +2986,11 @@ function csToast(msg){
 const _CS_NET={telegram:'Telegram',x:'X',whatsapp:'WhatsApp',facebook:'Facebook',reddit:'Reddit'};
 async function chartShareTo(net){
   await copyChartShot(true);   // silent copy
-  const u=encodeURIComponent(CHART_SHARE_URL),te=encodeURIComponent(_csShareText());
+  const link=_csChartUrl(),u=encodeURIComponent(link),te=encodeURIComponent(_csShareText());
   const urls={
     telegram:'https://t.me/share/url?url='+u+'&text='+te,
     x:'https://twitter.com/intent/tweet?text='+te+'&url='+u,
-    whatsapp:'https://wa.me/?text='+encodeURIComponent(_csShareText()+' '+CHART_SHARE_URL),
+    whatsapp:'https://wa.me/?text='+encodeURIComponent(_csShareText()+' '+link),
     facebook:'https://www.facebook.com/sharer/sharer.php?u='+u,
     reddit:'https://www.reddit.com/submit?url='+u+'&title='+te
   };
@@ -2986,9 +3002,9 @@ async function chartShareNative(){
   const f=_chartShotFile();if(!f)return;
   try{
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      await navigator.share({files:[f],title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()});return;
+      await navigator.share({files:[f],url:_csChartUrl(),title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+_csChartUrl()});return;
     }
-    if(navigator.share){await navigator.share({title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+CHART_SHARE_URL});return;}
+    if(navigator.share){await navigator.share({title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+_csChartUrl()});return;}
   }catch(e){if(e&&e.name==='AbortError')return;}
   downloadChartShot();csToast('⬇ Image saved — attach it anywhere');
 }
@@ -3342,6 +3358,7 @@ async function fetchData(){
     window._plannerCalcDone=true;
     const pBtn=document.querySelector('[data-tab="tab-planner"]');if(pBtn)pBtn.click();
   }
+  if(!S.chartDeepLinkChecked){S.chartDeepLinkChecked=true;if(!sharedPlan)maybeOpenChartFromURL();}
 }
 
 function updateHeader(){
