@@ -1,13 +1,14 @@
 /* GMT Optimizer — shared UI chrome/behaviors (reveal, count-up, tilt,
    magnetic, nav-shrink, decode headline, galaxy backdrop).
-   Ported verbatim from redesign-prototype.html; defensively no-ops on
-   pages that lack the relevant elements. */
+   Scoped to the .rd design-system container so it is safe to load on pages
+   that also contain the (non-.rd) tool UI; no-ops on anything it can't find. */
 (function(){
+  var root = document.querySelector('.rd') || document;
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* nav shrink */
-  var nav=document.getElementById('nav');
-  addEventListener('scroll',function(){nav.classList.toggle('shrunk',scrollY>40);},{passive:true});
+  /* nav shrink (guarded — the tool page has no #nav) */
+  var nav=root.querySelector('#nav');
+  if(nav)addEventListener('scroll',function(){nav.classList.toggle('shrunk',scrollY>40);},{passive:true});
 
   /* reveal + trigger counters/decode when a node enters */
   var io=new IntersectionObserver(function(es){es.forEach(function(e){
@@ -15,10 +16,10 @@
       e.target.querySelectorAll('[data-count]').forEach(runCount);
       io.unobserve(e.target);}
   });},{threshold:.16,rootMargin:'0px 0px -6% 0px'});
-  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  root.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
 
   /* FAQ */
-  document.querySelectorAll('.faq-q').forEach(function(q){q.addEventListener('click',function(){
+  root.querySelectorAll('.faq-q').forEach(function(q){q.addEventListener('click',function(){
     var it=q.parentElement,a=it.querySelector('.faq-a');var open=it.classList.toggle('open');
     a.style.maxHeight=open?a.scrollHeight+'px':0;});});
 
@@ -36,7 +37,7 @@
   /* decode headline */
   if(!reduce){
     var GL='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
-    document.querySelectorAll('[data-dec]').forEach(function(el,i){
+    root.querySelectorAll('[data-dec]').forEach(function(el,i){
       var full=el.textContent,out=el.textContent.split(''),done=0;
       el.textContent='';
       setTimeout(function(){
@@ -56,21 +57,21 @@
   if(reduce)return;
 
   /* pointer parallax + tilt + magnetic + spotlight */
-  var depths=[].slice.call(document.querySelectorAll('[data-depth]'));
+  var depths=[].slice.call(root.querySelectorAll('[data-depth]'));
   var mx=0,my=0,cx=0,cy=0;
   addEventListener('pointermove',function(e){mx=(e.clientX/innerWidth-.5);my=(e.clientY/innerHeight-.5);},{passive:true});
-  document.querySelectorAll('[data-tilt]').forEach(function(el){
+  root.querySelectorAll('[data-tilt]').forEach(function(el){
     el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
       var px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;
       el.style.transform='perspective(820px) rotateX('+(-py*6)+'deg) rotateY('+(px*8)+'deg) translateY(-4px)';});
     el.addEventListener('pointerleave',function(){el.style.transform='';});
   });
-  document.querySelectorAll('.spot').forEach(function(el){
+  root.querySelectorAll('.spot').forEach(function(el){
     el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
       el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
       el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
   });
-  document.querySelectorAll('[data-magnetic]').forEach(function(b){
+  root.querySelectorAll('[data-magnetic]').forEach(function(b){
     b.addEventListener('pointermove',function(e){var r=b.getBoundingClientRect();
       b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';});
     b.addEventListener('pointerleave',function(){b.style.transform='';});
@@ -80,8 +81,10 @@
       el.style.transform='translate('+(-cx*d)+'px,'+(-cy*d)+'px)';});
     requestAnimationFrame(loop);})();
 
-  /* ---- SPIRAL GALAXY BACKDROP ---- */
-  var cvs=document.getElementById('stars'),ctx=cvs.getContext('2d');
+  /* ---- SPIRAL GALAXY BACKDROP (guarded — needs the #stars canvas) ---- */
+  var cvs=root.querySelector('#stars');
+  if(!cvs)return;
+  var ctx=cvs.getContext('2d');
   var W,H,dpr=Math.min(devicePixelRatio||1,2),gal=[],bg=[],shots=[],shotTimer=0,rot=0,ARMS=2,TURNS=1.45,maxR,cx0,cy0;
   function tint(t){return t<.28?'255,240,205':t<.62?'255,207,122':'245,166,35';}
   function build(){
