@@ -137,7 +137,7 @@ h2.sec-title{font-size:clamp(1.8rem,4vw,2.9rem);font-weight:700;color:var(--whit
 /* hero visual — floating holo rings + stat card */
 .hero-visual{position:relative;height:440px;display:flex;align-items:center;justify-content:center;perspective:1000px}
 .holo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;will-change:transform}
-.holo svg{width:100%;height:100%;max-width:440px;filter:drop-shadow(0 0 30px rgba(245,166,35,.3));animation:spin 30s linear infinite}
+.holo svg{width:100%;height:100%;max-width:440px;filter:drop-shadow(0 0 16px rgba(245,166,35,.28));animation:spin 44s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .holo::after{content:'';position:absolute;width:60%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle,rgba(245,166,35,.28),transparent 62%);animation:pulseGlow 3.6s var(--ease) infinite}
@@ -318,28 +318,27 @@ footer::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.5;
               <stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
             </radialGradient>
           </defs>
-          <g fill="none" stroke="url(#logoGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path id="arcOuter" d="M 13 26 A 10 10 0 1 1 26 13"/>
-            <path id="arcInner" d="M 23 16 A 5 5 0 1 0 16 22"/>
-            <path d="M 22 13 L 26 13 L 26 17"/>
+          <g fill="none" stroke="url(#logoGrad)" stroke-linecap="round" stroke-linejoin="round">
+            <path id="arcOuter" d="M 13 26 A 10 10 0 1 1 26 13" stroke-width="0.9"/>
+            <path id="arcInner" d="M 23 16 A 5 5 0 1 0 16 22" stroke-width="0.8"/>
+            <path d="M 22 13 L 26 13 L 26 17" stroke-width="0.9"/>
           </g>
-          <!-- planet gliding along the outer arc -->
-          <g>
-            <circle r="2" fill="url(#planetGlow)"/>
-            <circle r="0.7" fill="#FFF7E6"/>
-            <animateMotion dur="6.5s" repeatCount="indefinite" calcMode="spline"
-              keyTimes="0;0.5;1" keyPoints="0;1;0" keySplines="0.42 0 0.58 1;0.42 0 0.58 1">
-              <mpath href="#arcOuter" xlink:href="#arcOuter"/>
-            </animateMotion>
-          </g>
-          <!-- planet gliding along the inner arc -->
-          <g>
-            <circle r="1.5" fill="url(#planetGlow)"/>
-            <circle r="0.55" fill="#FFF7E6"/>
-            <animateMotion dur="4.6s" repeatCount="indefinite" begin="-1.6s" calcMode="spline"
-              keyTimes="0;0.5;1" keyPoints="0;1;0" keySplines="0.42 0 0.58 1;0.42 0 0.58 1">
-              <mpath href="#arcInner" xlink:href="#arcInner"/>
-            </animateMotion>
+          <!-- subtle planets & stars drifting within the logo lines (a small circulating galaxy) -->
+          <g fill="url(#planetGlow)">
+            <!-- two brighter planets, gentle short glides -->
+            <g><circle r="1.3"/><circle r="0.45" fill="#FFF7E6"/>
+              <animate attributeName="opacity" values="0.75;1;0.75" dur="5s" repeatCount="indefinite"/>
+              <animateMotion dur="15s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.18;0.4;0.18" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="1.05"/><circle r="0.38" fill="#FFF7E6"/>
+              <animate attributeName="opacity" values="0.65;1;0.65" dur="6s" begin="-1.5s" repeatCount="indefinite"/>
+              <animateMotion dur="12s" begin="-3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.34;0.58;0.34" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcInner" xlink:href="#arcInner"/></animateMotion></g>
+            <!-- faint twinkling stars parked along the arms -->
+            <g><circle r="0.6"/><animate attributeName="opacity" values="0.12;0.7;0.12" dur="3.6s" repeatCount="indefinite"/>
+              <animateMotion dur="17s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.6;0.68;0.6" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="0.55"/><animate attributeName="opacity" values="0.1;0.65;0.1" dur="4.3s" begin="-2s" repeatCount="indefinite"/>
+              <animateMotion dur="19s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.86;0.92;0.86" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="0.5"/><animate attributeName="opacity" values="0.1;0.6;0.1" dur="4s" begin="-1s" repeatCount="indefinite"/>
+              <animateMotion dur="16s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.14;0.2;0.14" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcInner" xlink:href="#arcInner"/></animateMotion></g>
           </g>
         </svg>
       </div>
