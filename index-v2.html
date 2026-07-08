@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="V6vX7VZoM-hvNLKQUqsenHVh-sLM-SFPvn6PQjhgujQ" />
+<title>GoMining Calculator — Profit, ROI & Earnings Projector | GMT Optimizer</title>
+<meta name="description" content="Free GoMining calculator: project your mining profit, ROI and GMT earnings with live BTC difficulty and halving decay. New to GoMining? Sign up with code RINGO5 and we'll fund your first TH to get your account started.">
+<link rel="canonical" href="https://gmt-optimizer.com/">
+<meta name="robots" content="noindex,nofollow">
+<!-- Social link preview (Open Graph + Twitter Card) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GMT Optimizer">
+<meta property="og:url" content="https://gmt-optimizer.com/">
+<meta property="og:title" content="GoMining Calculator — Profit, ROI & Earnings Projector">
+<meta property="og:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: sign up with code RINGO5 and we'll fund your first TH.">
+<meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="GoMining Calculator — Profit, ROI & Earnings Projector">
+<meta name="twitter:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: sign up with code RINGO5 and we'll fund your first TH.">
+<meta name="twitter:image" content="https://gmt-optimizer.com/og-image.png?v=2">
+<!-- Structured data: helps Google understand this is a free GoMining calculator web app -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "GMT Optimizer — GoMining Calculator",
+  "url": "https://gmt-optimizer.com/",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Web browser",
+  "browserRequirements": "Requires JavaScript",
+  "description": "Free GoMining calculator and earnings projector. Model your mining profit, ROI and GMT rewards with live BTC price, network difficulty and halving decay.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "GoMining profit & ROI calculator",
+    "Live P&L tracking",
+    "Multi-year earnings projections with difficulty decay",
+    "Capital allocation planner"
+  ]
+}
+</script>
+<script>/* v2 STAGING: always show the landing for preview (real promotion will gate on !gm_onboarded). Use ?tool=1 to skip straight to the tool. */try{if(!/[?&]tool=1/.test(location.search))document.documentElement.classList.add('show-landing')}catch(e){}</script>
+<!-- FAQ structured data (mirrors the visible FAQ in the content section below) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is GoMining profitable?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "GoMining profitability depends on the Bitcoin price, network difficulty and your miner's efficiency (watts per TH). GMT Optimizer projects all three with live data so you can see your break-even and ROI before you invest — including the downside."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is GMT and how does the discount work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "GMT is GoMining's token. Locking GMT (or holding it in your wallet) builds coverage that discounts your daily electricity fee in 1% steps, up to a 20% cap, and unlocks VIP tiers. The planner finds the optimal amount to lock."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is GoMining ROI calculated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The tool computes daily mining rewards (sats per TH per day) from live network data, subtracts your electricity fee after any GMT discount, and projects the result forward through halvings and difficulty growth to estimate payback time."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the GoMining promo code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use code RINGO5 when you sign up for a 5% bonus TH on your first miner. New referrals can also message the GMT Optimizer team to have their first TH funded and get help setting up their account."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is GMT Optimizer affiliated with GoMining?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining."
+      }
+    }
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
+<link rel="stylesheet" href="assets/app.css?v=1">
+<link rel="stylesheet" href="assets/design.css?v=1">
+<style>
+/* v2 landing overlay */
+#landing{position:fixed;inset:0;z-index:1000;overflow-y:auto;overflow-x:hidden;display:none}
+html.show-landing #landing{display:block}
+html.show-landing body{overflow:hidden}
+</style>
+</head>
+<body>
+
+<!-- ===== NEW MARKETING LANDING (v2 staging) ===== -->
+<div id="landing" class="rd">
+
+<div class="world" aria-hidden="true">
+  <span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>
+  <div class="grid-floor" data-depth="0.04"></div>
+  <span class="beam beam-1"></span><span class="beam beam-2"></span><span class="beam beam-3"></span>
+  <canvas id="stars"></canvas>
+</div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="noise" aria-hidden="true"></div>
+<div class="scan" aria-hidden="true"></div>
+
+<!-- ===== UTILITY TICKER ===== -->
+<div class="util" aria-hidden="true">
+  <div class="ticker">
+    <span><span class="li">◉ NETWORK LIVE</span></span>
+    <span>BTC <b id="tkBtc">$64,180</b></span>
+    <span>DIFFICULTY <b>121.51 T</b></span>
+    <span>HASHPRICE <b>$46.2 / PH/day</b></span>
+    <span>GMT <b>$0.285</b></span>
+    <span>NEXT HALVING <b>2028</b></span>
+    <span><span class="up">▲ SATS/TH/DAY 412</span></span>
+    <span><span class="li">◉ NETWORK LIVE</span></span>
+    <span>BTC <b>$64,180</b></span>
+    <span>DIFFICULTY <b>121.51 T</b></span>
+    <span>HASHPRICE <b>$46.2 / PH/day</b></span>
+    <span>GMT <b>$0.285</b></span>
+  </div>
+</div>
+
+<!-- ===== NAV ===== -->
+<nav id="nav">
+  <a href="#" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
+  <div class="nav-links">
+    <a href="#dashboard">Dashboard</a><a href="#features">System</a><a href="#start">Access</a><a href="#faq">FAQ</a>
+  </div>
+  <a href="#" onclick="v2StartSetup();return false" class="nav-cta" data-magnetic>Launch Console</a>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <span class="tag reveal"><span class="dot"></span>AI-Driven Mining Optimizer <span class="idx">// v2.0</span></span>
+      <h1 class="reveal d1"><span class="dec" data-dec>Plan your work.</span><span class="line2 grad dec" data-dec>Work your plan.</span></h1>
+      <p class="hero-sub reveal d2">The free, ad-free GoMining profit optimizer that finds your perfect capital split — then tracks it live, sat by sat.</p>
+      <div class="hero-ctas reveal d3">
+        <a class="btn btn-primary" href="#" onclick="v2StartSetup();return false" data-magnetic>I'm already mining<small>Enter my GoMining setup</small></a>
+        <a class="btn btn-alt" href="#" onclick="v2NewUser();return false" data-magnetic>New to GoMining<small>No computing power yet</small></a>
+      </div>
+      <div class="hero-chips reveal d3">
+        <span>Capital Planner</span><span>Live P&amp;L</span><span>Growth Projection</span><span>VIP &amp; Discount</span>
+      </div>
+      <div class="hero-trust reveal d4">
+        <span><i></i>100% free</span><span><i></i>No login</span><span><i></i>Live network data</span><span><i></i>No ads, ever</span>
+      </div>
+    </div>
+
+    <!-- INSTRUMENT: exact-logo emblem framed as a holographic readout -->
+    <div class="instrument reveal d2">
+      <span class="corners" style="inset:0"></span>
+      <div class="reticle" aria-hidden="true">
+        <svg viewBox="-100 -100 200 200" fill="none">
+          <g class="r-spin" stroke="var(--line-hi)">
+            <circle r="94" stroke-width=".5" stroke-dasharray="1 5"/>
+            <circle r="80" stroke-width=".4" opacity=".7"/>
+            <circle r="80" stroke-width="1.4" stroke-dasharray="0.5 40" opacity=".9"/>
+          </g>
+          <g class="r-spin-rev" stroke="var(--line-hi)">
+            <circle r="64" stroke-width=".4" stroke-dasharray="1 9" opacity=".7"/>
+            <line x1="-98" y1="0" x2="-88" y2="0" stroke-width="1"/><line x1="98" y1="0" x2="88" y2="0" stroke-width="1"/>
+            <line x1="0" y1="-98" x2="0" y2="-88" stroke-width="1"/><line x1="0" y1="98" x2="0" y2="88" stroke-width="1"/>
+          </g>
+        </svg>
+      </div>
+      <div class="radar" aria-hidden="true"></div>
+
+      <div class="holo" data-tilt data-depth="0.03" aria-label="GMT Optimizer logo">
+        <!-- Exact replica of gmt-optimizer-logo.svg mark (same path data) + planets riding the lines -->
+        <svg viewBox="4 4 26 26" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F5A623"/><stop offset="100%" stop-color="#FFCF7A"/>
+            </linearGradient>
+            <radialGradient id="planetGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF4E0"/><stop offset="45%" stop-color="#FFCF7A"/><stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <g fill="none" stroke="url(#logoGrad)" stroke-linecap="round" stroke-linejoin="round">
+            <path id="arcOuter" d="M 13 26 A 10 10 0 1 1 26 13" stroke-width="0.9"/>
+            <path id="arcInner" d="M 23 16 A 5 5 0 1 0 16 22" stroke-width="0.8"/>
+            <path d="M 22 13 L 26 13 L 26 17" stroke-width="0.9"/>
+          </g>
+          <g fill="url(#planetGlow)">
+            <g><circle r="1.3"/><circle r="0.45" fill="#FFF7E6"/>
+              <animate attributeName="opacity" values="0.75;1;0.75" dur="5s" repeatCount="indefinite"/>
+              <animateMotion dur="15s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.18;0.4;0.18" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="1.05"/><circle r="0.38" fill="#FFF7E6"/>
+              <animate attributeName="opacity" values="0.65;1;0.65" dur="6s" begin="-1.5s" repeatCount="indefinite"/>
+              <animateMotion dur="12s" begin="-3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.34;0.58;0.34" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcInner" xlink:href="#arcInner"/></animateMotion></g>
+            <g><circle r="0.6"/><animate attributeName="opacity" values="0.12;0.7;0.12" dur="3.6s" repeatCount="indefinite"/>
+              <animateMotion dur="17s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.6;0.68;0.6" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="0.55"/><animate attributeName="opacity" values="0.1;0.65;0.1" dur="4.3s" begin="-2s" repeatCount="indefinite"/>
+              <animateMotion dur="19s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.86;0.92;0.86" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcOuter" xlink:href="#arcOuter"/></animateMotion></g>
+            <g><circle r="0.5"/><animate attributeName="opacity" values="0.1;0.6;0.1" dur="4s" begin="-1s" repeatCount="indefinite"/>
+              <animateMotion dur="16s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" keyPoints="0.14;0.2;0.14" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"><mpath href="#arcInner" xlink:href="#arcInner"/></animateMotion></g>
+          </g>
+        </svg>
+      </div>
+
+      <span class="callout c-l co1" aria-hidden="true">Coverage<span class="cd"></span><b>20%</b></span>
+      <span class="callout c-r co3" aria-hidden="true">Efficiency<span class="cd"></span><b>15.3 W/TH</b></span>
+      <span class="callout c-l co2" aria-hidden="true">Status<span class="cd"></span><b>Optimal</b></span>
+
+      <div class="telem glass corners-host" data-tilt data-depth="0.015" aria-hidden="true">
+        <div class="t-head"><span>Monthly Yield</span><span class="t-live"><i></i>Live</span></div>
+        <div class="t-big"><span data-count data-to="1284" data-prefix="$">$0</span></div>
+        <div class="t-sub">≈ 0.0192 BTC · net of fees</div>
+        <svg class="spark" viewBox="0 0 220 30" preserveAspectRatio="none" aria-hidden="true">
+          <defs><linearGradient id="spk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(245,166,35,.35)"/><stop offset="1" stop-color="rgba(245,166,35,0)"/></linearGradient></defs>
+          <path d="M0,24 L24,21 L48,22 L72,16 L96,18 L120,11 L144,13 L168,7 L192,9 L220,3 L220,30 L0,30 Z" fill="url(#spk)"/>
+          <path d="M0,24 L24,21 L48,22 L72,16 L96,18 L120,11 L144,13 L168,7 L192,9 L220,3" fill="none" stroke="var(--gold-soft)" stroke-width="1.4"/>
+        </svg>
+        <div class="t-row">
+          <div class="t-mini"><div class="ml">Daily Net</div><div class="mv g">$43.10</div></div>
+          <div class="t-mini"><div class="ml">Discount</div><div class="mv">20%</div></div>
+          <div class="t-mini"><div class="ml">VIP</div><div class="mv g">Diamond</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== MARQUEE ===== -->
+<div class="mq" aria-hidden="true">
+  <div class="mq-track">
+    <span>Live BTC Difficulty <span class="sep">/</span> <b>Halving Decay Modelled</b></span><span class="sep">◆</span>
+    <span>Capital Allocation Solver</span><span class="sep">◆</span>
+    <span>No-Arbitrage Break-Even Floor</span><span class="sep">◆</span>
+    <span><b>Real-Time P&amp;L</b></span><span class="sep">◆</span>
+    <span>Multi-Year Projections</span><span class="sep">◆</span>
+    <span>VIP &amp; Token Discount</span><span class="sep">◆</span>
+    <span>Live BTC Difficulty <span class="sep">/</span> <b>Halving Decay Modelled</b></span><span class="sep">◆</span>
+    <span>Capital Allocation Solver</span><span class="sep">◆</span>
+    <span>No-Arbitrage Break-Even Floor</span><span class="sep">◆</span>
+    <span><b>Real-Time P&amp;L</b></span><span class="sep">◆</span>
+  </div>
+</div>
+
+<!-- ===== STAT STRIP ===== -->
+<section id="dashboard" style="padding-top:96px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag"><span class="idx">01</span> / <span class="dot"></span>Live Dashboard</span>
+      <h2 class="sec-title">Your whole farm, <span class="grad">at a glance.</span></h2>
+    </div>
+    <div class="stat-strip">
+      <div class="stat-card glass spot reveal" data-tilt>
+        <span class="corners"></span>
+        <div class="s-id"><span>DAILY.NET</span><span>◈</span></div><div class="s-top"></div>
+        <div class="s-label">Daily Net Profit</div>
+        <div class="s-val g"><span data-count data-to="43.10" data-dec="2" data-prefix="$">$0</span></div>
+        <div class="s-sub">+0.00064 BTC / day</div>
+      </div>
+      <div class="stat-card glass spot reveal d1" data-tilt>
+        <span class="corners"></span>
+        <div class="s-id"><span>MONTH.YIELD</span><span>◈</span></div><div class="s-top"></div>
+        <div class="s-label">Monthly Earnings</div>
+        <div class="s-val"><span data-count data-to="1284" data-prefix="$">$0</span></div>
+        <div class="s-sub">≈ $15.4k / year</div>
+      </div>
+      <div class="stat-card glass spot reveal d2" data-tilt>
+        <span class="corners"></span>
+        <div class="s-id"><span>COVERAGE</span><span>◈</span></div><div class="s-top"></div>
+        <div class="s-label">Total Discount</div>
+        <div class="s-val g"><span data-count data-to="20" data-suffix="%">0%</span></div>
+        <div class="s-sub">token + VIP coverage</div>
+      </div>
+      <div class="stat-card glass spot action reveal d3" data-tilt>
+        <span class="corners"></span>
+        <div class="s-id"><span>PROJECT</span><span>◈</span></div><div class="s-top"></div>
+        <div class="s-label">Plan Ahead</div>
+        <div class="s-cta"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
+        <div class="go">Run projection <span class="ar">→</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag"><span class="idx">02</span> / <span class="dot"></span>System Modules</span>
+      <h2 class="sec-title">Everything you need to <span class="grad">optimize the farm.</span></h2>
+      <p class="sec-lead">One tool models your break-even, your ideal capital split, and years of growth — all on live Bitcoin network data.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat glass spot reveal" data-tilt>
+        <span class="corners"></span>
+        <div class="f-id">MODULE 01 — ALLOCATOR</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></div>
+        <h3>Capital Planner</h3>
+        <p>Finds your optimal split across locking GMT, buying TH, and upgrading efficiency — holding the 20% discount cap while maximizing net yield.</p>
+      </div>
+      <div class="feat glass spot reveal d1" data-tilt>
+        <span class="corners"></span>
+        <div class="f-id">MODULE 02 — TELEMETRY</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>Live P&amp;L</h3>
+        <p>Tracks your daily net profit, monthly earnings and effective discount in real time, sat by sat, against live BTC price and network difficulty.</p>
+      </div>
+      <div class="feat glass spot reveal d2" data-tilt>
+        <span class="corners"></span>
+        <div class="f-id">MODULE 03 — FORECAST</div>
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 18l5-5 3 3 8-9"/><path d="M15 7h5v5"/></svg></div>
+        <h3>Growth Projection</h3>
+        <p>Projects your setup years forward through halvings and difficulty decay — floored at the network no-arbitrage break-even, never fantasy math.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA BAND ===== -->
+<section id="start">
+  <div class="wrap">
+    <div class="cta-band glass reveal">
+      <svg class="rings" viewBox="-100 -100 200 200" fill="none" aria-hidden="true">
+        <g stroke="var(--line-hi)"><circle r="40" stroke-width=".5"/><circle r="66" stroke-width=".5" stroke-dasharray="1 6"/><circle r="92" stroke-width=".4" opacity=".6"/></g>
+      </svg>
+      <span class="tag" style="justify-content:center"><span class="dot"></span>New User Access</span>
+      <h2 style="margin-top:14px">New to GoMining?</h2>
+      <p>Sign up with code <span class="promo">RINGO5</span> for a 5% bonus TH on your first miner — and message the team to have your first TH funded and your account set up.</p>
+      <div class="hero-ctas" style="justify-content:center">
+        <a class="btn btn-primary" href="#" onclick="v2StartSetup();return false" data-magnetic>Launch the optimizer<small>Free · no login</small></a>
+        <a class="btn btn-alt" href="#" onclick="v2StartSetup();return false" data-magnetic>Enter my setup<small>I'm already mining</small></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="tag"><span class="idx">03</span> / <span class="dot"></span>Knowledge Base</span>
+      <h2 class="sec-title">Frequently <span class="grad">asked.</span></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item glass reveal"><button class="faq-q"><span><span class="qi">Q1</span>Is GoMining profitable?</span><span class="pm"></span></button>
+        <div class="faq-a"><p>GoMining profitability depends on the Bitcoin price, network difficulty and your miner's efficiency (watts per TH). GMT Optimizer projects all three with live data so you can see your break-even and ROI before you invest — including the downside.</p></div></div>
+      <div class="faq-item glass reveal d1"><button class="faq-q"><span><span class="qi">Q2</span>What is GMT and how does the discount work?</span><span class="pm"></span></button>
+        <div class="faq-a"><p>GMT is GoMining's token. Locking GMT (or holding it in your wallet) builds coverage that discounts your daily electricity fee in 1% steps, up to a 20% cap, and unlocks VIP tiers. The planner finds the optimal amount to lock.</p></div></div>
+      <div class="faq-item glass reveal d2"><button class="faq-q"><span><span class="qi">Q3</span>How is GoMining ROI calculated?</span><span class="pm"></span></button>
+        <div class="faq-a"><p>The tool computes daily mining rewards (sats per TH per day) from live network data, subtracts your electricity fee after any GMT discount, and projects the result forward through halvings and difficulty growth to estimate payback time.</p></div></div>
+      <div class="faq-item glass reveal d2"><button class="faq-q"><span><span class="qi">Q4</span>What is the GoMining promo code?</span><span class="pm"></span></button>
+        <div class="faq-a"><p>Use code RINGO5 when you sign up for a 5% bonus TH on your first miner. New referrals can also message the GMT Optimizer team to have their first TH funded and get help setting up their account.</p></div></div>
+      <div class="faq-item glass reveal d2"><button class="faq-q"><span><span class="qi">Q5</span>Is GMT Optimizer affiliated with GoMining?</span><span class="pm"></span></button>
+        <div class="faq-a"><p>No. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="foot-inner">
+      <div class="foot-brand">
+        <a href="#" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+        <p>The free, ad-free GoMining profit optimizer. Live network data, honest projections, no ads — ever.</p>
+        <div class="foot-social">
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.6l-5.2-6.8L5.7 22H2.4l7.7-8.8L1.9 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.8L7.1 3.9H5.2L17.7 20Z"/></svg></a>
+          <a href="#" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.6 20c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.4 13.9l-4.7-1.5c-1-.3-1-1 .2-1.5l18.4-7.1c.9-.3 1.6.2 1.6 1.5Z"/></svg></a>
+          <a href="#" aria-label="Discord"><svg viewBox="0 0 24 24"><path d="M20 4.4A19 19 0 0 0 15.3 3l-.3.5A17 17 0 0 1 19 5.1a15 15 0 0 0-14 0 17 17 0 0 1 4.1-1.6L8.7 3A19 19 0 0 0 4 4.4C1.4 8.3.7 12.1 1 15.8a19 19 0 0 0 5.8 2.9l.7-1.2c-.6-.2-1.2-.5-1.8-.9l.4-.3a13 13 0 0 0 11.6 0l.4.3c-.6.4-1.2.7-1.8.9l.7 1.2a19 19 0 0 0 5.8-2.9c.4-4.3-.7-8.1-3.8-11.4ZM8.7 13.7c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.7 1.9-1.7 1.9Zm6.6 0c-.9 0-1.7-.9-1.7-1.9s.7-1.9 1.7-1.9 1.7.9 1.7 1.9-.8 1.9-1.7 1.9Z"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col"><h4>Tool</h4><a href="#dashboard">Dashboard</a><a href="#features">System</a><a href="#faq">FAQ</a></div>
+        <div class="foot-col"><h4>Learn</h4><a href="#">How GoMining works</a><a href="#">Is it worth it?</a><a href="#">ROI Calculator</a></div>
+        <div class="foot-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 GMT Optimizer · Independent community tool, not affiliated with GoMining.</span>
+      <span>Made for miners who plan their work.</span>
+    </div>
+  </div>
+</footer>
+
+</div>
+<!-- ===== /LANDING ===== -->
+
+
+<!-- SHARED SVG DEFS (gradient palette for section thumbnails) -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <linearGradient id="thumbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5A623"/>
+      <stop offset="100%" stop-color="#4ecffa"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ONBOARDING -->
+<div class="ob-overlay lp-active" id="onboarding">
+<div class="lp-art" aria-hidden="true">
+  <span class="lp-aurora lp-aurora-1"></span>
+  <span class="lp-aurora lp-aurora-2"></span>
+  <span class="lp-aurora lp-aurora-3"></span>
+  <svg class="lp-rings" viewBox="-340 -340 680 680" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="lpRingGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#F5A623"/><stop offset="1" stop-color="#FFCF7A"/>
+      </linearGradient>
+      <radialGradient id="lpNode" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#FFE0A8"/><stop offset="1" stop-color="#F5A623" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <g fill="none" stroke="url(#lpRingGrad)" stroke-linecap="round">
+      <circle r="70" stroke-width="1.5" opacity=".9"/>
+      <circle r="130" stroke-width="1.2" opacity=".7"/>
+      <circle r="130" stroke-width="3" stroke-dasharray="6 26" opacity=".6"/>
+      <circle r="200" stroke-width="1" opacity=".5"/>
+      <circle r="275" stroke-width="1" stroke-dasharray="2 22" opacity=".55"/>
+      <circle r="330" stroke-width="1" opacity=".35"/>
+      <path d="M-70 0 A70 70 0 0 1 0 -70" stroke-width="4" opacity=".95"/>
+      <path d="M200 0 A200 200 0 0 1 141 141" stroke-width="3" opacity=".5"/>
+    </g>
+    <circle cx="0" cy="-130" r="26" fill="url(#lpNode)"/>
+    <circle cx="0" cy="-130" r="4.5" fill="#FFE0A8"/>
+    <circle cx="194" cy="50" r="20" fill="url(#lpNode)"/>
+    <circle cx="194" cy="50" r="3.5" fill="#FFCF7A"/>
+  </svg>
+</div>
+<div class="ob-modal">
+  <div class="ob-dots">
+    <div class="ob-dot active" id="obDot0"></div>
+    <div class="ob-dot" id="obDot1"></div>
+    <div class="ob-dot" id="obDot2"></div>
+    <div class="ob-dot" id="obDot3"></div>
+    <div class="ob-dot" id="obDot4"></div>
+    <div class="ob-dot" id="obDot5"></div>
+    <div class="ob-dot" id="obDot6"></div>
+  </div>
+  <div class="ob-body">
+
+    <!-- STEP 0: Welcome -->
+    <div class="ob-step lp active" data-ob-step="0">
+      <div class="lp-logo ob-step-reveal"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</div>
+      <h1 class="lp-headline ob-step-reveal">Plan your work.<br>Work your plan.</h1>
+      <p class="lp-sub ob-step-reveal">The free, ad-free GoMining profit optimizer that finds your perfect capital split &mdash; then tracks it live, sat by sat.</p>
+      <div class="lp-ctas ob-step-reveal">
+        <button class="lp-cta lp-cta-primary" onclick="obNext()">I'm already mining<small>Enter my GoMining setup</small></button>
+        <button class="lp-cta lp-cta-alt" onclick="obNewUser()">New to GoMining<small>No computing power yet</small></button>
+      </div>
+      <div class="lp-chips ob-step-reveal"><span>Capital Planner</span><span>Live P&amp;L</span><span>Growth Projection</span><span>VIP &amp; Discount</span></div>
+      <div class="lp-quote ob-step-reveal">Growing up, my parents always told me to <b>&ldquo;plan your work, and work your plan.&rdquo;</b> That&rsquo;s exactly what this tool does for your GoMining farm.</div>
+      <div class="lp-trust ob-step-reveal">100% free &middot; No login &middot; Live network data &middot; No ads, ever</div>
+    </div>
+
+    <!-- STEP 1: Display Currency -->
+    <div class="ob-step" data-ob-step="1">
+      <div class="ob-title ob-step-reveal">Display Currency</div>
+      <div class="ob-subtitle ob-step-reveal">Choose your preferred currency for all prices and earnings.</div>
+      <div class="ob-field">
+        <label>Currency</label>
+        <select id="obCurrency" class="ob-select">
+          <option value="USD">USD ($)</option>
+          <option value="GBP">GBP (&pound;)</option>
+          <option value="EUR">EUR (&euro;)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 2: Total Hashrate -->
+    <div class="ob-step" data-ob-step="2">
+      <div class="ob-title ob-step-reveal">Total Hashrate</div>
+      <div class="ob-subtitle ob-step-reveal">Your total computing power across all NFTs.</div>
+      <div class="gm-mk" role="img" aria-label="GoMining Mining farm tiles with the Power tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Mining farm</div>
+        <div class="gm-mk-grid">
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9935;</span>Miners</div><div class="gm-mk-tile-val">6</div></div>
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9889;</span>Power</div><div class="gm-mk-tile-val">1,926.76 <small>TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#128267;</span>Efficiency</div><div class="gm-mk-tile-val">16.46 <small>W/TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">%</span>Discount</div><div class="gm-mk-tile-val">9.52<small>%</small></div></div>
+        </div>
+      </div>
+      <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
+      <div class="ob-field">
+        <label>Total Hashrate</label>
+        <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Energy Efficiency -->
+    <div class="ob-step" data-ob-step="3">
+      <div class="ob-title ob-step-reveal">Energy Efficiency</div>
+      <div class="ob-subtitle ob-step-reveal">Average watts per terahash across your NFTs. Lower is better.</div>
+      <div class="gm-mk" role="img" aria-label="GoMining Mining farm tiles with the Efficiency tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Mining farm</div>
+        <div class="gm-mk-grid">
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9935;</span>Miners</div><div class="gm-mk-tile-val">6</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#9889;</span>Power</div><div class="gm-mk-tile-val">1,926.76 <small>TH</small></div></div>
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">&#128267;</span>Efficiency</div><div class="gm-mk-tile-val">16.46 <small>W/TH</small></div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl"><span class="gm-mk-ico">%</span>Discount</div><div class="gm-mk-tile-val">9.52<small>%</small></div></div>
+        </div>
+      </div>
+      <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> tile</span>
+      <div class="ob-field">
+        <label>Efficiency</label>
+        <div class="ob-input-wrap"><input type="number" id="obWTH" value="15" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Liquid GMT Balance -->
+    <div class="ob-step" data-ob-step="4">
+      <div class="ob-title ob-step-reveal">Liquid GMT Balance</div>
+      <div class="ob-subtitle ob-step-reveal">Unlocked GMT sitting in your GoMining virtual wallet.</div>
+      <div class="gm-mk" role="img" aria-label="GoMining wallet showing the GOMINING balance card highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>Wallets</div>
+        <div class="gm-mk-bal gm-mk-hl">
+          <div class="gm-mk-bal-top"><span class="gm-mk-token"><img src="gmt36.png" alt="GMT">GOMINING</span><span class="gm-mk-chev">&rsaquo;</span></div>
+          <div class="gm-mk-bal-lbl">Balance</div>
+          <div class="gm-mk-bal-val">2,625.50 <small>GOMINING</small></div>
+          <div class="gm-mk-bal-sub">$748.26</div>
+        </div>
+      </div>
+      <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
+      <div class="ob-field">
+        <label>Liquid GMT</label>
+        <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Locked GMT Balance -->
+    <div class="ob-step" data-ob-step="5">
+      <div class="ob-title ob-step-reveal">Locked GMT Balance</div>
+      <div class="ob-subtitle ob-step-reveal">GMT you've staked in VeGoMining. Earns yield and counts toward your VIP tier.</div>
+      <div class="gm-mk" role="img" aria-label="GoMining Governance My lock page with the Total Locked tile highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>My lock</div>
+        <div class="gm-mk-grid3">
+          <div class="gm-mk-tile gm-mk-hl"><div class="gm-mk-tile-lbl">Total Locked</div><div class="gm-mk-tile-val">9,354.00</div><div class="gm-mk-tile-sub">$2,662.15</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl">Total Votes</div><div class="gm-mk-tile-val">9,304.88</div></div>
+          <div class="gm-mk-tile"><div class="gm-mk-tile-lbl">Total Rewards</div><div class="gm-mk-tile-val">801.51</div></div>
+        </div>
+      </div>
+      <span class="ob-tutorial-cap">Governance &rarr; My lock &rarr; <b>Total Locked</b></span>
+      <div class="gm-mk" role="img" aria-label="GoMining wallet actions with a menu showing the Lock option highlighted">
+        <div class="gm-mk-head"><span class="gm-mk-dot"></span>GOMINING wallet</div>
+        <div class="gm-mk-actions">
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">+</span>Buy</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&darr;</span>Deposit</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&uarr;</span>Withdraw</div>
+          <div class="gm-mk-act"><span class="gm-mk-act-btn">&hellip;</span>More</div>
+        </div>
+        <div class="gm-mk-menu-wrap">
+          <div class="gm-mk-menu">
+            <div class="gm-mk-menu-row gm-mk-hl"><span class="gm-mk-menu-ico">&#128274;</span>Lock</div>
+            <div class="gm-mk-menu-row"><span class="gm-mk-menu-ico">&#8646;</span>Convert</div>
+          </div>
+          <div class="gm-mk-arrow"><span class="gm-mk-arrow-tip">&#9664;</span>tap to stake</div>
+        </div>
+      </div>
+      <span class="ob-tutorial-cap">Don't have any locked yet? Wallet &rarr; More &rarr; <b>Lock</b> to stake</span>
+      <div class="ob-field">
+        <label>Locked GMT</label>
+        <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span></div>
+      </div>
+      <input type="hidden" id="obLockAPR" value="18.69">
+      <input type="hidden" id="obCPT" value="12.77">
+      <label class="toggle" style="display:none"><input type="checkbox" id="obClickStreak"><span class="toggle-track"></span></label>
+      <label class="toggle" style="display:none"><input type="checkbox" id="obPayGMT" checked><span class="toggle-track"></span></label>
+    </div>
+
+    <!-- STEP 6: Confirmation -->
+    <div class="ob-step" data-ob-step="6">
+      <div class="ob-title ob-step-reveal">You're All Set!</div>
+      <div class="ob-subtitle ob-step-reveal">Here's a quick preview of your mining operation based on live data. All values update in real-time on the dashboard.</div>
+      <div class="ob-preview-grid">
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Daily Net Profit</div>
+          <div class="ob-pv-val green" id="obPrevDaily">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Monthly Earnings</div>
+          <div class="ob-pv-val cyan" id="obPrevMonthly">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">Total Discount</div>
+          <div class="ob-pv-val purple" id="obPrevDiscount">--</div>
+        </div>
+        <div class="ob-preview-card">
+          <div class="ob-pv-label">VIP Level</div>
+          <div class="ob-pv-val cyan" id="obPrevVip">--</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1rem;font-size:.78rem;color:var(--text3)">You can change any of these settings at any time from the dashboard.</div>
+    </div>
+
+  </div>
+  <div class="ob-nav">
+    <button class="ob-btn ob-btn-secondary" id="obBack" onclick="obGoStep(obCur-1)" style="display:none">Back</button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNewBtn" onclick="obNewUser()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 4px 20px rgba(239,68,68,.3);animation-delay:1.4s">New to GoMining<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(no computing power yet)</span></button>
+    <button class="ob-btn ob-btn-primary ob-reveal" id="obNext" onclick="obNext()" style="flex:1;background:linear-gradient(135deg,#F5A623,#d98e15);color:#000;box-shadow:0 4px 20px rgba(245,166,35,.3);animation-delay:1.4s">Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span></button>
+  </div>
+</div>
+</div>
+
+<!-- NEW USER MODAL -->
+<div class="sp-page" id="newUserModal" style="display:none">
+  <div class="sp-page-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="goBackFromNewUser()">&larr; Back</button>
+    </div>
+    <div class="sp-form" style="max-width:540px">
+      <div class="pi-title">Welcome to GMT Optimizer!</div>
+      <div class="pi-subtitle">You're starting fresh &mdash; everything's at zero. Enter a budget and the Capital Planner shows exactly how much TH and GMT to buy.</div>
+      <div style="background:rgba(245,166,35,.05);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1.2rem;text-align:center">
+        <div style="font-size:.75rem;color:var(--text3);margin-bottom:.6rem">Don't have a GoMining account yet?</div>
+        <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener" class="ri-btn" style="background:var(--purple);display:inline-block;padding:.65rem 1.5rem;font-size:.85rem;text-decoration:none;color:#000;font-weight:700;border-radius:var(--radius-sm)">Sign Up for GoMining</a>
+        <div style="margin-top:.9rem;background:#0e0e0e;border:1.5px solid var(--purple);border-radius:var(--radius-sm);padding:.75rem .8rem;box-shadow:0 0 16px rgba(245,166,35,.12)">
+          <div style="font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.4rem">Promo code</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:.6rem">
+            <span style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--purple);letter-spacing:.12em">RINGO5</span>
+            <button onclick="navigator.clipboard.writeText('RINGO5').catch(()=>{});this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)" style="background:var(--purple);color:#000;border:none;border-radius:8px;padding:.4rem .9rem;font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer">Copy</button>
+          </div>
+          <div style="font-size:.72rem;color:var(--purple-soft);margin-top:.5rem;font-weight:600">5% bonus TH on your first miner purchase</div>
+        </div>
+      </div>
+      <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem">
+        <div style="font-size:.8rem;color:var(--text2);margin-bottom:.6rem;font-weight:600;text-align:center">How much are you looking to invest?</div>
+        <label class="pi-field-budget" for="newUserBudget">
+          <span class="pi-prefix">$</span>
+          <input type="number" id="newUserBudget" value="" placeholder="0" min="0" step="100" onkeydown="if(event.key==='Enter')submitNewUserBudget()">
+          <span class="pi-unit">USD</span>
+        </label>
+      </div>
+      <div class="sp-run-wrap" style="margin-top:.4rem">
+        <button id="newUserBtn" class="ri-btn" onclick="submitNewUserBudget()">Plan my Capital</button>
+      </div>
+    </div>
+  </div>
+  <div class="sp-page-loading" id="newUserLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Planning your capital…</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo"><img src="gmt-optimizer-logo.svg?v=2" alt="" style="height:24px;width:24px;vertical-align:middle;margin-right:6px">GMT Optimizer <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button><a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="ob-reset-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;-webkit-text-fill-color:#000;border-color:transparent;font-weight:700;text-decoration:none">Suggest a Feature</a></div>
+    <div class="live-bar" id="liveBar">
+      <div class="live-chip live-chip-btn" title="Open live BTC chart" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><img src="btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip live-chip-btn" title="Open live GoMining Token chart" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><img src="gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tab-current">My Setup</button>
+  <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
+  <button id="btnEditSetup" class="tab-edit-btn" onclick="openEditSetup()" title="Edit your setup, saved profiles &amp; currency">Edit Setup</button>
+</div>
+
+<!-- ==================== TAB 1 ==================== -->
+<div class="tab-content active" id="tab-current">
+
+  <!-- HERO SUMMARY -->
+  <div class="hero-grid" id="heroGrid">
+    <div class="hero-card green-accent reveal">
+      <div class="hero-label">Daily Net Profit</div>
+      <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroDailyBTC">--</div>
+    </div>
+    <div class="hero-card cyan-accent reveal">
+      <div class="hero-label">Monthly Earnings</div>
+      <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
+      <div class="hero-yearly cyan" id="heroYearly">--</div>
+      <div class="hero-sub" id="heroMonthlyBTC">--</div>
+    </div>
+    <div class="hero-card purple-accent reveal">
+      <div class="hero-label">Total Discount</div>
+      <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroDiscountSub">--</div>
+      <div class="disc-override">
+        <button class="disc-override-toggle" id="discOverrideToggle" onclick="toggleDiscountOverride()">Incorrect discount?</button>
+        <div class="disc-override-panel" id="discOverridePanel" style="display:none">
+          <div class="disc-override-hint">Enter the total discount shown in your GoMining app to override the estimate.</div>
+          <div class="disc-override-row">
+            <input type="number" id="inDiscOverride" min="0" max="30" step="0.1" placeholder="e.g. 24" inputmode="decimal">
+            <button onclick="applyDiscountOverride()">Apply</button>
+          </div>
+          <button class="disc-override-reset" id="discOverrideReset" onclick="resetDiscountOverride()" style="display:none">Reset to auto-calc</button>
+        </div>
+      </div>
+    </div>
+    <div class="hero-card orange-accent reveal hero-card-action" onclick="openSetupProjection()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetupProjection()}" title="Project your farm's growth over time">
+      <div class="hero-label">Plan Ahead</div>
+      <div class="hero-cta"><svg class="hero-cta-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
+      <div class="hero-cta-btn">Run projection <span class="hero-cta-arrow">&rarr;</span></div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
+  <div class="sp-page" id="secInputs" style="display:none">
+    <div class="sp-page-inner">
+      <div class="sp-page-head">
+        <button class="sp-back-btn" onclick="closeEditSetup()">&larr; Return to My Setup</button>
+        <button class="sp-back-btn" onclick="clearInputs()" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
+      </div>
+      <div class="sp-form ed-form">
+        <div class="pi-title">Edit Your Setup</div>
+
+        <div class="ed-groups">
+
+          <div class="ed-group">
+            <div class="ed-group-title">Saved Setups</div>
+            <div class="ed-sel-row">
+              <select id="profileSelect" class="ed-dd ed-dd-setup" onchange="onProfileChange()" title="Saved setup"><option value="">Setup</option></select>
+              <span class="ed-sel-div"></span>
+              <select id="inCurrency" class="ed-dd ed-dd-cur" onchange="setCurrency(this.value)" title="Currency">
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </div>
+            <div class="ed-saved-btns">
+              <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
+              <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+              <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
+            </div>
+            <span id="saveStatus"></span>
+          </div>
+
+          <div class="ed-group">
+            <div class="ed-group-title">Your Farm</div>
+            <div class="ed-fields">
+              <label class="ed-fld" for="inTH">
+                <span class="ed-fld-lbl">Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates — the Power tile in the GoMining app. Includes your Greedy Machine.">?</span></span>
+                <input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')">
+                <span class="unit">TH</span>
+              </label>
+              <label class="ed-fld" for="inWTH">
+                <span class="ed-fld-lbl">Efficiency <span class="tip" data-tip="Average watts per terahash across your whole farm (the weighted average from your GoMining stats). Lower is better.">?</span></span>
+                <input type="number" id="inWTH" value="15" step="0.01" min="0">
+                <span class="unit">W/TH</span>
+              </label>
+              <label class="ed-fld" for="inGMTLocked">
+                <span class="ed-fld-lbl">Locked GMT <span class="tip" data-tip="GMT staked in VeGoMining. Earns weekly yield and counts toward VIP tier.">?</span></span>
+                <input type="number" id="inGMTLocked" value="0" step="1" min="0">
+                <span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+              </label>
+              <label class="ed-fld" for="inGMTWallet">
+                <span class="ed-fld-lbl">Liquid GMT <span class="tip" data-tip="Unlocked GMT in your GoMining wallet. Available for locking or transfers.">?</span></span>
+                <input type="number" id="inGMTWallet" value="0" step="0.01" min="0">
+                <span class="unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ed-group">
+            <div class="ed-group-title">Greedy Machine</div>
+            <div class="toggle-row ed-toggle">
+              <label class="toggle"><input type="checkbox" id="inHasGreedy" onchange="toggleGreedyFields()"><span class="toggle-track"></span></label>
+              <span class="toggle-label" onclick="document.getElementById('inHasGreedy').click()">I own a Greedy Machine</span>
+            </div>
+            <div class="ed-fields ed-greedy-grid">
+              <label class="ed-fld greedy-field" for="inGreedyTH">
+                <span class="ed-fld-lbl">Greedy TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></span>
+                <input type="number" id="inGreedyTH" value="0" step="1" min="0">
+                <span class="unit">TH</span>
+              </label>
+              <label class="ed-fld greedy-field" for="inGreedyInitial">
+                <span class="ed-fld-lbl">Initial <span class="tip" data-tip="The TH originally bought for this Greedy Machine on the marketplace. This portion never counts toward VIP; all growth above it does. If just bought, set equal to Greedy Machine TH.">?</span></span>
+                <input type="number" id="inGreedyInitial" value="0" step="1" min="0">
+                <span class="unit">TH</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ed-group">
+            <div class="ed-group-title">Options</div>
+            <div class="ed-toggles">
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inClickStreak"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inClickStreak').click()">Daily click streak <span class="ed-toggle-note">(10+ days = 3%)</span></span>
+              </div>
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inPayGMT" checked><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inPayGMT').click()">Pay maintenance in GMT</span>
+              </div>
+              <div class="toggle-row ed-toggle">
+                <label class="toggle"><input type="checkbox" id="inAvatarDisc"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inAvatarDisc').click()">Avatar TH discount <span class="ed-toggle-note">(5% off upgrades &amp; creation)</span></span>
+              </div>
+              <div class="toggle-row ed-toggle ed-amb-row">
+                <label class="toggle"><input type="checkbox" id="inAmbassador"><span class="toggle-track"></span></label>
+                <span class="toggle-label" onclick="document.getElementById('inAmbassador').click()">Ambassador <span class="ed-toggle-note">(referred TH)</span></span>
+                <span class="ed-amb-inline" id="ambassadorFields" style="display:none">
+                  <input type="number" id="inReferredTH" value="0" step="1" min="0" placeholder="0" title="Referred TH — total TH from users you've referred">
+                  <span class="unit">TH</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Advanced inputs kept for the math, hidden from the form -->
+        <div style="display:none">
+          <input type="number" id="inLockAPR" value="18.69">
+          <input type="number" id="inCostPerTH" value="12.77">
+          <input type="number" id="inMiningMode" value="0.82">
+          <span id="inTokenDiscountDisplay"></span>
+          <span id="cptAutoHint"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sp-page-loading" id="edLoading" style="display:none">
+      <div class="sp-spinner"></div>
+      <div class="sp-loading-txt" id="edLoadingTxt">Updating your setup…</div>
+    </div>
+  </div>
+
+  <!-- VIP & DISCOUNTS -->
+  <div class="section reveal" id="secVip">
+    <div class="section-header" onclick="toggleSection('secVip')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M9 27 L11 16 L17 22 L20 12 L23 22 L29 16 L31 27 Z"/><path d="M11 30 L29 30"/></g></svg> VIP Level &amp; Discount Stack</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Your VIP tier is determined by TH owned or GMT locked -- whichever qualifies you higher.</div>
+    <div class="section-body">
+      <div id="vipDisplay"></div>
+      <div id="discountDisplay"></div>
+    </div>
+  </div>
+
+  <!-- DAILY OPERATION & REWARDS -->
+  <div class="section reveal" id="secGmt">
+    <div class="section-header" onclick="toggleSection('secGmt')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M13 26 A7 7 0 0 1 27 26"/><path d="M7 30 L33 30"/><path d="M20 12 L20 9"/><path d="M11 19 L13 21"/><path d="M29 19 L27 21"/></g></svg> Daily Operation &amp; Rewards</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Live mining revenue, fees, and your monthly GMT mining + staking income.</div>
+    <div class="section-body">
+      <div id="gmtCoverage"></div>
+    </div>
+  </div>
+
+  <!-- REINVEST SIGNAL -->
+  <div class="section reveal" id="secSignal">
+    <div class="section-header" onclick="toggleSection('secSignal')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M7 22 L13 22 L16 13 L20 28 L24 16 L27 22 L33 22"/></g></svg> Reinvestment Signal</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Based on current BTC price, should you buy more hashrate or accumulate more GMT?</div>
+    <div class="section-body">
+      <div id="reinvestSignal"></div>
+    </div>
+  </div>
+
+  <!-- SHARE THIS SETUP -->
+  <div class="reveal" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
+    <button class="share-plan-btn" onclick="sharePlan(this)" title="Copy a link to your current setup so anyone can view these numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this setup</button>
+  </div>
+
+
+</div>
+
+<!-- ==================== TAB 2 ==================== -->
+<div class="tab-content" id="tab-planner">
+
+
+  <!-- TOP ROW: New Monthly Income + Growth Projection card -->
+  <div class="planner-top-row">
+    <div class="section reveal proj-hero" id="secProj2">
+      <div class="section-header" onclick="toggleSection('secProj2')">
+        <div class="section-title"><img src="btc36.png" style="height:20px;width:20px;border-radius:50%"> New Monthly Income</div>
+        <div class="section-toggle">&#9662;</div>
+      </div>
+      <div class="section-body">
+        <div id="projTable"></div>
+        <div style="text-align:center;margin-top:.8rem">
+          <button class="share-plan-btn" onclick="sharePlan(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this plan</button>
+        </div>
+      </div>
+    </div>
+    <button class="planner-proj-btn" onclick="openSetupProjection('planner')">
+      <span class="planner-proj-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,18 10,12 14,15 20,7"/><polyline points="15,7 20,7 20,12"/></svg></span>
+      <span class="planner-proj-txt"><strong>Growth Projection</strong><span>See what your farm looks like after deploying the recommended allocation &rarr;</span></span>
+    </button>
+  </div>
+
+  <!-- CAPITAL INPUT — inputs live here (hidden); edited via the full-page form -->
+  <div class="section reveal" id="secCapIn" style="display:none">
+    <div class="section-header" onclick="toggleSection('secCapIn')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><ellipse cx="20" cy="13" rx="10" ry="2.8"/><ellipse cx="20" cy="20" rx="10" ry="2.8"/><ellipse cx="20" cy="27" rx="10" ry="2.8"/><path d="M10 13 L10 27"/><path d="M30 13 L30 27"/></g></svg> Investment Amount</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">How much new capital are you planning to deploy into GoMining?</div>
+    <div class="section-body">
+      <div class="input-grid" style="max-width:360px">
+        <div class="field">
+          <label>Total Capital to Invest</label>
+          <div class="field-input"><input type="number" id="inCapital" value="5000" step="100" min="0"><span class="unit">USD</span></div>
+        </div>
+        <div class="field">
+          <label>Referral's Planned Capital <span class="tip" data-tip="Optional. Capital your referral plans to invest, following the same TH/GMT strategy as you. Their TH adds to your Ambassador rewards, and they reinvest along with you in projections.">?</span></label>
+          <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
+        </div>
+      </div>
+      <div id="capInMarketplace" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Buy a specific marketplace miner <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Eyeing a cheap miner on the GoMining marketplace? Enter it here. Its hashrate counts toward rewards &amp; fees, but <strong style="color:var(--text3)">not</strong> toward your VIP tier. The planner spends the remaining balance on locking GMT / minting TH for max discount.</div>
+        <div class="input-grid">
+          <div class="field">
+            <label>Miner Hashrate</label>
+            <div class="field-input"><input type="number" id="inMpTH" value="0" step="10" min="0"><span class="unit">TH</span></div>
+          </div>
+          <div class="field">
+            <label>Miner Price <span class="tip" data-tip="The marketplace asking price for this miner, in GMT. Paid from your GMT on hand first, then USD capital.">?</span></label>
+            <div class="field-input"><input type="number" id="inMpGMT" value="0" step="1" min="0"><span class="unit">GMT</span></div>
+          </div>
+          <div class="field">
+            <label>Miner Efficiency <span class="tip" data-tip="Watts per terahash of this marketplace miner — drives its daily fees. Older miners are less efficient (higher W/TH). Defaults to 15.">?</span></label>
+            <div class="field-input"><input type="number" id="inMpWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="capInGreedy" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+        <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Greedy Machine passive growth <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+        <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Weekly TH growth for the Greedy Machine(s) you entered in My Setup. Compounds on the current TH every week — and is the <strong style="color:var(--text3)">only</strong> growth once a miner hits the 5,000 TH manual-upgrade cap. Until then, reinvested rewards fill it up to 5k (discount-first). Enter last week's observed growth.</div>
+        <div class="input-grid">
+          <div class="field">
+            <label>Weekly TH Growth</label>
+            <div class="field-input"><input type="number" id="inGreedyGrowth" value="0.3" step="0.01" min="0"><span class="unit">%/wk</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALLOCATION -->
+  <div class="section reveal" id="secAlloc">
+    <div class="section-header" onclick="toggleSection('secAlloc')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><circle cx="20" cy="20" r="10"/><path d="M20 20 L20 10"/><path d="M20 20 L28.66 25"/></g></svg> Optimal Capital Allocation</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">Tests every TH/GMT split to find the allocation that maximizes your monthly net income.</div>
+    <div class="section-body">
+      <div id="allocDisplay"></div>
+    </div>
+  </div>
+
+  <!-- PROJECTION -->
+  <div class="section reveal" id="secProj">
+    <div class="section-header" onclick="toggleSection('secProj')">
+      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M8 30 L32 30"/><path d="M11 26 L17 21 L22 23 L29 13"/><path d="M24 13 L29 13 L29 18"/></g></svg> Post-Investment Projection</div>
+      <div class="section-toggle">&#9662;</div>
+    </div>
+    <div class="section-desc">What your farm looks like after deploying capital with the recommended allocation.</div>
+    <div class="section-body">
+      <div id="projDisplay"></div>
+    </div>
+  </div>
+
+
+
+</div>
+
+</div><!-- container -->
+
+<!-- DONATION MODAL -->
+<div class="donate-overlay" id="donateModal" style="display:none">
+  <div class="donate-box">
+    <h3>GMT Optimizer is Free Forever</h3>
+    <p>This site has no ads and never will. If you find it useful, please consider supporting development with a small donation.</p>
+    <div class="donate-row">
+      <img src="btc36.png" alt="BTC" class="donate-logo">
+      <div class="donate-addr-wrap">
+        <div class="donate-coin">Bitcoin (BTC)</div>
+        <div class="donate-addr" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</div>
+      </div>
+      <button class="donate-copy" onclick="copyAddr(this,'bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">Copy</button>
+    </div>
+    <div class="donate-row">
+      <img src="gmt36.png" alt="GMT" class="donate-logo">
+      <div class="donate-addr-wrap">
+        <div class="donate-coin">GoMining Token (GMT)</div>
+        <div class="donate-addr" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</div>
+      </div>
+      <button class="donate-copy" onclick="copyAddr(this,'0xc151cdCB14aac14096ae003793d3FfAb46881c99')">Copy</button>
+    </div>
+    <div class="donate-copied" id="donateCopied">Copied to clipboard!</div>
+    <br>
+    <button class="donate-btn" onclick="closeDonate()">Continue to Dashboard</button>
+  </div>
+</div>
+
+<!-- TUTORIAL LIGHTBOX -->
+<div id="lightbox" class="lightbox-overlay" style="display:none" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+  <img id="lightboxImg" src="" alt="" class="lightbox-img">
+</div>
+
+<!-- PLANNER INTRO -->
+<div class="sp-page" id="plannerIntro" style="display:none">
+  <div class="sp-page-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="returnToSetupFromPlanner()">&larr; Return to My Setup</button>
+      <button class="sp-back-btn" id="piReturnResults" onclick="returnToPlannerResults()" style="display:none">&larr; Return to Capital Planner</button>
+    </div>
+    <div class="sp-form">
+      <div class="pi-title">Capital Planner</div>
+      <div class="pi-note-12w"><strong>New: 12 W/TH miners.</strong> New machines are now 12 W/TH. The planner weighs <strong>upgrading efficiency</strong>, <strong>buying hashrate</strong>, and <strong>locking GMT</strong>.</div>
+      <div style="margin:1.4rem auto 0;max-width:340px;display:flex;flex-direction:column;gap:1rem">
+        <div>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">GMT Available</label>
+          <label class="pi-field-box" for="piGMTInput">
+            <input type="number" id="piGMTInput" value="0" step="1" min="0">
+            <span class="pi-unit"><img src="gmt36.png" class="gmt-logo" alt="GMT"></span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Total unlocked GMT you have on hand</div>
+        </div>
+        <div>
+          <div class="pi-mode-seg" role="tablist">
+            <button type="button" class="pi-mode-btn active" id="piModeAmount" onclick="setPlannerMode('amount')">Invest an amount</button>
+            <button type="button" class="pi-mode-btn" id="piModeGoal" onclick="setPlannerMode('goal')">Target an income</button>
+          </div>
+          <div id="piAmountBlock">
+            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Additional USD Capital <span style="color:var(--text4)">(optional)</span></label>
+            <label class="pi-field-box" for="piCapitalInput">
+              <input type="number" id="piCapitalInput" value="0" step="100" min="0">
+              <span class="pi-unit">USD</span>
+            </label>
+          </div>
+          <div id="piGoalBlock" hidden>
+            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Target Monthly Income</label>
+            <label class="pi-field-box" for="piTargetInput">
+              <input type="number" id="piTargetInput" value="200" step="10" min="0">
+              <span class="pi-unit" id="piTargetUnit">$/mo</span>
+            </label>
+            <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">We'll find the smallest capital that grows your farm to this monthly net income.</div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem">
+          <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptMiner')">Purchasing a specific miner?</button>
+          <div id="piOptMiner" class="pi-opt" hidden>
+          <div style="display:flex;gap:.5rem">
+            <div style="flex:1.2">
+              <input type="number" id="piMpTH" value="0" step="10" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">miner TH</div>
+            </div>
+            <div style="flex:1.4">
+              <input type="number" id="piMpGMT" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">price (GMT)</div>
+            </div>
+            <div style="flex:1">
+              <input type="number" id="piMpWth" value="15" step="0.1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">W/TH</div>
+            </div>
+          </div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
+          </div>
+        </div>
+        <div>
+          <button type="button" class="pi-opt-toggle" onclick="togglePiOpt(this,'piOptReferral')">Referral power options?</button>
+          <div id="piOptReferral" class="pi-opt" hidden>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Referral's Planned Capital <span style="color:var(--text4)">(optional)</span></label>
+          <label class="pi-field-box" for="piRefCapInput">
+            <input type="number" id="piRefCapInput" value="0" step="100" min="0">
+            <span class="pi-unit">USD</span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. You receive <strong style="color:var(--green)">5% of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
+          </div>
+        </div>
+        <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
+          <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin:0">
+            <input type="checkbox" id="piVipBonus" style="width:16px;height:16px;cursor:pointer;accent-color:#ffd700">
+            <span style="font-size:.8rem;color:var(--text);font-weight:600">VIP Member — 10% bonus TH on deposits ≥ $10,000</span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;padding-left:1.55rem">When the USD spent on TH is $10k+, GoMining adds 10% extra TH. Planner re-balances locked GMT so 20% token discount still holds at the larger farm.</div>
+        </div>
+      </div>
+      <div class="sp-run-wrap">
+        <button id="plannerCalcBtn" class="ri-btn" onclick="submitPlanner()">Calculate Optimal Split</button>
+      </div>
+    </div>
+  </div>
+  <div class="sp-page-loading" id="plannerCalcLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Finding your optimal split…</div>
+  </div>
+</div>
+
+<!-- LIVE BTC CHART — full page (TradingView advanced chart with drawing tools) -->
+<div class="sp-page" id="btcChartPage" style="display:none">
+  <div class="sp-page-inner btc-chart-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="closeBtcChart()">&larr; Return to My Setup</button>
+      <span class="btc-chart-title" id="btcChartTitle"><img src="btc36.png" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">Bitcoin — Live Chart</span>
+      <div class="btc-chart-mode" id="btcChartMode" style="display:none">
+        <button id="btcModeLive" class="active" onclick="setBtcChartView('live')">Live Chart</button>
+        <button id="btcModeRainbow" onclick="setBtcChartView('rainbow')">Rainbow Chart</button>
+      </div>
+      <button class="share-plan-btn chart-shot-btn" onclick="createChartShot(this)" title="Generate a branded, shareable snapshot of the 1-hour candles from the last few days"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg> Create chart screenshot</button>
+    </div>
+    <div class="btc-chart-wrap">
+      <div id="btcChartWidget" style="height:100%;width:100%"></div>
+      <div class="btc-rainbow-wrap" id="btcRainbowWrap">
+        <div class="btc-rainbow-legend" id="btcRainbowLegend"></div>
+        <canvas id="btcRainbowCanvas"></canvas>
+        <div class="btc-rainbow-tip" id="btcRainbowTip" style="display:none"></div>
+        <div class="btc-rainbow-foot" id="btcRainbowFoot">Power-Law regression fitted to BTC price history — a long-term valuation guide, not financial advice. Scroll to zoom, drag to pan, double-click to reset.</div>
+        <div class="btc-rainbow-msg" id="btcRainbowMsg" style="display:none">Loading price history…</div>
+      </div>
+    </div>
+  </div>
+  <div class="sp-page-loading" id="btcChartLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Loading your setup…</div>
+  </div>
+</div>
+
+<!-- CHART SCREENSHOT — branded, shareable snapshot of the 1h candles -->
+<div class="cshot-overlay" id="chartShotModal" style="display:none" onclick="if(event.target===this)closeChartShot()">
+  <div class="cshot-box">
+    <div class="cshot-head">
+      <span id="chartShotTitle">Chart snapshot</span>
+      <button class="cshot-x" onclick="closeChartShot()" aria-label="Close">&times;</button>
+    </div>
+    <div class="cshot-body" id="chartShotBody">
+      <div class="cshot-loading" id="chartShotLoading">
+        <div class="sp-spinner"></div>
+        <div class="sp-loading-txt" id="chartShotLoadTxt">Pulling the latest 1-hour candles…</div>
+      </div>
+      <img id="chartShotImg" alt="Branded chart snapshot" style="display:none">
+    </div>
+    <div class="cshot-actions" id="chartShotActions" style="display:none">
+      <button class="ri-btn cshot-copy" onclick="openChartShare()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share</button>
+      <button class="share-plan-btn cshot-dl" onclick="downloadChartShot(this)"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> Download PNG</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHART SHARE SHEET — YouTube-Music-style bottom sheet -->
+<div class="cshare-sheet" id="chartShareSheet" style="display:none" onclick="if(event.target===this)closeChartShare()">
+  <div class="cshare-panel">
+    <div class="cshare-grip"></div>
+    <div class="cshare-title">Share</div>
+    <div class="cshare-apps">
+      <button class="cshare-app" onclick="chartShareTo('telegram')"><span class="cshare-ic" style="background:#29a9eb"><svg viewBox="0 0 24 24" fill="#fff"><path d="M9.78 15.63l-.39 4.02c.56 0 .8-.24 1.1-.53l2.64-2.52 5.47 4c1 .55 1.72.26 1.99-.93l3.6-16.9c.32-1.48-.54-2.06-1.5-1.7L1.15 9.28C-.28 9.84-.26 10.65.9 11l5.4 1.68L18.85 4.8c.59-.39 1.13-.17.69.22z"/></svg></span>Telegram</button>
+      <button class="cshare-app" onclick="chartShareTo('x')"><span class="cshare-ic" style="background:#000"><svg viewBox="0 0 24 24" fill="#fff"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.68l7.73-8.84L1.25 2.25h6.83l4.71 6.23zm-1.16 17.52h1.83L7.08 4.13H5.12z"/></svg></span>X</button>
+      <button class="cshare-app" onclick="chartShareTo('whatsapp')"><span class="cshare-ic" style="background:#25d366"><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 00-8.6 15l-1.3 4.8 4.9-1.3A10 10 0 1012 2zm5.8 14.2c-.24.68-1.4 1.3-1.94 1.34-.5.05-1.13.07-1.82-.11a15 15 0 01-1.65-.61 11.6 11.6 0 01-4.45-3.93c-.33-.44-1.08-1.44-1.08-2.75s.69-1.95.93-2.22a.98.98 0 01.71-.33h.51c.16 0 .38-.06.6.46l.82 2c.07.14.11.3.02.48l-.3.47c-.14.18-.29.33-.13.62.16.3.72 1.18 1.54 1.91 1.06.95 1.95 1.24 2.24 1.38.22.11.35.09.48-.06l.71-.83c.18-.22.33-.16.55-.08l1.94.92c.22.11.37.16.42.25.06.09.06.52-.18 1.2z"/></svg></span>WhatsApp</button>
+      <button class="cshare-app" onclick="chartShareTo('facebook')"><span class="cshare-ic" style="background:#1877f2"><svg viewBox="0 0 24 24" fill="#fff"><path d="M24 12a12 12 0 10-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.95h-1.51c-1.49 0-1.96.93-1.96 1.87V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0024 12z"/></svg></span>Facebook</button>
+      <button class="cshare-app" onclick="chartShareTo('reddit')"><span class="cshare-ic" style="background:#ff4500"><svg viewBox="0 0 24 24" fill="#fff"><path d="M22 12a2.05 2.05 0 00-3.47-1.46 10.1 10.1 0 00-5.2-1.62l.88-4.16 2.9.62a1.5 1.5 0 101.5-1.56 1.48 1.48 0 00-1.33.83l-3.25-.69a.34.34 0 00-.4.26l-.98 4.62A10.15 10.15 0 007.1 9.05 2.06 2.06 0 003.6 12a2 2 0 001 1.73 3.62 3.62 0 00-.05.6c0 3.05 3.55 5.52 7.93 5.52s7.94-2.47 7.94-5.52a3.62 3.62 0 00-.05-.59A2.03 2.03 0 0022 12zm-13 1.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zm8.13 3.98a5.2 5.2 0 01-3.13.86 5.2 5.2 0 01-3.13-.86.34.34 0 11.46-.5 4.6 4.6 0 002.67.7 4.6 4.6 0 002.66-.7.34.34 0 11.47.5zm-.2-2.48a1.5 1.5 0 111.5-1.5 1.5 1.5 0 01-1.5 1.5z"/></svg></span>Reddit</button>
+    </div>
+    <div class="cshare-rows">
+      <button class="cshare-row" onclick="copyChartShot()"><span class="cshare-rowic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg></span>Copy image</button>
+      <button class="cshare-row" onclick="chartShareNative()"><span class="cshare-rowic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 16V3m0 0l-4 4m4-4l4 4"/></svg></span>Share with other apps</button>
+    </div>
+  </div>
+</div>
+<div class="cshare-toast" id="chartShareToast"></div>
+
+<!-- GROWTH PROJECTION (existing setup) — full page -->
+<div class="sp-page" id="setupProjModal" style="display:none">
+  <div class="sp-page-inner">
+
+    <!-- FORM VIEW -->
+    <div id="spFormView">
+      <div class="sp-page-head">
+        <button class="sp-back-btn" onclick="closeSetupProjection()">&larr; Return to My Setup</button>
+      </div>
+      <div class="sp-form">
+        <div class="pi-title">Growth Projection</div>
+        <div class="pi-subtitle" id="spSubtitle">Project your farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
+
+        <div class="sp-model-banner">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
+          <div>
+            <div class="sp-model-title"><span class="nu-badge">NEW</span>Worst-case projection model</div>
+            <div class="sp-model-desc"><span class="tip tip-down sp-readmore" data-tip="Pick a halving and we project to it conservatively. BTC price scales along the rainbow chart's Fire-Sale band (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also halves at each halving and erodes as network difficulty grinds upward (expected decay, kept coherent with the worst-case price). If it still grows here, it grows almost anywhere.">How this works &middot; read more</span></div>
+          </div>
+        </div>
+
+        <div class="input-grid sp-form-grid">
+          <div class="field">
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using a WORST-CASE price: BTC scales along the rainbow chart's bottom Fire-Sale band (the historical cyclical-bottom valuation), starting from today's real price and converging onto that band by the halving. Mining reward also halves at each halving crossed.">?</span></label>
+            <div class="field-input sp-selwrap"><select id="spTarget" onchange="updateSpTargetPreview()"><option value="">Loading fair-value model…</option></select></div>
+          </div>
+          <div class="field">
+            <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
+            <div class="sp-payout-row">
+              <div class="field-input sp-selwrap sp-payout-type"><select id="spPayoutType" onchange="syncPayoutUnit()">
+                <option value="pct" selected>% of rewards</option>
+                <option value="usd">$ per week</option>
+              </select></div>
+              <label class="sp-payout-val" for="spPayoutVal">
+                <input type="number" id="spPayoutVal" value="0" min="0" step="1" inputmode="decimal" placeholder="0">
+                <span class="unit" id="spPayoutUnit">%</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="sp-target-preview" id="spTargetPreview"></div>
+
+        <div class="sp-run-wrap">
+          <button class="ri-btn" id="spRunBtn" onclick="runSetupProjection()">&#8635; Run Projection</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS VIEW -->
+    <div id="spResultsView" style="display:none">
+      <div class="sp-page-head">
+        <button class="sp-back-btn" onclick="closeSetupProjection()">&larr; Return to My Setup</button>
+        <button class="sp-new-btn" onclick="newSetupProjection()">&#8635; Run a New Projection</button>
+      </div>
+      <div class="sp-results-title">Your Growth Forecast</div>
+      <div id="spResult"></div>
+      <div style="text-align:center;margin-top:.9rem">
+        <button class="share-plan-btn" onclick="copyProjectionImage(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg> Copy projection image</button>
+      </div>
+      <!-- Conversion CTA: peak-intent moment, right after seeing the growth forecast -->
+      <div style="margin:1.6rem auto 0;max-width:520px;padding:1.3rem;text-align:center;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:var(--radius-sm)">
+        <div style="color:var(--text);font-weight:700;font-size:1.05rem;margin-bottom:.4rem">Like what you see? Make it real.</div>
+        <div style="color:var(--text2);font-size:.9rem">New to GoMining? Sign up with code <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> for <strong style="color:var(--text)">+5% bonus TH</strong> — and I'll personally fund your first TH to get you started.</div>
+        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.hash='#claim';},60)">Claim your funded TH &rarr;</button>
+      </div>
+    </div>
+
+  </div>
+  <!-- page loading overlay -->
+  <div class="sp-page-loading" id="spPageLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Crunching your projection…</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SEO CONTENT SECTION (always in DOM = crawlable by Google)
+     Targets: "gomining calculator", "is gomining profitable",
+     "gomining roi", "gomining promo code"
+     ============================================================ -->
+<section class="seo-content" aria-label="About the GoMining calculator">
+  <h2>GoMining Calculator &amp; Earnings Projector</h2>
+  <p class="seo-lead">Model your GoMining profit before you spend a dollar. GMT Optimizer pulls <strong>live BTC price and network difficulty</strong>, then projects your mining rewards forward through halvings and difficulty grind — so you see realistic earnings, not a rosy flat-line.</p>
+
+  <h2>Is GoMining profitable?</h2>
+  <p>It comes down to three things: the <strong>Bitcoin price</strong>, <strong>network difficulty</strong>, and your miner's <strong>efficiency</strong> (watts per TH). This tool models all three so you can see your break-even and ROI <em>before</em> buying — including the downside. It's 100% free and ad-free.</p>
+
+  <h2>How the GoMining calculator works</h2>
+  <p>Enter your hashrate (TH) and efficiency, and GMT Optimizer computes your live profit &amp; loss, then runs a multi-year projection with a <strong>capital-allocation planner</strong> that finds your optimal split across buying TH, upgrading efficiency, and locking GMT for the electricity discount.</p>
+
+  <div class="claim-card" id="claim">
+    <h2>New to GoMining? Start with a head start.</h2>
+    <p>Sign up with promo code <span class="claim-code" onclick="copyFooterAddr('RINGO5')" title="Click to copy">RINGO5</span> for <strong>+5% bonus TH</strong> on your first miner. Then, as a new referral, <strong>I'll personally fund your first TH and help you set up your account.</strong></p>
+    <p style="font-size:.85rem;color:var(--text3)">Sign up first with the code above, then click below and send me your GoMining username — I'll take care of the rest.</p>
+    <button type="button" class="claim-open-btn" onclick="document.getElementById('claimForm').classList.add('open');this.style.display='none'">Claim my funded TH →</button>
+    <form id="claimForm" class="claim-form" onsubmit="return submitClaim(event)">
+      <!-- honeypot: bots fill this, humans never see it -->
+      <div class="claim-hp"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>
+      <label for="claimName">Your name or handle</label>
+      <input id="claimName" name="name" type="text" required>
+      <label for="claimUser">GoMining username (you must have signed up with RINGO5)</label>
+      <input id="claimUser" name="gomining_username" type="text" required>
+      <label for="claimContact">Best way to reach you (email, Telegram, X)</label>
+      <input id="claimContact" name="contact" type="text" required>
+      <label for="claimMsg">Anything else? (optional)</label>
+      <textarea id="claimMsg" name="message"></textarea>
+      <button type="submit" class="claim-btn">Send my claim</button>
+      <div style="margin-top:.7rem;font-size:.72rem;color:var(--text3);text-align:center">By submitting, you agree to our <a href="/privacy.html" style="color:var(--purple-soft)">Privacy Policy</a> and <a href="/terms.html" style="color:var(--purple-soft)">Terms of Use</a>.</div>
+      <div class="claim-status" id="claimStatus" role="status"></div>
+    </form>
+  </div>
+
+  <h2>Frequently asked questions</h2>
+  <div class="seo-faq">
+    <details><summary>Is GoMining profitable?</summary><p>GoMining profitability depends on the Bitcoin price, network difficulty and your miner's efficiency (watts per TH). GMT Optimizer projects all three with live data so you can see your break-even and ROI before you invest — including the downside.</p></details>
+    <details><summary>What is GMT and how does the discount work?</summary><p>GMT is GoMining's token. Locking GMT (or holding it in your wallet) builds coverage that discounts your daily electricity fee in 1% steps, up to a 20% cap, and unlocks VIP tiers. The planner finds the optimal amount to lock.</p></details>
+    <details><summary>How is GoMining ROI calculated?</summary><p>The tool computes daily mining rewards (sats per TH per day) from live network data, subtracts your electricity fee after any GMT discount, and projects the result forward through halvings and difficulty growth to estimate payback time.</p></details>
+    <details><summary>What is the GoMining promo code?</summary><p>Use code RINGO5 when you sign up for a 5% bonus TH on your first miner. New referrals can also message me to have their first TH funded and get help setting up their account.</p></details>
+    <details><summary>Is GMT Optimizer affiliated with GoMining?</summary><p>No. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</p></details>
+  </div>
+
+  <h2>GoMining guides</h2>
+  <p>New to GoMining or weighing it up? These free guides go deeper:</p>
+  <ul style="margin:0 0 .5rem 1.2rem;line-height:2">
+    <li><a href="/is-gomining-worth-it.html" style="color:var(--gold2)">Is GoMining worth it in 2026? An honest breakdown</a></li>
+    <li><a href="/gomining-promo-code.html" style="color:var(--gold2)">GoMining promo code (RINGO5) — bonus explained</a></li>
+    <li><a href="/gomining-roi-calculator.html" style="color:var(--gold2)">GoMining ROI &amp; break-even, explained</a></li>
+    <li><a href="/how-gomining-works.html" style="color:var(--gold2)">How does GoMining work? A beginner's guide</a></li>
+    <li><a href="/gomining-discount-explained.html" style="color:var(--gold2)">GoMining discount &amp; GMT locking explained</a></li>
+    <li><a href="/gomining-worth-it-now.html" style="color:var(--gold2)">Is GoMining worth it right now? (live figures, updated monthly)</a></li>
+  </ul>
+  <p style="margin-top:1rem"><strong>ROI &amp; break-even by size:</strong>
+    <a href="/gomining-1-th-roi.html" style="color:var(--gold2)">1 TH</a>,
+    <a href="/gomining-5-th-roi.html" style="color:var(--gold2)">5 TH</a>,
+    <a href="/gomining-10-th-roi.html" style="color:var(--gold2)">10 TH</a>,
+    <a href="/gomining-25-th-roi.html" style="color:var(--gold2)">25 TH</a>,
+    <a href="/gomining-50-th-roi.html" style="color:var(--gold2)">50 TH</a>,
+    <a href="/gomining-100-th-roi.html" style="color:var(--gold2)">100 TH</a>,
+    <a href="/gomining-250-th-roi.html" style="color:var(--gold2)">250 TH</a>,
+    <a href="/gomining-500-th-roi.html" style="color:var(--gold2)">500 TH</a>.</p>
+  <p><strong>Profitability by Bitcoin price:</strong>
+    <a href="/gomining-profit-btc-75k.html" style="color:var(--gold2)">$75k</a>,
+    <a href="/gomining-profit-btc-100k.html" style="color:var(--gold2)">$100k</a>,
+    <a href="/gomining-profit-btc-150k.html" style="color:var(--gold2)">$150k</a>,
+    <a href="/gomining-profit-btc-200k.html" style="color:var(--gold2)">$200k</a>,
+    <a href="/gomining-profit-btc-250k.html" style="color:var(--gold2)">$250k</a>.</p>
+</section>
+<script>
+// Claim form -> Formspree (no backend). Paste your form ID below after signing up at formspree.io.
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xojokqwe";
+async function submitClaim(e){
+  e.preventDefault();
+  const form=e.target, status=document.getElementById('claimStatus');
+  if(FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')){
+    status.style.color='var(--red)';
+    status.textContent='Form not configured yet — add your Formspree ID.';
+    return false;
+  }
+  status.style.color='var(--text3)';
+  status.textContent='Sending…';
+  try{
+    const res=await fetch(FORMSPREE_ENDPOINT,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+    if(res.ok){
+      form.reset();
+      status.style.color='var(--purple)';
+      status.textContent='Got it! I’ll be in touch shortly to fund your first TH.';
+    }else{
+      status.style.color='var(--red)';
+      status.textContent='Something went wrong — please try again.';
+    }
+  }catch(err){
+    status.style.color='var(--red)';
+    status.textContent='Network error — please try again.';
+  }
+  return false;
+}
+</script>
+
+<!-- FOOTER -->
+<div class="site-footer">
+  <div style="margin-bottom:.8rem;padding:.5rem .8rem;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);border-radius:12px;display:inline-block"><span style="color:var(--purple-soft);font-weight:600">New to GoMining?</span> <span style="color:var(--text2)">Use code</span> <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> <span style="color:var(--text2)">for +5% bonus TH —</span> <a href="#claim" style="color:var(--purple-soft);font-weight:600;text-decoration:none">plus I'll fund your first TH →</a></div><br>
+  GMT Optimizer is free and ad-free forever. If you find it helpful, consider donating.<br>
+  <span style="color:var(--text2)">BTC:</span> <span class="footer-addr" onclick="copyFooterAddr('bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh')">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span><br>
+  <span style="color:var(--text2)"><img src="gmt36.png" class="gmt-logo" alt="GMT">:</span> <span class="footer-addr" onclick="copyFooterAddr('0xc151cdCB14aac14096ae003793d3FfAb46881c99')">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span>
+  <div class="donate-copied" id="footerCopied">Copied to clipboard!</div>
+  <div style="margin-top:1rem;font-size:.75rem"><a href="/privacy.html" style="color:var(--text3);text-decoration:none">Privacy Policy</a> <span style="color:var(--text4)">&middot;</span> <a href="/terms.html" style="color:var(--text3);text-decoration:none">Terms of Use</a></div>
+  <div style="margin-top:.6rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
+</div>
+
+<script src="assets/app.js?v=1"></script>
+<script src="assets/chrome.js?v=1"></script>
+<script>
+/* v2 landing -> wizard glue (staging-only; folds into app.js on promotion) */
+function v2StartSetup(){var h=document.documentElement;h.classList.remove('show-landing');h.classList.add('show-onboarding');document.body.style.overflow='hidden';if(typeof obGoStep==='function')obGoStep(1);}
+function v2NewUser(){document.documentElement.classList.remove('show-landing');if(typeof obNewUser==='function')obNewUser();}
+</script>
+<button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
+<style>#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,#F5A623,#FFCF7A);color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,.45)}#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}</style>
+<script>(function(){var b=document.getElementById("toTop");if(!b)return;function o(){b.classList.toggle("show",(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener("scroll",o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};})();</script>
+</body>
+</html>
