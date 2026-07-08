@@ -137,7 +137,7 @@ h2.sec-title{font-size:clamp(1.8rem,4vw,2.9rem);font-weight:700;color:var(--whit
 /* hero visual — floating holo rings + stat card */
 .hero-visual{position:relative;height:440px;display:flex;align-items:center;justify-content:center;perspective:1000px}
 .holo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;will-change:transform}
-.holo svg{width:100%;height:100%;max-width:440px;filter:drop-shadow(0 0 30px rgba(245,166,35,.3));animation:spin 20s linear infinite}
+.holo svg{width:100%;height:100%;max-width:440px;filter:drop-shadow(0 0 30px rgba(245,166,35,.3));animation:spin 30s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .holo::after{content:'';position:absolute;width:60%;aspect-ratio:1;border-radius:50%;
   background:radial-gradient(circle,rgba(245,166,35,.28),transparent 62%);animation:pulseGlow 3.6s var(--ease) infinite}
@@ -305,18 +305,41 @@ footer::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.5;
 
     <div class="hero-visual reveal d2">
       <div class="holo" data-depth="0.06" aria-hidden="true">
-        <!-- Exact replica of gmt-optimizer-logo.svg mark (same path data; viewBox framed to the mark) -->
-        <svg viewBox="4 4 26 26">
+        <!-- Exact replica of gmt-optimizer-logo.svg mark (same path data) + planets riding the lines -->
+        <svg viewBox="4 4 26 26" xmlns:xlink="http://www.w3.org/1999/xlink">
           <defs>
             <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="#F5A623"/>
               <stop offset="100%" stop-color="#FFCF7A"/>
             </linearGradient>
+            <radialGradient id="planetGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#FFF4E0"/>
+              <stop offset="45%" stop-color="#FFCF7A"/>
+              <stop offset="100%" stop-color="#F5A623" stop-opacity="0"/>
+            </radialGradient>
           </defs>
           <g fill="none" stroke="url(#logoGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 13 26 A 10 10 0 1 1 26 13"/>
-            <path d="M 23 16 A 5 5 0 1 0 16 22"/>
+            <path id="arcOuter" d="M 13 26 A 10 10 0 1 1 26 13"/>
+            <path id="arcInner" d="M 23 16 A 5 5 0 1 0 16 22"/>
             <path d="M 22 13 L 26 13 L 26 17"/>
+          </g>
+          <!-- planet gliding along the outer arc -->
+          <g>
+            <circle r="2" fill="url(#planetGlow)"/>
+            <circle r="0.7" fill="#FFF7E6"/>
+            <animateMotion dur="6.5s" repeatCount="indefinite" calcMode="spline"
+              keyTimes="0;0.5;1" keyPoints="0;1;0" keySplines="0.42 0 0.58 1;0.42 0 0.58 1">
+              <mpath href="#arcOuter" xlink:href="#arcOuter"/>
+            </animateMotion>
+          </g>
+          <!-- planet gliding along the inner arc -->
+          <g>
+            <circle r="1.5" fill="url(#planetGlow)"/>
+            <circle r="0.55" fill="#FFF7E6"/>
+            <animateMotion dur="4.6s" repeatCount="indefinite" begin="-1.6s" calcMode="spline"
+              keyTimes="0;0.5;1" keyPoints="0;1;0" keySplines="0.42 0 0.58 1;0.42 0 0.58 1">
+              <mpath href="#arcInner" xlink:href="#arcInner"/>
+            </animateMotion>
           </g>
         </svg>
       </div>
