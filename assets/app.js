@@ -438,8 +438,8 @@ function closePlannerIntro(){
 // Live price chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
 // Reused for BTC and the GoMining token; the widget is rebuilt when the symbol changes.
 let _chartSym=null;
-function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','btc36.png',false,true);}
-function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','gmt36.png',true,false);}
+function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','/btc36.png',false,true);}
+function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','/gmt36.png',true,false);}
 // Deep-link: /bitcoin and /gmt (served by the redirect pages as /?chart=…, or hit directly)
 // auto-open the matching chart on first load.
 function maybeOpenChartFromURL(){
@@ -449,7 +449,7 @@ function maybeOpenChartFromURL(){
   else if(which==='gmt')openGmtChart();
 }
 function closeBtcChart(){
-  try{history.replaceState({},'','/'+location.search+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
+  try{history.replaceState({},'','/console'+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
   const load=document.getElementById('btcChartLoading');
   if(load)load.style.display='flex';
   setTimeout(function(){
@@ -464,8 +464,8 @@ function closeBtcChart(){
 function openChart(symbol,title,icon,allowChange,isBtc){
   // remember which asset is on screen so the screenshot button knows what to render
   window._chartAsset=isBtc
-    ? {kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'btc36.png'}
-    : {kind:'gmt',name:'GoMining Token',pair:'GMT / USD',icon:'gmt36.png'};
+    ? {kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'/btc36.png'}
+    : {kind:'gmt',name:'GoMining Token',pair:'GMT / USD',icon:'/gmt36.png'};
   // reflect the chart in the URL so it's shareable / bookmarkable (gmt-optimizer.com/bitcoin|/gmt)
   try{history.replaceState({},'',(isBtc?'/bitcoin':'/gmt')+location.hash);}catch(e){}
   document.getElementById('btcChartPage').style.display='';
@@ -878,7 +878,7 @@ async function fetchGmtCandles(hours){
   return null;
 }
 async function createChartShot(){
-  const asset=window._chartAsset||{kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'btc36.png'};
+  const asset=window._chartAsset||{kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'/btc36.png'};
   const modal=document.getElementById('chartShotModal');
   const load=document.getElementById('chartShotLoading');
   const img=document.getElementById('chartShotImg');
@@ -894,7 +894,7 @@ async function createChartShot(){
       asset.kind==='btc'?fetchBtcCandles(HOURS):fetchGmtCandles(HOURS),
       _csImg('gmt-optimizer-logo.svg?v=2'),
       _csImg(asset.icon),
-      _csImg('gmt36.png')
+      _csImg('/gmt36.png')
     ]);
     if(!data||!data.rows||data.rows.length<4)throw new Error('no data');
     _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,coin,token});
@@ -2061,10 +2061,10 @@ function flipProjCell(el){
   const tagEl=el.querySelector('.pc-mode-tag');
   if(mode==='usd'){
     el.dataset.mode='gmt';
-    moEl.innerHTML=fN(moGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">';
-    dayEl.innerHTML=fN(dailyGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">/day';
-    if(yrEl)yrEl.innerHTML=fN(yearlyGMT,0)+' <img src="gmt36.png" class="gmt-logo" alt="GMT">/yr';
-    tagEl.innerHTML='<img src="gmt36.png" alt="GMT" style="height:16px;width:16px;border-radius:4px;vertical-align:middle">';
+    moEl.innerHTML=fN(moGMT,0)+' <img src="/gmt36.png" class="gmt-logo" alt="GMT">';
+    dayEl.innerHTML=fN(dailyGMT,0)+' <img src="/gmt36.png" class="gmt-logo" alt="GMT">/day';
+    if(yrEl)yrEl.innerHTML=fN(yearlyGMT,0)+' <img src="/gmt36.png" class="gmt-logo" alt="GMT">/yr';
+    tagEl.innerHTML='<img src="/gmt36.png" alt="GMT" style="height:16px;width:16px;border-radius:4px;vertical-align:middle">';
     tagEl.style.color='';
   }else{
     el.dataset.mode='usd';
@@ -2515,7 +2515,7 @@ function renderPlanner(i,m){
     ph+=`<div class="divider"></div>`;
     ph+=`<div class="sub-title">Referral's planned allocation (${fU(i.refCap)})</div>`;
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(refInitTH*(i.cpt||0))}</span>`,'cyan');
-    ph+=row('Referral locked <img src="gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
+    ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
     ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
     if(refBonusGMT>0)ph+=row('Your 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
@@ -3003,7 +3003,7 @@ function computeSetupProjection(){
   </div>`;
   h+=`<div class="ri-single-card">
     <div class="ri-label">Locked GMT (End of Period)</div>
-    <div class="ri-headline green">${fN(gmtLocked,0)} <img src="gmt36.png" class="gmt-logo" alt="GMT"></div>
+    <div class="ri-headline green">${fN(gmtLocked,0)} <img src="/gmt36.png" class="gmt-logo" alt="GMT"></div>
     <div class="ri-usd-value">${fU(lockedUSD)} USD value</div>
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
   </div>`;
