@@ -101,7 +101,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=10">
+<link rel="stylesheet" href="/assets/app.css?v=11">
 <link rel="stylesheet" href="/assets/design.css?v=3">
 </head>
 <body>
@@ -376,14 +376,25 @@
 <!-- HEADER -->
 <div class="header">
   <div class="header-inner">
-    <div class="logo"><a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a><button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button><a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="ob-reset-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;-webkit-text-fill-color:#000;border-color:transparent;font-weight:700;text-decoration:none">Suggest a Feature</a></div>
+    <a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a><a href="/console">Console</a><a href="/planner">Planner</a><a href="/bitcoin">Charts</a>
+    </div>
+    <a href="/console" class="nav-cta" data-magnetic>Launch Console</a>
+  </div>
+</div>
+<!-- live data + tools strip (below the identical nav) -->
+<div class="subbar">
     <div class="live-bar" id="liveBar">
       <div class="live-chip live-chip-btn" title="Open live BTC chart" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><img src="/btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip live-chip-btn" title="Open live GoMining Token chart" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><img src="/gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
     </div>
-  </div>
+    <div class="subbar-tools">
+      <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button>
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="ob-reset-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;-webkit-text-fill-color:#000;border-color:transparent;font-weight:700;text-decoration:none">Suggest a Feature</a>
+    </div>
 </div>
 
 <div class="container">
