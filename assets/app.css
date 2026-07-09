@@ -1013,3 +1013,16 @@ body{background:transparent}
 /* primary action buttons -> gold gradient */
 .share-plan-btn,.disc-override-row button{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;border:none;box-shadow:0 6px 22px rgba(245,166,35,.3)}
 .share-plan-btn:hover,.disc-override-row button:hover{box-shadow:0 10px 30px rgba(245,166,35,.46)}
+
+/* ============================================================
+   PHASE 3c — sub-pages & modals onto the glass system
+   ============================================================ */
+/* full-screen sub-pages (planner / projection) -> galaxy-consistent dark base */
+.sp-page{background:#060709;background-image:radial-gradient(ellipse 90% 60% at 50% -12%,rgba(245,166,35,.10),transparent 60%),radial-gradient(ellipse 70% 50% at 110% 8%,rgba(245,166,35,.05),transparent 60%)}
+/* donate modal -> frosted glass */
+.donate-overlay{background:rgba(2,3,5,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.donate-box{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(255,255,255,.045),transparent 42%),var(--bg-card);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:var(--sh)}
+.donate-box::after{content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(140deg,var(--line-hi),transparent 42%,rgba(245,166,35,.2));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
