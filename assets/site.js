@@ -47,6 +47,13 @@
 
   if(reduce)return;
 
+  /* ---- cursor spotlight (sets --mx/--my for the ::after glow) ---- */
+  document.querySelectorAll('.stat,.scenario,.cta,.claim-card').forEach(function(el){
+    el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+      el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
+  });
+
   /* ---- spiral galaxy ---- */
   var cvs=document.getElementById('stars');if(!cvs)return;
   var ctx=cvs.getContext('2d');

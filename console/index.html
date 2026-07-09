@@ -101,8 +101,8 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=7">
-<link rel="stylesheet" href="/assets/design.css?v=2">
+<link rel="stylesheet" href="/assets/app.css?v=8">
+<link rel="stylesheet" href="/assets/design.css?v=3">
 </head>
 <body>
 <!-- ===== GALAXY BACKDROP (scoped .rd; dimmed for the console) ===== -->
@@ -401,20 +401,20 @@
   <!-- HERO SUMMARY -->
   <div class="hero-grid" id="heroGrid">
     <div class="hero-card green-accent reveal">
-      <span class="corners"></span><div class="s-id"><span>DAILY.NET</span><span>◈</span></div>
+      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>DAILY.NET</span><span>◈</span></div>
       <div class="hero-label">Daily Net Profit</div>
       <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDailyBTC">--</div>
     </div>
     <div class="hero-card cyan-accent reveal">
-      <span class="corners"></span><div class="s-id"><span>MONTH.YIELD</span><span>◈</span></div>
+      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>MONTH.YIELD</span><span>◈</span></div>
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
       <div class="hero-yearly cyan" id="heroYearly">--</div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
     </div>
     <div class="hero-card purple-accent reveal">
-      <span class="corners"></span><div class="s-id"><span>COVERAGE</span><span>◈</span></div>
+      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>COVERAGE</span><span>◈</span></div>
       <div class="hero-label">Total Discount</div>
       <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDiscountSub">--</div>
@@ -431,7 +431,7 @@
       </div>
     </div>
     <div class="hero-card orange-accent reveal hero-card-action" onclick="openSetupProjection()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetupProjection()}" title="Project your farm's growth over time">
-      <span class="corners"></span><div class="s-id"><span>PROJECT</span><span>◈</span></div>
+      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>PROJECT</span><span>◈</span></div>
       <div class="hero-label">Plan Ahead</div>
       <div class="hero-cta"><svg class="hero-cta-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
       <div class="hero-cta-btn">Run projection <span class="hero-cta-arrow">&rarr;</span></div>
@@ -1100,7 +1100,12 @@ async function submitClaim(e){
   var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
   if(view==='planner'){ var b=document.querySelector('[data-tab="tab-planner"]'); if(b) b.click(); }
   else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
-}catch(e){}})();</script>
+}catch(e){}
+  try{document.querySelectorAll('.hero-card').forEach(function(el){
+    el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+      el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
+  });}catch(e){}})();</script>
 <style>#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,#F5A623,#FFCF7A);color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,.45)}#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}</style>
 <script>(function(){var b=document.getElementById("toTop");if(!b)return;function o(){b.classList.toggle("show",(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener("scroll",o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};})();</script>
 </body>

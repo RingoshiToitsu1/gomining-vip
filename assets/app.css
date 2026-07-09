@@ -1061,3 +1061,9 @@ body{background:transparent}
     linear-gradient(var(--line-hi),var(--line-hi)) top left/1.5px 13px no-repeat,
     linear-gradient(var(--line-hi),var(--line-hi)) bottom right/13px 1.5px no-repeat,
     linear-gradient(var(--line-hi),var(--line-hi)) bottom right/1.5px 13px no-repeat}
+
+/* ===== cursor spotlight on console cards — matches the landing .spot ===== */
+.hero-card .hspot{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;
+  opacity:0;transition:opacity .45s var(--ease);
+  background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),rgba(245,166,35,.16),transparent 60%)}
+.hero-card:hover .hspot{opacity:1}

@@ -126,3 +126,9 @@ a{color:var(--gold-soft);text-decoration:none}a:hover{text-decoration:underline}
 .cta a.btn{transition:transform .25s var(--ease),box-shadow .25s ease}
 .cta a.btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(245,166,35,.5)}
 .cta a.btn:active,.nav-cta:active{transform:translateY(0) scale(.98)}
+
+/* ===== cursor spotlight — matches the landing .spot ===== */
+.stat::after,.scenario::after,.cta::after,.claim-card::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  opacity:0;transition:opacity .45s var(--ease);
+  background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(245,166,35,.16),transparent 60%)}
+.stat:hover::after,.scenario:hover::after,.cta:hover::after,.claim-card:hover::after{opacity:1}
