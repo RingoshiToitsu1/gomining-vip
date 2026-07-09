@@ -308,7 +308,7 @@ input[type=number]{-moz-appearance:textfield}
 }
 @media(max-width:600px){
   html{font-size:17.4px}
-  .header{padding:.5rem .7rem}
+  .header{padding:.5rem .7rem;top:12px;margin-top:12px;width:calc(100% - 20px)}
   .header-inner{gap:.4rem}
   .logo{font-size:1.1rem}
   .live-bar{gap:.3rem;width:100%;justify-content:center}
@@ -992,14 +992,20 @@ body{background:transparent}
   --gold-hi:#FFC65A;--gold-soft:#FFCF7A;--warm:#FFF4E0;
   --line-hi:rgba(245,200,130,.34);
 }
-/* header -> glass bar with gold hairline */
-.header{background:linear-gradient(180deg,rgba(20,22,30,.74),rgba(10,12,18,.66));border-bottom:1px solid rgba(245,200,130,.16);box-shadow:0 14px 44px rgba(0,0,0,.42)}
-/* brand -> v2 warm-gold wordmark + version badge (matches the site nav) */
-.logo{background:none;-webkit-text-fill-color:currentColor;font-size:1.02rem;font-weight:600;letter-spacing:.01em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.logo .c-brand{display:inline-flex;align-items:center;gap:10px;color:var(--warm);-webkit-text-fill-color:currentColor;text-decoration:none;font-weight:600;transition:color .25s}
-.logo .c-brand img{width:26px;height:26px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
+/* header -> EXACT copy of the landing nav: floating glass pill.
+   (sticky+margin instead of the landing's fixed so console content keeps its flow) */
+.header{position:sticky;top:42px;z-index:100;width:min(1160px,calc(100% - 28px));margin:42px auto 0;
+  padding:11px 14px 11px 20px;border-radius:18px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(20,22,30,.7),rgba(10,12,18,.66));
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 12px 44px rgba(0,0,0,.5)}
+.header-inner{max-width:none}
+/* brand -> exact copy of the landing .brand (warm wordmark + gold-glow logo + v2 badge) */
+.logo{background:none;-webkit-text-fill-color:currentColor;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:1.02rem;font-weight:600;letter-spacing:.01em}
+.logo .c-brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--warm);-webkit-text-fill-color:currentColor;letter-spacing:.01em;font-size:1.02rem;text-decoration:none;transition:color .25s}
+.logo .c-brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
 .logo .c-brand:hover{color:var(--gold-soft)}
-.logo .c-brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px}
+.logo .c-brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px;margin-left:2px}
 /* live chips -> glass pill */
 .live-chip{background:linear-gradient(180deg,rgba(255,255,255,.045),transparent),var(--bg-card)}
 .live-chip:hover{border-color:var(--line-hi)}
