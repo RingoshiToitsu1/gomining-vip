@@ -1051,3 +1051,13 @@ body{background:transparent}
 .hero-card:active,.hero-card-action:active{transform:translateY(-1px) scale(.995)}
 .section:hover{border-color:var(--line-hi);box-shadow:var(--sh),0 0 26px rgba(245,166,35,.10)}
 .hero-card-action{cursor:pointer}
+
+/* ============================================================
+   PHASE 3f — corner brackets on result panels (echoes landing cards)
+   ============================================================ */
+.section::before{content:'';position:absolute;inset:8px;pointer-events:none;z-index:3;
+  background:
+    linear-gradient(var(--line-hi),var(--line-hi)) top left/13px 1.5px no-repeat,
+    linear-gradient(var(--line-hi),var(--line-hi)) top left/1.5px 13px no-repeat,
+    linear-gradient(var(--line-hi),var(--line-hi)) bottom right/13px 1.5px no-repeat,
+    linear-gradient(var(--line-hi),var(--line-hi)) bottom right/1.5px 13px no-repeat}
