@@ -1161,8 +1161,9 @@ body .rd .fd-addr{font-size:11.8px}
 body .rd .fd-addr.copied::after{font-size:9.6px}
 
 /* ============================================================
-   In-flow panel views — Edit Setup + the Planner form now render between the sticky
-   header+quotron and the footer (no full-screen takeover), matching the site UI.
+   In-flow panel views — Edit Setup, Planner form, Growth Projection and the live
+   charts now render between the sticky header+quotron and the footer (no full-screen
+   takeover), matching the site UI.
    ============================================================ */
 .sp-page.sp-view{position:static;inset:auto;z-index:auto;min-height:60vh;overflow:visible;
   background:transparent;background-image:none;background-attachment:initial;animation:fadeIn .25s ease}
@@ -1170,5 +1171,11 @@ body .rd .fd-addr.copied::after{font-size:9.6px}
 /* Edit Setup: keep the My Setup tab shell active but hide its dashboard content behind the editor. */
 body.editing #tab-current>:not(#secInputs){display:none}
 body.editing #tab-planner{display:none}
-/* Planner form: hide the whole dashboard; the form (a top-level sibling) flows in its place. */
-body.planning .container{display:none}
+/* Planner form / Growth Projection / charts are top-level siblings — hide the whole
+   dashboard and let the panel flow in its place. */
+body.planning .container,body.projecting .container,body.charting .container{display:none}
+/* Chart panel: the flex column relied on a fixed-overlay 100% height, so give the chart
+   an explicit height now that it flows normally. */
+#btcChartPage.sp-view{overflow:visible;overscroll-behavior:auto}
+#btcChartPage.sp-view .sp-page-inner{height:auto}
+#btcChartPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}

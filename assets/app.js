@@ -293,12 +293,13 @@ addEventListener('popstate',function(){
   const b=document.querySelector('[data-tab="'+id+'"]');
   if(b&&!b.classList.contains('active'))_activateTab(b,false);
 });
-// ---- In-flow panel views (Edit Setup, Planner form) ----
+// ---- In-flow panel views (Edit Setup, Planner form, Growth Projection, Charts) ----
 // Replace the old full-screen overlays: hide the dashboard but keep the sticky
 // header + quotron and the footer, scrolling with the page instead of covering it.
+const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting'};
 function showPanelView(id){
   const el=document.getElementById(id);if(!el)return;
-  document.body.classList.add(id==='secInputs'?'editing':'planning');
+  document.body.classList.add(_PANEL_CLASS[id]||'planning');
   el.classList.add('sp-view');
   el.style.display='';
   el.scrollTop=0;
@@ -306,7 +307,7 @@ function showPanelView(id){
 }
 function hidePanelView(id){
   const el=document.getElementById(id);if(el){el.style.display='none';el.classList.remove('sp-view');}
-  document.body.classList.remove(id==='secInputs'?'editing':'planning');
+  document.body.classList.remove(_PANEL_CLASS[id]||'planning');
 }
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){
@@ -476,9 +477,8 @@ function closeBtcChart(){
   const load=document.getElementById('btcChartLoading');
   if(load)load.style.display='flex';
   setTimeout(function(){
-    document.getElementById('btcChartPage').style.display='none';
+    hidePanelView('btcChartPage');
     if(load)load.style.display='none';
-    document.body.style.overflow='';
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();        // return to My Setup
     refreshMySetupAnimation();            // replay the count-up on all the numbers
@@ -491,9 +491,7 @@ function openChart(symbol,title,icon,allowChange,isBtc){
     : {kind:'gmt',name:'GoMining Token',pair:'GMT / USD',icon:'/gmt36.png'};
   // reflect the chart in the URL so it's shareable / bookmarkable (gmt-optimizer.com/bitcoin|/gmt)
   try{history.replaceState({},'',(isBtc?'/bitcoin':'/gmt')+location.hash);}catch(e){}
-  document.getElementById('btcChartPage').style.display='';
-  document.getElementById('btcChartPage').scrollTop=0;
-  document.body.style.overflow='hidden';
+  showPanelView('btcChartPage');
   const t=document.getElementById('btcChartTitle');
   if(t)t.innerHTML='<img src="'+icon+'" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">'+title;
   // The Rainbow Chart toggle is BTC-only; reset to the live view each open.
@@ -2646,8 +2644,7 @@ function openSetupProjection(mode){
     : 'Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   syncPayoutUnit();
-  m.style.display='';
-  document.body.style.overflow='hidden';
+  showPanelView('setupProjModal');
   const btn=document.getElementById('spRunBtn');
   if(btn)btn.disabled=false;
 }
@@ -2726,8 +2723,7 @@ function closeSetupProjection(){
   if(txt)txt.textContent='Loading your setup…';
   if(load)load.style.display='flex';
   setTimeout(function(){
-    if(m)m.style.display='none';
-    document.body.style.overflow='';
+    hidePanelView('setupProjModal');
     spShowForm();   // reset for next open
     if(load)load.style.display='none';
     if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
