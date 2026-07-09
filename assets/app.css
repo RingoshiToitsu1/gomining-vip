@@ -39,7 +39,7 @@ input[type=number]{-moz-appearance:textfield}
 .api-err .val{color:var(--orange)}
 
 /* ---- CONTAINER ---- */
-.container{max-width:1200px;margin:0 auto;padding:0 1.2rem 4rem}
+.container{width:min(1160px,calc(100% - 40px));max-width:none;margin:0 auto;padding:0 0 96px}
 
 /* ---- TABS ---- */
 .tabs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:1.2rem 0 0;position:sticky;top:52px;z-index:90;background:transparent;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:.8rem}
@@ -60,8 +60,8 @@ input[type=number]{-moz-appearance:textfield}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ---- HERO CARDS ---- */
-.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.2rem}
-.hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
+.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-bottom:2.6rem}
+.hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
 .hero-card.purple-accent::before{background:linear-gradient(90deg,var(--purple),transparent)}
@@ -79,7 +79,7 @@ input[type=number]{-moz-appearance:textfield}
 /* Vertically center the CTA card's content on non-mobile so it doesn't leave a gap at the bottom (mobile uses the compact row layout). */
 @media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center;align-items:center}}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
-.hero-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;line-height:1.15;letter-spacing:.01em}
+.hero-val{font-family:var(--mono);font-size:1.9rem;font-weight:700;line-height:1.12;letter-spacing:.01em}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}
@@ -99,20 +99,28 @@ input[type=number]{-moz-appearance:textfield}
 .hero-yearly.red{color:var(--red)}
 .hero-val.green{color:var(--green)}.hero-val.cyan{color:var(--cyan)}.hero-val.orange{color:var(--orange)}.hero-val.purple{color:var(--purple-soft)}.hero-val.red{color:var(--red)}
 
+/* landing-style section head (eyebrow + big title) */
+.sec-head{margin:0 0 1.2rem}
+.sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-soft)}
+.sec-head .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+.sec-head .sec-title{font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:600;color:var(--warm);line-height:1.06;letter-spacing:-.025em;margin-top:12px}
+.sec-head .sec-title .grad{background:linear-gradient(96deg,var(--gold-hi),var(--gold-soft));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sec-head .sec-lead{color:var(--ink2);font-size:1.02rem;max-width:600px;margin-top:10px}
+
 /* ---- SECTION ---- */
-.section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;transition:var(--transition)}
+.section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:1.6rem;overflow:hidden;transition:var(--transition)}
 .section:hover{border-color:#232d48}
-.section-header{display:flex;align-items:center;justify-content:center;padding:1rem 1.2rem;cursor:default;user-select:none;transition:var(--transition)}
-.section-header:hover{background:rgba(245,166,35,.04)}
-.section-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.section-header{display:flex;align-items:center;justify-content:flex-start;padding:1.5rem 1.6rem .3rem;cursor:default;user-select:none;transition:var(--transition)}
+.section-header:hover{background:transparent}
+.section-title{font-size:clamp(1.12rem,2vw,1.42rem);font-weight:600;color:var(--warm);letter-spacing:-.015em;display:flex;align-items:center;gap:.6rem}
 .section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
-.section-title .thumb{width:20px;height:20px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(245,166,35,.25))}
+.section-title .thumb{width:26px;height:26px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(245,166,35,.25))}
 .section-title .thumb rect.bg{fill:url(#thumbGrad)}
 .section-title .thumb .g{stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .icon-purple{background:var(--purple)}.icon-cyan{background:var(--cyan)}.icon-green{background:var(--green)}.icon-orange{background:var(--orange)}
 .section-toggle{display:none}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
-.section-body{padding:0 1.2rem 1.2rem;transition:var(--transition)}
+.section-body{padding:.6rem 1.6rem 1.6rem;transition:var(--transition)}
 .section.collapsed .section-body{display:block}
 
 /* ---- INPUTS ---- */
@@ -525,8 +533,10 @@ html.show-onboarding #onboarding{display:flex}
 @keyframes obReveal{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .ob-reveal{opacity:0;animation:obReveal .6s ease forwards}
 .ob-nav .ob-btn{transition:opacity .5s ease,transform .5s ease}
-.reveal{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
+/* scroll reveal — matched to the landing (.rd .reveal): soft blur-up, .9s ease2 */
+.reveal{opacity:0;transform:translateY(30px);filter:blur(6px);transition:opacity .9s var(--ease2),transform .9s var(--ease2),filter .9s var(--ease2)}
+.reveal.visible{opacity:1;transform:none;filter:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;filter:none!important}}
 .ob-step-reveal{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
 .ob-step.active .ob-step-reveal{opacity:1;transform:translateY(0)}
 .ob-field,.ob-toggle-row,.ob-preview-card,.ob-preview-grid{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
@@ -871,7 +881,7 @@ html.show-onboarding #onboarding{display:flex}
 .ob-reset-btn:hover{border-color:var(--purple);color:var(--text2)}
 
 /* ---- SECTION DESCRIPTIONS ---- */
-.section-desc{font-size:.73rem;color:var(--text3);padding:.2rem 1.2rem .6rem;line-height:1.5;border-bottom:1px solid var(--border);text-align:center}
+.section-desc{font-size:.92rem;color:var(--ink2);padding:.1rem 1.6rem 0;line-height:1.55;border-bottom:none;text-align:left;max-width:640px}
 
 /* ---- REINVEST PROJECTION ---- */
 .ri-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem;justify-items:center}
@@ -994,7 +1004,7 @@ body{background:transparent}
   /* landing-nav tokens that live only under .rd in design.css — mirrored here
      verbatim so the console (not .rd-scoped) resolves them identically */
   --line:rgba(240,196,120,.14);--ink2:#8A93A6;--ink3:#575E70;
-  --ease:cubic-bezier(.22,.61,.36,1);
+  --ease:cubic-bezier(.22,.61,.36,1);--ease2:cubic-bezier(.16,1,.3,1);
 }
 /* header -> EXACT copy of the landing nav: floating glass pill.
    (sticky+margin instead of the landing's fixed so console content keeps its flow) */
