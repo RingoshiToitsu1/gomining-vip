@@ -29,8 +29,18 @@
       '<div><h4>Learn</h4><a href="/how-gomining-works.html">How GoMining works</a><a href="/is-gomining-worth-it.html">Is it worth it?</a><a href="/gomining-roi-calculator.html">ROI calculator</a><a href="/gomining-discount-explained.html">Discount explained</a></div>'+
       '<div><h4>Legal</h4><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div>'+
     '</div></div>'+
+    '<div class="foot-donate">'+
+      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/console#claim">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
+      '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
+      '<div class="fd-addrs">'+
+        '<button type="button" class="fd-addr" data-copy="bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh"><span class="fd-tag">BTC</span><span class="fd-val">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span></button>'+
+        '<button type="button" class="fd-addr" data-copy="0xc151cdCB14aac14096ae003793d3FfAb46881c99"><span class="fd-tag">GMT</span><span class="fd-val">0xc151cdCB14aac14096ae003793d3FfAb46881c99</span></button>'+
+      '</div></div>'+
     '<div class="fbase">&copy; 2026 GMT Optimizer &middot; Independent community tool, not affiliated with GoMining. Informational only, not financial advice.</div>';
   document.body.appendChild(foot);
+
+  /* ---- footer donation copy-to-clipboard (delegated) ---- */
+  document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 
   /* ---- back to top ---- */
   var top=document.createElement('button');
@@ -53,6 +63,21 @@
       el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
       el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
   });
+
+  /* ---- magnetic hover on every clickable button (mirrors the landing page) ---- */
+  (function(){
+    var SEL='button, a.nav-cta, a.btn, a.ri-btn', cur=null;
+    function clr(){ if(cur){cur.style.transform='';cur=null;} }
+    document.addEventListener('pointermove',function(e){
+      var b=(e.target&&e.target.closest)?e.target.closest(SEL):null;
+      if(b!==cur)clr();
+      if(!b)return;
+      cur=b;var r=b.getBoundingClientRect();
+      b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';
+    },{passive:true});
+    document.addEventListener('pointerleave',clr,{passive:true});
+    addEventListener('blur',clr);
+  })();
 
   /* ---- spiral galaxy ---- */
   var cvs=document.getElementById('stars');if(!cvs)return;
