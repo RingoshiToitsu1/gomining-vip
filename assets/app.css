@@ -1044,12 +1044,23 @@ body{background:transparent}
 .header .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82em;font-weight:600;color:#100a02;text-decoration:none;position:relative;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden;white-space:nowrap}
 .header .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 /* live-data + tools strip sitting just below the identical nav */
-.subbar{width:min(1160px,calc(100% - 28px));margin:12px auto 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* live strip -> its own glass panel matching the header pill, hugged to the chips
+   and centered on the page just below the header (one attached unit in .topbar) */
+.subbar{width:fit-content;max-width:calc(100% - 28px);margin:8px auto 0;
+  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:7px 12px;border-radius:16px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(20,22,30,.7),rgba(10,12,18,.66));
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 10px 34px rgba(0,0,0,.44)}
+.subbar .live-bar{width:auto;gap:6px;flex-wrap:wrap;justify-content:center}
 .subbar-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* live chips + tools normalized to the same 16px scale as the header (em off .topbar) */
 .topbar .live-chip{font-size:.78em;padding:5px 10px;gap:5px;border-radius:16px}
 .topbar .live-chip img{width:16px;height:16px}
 .topbar .subbar-tools .ob-reset-btn{font-size:.72em;padding:4px 10px;margin-left:0}
+/* chips read as items ON the glass panel, not nested pills */
+.subbar .live-chip{background:transparent;border-color:transparent;box-shadow:none}
+.subbar .live-chip:hover,.subbar .live-chip-btn:hover{background:rgba(255,255,255,.05);border-color:transparent;box-shadow:none}
 @media(max-width:820px){.header .nav-links{display:none}}
 @media(max-width:600px){.topbar{padding-top:12px}}
 /* live chips -> glass pill */
