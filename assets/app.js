@@ -262,7 +262,7 @@ function fAxisGMT(v){const a=Math.abs(v);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e
 function toggleSection(id){document.getElementById(id).classList.toggle('collapsed')}
 
 // ---- TABS ----
-document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
+function _activateTab(b,push){
   const prev=document.querySelector('.tab-content.active');
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
@@ -272,13 +272,27 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>
   if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
+  // Reflect the view in the URL so the tabs are real pages (/planner, /console) — unless we're
+  // syncing FROM the URL via back/forward (push===false).
+  if(push!==false){
+    const t=b.dataset.tab, u=t==='tab-planner'?'/planner':t==='tab-current'?'/console':null;
+    if(u&&location.pathname.replace(/\/+$/,'')!==u){try{history.pushState({tab:t},'',u);}catch(e){}}
+  }
   // First visit to the planner auto-opens the full-page form; navigating in from another tab
   // shows the results. Re-clicking "Capital Planner" while already on it reopens the form to
   // adjust (replaces the old "Adjust Investment Amount" button).
   if(b.dataset.tab==='tab-planner'&&(!window._plannerCalcDone||(prev&&prev.id==='tab-planner'))){openPlannerForm();}
   // Switching to My Setup from another tab replays the count-up animation.
   if(b.dataset.tab==='tab-current'&&(!prev||prev.id!=='tab-current')){refreshMySetupAnimation();}
-}));
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>_activateTab(b,true)));
+// Back/forward between /console and /planner switches the tab without pushing a new history entry.
+addEventListener('popstate',function(){
+  const seg=location.pathname.replace(/\/+$/,'').split('/').pop();
+  const id=seg==='planner'?'tab-planner':'tab-current';
+  const b=document.querySelector('[data-tab="'+id+'"]');
+  if(b&&!b.classList.contains('active'))_activateTab(b,false);
+});
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){
   document.getElementById('piCapitalInput').value=$('inCapital').value;

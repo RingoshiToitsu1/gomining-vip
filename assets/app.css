@@ -1026,3 +1026,18 @@ body{background:transparent}
   background:linear-gradient(140deg,var(--line-hi),transparent 42%,rgba(245,166,35,.2));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+
+/* ============================================================
+   PHASE 3d — dashboard hero cards mirror the landing stat-cards
+   ============================================================ */
+.hero-card{text-align:left;padding:1.1rem 1.15rem 1.05rem}
+.hero-card .s-id{font-family:var(--mono);font-size:.56rem;letter-spacing:.16em;color:var(--text3);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;margin-bottom:.7rem}
+.hero-card .corners{position:absolute;inset:9px;pointer-events:none;z-index:2}
+.hero-card .corners::before,.hero-card .corners::after{content:'';position:absolute;width:11px;height:11px;border:1px solid var(--line-hi)}
+.hero-card .corners::before{top:0;left:0;border-right:0;border-bottom:0}
+.hero-card .corners::after{right:0;bottom:0;border-left:0;border-top:0}
+.hero-card .hero-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);font-weight:600}
+.hero-card .hero-val{font-family:var(--mono);font-size:1.5rem;line-height:1.12;margin:.3rem 0 .18rem;font-weight:400}
+.hero-card .hero-sub,.hero-card .hero-yearly{font-family:var(--mono);font-size:.66rem;color:var(--text3)}
+.hero-card .hero-cta{color:var(--gold-soft);font-weight:600;margin:.3rem 0 0}
+.hero-card .hero-cta-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.04em;color:#120a01;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));padding:.42rem .72rem;border-radius:9px}

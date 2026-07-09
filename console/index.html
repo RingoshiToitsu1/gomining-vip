@@ -101,7 +101,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=4">
+<link rel="stylesheet" href="/assets/app.css?v=5">
 <link rel="stylesheet" href="/assets/design.css?v=2">
 </head>
 <body>
@@ -400,17 +400,20 @@
   <!-- HERO SUMMARY -->
   <div class="hero-grid" id="heroGrid">
     <div class="hero-card green-accent reveal">
+      <span class="corners"></span><div class="s-id"><span>DAILY.NET</span><span>◈</span></div>
       <div class="hero-label">Daily Net Profit</div>
       <div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDailyBTC">--</div>
     </div>
     <div class="hero-card cyan-accent reveal">
+      <span class="corners"></span><div class="s-id"><span>MONTH.YIELD</span><span>◈</span></div>
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div>
       <div class="hero-yearly cyan" id="heroYearly">--</div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
     </div>
     <div class="hero-card purple-accent reveal">
+      <span class="corners"></span><div class="s-id"><span>COVERAGE</span><span>◈</span></div>
       <div class="hero-label">Total Discount</div>
       <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
       <div class="hero-sub" id="heroDiscountSub">--</div>
@@ -427,6 +430,7 @@
       </div>
     </div>
     <div class="hero-card orange-accent reveal hero-card-action" onclick="openSetupProjection()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetupProjection()}" title="Project your farm's growth over time">
+      <span class="corners"></span><div class="s-id"><span>PROJECT</span><span>◈</span></div>
       <div class="hero-label">Plan Ahead</div>
       <div class="hero-cta"><svg class="hero-cta-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
       <div class="hero-cta-btn">Run projection <span class="hero-cta-arrow">&rarr;</span></div>
@@ -1085,7 +1089,7 @@ async function submitClaim(e){
   <div style="margin-top:.6rem;font-size:.65rem;color:var(--text4)">GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</div>
 </div>
 
-<script src="/assets/app.js?v=2"></script>
+<script src="/assets/app.js?v=5"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: route new users + honor deep-linked views (/planner, /projection) */
 (function(){try{
