@@ -994,6 +994,12 @@ body{background:transparent}
 }
 /* header -> glass bar with gold hairline */
 .header{background:linear-gradient(180deg,rgba(20,22,30,.74),rgba(10,12,18,.66));border-bottom:1px solid rgba(245,200,130,.16);box-shadow:0 14px 44px rgba(0,0,0,.42)}
+/* brand -> v2 warm-gold wordmark + version badge (matches the site nav) */
+.logo{background:none;-webkit-text-fill-color:currentColor;font-size:1.02rem;font-weight:600;letter-spacing:.01em;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo .c-brand{display:inline-flex;align-items:center;gap:10px;color:var(--warm);-webkit-text-fill-color:currentColor;text-decoration:none;font-weight:600;transition:color .25s}
+.logo .c-brand img{width:26px;height:26px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
+.logo .c-brand:hover{color:var(--gold-soft)}
+.logo .c-brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px}
 /* live chips -> glass pill */
 .live-chip{background:linear-gradient(180deg,rgba(255,255,255,.045),transparent),var(--bg-card)}
 .live-chip:hover{border-color:var(--line-hi)}
