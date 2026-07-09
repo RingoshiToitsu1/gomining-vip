@@ -132,3 +132,5 @@ a{color:var(--gold-soft);text-decoration:none}a:hover{text-decoration:underline}
   opacity:0;transition:opacity .45s var(--ease);
   background:radial-gradient(320px circle at var(--mx,50%) var(--my,50%),rgba(245,166,35,.16),transparent 60%)}
 .stat:hover::after,.scenario:hover::after,.cta:hover::after,.claim-card:hover::after{opacity:1}
+/* v2 badge on the brand (matches the landing) */
+.brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px;margin-left:2px}

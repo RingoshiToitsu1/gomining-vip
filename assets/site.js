@@ -14,7 +14,7 @@
   /* ---- nav ---- */
   var nav=document.createElement('nav');
   nav.id='nav';
-  nav.innerHTML='<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer</a>'+
+  nav.innerHTML='<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
     '<div class="nav-links"><a href="/">Home</a><a href="/console">Console</a><a href="/planner">Planner</a><a href="/bitcoin">Charts</a></div>'+
     '<a href="/console" class="nav-cta">Launch Console</a>';
   document.body.insertBefore(nav, document.body.firstChild);
