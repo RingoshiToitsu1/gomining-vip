@@ -44,53 +44,16 @@
   ]
 }
 </script>
-<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
-body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
-.wrap{max-width:760px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
-.brand img{height:28px;width:28px}
-h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
-.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
-h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
-p{margin:0 0 .9rem}
-ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
-strong{color:var(--text)}
-a{color:var(--gold2)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin:1.4rem 0}
-.stat{background:#111;border:1px solid var(--border);border-radius:14px;padding:1rem 1.1rem}
-.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.3rem}
-.stat .v{font-family:var(--mono);font-size:1.35rem;color:var(--gold2);line-height:1.2}
-.stat .s{font-size:.72rem;color:var(--text4);margin-top:.2rem}
-.updated{font-size:.78rem;color:var(--text4);margin-bottom:1.2rem}
-.scenario{margin:1.4rem 0;padding:1.1rem 1.3rem;background:rgba(245,166,35,.06);border-left:3px solid var(--gold);border-radius:0 12px 12px 0}
-.scenario .big{font-family:var(--mono);font-size:1.25rem;color:var(--gold2);display:block;margin:.2rem 0 .4rem}
-.scenario .src{font-size:.78rem;color:var(--text4);margin-top:.5rem}
-.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
-.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
-.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
-.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
-.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
-.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
-.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
-.faq details p{margin:.7rem 0 0}
-.related{margin-top:2.5rem;font-size:.92rem}
-.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
-.foot a{color:var(--text3);text-decoration:none}
-#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.45)}
-#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}
-</style>
+<link rel="stylesheet" href="/assets/content.css?v=1">
 </head>
 <body>
-<div class="wrap">
-  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+<main class="content-wrap">
   <h1>GoMining Profitability at $150k Bitcoin</h1>
   <p class="lead">What a GoMining farm would earn if Bitcoin traded at $150,000 — counting the GMT locked for the discount and its staking, on a reference 100 TH setup at live difficulty.</p>
-  <p class="updated">Scenario price $150,000 &middot; live difficulty 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 5, 2026</p>
+  <p class="updated">Scenario price $150,000 &middot; live difficulty 47 sats/TH/day &middot; 23.1% GMT staking APR &middot; updated July 8, 2026</p>
   <div class="stats">
     <div class="stat"><div class="k">BTC price</div><div class="v">$150k</div><div class="s">scenario</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">$171</div><div class="s">$155 mining + $16 staking</div></div>
@@ -103,7 +66,7 @@ a{color:var(--gold2)}
     <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
   </div>
   <div class="scenario">
-    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~1385 TH earning ~$2,395/mo in 3 years</span>
+    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~1393 TH earning ~$2,412/mo in 3 years</span>
     <span class="src">Floor case: at a flat Bitcoin price it holds ~326 TH earning ~$98/month — rising difficulty caps per-TH income, so growth mostly offsets decay. Compounding at 23.1% GMT staking plus reinvested mining. A growth path, not a promise.</span>
   </div>
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
@@ -120,12 +83,7 @@ a{color:var(--gold2)}
     <details><summary>Does difficulty change these numbers?</summary><p>Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.</p></details>
   </div>
   <div class="related">Read next: <a href="/is-gomining-worth-it.html">Is GoMining worth it?</a> &middot; <a href="/gomining-roi-calculator.html">How ROI is calculated</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
-  <button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
-  <script>(function(){var b=document.getElementById('toTop');if(!b)return;function o(){b.classList.toggle('show',(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener('scroll',o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:'smooth'});};})();</script>
-  <div class="foot">
-    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
-    This page is for informational purposes only and is not financial advice. Figures are model estimates from live network data and assume a flat Bitcoin price; real results vary. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
-  </div>
-</div>
+</main>
+<script src="/assets/site.js?v=1"></script>
 </body>
 </html>

@@ -26,36 +26,10 @@
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0A0A0A;--gold:#F5A623;--gold2:#FFCF7A;--text:#E0E0E0;--text2:#C2C2C2;--text3:#888;--text4:#6a6a6a;--border:rgba(245,166,35,.16);--card-border:rgba(245,166,35,.30);--mono:'Share Tech Mono',monospace}
-body{background:var(--bg);color:var(--text2);font-family:'Space Grotesk',system-ui,sans-serif;line-height:1.7;padding:2.5rem 1.5rem 4rem;background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(245,166,35,.08),transparent 60%)}
-.wrap{max-width:760px;margin:0 auto}
-.brand{display:flex;align-items:center;gap:.5rem;font-weight:700;color:var(--text);font-size:1.1rem;margin-bottom:2rem;text-decoration:none}
-.brand img{height:28px;width:28px}
-h1{font-size:2rem;color:var(--text);font-weight:700;margin-bottom:.6rem;letter-spacing:-.02em;line-height:1.15}
-.lead{font-size:1.1rem;color:var(--text);margin-bottom:1.6rem}
-h2{font-size:1.3rem;color:var(--gold);font-weight:700;margin:2.2rem 0 .6rem}
-p{margin:0 0 .9rem}
-ul{margin:0 0 .9rem 1.2rem}li{margin-bottom:.45rem}
-strong{color:var(--text)}
-a{color:var(--gold2)}
-.formula{font-family:var(--mono);font-size:.9rem;color:var(--gold2);background:#111;border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:0 0 .9rem;overflow-x:auto}
-.cta{display:block;margin:2rem 0;padding:1.5rem;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:18px;text-align:center}
-.cta h3{color:var(--text);font-size:1.2rem;margin-bottom:.5rem}
-.cta .code{font-family:var(--mono);font-weight:700;color:var(--gold);background:rgba(245,166,35,.12);padding:.1rem .5rem;border-radius:8px}
-.cta a.btn{display:inline-block;margin-top:.9rem;padding:.75rem 1.6rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:700;border-radius:12px;text-decoration:none}
-.faq details{border:1px solid var(--border);border-radius:14px;padding:.9rem 1.1rem;margin-bottom:.6rem;background:#111}
-.faq summary{cursor:pointer;font-weight:600;color:var(--text)}
-.faq details p{margin:.7rem 0 0}
-.related{margin-top:2.5rem;font-size:.92rem}
-.foot{margin-top:2.5rem;padding-top:1.4rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--text4)}
-.foot a{color:var(--text3);text-decoration:none}
-</style>
+<link rel="stylesheet" href="/assets/content.css?v=1">
 </head>
 <body>
-<div class="wrap">
-  <a href="/" class="brand"><img src="gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+<main class="content-wrap">
   <h1>GoMining ROI &amp; Break-Even Calculator</h1>
   <p class="lead">Most "calculators" show a flat monthly figure that never happens in reality. Here's how GoMining ROI is <em>actually</em> calculated — and a free tool that projects your real payback.</p>
 
@@ -90,14 +64,7 @@ a{color:var(--gold2)}
   </div>
 
   <div class="related">Read next: <a href="/is-gomining-worth-it.html">Is GoMining worth it in 2026?</a> &middot; <a href="/gomining-promo-code.html">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>
-
-  <div class="foot">
-    <a href="/privacy.html">Privacy Policy</a> &middot; <a href="/terms.html">Terms of Use</a><br><br>
-    This page is for informational purposes only and is not financial advice. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.
-  </div>
-</div>
-<button id="toTop" aria-label="Back to top" title="Back to top">&uarr;</button>
-<style>#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,#F5A623,#FFCF7A);color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,.45)}#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}</style>
-<script>(function(){var b=document.getElementById("toTop");if(!b)return;function o(){b.classList.toggle("show",(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener("scroll",o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};})();</script>
+</main>
+<script src="/assets/site.js?v=1"></script>
 </body>
 </html>
