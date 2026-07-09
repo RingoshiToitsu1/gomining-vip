@@ -976,8 +976,10 @@ html.show-onboarding #onboarding{display:flex}
 }
 html{background:#060709}
 body{background:transparent}
-/* galaxy backdrop wrapper: fixed behind everything, dimmed so the dense UI stays readable */
-.console-bg{position:fixed;inset:0;z-index:-3;opacity:.5;pointer-events:none}
+/* galaxy backdrop wrapper: fixed behind everything, dimmed so the dense UI stays readable.
+   Selector is .rd.console-bg (0-2-0) so it beats design.css's .rd{position:relative;min-height:100vh}
+   regardless of load order — otherwise the wrapper takes a full viewport of layout space. */
+.rd.console-bg{position:fixed;inset:0;min-height:0;z-index:-3;opacity:.5;pointer-events:none;background:transparent}
 /* smoked-glass material on the primary surfaces */
 .hero-card,.section,.sp-page,.ob-modal,.ri-card,.ri-single-card{
   backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
