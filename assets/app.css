@@ -59,10 +59,12 @@ input[type=number]{-moz-appearance:textfield}
    two tab buttons are hidden. The tab elements STAY in the DOM so the JS that
    programmatically .click()s them (planner submit, onboarding, deep-links) never
    null-crashes; toggling their .active class is now a visual no-op. */
-.tab-content{display:block;animation:none}
-/* header nav links jump here — offset so the target clears the sticky topbar */
-#tab-current,#tab-planner{scroll-margin-top:160px}
-@media(max-width:600px){#tab-current,#tab-planner{scroll-margin-top:120px}}
+/* Capital Planner is its own view again — only the active panel shows. The header
+   nav (My Setup / Planner) switches views by clicking the hidden .tab-btns, so the
+   existing _activateTab logic (view show/hide, /planner URL, form auto-open,
+   animations) keeps working unchanged. */
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 /* planner entry button (opens the existing capital form; replaces the old tab) */
 .planner-open-btn{display:inline-flex;align-items:center;gap:.5rem;padding:11px 20px;border-radius:12px;font-size:.92rem;font-weight:700;color:#100a02;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);border:none;cursor:pointer;font-family:var(--sans);transition:transform .25s var(--ease),box-shadow .25s}
@@ -1040,6 +1042,9 @@ body{background:transparent}
 .header .nav-links a::after{content:'';position:absolute;left:0;bottom:-6px;height:1.5px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft));transition:width .3s var(--ease);border-radius:2px}
 .header .nav-links a:hover{color:var(--warm)}
 .header .nav-links a:hover::after{width:100%}
+/* current view highlighted in the header nav */
+.header .nav-links a.nav-active{color:var(--warm)}
+.header .nav-links a.nav-active::after{width:100%}
 /* CTA -> exact copy of the landing .nav-cta */
 .header .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82em;font-weight:600;color:#100a02;text-decoration:none;position:relative;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden;white-space:nowrap}
 .header .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}

@@ -101,7 +101,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=15">
+<link rel="stylesheet" href="/assets/app.css?v=16">
 <link rel="stylesheet" href="/assets/design.css?v=3">
 </head>
 <body>
@@ -379,7 +379,7 @@
   <div class="header-inner">
     <a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
     <div class="nav-links">
-      <a href="#tab-current">My Setup</a><a href="#" onclick="openEditSetup();return false">Edit Setup</a><a href="#tab-planner">Planner</a>
+      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">My Setup</a><a href="#" onclick="openEditSetup();return false">Edit Setup</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a>
     </div>
     <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="nav-cta" data-magnetic>Suggest a feature</a>
   </div>
@@ -396,6 +396,13 @@
 </div><!-- topbar -->
 
 <div class="container">
+
+<!-- hidden view-switch buttons, driven by the header nav (My Setup / Planner).
+     Kept in the DOM so the existing _activateTab logic works unchanged. -->
+<div class="tabs" style="display:none" aria-hidden="true">
+  <button class="tab-btn active" data-tab="tab-current">My Setup</button>
+  <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
+</div>
 
 <!-- ==================== MY SETUP ==================== -->
 <div class="tab-content active" id="tab-current">
@@ -1104,13 +1111,16 @@ async function submitClaim(e){
 
 <script src="/assets/app.js?v=5"></script>
 <script src="/assets/chrome.js?v=2"></script>
-<script>/* console: route new users + honor deep-linked views (/planner, /projection) */
+<script>/* console: header-nav view switching + route new users / deep-linked views */
+/* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
+   Global so the header links' inline onclick can reach it. */
+function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.click();document.querySelectorAll('.nav-links a[data-view]').forEach(function(a){a.classList.toggle('nav-active',a.dataset.view===tab);});try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}}
 (function(){try{
   var qs=location.search;
   if(/[?&]new=1/.test(qs)){ if(typeof obNewUser==='function') obNewUser(); return; }
   if(!localStorage.getItem('gm_onboarded')){ if(typeof obGoStep==='function') obGoStep(1); return; }
   var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
-  if(view==='planner'){ var pt=document.getElementById('tab-planner'); if(pt) pt.scrollIntoView({behavior:'smooth'}); }
+  if(view==='planner'){ if(typeof consoleView==='function') consoleView('tab-planner'); }
   else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
 }catch(e){}
   try{document.querySelectorAll('.hero-card').forEach(function(el){
