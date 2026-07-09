@@ -46,7 +46,6 @@
 }
 </script>
 <script>/* Show onboarding for new visitors before paint (no dashboard flash). */try{if(!localStorage.getItem('gm_onboarded'))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
-<script>/* Enable the scroll-reveal hidden state before paint so blocks animate in (no flash). */try{document.documentElement.classList.add('js-sr')}catch(e){}</script>
 <!-- FAQ structured data (mirrors the visible FAQ in the content section below) -->
 <script type="application/ld+json">
 {
@@ -102,7 +101,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=17">
+<link rel="stylesheet" href="/assets/app.css?v=18">
 <link rel="stylesheet" href="/assets/design.css?v=4">
 </head>
 <body>
@@ -1152,7 +1151,7 @@ async function submitClaim(e){
 </footer>
 </div>
 
-<script src="/assets/app.js?v=6"></script>
+<script src="/assets/app.js?v=7"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
@@ -1232,17 +1231,6 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 <script>
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
-</script>
-<script>
-/* Console scroll-reveal — wires the existing .reveal blocks (flash-free via html.js-sr). */
-(function(){
-  try{
-    var els=document.querySelectorAll('.reveal');
-    if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in');});return;}
-    var io=new IntersectionObserver(function(entries){entries.forEach(function(en){if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});},{threshold:.14,rootMargin:'0px 0px -6% 0px'});
-    els.forEach(function(e){io.observe(e);});
-  }catch(e){document.querySelectorAll('.reveal').forEach(function(el){el.classList.add('in');});}
-})();
 </script>
 </body>
 </html>

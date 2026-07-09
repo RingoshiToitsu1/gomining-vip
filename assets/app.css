@@ -1160,10 +1160,15 @@ body .rd .fd-tip{font-size:12.8px}
 body .rd .fd-addr{font-size:11.8px}
 body .rd .fd-addr.copied::after{font-size:9.6px}
 
-/* ===== scroll-reveal on the console (wires the existing .reveal markup; matches the landing) =====
-   Gated by html.js-sr (set synchronously in <head>) so blocks are hidden from first paint
-   — no flash — and shown again if the reveal script never runs. */
-html.js-sr .reveal{opacity:0;transform:translateY(30px);filter:blur(6px);transition:opacity .9s var(--ease2),transform .9s var(--ease2),filter .9s var(--ease2)}
-html.js-sr .reveal.in{opacity:1;transform:none;filter:none}
-html.js-sr .reveal.d1{transition-delay:.08s}html.js-sr .reveal.d2{transition-delay:.16s}html.js-sr .reveal.d3{transition-delay:.24s}
-@media(prefers-reduced-motion:reduce){html.js-sr .reveal{opacity:1;transform:none;filter:none;transition:none}}
+/* ============================================================
+   In-flow panel views — Edit Setup + the Planner form now render between the sticky
+   header+quotron and the footer (no full-screen takeover), matching the site UI.
+   ============================================================ */
+.sp-page.sp-view{position:static;inset:auto;z-index:auto;min-height:60vh;overflow:visible;
+  background:transparent;background-image:none;background-attachment:initial;animation:fadeIn .25s ease}
+.sp-page.sp-view .sp-page-inner{padding-top:1.6rem}
+/* Edit Setup: keep the My Setup tab shell active but hide its dashboard content behind the editor. */
+body.editing #tab-current>:not(#secInputs){display:none}
+body.editing #tab-planner{display:none}
+/* Planner form: hide the whole dashboard; the form (a top-level sibling) flows in its place. */
+body.planning .container{display:none}

@@ -293,6 +293,21 @@ addEventListener('popstate',function(){
   const b=document.querySelector('[data-tab="'+id+'"]');
   if(b&&!b.classList.contains('active'))_activateTab(b,false);
 });
+// ---- In-flow panel views (Edit Setup, Planner form) ----
+// Replace the old full-screen overlays: hide the dashboard but keep the sticky
+// header + quotron and the footer, scrolling with the page instead of covering it.
+function showPanelView(id){
+  const el=document.getElementById(id);if(!el)return;
+  document.body.classList.add(id==='secInputs'?'editing':'planning');
+  el.classList.add('sp-view');
+  el.style.display='';
+  el.scrollTop=0;
+  try{window.scrollTo(0,0);}catch(e){}
+}
+function hidePanelView(id){
+  const el=document.getElementById(id);if(el){el.style.display='none';el.classList.remove('sp-view');}
+  document.body.classList.remove(id==='secInputs'?'editing':'planning');
+}
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){
   document.getElementById('piCapitalInput').value=$('inCapital').value;
@@ -303,9 +318,7 @@ function openPlannerForm(){
   document.getElementById('piMpWth').value=$('inMpWth').value;
   if(window._incomeGoal&&isFinite(window._incomeGoal.targetDisp))document.getElementById('piTargetInput').value=Math.round(window._incomeGoal.targetDisp);
   setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
-  document.getElementById('plannerIntro').style.display='';
-  document.getElementById('plannerIntro').scrollTop=0;
-  document.body.style.overflow='hidden';
+  showPanelView('plannerIntro');
   const cb=document.getElementById('plannerCalcBtn');if(cb)cb.disabled=false;
   // "Return to Capital Planner" only makes sense once a plan has been calculated to go back to.
   const rr=document.getElementById('piReturnResults');if(rr)rr.style.display=window._plannerCalcDone?'':'none';
@@ -338,8 +351,7 @@ function submitPlannerCapital(){
     window._plannerCalcDone=true;
     window._incomeGoal=null;   // amount mode: drop any prior income-goal banner
     recalc();
-    document.getElementById('plannerIntro').style.display='none';
-    document.body.style.overflow='';
+    hidePanelView('plannerIntro');
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
     animatePlannerResults();   // fresh-load feel: count the allocation up from 0
@@ -421,8 +433,7 @@ function submitPlannerTarget(){
     window._plannerCalcDone=true;
     window._incomeGoal={targetUSD,targetDisp,cap,res};
     recalc();
-    $('plannerIntro').style.display='none';
-    document.body.style.overflow='';
+    hidePanelView('plannerIntro');
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
     animatePlannerResults();
@@ -435,8 +446,7 @@ function returnToSetupFromPlanner(){
   if(txt)txt.textContent='Loading your setup…';
   if(load)load.style.display='flex';
   setTimeout(function(){
-    document.getElementById('plannerIntro').style.display='none';
-    document.body.style.overflow='';
+    hidePanelView('plannerIntro');
     if(load)load.style.display='none';
     if(txt)txt.textContent='Finding your optimal split…';
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
@@ -445,8 +455,7 @@ function returnToSetupFromPlanner(){
   },650);
 }
 function closePlannerIntro(){
-  document.getElementById('plannerIntro').style.display='none';
-  document.body.style.overflow='';
+  hidePanelView('plannerIntro');
 }
 
 // Live price chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
@@ -1608,13 +1617,11 @@ function openEditSetup(){
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();
   }
-  sec.style.display='';sec.scrollTop=0;
-  document.body.style.overflow='hidden';
+  showPanelView('secInputs');
   refreshGreedyVisibility();
 }
 function closeEditSetup(){
-  const sec=$('secInputs');if(sec)sec.style.display='none';
-  document.body.style.overflow='';
+  hidePanelView('secInputs');
   refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
 }
 // Brief load spinner (optionally with a status message), then return to My
