@@ -19,6 +19,54 @@
     '<a href="/console" class="nav-cta">Launch Console</a>';
   document.body.insertBefore(nav, document.body.firstChild);
 
+  /* ---- utility ticker / quotron (matches the landing) ---- */
+  var util=document.createElement('div');
+  util.className='util';util.setAttribute('aria-hidden','true');
+  util.innerHTML='<div class="ticker">'+
+    '<span><span class="li">◉ NETWORK LIVE</span></span>'+
+    '<span>BTC <b data-tk="btc">$64,180</b></span>'+
+    '<span>DIFFICULTY <b data-tk="diff">121.51 T</b></span>'+
+    '<span>HASHPRICE <b data-tk="hp">$46.2 / PH/day</b></span>'+
+    '<span>GMT <b data-tk="gmt">$0.285</b></span>'+
+    '<span>NEXT HALVING <b>2028</b></span>'+
+    '<span class="up">▲ SATS/TH/DAY <b data-tk="sats" style="color:inherit;font-weight:400">412</b></span>'+
+    '<span><span class="li">◉ NETWORK LIVE</span></span>'+
+    '<span>BTC <b data-tk="btc">$64,180</b></span>'+
+    '<span>DIFFICULTY <b data-tk="diff">121.51 T</b></span>'+
+    '<span>HASHPRICE <b data-tk="hp">$46.2 / PH/day</b></span>'+
+    '<span>GMT <b data-tk="gmt">$0.285</b></span>'+
+    '</div>';
+  document.body.insertBefore(util, document.body.firstChild);
+  (function(){
+    var BS=3.125;
+    function set(k,v){document.querySelectorAll('[data-tk="'+k+'"]').forEach(function(el){el.textContent=v;});}
+    function j(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json();});}
+    async function btcPrice(){
+      try{var r=await j('https://api.coinpaprika.com/v1/tickers/btc-bitcoin');var p=+r.quotes.USD.price;if(p>0)return p;}catch(e){}
+      try{var r=await j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');var p=+r.bitcoin.usd;if(p>0)return p;}catch(e){}
+      try{var r=await j('https://mempool.space/api/v1/prices');var p=+r.USD;if(p>0)return p;}catch(e){}
+      return 0;
+    }
+    async function gmtPrice(){
+      try{var r=await j('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token');var p=+r.quotes.USD.price;if(p>0)return p;}catch(e){}
+      try{var r=await j('https://api.coingecko.com/api/v3/simple/price?ids=gmt-token&vs_currencies=usd');var p=+r['gmt-token'].usd;if(p>0)return p;}catch(e){}
+      return 0;
+    }
+    (async function(){
+      try{
+        var res=await Promise.all([btcPrice(),gmtPrice(),j('https://mempool.space/api/v1/mining/hashrate/3d').catch(function(){return null;})]);
+        var btc=res[0],gmt=res[1],h=res[2];
+        if(btc>0)set('btc','$'+Math.round(btc).toLocaleString());
+        if(gmt>0)set('gmt','$'+gmt.toFixed(3));
+        if(h&&h.currentDifficulty){
+          var diff=h.currentDifficulty;set('diff',(diff/1e12).toFixed(2)+' T');
+          var sats=((1e12*86400*BS)/(diff*Math.pow(2,32)))*1e8;set('sats',Math.round(sats));
+          if(btc>0)set('hp','$'+((sats/1e8)*1000*btc).toFixed(1)+' / PH/day');
+        }
+      }catch(e){}
+    })();
+  })();
+
   /* ---- footer ---- */
   var foot=document.createElement('footer');
   foot.className='site-foot';
@@ -77,6 +125,15 @@
     },{passive:true});
     document.addEventListener('pointerleave',clr,{passive:true});
     addEventListener('blur',clr);
+  })();
+
+  /* ---- reveal-on-scroll (matches landing; flash-free — only pre-hides blocks below the fold) ---- */
+  (function(){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14,rootMargin:'0px 0px -6% 0px'});
+    var vh=innerHeight||800,i=0;
+    document.querySelectorAll('.content-wrap h2, .content-wrap .stats, .content-wrap .scenario, .content-wrap .formula, .content-wrap .cta, .content-wrap .faq, .content-wrap .related').forEach(function(el){
+      if(el.getBoundingClientRect().top>vh*0.88){el.classList.add('reveal');if(i%3===1)el.classList.add('d1');else if(i%3===2)el.classList.add('d2');io.observe(el);i++;}
+    });
   })();
 
   /* ---- spiral galaxy ---- */

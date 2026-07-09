@@ -1141,3 +1141,29 @@ body{background:transparent}
   opacity:0;transition:opacity .45s var(--ease);
   background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),rgba(245,166,35,.16),transparent 60%)}
 .hero-card:hover .hspot{opacity:1}
+
+/* ============================================================
+   Shared chrome pinned to the landing's 16px type scale.
+   design.css sizes the footer + quotron in root-relative rem; the console root is
+   19.8px (17.4px on small screens), which inflated them ~24%. Re-declared in px so
+   they match the landing exactly — same intent as the .topbar 16px pin. The
+   `body .rd` prefix (0,2,1) beats design.css's `.rd …` (0,2,0) regardless of load order.
+   ============================================================ */
+body .rd .util{font-size:10.9px}
+body .rd footer .brand{font-size:16.3px}
+body .rd .foot-brand p{font-size:13.6px}
+body .rd .foot-col h4{font-size:11.2px}
+body .rd .foot-col a{font-size:14.4px}
+body .rd .foot-base{font-size:11.5px}
+body .rd .fd-offer{font-size:14.4px}
+body .rd .fd-tip{font-size:12.8px}
+body .rd .fd-addr{font-size:11.8px}
+body .rd .fd-addr.copied::after{font-size:9.6px}
+
+/* ===== scroll-reveal on the console (wires the existing .reveal markup; matches the landing) =====
+   Gated by html.js-sr (set synchronously in <head>) so blocks are hidden from first paint
+   — no flash — and shown again if the reveal script never runs. */
+html.js-sr .reveal{opacity:0;transform:translateY(30px);filter:blur(6px);transition:opacity .9s var(--ease2),transform .9s var(--ease2),filter .9s var(--ease2)}
+html.js-sr .reveal.in{opacity:1;transform:none;filter:none}
+html.js-sr .reveal.d1{transition-delay:.08s}html.js-sr .reveal.d2{transition-delay:.16s}html.js-sr .reveal.d3{transition-delay:.24s}
+@media(prefers-reduced-motion:reduce){html.js-sr .reveal{opacity:1;transform:none;filter:none;transition:none}}
