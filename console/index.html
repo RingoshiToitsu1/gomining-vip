@@ -102,8 +102,20 @@
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
 <link rel="stylesheet" href="/assets/app.css?v=1">
+<link rel="stylesheet" href="/assets/design.css?v=1">
 </head>
 <body>
+<!-- ===== GALAXY BACKDROP (scoped .rd; dimmed for the console) ===== -->
+<div class="rd console-bg" aria-hidden="true">
+  <div class="world">
+    <span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>
+    <div class="grid-floor"></div>
+    <canvas id="stars"></canvas>
+  </div>
+  <div class="vignette"></div>
+  <div class="noise"></div>
+</div>
+
 
 <!-- SHARED SVG DEFS (gradient palette for section thumbnails) -->
 <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
@@ -1074,6 +1086,7 @@ async function submitClaim(e){
 </div>
 
 <script src="/assets/app.js?v=1"></script>
+<script src="/assets/chrome.js?v=1"></script>
 <script>/* console: skip the marketing hero (lives on / now); route new users */
 (function(){try{
   if(/[?&]new=1/.test(location.search)){ if(typeof obNewUser==='function') obNewUser(); return; }

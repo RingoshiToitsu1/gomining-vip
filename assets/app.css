@@ -962,3 +962,23 @@ html.show-onboarding #onboarding{display:flex}
 .claim-open-btn{margin-top:1rem;padding:.75rem 1.4rem;background:transparent;border:1px solid var(--border-focus);color:var(--purple);font-weight:700;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem}
 .claim-open-btn:hover{background:rgba(245,166,35,.08)}
 .claim-status{margin-top:.9rem;font-size:.9rem;font-weight:600}
+
+/* ============================================================
+   PHASE 3 — GLASS / HUD RESKIN (console)
+   Appended so these token + material overrides win by source order.
+   ============================================================ */
+:root{
+  --bg:#060709;--bg2:#0A0C12;
+  --bg-card:rgba(18,20,28,.82);--bg-card-hover:rgba(30,33,44,.9);--bg-input:rgba(10,12,18,.72);
+  --border:rgba(245,200,130,.14);--card-border:rgba(245,200,130,.26);
+  --radius:22px;--radius-sm:13px;
+  --sh:0 26px 64px -18px rgba(0,0,0,.72);
+}
+html{background:#060709}
+body{background:transparent}
+/* galaxy backdrop wrapper: fixed behind everything, dimmed so the dense UI stays readable */
+.console-bg{position:fixed;inset:0;z-index:-3;opacity:.5;pointer-events:none}
+/* smoked-glass material on the primary surfaces */
+.hero-card,.section,.sp-page,.ob-modal,.ri-card,.ri-single-card{
+  backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
+  box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.06)}
