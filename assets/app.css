@@ -55,9 +55,18 @@ input[type=number]{-moz-appearance:textfield}
 .tab-edit-btn{margin-left:auto;padding:.55rem 1.25rem;cursor:pointer;border:1px solid var(--cyan);border-radius:24px;background:transparent;color:var(--cyan);font-family:var(--sans);font-size:.85rem;font-weight:600;transition:var(--transition);user-select:none;white-space:nowrap}
 .tab-edit-btn:hover{background:var(--cyan);color:#000}
 @media(max-width:600px){.tab-edit-btn{padding:.45rem 1rem;font-size:.8rem;border-radius:20px}}
-.tab-content{display:none;animation:fadeIn .3s ease}
-.tab-content.active{display:block}
+/* FLATTENED one-page layout: both panels render as one continuous scroll and the
+   two tab buttons are hidden. The tab elements STAY in the DOM so the JS that
+   programmatically .click()s them (planner submit, onboarding, deep-links) never
+   null-crashes; toggling their .active class is now a visual no-op. */
+.tab-content{display:block;animation:none}
+/* header nav links jump here — offset so the target clears the sticky topbar */
+#tab-current,#tab-planner{scroll-margin-top:160px}
+@media(max-width:600px){#tab-current,#tab-planner{scroll-margin-top:120px}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* planner entry button (opens the existing capital form; replaces the old tab) */
+.planner-open-btn{display:inline-flex;align-items:center;gap:.5rem;padding:11px 20px;border-radius:12px;font-size:.92rem;font-weight:700;color:#100a02;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);border:none;cursor:pointer;font-family:var(--sans);transition:transform .25s var(--ease),box-shadow .25s}
+.planner-open-btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 
 /* ---- HERO CARDS ---- */
 .hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-bottom:2.6rem}

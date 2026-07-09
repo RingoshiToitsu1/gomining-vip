@@ -101,7 +101,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=13">
+<link rel="stylesheet" href="/assets/app.css?v=14">
 <link rel="stylesheet" href="/assets/design.css?v=3">
 </head>
 <body>
@@ -379,9 +379,9 @@
   <div class="header-inner">
     <a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
     <div class="nav-links">
-      <a href="/">Home</a><a href="/console">Console</a><a href="/planner">Planner</a><a href="/bitcoin">Charts</a>
+      <a href="#tab-current">My Setup</a><a href="#" onclick="openEditSetup();return false">Edit Setup</a><a href="#tab-planner">Planner</a>
     </div>
-    <a href="/console" class="nav-cta" data-magnetic>Launch Console</a>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="nav-cta" data-magnetic>Suggest a feature</a>
   </div>
 </div>
 <!-- live data + tools strip (below the identical nav) -->
@@ -392,23 +392,12 @@
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
     </div>
-    <div class="subbar-tools">
-      <button class="ob-reset-btn" onclick="resetOnboarding()" title="Re-run setup wizard">Setup</button>
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLScgzTXwefDJtmt-pJ-rQc7XH9QV_KOZRyVxLpOoLiHqOZSB0w/viewform" target="_blank" rel="noopener" class="ob-reset-btn" style="background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:#000;-webkit-text-fill-color:#000;border-color:transparent;font-weight:700;text-decoration:none">Suggest a Feature</a>
-    </div>
 </div>
 </div><!-- topbar -->
 
 <div class="container">
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="tab-btn active" data-tab="tab-current">My Setup</button>
-  <button class="tab-btn" data-tab="tab-planner">Capital Planner</button>
-  <button id="btnEditSetup" class="tab-edit-btn" onclick="openEditSetup()" title="Edit your setup, saved profiles &amp; currency">Edit Setup</button>
-</div>
-
-<!-- ==================== TAB 1 ==================== -->
+<!-- ==================== MY SETUP ==================== -->
 <div class="tab-content active" id="tab-current">
 
   <!-- HERO SUMMARY -->
@@ -624,6 +613,12 @@
 <!-- ==================== TAB 2 ==================== -->
 <div class="tab-content" id="tab-planner">
 
+  <div class="sec-head reveal" style="margin-top:3.4rem">
+    <span class="tag"><span class="dot"></span>Capital Planner</span>
+    <h2 class="sec-title">Deploy new capital, <span class="grad">optimally.</span></h2>
+    <p class="sec-lead">Tests every TH / GMT split to maximise your monthly net income at the 20% discount cap. Adjust the amount you're deploying and recalculate.</p>
+    <div style="margin-top:1.1rem"><button class="planner-open-btn" onclick="openPlannerForm()">Adjust investment amount &rarr;</button></div>
+  </div>
 
   <!-- TOP ROW: New Monthly Income + Growth Projection card -->
   <div class="planner-top-row">
@@ -1115,7 +1110,7 @@ async function submitClaim(e){
   if(/[?&]new=1/.test(qs)){ if(typeof obNewUser==='function') obNewUser(); return; }
   if(!localStorage.getItem('gm_onboarded')){ if(typeof obGoStep==='function') obGoStep(1); return; }
   var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
-  if(view==='planner'){ var b=document.querySelector('[data-tab="tab-planner"]'); if(b) b.click(); }
+  if(view==='planner'){ var pt=document.getElementById('tab-planner'); if(pt) pt.scrollIntoView({behavior:'smooth'}); }
   else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
 }catch(e){}
   try{document.querySelectorAll('.hero-card').forEach(function(el){
