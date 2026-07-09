@@ -1087,10 +1087,14 @@ async function submitClaim(e){
 
 <script src="/assets/app.js?v=2"></script>
 <script src="/assets/chrome.js?v=2"></script>
-<script>/* console: skip the marketing hero (lives on / now); route new users */
+<script>/* console: route new users + honor deep-linked views (/planner, /projection) */
 (function(){try{
-  if(/[?&]new=1/.test(location.search)){ if(typeof obNewUser==='function') obNewUser(); return; }
-  if(!localStorage.getItem('gm_onboarded') && typeof obGoStep==='function'){ obGoStep(1); }
+  var qs=location.search;
+  if(/[?&]new=1/.test(qs)){ if(typeof obNewUser==='function') obNewUser(); return; }
+  if(!localStorage.getItem('gm_onboarded')){ if(typeof obGoStep==='function') obGoStep(1); return; }
+  var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
+  if(view==='planner'){ var b=document.querySelector('[data-tab="tab-planner"]'); if(b) b.click(); }
+  else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
 }catch(e){}})();</script>
 <style>#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,#F5A623,#FFCF7A);color:#000;font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99999;box-shadow:0 4px 14px rgba(0,0,0,.45)}#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}</style>
 <script>(function(){var b=document.getElementById("toTop");if(!b)return;function o(){b.classList.toggle("show",(window.scrollY||document.documentElement.scrollTop)>320);}window.addEventListener("scroll",o,{passive:true});o();b.onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};})();</script>
