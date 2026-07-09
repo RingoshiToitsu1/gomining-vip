@@ -984,3 +984,32 @@ body{background:transparent}
 .hero-card,.section,.sp-page,.ob-modal,.ri-card,.ri-single-card{
   backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
   box-shadow:var(--sh),inset 0 1px 0 rgba(255,255,255,.06)}
+
+/* ============================================================
+   PHASE 3b — component polish (glass / HUD) to match the landing
+   ============================================================ */
+:root{
+  --gold-hi:#FFC65A;--gold-soft:#FFCF7A;--warm:#FFF4E0;
+  --line-hi:rgba(245,200,130,.34);
+}
+/* header -> glass bar with gold hairline */
+.header{background:linear-gradient(180deg,rgba(20,22,30,.74),rgba(10,12,18,.66));border-bottom:1px solid rgba(245,200,130,.16);box-shadow:0 14px 44px rgba(0,0,0,.42)}
+/* live chips -> glass pill */
+.live-chip{background:linear-gradient(180deg,rgba(255,255,255,.045),transparent),var(--bg-card)}
+.live-chip:hover{border-color:var(--line-hi)}
+/* signature gradient hairline border on the glass surfaces
+   (uses ::after because ::before already carries the accent bar on cards/modals) */
+.hero-card::after,.section::after,.ob-modal::after,.ri-card::after,.ri-single-card::after,.sp-prompt::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(140deg,var(--line-hi),transparent 36%,transparent 64%,rgba(245,166,35,.20));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+/* tabs -> HUD pills; active = gold gradient like the landing CTA */
+.tab-btn{text-transform:uppercase;letter-spacing:.05em}
+.tab-btn.active{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));border-color:transparent;color:#120a01;box-shadow:0 8px 26px rgba(245,166,35,.36)}
+/* inputs -> gold focus ring */
+.field-input:has(input[type="number"]):focus-within,.field-input:has(#inTokenDiscountDisplay):focus-within,
+.tabs-saved select:focus,.disc-override-row input:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+/* primary action buttons -> gold gradient */
+.share-plan-btn,.disc-override-row button{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;border:none;box-shadow:0 6px 22px rgba(245,166,35,.3)}
+.share-plan-btn:hover,.disc-override-row button:hover{box-shadow:0 10px 30px rgba(245,166,35,.46)}
