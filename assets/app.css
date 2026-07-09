@@ -979,7 +979,7 @@ body{background:transparent}
 /* galaxy backdrop wrapper: fixed behind everything, dimmed so the dense UI stays readable.
    Selector is .rd.console-bg (0-2-0) so it beats design.css's .rd{position:relative;min-height:100vh}
    regardless of load order — otherwise the wrapper takes a full viewport of layout space. */
-.rd.console-bg{position:fixed;inset:0;min-height:0;z-index:-3;opacity:.5;pointer-events:none;background:transparent}
+.rd.console-bg{position:fixed;inset:0;min-height:0;z-index:-3;opacity:1;pointer-events:none;background:transparent}
 /* smoked-glass material on the primary surfaces */
 .hero-card,.section,.sp-page,.ob-modal,.ri-card,.ri-single-card{
   backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);
@@ -1041,3 +1041,13 @@ body{background:transparent}
 .hero-card .hero-sub,.hero-card .hero-yearly{font-family:var(--mono);font-size:.66rem;color:var(--text3)}
 .hero-card .hero-cta{color:var(--gold-soft);font-weight:600;margin:.3rem 0 0}
 .hero-card .hero-cta-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;font-family:var(--mono);font-size:.66rem;font-weight:600;letter-spacing:.04em;color:#120a01;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));padding:.42rem .72rem;border-radius:9px}
+
+/* ============================================================
+   PHASE 3e — interactions match the landing (hover lift + glow + press)
+   ============================================================ */
+.hero-card,.section{transition:transform .4s var(--ease),box-shadow .4s ease,border-color .3s ease}
+.hero-card:hover{transform:translateY(-3px);border-color:var(--line-hi);
+  box-shadow:var(--sh),0 0 34px rgba(245,166,35,.16),inset 0 1px 0 rgba(255,255,255,.07)}
+.hero-card:active,.hero-card-action:active{transform:translateY(-1px) scale(.995)}
+.section:hover{border-color:var(--line-hi);box-shadow:var(--sh),0 0 26px rgba(245,166,35,.10)}
+.hero-card-action{cursor:pointer}

@@ -7,8 +7,8 @@
 
   /* ---- backdrop ---- */
   var bg=document.createElement('div');
-  bg.innerHTML='<div class="world" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span>'+
-    '<div class="grid-floor"></div><canvas id="stars"></canvas></div><div class="vignette" aria-hidden="true"></div>';
+  bg.innerHTML='<div class="world" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>'+
+    '<div class="grid-floor"></div><span class="beam beam-1"></span><span class="beam beam-2"></span><span class="beam beam-3"></span><canvas id="stars"></canvas></div><div class="vignette" aria-hidden="true"></div>';
   while(bg.firstChild) document.body.insertBefore(bg.firstChild, document.body.firstChild);
 
   /* ---- nav ---- */
@@ -55,7 +55,7 @@
   function build(){
     W=cvs.width=innerWidth*dpr;H=cvs.height=innerHeight*dpr;cvs.style.width=innerWidth+'px';cvs.style.height=innerHeight+'px';
     var narrow=innerWidth<900;cx0=W*(narrow?.5:.64);cy0=H*(narrow?.3:.4);maxR=Math.min(W,H)*(narrow?.7:.58);
-    var n=Math.min(380,Math.round(innerWidth*.24));gal=[];
+    var n=Math.min(440,Math.round(innerWidth*.28));gal=[];
     for(var i=0;i<n;i++){var arm=i%ARMS,t=Math.pow(Math.random(),.62);
       gal.push({r:maxR*t+(Math.random()-.5)*maxR*.05,ang:arm*(6.2832/ARMS)+t*TURNS*6.2832+(Math.random()-.5)*(.42*(1-t*.5)),
         t:t,sz:(Math.random()*1.4+.5)*dpr,tw:Math.random()*6.28,tws:Math.random()*.05+.012,w:.85+.55*(1-t)});}
@@ -69,8 +69,8 @@
       ctx.beginPath();ctx.arc(s.x,s.y,s.sz,0,6.28);ctx.fillStyle='rgba(255,225,175,'+o+')';ctx.fill();}
     ctx.globalCompositeOperation='lighter';
     var core=ctx.createRadialGradient(cx0,cy0,0,cx0,cy0,maxR*.34);
-    core.addColorStop(0,'rgba(255,246,222,.7)');core.addColorStop(.18,'rgba(255,207,122,.38)');
-    core.addColorStop(.5,'rgba(245,166,35,.1)');core.addColorStop(1,'rgba(245,166,35,0)');
+    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(255,207,122,.45)');
+    core.addColorStop(.5,'rgba(245,166,35,.12)');core.addColorStop(1,'rgba(245,166,35,0)');
     ctx.fillStyle=core;ctx.beginPath();ctx.arc(cx0,cy0,maxR*.34,0,6.28);ctx.fill();
     rot+=.0014;
     for(var i=0;i<gal.length;i++){var p=gal[i];p.tw+=p.tws;var a=p.ang+rot*p.w;

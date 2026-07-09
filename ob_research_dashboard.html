@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OB Research - Late-Entry Fill Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #09090b; color: #e4e4e7; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; min-height: 100vh; }
+
+  .header {
+    background: linear-gradient(135deg, #18181b 0%, #09090b 100%);
+    border-bottom: 1px solid #27272a;
+    padding: 14px 28px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; background: linear-gradient(135deg, #6ee7b7 0%, #34d399 50%, #10b981 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .badge { padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .header-meta { font-size: 12px; color: #71717a; font-weight: 500; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status-dot.on { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.6); animation: glow 2s infinite; }
+  .status-dot.off { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 8px rgba(16,185,129,0.6); } 50% { box-shadow: 0 0 16px rgba(16,185,129,0.9); } }
+
+  .container { max-width: 1440px; margin: 0 auto; padding: 20px 28px; }
+  .grid { display: grid; gap: 16px; margin-bottom: 16px; }
+  .grid-5 { grid-template-columns: repeat(5, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-1 { grid-template-columns: 1fr; }
+
+  .card {
+    background: #18181b; border: 1px solid #27272a; border-radius: 12px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent);
+  }
+  .card-title {
+    font-size: 12px; font-weight: 600; color: #71717a;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .tip {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 15px; height: 15px; border-radius: 50%;
+    background: #27272a; color: #71717a; font-size: 9px; font-weight: 700; cursor: help; flex-shrink: 0;
+  }
+  .tip:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: #3f3f46; color: #e4e4e7; padding: 8px 12px; border-radius: 8px;
+    font-size: 12px; font-weight: 400; white-space: nowrap; z-index: 100; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 0; text-transform: none;
+  }
+  .tip:hover::before {
+    content: ''; position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: #3f3f46; z-index: 100;
+  }
+
+  .hero-stat { text-align: center; padding: 24px 16px; }
+  .hero-stat .value {
+    font-size: 32px; font-weight: 800; line-height: 1.1;
+    letter-spacing: -1px; font-variant-numeric: tabular-nums;
+  }
+  .hero-stat .label {
+    font-size: 13px; font-weight: 600; color: #a1a1aa; margin-top: 6px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .hero-stat .sub { font-size: 11px; color: #52525b; margin-top: 4px; font-weight: 500; }
+
+  .c-green { color: #34d399; } .c-red { color: #f87171; } .c-yellow { color: #fbbf24; }
+  .c-blue { color: #818cf8; } .c-cyan { color: #22d3ee; } .c-dim { color: #52525b; }
+  .c-white { color: #fafafa; } .c-emerald { color: #6ee7b7; } .c-teal { color: #2dd4bf; }
+
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th { text-align: left; font-size: 11px; text-transform: uppercase; color: #52525b; letter-spacing: 0.5px; padding: 0 0 10px; border-bottom: 1px solid #27272a; font-weight: 700; }
+  .tbl td { padding: 8px 0; border-bottom: 1px solid #1c1c22; font-weight: 500; }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  .scroll-y { max-height: 500px; overflow-y: auto; }
+  .scroll-y::-webkit-scrollbar { width: 4px; }
+  .scroll-y::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+  .no-data { text-align: center; color: #52525b; padding: 40px; font-size: 13px; font-weight: 500; }
+
+  /* Fill matrix heatmap */
+  .matrix-tbl { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+  .matrix-tbl th { padding: 8px 4px; font-size: 11px; color: #71717a; font-weight: 700; border-bottom: 1px solid #27272a; }
+  .matrix-tbl td { padding: 8px 4px; font-weight: 700; font-variant-numeric: tabular-nums; border-bottom: 1px solid #1c1c22; }
+  .matrix-tbl tr:last-child td { border-bottom: none; }
+  .matrix-tbl .row-label { text-align: left; color: #6ee7b7; font-weight: 800; }
+
+  .period-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .period-tab {
+    padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    cursor: pointer; background: #27272a; color: #71717a; border: 1px solid #3f3f46;
+    transition: all 0.2s;
+  }
+  .period-tab.active { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.4); }
+  .period-tab:hover { color: #a1a1aa; }
+
+  .rec-card {
+    display: inline-flex; flex-direction: column; align-items: center;
+    background: #0f0f12; border: 1px solid #27272a; border-radius: 10px;
+    padding: 14px 18px; min-width: 120px; gap: 4px;
+  }
+  .rec-price { font-size: 20px; font-weight: 900; color: #6ee7b7; }
+  .rec-entry { font-size: 13px; font-weight: 700; color: #fafafa; }
+  .rec-sub { font-size: 11px; color: #52525b; font-weight: 500; }
+  .rec-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 1000px) {
+    .grid-5 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .grid-5, .grid-4 { grid-template-columns: 1fr; }
+    .container { padding: 12px 14px; }
+    .header { padding: 10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">OB RESEARCH</span>
+    <span class="badge">LATE-ENTRY FILLS</span>
+  </div>
+  <div class="header-right">
+    <span class="header-meta" id="metaLabel">--</span>
+    <span class="status-dot off" id="wsDot"></span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Hero stats -->
+  <div class="grid grid-5">
+    <div class="card hero-stat">
+      <div class="value c-emerald" id="sWindows">--</div>
+      <div class="label">Windows</div>
+      <div class="sub" id="sWinDetail">--</div>
+    </div>
+    <div class="card hero-stat">
+      <div class="value c-teal" id="sSamples">--</div>
+      <div class="label">Price Samples</div>
+      <div class="sub" id="sSampDetail">0.5s interval</div>
+    </div>
+    <div class="card hero-stat">
+      <div class="value c-white" id="sMarkets">--</div>
+      <div class="label">Markets Tracked</div>
+      <div class="sub" id="sMarketDetail">--</div>
+    </div>
+    <div class="card hero-stat">
+      <div class="value c-green" id="sUpWins">--</div>
+      <div class="label">UP Wins</div>
+      <div class="sub" id="sUpDetail">--</div>
+    </div>
+    <div class="card hero-stat">
+      <div class="value c-red" id="sDnWins">--</div>
+      <div class="label">DOWN Wins</div>
+      <div class="sub" id="sDnDetail">--</div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-title">5m Recommendations <span class="tip" data-tip="Latest entry point with >80% fill rate at each limit price">?</span></div>
+      <div id="rec5mPanel"><div class="no-data">Need more data</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">15m Recommendations <span class="tip" data-tip="Latest entry point with >80% fill rate at each limit price">?</span></div>
+      <div id="rec15mPanel"><div class="no-data">Need more data</div></div>
+    </div>
+  </div>
+
+  <!-- Fill probability matrix -->
+  <div class="grid grid-1">
+    <div class="card">
+      <div class="card-title">Fill Probability Matrix <span class="tip" data-tip="Chance of buying winning side at limit price X when entering at Y% progress">?</span></div>
+      <div class="period-tabs" id="matrixTabs">
+        <span class="period-tab active" data-period="all">ALL</span>
+        <span class="period-tab" data-period="5m">5-MIN</span>
+        <span class="period-tab" data-period="15m">15-MIN</span>
+      </div>
+      <div class="scroll-y" id="matrixPanel"><div class="no-data">Awaiting data</div></div>
+    </div>
+  </div>
+
+  <!-- Winning ask by progress -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-title">Winning Ask Price by Progress <span class="tip" data-tip="Average ask price of the eventual winning side at each progress point">?</span></div>
+      <div class="period-tabs" id="askTabs">
+        <span class="period-tab active" data-period="all">ALL</span>
+        <span class="period-tab" data-period="5m">5-MIN</span>
+        <span class="period-tab" data-period="15m">15-MIN</span>
+      </div>
+      <div id="askPanel"><div class="no-data">Awaiting data</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Market Breakdown</div>
+      <div class="scroll-y" id="marketPanel"><div class="no-data">Awaiting data</div></div>
+    </div>
+  </div>
+
+  <!-- Recent windows -->
+  <div class="grid grid-1">
+    <div class="card">
+      <div class="card-title">Recent Windows <span class="c-dim" id="recentCount" style="font-size:11px;text-transform:none;letter-spacing:0;"></span></div>
+      <div class="scroll-y" id="recentPanel" style="max-height:400px;"><div class="no-data">Awaiting data</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsHost = location.hostname || 'localhost';
+const wsPort = location.protocol === 'https:' ? '' : ':' + (new URLSearchParams(location.search).get('port') || '8771');
+const WS_URL = `${wsProto}//${wsHost}${wsPort}`;
+
+let ws = null, state = null, reconnTimer = null;
+let matrixPeriod = 'all', askPeriod = 'all';
+
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => { document.getElementById('wsDot').className = 'status-dot on'; if (reconnTimer) { clearInterval(reconnTimer); reconnTimer = null; } };
+  ws.onclose = () => { document.getElementById('wsDot').className = 'status-dot off'; if (!reconnTimer) reconnTimer = setInterval(connect, 3000); };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (e) => { state = JSON.parse(e.data); render(state); };
+}
+
+function fmt(n, d=2) { if (n == null) return '--'; return n.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function pct(n) { return (n * 100).toFixed(0) + '%'; }
+function pct1(n) { return (n * 100).toFixed(1) + '%'; }
+function cfgLabel(k) { const m = k.match(/^(\w+?)(\d+)$/); if (m) return `${m[1]} ${m[2]}m`; return k; }
+
+function fillColor(rate) {
+  if (rate >= 0.90) return '#34d399';
+  if (rate >= 0.70) return '#6ee7b7';
+  if (rate >= 0.50) return '#fbbf24';
+  if (rate >= 0.30) return '#f97316';
+  return '#f87171';
+}
+
+function fillBg(rate) {
+  if (rate >= 0.90) return 'rgba(52,211,153,0.15)';
+  if (rate >= 0.70) return 'rgba(110,231,183,0.10)';
+  if (rate >= 0.50) return 'rgba(251,191,36,0.10)';
+  if (rate >= 0.30) return 'rgba(249,115,22,0.10)';
+  return 'rgba(248,113,113,0.10)';
+}
+
+// Tab handlers
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('period-tab')) {
+    const tabs = e.target.parentElement;
+    tabs.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    const period = e.target.dataset.period;
+    if (tabs.id === 'matrixTabs') { matrixPeriod = period; }
+    if (tabs.id === 'askTabs') { askPeriod = period; }
+    if (state) render(state);
+  }
+});
+
+function render(s) {
+  document.getElementById('metaLabel').textContent = `${s.total_windows || 0} windows · ${s.total_samples || 0} samples`;
+
+  // Hero stats
+  document.getElementById('sWindows').textContent = s.total_windows || 0;
+  document.getElementById('sWinDetail').textContent = `${s.windows_5m || 0} x 5m · ${s.windows_15m || 0} x 15m`;
+  document.getElementById('sSamples').textContent = (s.total_samples || 0).toLocaleString();
+  document.getElementById('sMarkets').textContent = (s.markets_seen || []).length;
+  document.getElementById('sMarketDetail').textContent = (s.markets_seen || []).map(cfgLabel).join(', ') || '--';
+  document.getElementById('sUpWins').textContent = s.up_wins || 0;
+  const totalW = (s.up_wins || 0) + (s.dn_wins || 0);
+  document.getElementById('sUpDetail').textContent = totalW > 0 ? pct1(s.up_wins / totalW) : '--';
+  document.getElementById('sDnWins').textContent = s.dn_wins || 0;
+  document.getElementById('sDnDetail').textContent = totalW > 0 ? pct1(s.dn_wins / totalW) : '--';
+
+  renderRecommendations(s.rec_5m || [], 'rec5mPanel');
+  renderRecommendations(s.rec_15m || [], 'rec15mPanel');
+  renderFillMatrix(s);
+  renderWinningAsk(s);
+  renderMarketStats(s.market_stats || {});
+  renderRecentWindows(s.recent_windows || []);
+}
+
+function renderRecommendations(recs, elId) {
+  const el = document.getElementById(elId);
+  if (!recs.length) { el.innerHTML = '<div class="no-data">Need more data</div>'; return; }
+  el.innerHTML = '<div class="rec-row">' + recs.map(r =>
+    `<div class="rec-card">
+      <div class="rec-price">$${r.limit_price.toFixed(2)}</div>
+      <div class="rec-entry">Enter @ ${pct(r.latest_entry)}</div>
+      <div class="rec-sub">${r.remaining_secs}s left · ${pct(r.fill_rate)} fill</div>
+    </div>`
+  ).join('') + '</div>';
+}
+
+function renderFillMatrix(s) {
+  const el = document.getElementById('matrixPanel');
+  let matrix;
+  if (matrixPeriod === '5m') matrix = s.fill_matrix_5m;
+  else if (matrixPeriod === '15m') matrix = s.fill_matrix_15m;
+  else matrix = s.fill_matrix_all;
+
+  if (!matrix || Object.keys(matrix).length === 0) {
+    el.innerHTML = '<div class="no-data">Awaiting data</div>';
+    return;
+  }
+
+  const prices = s.sim_prices || [];
+  const entries = s.sim_entry_pcts || [];
+
+  let html = '<table class="matrix-tbl"><thead><tr><th></th>';
+  prices.forEach(p => { html += `<th>$${p.toFixed(2)}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  entries.forEach(ep => {
+    const key = ep.toFixed(2);
+    const row = matrix[key] || {};
+    html += `<tr><td class="row-label">${pct(ep)}</td>`;
+    prices.forEach(lp => {
+      const lk = lp.toFixed(2);
+      const cell = row[lk];
+      if (cell) {
+        const rate = cell.fill_rate;
+        const color = fillColor(rate);
+        const bg = fillBg(rate);
+        html += `<td style="color:${color};background:${bg};" title="${cell.fills}/${cell.total} fills">${pct(rate)}</td>`;
+      } else {
+        html += '<td class="c-dim">--</td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderWinningAsk(s) {
+  const el = document.getElementById('askPanel');
+  let stats;
+  if (askPeriod === '5m') stats = s.winning_ask_5m;
+  else if (askPeriod === '15m') stats = s.winning_ask_15m;
+  else stats = s.winning_ask_stats;
+
+  if (!stats || Object.keys(stats).length === 0) {
+    el.innerHTML = '<div class="no-data">Awaiting data</div>';
+    return;
+  }
+
+  let html = '<table class="tbl"><thead><tr><th>Progress</th><th>Avg Ask</th><th>Min</th><th>Max</th><th>Profit @Avg</th><th>Windows</th></tr></thead><tbody>';
+
+  const buckets = ['50-60%','60-70%','70-75%','75-80%','80-85%','85-90%','90-95%','95-97%','97-100%'];
+  buckets.forEach(b => {
+    const d = stats[b];
+    if (!d) return;
+    const profit = 1.0 - d.avg;
+    const profitColor = profit >= 0.20 ? '#34d399' : profit >= 0.10 ? '#6ee7b7' : profit >= 0.05 ? '#fbbf24' : '#f87171';
+    const askColor = d.avg <= 0.80 ? '#34d399' : d.avg <= 0.90 ? '#fbbf24' : '#f87171';
+    html += `<tr>
+      <td style="font-weight:800;color:#6ee7b7">${b}</td>
+      <td style="font-weight:700;color:${askColor}">$${fmt(d.avg, 3)}</td>
+      <td class="c-dim">$${fmt(d.min, 2)}</td>
+      <td class="c-dim">$${fmt(d.max, 2)}</td>
+      <td style="font-weight:700;color:${profitColor}">+$${fmt(profit, 3)}</td>
+      <td class="c-dim">${d.windows}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderMarketStats(stats) {
+  const el = document.getElementById('marketPanel');
+  const keys = Object.keys(stats).sort();
+  if (!keys.length) { el.innerHTML = '<div class="no-data">Awaiting data</div>'; return; }
+
+  let html = '<table class="tbl"><thead><tr><th>Market</th><th>Windows</th><th>UP Wins</th><th>DN Wins</th><th>Samples</th></tr></thead><tbody>';
+  keys.forEach(k => {
+    const m = stats[k];
+    html += `<tr>
+      <td style="font-weight:800;color:#6ee7b7">${cfgLabel(k)}</td>
+      <td class="c-white" style="font-weight:600;">${m.windows}</td>
+      <td class="c-green" style="font-weight:600;">${m.up_wins}</td>
+      <td class="c-red" style="font-weight:600;">${m.dn_wins}</td>
+      <td class="c-dim">${m.total_samples.toLocaleString()}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderRecentWindows(windows) {
+  const el = document.getElementById('recentPanel');
+  if (!windows.length) { el.innerHTML = '<div class="no-data">Awaiting data</div>'; return; }
+  document.getElementById('recentCount').textContent = `(${windows.length})`;
+
+  let html = '<table class="tbl"><thead><tr><th>Market</th><th>Period</th><th>Winner</th><th>Samples</th><th>Cheapest Ask</th><th>Avg Ask @80%</th><th>Avg Ask @90%</th></tr></thead><tbody>';
+  [...windows].reverse().forEach(w => {
+    const wc = w.winner === 'UP' ? 'c-green' : 'c-red';
+    const period = w.window_secs === 300 ? '5m' : '15m';
+    const cheapest = w.cheapest_winning_ask != null ? `$${fmt(w.cheapest_winning_ask, 2)}` : '--';
+    const ask80 = w.winning_asks_summary && w.winning_asks_summary['80-85%'] != null ? `$${fmt(w.winning_asks_summary['80-85%'], 2)}` : '--';
+    const ask90 = w.winning_asks_summary && w.winning_asks_summary['90-95%'] != null ? `$${fmt(w.winning_asks_summary['90-95%'], 2)}` : '--';
+
+    const ts = new Date(w.window_start * 1000);
+    const time = ts.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', hour12:false});
+
+    html += `<tr>
+      <td style="font-weight:700;">${cfgLabel(w.market_key)} <span class="c-dim" style="font-size:11px;">${time}</span></td>
+      <td class="c-dim">${period}</td>
+      <td class="${wc}" style="font-weight:800;">${w.winner}</td>
+      <td class="c-dim">${w.samples}</td>
+      <td style="font-weight:600;">${cheapest}</td>
+      <td class="c-dim">${ask80}</td>
+      <td class="c-dim">${ask90}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+connect();
+</script>
+</body>
+</html>

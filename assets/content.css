@@ -16,10 +16,13 @@ body{font-family:var(--sans);background:transparent;color:var(--ink);line-height
 ::selection{background:rgba(245,166,35,.28);color:#fff}
 
 /* ===== galaxy backdrop (injected by site.js) ===== */
-.world{position:fixed;inset:0;z-index:-3;overflow:hidden;pointer-events:none;opacity:.55}
-.orb{position:absolute;border-radius:50%;filter:blur(66px);opacity:.55}
+.world{position:fixed;inset:0;z-index:-3;overflow:hidden;pointer-events:none;opacity:1}
+.orb{position:absolute;border-radius:50%;filter:blur(66px);opacity:.6}
 .orb-1{width:52vw;height:52vw;left:-12vw;top:-16vw;background:radial-gradient(circle,rgba(245,166,35,.5),transparent 68%)}
 .orb-2{width:46vw;height:46vw;right:-16vw;top:14vh;background:radial-gradient(circle,rgba(255,138,61,.45),transparent 66%)}
+.orb-3{width:42vw;height:42vw;left:22vw;bottom:-18vw;background:radial-gradient(circle,rgba(255,207,122,.4),transparent 66%)}
+.beam{position:absolute;top:-20%;width:1.5px;height:140%;opacity:.5;transform:rotate(15deg);background:linear-gradient(to bottom,transparent,rgba(255,210,140,.4),transparent);filter:blur(.5px)}
+.beam-1{left:20%}.beam-2{left:52%}.beam-3{left:80%}
 .grid-floor{position:absolute;inset:-64px 0;
   background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);
   background-size:60px 60px;-webkit-mask-image:radial-gradient(ellipse 82% 62% at 50% 30%,#000 28%,transparent 76%);
@@ -114,3 +117,12 @@ a{color:var(--gold-soft);text-decoration:none}a:hover{text-decoration:underline}
 #toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ===== interactions match the landing (hover lift + glow + press) ===== */
+.stat,.scenario,.cta,.faq details,.claim-card{transition:transform .35s var(--ease),box-shadow .35s ease,border-color .3s ease}
+.stat:hover,.scenario:hover,.claim-card:hover{transform:translateY(-3px);border-color:var(--line-hi);box-shadow:var(--sh),0 0 30px rgba(245,166,35,.14)}
+.faq details:hover{border-color:var(--line-hi)}
+.faq summary{transition:color .2s}.faq summary:hover{color:var(--gold-soft)}
+.cta a.btn{transition:transform .25s var(--ease),box-shadow .25s ease}
+.cta a.btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(245,166,35,.5)}
+.cta a.btn:active,.nav-cta:active{transform:translateY(0) scale(.98)}
