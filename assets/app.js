@@ -267,6 +267,10 @@ function _activateTab(b,push){
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');
+  // Keep the header nav links in sync no matter how the tab was switched (e.g. "Return to
+  // Console" clicks the hidden tab-btn directly, bypassing consoleView) — otherwise the
+  // Planner link stays highlighted after returning.
+  document.querySelectorAll('.nav-links a[data-view]').forEach(a=>a.classList.toggle('nav-active',a.dataset.view===b.dataset.tab));
   // The Capital Planner tab relabels to "Adjust Amount" while you're on it (re-clicking adjusts).
   const pBtn=document.querySelector('[data-tab="tab-planner"]');
   if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
@@ -297,8 +301,13 @@ addEventListener('popstate',function(){
 // Replace the old full-screen overlays: hide the dashboard but keep the sticky
 // header + quotron and the footer, scrolling with the page instead of covering it.
 const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting'};
+const _PANEL_IDS=['secInputs','plannerIntro','setupProjModal','btcChartPage'];
 function showPanelView(id){
   const el=document.getElementById(id);if(!el)return;
+  // Each panel is its own page — close any other that's already open (e.g. open Edit
+  // Setup while the Planner is showing) so we never stack two panels.
+  _PANEL_IDS.forEach(function(pid){if(pid!==id){const p=document.getElementById(pid);if(p){p.style.display='none';p.classList.remove('sp-view');}}});
+  document.body.classList.remove('editing','planning','projecting','charting');
   document.body.classList.add(_PANEL_CLASS[id]||'planning');
   el.classList.add('sp-view');
   el.style.display='';

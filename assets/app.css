@@ -1166,7 +1166,8 @@ body .rd .fd-addr.copied::after{font-size:9.6px}
    takeover), matching the site UI.
    ============================================================ */
 .sp-page.sp-view{position:static;inset:auto;z-index:auto;min-height:60vh;overflow:visible;
-  background:transparent;background-image:none;background-attachment:initial;animation:fadeIn .25s ease}
+  background:transparent;background-image:none;background-attachment:initial;animation:fadeIn .25s ease;
+  backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
 .sp-page.sp-view .sp-page-inner{padding-top:1.6rem}
 /* Edit Setup: keep the My Setup tab shell active but hide its dashboard content behind the editor. */
 body.editing #tab-current>:not(#secInputs){display:none}

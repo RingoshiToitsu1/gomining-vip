@@ -239,6 +239,18 @@
 .rd .faq-a p{padding:0 24px 22px 60px;color:var(--ink2);font-size:.95rem;max-width:74ch}
 
 /* ============ FOOTER ============ */
+/* ============ SEO / LEARN PROSE ============ */
+.rd .seo{max-width:820px;color:var(--ink);font-size:1.04rem;line-height:1.72}
+.rd .seo h3{color:var(--warm);font-size:1.28rem;font-weight:600;letter-spacing:-.01em;margin:2rem 0 .6rem}
+.rd .seo p{margin-bottom:1rem;color:var(--ink)}
+.rd .seo strong{color:var(--warm);font-weight:600}
+.rd .seo a{color:var(--gold-soft);text-decoration:none;border-bottom:1px solid var(--line-hi);transition:color .2s,border-color .2s}
+.rd .seo a:hover{color:var(--gold-hi);border-color:var(--gold-soft)}
+.rd .seo-links{list-style:none;margin:.5rem 0 1.3rem;padding:0}
+.rd .seo-links li{margin-bottom:.55rem;padding-left:1.2rem;position:relative}
+.rd .seo-links li::before{content:'\2192';position:absolute;left:0;color:var(--gold-soft)}
+.rd .seo-links a{border-bottom:none}.rd .seo-links a:hover{border-bottom:1px solid var(--gold-soft)}
+
 .rd footer{position:relative;padding:66px 0 40px;margin-top:70px;border-top:1px solid var(--line);overflow:hidden}
 .rd footer::before{content:'';position:absolute;inset:0;z-index:-1;opacity:.5;
   background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);

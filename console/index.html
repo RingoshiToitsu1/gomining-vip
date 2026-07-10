@@ -46,63 +46,14 @@
 }
 </script>
 <script>/* Show onboarding for new visitors before paint (no dashboard flash). */try{if(!localStorage.getItem('gm_onboarded'))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
-<!-- FAQ structured data (mirrors the visible FAQ in the content section below) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Is GoMining profitable?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "GoMining profitability depends on the Bitcoin price, network difficulty and your miner's efficiency (watts per TH). GMT Optimizer projects all three with live data so you can see your break-even and ROI before you invest — including the downside."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What is GMT and how does the discount work?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "GMT is GoMining's token. Locking GMT (or holding it in your wallet) builds coverage that discounts your daily electricity fee in 1% steps, up to a 20% cap, and unlocks VIP tiers. The planner finds the optimal amount to lock."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How is GoMining ROI calculated?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "The tool computes daily mining rewards (sats per TH per day) from live network data, subtracts your electricity fee after any GMT discount, and projects the result forward through halvings and difficulty growth to estimate payback time."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What is the GoMining promo code?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Use code RINGO5 when you sign up for a 5% bonus TH on your first miner. New referrals can also message the GMT Optimizer team to have their first TH funded and get help setting up their account."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is GMT Optimizer affiliated with GoMining?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining."
-      }
-    }
-  ]
-}
-</script>
 <link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=19">
-<link rel="stylesheet" href="/assets/design.css?v=4">
+<link rel="stylesheet" href="/assets/app.css?v=20">
+<link rel="stylesheet" href="/assets/design.css?v=5">
 </head>
 <body>
 <!-- ===== GALAXY BACKDROP (scoped .rd; dimmed for the console) ===== -->
@@ -1001,7 +952,7 @@
       <div style="margin:1.6rem auto 0;max-width:520px;padding:1.3rem;text-align:center;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:var(--radius-sm)">
         <div style="color:var(--text);font-weight:700;font-size:1.05rem;margin-bottom:.4rem">Like what you see? Make it real.</div>
         <div style="color:var(--text2);font-size:.9rem">New to GoMining? Sign up with code <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> for <strong style="color:var(--text)">+5% bonus TH</strong> — and I'll personally fund your first TH to get you started.</div>
-        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.hash='#claim';},60)">Claim your funded TH &rarr;</button>
+        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.href='/#start';},60)">Claim your funded TH &rarr;</button>
       </div>
     </div>
 
@@ -1013,108 +964,6 @@
   </div>
 </div>
 
-<!-- ============================================================
-     SEO CONTENT SECTION (always in DOM = crawlable by Google)
-     Targets: "gomining calculator", "is gomining profitable",
-     "gomining roi", "gomining promo code"
-     ============================================================ -->
-<section class="seo-content" aria-label="About the GoMining calculator">
-  <h2>GoMining Calculator &amp; Earnings Projector</h2>
-  <p class="seo-lead">Model your GoMining profit before you spend a dollar. GMT Optimizer pulls <strong>live BTC price and network difficulty</strong>, then projects your mining rewards forward through halvings and difficulty grind — so you see realistic earnings, not a rosy flat-line.</p>
-
-  <h2>Is GoMining profitable?</h2>
-  <p>It comes down to three things: the <strong>Bitcoin price</strong>, <strong>network difficulty</strong>, and your miner's <strong>efficiency</strong> (watts per TH). This tool models all three so you can see your break-even and ROI <em>before</em> buying — including the downside. It's 100% free and ad-free.</p>
-
-  <h2>How the GoMining calculator works</h2>
-  <p>Enter your hashrate (TH) and efficiency, and GMT Optimizer computes your live profit &amp; loss, then runs a multi-year projection with a <strong>capital-allocation planner</strong> that finds your optimal split across buying TH, upgrading efficiency, and locking GMT for the electricity discount.</p>
-
-  <div class="claim-card" id="claim">
-    <h2>New to GoMining? Start with a head start.</h2>
-    <p>Sign up with promo code <span class="claim-code" onclick="copyFooterAddr('RINGO5')" title="Click to copy">RINGO5</span> for <strong>+5% bonus TH</strong> on your first miner. Then, as a new referral, <strong>I'll personally fund your first TH and help you set up your account.</strong></p>
-    <p style="font-size:.85rem;color:var(--text3)">Sign up first with the code above, then click below and send me your GoMining username — I'll take care of the rest.</p>
-    <button type="button" class="claim-open-btn" onclick="document.getElementById('claimForm').classList.add('open');this.style.display='none'">Claim my funded TH →</button>
-    <form id="claimForm" class="claim-form" onsubmit="return submitClaim(event)">
-      <!-- honeypot: bots fill this, humans never see it -->
-      <div class="claim-hp"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>
-      <label for="claimName">Your name or handle</label>
-      <input id="claimName" name="name" type="text" required>
-      <label for="claimUser">GoMining username (you must have signed up with RINGO5)</label>
-      <input id="claimUser" name="gomining_username" type="text" required>
-      <label for="claimContact">Best way to reach you (email, Telegram, X)</label>
-      <input id="claimContact" name="contact" type="text" required>
-      <label for="claimMsg">Anything else? (optional)</label>
-      <textarea id="claimMsg" name="message"></textarea>
-      <button type="submit" class="claim-btn">Send my claim</button>
-      <div style="margin-top:.7rem;font-size:.72rem;color:var(--text3);text-align:center">By submitting, you agree to our <a href="/privacy.html" style="color:var(--purple-soft)">Privacy Policy</a> and <a href="/terms.html" style="color:var(--purple-soft)">Terms of Use</a>.</div>
-      <div class="claim-status" id="claimStatus" role="status"></div>
-    </form>
-  </div>
-
-  <h2>Frequently asked questions</h2>
-  <div class="seo-faq">
-    <details><summary>Is GoMining profitable?</summary><p>GoMining profitability depends on the Bitcoin price, network difficulty and your miner's efficiency (watts per TH). GMT Optimizer projects all three with live data so you can see your break-even and ROI before you invest — including the downside.</p></details>
-    <details><summary>What is GMT and how does the discount work?</summary><p>GMT is GoMining's token. Locking GMT (or holding it in your wallet) builds coverage that discounts your daily electricity fee in 1% steps, up to a 20% cap, and unlocks VIP tiers. The planner finds the optimal amount to lock.</p></details>
-    <details><summary>How is GoMining ROI calculated?</summary><p>The tool computes daily mining rewards (sats per TH per day) from live network data, subtracts your electricity fee after any GMT discount, and projects the result forward through halvings and difficulty growth to estimate payback time.</p></details>
-    <details><summary>What is the GoMining promo code?</summary><p>Use code RINGO5 when you sign up for a 5% bonus TH on your first miner. New referrals can also message me to have their first TH funded and get help setting up their account.</p></details>
-    <details><summary>Is GMT Optimizer affiliated with GoMining?</summary><p>No. GMT Optimizer is an independent community tool and is not affiliated with, endorsed by, or officially connected to GoMining.</p></details>
-  </div>
-
-  <h2>GoMining guides</h2>
-  <p>New to GoMining or weighing it up? These free guides go deeper:</p>
-  <ul style="margin:0 0 .5rem 1.2rem;line-height:2">
-    <li><a href="/is-gomining-worth-it.html" style="color:var(--gold2)">Is GoMining worth it in 2026? An honest breakdown</a></li>
-    <li><a href="/gomining-promo-code.html" style="color:var(--gold2)">GoMining promo code (RINGO5) — bonus explained</a></li>
-    <li><a href="/gomining-roi-calculator.html" style="color:var(--gold2)">GoMining ROI &amp; break-even, explained</a></li>
-    <li><a href="/how-gomining-works.html" style="color:var(--gold2)">How does GoMining work? A beginner's guide</a></li>
-    <li><a href="/gomining-discount-explained.html" style="color:var(--gold2)">GoMining discount &amp; GMT locking explained</a></li>
-    <li><a href="/gomining-worth-it-now.html" style="color:var(--gold2)">Is GoMining worth it right now? (live figures, updated monthly)</a></li>
-  </ul>
-  <p style="margin-top:1rem"><strong>ROI &amp; break-even by size:</strong>
-    <a href="/gomining-1-th-roi.html" style="color:var(--gold2)">1 TH</a>,
-    <a href="/gomining-5-th-roi.html" style="color:var(--gold2)">5 TH</a>,
-    <a href="/gomining-10-th-roi.html" style="color:var(--gold2)">10 TH</a>,
-    <a href="/gomining-25-th-roi.html" style="color:var(--gold2)">25 TH</a>,
-    <a href="/gomining-50-th-roi.html" style="color:var(--gold2)">50 TH</a>,
-    <a href="/gomining-100-th-roi.html" style="color:var(--gold2)">100 TH</a>,
-    <a href="/gomining-250-th-roi.html" style="color:var(--gold2)">250 TH</a>,
-    <a href="/gomining-500-th-roi.html" style="color:var(--gold2)">500 TH</a>.</p>
-  <p><strong>Profitability by Bitcoin price:</strong>
-    <a href="/gomining-profit-btc-75k.html" style="color:var(--gold2)">$75k</a>,
-    <a href="/gomining-profit-btc-100k.html" style="color:var(--gold2)">$100k</a>,
-    <a href="/gomining-profit-btc-150k.html" style="color:var(--gold2)">$150k</a>,
-    <a href="/gomining-profit-btc-200k.html" style="color:var(--gold2)">$200k</a>,
-    <a href="/gomining-profit-btc-250k.html" style="color:var(--gold2)">$250k</a>.</p>
-</section>
-<script>
-// Claim form -> Formspree (no backend). Paste your form ID below after signing up at formspree.io.
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/xojokqwe";
-async function submitClaim(e){
-  e.preventDefault();
-  const form=e.target, status=document.getElementById('claimStatus');
-  if(FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')){
-    status.style.color='var(--red)';
-    status.textContent='Form not configured yet — add your Formspree ID.';
-    return false;
-  }
-  status.style.color='var(--text3)';
-  status.textContent='Sending…';
-  try{
-    const res=await fetch(FORMSPREE_ENDPOINT,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
-    if(res.ok){
-      form.reset();
-      status.style.color='var(--purple)';
-      status.textContent='Got it! I’ll be in touch shortly to fund your first TH.';
-    }else{
-      status.style.color='var(--red)';
-      status.textContent='Something went wrong — please try again.';
-    }
-  }catch(err){
-    status.style.color='var(--red)';
-    status.textContent='Network error — please try again.';
-  }
-  return false;
-}
-</script>
 
 <!-- ===== FOOTER (unified with the landing page) ===== -->
 <div class="rd" style="display:contents">
@@ -1136,7 +985,7 @@ async function submitClaim(e){
       </div>
     </div>
     <div class="foot-donate">
-      <div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH — <a href="/console#claim">plus I'll fund your first TH&nbsp;→</a></div>
+      <div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH — <a href="/#start">plus I'll fund your first TH&nbsp;→</a></div>
       <div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>
       <div class="fd-addrs">
         <button type="button" class="fd-addr" data-copy="bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh"><span class="fd-tag">BTC</span><span class="fd-val">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span></button>
@@ -1151,7 +1000,7 @@ async function submitClaim(e){
 </footer>
 </div>
 
-<script src="/assets/app.js?v=8"></script>
+<script src="/assets/app.js?v=9"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
