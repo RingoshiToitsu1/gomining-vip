@@ -1,0 +1,86 @@
+[
+  {
+    "page": "index.html",
+    "out": "og-home.png"
+  },
+  {
+    "page": "console/index.html",
+    "out": "og-console.png"
+  },
+  {
+    "page": "gomining-roi-calculator.html",
+    "out": "og-gomining-roi-calculator.png"
+  },
+  {
+    "page": "gomining-discount-explained.html",
+    "out": "og-gomining-discount-explained.png"
+  },
+  {
+    "page": "gomining-promo-code.html",
+    "out": "og-gomining-promo-code.png"
+  },
+  {
+    "page": "gomining-worth-it-now.html",
+    "out": "og-gomining-worth-it-now.png"
+  },
+  {
+    "page": "how-gomining-works.html",
+    "out": "og-how-gomining-works.png"
+  },
+  {
+    "page": "is-gomining-worth-it.html",
+    "out": "og-is-gomining-worth-it.png"
+  },
+  {
+    "page": "gomining-1-th-roi.html",
+    "out": "og-gomining-1-th-roi.png"
+  },
+  {
+    "page": "gomining-5-th-roi.html",
+    "out": "og-gomining-5-th-roi.png"
+  },
+  {
+    "page": "gomining-10-th-roi.html",
+    "out": "og-gomining-10-th-roi.png"
+  },
+  {
+    "page": "gomining-25-th-roi.html",
+    "out": "og-gomining-25-th-roi.png"
+  },
+  {
+    "page": "gomining-50-th-roi.html",
+    "out": "og-gomining-50-th-roi.png"
+  },
+  {
+    "page": "gomining-100-th-roi.html",
+    "out": "og-gomining-100-th-roi.png"
+  },
+  {
+    "page": "gomining-250-th-roi.html",
+    "out": "og-gomining-250-th-roi.png"
+  },
+  {
+    "page": "gomining-500-th-roi.html",
+    "out": "og-gomining-500-th-roi.png"
+  },
+  {
+    "page": "gomining-profit-btc-75k.html",
+    "out": "og-gomining-profit-btc-75k.png"
+  },
+  {
+    "page": "gomining-profit-btc-100k.html",
+    "out": "og-gomining-profit-btc-100k.png"
+  },
+  {
+    "page": "gomining-profit-btc-150k.html",
+    "out": "og-gomining-profit-btc-150k.png"
+  },
+  {
+    "page": "gomining-profit-btc-200k.html",
+    "out": "og-gomining-profit-btc-200k.png"
+  },
+  {
+    "page": "gomining-profit-btc-250k.html",
+    "out": "og-gomining-profit-btc-250k.png"
+  }
+]
