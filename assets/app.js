@@ -263,6 +263,9 @@ function toggleSection(id){document.getElementById(id).classList.toggle('collaps
 
 // ---- TABS ----
 function _activateTab(b,push){
+  // Leaving whatever panel was open (Edit Setup / Planner form / Projection / Chart) —
+  // these are separate pages, so clear them before showing the tab.
+  closeAllPanels();
   const prev=document.querySelector('.tab-content.active');
   document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
@@ -317,6 +320,12 @@ function showPanelView(id){
 function hidePanelView(id){
   const el=document.getElementById(id);if(el){el.style.display='none';el.classList.remove('sp-view');}
   document.body.classList.remove(_PANEL_CLASS[id]||'planning');
+}
+// Close every in-flow panel and clear all panel state. Called on any tab switch so
+// navigating to Console / Planner from an open panel always lands on a clean page.
+function closeAllPanels(){
+  _PANEL_IDS.forEach(function(pid){const p=document.getElementById(pid);if(p){p.style.display='none';p.classList.remove('sp-view');}});
+  document.body.classList.remove('editing','planning','projecting','charting');
 }
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){

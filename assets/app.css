@@ -1030,7 +1030,7 @@ body{background:transparent}
   background:linear-gradient(180deg,rgba(20,22,30,.7),rgba(10,12,18,.66));
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
   box-shadow:0 12px 44px rgba(0,0,0,.5)}
-.header-inner{max-width:none;flex-wrap:nowrap}
+.header-inner{max-width:none;flex-wrap:nowrap;min-height:40px}
 /* brand -> exact copy of the landing .brand (warm wordmark + gold-glow logo + v2 badge) */
 .header .c-brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--warm);-webkit-text-fill-color:currentColor;letter-spacing:.01em;font-size:1.02em;text-decoration:none;transition:color .25s;white-space:nowrap}
 .header .c-brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
