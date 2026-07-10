@@ -8,6 +8,10 @@
     "out": "og-console.png"
   },
   {
+    "page": "claim/index.html",
+    "out": "og-claim.png"
+  },
+  {
     "page": "gomining-roi-calculator.html",
     "out": "og-gomining-roi-calculator.png"
   },

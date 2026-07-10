@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Claim Your Funded First TH — GMT Optimizer</title>
+<meta name="description" content="New to GoMining? Sign up with code RINGO5 for +5% bonus TH, then claim your funded first TH — I'll personally fund it and help you set up your account.">
+<link rel="canonical" href="https://gmt-optimizer.com/claim">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GMT Optimizer">
+<meta property="og:url" content="https://gmt-optimizer.com/claim">
+<meta property="og:title" content="Claim Your Funded First TH — GMT Optimizer">
+<meta property="og:description" content="Sign up with code RINGO5 for +5% bonus TH, then claim your funded first TH.">
+<meta property="og:image" content="https://gmt-optimizer.com/og-claim.png?v=1">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gmt-optimizer.com/og-claim.png?v=1">
+<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/content.css?v=7">
+<style>
+  .claim-wrap{max-width:600px}
+  .claim-code{font-family:var(--mono);font-weight:700;color:var(--warm);background:rgba(245,166,35,.14);border:1px solid var(--line-hi);padding:.12rem .55rem;border-radius:8px;letter-spacing:.1em;cursor:pointer}
+  .claim-steps{list-style:none;counter-reset:s;margin:1rem 0 0;padding:0}
+  .claim-steps li{counter-increment:s;position:relative;padding:.55rem 0 .55rem 2.5rem;color:var(--ink2);line-height:1.6}
+  .claim-steps li::before{content:counter(s);position:absolute;left:0;top:.5rem;width:1.7rem;height:1.7rem;border-radius:50%;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center}
+  .claim-form{margin-top:1.6rem;display:flex;flex-direction:column;gap:.15rem}
+  .claim-form label{font-size:.82rem;font-weight:600;color:var(--ink2);margin-top:1rem;margin-bottom:.35rem}
+  .claim-form input,.claim-form textarea{font-family:var(--sans);font-size:1rem;color:var(--warm);background:var(--glass-2);border:1px solid var(--line);border-radius:12px;padding:.75rem .9rem;transition:border-color .2s,box-shadow .2s}
+  .claim-form input:focus,.claim-form textarea:focus{outline:none;border-color:var(--gold-soft);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+  .claim-form textarea{min-height:90px;resize:vertical}
+  .claim-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  .claim-btn{margin-top:1.3rem;padding:.9rem 1.5rem;border:none;border-radius:12px;font-family:var(--sans);font-size:1rem;font-weight:700;color:#120a01;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 10px 30px rgba(245,166,35,.4);cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s}
+  .claim-btn:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(245,166,35,.5)}
+  .claim-btn:disabled{opacity:.6;cursor:default;transform:none}
+  .claim-status{margin-top:.9rem;font-size:.9rem;font-weight:600;text-align:center;min-height:1.2rem}
+  .claim-fine{margin-top:1rem;font-size:.72rem;color:var(--ink3);text-align:center}
+  .claim-fine a{color:var(--gold-soft)}
+</style>
+</head>
+<body>
+<main class="content-wrap claim-wrap">
+  <span class="tag"><span class="dot"></span>New User Offer</span>
+  <h1>Claim your <span style="background:linear-gradient(96deg,var(--gold-hi),var(--gold-soft) 60%,var(--amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">funded first TH</span></h1>
+  <p class="lead">New to GoMining? Sign up with code <span class="claim-code" onclick="copyCode()" title="Click to copy">RINGO5</span> for <strong>+5% bonus TH</strong> on your first miner. Then I'll personally <strong>fund your first TH</strong> and help you set up your account.</p>
+
+  <div class="cta" style="text-align:left;margin-top:1.2rem">
+    <h3 style="margin:0 0 .3rem">How it works</h3>
+    <ol class="claim-steps">
+      <li>Sign up at GoMining with promo code <strong>RINGO5</strong> — you get +5% bonus TH instantly.</li>
+      <li>Fill in the short form below with the GoMining username you just created.</li>
+      <li>I fund your first TH and message you to help get your farm started.</li>
+    </ol>
+    <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener" class="btn" style="margin-top:1.2rem">Sign up with RINGO5 →</a>
+  </div>
+
+  <form id="claimForm" class="claim-form" onsubmit="return submitClaim(event)">
+    <div class="claim-hp"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>
+    <label for="claimName">Your name or handle</label>
+    <input id="claimName" name="name" type="text" required>
+    <label for="claimUser">GoMining username <span style="color:var(--ink3);font-weight:400">(you must have signed up with RINGO5)</span></label>
+    <input id="claimUser" name="gomining_username" type="text" required>
+    <label for="claimContact">Best way to reach you (email, Telegram, X)</label>
+    <input id="claimContact" name="contact" type="text" required>
+    <label for="claimMsg">Anything else? <span style="color:var(--ink3);font-weight:400">(optional)</span></label>
+    <textarea id="claimMsg" name="message"></textarea>
+    <button type="submit" class="claim-btn" id="claimSubmit">Send my claim</button>
+    <div class="claim-status" id="claimStatus" role="status"></div>
+    <div class="claim-fine">By submitting, you agree to our <a href="/privacy.html">Privacy Policy</a> and <a href="/terms.html">Terms of Use</a>. GMT Optimizer is an independent community tool, not affiliated with GoMining.</div>
+  </form>
+</main>
+<script src="/assets/site.js?v=8"></script>
+<script>
+const FORMSPREE_ENDPOINT="https://formspree.io/f/xojokqwe";
+function copyCode(){try{navigator.clipboard&&navigator.clipboard.writeText('RINGO5');}catch(e){}}
+async function submitClaim(e){
+  e.preventDefault();
+  const form=e.target, status=document.getElementById('claimStatus'), btn=document.getElementById('claimSubmit');
+  status.style.color='var(--ink3)';status.textContent='Sending…';btn.disabled=true;
+  try{
+    const res=await fetch(FORMSPREE_ENDPOINT,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+    if(res.ok){
+      form.reset();
+      status.style.color='var(--gold-soft)';
+      status.textContent="Got it! I'll be in touch shortly to fund your first TH.";
+    }else{
+      status.style.color='#ff6b6b';status.textContent='Something went wrong — please try again.';btn.disabled=false;
+    }
+  }catch(err){
+    status.style.color='#ff6b6b';status.textContent='Network error — please try again.';btn.disabled=false;
+  }
+  return false;
+}
+</script>
+</body>
+</html>

@@ -63,6 +63,7 @@ function thumb({ eyebrow, lines, sub }) {
 const PAGES = [
   { page: 'index.html',          out: 'og-home.png',    eyebrow: 'GOMINING PROFIT OPTIMIZER', lines: ['Free GoMining', 'Profit Optimizer'], sub: 'Live P&L, a capital planner, and honest projections.' },
   { page: 'console/index.html',  out: 'og-console.png', eyebrow: 'LIVE DASHBOARD',            lines: ['Your GoMining', 'farm, live.'],      sub: 'Daily net, monthly yield, discount & VIP — sat by sat.' },
+  { page: 'claim/index.html',    out: 'og-claim.png',   eyebrow: 'NEW USER OFFER',           lines: ['Claim your funded', 'first TH.'],     sub: 'Sign up with RINGO5 — I fund your first TH.' },
   { page: 'gomining-roi-calculator.html',   out: 'og-gomining-roi-calculator.png',   eyebrow: 'CALCULATOR',        lines: ['GoMining ROI &', 'Break-Even Calculator'], sub: 'Model your payback on live network data.' },
   { page: 'gomining-discount-explained.html', out: 'og-gomining-discount-explained.png', eyebrow: 'GUIDE',           lines: ['The GoMining', 'Discount, Explained'],    sub: 'How locking GMT cuts your electricity fee.' },
   { page: 'gomining-promo-code.html',       out: 'og-gomining-promo-code.png',       eyebrow: 'PROMO CODE',        lines: ['GoMining Promo', 'Code: RINGO5'],         sub: '+5% bonus TH — and a funded first TH.' },

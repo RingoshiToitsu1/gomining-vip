@@ -78,7 +78,7 @@
       '<div><h4>Legal</h4><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div>'+
     '</div></div>'+
     '<div class="foot-donate">'+
-      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/#start">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
+      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/claim">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
       '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
       '<div class="fd-addrs">'+
         '<button type="button" class="fd-addr" data-copy="bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh"><span class="fd-tag">BTC</span><span class="fd-val">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span></button>'+
