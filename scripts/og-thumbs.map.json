@@ -12,6 +12,10 @@
     "out": "og-claim.png"
   },
   {
+    "page": "rainbow/index.html",
+    "out": "og-rainbow.png"
+  },
+  {
     "page": "gomining-roi-calculator.html",
     "out": "og-gomining-roi-calculator.png"
   },

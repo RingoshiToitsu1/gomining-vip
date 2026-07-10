@@ -1177,6 +1177,6 @@ body.editing #tab-planner{display:none}
 body.planning .container,body.projecting .container,body.charting .container{display:none}
 /* Chart panel: the flex column relied on a fixed-overlay 100% height, so give the chart
    an explicit height now that it flows normally. */
-#btcChartPage.sp-view{overflow:visible;overscroll-behavior:auto}
-#btcChartPage.sp-view .sp-page-inner{height:auto}
-#btcChartPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}
+#btcChartPage.sp-view,#rainbowPage.sp-view{overflow:visible;overscroll-behavior:auto}
+#btcChartPage.sp-view .sp-page-inner,#rainbowPage.sp-view .sp-page-inner{height:auto}
+#btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}

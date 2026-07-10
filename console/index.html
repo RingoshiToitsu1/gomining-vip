@@ -52,7 +52,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=21">
+<link rel="stylesheet" href="/assets/app.css?v=22">
 <link rel="stylesheet" href="/assets/design.css?v=5">
 </head>
 <body>
@@ -822,14 +822,32 @@
       <button class="sp-back-btn" onclick="closeBtcChart()">&larr; Return to Console</button>
       <span class="btc-chart-title" id="btcChartTitle"><img src="/btc36.png" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">Bitcoin — Live Chart</span>
       <div class="btc-chart-mode" id="btcChartMode" style="display:none">
-        <button id="btcModeLive" class="active" onclick="setBtcChartView('live')">Live Chart</button>
-        <button id="btcModeRainbow" onclick="setBtcChartView('rainbow')">Rainbow Chart</button>
+        <button onclick="openRainbow()">Rainbow Chart &rarr;</button>
       </div>
       <button class="share-plan-btn chart-shot-btn" onclick="createChartShot(this)" title="Generate a branded, shareable snapshot of the 1-hour candles from the last few days"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg> Create chart screenshot</button>
     </div>
     <div class="btc-chart-wrap">
       <div id="btcChartWidget" style="height:100%;width:100%"></div>
-      <div class="btc-rainbow-wrap" id="btcRainbowWrap">
+    </div>
+  </div>
+  <div class="sp-page-loading" id="btcChartLoading" style="display:none">
+    <div class="sp-spinner"></div>
+    <div class="sp-loading-txt">Loading your setup…</div>
+  </div>
+</div>
+
+<!-- BITCOIN RAINBOW CHART — its own page (/rainbow) -->
+<div class="sp-page" id="rainbowPage" style="display:none">
+  <div class="sp-page-inner btc-chart-inner">
+    <div class="sp-page-head">
+      <button class="sp-back-btn" onclick="closeRainbow()">&larr; Return to Console</button>
+      <span class="btc-chart-title"><img src="/btc36.png" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">Bitcoin Rainbow Chart</span>
+      <div class="btc-chart-mode">
+        <button onclick="openBtcChart()">&larr; Live Chart</button>
+      </div>
+    </div>
+    <div class="btc-chart-wrap">
+      <div class="btc-rainbow-wrap show" id="btcRainbowWrap">
         <div class="btc-rainbow-legend" id="btcRainbowLegend"></div>
         <canvas id="btcRainbowCanvas"></canvas>
         <div class="btc-rainbow-tip" id="btcRainbowTip" style="display:none"></div>
@@ -838,9 +856,9 @@
       </div>
     </div>
   </div>
-  <div class="sp-page-loading" id="btcChartLoading" style="display:none">
+  <div class="sp-page-loading" id="rainbowLoading" style="display:none">
     <div class="sp-spinner"></div>
-    <div class="sp-loading-txt">Loading your setup…</div>
+    <div class="sp-loading-txt">Loading rainbow chart…</div>
   </div>
 </div>
 
@@ -997,7 +1015,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=11"></script>
+<script src="/assets/app.js?v=12"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
@@ -1011,6 +1029,7 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
   if(view==='planner'){ if(typeof consoleView==='function') consoleView('tab-planner'); }
   else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
   else if(view==='edit'){ if(typeof openEditSetup==='function') openEditSetup(); }
+  else if(view==='rainbow'){ if(typeof openRainbow==='function') openRainbow(); }
 }catch(e){}
   try{document.querySelectorAll('.hero-card').forEach(function(el){
     el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();

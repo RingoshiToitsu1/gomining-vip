@@ -305,8 +305,8 @@ addEventListener('popstate',function(){
 // ---- In-flow panel views (Edit Setup, Planner form, Growth Projection, Charts) ----
 // Replace the old full-screen overlays: hide the dashboard but keep the sticky
 // header + quotron and the footer, scrolling with the page instead of covering it.
-const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting'};
-const _PANEL_IDS=['secInputs','plannerIntro','setupProjModal','btcChartPage'];
+const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting',rainbowPage:'charting'};
+const _PANEL_IDS=['secInputs','plannerIntro','setupProjModal','btcChartPage','rainbowPage'];
 function showPanelView(id){
   const el=document.getElementById(id);if(!el)return;
   // Each panel is its own page — close any other that's already open (e.g. open Edit
@@ -518,8 +518,24 @@ function openChart(symbol,title,icon,allowChange,isBtc){
   const mode=document.getElementById('btcChartMode');
   if(mode)mode.style.display=isBtc?'':'none';
   _rbView=null;                       // reset rainbow zoom/pan on each open
-  setBtcChartView('live',true);
   buildChart(symbol,allowChange);
+}
+// ---- Bitcoin Rainbow Chart — its own page (/rainbow) ----
+function openRainbow(){
+  window._chartAsset={kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'/btc36.png'};
+  try{history.replaceState({},'','/rainbow'+location.hash);}catch(e){}
+  showPanelView('rainbowPage');
+  const wrap=document.getElementById('btcRainbowWrap');
+  if(wrap)wrap.classList.add('show');
+  _rbView=null;
+  loadBtcRainbow();
+}
+function closeRainbow(){
+  try{history.replaceState({},'','/console'+location.hash);}catch(e){}
+  hidePanelView('rainbowPage');
+  const setupBtn=document.querySelector('[data-tab="tab-current"]');
+  if(setupBtn)setupBtn.click();
+  refreshMySetupAnimation();
 }
 
 // ---- Live vs Rainbow view toggle (BTC) ----
