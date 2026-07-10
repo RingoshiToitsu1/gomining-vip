@@ -997,7 +997,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=10"></script>
+<script src="/assets/app.js?v=11"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
@@ -1010,6 +1010,7 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
   var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
   if(view==='planner'){ if(typeof consoleView==='function') consoleView('tab-planner'); }
   else if(view==='projection'){ if(typeof openSetupProjection==='function') openSetupProjection(); }
+  else if(view==='edit'){ if(typeof openEditSetup==='function') openEditSetup(); }
 }catch(e){}
   try{document.querySelectorAll('.hero-card').forEach(function(el){
     el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();

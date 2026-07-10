@@ -295,7 +295,9 @@ function _activateTab(b,push){
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>_activateTab(b,true)));
 // Back/forward between /console and /planner switches the tab without pushing a new history entry.
 addEventListener('popstate',function(){
+  closeAllPanels();   // any history navigation closes an open panel (Edit/Planner/Projection/Chart)
   const seg=location.pathname.replace(/\/+$/,'').split('/').pop();
+  if(seg==='edit'){ openEditSetup(); return; }
   const id=seg==='planner'?'tab-planner':'tab-current';
   const b=document.querySelector('[data-tab="'+id+'"]');
   if(b&&!b.classList.contains('active'))_activateTab(b,false);
@@ -1635,9 +1637,11 @@ function openEditSetup(){
   }
   showPanelView('secInputs');
   refreshGreedyVisibility();
+  try{history.replaceState({panel:'edit'},'','/edit'+location.hash);}catch(e){}   // its own URL
 }
 function closeEditSetup(){
   hidePanelView('secInputs');
+  try{history.replaceState({},'','/console'+location.hash);}catch(e){}
   refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
 }
 // Brief load spinner (optionally with a status message), then return to My
