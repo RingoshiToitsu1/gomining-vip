@@ -1173,6 +1173,9 @@ body .rd .fd-addr.copied::after{font-size:9.6px}
   background:transparent;background-image:none;background-attachment:initial;animation:fadeIn .25s ease;
   backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none}
 .sp-page.sp-view .sp-page-inner{padding-top:1.6rem}
+/* in-flow panels scroll under the real sticky header, so the panel's own head must NOT
+   be sticky — otherwise its back buttons glue to / collide with the console header. */
+.sp-page.sp-view .sp-page-head{position:static;backdrop-filter:none;-webkit-backdrop-filter:none}
 /* Edit Setup: keep the My Setup tab shell active but hide its dashboard content behind the editor. */
 body.editing #tab-current>:not(#secInputs){display:none}
 body.editing #tab-planner{display:none}
