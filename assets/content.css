@@ -56,7 +56,12 @@ nav.shrunk{top:34px;padding:7px 14px 7px 20px;background:linear-gradient(180deg,
 .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82rem;font-weight:600;color:#100a02;text-decoration:none;position:relative;
   background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden}
 .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
-@media(max-width:820px){.nav-links{display:none}.util{display:none}nav{top:12px}nav.shrunk{top:8px}}
+@media(max-width:820px){
+  nav{flex-wrap:wrap;row-gap:9px;top:12px}
+  nav.shrunk{top:8px}
+  .nav-links{display:flex;order:3;width:100%;justify-content:center;gap:16px;flex-wrap:wrap}
+  .util{display:none}
+}
 
 /* ===== reveal-on-scroll (matches the landing chrome.js reveal) ===== */
 .reveal{opacity:0;transform:translateY(30px);filter:blur(6px);transition:opacity .9s var(--ease2),transform .9s var(--ease2),filter .9s var(--ease2)}

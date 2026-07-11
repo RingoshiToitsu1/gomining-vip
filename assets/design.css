@@ -108,7 +108,12 @@
 .rd .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82rem;font-weight:600;color:#100a02;text-decoration:none;position:relative;
   background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden}
 .rd .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
-@media(max-width:820px){.rd .nav-links{display:none}.rd .util{display:none}.rd nav{top:12px}.rd nav.shrunk{top:8px}}
+@media(max-width:820px){
+  .rd nav{flex-wrap:wrap;row-gap:9px;top:12px}
+  .rd nav.shrunk{top:8px}
+  .rd .nav-links{display:flex;order:3;width:100%;justify-content:center;gap:15px;flex-wrap:wrap}
+  .rd .util{display:none}
+}
 
 /* ============ BUTTONS ============ */
 .rd .btn{position:relative;display:inline-flex;flex-direction:column;gap:2px;padding:15px 26px;border-radius:15px;text-decoration:none;
@@ -302,7 +307,7 @@
   .rd .cta-band{padding:40px 22px}
   .rd .foot-inner{flex-direction:column}
   .rd section{padding:66px 0}
-  .rd .hero{padding-top:120px}
+  .rd .hero{padding-top:140px}
 }
 @media(prefers-reduced-motion:reduce){
   .rd *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
