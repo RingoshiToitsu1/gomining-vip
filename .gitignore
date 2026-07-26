@@ -42,3 +42,7 @@ next-env.d.ts
 seo-data/
 x-event.json
 x-draft.txt
+
+# python bytecode
+__pycache__/
+*.pyc

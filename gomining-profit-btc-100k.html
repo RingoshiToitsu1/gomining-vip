@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Is GoMining Profitable if Bitcoin Hits $100k? (2026)</title>
-<meta name="description" content="Modeling GoMining returns at a $100,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $109/month, break-even in about 4.6 years. Live difficulty.">
+<meta name="description" content="Modeling GoMining returns at a $100,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $109/month, $2,815 over five years. Live difficulty.">
 <link rel="canonical" href="https://gmt-optimizer.com/gomining-profit-btc-100k">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Is GoMining Profitable if Bitcoin Hits $100k? (2026)">
-<meta property="og:description" content="Modeling GoMining returns at a $100,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $109/month, break-even in about 4.6 years. Live difficulty.">
+<meta property="og:description" content="Modeling GoMining returns at a $100,000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about $109/month, $2,815 over five years. Live difficulty.">
 <meta property="og:url" content="https://gmt-optimizer.com/gomining-profit-btc-100k">
 <meta property="og:image" content="https://gmt-optimizer.com/og-image.png?v=2">
 <script type="application/ld+json">
@@ -22,7 +22,7 @@
       "name": "Is GoMining profitable at $100k Bitcoin?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "At a $100,000 price and current difficulty, a 100 TH GoMining farm nets about $93/month from mining plus $15 from staking the GMT locked for the 20% discount — around $109 combined — paying back the full $2,660 of capital in about 4.6 years. Profitability scales with your hashrate."
+        "text": "At a $100,000 price and current difficulty, a 100 TH GoMining farm nets about $93/month from mining plus $15 from staking the GMT locked for the 20% discount — around $109 combined, or $2,815 across five years. Earnings scale with your hashrate."
       }
     },
     {
@@ -30,7 +30,7 @@
       "name": "Why does the Bitcoin price matter so much for GoMining?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — improving margin and shortening break-even. A falling price does the opposite."
+        "text": "Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — every dollar of price increase lands in your margin. A falling price does the opposite."
       }
     },
     {
@@ -47,7 +47,7 @@
 <link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/content.css?v=4">
+<link rel="stylesheet" href="/assets/content.css?v=9">
 </head>
 <body>
 <main class="content-wrap">
@@ -58,28 +58,41 @@
     <div class="stat"><div class="k">BTC price</div><div class="v">$100k</div><div class="s">scenario</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">$109</div><div class="s">$93 mining + $15 staking</div></div>
     <div class="stat"><div class="k">Total capital</div><div class="v">$2,660</div><div class="s">$1,821 hashrate + $839 GMT</div></div>
-    <div class="stat"><div class="k">Break-even</div><div class="v">about 4.6 years</div><div class="s">on total capital</div></div>
+    <div class="stat"><div class="k">Earned in 5 years</div><div class="v">$2,815</div><div class="s">then on $29/mo</div></div>
   </div>
-  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $100,000, the 100 TH hashrate nets about $93/month, and the $839 of GMT you lock for the 20% discount adds roughly $15/month in staking — about $109 combined on $2,660 of committed capital. Based on that, that is a long payback at a flat price, so the case rests largely on Bitcoin appreciating from here.</p>
+  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $100,000, the 100 TH hashrate nets about $93/month, and the $839 of GMT you lock for the 20% discount adds roughly $15/month in staking — about $109 combined on $2,660 of committed capital, that is 48.9% a year on capital at today's price — a strong rate for cloud mining, though it assumes you hold the maximum fee discount and Bitcoin holds its price.</p>
+  <h2>What it earns over time at $100k</h2>
+  <div class="table-wrap">
+    <table class="earnings">
+      <thead><tr><th>Held for</th><th>Total earned</th><th>Per day</th><th>Per month</th><th>Per year</th></tr></thead>
+      <tbody>
+      <tr><td>1 year</td><td>$1,093</td><td>$2.57</td><td>$78</td><td>$939</td></tr>
+      <tr><td>3 years</td><td>$2,117</td><td>$0.95</td><td>$29</td><td>$349</td></tr>
+      <tr><td>5 years</td><td>$2,815</td><td>$0.95</td><td>$29</td><td>$349</td></tr>
+      <tr><td>10 years</td><td>$4,558</td><td>$0.95</td><td>$29</td><td>$349</td></tr>
+      </tbody>
+    </table>
+    <p class="src">Cumulative net earnings and the run-rate at that point, mining plus staking on the locked GMT, after fees and the 2.25% conversion. Bitcoin held flat. Halvings and rising difficulty erode the per-day figure early on, then it steadies: difficulty is an equilibrium, and it cannot grind rewards below the point where a 12 W/TH miner would switch off. Income decays toward that floor rather than toward zero.</p>
+  </div>
   <div class="scenario">
-    <strong>The flat-price break-even is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Holding it flat, this setup breaks even in about 4.6 years. If Bitcoin instead follows published analyst forecasts, break-even shortens to <span class="big">around 1.4 years</span>
+    <strong>Holding Bitcoin flat is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Flat, this setup earns $2,815 over five years and is on $29/month by the end of them. If Bitcoin instead follows published analyst forecasts, the same five years pay <span class="big">$10,886, ending on $193/month</span>
     <span class="src">Forecast path: Standard Chartered ($500k by 2028), Bernstein ($1M by 2033), interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
   </div>
   <div class="scenario">
-    <strong>Or reinvest instead of cashing out.</strong> Break-even assumes you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~1100 TH earning ~$2,055/mo in 3 years</span>
+    <strong>Or reinvest instead of cashing out.</strong> The figures above assume you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the analyst-forecast price path it grows to <span class="big">~1100 TH earning ~$2,056/mo in 3 years</span>
     <span class="src">Floor case: at a flat Bitcoin price it holds ~225 TH earning ~$65/month — rising difficulty caps per-TH income, so growth mostly offsets decay. Compounding at 21.73% GMT staking plus reinvested mining. A growth path, not a promise.</span>
   </div>
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
   <div class="cta">
     <h3>Run your own numbers — free</h3>
-    <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection with your break-even.</p>
+    <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection of what it earns.</p>
     <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
     <a href="/console" class="btn">Open the calculator →</a>
   </div>
   <h2>Frequently asked questions</h2>
   <div class="faq">
-    <details><summary>Is GoMining profitable at $100k Bitcoin?</summary><p>At a $100,000 price and current difficulty, a 100 TH GoMining farm nets about $93/month from mining plus $15 from staking the GMT locked for the 20% discount — around $109 combined — paying back the full $2,660 of capital in about 4.6 years. Profitability scales with your hashrate.</p></details>
-    <details><summary>Why does the Bitcoin price matter so much for GoMining?</summary><p>Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — improving margin and shortening break-even. A falling price does the opposite.</p></details>
+    <details><summary>Is GoMining profitable at $100k Bitcoin?</summary><p>At a $100,000 price and current difficulty, a 100 TH GoMining farm nets about $93/month from mining plus $15 from staking the GMT locked for the 20% discount — around $109 combined, or $2,815 across five years. Earnings scale with your hashrate.</p></details>
+    <details><summary>Why does the Bitcoin price matter so much for GoMining?</summary><p>Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — every dollar of price increase lands in your margin. A falling price does the opposite.</p></details>
     <details><summary>Does difficulty change these numbers?</summary><p>Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.</p></details>
   </div>
   <div class="related">Read next: <a href="/is-gomining-worth-it">Is GoMining worth it?</a> &middot; <a href="/gomining-roi-calculator">How ROI is calculated</a> &middot; <a href="/gomining-promo-code">GoMining promo code (RINGO5)</a> &middot; <a href="/">the calculator</a></div>

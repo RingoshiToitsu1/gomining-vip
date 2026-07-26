@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoMining ROI Calculator — Live Break-Even & Payback</title>
-<meta name="description" content="Free GoMining ROI calculator. Enter your TH and efficiency for a break-even date built on live BTC price and rising difficulty — not a flat estimate that overstates returns. No signup.">
+<title>GoMining ROI Calculator — What Your Setup Earns</title>
+<meta name="description" content="Free GoMining ROI calculator. Enter your TH and efficiency to see what it earns per day, per month and cumulatively — built on live BTC price and rising difficulty, not a flat estimate. No signup.">
 <link rel="canonical" href="https://gmt-optimizer.com/gomining-roi-calculator">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="article">
-<meta property="og:title" content="GoMining ROI Calculator — Live Break-Even & Payback">
-<meta property="og:description" content="Enter your TH and efficiency; get a break-even date built on live BTC price and rising difficulty. Free, no signup.">
+<meta property="og:title" content="GoMining ROI Calculator — What Your Setup Earns">
+<meta property="og:description" content="Enter your TH and efficiency; see what it earns over 1, 3, 5 and 10 years on live BTC price and rising difficulty. Free, no signup.">
 <meta property="og:url" content="https://gmt-optimizer.com/gomining-roi-calculator">
 <meta property="og:image" content="https://gmt-optimizer.com/og-gomining-roi-calculator.png?v=1">
 <script type="application/ld+json">
@@ -17,8 +17,8 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"How is GoMining ROI calculated?","acceptedAnswer":{"@type":"Answer","text":"GoMining ROI is your net earnings divided by what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount. A good calculator projects that forward through halvings and rising difficulty to estimate payback time."}},
-    {"@type":"Question","name":"What is the break-even point in GoMining?","acceptedAnswer":{"@type":"Answer","text":"Break-even is when your cumulative net mining earnings equal what you paid for the hashrate. It arrives sooner with efficient miners and a larger GMT discount, and later if difficulty rises quickly or Bitcoin's price falls."}},
+    {"@type":"Question","name":"How is GoMining ROI calculated?","acceptedAnswer":{"@type":"Answer","text":"GoMining ROI is your net earnings measured against what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount, plus staking on the GMT you lock. A good calculator projects that forward through halvings and rising difficulty to show what you actually receive each year."}},
+    {"@type":"Question","name":"What is the break-even point in GoMining?","acceptedAnswer":{"@type":"Answer","text":"This calculator does not lead with a break-even date, because a payback period tells you when you stop being down rather than what you receive. It shows cumulative earnings at 1, 3, 5 and 10 years alongside the per-day and per-month run-rate at each point. Efficient miners and a full GMT discount raise every one of those figures; rising difficulty and a falling Bitcoin price lower them."}},
     {"@type":"Question","name":"What affects GoMining profitability the most?","acceptedAnswer":{"@type":"Answer","text":"Three variables dominate: the Bitcoin price, network difficulty, and your miner's efficiency in watts per TH. The GMT discount on your electricity fee is the main lever you directly control."}}
   ]
 }
@@ -29,12 +29,12 @@
   "@graph": [
     {
       "@type": "WebApplication",
-      "name": "GoMining ROI & Break-Even Calculator",
+      "name": "GoMining ROI Calculator",
       "url": "https://gmt-optimizer.com/gomining-roi-calculator",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Any (web browser)",
       "browserRequirements": "Requires JavaScript",
-      "description": "Projects GoMining payback and break-even from live BTC price and network difficulty, including halvings, difficulty decay and the GMT electricity discount.",
+      "description": "Projects GoMining earnings from live BTC price and network difficulty, including halvings, difficulty decay and the GMT electricity discount.",
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
       "publisher": {"@type": "Organization", "name": "Ringoshi", "url": "https://gmt-optimizer.com/"}
     },
@@ -52,16 +52,16 @@
 <link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/content.css?v=8">
+<link rel="stylesheet" href="/assets/content.css?v=9">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
 </head>
 <body>
 <main class="content-wrap">
-  <h1>GoMining ROI &amp; Break-Even Calculator</h1>
-  <p class="lead">Most "calculators" show a flat monthly figure that never happens in reality. This one projects your real payback — live BTC price, rising difficulty, halvings and your GMT discount included.</p>
+  <h1>GoMining ROI Calculator</h1>
+  <p class="lead">Most "calculators" show a flat monthly figure that never happens in reality. This one projects what you actually earn — live BTC price, rising difficulty, halvings and your GMT discount included.</p>
 
   <div id="roi-embed" class="re-loading">
-    <h2>Calculate your break-even</h2>
+    <h2>Calculate what yours earns</h2>
     <div class="re-basis" id="re-basis">loading live market data…</div>
 
     <div class="re-inputs">
@@ -88,9 +88,9 @@
 
     <div class="re-out">
       <div class="re-tile hero">
-        <div class="k">Break-even</div>
+        <div class="k">Earned in 5 years</div>
         <div class="v" id="re-be">—</div>
-        <div class="s" id="re-be-sub">to full payback</div>
+        <div class="s" id="re-be-sub">cumulative, mining + staking</div>
       </div>
       <div class="re-tile">
         <div class="k">Net / month</div>
@@ -120,7 +120,7 @@
   <h2>How GoMining ROI works</h2>
   <p>Return on investment is simply your net earnings over what you put in. For GoMining, net earnings come from daily mining rewards minus your electricity fee:</p>
   <div class="formula">daily net = (sats/TH/day × your TH × BTC price) − (electricity fee × (1 − GMT discount))</div>
-  <p>Break-even is the day your cumulative net earnings finally equal what you paid for the hashrate.</p>
+  <p>What matters is what the setup pays you: cumulative earnings, and the run-rate it is still on when you get there.</p>
 
   <h2>The variables that actually move it</h2>
   <ul>
@@ -131,25 +131,25 @@
   </ul>
 
   <h2>Why a projection beats a flat estimate</h2>
-  <p>A realistic model has to erode rewards over time — through Bitcoin halvings and the steady grind of rising difficulty — otherwise it dramatically overstates your returns. GMT Optimizer pulls live BTC price and difficulty, then projects forward with that decay so your break-even reflects reality, not a best-case straight line.</p>
+  <p>A realistic model has to erode rewards over time — through Bitcoin halvings and the steady grind of rising difficulty — otherwise it dramatically overstates your returns. GMT Optimizer pulls live BTC price and difficulty, then projects forward with that decay so your earnings reflect reality, not a best-case straight line.</p>
 
   <div class="cta">
     <h3>Calculate your real ROI — free</h3>
-    <p>Enter your hashrate and efficiency; get live P&amp;L and a multi-year projection with your break-even.</p>
+    <p>Enter your hashrate and efficiency; get live P&amp;L and a multi-year projection of what it earns.</p>
     <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to start you off.</p>
     <a href="/claim" class="btn">Claim your first TH →</a>
   </div>
 
   <h2>Frequently asked questions</h2>
   <div class="faq">
-    <details><summary>How is GoMining ROI calculated?</summary><p>GoMining ROI is your net earnings divided by what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount. A good calculator projects that forward through halvings and rising difficulty to estimate payback time.</p></details>
-    <details><summary>What is the break-even point in GoMining?</summary><p>Break-even is when your cumulative net mining earnings equal what you paid for the hashrate. It arrives sooner with efficient miners and a larger GMT discount, and later if difficulty rises quickly or Bitcoin's price falls.</p></details>
+    <details><summary>How is GoMining ROI calculated?</summary><p>GoMining ROI is your net earnings measured against what you invested. Net earnings are daily mining rewards (sats per TH per day) minus your electricity fee after any GMT discount, plus staking on the GMT you lock. A good calculator projects that forward through halvings and rising difficulty to show what you actually receive each year.</p></details>
+    <details><summary>What is the break-even point in GoMining?</summary><p>This calculator does not lead with a break-even date, because a payback period tells you when you stop being down rather than what you receive. It shows cumulative earnings at 1, 3, 5 and 10 years alongside the per-day and per-month run-rate at each point. Efficient miners and a full GMT discount raise every one of those figures; rising difficulty and a falling Bitcoin price lower them.</p></details>
     <details><summary>What affects GoMining profitability the most?</summary><p>Three variables dominate: the Bitcoin price, network difficulty, and your miner's efficiency in watts per TH. The GMT discount on your electricity fee is the main lever you directly control.</p></details>
   </div>
 
   <div class="related">Read next: <a href="/is-gomining-worth-it">Is GoMining worth it in 2026?</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/gomining-promo-code">GoMining promo code (RINGO5)</a></div>
 </main>
 <script src="/assets/site.js?v=8"></script>
-<script src="/assets/roi-embed.js?v=2"></script>
+<script src="/assets/roi-embed.js?v=3"></script>
 </body>
 </html>

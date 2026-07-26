@@ -112,16 +112,22 @@ anything outside the fence gets copied along with it.
 
 **Every number you use must appear in `network-facts.json`.** Nothing is checking
 this before it goes out, and the reader will reasonably assume the figures were
-verified because a machine produced them. A wrong break-even published under
-their own name is the worst outcome this skill can cause. Round sensibly (7.2
-from 7.23) but never estimate, never interpolate between two facts, and never
-carry a figure over from yesterday's report.
+verified because a machine produced them. A wrong earnings figure published
+under their own name is the worst outcome this skill can cause. Round sensibly
+($976 to "about $975") but never estimate, never interpolate between two facts,
+and never carry a figure over from yesterday's report.
 
 - Lead with `notable` if it is non-null — that is the day's real news. If it is
   null, teach something evergreen from the same figures instead.
+- Frame it as what the setup **earns** — cumulative totals and the per-day or
+  per-month run-rate. Never as a payback period or a break-even date, however the
+  arithmetic tempts you. Nobody decides to mine because they will stop being down
+  in four years; they decide because of what it pays them. There is no payback
+  figure in `network-facts.json` any more, and reconstructing one from the totals
+  and the capital is exactly the move to avoid.
 - Under 280 characters. Count them.
 - No price predictions. The rainbow bands are a fit to past price, not a
-  forecast: "at the Still-cheap band, break-even is 4.4 years" is fine;
+  forecast: "at the Still-cheap band, the same five years pay $1,455" is fine;
   "Bitcoin is going to $103k" is not, and neither is anything shaped like it.
 - No guarantees, no "risk-free", no "passive income", no financial advice, no
   hype register. The account's whole edge is sounding like the only honest

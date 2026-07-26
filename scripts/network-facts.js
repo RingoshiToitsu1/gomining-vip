@@ -5,7 +5,7 @@
  *
  * Design: this script does ALL the arithmetic. The daily report suggests a tweet
  * but may only quote figures that appear here — a suggestion carrying a
- * plausible-but-invented break-even is worse than no suggestion, because you'd
+ * plausible-but-invented earnings figure is worse than no suggestion, because you'd
  * post it under your own name believing it was checked.
  *
  * `notable` marks whether anything actually moved (difficulty retarget, halving
@@ -46,25 +46,28 @@ async function market() {
   return { bp, diff, sats: C.satsPerTHDay(diff) };
 }
 
-// Break-even in months for the reference setup, total-capital model.
-// Mirrors scripts/gen-pages.js model() so a post can never contradict a page.
-function breakEvenMonths({ th, bp, diff, disc, wth = C.EFF_BEST }) {
+// Cumulative earnings and run-rate at each year mark, total-capital model.
+// Mirrors earnings() in scripts/gen-pages.js so a post can never contradict a page.
+const YEAR_MARKS = [1, 3, 5, 10];
+function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST }) {
   const now = Date.now();
   const dbt = C.dailyBTCperTH(diff);
   const fee = C.feesBTC(th, wth, bp);
   const gmtLockUSD = disc > 0 ? C.COV_DAYS_PER_PCT * disc * fee * bp : 0;
   const stakingUSD = gmtLockUSD * (C.STAKING_APR / 100) / 365.25;
-  const totalCapital = th * C.cptTier(th) + gmtLockUSD;
   const dfeesUSD = fee * bp * (1 - disc / 100);
+  const rows = {};
   let cum = 0;
   for (let m = 1; m <= 120; m++) {
     const t = now + m * 30.44 * 86400000;
     const dbt_t = Math.max(dbt * C.subsidyMultAt(t) * C.difficultyMultAt(t, now), C.rewardFloorBTC(bp));
     const mining = Math.max(0, dbt_t * th * bp - dfeesUSD) * (1 - C.CONVERSION_FEE);
-    cum += (mining + stakingUSD) * 30.44;
-    if (cum >= totalCapital) return m;
+    const day = mining + stakingUSD;
+    cum += day * 30.44;
+    if (m % 12 === 0 && YEAR_MARKS.indexOf(m / 12) >= 0)
+      rows[m / 12] = { total: +cum.toFixed(2), daily: +day.toFixed(2), monthly: +(day * 30.44).toFixed(2) };
   }
-  return null;
+  return rows;
 }
 
 function monthlyNetUSD({ th, bp, diff, disc, wth = C.EFF_BEST }) {
@@ -75,7 +78,6 @@ function monthlyNetUSD({ th, bp, diff, disc, wth = C.EFF_BEST }) {
   return (mining + staking) * 30.44;
 }
 
-const yrs = m => m == null ? null : +(m / 12).toFixed(1);
 const loadState = () => { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch (e) { return {}; } };
 
 // What, if anything, is worth leading with today. Returns null on a flat day —
@@ -112,9 +114,9 @@ function notable(state, mk) {
   const ev = notable(state, mk);
   const daysToHalving = Math.floor((C.HALVING_DATES[0] - Date.now()) / 86400000);
 
-  const beNow = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
-  const beNoDisc = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: 0 });
-  const be15W = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, wth: C.EFF_BASE_MAX });
+  const eNow = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
+  const eNoDisc = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: 0 });
+  const e15W = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, wth: C.EFF_BASE_MAX });
   const net = monthlyNetUSD({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
 
   // Rainbow-chart valuation context. Optional — if the price history is
@@ -128,7 +130,7 @@ function notable(state, mk) {
       rainbowCenterUSD: Math.round(r.center),
       rainbowBandNow: r.bandAt(mk.bp).label,
       rainbowUpsidePct: +(((sc - mk.bp) / mk.bp) * 100).toFixed(1),
-      breakEvenYearsAtStillCheap: yrs(breakEvenMonths({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC })),
+      earned5yrAtStillCheap: earningsAt({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC })[5].total,
       monthlyNetAtStillCheap: +monthlyNetUSD({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC }).toFixed(2)
     };
   } catch (e) {
@@ -145,9 +147,14 @@ function notable(state, mk) {
     refWTH: REF_WTH,
     refDiscountPct: REF_DISC,
     monthlyNetUSD: +net.toFixed(2),
-    breakEvenYears: yrs(beNow),
-    breakEvenYearsNoDiscount: yrs(beNoDisc),
-    breakEvenYears15W: yrs(be15W),
+    earned1yr: eNow[1].total,
+    earned3yr: eNow[3].total,
+    earned5yr: eNow[5].total,
+    earned10yr: eNow[10].total,
+    dailyAt5yr: eNow[5].daily,
+    monthlyAt5yr: eNow[5].monthly,
+    earned5yrNoDiscount: eNoDisc[5].total,
+    earned5yrAt15W: e15W[5].total,
     daysToHalving,
     stakingAPR: C.STAKING_APR,
     conversionFeePct: C.CONVERSION_FEE * 100,
@@ -156,7 +163,7 @@ function notable(state, mk) {
     discountStepPct: 1,               // the discount is granted in whole 1% steps
     halvingYear: new Date(C.HALVING_DATES[0]).getUTCFullYear(),
     efficiencyBest: C.EFF_BEST,
-    efficiencyBase: C.EFF_BASE_MAX,   // the 15 W/TH comparison point breakEvenYears15W refers to
+    efficiencyBase: C.EFF_BASE_MAX,   // the 15 W/TH comparison point earned5yrAt15W refers to
     ...(ev && ev.changePct != null ? { changePct: ev.changePct } : {}),
     ...(ev && ev.milestone != null ? { milestone: ev.milestone } : {}),
     ...(rb || {})

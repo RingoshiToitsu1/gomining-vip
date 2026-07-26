@@ -83,7 +83,7 @@ ${chartSVG(rows,CX0,CX1,CY0,CY1)}
 <!-- footer -->
 <line x1="60" y1="540" x2="${W-60}" y2="540" stroke="url(#divg)" stroke-width="1.5"/>
 <image href="${GMT}" x="60" y="560" width="26" height="26" clip-path="circle(13px at 13px 13px)"/>
-<text x="98" y="580" font-family="Ubuntu, sans-serif" font-size="23" font-weight="700" fill="rgba(255,255,255,0.82)">Live 1-hour chart — free GoMining ROI, discount &amp; break-even planner</text>
+<text x="98" y="580" font-family="Ubuntu, sans-serif" font-size="23" font-weight="700" fill="rgba(255,255,255,0.82)">Live 1-hour chart — free GoMining ROI, discount &amp; earnings planner</text>
 </svg>`;
 }
 // crude text-width estimate for right-aligned coin placement (Ubuntu ~0.56em avg)

@@ -65,22 +65,22 @@ const PAGES = [
   { page: 'console/index.html',  out: 'og-console.png', eyebrow: 'LIVE DASHBOARD',            lines: ['Your GoMining', 'farm, live.'],      sub: 'Daily net, monthly yield, discount & VIP — sat by sat.' },
   { page: 'claim/index.html',    out: 'og-claim.png',   eyebrow: 'NEW USER OFFER',           lines: ['Claim your funded', 'first TH.'],     sub: 'Sign up with RINGO5 — I fund your first TH.' },
   { page: 'rainbow/index.html',  out: 'og-rainbow.png', eyebrow: 'BITCOIN RAINBOW CHART',     lines: ['Bitcoin Rainbow', 'Chart'],          sub: 'Power-law valuation bands on live price history.' },
-  { page: 'gomining-roi-calculator.html',   out: 'og-gomining-roi-calculator.png',   eyebrow: 'CALCULATOR',        lines: ['GoMining ROI &', 'Break-Even Calculator'], sub: 'Model your payback on live network data.' },
+  { page: 'gomining-roi-calculator.html',   out: 'og-gomining-roi-calculator.png',   eyebrow: 'CALCULATOR',        lines: ['GoMining ROI', 'Calculator'], sub: 'See what a setup earns, on live network data.' },
   { page: 'gomining-discount-explained.html', out: 'og-gomining-discount-explained.png', eyebrow: 'GUIDE',           lines: ['The GoMining', 'Discount, Explained'],    sub: 'How locking GMT cuts your electricity fee.' },
   { page: 'gomining-promo-code.html',       out: 'og-gomining-promo-code.png',       eyebrow: 'PROMO CODE',        lines: ['GoMining Promo', 'Code: RINGO5'],         sub: '+5% bonus TH — and a funded first TH.' },
   { page: 'gomining-worth-it-now.html',     out: 'og-gomining-worth-it-now.png',     eyebrow: 'LIVE VERDICT',      lines: ['Is GoMining', 'Worth It Right Now?'],     sub: 'Updated monthly on live figures.' },
   { page: 'how-gomining-works.html',        out: 'og-how-gomining-works.png',        eyebrow: "BEGINNER'S GUIDE",  lines: ['How Does', 'GoMining Work?'],             sub: 'Cloud Bitcoin mining, explained simply.' },
   { page: 'is-gomining-worth-it.html',      out: 'og-is-gomining-worth-it.png',      eyebrow: 'HONEST BREAKDOWN',  lines: ['Is GoMining', 'Worth It in 2026?'],       sub: 'An honest, numbers-first breakdown.' },
 ];
-// ROI & break-even by size
+// what each size earns
 [1, 5, 10, 25, 50, 100, 250, 500].forEach(th => PAGES.push({
   page: `gomining-${th}-th-roi.html`, out: `og-gomining-${th}-th-roi.png`,
-  eyebrow: 'ROI & BREAK-EVEN', lines: [`GoMining ${th} TH`, 'ROI & Break-Even'], sub: 'What it really costs, earns, and pays back.'
+  eyebrow: 'EARNINGS BY SIZE', lines: [`GoMining ${th} TH`, 'What It Earns'], sub: 'What it really costs and what it pays you.'
 }));
 // Profitability by BTC price
 [['75k', '$75k'], ['100k', '$100k'], ['150k', '$150k'], ['200k', '$200k'], ['250k', '$250k']].forEach(([s, p]) => PAGES.push({
   page: `gomining-profit-btc-${s}.html`, out: `og-gomining-profit-btc-${s}.png`,
-  eyebrow: 'PRICE SCENARIO', lines: ['Is GoMining Profitable', `if BTC hits ${p}?`], sub: 'Break-even and ROI at this Bitcoin price.'
+  eyebrow: 'PRICE SCENARIO', lines: ['Is GoMining Profitable', `if BTC hits ${p}?`], sub: 'What a farm earns at this Bitcoin price.'
 }));
 
 let n = 0;

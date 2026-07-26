@@ -871,7 +871,7 @@ function _csChartUrl(){
 }
 function _csShareText(){
   const a=window._chartAsset||{name:'Bitcoin'};
-  return 'Live '+a.name+' chart — plan your GoMining ROI, discount & break-even free at GMT-Optimizer.com';
+  return 'Live '+a.name+' chart — plan your GoMining ROI, discount & earnings free at GMT-Optimizer.com';
 }
 // Build a File from the cached PNG blob (present once the shot is rendered).
 function _chartShotFile(){

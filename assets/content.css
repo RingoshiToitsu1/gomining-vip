@@ -101,6 +101,18 @@ a{color:var(--gold-soft);text-decoration:none}a:hover{text-decoration:underline}
 .scenario .src{font-family:var(--mono);font-size:.72rem;color:var(--ink3);margin-top:.5rem}
 .formula{font-family:var(--mono);font-size:.9rem;color:var(--gold-soft);border-radius:var(--r-sm);padding:1rem 1.2rem;margin:0 0 1rem;overflow-x:auto}
 
+/* earnings table — five columns, so it scrolls inside its own box on a phone
+   rather than forcing the whole page sideways */
+.table-wrap{margin:1.6rem 0}
+.table-wrap .src{display:block;font-family:var(--mono);font-size:.72rem;color:var(--ink3);margin-top:.6rem;line-height:1.5}
+table.earnings{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.86rem;display:block;overflow-x:auto;white-space:nowrap}
+table.earnings th,table.earnings td{padding:.6rem .9rem;text-align:right;border-bottom:1px solid var(--line)}
+table.earnings th:first-child,table.earnings td:first-child{text-align:left}
+table.earnings thead th{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink3);font-weight:400}
+table.earnings tbody td{color:var(--ink2)}
+table.earnings tbody td:nth-child(2){color:var(--gold-soft)}
+table.earnings tbody tr:last-child td{border-bottom:none}
+
 /* CTA band */
 .cta{display:block;margin:2.4rem 0;padding:1.8rem;border-radius:var(--r);text-align:center;overflow:hidden}
 .cta h3{color:var(--warm);font-size:1.3rem;margin:0 0 .5rem}

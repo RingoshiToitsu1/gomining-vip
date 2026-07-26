@@ -1,4 +1,4 @@
-/* GMT Optimizer — inline ROI / break-even calculator for the content pages.
+/* GMT Optimizer — inline ROI / earnings calculator for the content pages.
    =========================================================================
    A trimmed, self-contained mirror of the engine in assets/app.js. It exists so
    /gomining-roi-calculator answers its own query (a calculator) instead of only
@@ -22,6 +22,8 @@
   const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
   const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
   const EFF_BEST       = 12;      // best efficiency purchasable now (W/TH)
+  // Year marks the earnings figures are quoted at — mirrors YEAR_MARKS in scripts/gen-pages.js.
+  const YEAR_MARKS     = [1, 3, 5, 10];
   // % — GMT locked-staking APR (observed 2026-07-26). Kept in step with STAKING_APR in
   // scripts/gen-pages.js and inLockAPR in console/index.html so the cluster agrees.
   const STAKE_APR0     = 21.73;
@@ -111,7 +113,7 @@
   }
 
   // ---- the model ----
-  // Returns today's economics plus a day-by-day projection to break-even.
+  // Returns today's economics plus cumulative earnings at each year mark.
   function model(th, wth, gmtLocked, apr0, streak) {
     const bp = S.btc, gp = S.gmt;
     const dbt0 = Math.round(S.satsPerTHDay) / 1e8;            // BTC/TH/day, rounded like the app
@@ -148,21 +150,25 @@
     // halvings and the difficulty grind (floored at the network no-arbitrage break-even),
     // mining clamped at >=0 (a rational operator stops rather than pays fees at a loss),
     // and staking held flat since the GMT price is held flat.
-    let cum = 0, beDay = 0;
+    let cum = 0, lastMining = 0;
+    const earn = [];
     const now = Date.now();
     for (let d = 1; d <= 3650; d++) {
       const t = now + d * 86400000;
       const dbt = Math.max(dbt0 * subsidyMultAt(t) * difficultyMultAt(t), rewardFloorBTC(bp));
       const mining = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE);
       cum += mining + stakingToday;
-      if (cum >= invested) { beDay = d; break; }
+      lastMining = mining;
+      if (d % 365 === 0 && YEAR_MARKS.indexOf(d / 365) >= 0) {
+        const day = mining + stakingToday;
+        earn.push({ years: d / 365, total: cum, daily: day, monthly: day * 30.44, yearly: day * 365.25 });
+      }
     }
-    // Naive payback at today's rates — no halving, no difficulty grind. This is the
-    // number most calculators quote and what people expect; showing it next to the
-    // real figure makes it obvious that the gap IS the halving, not a missing discount.
-    const beDayFlat = netToday > 0 ? Math.ceil(invested / netToday) : 0;
+    // Mining margin hitting zero is the teaching case, not a payback failure: with
+    // no discount you ARE the marginal miner the reward floor is defined by.
+    const miningDead = lastMining <= 0;
     return { dbt0, feesUSD, totD, tok, nonTok, vip, gmtFor20, invested, thCost, lockCost,
-             netToday, miningToday, stakingToday, grossToday, beDay, beDayFlat, bp, gp };
+             netToday, miningToday, stakingToday, grossToday, earn, miningDead, bp, gp };
   }
 
   // ---- render ----
@@ -170,13 +176,7 @@
   const money = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: Math.abs(n) < 100 ? 2 : 0 });
   const num = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 
-  function beLabel(days) {
-    if (!days) return { v: 'Never', s: 'not at these inputs' };
-    if (days < 60) return { v: days + ' days', s: 'to full payback' };
-    const mo = days / 30.44;
-    if (mo < 24) return { v: num(mo, 1) + ' months', s: 'to full payback' };
-    return { v: num(mo / 12, 1) + ' years', s: 'to full payback' };
-  }
+  const atYear = (rows, y) => { for (let i = 0; i < rows.length; i++) if (rows[i].years === y) return rows[i]; return null; };
 
   function render() {
     const th = Math.max(0, parseFloat($('re-th').value) || 0);
@@ -187,15 +187,12 @@
     if (th <= 0) return;
 
     const m = model(th, wth, gl, apr, streak);
-    const be = beLabel(m.beDay);
+    const e5 = atYear(m.earn, 5);
 
     $('re-net').textContent = money(m.netToday * 30.44);
     $('re-disc').textContent = num(m.totD, 1) + '%';
-    $('re-be').textContent = be.v;
-    const flat = beLabel(m.beDayFlat);
-    $('re-be-sub').textContent = m.beDayFlat && m.beDay !== m.beDayFlat
-      ? flat.v + ' if today\'s rates held'
-      : be.s;
+    $('re-be').textContent = money(e5.total);
+    $('re-be-sub').textContent = 'then on ' + money(e5.monthly) + '/mo';
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
       ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'
@@ -209,13 +206,12 @@
     $('re-disc-sub').textContent = parts.length ? parts.join(' + ') : 'no GMT locked yet';
 
     // The lever the site is actually about: what it takes to max the discount.
-    // The "never pays back" case is the important teaching moment — with no
-    // discount you ARE the marginal miner the reward floor is defined by, so
-    // margin decays toward zero and cumulative net never catches the outlay.
+    // Mining margin reaching zero is the important teaching moment — with no
+    // discount you ARE the marginal miner the reward floor is defined by.
     const hint = $('re-hint');
     const need = Math.max(0, m.gmtFor20 - gl);
-    if (!m.beDay && m.tok < 20) {
-      hint.textContent = 'This never pays back — without the GMT discount your margin decays toward zero as difficulty ' +
+    if (m.miningDead && m.tok < 20) {
+      hint.textContent = 'This stops earning — without the GMT discount your mining margin decays to zero as difficulty ' +
         'rises, because you are exactly the marginal miner the network prices for. Locking ' + num(m.gmtFor20, 0) +
         ' GMT (~' + money(m.gmtFor20 * m.gp * (1 + USD_GMT_FEE)) + ') for the full 20% discount is what makes this setup viable.';
     } else if (m.tok >= 20) {
@@ -234,7 +230,7 @@
 
   // Until the visitor touches the GMT field, keep it parked at the amount that
   // holds the full 20% discount. First paint then shows the setup we'd actually
-  // recommend rather than an unfunded one that never pays back.
+  // recommend rather than an unfunded one whose margin decays to zero.
   let gmtTouched = false;
   function autoFillGMT() {
     if (gmtTouched) return;
