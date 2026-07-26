@@ -26,7 +26,7 @@ const CONVERSION_FEE  = 0.02;    // BTC→GMT payout skim
 const EFF_BEST        = 12;      // W/TH — freshly-minted new miners
 const EFF_BASE_MAX    = 15;      // W/TH — cheaper marketplace hashrate; the base + reinvest assumption here
 const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage reward floor (stays 12)
-const STAKING_APR     = 23.1;    // % — GMT locked-staking APR (matches the calculator default)
+const STAKING_APR     = 21.73;   // % — GMT locked-staking APR (observed 2026-07-26)
 const COV_DAYS_PER_PCT= 18;      // 18 days of fee coverage per 1% token discount (360d = 20% cap)
 // Citable analyst price milestones (same forecasts the live tool offers). Used ONLY for the
 // clearly-labeled "if Bitcoin follows analyst forecasts" break-even — never as the headline.
@@ -178,7 +178,9 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 
 /* ===== shared page shell ===== */
 function shell({slug,title,desc,faq,body,related}){
-  const canonical=`${SITE}/${slug}`;
+  // slug is the FILENAME (foo.html); the canonical URL is extensionless. GitHub Pages
+  // serves /foo for foo.html, so both resolve — the canonical picks which one Google keeps.
+  const canonical=`${SITE}/${slug.replace(/\.html$/,'')}`;
   const faqLd={"@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))};
   const faqHtml=faq.map(f=>`    <details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('\n');
   const relHtml=related.map(r=>`<a href="${r.href}">${esc(r.label)}</a>`).join(' &middot; ');
@@ -223,7 +225,7 @@ const CTA = `  <div class="cta">
     <h3>Run your own numbers — free</h3>
     <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection with your break-even.</p>
     <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
-    <a href="/#claim" class="btn">Open the calculator →</a>
+    <a href="/console" class="btn">Open the calculator →</a>
   </div>`;
 
 // Clearly-labeled halving-cycle upside callout: the same break-even under an analyst price path.
@@ -288,9 +290,9 @@ ${CTA}`;
     {q:`What is the break-even for ${th} TH?`,a:`Counting both the hashrate and the GMT locked for the discount as capital (about ${usd(full.totalCapital)}), and both mining and staking as income, break-even is ${be(full.beMonths)} at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it.`}
   ];
   const related=[
-    {href:'/gomining-roi-calculator.html',label:'How ROI is calculated'},
-    {href:'/gomining-discount-explained.html',label:'The GMT discount explained'},
-    {href:'/gomining-promo-code.html',label:'GoMining promo code (RINGO5)'},
+    {href:'/gomining-roi-calculator',label:'How ROI is calculated'},
+    {href:'/gomining-discount-explained',label:'The GMT discount explained'},
+    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
     {href:'/',label:'the calculator'}
   ];
   return {slug,html:shell({slug,title,desc,faq,body,related})};
@@ -323,9 +325,9 @@ ${CTA}`;
     {q:`Does difficulty change these numbers?`,a:`Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.`}
   ];
   const related=[
-    {href:'/is-gomining-worth-it.html',label:'Is GoMining worth it?'},
-    {href:'/gomining-roi-calculator.html',label:'How ROI is calculated'},
-    {href:'/gomining-promo-code.html',label:'GoMining promo code (RINGO5)'},
+    {href:'/is-gomining-worth-it',label:'Is GoMining worth it?'},
+    {href:'/gomining-roi-calculator',label:'How ROI is calculated'},
+    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
     {href:'/',label:'the calculator'}
   ];
   return {slug,html:shell({slug,title,desc,faq,body,related})};
@@ -358,9 +360,9 @@ ${CTA}`;
     {q:`Is GoMining a scam?`,a:`GoMining is a real service that has paid users for years, though many negative reviews trace to maintenance fees spiking when a user's GMT coverage lapses and the discount is lost — a configuration issue, not a scam. Understanding the fee and discount mechanics is what separates a good outcome from a bad one.`}
   ];
   const related=[
-    {href:'/is-gomining-worth-it.html',label:'Is GoMining worth it? (full guide)'},
-    {href:'/gomining-discount-explained.html',label:'The GMT discount explained'},
-    {href:'/gomining-promo-code.html',label:'GoMining promo code (RINGO5)'},
+    {href:'/is-gomining-worth-it',label:'Is GoMining worth it? (full guide)'},
+    {href:'/gomining-discount-explained',label:'The GMT discount explained'},
+    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
     {href:'/',label:'the calculator'}
   ];
   return {slug,html:shell({slug,title,desc,faq,body,related})};
@@ -372,7 +374,7 @@ function updateSitemap(slugs){
   let sm=fs.readFileSync(smPath,'utf8');
   const today=new Date().toISOString().slice(0,10);
   for(const slug of slugs){
-    const loc=`${SITE}/${slug}`;
+    const loc=`${SITE}/${slug.replace(/\.html$/,'')}`;   // extensionless, matching the canonical
     if(sm.includes(loc))continue;   // don't duplicate
     const entry=`  <url><loc>${loc}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
     sm=sm.replace('</urlset>',entry+'</urlset>');
