@@ -26,6 +26,7 @@
   // scripts/gen-pages.js and inLockAPR in console/index.html so the cluster agrees.
   const STAKE_APR0     = 21.73;
   const MINING_MODE    = 0.83;    // % — mining-mode discount (console inMiningMode, observed 2026-07-26)
+  const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount.
@@ -111,17 +112,18 @@
 
   // ---- the model ----
   // Returns today's economics plus a day-by-day projection to break-even.
-  function model(th, wth, gmtLocked, apr0) {
+  function model(th, wth, gmtLocked, apr0, streak) {
     const bp = S.btc, gp = S.gmt;
     const dbt0 = Math.round(S.satsPerTHDay) / 1e8;            // BTC/TH/day, rounded like the app
     const feeUSDperTH = (ELEC_RATE * 24 * wth) / 1000 + SERVICE_RATE;
     const feesUSD = feeUSDperTH * th;                          // daily, pre-discount
 
     // Discount: VIP tier bonus, then the GMT coverage discount in 1% steps.
-    // Non-token discounts stack before coverage, matching calc() in app.js
-    // (nonTokD = VIP bonus + click streak + mining mode + other).
+    // Non-token discounts stack before coverage, matching calc() in app.js:
+    // nonTokD = min(30, VIP bonus + click streak + mining mode + other).
     const vip = vipOf(th, gmtLocked);
-    const nonTok = vip.d + MINING_MODE;
+    const cb = streak ? CLICK_STREAK : 0;
+    const nonTok = Math.min(30, vip.d + cb + MINING_MODE);
     const feesGMT = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
     const cov = feesGMT > 0 ? gmtLocked / feesGMT : (gmtLocked > 0 ? Infinity : 0);
     const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
@@ -155,8 +157,12 @@
       cum += mining + stakingToday;
       if (cum >= invested) { beDay = d; break; }
     }
+    // Naive payback at today's rates — no halving, no difficulty grind. This is the
+    // number most calculators quote and what people expect; showing it next to the
+    // real figure makes it obvious that the gap IS the halving, not a missing discount.
+    const beDayFlat = netToday > 0 ? Math.ceil(invested / netToday) : 0;
     return { dbt0, feesUSD, totD, tok, nonTok, vip, gmtFor20, invested, thCost, lockCost,
-             netToday, miningToday, stakingToday, grossToday, beDay, bp, gp };
+             netToday, miningToday, stakingToday, grossToday, beDay, beDayFlat, bp, gp };
   }
 
   // ---- render ----
@@ -177,15 +183,19 @@
     const wth = Math.max(EFF_BEST, parseFloat($('re-wth').value) || EFF_BEST);
     const gl = Math.max(0, parseFloat($('re-gmt').value) || 0);
     const apr = Math.max(0, parseFloat($('re-apr').value) || 0);
+    const streak = !!$('re-streak').checked;
     if (th <= 0) return;
 
-    const m = model(th, wth, gl, apr);
+    const m = model(th, wth, gl, apr, streak);
     const be = beLabel(m.beDay);
 
     $('re-net').textContent = money(m.netToday * 30.44);
     $('re-disc').textContent = num(m.totD, 1) + '%';
     $('re-be').textContent = be.v;
-    $('re-be-sub').textContent = be.s;
+    const flat = beLabel(m.beDayFlat);
+    $('re-be-sub').textContent = m.beDayFlat && m.beDay !== m.beDayFlat
+      ? flat.v + ' if today\'s rates held'
+      : be.s;
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
       ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'
@@ -194,6 +204,7 @@
     const parts = [];
     if (m.tok > 0) parts.push(m.tok + '% GMT coverage');
     if (m.vip.d > 0) parts.push(num(m.vip.d, 1) + '% ' + m.vip.n);
+    if (streak) parts.push(CLICK_STREAK + '% click streak');
     if (MINING_MODE > 0) parts.push(num(MINING_MODE, 2) + '% mining mode');
     $('re-disc-sub').textContent = parts.length ? parts.join(' + ') : 'no GMT locked yet';
 
@@ -230,7 +241,7 @@
     const th = Math.max(0, parseFloat($('re-th').value) || 0);
     const wth = Math.max(EFF_BEST, parseFloat($('re-wth').value) || EFF_BEST);
     if (th <= 0) return;
-    const m = model(th, wth, 0, STAKE_APR0);
+    const m = model(th, wth, 0, STAKE_APR0, !!$('re-streak').checked);
     $('re-gmt').value = String(Math.ceil(m.gmtFor20));
   }
 
@@ -241,6 +252,8 @@
       const el = $(id);
       if (el) el.addEventListener('input', () => { autoFillGMT(); render(); });
     });
+    const st = $('re-streak');
+    if (st) st.addEventListener('change', () => { autoFillGMT(); render(); });
     const g = $('re-gmt');
     if (g) g.addEventListener('input', () => { gmtTouched = true; render(); });
     loadMarket().then(() => {
