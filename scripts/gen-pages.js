@@ -324,6 +324,48 @@ function updateSitemap(slugs){
   fs.writeFileSync(smPath,sm);
 }
 
+/* ===== live-number injection into hand-written pages =====
+   Some pages are hand-maintained prose but still need real, current figures —
+   client-side JS numbers do not help ranking, since Google is weighing the HTML.
+   These pages carry <!-- LIVE:name --> … <!-- /LIVE:name --> markers and this
+   refills them on every run. Everything outside the markers is left alone. */
+function injectLiveBlock(file,name,html){
+  const p=path.join(ROOT,file);
+  if(!fs.existsSync(p))return false;
+  const src=fs.readFileSync(p,'utf8');
+  const re=new RegExp(`(<!-- LIVE:${name}[^>]*-->)[\\s\\S]*?(<!-- /LIVE:${name} -->)`);
+  if(!re.test(src)){console.log(`  ! ${file}: no LIVE:${name} markers`);return false;}
+  // Replacement FUNCTION, not a string: the injected HTML contains dollar amounts
+  // like "$1,341", and string replacement would treat "$1" as a backreference.
+  fs.writeFileSync(p,src.replace(re,(_m,open,close)=>`${open}\n${html}\n  ${close}`));
+  console.log('  injected',name,'->',file);
+  return true;
+}
+
+function injectLiveBlocks(live,dateStr){
+  // "Is GoMining worth it" — the query wants a verdict backed by evidence, so give
+  // it the real numbers at both the optimised and the do-nothing end of the range.
+  const good=model({th:50,bp:live.bp,diff:live.diff,disc:20});
+  const bad =model({th:50,bp:live.bp,diff:live.diff,disc:0});
+  const verdict = good.beMonths
+    ? `pays for itself in about <strong>${(good.beMonths/12).toFixed(1)} years</strong>`
+    : `does not pay back inside ten years`;
+  const badVerdict = bad.beMonths
+    ? `takes about <strong>${(bad.beMonths/12).toFixed(1)} years</strong>`
+    : `<strong>never pays back at all</strong>`;
+  const html=
+`  <div class="formula">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; updated ${dateStr.full}</div>
+  <p>Take a 50 TH setup at the best available efficiency (${EFF_BEST} W/TH). Buying the hashrate costs about
+  <strong>${usd(good.hashCost)}</strong>, and holding the maximum 20% fee discount means locking roughly
+  <strong>${usd(good.gmtLockUSD)}</strong> of GMT — <strong>${usd(good.totalCapital)}</strong> of capital in total.
+  That earns about <strong>${usd(good.monthlyUSD)}/month</strong> combined, and on total capital it ${verdict}.</p>
+  <p>Run the same 50 TH <em>without</em> the GMT discount and it ${badVerdict} — the fee eats the margin as
+  difficulty climbs. That gap is the whole answer to "is it worth it": the hardware is not what decides it,
+  the discount is. Both figures already price in the ${dateStr.year < 2028 ? '2028 halving' : 'next halving'}
+  and the difficulty grind, which is why they look longer than the flat estimates most calculators show.</p>`;
+  injectLiveBlock('is-gomining-worth-it.html','worth-it-verdict',html);
+}
+
 /* ===== main ===== */
 (async()=>{
   const live=await getLive();
@@ -342,5 +384,6 @@ function updateSitemap(slugs){
     console.log('  wrote',p.slug);
   }
   updateSitemap(pages.map(p=>p.slug));
+  injectLiveBlocks(live,dateStr);
   console.log(`\nDone: ${pages.length} pages + sitemap updated.`);
 })();

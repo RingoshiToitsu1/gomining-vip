@@ -68,7 +68,8 @@ def query(tok, start, end, dimensions, limit=1000):
         sys.exit(f"GSC API {r.status_code}: {r.text[:400]}")
     rows = []
     for row in r.json().get("rows", []):
-        rec = dict(zip(dimensions, row["keys"]))
+        # A dimensionless query (site totals) returns rows with no "keys" field.
+        rec = dict(zip(dimensions, row.get("keys", [])))
         rec.update({
             "clicks": row.get("clicks", 0),
             "impressions": row.get("impressions", 0),
