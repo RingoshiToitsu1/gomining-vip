@@ -24,8 +24,9 @@ not a number.
 
 ## Voice
 
-The brand is independent mining education. Hype-free, no financial promises, no
-urgency. The reader is intelligent and skeptical and has been pitched at all day.
+Independent mining education, written for someone intelligent and skeptical.
+**Lead with the upside case** — this account is optimistic about Bitcoin mining
+and should read that way — but earn it with numbers rather than adjectives.
 
 - Lead with the idea, not the event. The event is the reason to post today, not
   the subject. "Difficulty went up 2%" is a data point; "rising difficulty is why
@@ -34,9 +35,33 @@ urgency. The reader is intelligent and skeptical and has been pitched at all day
 - Plain sentences. No emoji, no hashtags, no "🚨", no "Let that sink in."
 - Never tell anyone to buy anything. No referral code, no "DM me", no link
   unless it is gmt-optimizer.com and it genuinely completes the thought.
-- It is fine — good, even — to say something unflattering about the economics.
-  "Without the discount this never pays back" is the most trustworthy thing the
-  account can say, and it is true.
+- Optimism comes from the arithmetic, not from cheerleading. "Break-even drops
+  to 4.4 years at the rainbow chart's Still-cheap price" is optimistic *and*
+  checkable. "Bitcoin is going to fly" is neither.
+- Being straight about a downside when it is the honest framing is still
+  allowed and still valuable — it is what makes the optimistic posts credible.
+  Just do not make pessimism the default register.
+
+## The rainbow chart — the optimistic anchor
+
+When the facts include `rainbow*` fields, prefer them. They are the strongest
+honest case the account can make, because today's payback figure is computed at
+today's depressed price:
+
+- `rainbowBandNow` — which band BTC sits in right now
+- `rainbowStillCheapUSD` — the "Still cheap" band price
+- `rainbowUpsidePct` — how far below that band BTC currently is
+- `breakEvenYearsAtStillCheap` / `monthlyNetAtStillCheap` — the same setup, run
+  at that price
+
+The move is the contrast: break-even at today's price versus at the Still-cheap
+price. That reframes a long payback as a function of a *cheap entry*, which is
+both encouraging and true.
+
+**Attribution is required.** The rainbow bands are a power-law fit to past price,
+not a forecast. Say "the rainbow chart's Still-cheap band" or "on the power-law
+model" — never "Bitcoin will reach". Predicting a price is the one thing that
+turns this account into every other crypto account.
 
 ## Shape
 

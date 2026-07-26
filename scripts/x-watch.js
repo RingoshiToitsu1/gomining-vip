@@ -19,6 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 const C = require('./constants.js');
+const rainbow = require('./rainbow.js');
 
 const args = process.argv.slice(2);
 const argv = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
@@ -128,6 +129,24 @@ function detect(state, mk) {
   const be15W = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, wth: C.EFF_BASE_MAX });
   const net = monthlyNetUSD({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
 
+  // Rainbow-chart valuation context. Optional — if the price history is
+  // unreachable we post without it rather than not posting at all.
+  let rb = null;
+  try {
+    const r = await rainbow.load();
+    const sc = r.stillCheap;
+    rb = {
+      rainbowStillCheapUSD: Math.round(sc),
+      rainbowCenterUSD: Math.round(r.center),
+      rainbowBandNow: r.bandAt(mk.bp).label,
+      rainbowUpsidePct: +(((sc - mk.bp) / mk.bp) * 100).toFixed(1),
+      breakEvenYearsAtStillCheap: yrs(breakEvenMonths({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC })),
+      monthlyNetAtStillCheap: +monthlyNetUSD({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC }).toFixed(2)
+    };
+  } catch (e) {
+    console.error('rainbow unavailable (posting without it):', e.message);
+  }
+
   // Every figure the post is permitted to state. x-verify.js rejects anything else.
   const facts = {
     btcPrice: Math.round(mk.bp),
@@ -150,7 +169,8 @@ function detect(state, mk) {
     efficiencyBest: C.EFF_BEST,
     efficiencyBase: C.EFF_BASE_MAX,   // the 15 W/TH comparison point breakEvenYears15W refers to
     ...(ev.changePct != null ? { changePct: ev.changePct } : {}),
-    ...(ev.milestone != null ? { milestone: ev.milestone } : {})
+    ...(ev.milestone != null ? { milestone: ev.milestone } : {}),
+    ...(rb || {})
   };
 
   fs.writeFileSync(OUT, JSON.stringify({ event: ev, facts, generatedAt: new Date().toISOString() }, null, 1));

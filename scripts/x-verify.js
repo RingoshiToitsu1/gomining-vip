@@ -27,7 +27,13 @@ const MAX_LEN = 280;
 const BANNED = [
   /guarantee/i, /risk[- ]free/i, /can'?t lose/i, /passive income for life/i,
   /\bmoon\b/i, /100x/i, /get rich/i, /financial advice/i, /you should buy/i,
-  /sure thing/i, /no risk/i
+  /sure thing/i, /no risk/i,
+  // Price prediction. The rainbow bands are a fit to past price, not a forecast,
+  // and quoting one as a destination is what turns this into every other crypto
+  // account. Contrast framing ("at the Still-cheap price, break-even is X") is
+  // fine; asserting Bitcoin will get there is not.
+  /will (reach|hit|be at|go to)/i, /price target/i, /headed (to|for) \$/i,
+  /going to \$\d/i, /\bby (year[- ]end|20\d\d)\b.{0,20}\$\d/i
 ];
 
 const fail = m => { console.error('REJECT: ' + m); process.exit(1); };
