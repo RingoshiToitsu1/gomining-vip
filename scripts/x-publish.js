@@ -24,6 +24,10 @@ const argv = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : nul
 const DRY = args.includes('--dry');
 const text = fs.readFileSync(argv('--draft'), 'utf8').trim();
 const historyPath = argv('--history');
+// Defaults to the same file x-watch.js reads, so the 48h rate limit works without
+// the workflow having to pass it. x-watch checks state.lastPostAt; only a real
+// (non-dry) publish sets it, which is what makes the limit meaningful.
+const statePath = argv('--state') || require('path').join(__dirname, '..', 'seo-data', 'bot-state.json');
 
 const { X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET } = process.env;
 if (!DRY && !(X_API_KEY && X_API_SECRET && X_ACCESS_TOKEN && X_ACCESS_SECRET)) {
@@ -53,11 +57,19 @@ function authHeader() {
 }
 
 function record(id) {
-  if (!historyPath) return;
-  let h = { posts: [] };
-  try { h = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (e) {}
-  h.posts = (h.posts || []).concat([{ id: id || null, text, at: new Date().toISOString() }]).slice(-50);
-  fs.writeFileSync(historyPath, JSON.stringify(h, null, 1));
+  if (historyPath) {
+    let h = { posts: [] };
+    try { h = JSON.parse(fs.readFileSync(historyPath, 'utf8')); } catch (e) {}
+    h.posts = (h.posts || []).concat([{ id: id || null, text, at: new Date().toISOString() }]).slice(-50);
+    fs.writeFileSync(historyPath, JSON.stringify(h, null, 1));
+  }
+  // Stamp the rate limit. Without this x-watch's MIN_HOURS_BETWEEN_POSTS check
+  // reads an undefined lastPostAt and never fires.
+  try {
+    const s = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    s.lastPostAt = Date.now();
+    fs.writeFileSync(statePath, JSON.stringify(s, null, 1));
+  } catch (e) { console.error('warning: could not stamp lastPostAt in ' + statePath); }
 }
 
 (async () => {
