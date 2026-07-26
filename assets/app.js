@@ -2321,8 +2321,16 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
 // Side-by-side comparison: spend the next chunk of capital on efficiency vs hashrate vs discount.
 // Persistent shell: title + the per-miner upgrade input + an empty body the input refreshes.
+// 12 W/TH is the floor — nothing can be upgraded below it. Only surface the efficiency option
+// when something actually sits above it: the existing VIP farm, or a greedy machine.
+function hasEffRoom(i){
+  if(!i)return false;
+  const gwth=(i.gth>0)?(i.gwth>0?i.gwth:EFF_BASE_MAX):0;
+  return (i.th>0&&i.wth>EFF_BEST+1e-6)||(i.gth>0&&gwth>EFF_BEST+1e-6);
+}
 function effCompareShell(i){
-  return `<div class="sub-title" style="margin-top:1rem">Efficiency vs. Hashrate vs. Discount</div><div id="effCompareBody"></div>`;
+  const t=hasEffRoom(i)?'Efficiency vs. Hashrate vs. Discount':'Hashrate vs. Discount';
+  return `<div class="sub-title" style="margin-top:1rem">${t}</div><div id="effCompareBody"></div>`;
 }
 // Populate the comparison body (called once after the planner renders).
 function updateEffCompare(){
@@ -2346,7 +2354,8 @@ function renderEfficiencyComparison(st){
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
   // dollar than buying new TH, divert that slice of the TH budget into the upgrade (whole farm).
   let effUSD=0, effTHupg=0, upgradeROI=0, newThROI=0;
-  if(i.th>0 && i.wth>12 && thUSD>0){
+  const effRoom=hasEffRoom(i);   // false ⇒ everything is already at 12 W/TH; never offer the upgrade
+  if(effRoom && i.th>0 && i.wth>EFF_BEST && thUSD>0){
     const cptU=effUpgradeCostPerTH(i.wth);
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
@@ -2395,10 +2404,13 @@ function renderEfficiencyComparison(st){
 
   let h=`<div class="eff-verdict">`;
   h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
-  h+=`<div class="eff-verdict-sub">Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.</div>`;
+  h+=`<div class="eff-verdict-sub">${effRoom
+    ?'Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.'
+    :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.'}</div>`;
   h+=`</div>`;
 
-  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)'],[effPct,'Upgrade Eff','var(--green)']];
+  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
+  if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
   let bar=`<div class="eff-splitbar">`;
   segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
   bar+=`</div>`;
@@ -2411,7 +2423,7 @@ function renderEfficiencyComparison(st){
     if(extra)s+=extra;
     return s+`</div>`;
   };
-  let g=`<div class="eff-grid">`;
+  let g=`<div class="eff-grid${effRoom?'':' eff-grid-2'}">`;
   g+=card('Lock GMT',lockPct,lockUSD,[
     ['Locks',glAdd>0?`+${fN(glAdd,0)} GMT`:'—'],
     ['Effect',lockPct>0.5?'holds 20% discount':'—']
@@ -2420,7 +2432,7 @@ function renderEfficiencyComparison(st){
     ['Adds',addTH>0?`+${fN(addTH,1)} TH @ 15W`:'—'],
     ['Source',addTH>0?'15 W machine upgrade':'—']
   ]);
-  g+=card('Upgrade Efficiency',effPct,effUSD,[
+  if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
     ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
   ],effThreshBp?effGauge(effThreshBp,bp):'');
@@ -2962,11 +2974,15 @@ function computeSetupProjection(){
               const vAdd=thForBudgetTiers(incr,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
-            // --- option EFF: drive efficiency toward 12 W/TH ($2.67/TH per W-step), upgrading whichever
-            // fleet (greedy or VIP) currently has the HIGHER W/TH so the FARM BLENDED falls fastest. ---
+            // --- option EFF: drive efficiency toward 12 W/TH ($2.67/TH per W-step). ---
+            // GREEDY IS ALWAYS UPGRADED FIRST, even when the VIP farm sits at a worse W/TH. The two
+            // fleets are not symmetric: every TH bought now mints at 12 W/TH, so the VIP farm blends
+            // its own efficiency down for free as it reinvests — but the Greedy Machine's weekly free
+            // TH inherits whatever rating the machine already has, so it never self-heals, and the
+            // upgrade bill grows with the machine (delaying 5 yr at 1%/wk costs 13x more).
             let effNet=-Infinity, effApply=null;
             const vipRoom=(curWTH>EFF_BEST+1e-6&&th>0), grdRoom=(HAS_GREEDY&&greedyTH>0&&greedyWTH>EFF_BEST+1e-6);
-            if(grdRoom&&(!vipRoom||greedyWTH>=curWTH)){
+            if(grdRoom){
               const dW=Math.min(greedyWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*greedyTH));const gw2=greedyWTH-dW;
               effNet=dailyNet(th,gmtLocked,{greedyWTH:gw2}).net;effApply=()=>{greedyWTH=gw2;};
             }else if(vipRoom){

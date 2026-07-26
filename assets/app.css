@@ -294,6 +294,8 @@ input[type=number]{-moz-appearance:textfield}
 .eff-gauge-lbl{font-size:.6rem;color:var(--text3);margin-top:1.05rem;line-height:1.3;text-align:center}
 .eff-gauge-lbl b{color:var(--text)}
 .eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem}
+/* Efficiency card is dropped when every miner is already at 12 W/TH — close the gap. */
+.eff-grid.eff-grid-2{grid-template-columns:repeat(2,1fr)}
 .eff-card{position:relative;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem .65rem}
 .eff-card.eff-best{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 2px 14px rgba(80,220,140,.12)}
 .eff-tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--green);color:#062;font-size:.58rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:.12rem .5rem;border-radius:8px;white-space:nowrap}
