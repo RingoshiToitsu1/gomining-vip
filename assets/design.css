@@ -309,6 +309,38 @@
   .rd section{padding:66px 0}
   .rd .hero{padding-top:140px}
 }
+/* ============ LANDING PHONE PASS ============
+   Scoped to body.rd, which is index.html only — the console carries .rd on inner
+   wrappers (its <body> is bare), so none of this reaches it. */
+@media(max-width:560px){
+  /* The hero instrument is decoration, and at 390px tall it took the whole first
+     screen: headline, both CTAs and the chips all started below the fold. */
+  body.rd .instrument{display:none}
+  body.rd .hero-inner{gap:0}
+  body.rd .hero{min-height:0;padding-top:132px;padding-bottom:44px}
+  body.rd .hero h1{font-size:clamp(2.2rem,8.5vw,3.4rem);margin:16px 0}
+  body.rd .hero-sub{font-size:1.02rem;margin-bottom:24px}
+
+  /* Nav row 1 overflowed: brand (~179px incl. the v2 badge) + CTA (~134px) against
+     313px of usable width at 375px. Drop the badge and tighten both. */
+  body.rd .brand{font-size:.94rem;gap:8px}
+  body.rd .brand img{width:23px;height:23px}
+  body.rd .brand .v{display:none}
+  body.rd .nav-cta{padding:9px 13px;font-size:.78rem}
+  /* Smaller links keep all five on one row, so the nav stays 2 rows and can't
+     creep down into the hero. Vertical padding gives a real tap target. */
+  body.rd .nav-links{gap:11px}
+  body.rd .nav-links a{font-size:.76rem;padding:6px 1px}
+  body.rd .nav-links a::after{bottom:0}
+
+  /* 60px of left indent left ~291px for answer text on a 375px screen. */
+  body.rd .faq-q{padding:18px;font-size:.98rem}
+  body.rd .faq-q .qi{margin-right:10px}
+  body.rd .faq-a p{padding:0 18px 18px}
+
+  body.rd .foot-cols{gap:26px}
+  body.rd .foot-col a{padding:3px 0}
+}
 @media(prefers-reduced-motion:reduce){
   .rd *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
   .rd .reveal{opacity:1!important;transform:none!important;filter:none!important}
