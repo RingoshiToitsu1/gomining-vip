@@ -1,0 +1,31 @@
+{
+ "notable": null,
+ "facts": {
+  "btcPrice": 64586,
+  "satsPerTHDay": 50,
+  "difficultyT": 126.2,
+  "refTH": 50,
+  "refWTH": 12,
+  "refDiscountPct": 20,
+  "monthlyNetUSD": 27.91,
+  "breakEvenYears": 7.2,
+  "breakEvenYearsNoDiscount": null,
+  "breakEvenYears15W": 9.6,
+  "daysToHalving": 628,
+  "stakingAPR": 21.73,
+  "conversionFeePct": 2.25,
+  "maxDiscountPct": 20,
+  "coverageDaysPerPct": 18,
+  "discountStepPct": 1,
+  "halvingYear": 2028,
+  "efficiencyBest": 12,
+  "efficiencyBase": 15,
+  "rainbowStillCheapUSD": 103905,
+  "rainbowCenterUSD": 130808,
+  "rainbowBandNow": "BUY!",
+  "rainbowUpsidePct": 60.9,
+  "breakEvenYearsAtStillCheap": 4.4,
+  "monthlyNetAtStillCheap": 57.16
+ },
+ "generatedAt": "2026-07-26T20:35:13.837Z"
+}
