@@ -1718,6 +1718,32 @@ function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}
 // up even in bears (2022 bear: +45%). NO quantitative price→difficulty regression (that's OOS-invalid,
 // +2346% error); this is only the qualitative scenario-coherence choice. Reward factor vs today (≤1).
 const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;   // expected decay, coherent with worst-case price
+// GMT price path — expressed as a LEVEL ratio to BTC (GMT $ per micro-BTC), so the token scales
+// with whatever BTC path a projection already uses instead of sitting frozen for a decade.
+// Calibrated 2026-07-26 on ~3 yr of daily GoMining/BTC closes (Bitget, 1056 obs).
+// WHY A LEVEL RATIO AND NOT A BETA: regressing GMT log-returns on BTC is worthless — R² is
+// 0.039 daily / 0.061 weekly / 0.042 monthly, and beta swings 0.41 → 0.24 → -0.00 → 0.23 → 0.89
+// across consecutive 6-month blocks. That is the same out-of-sample failure as the price→difficulty
+// regression, so NEVER model GMT as a return beta. The LEVEL ratio is what's stable: over the last
+// two years min 3.17, p25 4.02, median 4.38, today ~4.49. We use the p25 so the token tracks BTC
+// but lands ~11% below today's ratio — scaling, without quietly turning the worst case bullish.
+// NOT enforced by any arbitrage (unlike the reward floor): emissions or tokenomics changes could
+// reset it permanently. Treat as a calibrated assumption, not a law.
+const GMT_BTC_RATIO=4.02e-6;
+// GMT staking APR decay. The headline ~23.1% CANNOT persist: GMT is FIXED SUPPLY
+// (total_supply === max_supply === 404,266,808, zero inflation headroom), so staking rewards come
+// from a finite pool / protocol revenue, never from emissions. A staker is owed S((1+r)^n − 1):
+// at a flat 23.1% that is 17.35x the staked amount over 14 yr, so with just 5% of supply staked
+// the payout would consume 87% of every GMT that will ever exist (10% staked ⇒ 173% — impossible).
+// So the APR must decay; only the speed is a judgement call. We mirror the difficulty treatment:
+// start at the user's observed APR and relax toward a floor set by what fee revenue can fund
+// long-run. Cuts the 14-yr compounding from 17.35x to ~4.7x, which a plausible rewards allocation
+// can actually cover. Applies to PROJECTIONS only — today's run-rate stays at the observed APR.
+const STAKE_APR_FLOOR=5, STAKE_APR_TAU=5;   // % floor, years
+function stakeAprAt(apr0,yrs){
+  if(!(apr0>STAKE_APR_FLOOR))return apr0;    // already at/below the floor: leave it alone
+  return STAKE_APR_FLOOR+(apr0-STAKE_APR_FLOOR)*Math.exp(-Math.max(0,yrs)/STAKE_APR_TAU);
+}
 function difficultyMultAt(t){
   const yrs=(t-Date.now())/(365.25*86400000);
   if(yrs<=0)return 1;
@@ -2709,7 +2735,10 @@ function computeSetupProjection(){
   const pval=Math.max(0,+($('spPayoutVal')&&$('spPayoutVal').value||0));
   const distPct=(ptype==='pct'?Math.min(100,pval):0)/100;
   const distWeeklyUSD=ptype==='usd'?pval:0;
-  const gp=S.gmtPrice,dbt=dailyBTCperTH();
+  // gp0 = today's spot GMT (used for the planner seed, which is a point-in-time purchase).
+  // gp itself is a LET: it walks forward each simulated day, see gpForDay below.
+  const gp0=S.gmtPrice,dbt=dailyBTCperTH();
+  let gp=gp0;
   const bpStart=S.btcPrice;
   // Need the HODL (Power-Law) fit and a target halving to auto-scale the price.
   if(!_rbFit){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Loading the fair-value model…</div>';ensureRainbowFit(()=>runSetupProjection());return;}
@@ -2719,7 +2748,7 @@ function computeSetupProjection(){
   if(!(targetMs>nowMs)){const fut=HALVING_DATES.filter(h=>h>nowMs);targetMs=fut.length?fut[0]:nowMs+1095*86400000;}
   const days=Math.min(7300,Math.max(1,Math.round((targetMs-nowMs)/86400000)));
   const centerNow=rbFireSalePrice(nowMs), bpEnd=rbFireSalePrice(targetMs);
-  if(!bpStart||!bpEnd||!centerNow||!gp||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
+  if(!bpStart||!bpEnd||!centerNow||!gp0||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
   // Worst-case convergence: start at today's real price, converge onto the Fire-Sale band by the target.
   const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from the worst-case band
   const btcSel={mode:'powerlaw',label:'Fire-sale '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
@@ -2728,9 +2757,11 @@ function computeSetupProjection(){
   //      otherwise the current My Setup state (no new capital deployed). ----
   const fromPlanner=(window._spMode==='planner');
   let MP_TH,MP_WTH,HAS_GREEDY,GGROW,GINIT,greedyTH,greedyWTH,th,curWTH,gmtLocked,gmtW,startTH,startLocked;
-  const apr=i.apr||0;
+  // apr0 = the APR observed today; apr walks down it across the simulated years (see stakeAprAt).
+  const apr0=i.apr||0;
+  let apr=apr0;
   if(fromPlanner){
-    const a=solvePlannerAllocation(i,bpStart,gp,dbt);
+    const a=solvePlannerAllocation(i,bpStart,gp0,dbt);   // allocation is a purchase TODAY -> spot GMT
     if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital Planner</strong> first, then project.</div>';return;}
     MP_TH=a.mpTH||0; MP_WTH=a.mpWth>0?a.mpWth:15;
     HAS_GREEDY=(a.gth||0)>0;
@@ -2778,6 +2809,18 @@ function computeSetupProjection(){
     const c=rbFireSalePrice(t)||bpEnd;
     return c*Math.exp(offset0*(1-progress));
   }
+  // GMT walks with BTC instead of sitting frozen: it starts at today's REAL GMT price and converges
+  // onto the conservative GMT_BTC_RATIO band by the target — exactly the treatment BTC gets above,
+  // so a worst-case BTC path automatically produces a worst-case GMT path. Holding GMT flat while
+  // BTC multiplies was the single harshest assumption in the model: locked GMT is ~40% of a
+  // reinvested farm's end value, and coverage needs FEWER tokens as GMT rises (burn ∝ 1/gp).
+  const gpRatioNow=bpStart>0?gp0/bpStart:GMT_BTC_RATIO;
+  const gpOffset0=Math.log((gpRatioNow>0?gpRatioNow:GMT_BTC_RATIO)/GMT_BTC_RATIO);
+  function gpForDay(d){
+    const t=projStartMs+(d-1)*86400000;
+    const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
+    return bpForDay(d)*GMT_BTC_RATIO*Math.exp(gpOffset0*(1-progress));
+  }
 
   // ov (optional) overrides closure state for trial evaluation in the reinvest allocator:
   // {wth} = VIP blended efficiency, {greedyTH,greedyWTH} = greedy fleet. Defaults to live state.
@@ -2813,6 +2856,9 @@ function computeSetupProjection(){
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
+    gp=gpForDay(d);      // dailyNet/gmtDeficit close over gp, so staking value, burn, coverage
+                         // and every GMT purchase reprice off the walking token price
+    apr=stakeAprAt(apr0,(d-1)/365.25);   // and the staking yield relaxes toward its funded floor
     dbtToday=Math.max(dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*difficultyMultAt(projStartMs+(d-1)*86400000), rewardFloorBTC(bpToday));  // halving + difficulty grind, floored at the network no-arbitrage break-even
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
@@ -2904,7 +2950,7 @@ function computeSetupProjection(){
       }
       postDN=dailyNet(th,gmtLocked);
     }
-    daily.push({d,th:th+MP_TH+greedyTH,greedy:greedyTH,gmtLocked,gmtW,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
+    daily.push({d,th:th+MP_TH+greedyTH,greedy:greedyTH,gmtLocked,gmtW,gp,ssNet:postDN.net,disc:postDN.disc,tokD:postDN.tokD,vip:postDN.vip});
     if(!isFinite(th)||!isFinite(greedyTH)||!isFinite(gmtLocked)||!isFinite(postDN.net)){out.innerHTML='<div class="warn" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:#fca5a5"><strong>Numbers exceeded simulation precision.</strong> Pick a more conservative BTC target or shorter horizon.</div>';return;}
   }
 
@@ -3012,8 +3058,8 @@ function buildReinvestChart(daily,days,gp){
   const target=Math.min(150,N);
   const stride=Math.max(1,Math.floor(N/target));
   const pts=[];
-  for(let i=0;i<N;i+=stride)pts.push({d:daily[i].d,v:daily[i].ssNet});
-  if(pts[pts.length-1].d!==daily[N-1].d)pts.push({d:daily[N-1].d,v:daily[N-1].ssNet});
+  for(let i=0;i<N;i+=stride)pts.push({d:daily[i].d,v:daily[i].ssNet,gp:daily[i].gp});
+  if(pts[pts.length-1].d!==daily[N-1].d)pts.push({d:daily[N-1].d,v:daily[N-1].ssNet,gp:daily[N-1].gp});
   const W=600,H=232,padL=72,padR=18,padT=20,padB=44;
   const innerW=W-padL-padR,innerH=H-padT-padB;
 
@@ -3080,7 +3126,8 @@ function riChartUpdateAxis(){
   const mult=period==='month'?30:1;
   const ys=c.pts.map(p=>p.v);
   const yMax=Math.max(...ys,1e-9);
-  const scaled=unit==='gmt'?(yMax/c.gp)*mult:yMax*mult;
+  // GMT price moves across the run, so convert point-wise rather than at one rate.
+  const scaled=unit==='gmt'?Math.max(...c.pts.map(p=>p.v/(p.gp||c.gp)),1e-9)*mult:yMax*mult;
   const fmt=v=>unit==='gmt'?fAxisGMT(v):fAxisUSD(v);
   const aMax=document.getElementById('riAxisMax');
   const aMid=document.getElementById('riAxisMid');
@@ -3133,7 +3180,7 @@ function riChartHover(e){
 
   const unit=window._reinvestUnit,period=window._reinvestPeriod;
   const mult=period==='month'?30:1;
-  const val=unit==='gmt'?(pt.v/c.gp)*mult:pt.v*mult;
+  const val=unit==='gmt'?(pt.v/(pt.gp||c.gp))*mult:pt.v*mult;
   const valStr=unit==='gmt'?fN(val,val>=1000?0:2)+' GMT':fU(val);
   const suffix=period==='month'?'/mo':'/day';
   const tip=document.getElementById('riChartTip');
