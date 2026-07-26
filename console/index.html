@@ -493,6 +493,11 @@
                 <input type="number" id="inGreedyInitial" value="0" step="1" min="0">
                 <span class="unit">TH</span>
               </label>
+              <label class="ed-fld greedy-field" for="inGreedyWth">
+                <span class="ed-fld-lbl">Greedy efficiency <span class="tip" data-tip="The Greedy Machine's own W/TH — it is a separate miner, so it can differ from your main farm. Leave blank to reuse the main farm's efficiency. Its free weekly TH inherits this rating, so upgrading it early is much cheaper than upgrading it once the machine has grown.">?</span></span>
+                <input type="number" id="inGreedyWth" value="" step="0.1" min="12" max="100" placeholder="same as farm">
+                <span class="unit">W/TH</span>
+              </label>
             </div>
           </div>
 

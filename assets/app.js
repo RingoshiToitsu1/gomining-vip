@@ -1151,7 +1151,7 @@ const SHARE_FIELDS=[
   ['inTH'],['inWTH'],['inGMTLocked'],['inGMTWallet'],['inCapital'],
   ['inMpTH'],['inMpGMT'],['inMpWth'],['inGreedyTH'],['inGreedyInitial'],['inGreedyGrowth'],
   ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],['inAvatarDisc','b'],
-  ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b']
+  ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b'],['inGreedyWth']
 ];
 // Compact v2 share encoding (?s2=). Shorter than v1 (?s=) because:
 //  • the rarely-filled marketplace/greedy/referral fields sit at the TAIL, so they're
@@ -1168,7 +1168,8 @@ function encodeShareV2(d){
     flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
     v(d.inMpTH),v(d.inMpGMT),v(d.inMpWth),
     v(d.inGreedyTH),v(d.inGreedyInitial),v(d.inGreedyGrowth),
-    v(d.inReferredTH),v(d.inRefCapital)
+    v(d.inReferredTH),v(d.inRefCapital),
+    v(d.inGreedyWth)          // appended at the tail so pre-existing ?s2= links stay valid
   ];
   while(parts.length&&parts[parts.length-1]==='')parts.pop();
   return parts.join('~');
@@ -1183,6 +1184,7 @@ function decodeShareV2(s){
   set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
   set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
   set('inReferredTH',13);set('inRefCapital',14);
+  set('inGreedyWth',15);
   return d;
 }
 // Copy text without the ugly prompt: clipboard API on https, else a silent textarea+execCommand
@@ -1424,7 +1426,9 @@ function inp(){
   mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
   gth:gth,
   gInit:+($('inGreedyInitial')?$('inGreedyInitial').value:0)||0,
-  gwth:wth,
+  // The Greedy Machine is a separate miner with its own W/TH rating. Blank/0 ⇒ reuse the main
+  // farm's efficiency (keeps every setup saved before this field existed behaving as it did).
+  gwth:(+($('inGreedyWth')?$('inGreedyWth').value:0)||0)||wth,
   ggrow:+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
   refCap:+$('inRefCapital').value||0
@@ -1522,6 +1526,7 @@ function readInputs(){
     inCapital:$('inCapital').value,
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
+    inGreedyWth:($('inGreedyWth')?$('inGreedyWth').value:''),
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAvatarDisc:$('inAvatarDisc').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
@@ -1709,7 +1714,7 @@ function clearInputs(){
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
-    inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'15',inGreedyGrowth:'0.3',
+    inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
     piVipBonus:false
   });
@@ -2282,7 +2287,9 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   const greedyTot=sol.greedyTot!=null?sol.greedyTot:gth0;
   const addGreedy=sol.addGreedy||0;
-  const greedyWthAfter=greedyTot>0?(gth0*gwth0+addGreedy*15)/greedyTot:gwth0;
+  // addGreedy is hashrate added to the EXISTING greedy machine (up to its 5k cap), and adding TH
+  // to a miner never changes that miner's W/TH rating — so the greedy keeps the efficiency it owns.
+  const greedyWthAfter=gwth0;
   const addVip=sol.addVip!=null?sol.addVip:sol.addTH;
   const vipStandalone=i.th+addVip;     // non-greedy VIP TH — the projection's compounding base
   const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit); // VIP tier basis (excl. initial mkt greedy + mpTH)
@@ -3489,7 +3496,7 @@ function obNewUser(){
   syncOB();
   // Zero the extras that syncOB doesn't touch, so "Current" starts at $0.
   ['inGreedyTH','inGreedyInitial','inMpTH','inMpGMT','inReferredTH','inRefCapital'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});
-  const gw=document.getElementById('inGreedyWth');if(gw)gw.value='15';
+  const gw=document.getElementById('inGreedyWth');if(gw)gw.value='';
   if(typeof refreshGreedyVisibility==='function')refreshGreedyVisibility();
   // Close onboarding
   try{localStorage.setItem('gm_onboarded','1')}catch(e){}
