@@ -118,10 +118,12 @@ const be=m=>m===null?'beyond 10 years':m<12?`about ${m} month${m===1?'':'s'}`:`a
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 /* ===== shared page shell ===== */
-function shell({slug,title,desc,faq,body,related}){
+function shell({slug,title,desc,faq,body,related,canonicalUrl}){
   // slug is the FILENAME (foo.html); the canonical URL is extensionless. GitHub Pages
   // serves /foo for foo.html, so both resolve — the canonical picks which one Google keeps.
-  const canonical=`${SITE}/${slug.replace(/\.html$/,'')}`;
+  // canonicalUrl overrides that when this page duplicates a stronger one and should
+  // consolidate its signals there instead of competing with it.
+  const canonical=canonicalUrl||`${SITE}/${slug.replace(/\.html$/,'')}`;
   const faqLd={"@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))};
   const faqHtml=faq.map(f=>`    <details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('\n');
   const relHtml=related.map(r=>`<a href="${r.href}">${esc(r.label)}</a>`).join(' &middot; ');
@@ -278,6 +280,10 @@ function monthlyPage(live, dateStr){
   const th=100;
   const m=model({th,bp:live.bp,diff:live.diff,disc:20});
   const slug='gomining-worth-it-now.html';   // stable URL, regenerated in place (fresh, no pile-up)
+  // This page and /is-gomining-worth-it chase the same query, and the latter pulls ~6x
+  // the impressions. Point the canonical there so the two stop splitting the signal —
+  // the page still exists and stays current, it just ranks under its stronger twin.
+  const canonicalUrl=`${SITE}/is-gomining-worth-it`;
   const title=`Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?`;
   const desc=`A ${MONTHS[dateStr.m]} ${dateStr.year} snapshot: with Bitcoin at ${usd(live.bp)}, a 100 TH GoMining farm plus the GMT locked for the discount nets ~${usd(m.monthlyUSD)}/mo, break-even ${be(m.beMonths)}. Live numbers.`;
   const body=`  <h1>Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?</h1>
@@ -306,16 +312,22 @@ ${CTA}`;
     {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
     {href:'/',label:'the calculator'}
   ];
-  return {slug,html:shell({slug,title,desc,faq,body,related})};
+  return {slug,canonicalUrl,html:shell({slug,title,desc,faq,body,related,canonicalUrl})};
 }
 
 /* ===== sitemap ===== */
-function updateSitemap(slugs){
+function updateSitemap(pages){
   const smPath=path.join(ROOT,'sitemap.xml');
   let sm=fs.readFileSync(smPath,'utf8');
   const today=new Date().toISOString().slice(0,10);
-  for(const slug of slugs){
+  for(const {slug,canonicalUrl} of pages){
     const loc=`${SITE}/${slug.replace(/\.html$/,'')}`;   // extensionless, matching the canonical
+    // A page canonicalised elsewhere doesn't belong in the sitemap — listing a URL we've
+    // told Google not to index is a mixed signal, so drop any entry it already has.
+    if(canonicalUrl&&canonicalUrl!==loc){
+      sm=sm.replace(new RegExp(`^\\s*<url>(?:(?!</url>)[\\s\\S])*?<loc>${loc}</loc>[\\s\\S]*?</url>\\n`,'m'),'');
+      continue;
+    }
     if(sm.includes(loc))continue;   // don't duplicate
     const entry=`  <url><loc>${loc}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>\n`;
     sm=sm.replace('</urlset>',entry+'</urlset>');
@@ -383,7 +395,7 @@ function injectLiveBlocks(live,dateStr){
     fs.writeFileSync(path.join(ROOT,p.slug),p.html);
     console.log('  wrote',p.slug);
   }
-  updateSitemap(pages.map(p=>p.slug));
+  updateSitemap(pages);
   injectLiveBlocks(live,dateStr);
   console.log(`\nDone: ${pages.length} pages + sitemap updated.`);
 })();
