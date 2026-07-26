@@ -574,9 +574,21 @@ function rbComputeFit(series){
 }
 // HODL (Power-Law center) fair value at time t — the rainbow chart's center line.
 function rbCenterPrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b):0;}
-// Worst-case "Basically a Fire Sale" price — the chart's absolute bottom edge (most conservative valuation).
-const RB_FIRESALE_OFF=RB_OFFSETS[RB_OFFSETS.length-1];
-function rbFireSalePrice(t){return _rbFit?Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b+RB_FIRESALE_OFF):0;}
+// Price at the MIDPOINT of a named rainbow band at time t. Band i spans RB_OFFSETS[i]
+// to RB_OFFSETS[i+1], so its representative price sits between them.
+function rbBandPrice(t,i){
+  if(!_rbFit)return 0;
+  const mid=(RB_OFFSETS[i]+RB_OFFSETS[i+1])/2;
+  return Math.pow(10,_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b+mid);
+}
+// The band the Growth Projection converges onto. "Still cheap" sits one step below the
+// Power-Law centre — a conservative valuation, but a realistic one. This used to be the
+// chart's absolute bottom edge (Fire Sale, offset −0.45), which is where price goes in a
+// capitulation, not where it lives. Projecting a decade of earnings off a capitulation
+// price understated the whole model. See DIFF_G0 — the difficulty path is paired to this
+// choice and must move with it.
+const RB_PROJ_BAND=RB_LABELS.indexOf('Still cheap');
+function rbProjPrice(t){return rbBandPrice(t,RB_PROJ_BAND);}
 // Ensure the Power-Law fit exists (load history once if needed), then run cb. Lets the
 // Growth Projection reference HODL fair values even before the rainbow chart is opened.
 function ensureRainbowFit(cb){
@@ -1711,13 +1723,16 @@ function subsidyMultAt(t){let m=1;for(const h of HALVING_DATES){if(t>=h)m*=0.5;}
 // Beyond halvings, network difficulty grinds upward and erodes sats/TH/day continuously.
 // Calibrated to the DECAYING trailing difficulty CAGR (8yr 50% → 5yr 46% → 3yr 37% → 2yr 26%):
 //   g(Y) = floor + (g0−floor)·e^(−Y/τ)   (Y = years from now), cumulative growth = exp(∫₀^Y g dY).
-// Reward factor = 1/that. Params are the EXPECTED (decelerated) trajectory, chosen to stay coherent
-// with the projection's worst-case Fire-Sale PRICE: a low-price world starves miners, so difficulty
-// growth decelerates rather than racing (pairing low price with worst-case difficulty would double-
-// stack two anti-correlated pessimisms). Not flat though — ASIC efficiency keeps difficulty grinding
-// up even in bears (2022 bear: +45%). NO quantitative price→difficulty regression (that's OOS-invalid,
-// +2346% error); this is only the qualitative scenario-coherence choice. Reward factor vs today (≤1).
-const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;   // expected decay, coherent with worst-case price
+// Reward factor = 1/that. Params must stay coherent with the PRICE path the projection uses:
+// price and difficulty are anti-correlated, so pairing one scenario's price with another's
+// difficulty double-stacks. The projection converges on the "Still cheap" band (rbProjPrice),
+// a healthier world than the old Fire-Sale path — a better-funded network adds hashrate, so
+// g0 sits at the 3yr trailing CAGR (37%) rather than the maximally-decelerated 2yr (26%) that
+// paired with capitulation pricing. Still decaying, since the trailing series decelerates
+// (8yr 50% → 5yr 46% → 3yr 37% → 2yr 26%), and never flat — ASIC efficiency grinds difficulty
+// up even in bears (2022 bear: +45%). NO quantitative price→difficulty regression (that's
+// OOS-invalid, +2346% error); this is only the qualitative scenario-coherence choice.
+const DIFF_G0=0.37, DIFF_FLOOR=0.05, DIFF_TAU=4;   // paired with the Still-cheap price path
 // GMT price path — expressed as a LEVEL ratio to BTC (GMT $ per micro-BTC), so the token scales
 // with whatever BTC path a projection already uses instead of sitting frozen for a decade.
 // Calibrated 2026-07-26 on ~3 yr of daily GoMining/BTC closes (Bitget, 1056 obs).
@@ -1726,7 +1741,7 @@ const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;   // expected decay, coherent w
 // across consecutive 6-month blocks. That is the same out-of-sample failure as the price→difficulty
 // regression, so NEVER model GMT as a return beta. The LEVEL ratio is what's stable: over the last
 // two years min 3.17, p25 4.02, median 4.38, today ~4.49. We use the p25 so the token tracks BTC
-// but lands ~11% below today's ratio — scaling, without quietly turning the worst case bullish.
+// but lands ~11% below today's ratio — scaling, without quietly turning the projection bullish.
 // NOT enforced by any arbitrage (unlike the reward floor): emissions or tokenomics changes could
 // reset it permanently. Treat as a calibrated assumption, not a law.
 const GMT_BTC_RATIO=4.02e-6;
@@ -2577,8 +2592,8 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
-// Populate the "Project To" dropdown with each upcoming halving and its projected worst-case
-// (Fire-Sale band) price, so the user sees the conservative target the projection will reach.
+// Populate the "Project To" dropdown with each upcoming halving and its projected
+// Still-cheap band price, so the user sees the target the projection will converge on.
 function populateSpTargets(){
   const sel=document.getElementById('spTarget');
   if(!sel)return;
@@ -2588,8 +2603,8 @@ function populateSpTargets(){
   const prev=sel.value;
   sel.innerHTML=future.map((h,idx)=>{
     const yr=new Date(h).getUTCFullYear();
-    const fv=rbFireSalePrice(h);
-    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; worst-case '+fmtBTCPrice(fv);
+    const fv=rbProjPrice(h);
+    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; '+fmtBTCPrice(fv);
     return `<option value="${h}">${label}</option>`;
   }).join('');
   if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
@@ -2603,11 +2618,11 @@ function updateSpTargetPreview(){
   const targetMs=parseFloat(sel.value);
   if(!_rbFit||!(targetMs>Date.now())){el.innerHTML='';return;}
   const now=Date.now(), days=Math.round((targetMs-now)/86400000), yrs=days/365;
-  const P0=S.btcPrice||0, target=rbFireSalePrice(targetMs);
+  const P0=S.btcPrice||0, target=rbProjPrice(targetMs);
   const hv=halvingsInWindow(days);
   el.innerHTML=
     `<div class="sp-prev-chip"><div class="sp-prev-val">${yrs.toFixed(1)} yr</div><div class="sp-prev-lbl">horizon (${days} days)</div></div>`+
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; worst-case (Fire Sale)</div></div>`+
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; Still cheap (rainbow)</div></div>`+
     `<div class="sp-prev-chip"><div class="sp-prev-val">${hv.length?hv.join(' &amp; '):'—'}</div><div class="sp-prev-lbl">halving${hv.length===1?'':'s'} crossed${hv.length?' (−50% reward each)':''}</div></div>`;
 }
 function openSetupProjection(mode){
@@ -2747,11 +2762,11 @@ function computeSetupProjection(){
   let targetMs=selEl?parseFloat(selEl.value):0;
   if(!(targetMs>nowMs)){const fut=HALVING_DATES.filter(h=>h>nowMs);targetMs=fut.length?fut[0]:nowMs+1095*86400000;}
   const days=Math.min(7300,Math.max(1,Math.round((targetMs-nowMs)/86400000)));
-  const centerNow=rbFireSalePrice(nowMs), bpEnd=rbFireSalePrice(targetMs);
+  const centerNow=rbProjPrice(nowMs), bpEnd=rbProjPrice(targetMs);
   if(!bpStart||!bpEnd||!centerNow||!gp0||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
-  // Worst-case convergence: start at today's real price, converge onto the Fire-Sale band by the target.
-  const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from the worst-case band
-  const btcSel={mode:'powerlaw',label:'Fire-sale '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
+  // Convergence: start at today's real price, converge onto the Still-cheap band by the target.
+  const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from that band
+  const btcSel={mode:'powerlaw',label:'Still cheap '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
@@ -2801,17 +2816,17 @@ function computeSetupProjection(){
   let bpToday=bpStart;
   const projStartMs=Date.now();
   let dbtToday=dbt;                 // daily BTC/TH; halves at each halving date during the run
-  // Worst-case convergence to the Fire-Sale band: price = fireSale(t) · e^(offset0·(1−progress)).
-  // At d=1 → today's real price; at the target halving → exactly the Fire-Sale band price.
+  // Convergence to the Still-cheap band: price = stillCheap(t) · e^(offset0·(1−progress)).
+  // At d=1 → today's real price; at the target halving → exactly the Still-cheap band price.
   function bpForDay(d){
     const t=projStartMs+(d-1)*86400000;
     const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
-    const c=rbFireSalePrice(t)||bpEnd;
+    const c=rbProjPrice(t)||bpEnd;
     return c*Math.exp(offset0*(1-progress));
   }
   // GMT walks with BTC instead of sitting frozen: it starts at today's REAL GMT price and converges
   // onto the conservative GMT_BTC_RATIO band by the target — exactly the treatment BTC gets above,
-  // so a worst-case BTC path automatically produces a worst-case GMT path. Holding GMT flat while
+  // so GMT always tracks whatever BTC path the projection uses. Holding GMT flat while
   // BTC multiplies was the single harshest assumption in the model: locked GMT is ~40% of a
   // reinvested farm's end value, and coverage needs FEWER tokens as GMT rises (burn ∝ 1/gp).
   const gpRatioNow=bpStart>0?gp0/bpStart:GMT_BTC_RATIO;
@@ -2966,7 +2981,7 @@ function computeSetupProjection(){
   const lockedUSD=gmtLocked*gp;
 
   const btcModeBadge='<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">WORST CASE</span>';
-  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the worst-case <strong style="color:var(--text2)">Fire-Sale ${fmtBTCPrice(bpEnd)}</strong> at the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
+  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);

@@ -924,14 +924,14 @@
         <div class="sp-model-banner">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-9 6-9 9-4s6 5 9-9"/></svg>
           <div>
-            <div class="sp-model-title"><span class="nu-badge">NEW</span>Worst-case projection model</div>
-            <div class="sp-model-desc"><span class="tip tip-down sp-readmore" data-tip="Pick a halving and we project to it conservatively. BTC price scales along the rainbow chart's Fire-Sale band (the historical cyclical bottom), so figures reflect a worst-case price. Mining reward also halves at each halving and erodes as network difficulty grinds upward (expected decay, kept coherent with the worst-case price). If it still grows here, it grows almost anywhere.">How this works &middot; read more</span></div>
+            <div class="sp-model-title"><span class="nu-badge">NEW</span>Rainbow-anchored projection model</div>
+            <div class="sp-model-desc"><span class="tip tip-down sp-readmore" data-tip="Pick a halving and we project to it. BTC price scales along the rainbow chart's Still-cheap band — one step below the Power-Law centre, a conservative valuation but a realistic one, rather than the capitulation price the model used to assume. Mining reward halves at each halving and erodes as network difficulty grinds upward, and that difficulty path is deliberately paired with this price: a better-funded network adds hashrate, so we do not get to bank a high price and slow difficulty at the same time.">How this works &middot; read more</span></div>
           </div>
         </div>
 
         <div class="input-grid sp-form-grid">
           <div class="field">
-            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using a WORST-CASE price: BTC scales along the rainbow chart's bottom Fire-Sale band (the historical cyclical-bottom valuation), starting from today's real price and converging onto that band by the halving. Mining reward also halves at each halving crossed.">?</span></label>
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using the rainbow chart's Still-cheap band: BTC starts at today's real price and converges onto that band by the halving. One step below the Power-Law centre — conservative, but not the cyclical-bottom price. Mining reward also halves at each halving crossed.">?</span></label>
             <div class="field-input sp-selwrap"><select id="spTarget" onchange="updateSpTargetPreview()"><option value="">Loading fair-value model…</option></select></div>
           </div>
           <div class="field">
@@ -1020,7 +1020,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=17"></script>
+<script src="/assets/app.js?v=18"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
