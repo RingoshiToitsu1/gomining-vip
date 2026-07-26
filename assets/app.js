@@ -108,6 +108,10 @@ function cptTier(tiers,th){
   return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+// Budget → TH when MINTING A NEW MACHINE. New miners are 12 W/TH only, so this is the right
+// converter for every "spend capital on fresh hashrate" path. (thForBudget/estimateCPT price
+// hashrate UPGRADES on a machine you already own — a different product, kept on TH_TIERS.)
+function thForBudget12(budget){return thForBudgetTiers(budget,TH_TIERS_12W);}
 function thForBudgetTiers(budget,tiers){
   if(budget<=0)return 0;
   let lo=0,hi=budget/(tiers[tiers.length-1].cpt*avatarDiscMult());
@@ -126,122 +130,6 @@ function netMonthlyAt(i,bpOverride){
   return mo;
 }
 
-// Marginal net-monthly impact of deploying GROWTH capital down each path, at price bp.
-// Capital split: gmtUSD = USD value of existing GMT (no conversion fee — upgrades/TH are paid
-// in GMT directly), usdUSD = USD cash (pays the 2% USD→GMT fee).
-// Discount is held FIXED at the current level: this answers "best use of growth capital while
-// you MAINTAIN your token discount" (securing the discount is the main allocation's job). So
-// TH never shows a phantom loss from coverage dipping, and Lock GMT here is staking-yield only.
-function evalPaths(i,gmtUSD,usdUSD,bp,minerTH){
-  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, curW=i.wth, dbt=dailyBTCperTH();
-  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
-  const K=gmtUSD+usdUSD;                 // nominal capital deployed (for ROI / display)
-  const eff=gmtUSD+usdUSD*(1-fee);       // effective GMT purchasing power in USD terms
-  const ppRate=K>0?eff/K:1-fee;          // GMT-USD per nominal-USD; convert a GMT cost → nominal
-  const toNominal=gmtCost=>gmtCost/ppRate;
-  const d=(calc(i).totD)/100;            // current discount, held fixed (greedy TH cancels in deltas)
-  const netFix=(th,w)=>((dbt*th-((0.0012*w+0.0089)/bp)*th*(1-d))*(1-cf))*bp*30;
-  const base=netFix(i.th,curW), out={base,K};
-  // 15 W TH — upgrade an existing machine up to the 5,000 TH cap (cheap raw hashrate)
-  {
-    const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
-    let dth=Math.min(room,want), usd=K, capped=false;
-    if(want>room&&room>0){capped=true;usd=toNominal(room*cptTier(TH_TIERS,i.th+room/2));}
-    if(room<=0){dth=0;usd=0;}
-    const nth=i.th+dth, nwth=nth>0?(i.th*curW+dth*EFF_BASE_MAX)/nth:curW;
-    out.th15={dth,usd,room,capped,mo:netFix(nth,nwth)-base};
-  }
-  // 12 W TH — create a new machine (no cap)
-  {
-    const dth=thForBudgetTiers(eff,TH_TIERS_12W), nth=i.th+dth;
-    const nwth=nth>0?(i.th*curW+dth*EFF_BEST)/nth:curW;
-    out.th12={dth,usd:K,mo:netFix(nth,nwth)-base};
-  }
-  // Upgrade efficiency of a SPECIFIC machine (minerTH of hashrate) down to 12 W.
-  // Upgrades are per-machine: minerTH defaults to the whole standalone farm but the user
-  // can point it at one miner. Cost = upgraded TH × $2.67 per 1 W/TH step toward 12.
-  {
-    const cap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th));
-    const cpt=effUpgradeCostPerTH(curW);let dth=0,nwth=curW,usd=0;
-    if(cpt>0&&cap>0){dth=Math.min(cap,eff/cpt);nwth=i.th>0?((i.th-dth)*curW+dth*EFF_BEST)/i.th:curW;usd=toNominal(dth*cpt);}
-    out.upg={dth,cpt,usd,minerTH:cap,na:cpt<=0,newWth:nwth,mo:netFix(i.th,nwth)-base};
-  }
-  // Lock GMT — staking yield only here (securing the 20% discount is handled in the allocation above).
-  {
-    const dgmt=eff/gp, staking=dgmt*(i.apr||0)/100/12*gp;
-    out.gmt={dgmt,usd:K,staking,mo:staking};
-  }
-  return out;
-}
-
-// BTC price where upgrading the existing 15 W machine starts to beat creating a new 12 W machine.
-// Analytic, at a FIXED discount (consistent with the cards): ΔTH15·(g−m15) = ΔTH12·(g−m12) ⇒ g,
-// bp = g/dbt. Above it, cheaper raw 15 W hashrate wins; below it, 12 W's lower maintenance wins.
-function btcCrossover(i,eff){
-  const room=Math.max(0,MINER_CAP-i.th), want=thForBudget(eff);
-  const dth15=Math.min(room,want), dth12=thForBudgetTiers(eff,TH_TIERS_12W);
-  if(dth15<=0)return{capped:true,bp:null};
-  if(dth15<=dth12)return{capped:want>room,bp:null};
-  const d=(calc(i).totD)/100, dbt=dailyBTCperTH();
-  const m15=(0.0012*EFF_BASE_MAX+0.0089)*(1-d), m12=(0.0012*EFF_BEST+0.0089)*(1-d);
-  const g=(dth15*m15-dth12*m12)/(dth15-dth12), bp=dbt>0?g/dbt:null;
-  return{capped:want>room,bp:(bp&&bp>0&&isFinite(bp))?bp:null};
-}
-
-// Greedy marginal allocator: spends capital where the NEXT dollar earns most, re-running the real
-// calc() each step so the token discount is ALWAYS respected — adding TH erodes coverage, which
-// raises the value of locking GMT, so locks and TH interleave to HOLD the 20% discount. Returns the
-// optimal split across {lock GMT, buy TH (15 W upgrade / 12 W new), upgrade efficiency}.
-function optimalSplit(i,gmtUSD,usdUSD,bp,minerTH){
-  const gp=S.gmtPrice||FB.gmtPrice, fee=USD_GMT_FEE, cf=CONVERSION_FEE, aprMo=(i.apr||0)/100/12;
-  gmtUSD=Math.max(0,gmtUSD||0);usdUSD=Math.max(0,usdUSD||0);
-  const K=gmtUSD+usdUSD, eff=gmtUSD+usdUSD*(1-fee), ppRate=K>0?eff/K:1-fee;
-  if(eff<=0)return null;
-  const minerCap=Math.max(0,Math.min(minerTH>0?minerTH:i.th,i.th)), cptU=effUpgradeCostPerTH(i.wth);
-  const STEPS=60, incr=eff/STEPS;
-  const s={gl:0,th15:0,th12:0,effTH:0};   // amounts ADDED (gl in GMT, th/eff in TH)
-  const spent={lock:0,th:0,eff:0};        // eff-USD allocated per category
-  const setupOf=st=>{
-    const totStand=i.th+st.th15+st.th12;
-    const wsum=(i.th-st.effTH)*i.wth+st.effTH*EFF_BEST+st.th15*EFF_BASE_MAX+st.th12*EFF_BEST;
-    return {...i,th:totStand,wth:totStand>0?wsum/totStand:i.wth,gl:i.gl+st.gl};
-  };
-  const objOf=st=>{const c=calc(setupOf(st));return c.net*c.bp*30+st.gl*aprMo*gp;};
-  const base=objOf(s); let cur=base;
-  for(let step=0;step<STEPS;step++){
-    const c=calc(setupOf(s));
-    // Lock GMT: forward ROI to the next discount step; pure staking once at the 20% cap.
-    let lockROI;
-    if(c.eTok>=20){lockROI=aprMo*12;}
-    else{
-      const targetCov=(c.eTok+1)*18, needGMT=Math.max(incr/gp,targetCov*c.feesGMT-(i.gl+s.gl+i.gw));
-      const stepSaveMo=c.f.t*0.01*(1-cf)*bp*30;
-      lockROI=(stepSaveMo*12)/(needGMT*gp)+aprMo*12;
-    }
-    // Buy TH: 15 W upgrade while the machine has room, else a new 12 W machine.
-    const room=Math.max(0,MINER_CAP-(i.th+s.th15)), th15Mode=room>0.01;
-    const thDth=th15Mode?Math.min(room,thForBudget(incr)):thForBudgetTiers(incr,TH_TIERS_12W);
-    const thState={...s};if(th15Mode)thState.th15+=thDth;else thState.th12+=thDth;
-    const thROI=thDth>0?(objOf(thState)-cur)*12/incr:-Infinity;
-    // Upgrade efficiency of the chosen miner.
-    let effROI=-Infinity,effDth=0;
-    if(cptU>0&&s.effTH<minerCap-0.01){
-      effDth=Math.min(minerCap-s.effTH,incr/cptU);
-      const effState={...s};effState.effTH+=effDth;
-      effROI=(objOf(effState)-cur)*12/incr;
-    }
-    const opts=[['lock',lockROI],['th',thROI],['eff',effROI]].sort((a,b)=>b[1]-a[1]);
-    const winner=opts[0][0];
-    if(winner==='lock'){s.gl+=incr/gp;spent.lock+=incr;}
-    else if(winner==='th'){if(th15Mode)s.th15+=thDth;else s.th12+=thDth;spent.th+=incr;}
-    else{s.effTH+=effDth;spent.eff+=incr;}
-    cur=objOf(s);
-  }
-  const fin=setupOf(s);
-  return {spent,eff,K,ppRate,gp,totalMo:cur-base,baseMo:base,
-    lockPct:spent.lock/eff*100,thPct:spent.th/eff*100,effPct:spent.eff/eff*100,
-    th15:s.th15,th12:s.th12,effTH:s.effTH,glAdd:s.gl,finWth:fin.wth,finTH:fin.th};
-}
 function autoFillCPT(thId,cptId){
   const th=parseFloat(document.getElementById(thId).value)||0;
   const el=document.getElementById(cptId);
@@ -2170,8 +2058,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     const COV=360;
     function refSolve(gmtUSD){
       const ag=gmtUSD*(1-USD_GMT_FEE)/gp, thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget(thUSD*(1-USD_GMT_FEE)):0;
-      const fT=fees(at||1,15,bp);
+      const at=thUSD>0?thForBudget12(thUSD*(1-USD_GMT_FEE)):0;
+      const fT=fees(at||1,EFF_BEST,bp);   // a referral's capital mints a new machine ⇒ 12 W/TH
       const vT=vipOf(at,ag);
       const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
       const burn=(fT.t*(1-ntd/100)*bp)/gp;
@@ -2202,10 +2090,10 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
 
-  // VIP-only blended efficiency (existing farm + freshly minted TH at 15 W/TH).
-  function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*15)/(i.th+addTH):i.wth}
+  // VIP-only blended efficiency (existing farm + freshly minted TH, which is 12 W/TH only).
+  function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_BEST)/(i.th+addTH):i.wth}
   // Total blended efficiency including the marketplace miner — drives fees.
-  function blendWTH(addTH){const tot=i.th+addTH+mpTH+gth0;return tot>0?(i.th*i.wth+addTH*15+mpTH*mpWth+gth0*gwth0)/tot:i.wth}
+  function blendWTH(addTH){const tot=i.th+addTH+mpTH+gth0;return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+gth0*gwth0)/tot:i.wth}
 
   let reserveNeeded=0;
   function calcReserve(totFeeTH,vipBasis,lockedGMT){
@@ -2233,7 +2121,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       // Leftover USD routes through GMT to mint TH, so it eats the 2% fee too;
       // existing pool GMT (gmtSell) is already GMT, so it's spent at face value.
       const thBudgetUSD=(usdCap-usdSpentOnGMT)*(1-USD_GMT_FEE)+(gmtSell*gp);
-      const baseTH=thBudgetUSD>0?thForBudget(thBudgetUSD):0;
+      const baseTH=thBudgetUSD>0?thForBudget12(thBudgetUSD):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
       const bonusTH=atTest-baseTH;
@@ -2295,7 +2183,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit); // VIP tier basis (excl. initial mkt greedy + mpTH)
   const nt=i.th+addVip+greedyTot+mpTH; // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(sol.addTH);      // total blended efficiency (all new TH @15, greedy/VIP split-agnostic)
+  const bwth=blendWTH(sol.addTH);      // total blended efficiency (all new TH @12W, greedy/VIP split-agnostic)
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
@@ -2362,8 +2250,9 @@ function renderEfficiencyComparison(st){
       const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
       const upgradeCost=cap*cptU;
       upgradeROI=upgradeCost>0?savedMo*12/upgradeCost:0;
-      const cptTH=estimateCPT((i.th+addTH)||1);
-      const thNetMo=(dbt*bp-(0.0012*EFF_BASE_MAX+0.0089)*(1-d))*(1-cf)*30;
+      // The alternative to upgrading is MINTING a new machine — 12 W/TH, priced off TH_TIERS_12W.
+      const cptTH=estimateCPT12((i.th+addTH)||1);
+      const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
         effUSD=Math.min(thUSD,upgradeCost);
@@ -2378,7 +2267,7 @@ function renderEfficiencyComparison(st){
   if(tot<=0)return '';
   const lockPct=lockUSD/tot*100, thPct=thUSD/tot*100, effPct=effUSD/tot*100;
   const finTH=i.th+addTH;
-  const finWth=finTH>0?((i.th-effTHupg)*i.wth+effTHupg*EFF_BEST+addTH*EFF_BASE_MAX)/finTH:i.wth;
+  const finWth=finTH>0?((i.th-effTHupg)*i.wth+effTHupg*EFF_BEST+addTH*EFF_BEST)/finTH:i.wth;
   const baseMo=calc(i).net*bp*30;
   const newMo=calc({...i,th:finTH,wth:finWth,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
@@ -2390,7 +2279,7 @@ function renderEfficiencyComparison(st){
   if(i.th>0 && i.wth>EFF_BEST){
     const cptU=effUpgradeCostPerTH(i.wth);
     if(cptU>0){
-      const M=0.0012*EFF_BASE_MAX+0.0089, cptTH=estimateCPT((i.th+addTH)||1);
+      const M=0.0012*EFF_BEST+0.0089, cptTH=estimateCPT12((i.th+addTH)||1);
       const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
       if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
     }
@@ -2429,8 +2318,8 @@ function renderEfficiencyComparison(st){
     ['Effect',lockPct>0.5?'holds 20% discount':'—']
   ]);
   g+=card('Buy TH',thPct,thUSD,[
-    ['Adds',addTH>0?`+${fN(addTH,1)} TH @ 15W`:'—'],
-    ['Source',addTH>0?'15 W machine upgrade':'—']
+    ['Adds',addTH>0?`+${fN(addTH,1)} TH @ ${fN(EFF_BEST,0)}W`:'—'],
+    ['Source',addTH>0?'new 12 W machine':'—']
   ]);
   if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
@@ -2943,16 +2832,18 @@ function computeSetupProjection(){
         // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
         let gmtSpend=0;
         if(i.payG){
-          const allTH=th+thForBudget(netUSD);
+          // Size the lock off the SAME price table the reinvest step actually buys at (12W),
+          // otherwise the cheaper 15W curve overestimates the TH bought and over-locks GMT.
+          const allTH=th+thForBudget12(netUSD);
           if(gmtDeficit(allTH,gmtLocked)>0){
             let lo=0,hi=netUSD;
-            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudget(thRem):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
+            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudget12(thRem):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
             gmtSpend=hi;
           }
         }
         gmtLocked+=gmtSpend/gp;                 // discount-first lock
         let budget=netUSD-gmtSpend;
-        // Marginal allocator (mirrors optimalSplit): each step spend `incr` on buy TH @12W /
+        // Marginal allocator: each step spend `incr` on buy TH @12W /
         // upgrade efficiency toward 12 / lock GMT for staking. Efficiency is PREFERRED over staking
         // while mining is alive or rescuable — a lower W/TH lowers break-even and keeps the miner
         // earning longer, which the myopic daily-ROI of staking ignores. Staking only wins once the
@@ -3503,8 +3394,10 @@ function copyFooterAddr(addr){
 function obNewUser(){
   // Zero out all onboarding fields
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
-  const wth=document.getElementById('obWTH');if(wth)wth.value='15';
-  const cpt=document.getElementById('obCPT');if(cpt)cpt.value='14.48';
+  // A brand-new miner can only mint a 12 W/TH machine, so seed the 12W rating and its $/TH —
+  // never the 15W marketplace figures, which describe hardware they cannot buy.
+  const wth=document.getElementById('obWTH');if(wth)wth.value=String(EFF_BEST);
+  const cpt=document.getElementById('obCPT');if(cpt)cpt.value=estimateCPT12(0).toFixed(2);
   const apr=document.getElementById('obLockAPR');if(apr)apr.value='23.1';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;

@@ -60,8 +60,8 @@ const TH_TIERS_12W=[
 const FB = { btcPrice:84000, difficulty:113e12 };
 
 /* ===== engine ===== */
-// Interpolated $/TH for a size on a given tier table (defaults to the 12 W new-miner table —
-// 12 W nets more per TH long-term because its lower maintenance fee is a fixed $ saving).
+// Interpolated $/TH for a size. New miners are 12 W/TH only, so there is one table —
+// 12 W also nets more per TH long-term because its lower maintenance fee is a fixed $ saving.
 function cptTier(th, T=TH_TIERS_12W){
   if(th<=T[0].th)return T[0].cpt;
   if(th>=T[T.length-1].th)return T[T.length-1].cpt;
