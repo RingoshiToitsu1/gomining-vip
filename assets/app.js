@@ -81,17 +81,19 @@ function thForBudget(budget){
    12 W/TH economics — new-miner pricing & efficiency upgrades
    ============================================================ */
 // New miners can ONLY be created at 12 W/TH now, at this tiered $/TH (tiers down with block size).
-// Repriced 2026-07-25: GoMining cut 12 W/TH pricing. Observed endpoints are $19.99/TH at 1 TH
-// (was $21.99) and $17.24/TH at 5000 TH (was $17.60) — so the volume taper also COMPRESSED,
-// from 20.0% end-to-end down to 13.8%. Intermediate tiers are an affine rescale of the old
-// curve onto the new range, preserving each tier's relative position in the taper.
-// Pre-avatar-discount. Only the two endpoints are confirmed prices; the rest are fitted.
+// Repriced 2026-07-25: GoMining cut 12 W/TH pricing, and the volume taper compressed with it —
+// 20.0% end-to-end down to 13.8%. Four CONFIRMED observations anchor the curve:
+//   1 TH $19.99 (was 21.99) · 64 TH $18.33 · 512 TH $17.78 · 5000 TH $17.24 (was 17.60)
+// The other 16 tiers interpolate piecewise-linearly in log10(TH) between those anchors, which
+// hits all four exactly and stays strictly decreasing. The real curve falls faster early and
+// flattens sooner than a uniform rescale of the old shape would suggest (-$0.34/TH at 48 TH).
+// Pre-avatar-discount.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.99},{th:2,cpt:19.68},{th:4,cpt:19.37},{th:8,cpt:19.21},
-  {th:16,cpt:19.06},{th:32,cpt:18.92},{th:48,cpt:18.78},{th:64,cpt:18.66},
-  {th:96,cpt:18.53},{th:128,cpt:18.41},{th:192,cpt:18.29},{th:256,cpt:18.16},
-  {th:384,cpt:18.04},{th:512,cpt:17.92},{th:768,cpt:17.81},{th:1024,cpt:17.69},
-  {th:1536,cpt:17.58},{th:2560,cpt:17.47},{th:3584,cpt:17.35},{th:5000,cpt:17.24}
+  {th:1,cpt:19.99},{th:2,cpt:19.71},{th:4,cpt:19.44},{th:8,cpt:19.16},
+  {th:16,cpt:18.88},{th:32,cpt:18.61},{th:48,cpt:18.44},{th:64,cpt:18.33},
+  {th:96,cpt:18.22},{th:128,cpt:18.15},{th:192,cpt:18.04},{th:256,cpt:17.96},
+  {th:384,cpt:17.86},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.62},
+  {th:1536,cpt:17.52},{th:2560,cpt:17.40},{th:3584,cpt:17.32},{th:5000,cpt:17.24}
 ];
 const EFF_UPGRADE_STEP=2.67;  // $/TH to improve efficiency by 1 W/TH toward 12
 const EFF_BEST=12;            // best efficiency available now
