@@ -40,3 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 seo-data/
+x-event.json
+x-draft.txt
