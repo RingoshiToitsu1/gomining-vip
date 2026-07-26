@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>测试实例：map-reduce - Rust By Example</title>
+
+
+        <!-- Custom HTML head -->
+        <script>
+            const mdbookPath = "std_misc/threads/testcase_mapreduce.md";
+            const mdbookPathToRoot = "../../";
+        </script>
+
+        <meta name="description" content="Rust by Example (RBE) is a collection of runnable examples that illustrate various Rust concepts and standard libraries.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-3865ffda.css">
+        <link rel="stylesheet" href="../../css/general-4c35105a.css">
+        <link rel="stylesheet" href="../../css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="../../css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../../theme/css/language-picker-2070e7fe.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-f78e0384.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-32872d2c.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust By Example</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example/edit/master/src/std_misc/threads/testcase_mapreduce.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="测试实例map-reduce"><a class="header" href="#测试实例map-reduce">测试实例：map-reduce</a></h1>
+<p>Rust 使并行数据处理变得非常简单，避免了传统并行处理中常见的诸多问题。</p>
+<p>标准库提供了开箱即用的优秀线程原语。这些原语结合 Rust 的所有权概念和别名规则，自动防止了数据竞争。</p>
+<p>别名规则（一个可写引用异或多个可读引用）自动防止你操作对其他线程可见的状态。（在需要同步的情况下，可以使用 <code>Mutex</code> 或 <code>Channel</code> 等同步原语。）</p>
+<p>在这个例子中，我们将计算一个数字块中所有数字的总和。我们通过将数字块分成小块并分配给不同的线程来完成这个任务。每个线程将计算其小块数字的总和，随后我们将汇总每个线程产生的中间结果。</p>
+<p>注意，尽管我们在线程间传递引用，但 Rust 理解我们只是传递只读引用，因此不会发生不安全操作或数据竞争。此外，由于我们传递的引用具有 <code>'static</code> 生命周期，Rust 确保这些线程运行时数据不会被销毁。（当需要在线程间共享非 <code>static</code> 数据时，可以使用 <code>Arc</code> 等智能指针来保持数据存活并避免非 <code>static</code> 生命周期。）</p>
+<pre><pre class="playground"><code class="language-rust editable edition2021">use std::thread;
+
+// 这是主线程
+fn main() {
+
+    // 这是我们要处理的数据
+    // 我们将通过一个线程化的 map-reduce 算法计算所有数字的总和
+    // 每个由空格分隔的块将在不同的线程中处理
+    //
+    // TODO：试试插入空格会对输出有什么影响！
+    let data = "86967897737416471853297327050364959
+11861322575564723963297542624962850
+70856234701860851907960690014725639
+38397966707106094172783238747669219
+52380795257888236525459303330302837
+58495327135744041048897885734297812
+69920216438980873548808413720956532
+16278424637452589860345374828574668";
+
+    // 创建一个向量来存储我们将要生成的子线程。
+    let mut children = vec![];
+
+    /*************************************************************************
+     * "Map"阶段
+     *
+     * 将数据分割成多个段，并进行初步处理
+     ************************************************************************/
+
+    // 将数据分割成多个段以进行单独计算
+    // 每个数据块都是指向实际数据的引用（&amp;str）
+    let chunked_data = data.split_whitespace();
+
+    // 遍历数据段
+    // .enumerate() 为迭代的每个元素添加当前循环索引
+    // 生成的元组"(索引, 元素)"随后立即通过
+    // "解构赋值"被"解构"为两个变量："i"和"data_segment"
+    // 
+    for (i, data_segment) in chunked_data.enumerate() {
+        println!("数据段 {} 是\"{}\"", i, data_segment);
+
+        // 在单独的线程中处理每个数据段
+        //
+        // spawn() 返回新线程的句柄，
+        // 我们必须保留该句柄以访问返回值
+        //
+        // 'move || -&gt; u32' 是一个闭包的语法，它：
+        // * 不接受参数（'||'）
+        // * 获取其捕获变量的所有权（'move'）
+        // * 返回一个无符号 32 位整数（'-&gt; u32'）
+        //
+        // Rust 足够智能，能从闭包本身推断出 '-&gt; u32'，
+        // 所以我们可以省略它。
+        //
+        // TODO：尝试移除 'move' 并观察结果
+        children.push(thread::spawn(move || -&gt; u32 {
+            // 计算此段的中间和：
+            let result = data_segment
+                        // 遍历此段中的字符...
+                        .chars()
+                        // ...将文本字符转换为对应的数值...
+                        .map(|c| c.to_digit(10).expect("应该是一个数字"))
+                        // ...并对结果数字迭代器求和
+                        .sum();
+
+            // println! 会锁定标准输出，因此不会出现文本交错
+            println!("已处理段 {}，结果={}", i, result);
+
+            // 不需要使用 "return"，因为 Rust 是一种"表达式语言"，
+// 每个代码块中最后求值的表达式会自动成为该块的返回值。
+            result
+
+        }));
+    }
+
+
+    /*************************************************************************
+     * "归约"阶段
+     *
+     * 收集中间结果，并将它们合并成最终结果
+     ************************************************************************/
+
+    // 将每个线程的中间结果合并成一个最终总和。
+    //
+    // 我们使用 "turbofish" ::&lt;&gt; 为 sum() 提供类型提示。
+    //
+    // TODO：尝试不使用 turbofish，而是显式
+    // 指定 final_result 的类型
+    let final_result = children.into_iter().map(|c| c.join().unwrap()).sum::&lt;u32&gt;();
+
+    println!("最终求和结果：{}", final_result);
+}</code></pre></pre>
+<h3 id="练习"><a class="header" href="#练习">练习</a></h3>
+<p>让线程数量依赖于用户输入的数据并不明智。如果用户决定插入大量空格，我们真的想要创建 2,000 个线程吗？修改程序，使数据始终被分割成固定数量的块，这个数量应由程序开头定义的静态常量来确定。</p>
+<h3 id="另请参阅"><a class="header" href="#另请参阅">另请参阅：</a></h3>
+<ul>
+<li><a href="../threads.html">线程</a></li>
+<li><a href="../../std/vec.html">向量</a>和<a href="../../trait/iter.html">迭代器</a></li>
+<li><a href="../../fn/closures.html">闭包</a>、<a href="../../scope/move.html">move</a> 语义和 <a href="https://doc.rust-lang.org/book/ch13-01-closures.html#closures-can-capture-their-environment"><code>move</code> 闭包</a></li>
+<li><a href="https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html#destructuring-to-break-apart-values">解构</a>赋值</li>
+<li><a href="https://doc.rust-lang.org/book/appendix-02-operators.html?highlight=turbofish">涡轮鱼符号</a>用于辅助类型推断</li>
+<li><a href="../../error/option_unwrap.html">unwrap 与 expect</a></li>
+<li><a href="https://doc.rust-lang.org/book/loops.html#enumerate">enumerate</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../std_misc/threads.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../std_misc/channels.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../std_misc/threads.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../std_misc/channels.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+        <script>
+            window.playground_line_numbers = true;
+        </script>
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="../../ace-2a3cd908.js"></script>
+        <script src="../../mode-rust-2c9d5c9a.js"></script>
+        <script src="../../editor-16ca416c.js"></script>
+        <script src="../../theme-dawn-4493f9c8.js"></script>
+        <script src="../../theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-9aeb6ddf.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../theme/js/language-picker-f471f317.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

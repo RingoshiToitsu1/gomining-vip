@@ -1,0 +1,466 @@
+<!DOCTYPE HTML>
+<html lang="ja" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ユニットテスト - Rust By Example</title>
+
+
+        <!-- Custom HTML head -->
+        <script>
+            const mdbookPath = "testing/unit_testing.md";
+            const mdbookPathToRoot = "../";
+        </script>
+
+        <meta name="description" content="Rust by Example (RBE) is a collection of runnable examples that illustrate various Rust concepts and standard libraries.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-3865ffda.css">
+        <link rel="stylesheet" href="../css/general-4c35105a.css">
+        <link rel="stylesheet" href="../css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="../css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/language-picker-2070e7fe.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-77f7bd9f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-a1ce3eb6.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust By Example</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example/edit/master/src/testing/unit_testing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="ユニットテスト"><a class="header" href="#ユニットテスト">ユニットテスト</a></h1>
+<p>テストは、テスト以外のコードが想定通りに動いているかを確かめるRustの関数です。一般にテスト関数は、準備をしてからテストしたいコードを実行し、そしてその結果が期待したものであるか確認します。</p>
+<p>大抵の場合ユニットテストは<code>#[cfg(test)]</code><a href="../attribute.html">アトリビュート</a>を付けた<code>tests</code><a href="../mod.html">モジュール</a>に配置されます。テスト関数には<code>#[test]</code>アトリビュートを付与します。</p>
+<p>テスト関数内部で<a href="../std/panic.html">パニック</a>するとテストは失敗となります。次のような<a href="../macros.html">マクロ</a>が用意されています。</p>
+<ul>
+<li><code>assert!(expression)</code> - 式を評価した結果が<code>false</code>であればパニックします。</li>
+<li><code>assert_eq!(left, right)</code>と<code>assert_ne!(left, right)</code> - 左右の式を評価した結果が、それぞれ等しくなること、ならないことをテストします。</li>
+</ul>
+<pre><code class="language-rust ignore">pub fn add(a: i32, b: i32) -&gt; i32 {
+    a + b
+}
+
+// 誤った加算をする関数がテストに通らないことを示します。
+#[allow(dead_code)]
+fn bad_add(a: i32, b: i32) -&gt; i32 {
+    a - b
+}
+
+#[cfg(test)]
+mod tests {
+    // 外部のスコープから（mod testsに）名前をインポートする便利なイディオム。
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(1, 2), 3);
+    }
+
+    #[test]
+    fn test_bad_add() {
+        // このアサーションはパニックして、テストは失敗します。
+        // プライベートな関数もテストすることができます。
+        assert_eq!(bad_add(1, 2), 3);
+    }
+}</code></pre>
+<p><code>cargo test</code>でテストを実行できます。</p>
+<pre><code class="language-shell">$ cargo test
+
+running 2 tests
+test tests::test_bad_add ... FAILED
+test tests::test_add ... ok
+
+failures:
+
+---- tests::test_bad_add stdout ----
+        thread 'tests::test_bad_add' panicked at 'assertion failed: `(left == right)`
+  left: `-1`,
+ right: `3`', src/lib.rs:21:8
+note: Run with `RUST_BACKTRACE=1` for a backtrace.
+
+
+failures:
+    tests::test_bad_add
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<h2 id="テストと"><a class="header" href="#テストと">テストと<code>?</code></a></h2>
+<p>ここまでに例示したユニットテストは返り値の型を持っていませんでしたが、Rust 2018ではユニットテストが<code>Result&lt;()&gt;</code>を返し、内部で<code>?</code>を使えるようになりました！これにより、ユニットテストをさらに簡潔に記述できます。</p>
+<pre><pre class="playground"><code class="language-rust editable edition2021">fn sqrt(number: f64) -&gt; Result&lt;f64, String&gt; {
+    if number &gt;= 0.0 {
+        Ok(number.powf(0.5))
+    } else {
+        Err("negative floats don't have square roots".to_owned())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sqrt() -&gt; Result&lt;(), String&gt; {
+        let x = 4.0;
+        assert_eq!(sqrt(x)?.powf(2.0), x);
+        Ok(())
+    }
+}</code></pre></pre>
+<p>詳細は<a href="https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/question-mark-in-main-and-tests.html">エディションガイド</a>を参照してください。</p>
+<h2 id="パニックをテストする"><a class="header" href="#パニックをテストする">パニックをテストする</a></h2>
+<p>ある条件下でパニックすべき関数をテストするには、<code>#[should_panic]</code>アトリビュートを使います。このアトリビュートはパニックメッセージをオプションの引数<code>expected =</code>で受け取れます。パニックの原因が複数あるときに、想定した原因でパニックが発生したことを確認できます。</p>
+<p><strong>Note</strong>: Rust also allows a shorthand form <code>#[should_panic = "message"]</code>, which works exactly like <code>#[should_panic(expected = "message")]</code>. Both are valid; the latter is more commonly used and is considered more explicit.</p>
+<pre><code class="language-rust ignore">pub fn divide_non_zero_result(a: u32, b: u32) -&gt; u32 {
+    if b == 0 {
+        panic!("Divide-by-zero error");
+    } else if a &lt; b {
+        panic!("Divide result is zero");
+    }
+    a / b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_divide() {
+        assert_eq!(divide_non_zero_result(10, 2), 5);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_any_panic() {
+        divide_non_zero_result(1, 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Divide result is zero")]
+    fn test_specific_panic() {
+        divide_non_zero_result(1, 10);
+    }
+
+    #[test]
+    #[should_panic = "Divide result is zero"] // This also works
+    fn test_specific_panic_shorthand() {
+        divide_non_zero_result(1, 10);
+    }
+}</code></pre>
+<p>テストを実行すると、次の結果を得られます。</p>
+<pre><code class="language-shell">$ cargo test
+
+running 4 tests
+test tests::test_any_panic ... ok
+test tests::test_divide ... ok
+test tests::test_specific_panic ... ok
+test tests::test_specific_panic_shorthand ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Doc-tests tmp-test-should-panic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<h2 id="実行するテストを指定する"><a class="header" href="#実行するテストを指定する">実行するテストを指定する</a></h2>
+<p><code>cargo test</code>にテストの名前を与えると、そのテストだけが実行されます。</p>
+<pre><code class="language-shell">$ cargo test test_any_panic
+running 1 test
+test tests::test_any_panic ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out
+
+   Doc-tests tmp-test-should-panic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<p>テスト名の一部を指定すると、それにマッチするすべてのテストが実行されます。</p>
+<pre><code class="language-shell">$ cargo test panic
+running 3 tests
+test tests::test_any_panic ... ok
+test tests::test_specific_panic ... ok
+test tests::test_specific_panic_shorthand ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out
+
+   Doc-tests tmp-test-should-panic
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<h2 id="テストを除外する"><a class="header" href="#テストを除外する">テストを除外する</a></h2>
+<p>テストを実行から除外するには、<code>#[ignore]</code>アトリビュートを使います。また、<code>cargo test -- --ignored</code>で、除外したテストのみを実行できます。</p>
+<pre><code class="language-rust ignore">pub fn add(a: i32, b: i32) -&gt; i32 {
+    a + b
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(2, 2), 4);
+    }
+
+    #[test]
+    fn test_add_hundred() {
+        assert_eq!(add(100, 2), 102);
+        assert_eq!(add(2, 100), 102);
+    }
+
+    #[test]
+    #[ignore]
+    fn ignored_test() {
+        assert_eq!(add(0, 0), 0);
+    }
+}</code></pre>
+<pre><code class="language-shell">$ cargo test
+running 3 tests
+test tests::ignored_test ... ignored
+test tests::test_add ... ok
+test tests::test_add_hundred ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out
+
+   Doc-tests tmp-ignore
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+$ cargo test -- --ignored
+running 1 test
+test tests::ignored_test ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Doc-tests tmp-ignore
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../testing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../testing/doc_testing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../testing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../testing/doc_testing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+        <script>
+            window.playground_line_numbers = true;
+        </script>
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="../ace-2a3cd908.js"></script>
+        <script src="../mode-rust-2c9d5c9a.js"></script>
+        <script src="../editor-16ca416c.js"></script>
+        <script src="../theme-dawn-4493f9c8.js"></script>
+        <script src="../theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-9aeb6ddf.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../theme/js/language-picker-f471f317.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

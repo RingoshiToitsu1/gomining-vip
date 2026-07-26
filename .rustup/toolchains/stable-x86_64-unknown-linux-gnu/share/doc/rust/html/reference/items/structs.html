@@ -1,0 +1,744 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Structs - The Rust Reference</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-3865ffda.css">
+        <link rel="stylesheet" href="../css/general-4c35105a.css">
+        <link rel="stylesheet" href="../css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="../css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/reference-2fc27eaa.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-5d1b9f75.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-790787e7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Rust Reference</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/reference/" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/reference/edit/master/src/items/structs.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <div class="rule" id="r-items.struct"><a class="rule-link" href="#r-items.struct" title="items.struct"><span>[items<wbr>.struct]</span></a>
+</div>
+<h1 id="structs"><a class="header" href="#structs">Structs</a></h1>
+<div class="rule" id="r-items.struct.syntax"><a class="rule-link" href="#r-items.struct.syntax" title="items.struct.syntax"><span>[items<wbr>.struct<wbr>.syntax]</span></a>
+</div>
+<div class="grammar-container">
+<p><strong><sup>Syntax</sup></strong>
+<br>
+<span class="grammar-text grammar-production" id="grammar-Struct" onclick="show_railroad()"><a href="structs.html#railroad-Struct">Struct</a></span> → <br />
+      <span class="grammar-text"><a href="structs.html#grammar-StructStruct">StructStruct</a></span> <br />
+    | <span class="grammar-text"><a href="structs.html#grammar-TupleStruct">TupleStruct</a></span></p>
+<p><span class="grammar-text grammar-production" id="grammar-StructStruct" onclick="show_railroad()"><a href="structs.html#railroad-StructStruct">StructStruct</a></span> → <br />
+    <span class="grammar-literal">struct</span> <span class="grammar-text"><a href="../identifiers.html#grammar-IDENTIFIER">IDENTIFIER</a></span> <span class="grammar-text"><a href="generics.html#grammar-GenericParams">GenericParams</a></span><sup>?</sup> <span class="grammar-text"><a href="generics.html#grammar-WhereClause">WhereClause</a></span><sup>?</sup> ( <span class="grammar-literal">{</span> <span class="grammar-text"><a href="structs.html#grammar-StructFields">StructFields</a></span><sup>?</sup> <span class="grammar-literal">}</span> | <span class="grammar-literal">;</span> )</p>
+<p><span class="grammar-text grammar-production" id="grammar-TupleStruct" onclick="show_railroad()"><a href="structs.html#railroad-TupleStruct">TupleStruct</a></span> → <br />
+    <span class="grammar-literal">struct</span> <span class="grammar-text"><a href="../identifiers.html#grammar-IDENTIFIER">IDENTIFIER</a></span> <span class="grammar-text"><a href="generics.html#grammar-GenericParams">GenericParams</a></span><sup>?</sup> <span class="grammar-literal">(</span> <span class="grammar-text"><a href="structs.html#grammar-TupleFields">TupleFields</a></span><sup>?</sup> <span class="grammar-literal">)</span> <span class="grammar-text"><a href="generics.html#grammar-WhereClause">WhereClause</a></span><sup>?</sup> <span class="grammar-literal">;</span></p>
+<p><span class="grammar-text grammar-production" id="grammar-StructFields" onclick="show_railroad()"><a href="structs.html#railroad-StructFields">StructFields</a></span> → <span class="grammar-text"><a href="structs.html#grammar-StructField">StructField</a></span> ( <span class="grammar-literal">,</span> <span class="grammar-text"><a href="structs.html#grammar-StructField">StructField</a></span> )<sup>*</sup> <span class="grammar-literal">,</span><sup>?</sup></p>
+<p><span class="grammar-text grammar-production" id="grammar-StructField" onclick="show_railroad()"><a href="structs.html#railroad-StructField">StructField</a></span> → <span class="grammar-text"><a href="../attributes.html#grammar-OuterAttribute">OuterAttribute</a></span><sup>*</sup> <span class="grammar-text"><a href="../visibility-and-privacy.html#grammar-Visibility">Visibility</a></span><sup>?</sup> <span class="grammar-text"><a href="../identifiers.html#grammar-IDENTIFIER">IDENTIFIER</a></span> <span class="grammar-literal">:</span> <span class="grammar-text"><a href="../types.html#grammar-Type">Type</a></span></p>
+<p><span class="grammar-text grammar-production" id="grammar-TupleFields" onclick="show_railroad()"><a href="structs.html#railroad-TupleFields">TupleFields</a></span> → <span class="grammar-text"><a href="structs.html#grammar-TupleField">TupleField</a></span> ( <span class="grammar-literal">,</span> <span class="grammar-text"><a href="structs.html#grammar-TupleField">TupleField</a></span> )<sup>*</sup> <span class="grammar-literal">,</span><sup>?</sup></p>
+<p><span class="grammar-text grammar-production" id="grammar-TupleField" onclick="show_railroad()"><a href="structs.html#railroad-TupleField">TupleField</a></span> → <span class="grammar-text"><a href="../attributes.html#grammar-OuterAttribute">OuterAttribute</a></span><sup>*</sup> <span class="grammar-text"><a href="../visibility-and-privacy.html#grammar-Visibility">Visibility</a></span><sup>?</sup> <span class="grammar-text"><a href="../types.html#grammar-Type">Type</a></span></p>
+<p><button class="grammar-toggle-railroad" type="button" title="Toggle railroad display" onclick="toggle_railroad()">Show Railroad</button></p>
+</div>
+<div class="grammar-railroad grammar-hidden">
+<div style="width: 234px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-Struct"><svg class="railroad" viewBox="0 0 234 107" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-Struct">
+<text class="comment" x="36" y="25">
+Struct</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="choice">
+<path d=" M 35 53 h 24 m 116 0 h 24"/>
+<g class="sequence">
+<a class="link" xlink:href="structs.html#railroad-StructStruct">
+<g class="nonterminal">
+<rect height="22" width="116" x="59" y="42"/>
+<text x="117" y="58">
+StructStruct</text>
+</g>
+</a>
+</g>
+<path d=" M 35 53 a 12 12 0 0 1 12 12 v 9 m 140 0 v -9 a 12 12 0 0 1 12 -12"/>
+<path d=" M 47 74 v 0 a 12 12 0 0 0 12 12 m 108 0 h 8 a 12 12 0 0 0 12 -12 v 0"/>
+<a class="link" xlink:href="structs.html#railroad-TupleStruct">
+<g class="nonterminal">
+<rect height="22" width="108" x="59" y="75"/>
+<text x="113" y="91">
+TupleStruct</text>
+</g>
+</a>
+</g>
+<path d=" M 209 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 199 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 894px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-StructStruct"><svg class="railroad" viewBox="0 0 894 120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-StructStruct">
+<text class="comment" x="57" y="25">
+StructStruct</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="68" x="35" y="55"/>
+<text x="69" y="71">
+struct</text>
+</g>
+<a class="link" xlink:href="../identifiers.html#railroad-IDENTIFIER">
+<g class="nonterminal">
+<rect height="22" width="100" x="113" y="55"/>
+<text x="163" y="71">
+IDENTIFIER</text>
+</g>
+</a>
+<g class="optional">
+<path d=" M 223 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 124 m -59 0 l -5 -5 m 0 10 l 5 -5 m 59 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="generics.html#railroad-GenericParams">
+<g class="nonterminal">
+<rect height="22" width="124" x="247" y="55"/>
+<text x="309" y="71">
+GenericParams</text>
+</g>
+</a>
+</g>
+<g class="optional">
+<path d=" M 405 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 108 m -51 0 l -5 -5 m 0 10 l 5 -5 m 51 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="generics.html#railroad-WhereClause">
+<g class="nonterminal">
+<rect height="22" width="108" x="429" y="55"/>
+<text x="483" y="71">
+WhereClause</text>
+</g>
+</a>
+</g>
+<g class="choice">
+<path d=" M 571 66 h 24 m 240 0 h 24"/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="595" y="55"/>
+<text x="609" y="71">
+{</text>
+</g>
+<g class="optional">
+<path d=" M 633 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 116 m -55 0 l -5 -5 m 0 10 l 5 -5 m 55 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="structs.html#railroad-StructFields">
+<g class="nonterminal">
+<rect height="22" width="116" x="657" y="55"/>
+<text x="715" y="71">
+StructFields</text>
+</g>
+</a>
+</g>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="807" y="55"/>
+<text x="821" y="71">
+}</text>
+</g>
+<path d=" M 623 66 h 10"/>
+<path d=" M 797 66 h 10"/>
+</g>
+<path d=" M 571 66 a 12 12 0 0 1 12 12 v 9 m 264 0 v -9 a 12 12 0 0 1 12 -12"/>
+<path d=" M 583 87 v 0 a 12 12 0 0 0 12 12 m 28 0 h 212 m -103 0 l -5 -5 m 0 10 l 5 -5 m 103 0 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="595" y="88"/>
+<text x="609" y="104">
+;</text>
+</g>
+</g>
+<path d=" M 103 66 h 10"/>
+<path d=" M 213 66 h 10"/>
+<path d=" M 395 66 h 10"/>
+<path d=" M 561 66 h 10"/>
+</g>
+<path d=" M 869 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 859 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 876px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-TupleStruct"><svg class="railroad" viewBox="0 0 876 87" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-TupleStruct">
+<text class="comment" x="53" y="25">
+TupleStruct</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="68" x="35" y="55"/>
+<text x="69" y="71">
+struct</text>
+</g>
+<a class="link" xlink:href="../identifiers.html#railroad-IDENTIFIER">
+<g class="nonterminal">
+<rect height="22" width="100" x="113" y="55"/>
+<text x="163" y="71">
+IDENTIFIER</text>
+</g>
+</a>
+<g class="optional">
+<path d=" M 223 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 124 m -59 0 l -5 -5 m 0 10 l 5 -5 m 59 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="generics.html#railroad-GenericParams">
+<g class="nonterminal">
+<rect height="22" width="124" x="247" y="55"/>
+<text x="309" y="71">
+GenericParams</text>
+</g>
+</a>
+</g>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="405" y="55"/>
+<text x="419" y="71">
+(</text>
+</g>
+<g class="optional">
+<path d=" M 443 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 108 m -51 0 l -5 -5 m 0 10 l 5 -5 m 51 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="structs.html#railroad-TupleFields">
+<g class="nonterminal">
+<rect height="22" width="108" x="467" y="55"/>
+<text x="521" y="71">
+TupleFields</text>
+</g>
+</a>
+</g>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="609" y="55"/>
+<text x="623" y="71">
+)</text>
+</g>
+<g class="optional">
+<path d=" M 647 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 108 m -51 0 l -5 -5 m 0 10 l 5 -5 m 51 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="generics.html#railroad-WhereClause">
+<g class="nonterminal">
+<rect height="22" width="108" x="671" y="55"/>
+<text x="725" y="71">
+WhereClause</text>
+</g>
+</a>
+</g>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="813" y="55"/>
+<text x="827" y="71">
+;</text>
+</g>
+<path d=" M 103 66 h 10"/>
+<path d=" M 213 66 h 10"/>
+<path d=" M 395 66 h 10"/>
+<path d=" M 433 66 h 10"/>
+<path d=" M 599 66 h 10"/>
+<path d=" M 637 66 h 10"/>
+<path d=" M 803 66 h 10"/>
+</g>
+<path d=" M 851 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 841 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 492px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-StructFields"><svg class="railroad" viewBox="0 0 492 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-StructFields">
+<text class="comment" x="57" y="25">
+StructFields</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<a class="link" xlink:href="structs.html#railroad-StructField">
+<g class="nonterminal">
+<rect height="22" width="108" x="35" y="55"/>
+<text x="89" y="71">
+StructField</text>
+</g>
+</a>
+<g class="optional">
+<path d=" M 153 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 170 m -82 0 l -5 -5 m 0 10 l 5 -5 m 82 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="repeat">
+<path d=" M 177 66 h 12 m 146 0 h 12 m -12 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 1 -12 12 m 0 0 h -146 m 76 0 l 5 -5 m 0 10 l -5 -5 m -76 0 a 12 12 0 0 1 -12 -12 v 0 a 12 12 0 0 1 12 -12"/>
+<g/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="189" y="55"/>
+<text x="203" y="71">
+,</text>
+</g>
+<a class="link" xlink:href="structs.html#railroad-StructField">
+<g class="nonterminal">
+<rect height="22" width="108" x="227" y="55"/>
+<text x="281" y="71">
+StructField</text>
+</g>
+</a>
+<path d=" M 217 66 h 10"/>
+</g>
+</g>
+</g>
+<g class="optional">
+<path d=" M 381 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 28 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="405" y="55"/>
+<text x="419" y="71">
+,</text>
+</g>
+</g>
+<path d=" M 143 66 h 10"/>
+<path d=" M 371 66 h 10"/>
+</g>
+<path d=" M 467 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 457 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 642px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-StructField"><svg class="railroad" viewBox="0 0 642 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-StructField">
+<text class="comment" x="53" y="25">
+StructField</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="optional">
+<path d=" M 35 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 156 m -75 0 l -5 -5 m 0 10 l 5 -5 m 75 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="repeat">
+<path d=" M 59 66 h 12 m 132 0 h 12 m -12 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 1 -12 12 m 0 0 h -132 m 69 0 l 5 -5 m 0 10 l -5 -5 m -69 0 a 12 12 0 0 1 -12 -12 v 0 a 12 12 0 0 1 12 -12"/>
+<g/>
+<a class="link" xlink:href="../attributes.html#railroad-OuterAttribute">
+<g class="nonterminal">
+<rect height="22" width="132" x="71" y="55"/>
+<text x="137" y="71">
+OuterAttribute</text>
+</g>
+</a>
+</g>
+</g>
+<g class="optional">
+<path d=" M 249 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 100 m -47 0 l -5 -5 m 0 10 l 5 -5 m 47 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="../visibility-and-privacy.html#railroad-Visibility">
+<g class="nonterminal">
+<rect height="22" width="100" x="273" y="55"/>
+<text x="323" y="71">
+Visibility</text>
+</g>
+</a>
+</g>
+<a class="link" xlink:href="../identifiers.html#railroad-IDENTIFIER">
+<g class="nonterminal">
+<rect height="22" width="100" x="407" y="55"/>
+<text x="457" y="71">
+IDENTIFIER</text>
+</g>
+</a>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="517" y="55"/>
+<text x="531" y="71">
+:</text>
+</g>
+<a class="link" xlink:href="../types.html#railroad-Type">
+<g class="nonterminal">
+<rect height="22" width="52" x="555" y="55"/>
+<text x="581" y="71">
+Type</text>
+</g>
+</a>
+<path d=" M 239 66 h 10"/>
+<path d=" M 397 66 h 10"/>
+<path d=" M 507 66 h 10"/>
+<path d=" M 545 66 h 10"/>
+</g>
+<path d=" M 617 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 607 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 476px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-TupleFields"><svg class="railroad" viewBox="0 0 476 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-TupleFields">
+<text class="comment" x="53" y="25">
+TupleFields</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<a class="link" xlink:href="structs.html#railroad-TupleField">
+<g class="nonterminal">
+<rect height="22" width="100" x="35" y="55"/>
+<text x="85" y="71">
+TupleField</text>
+</g>
+</a>
+<g class="optional">
+<path d=" M 145 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 162 m -78 0 l -5 -5 m 0 10 l 5 -5 m 78 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="repeat">
+<path d=" M 169 66 h 12 m 138 0 h 12 m -12 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 1 -12 12 m 0 0 h -138 m 72 0 l 5 -5 m 0 10 l -5 -5 m -72 0 a 12 12 0 0 1 -12 -12 v 0 a 12 12 0 0 1 12 -12"/>
+<g/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="181" y="55"/>
+<text x="195" y="71">
+,</text>
+</g>
+<a class="link" xlink:href="structs.html#railroad-TupleField">
+<g class="nonterminal">
+<rect height="22" width="100" x="219" y="55"/>
+<text x="269" y="71">
+TupleField</text>
+</g>
+</a>
+<path d=" M 209 66 h 10"/>
+</g>
+</g>
+</g>
+<g class="optional">
+<path d=" M 365 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 28 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="389" y="55"/>
+<text x="403" y="71">
+,</text>
+</g>
+</g>
+<path d=" M 135 66 h 10"/>
+<path d=" M 355 66 h 10"/>
+</g>
+<path d=" M 451 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 441 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 494px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-TupleField"><svg class="railroad" viewBox="0 0 494 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="structs.html#grammar-TupleField">
+<text class="comment" x="50" y="25">
+TupleField</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="optional">
+<path d=" M 35 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 156 m -75 0 l -5 -5 m 0 10 l 5 -5 m 75 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="repeat">
+<path d=" M 59 66 h 12 m 132 0 h 12 m -12 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 1 -12 12 m 0 0 h -132 m 69 0 l 5 -5 m 0 10 l -5 -5 m -69 0 a 12 12 0 0 1 -12 -12 v 0 a 12 12 0 0 1 12 -12"/>
+<g/>
+<a class="link" xlink:href="../attributes.html#railroad-OuterAttribute">
+<g class="nonterminal">
+<rect height="22" width="132" x="71" y="55"/>
+<text x="137" y="71">
+OuterAttribute</text>
+</g>
+</a>
+</g>
+</g>
+<g class="optional">
+<path d=" M 249 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 100 m -47 0 l -5 -5 m 0 10 l 5 -5 m 47 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<a class="link" xlink:href="../visibility-and-privacy.html#railroad-Visibility">
+<g class="nonterminal">
+<rect height="22" width="100" x="273" y="55"/>
+<text x="323" y="71">
+Visibility</text>
+</g>
+</a>
+</g>
+<a class="link" xlink:href="../types.html#railroad-Type">
+<g class="nonterminal">
+<rect height="22" width="52" x="407" y="55"/>
+<text x="433" y="71">
+Type</text>
+</g>
+</a>
+<path d=" M 239 66 h 10"/>
+<path d=" M 397 66 h 10"/>
+</g>
+<path d=" M 469 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 459 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+</div>
+<div class="rule" id="r-items.struct.intro"><a class="rule-link" href="#r-items.struct.intro" title="items.struct.intro"><span>[items<wbr>.struct<wbr>.intro]</span></a>
+</div>
+<p>A <em>struct</em> is a nominal <a href="../types/struct.html">struct type</a> defined with the keyword <code>struct</code>.</p>
+<div class="rule" id="r-items.struct.namespace"><a class="rule-link" href="#r-items.struct.namespace" title="items.struct.namespace"><span>[items<wbr>.struct<wbr>.namespace]</span></a>
+</div>
+<p>A struct declaration defines the given name in the <a href="../names/namespaces.html">type namespace</a> of the module or block where it is located.</p>
+<p>An example of a <code>struct</code> item and its use:</p>
+<pre><pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Point {x: i32, y: i32}
+let p = Point {x: 10, y: 11};
+let px: i32 = p.x;
+<span class="boring">}</span></code></pre></pre>
+<div class="rule" id="r-items.struct.tuple"><a class="rule-link" href="#r-items.struct.tuple" title="items.struct.tuple"><span>[items<wbr>.struct<wbr>.tuple]</span></a>
+</div>
+<p>A <em>tuple struct</em> is a nominal <a href="../types/tuple.html">tuple type</a>, and is also defined with the keyword <code>struct</code>.
+In addition to defining a type, it also defines a constructor of the same name in the <a href="../names/namespaces.html">value namespace</a>.
+The constructor is a function which can be called to create a new instance of the struct.
+For example:</p>
+<pre><pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Point(i32, i32);
+let p = Point(10, 11);
+let px: i32 = match p { Point(x, _) =&gt; x };
+<span class="boring">}</span></code></pre></pre>
+<div class="rule" id="r-items.struct.unit"><a class="rule-link" href="#r-items.struct.unit" title="items.struct.unit"><span>[items<wbr>.struct<wbr>.unit]</span></a>
+</div>
+<p>A <em>unit-like struct</em> is a struct without any fields, defined by leaving off the
+list of fields entirely. Such a struct implicitly defines a <a href="constant-items.html">constant</a> of its
+type with the same name. For example:</p>
+<pre><pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Cookie;
+let c = [Cookie, Cookie {}, Cookie, Cookie {}];
+<span class="boring">}</span></code></pre></pre>
+<p>is equivalent to</p>
+<pre><pre class="playground"><code class="language-rust edition2024"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>struct Cookie {}
+const Cookie: Cookie = Cookie {};
+let c = [Cookie, Cookie {}, Cookie, Cookie {}];
+<span class="boring">}</span></code></pre></pre>
+<div class="rule" id="r-items.struct.layout"><a class="rule-link" href="#r-items.struct.layout" title="items.struct.layout"><span>[items<wbr>.struct<wbr>.layout]</span></a>
+</div>
+<p>The precise memory layout of a struct is not specified. One can specify a
+particular layout using the <a href="../type-layout.html#representations"><code>repr</code> attribute</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../items/type-aliases.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../items/enumerations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../items/type-aliases.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../items/enumerations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-9aeb6ddf.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../theme/reference-da60281b.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

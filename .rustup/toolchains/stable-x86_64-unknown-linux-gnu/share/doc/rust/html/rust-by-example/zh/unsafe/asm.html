@@ -1,0 +1,623 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>内联汇编 - Rust By Example</title>
+
+
+        <!-- Custom HTML head -->
+        <script>
+            const mdbookPath = "unsafe/asm.md";
+            const mdbookPathToRoot = "../";
+        </script>
+
+        <meta name="description" content="Rust by Example (RBE) is a collection of runnable examples that illustrate various Rust concepts and standard libraries.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-3865ffda.css">
+        <link rel="stylesheet" href="../css/general-4c35105a.css">
+        <link rel="stylesheet" href="../css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="../css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/language-picker-2070e7fe.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-f78e0384.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-32872d2c.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Rust By Example</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/rust-by-example/edit/master/src/unsafe/asm.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="内联汇编"><a class="header" href="#内联汇编">内联汇编</a></h1>
+<p>Rust 通过 <code>asm!</code> 宏提供了内联汇编支持。它可以用于在编译器生成的汇编输出中嵌入手写的汇编代码。通常这不是必需的，但在无法通过其他方式实现所需性能或时序要求时可能会用到。访问底层硬件原语（例如在内核代码中）也可能需要这个功能。</p>
+<blockquote>
+<p><strong>注意</strong>：这里的示例使用 x86/x86-64 汇编，但也支持其他架构。</p>
+</blockquote>
+<p>目前支持内联汇编的架构包括：</p>
+<ul>
+<li>x86 和 x86-64</li>
+<li>ARM</li>
+<li>AArch64</li>
+<li>RISC-V</li>
+</ul>
+<h2 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h2>
+<p>让我们从最简单的例子开始：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+unsafe {
+    asm!("nop");
+}
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>这将在编译器生成的汇编代码中插入一条 NOP（无操作）指令。请注意，所有 <code>asm!</code> 调用都必须放在 <code>unsafe</code> 块内，因为它们可能插入任意指令并破坏各种不变量。要插入的指令以字符串字面量的形式列在 <code>asm!</code> 宏的第一个参数中。</p>
+<h2 id="输入和输出"><a class="header" href="#输入和输出">输入和输出</a></h2>
+<p>插入一个什么都不做的指令相当无聊。让我们来做些实际操作数据的事情：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let x: u64;
+unsafe {
+    asm!("mov {}, 5", out(reg) x);
+}
+assert_eq!(x, 5);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>这将把值 <code>5</code> 写入 <code>u64</code> 类型的变量 <code>x</code>。你可以看到，我们用来指定指令的字符串字面量实际上是一个模板字符串。它遵循与 Rust <a href="https://doc.rust-lang.org/std/fmt/#syntax">格式化字符串</a>相同的规则。然而，插入到模板中的参数看起来可能与你熟悉的有些不同。首先，我们需要指定变量是内联汇编的输入还是输出。在这个例子中，它是一个输出。我们通过写 <code>out</code> 来声明这一点。我们还需要指定汇编期望变量在什么类型的寄存器中。这里我们通过指定 <code>reg</code> 将其放在任意通用寄存器中。编译器将选择一个合适的寄存器插入到模板中，并在内联汇编执行完成后从该寄存器读取变量的值。</p>
+<p>让我们再看一个使用输入的例子：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let i: u64 = 3;
+let o: u64;
+unsafe {
+    asm!(
+        "mov {0}, {1}",
+        "add {0}, 5",
+        out(reg) o,
+        in(reg) i,
+    );
+}
+assert_eq!(o, 8);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>这段代码会将 <code>5</code> 加到变量 <code>i</code> 的值上，然后将结果写入变量 <code>o</code>。具体的汇编实现是先将 <code>i</code> 的值复制到输出寄存器，然后再加上 <code>5</code>。</p>
+<p>这个例子展示了几个要点：</p>
+<p><code>asm!</code> 宏支持多个模板字符串参数，每个参数都被视为独立的汇编代码行，就像它们之间用换行符连接一样。这使得格式化汇编代码变得简单。</p>
+<p>其次，我们可以看到输入参数使用 <code>in</code> 声明，而不是 <code>out</code>。</p>
+<p>第三，我们可以像在任何格式字符串中一样指定参数编号或名称。这在内联汇编模板中特别有用，因为参数通常会被多次使用。对于更复杂的内联汇编，建议使用这种方式，因为它提高了可读性，并且允许在不改变参数顺序的情况下重新排列指令。</p>
+<p>我们可以进一步优化上面的例子，避免使用 <code>mov</code> 指令：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut x: u64 = 3;
+unsafe {
+    asm!("add {0}, 5", inout(reg) x);
+}
+assert_eq!(x, 8);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>我们可以看到 <code>inout</code> 用于指定既作为输入又作为输出的参数。这与分别指定输入和输出不同，它保证将两者分配到同一个寄存器。</p>
+<p>也可以为 <code>inout</code> 操作数的输入和输出部分指定不同的变量：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let x: u64 = 3;
+let y: u64;
+unsafe {
+    asm!("add {0}, 5", inout(reg) x =&gt; y);
+}
+assert_eq!(y, 8);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<h2 id="延迟输出操作数"><a class="header" href="#延迟输出操作数">延迟输出操作数</a></h2>
+<p>Rust 编译器在分配操作数时采取保守策略。它假设 <code>out</code> 可以在任何时候被写入，因此不能与其他参数共享位置。然而，为了保证最佳性能，使用尽可能少的寄存器很重要，这样就不必在内联汇编块前后保存和重新加载寄存器。为此，Rust 提供了 <code>lateout</code> 说明符。这可以用于任何在所有输入被消耗后才写入的输出。此外还有一个 <code>inlateout</code> 变体。</p>
+<p>以下是一个在 <code>release</code> 模式或其他优化情况下 <em>不能</em> 使用 <code>inlateout</code> 的例子：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut a: u64 = 4;
+let b: u64 = 4;
+let c: u64 = 4;
+unsafe {
+    asm!(
+        "add {0}, {1}",
+        "add {0}, {2}",
+        inout(reg) a,
+        in(reg) b,
+        in(reg) c,
+    );
+}
+assert_eq!(a, 12);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>在未优化的情况下（如 <code>Debug</code> 模式），将上述例子中的 <code>inout(reg) a</code> 替换为 <code>inlateout(reg) a</code> 仍能得到预期结果。但在 <code>release</code> 模式或其他优化情况下，使用 <code>inlateout(reg) a</code> 可能导致最终值 <code>a = 16</code>，使断言失败。</p>
+<p>这是因为在优化情况下，编译器可以为输入 <code>b</code> 和 <code>c</code> 分配相同的寄存器，因为它知道它们具有相同的值。此外，当使用 <code>inlateout</code> 时，<code>a</code> 和 <code>c</code> 可能被分配到同一个寄存器，这种情况下，第一条 <code>add</code> 指令会覆盖从变量 <code>c</code> 初始加载的值。相比之下，使用 <code>inout(reg) a</code> 可以确保为 <code>a</code> 分配一个单独的寄存器。</p>
+<p>然而，以下示例可以使用 <code>inlateout</code>，因为输出仅在读取所有输入寄存器后才被修改：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut a: u64 = 4;
+let b: u64 = 4;
+unsafe {
+    asm!("add {0}, {1}", inlateout(reg) a, in(reg) b);
+}
+assert_eq!(a, 8);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>如你所见，即使 <code>a</code> 和 <code>b</code> 被分配到同一个寄存器，这段汇编代码片段仍能正确运行。</p>
+<h2 id="显式寄存器操作数"><a class="header" href="#显式寄存器操作数">显式寄存器操作数</a></h2>
+<p>某些指令要求操作数必须位于特定寄存器中。因此，Rust 内联汇编提供了一些更具体的约束说明符。虽然 <code>reg</code> 通常适用于任何架构，但显式寄存器高度依赖于特定架构。例如，对于 x86 架构，通用寄存器如 <code>eax</code>、<code>ebx</code>、<code>ecx</code>、<code>edx</code>、<code>ebp</code>、<code>esi</code> 和 <code>edi</code> 等可以直接通过名称进行寻址。</p>
+<pre><pre class="playground"><code class="language-rust no_run edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let cmd = 0xd1;
+unsafe {
+    asm!("out 0x64, eax", in("eax") cmd);
+}
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>在这个例子中，我们调用 <code>out</code> 指令将 <code>cmd</code> 变量的内容输出到端口 <code>0x64</code>。由于 <code>out</code> 指令只接受 <code>eax</code>（及其子寄存器）作为操作数，我们必须使用 <code>eax</code> 约束说明符。</p>
+<blockquote>
+<p><strong>注意</strong>：与其他操作数类型不同，显式寄存器操作数不能在模板字符串中使用。你不能使用 <code>{}</code>，而应直接写入寄存器名称。此外，它们必须出现在操作数列表的末尾，位于所有其他操作数类型之后。</p>
+</blockquote>
+<p>考虑以下使用 x86 <code>mul</code> 指令的例子：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+fn mul(a: u64, b: u64) -&gt; u128 {
+    let lo: u64;
+    let hi: u64;
+
+    unsafe {
+        asm!(
+            // x86 的 mul 指令将 rax 作为隐式输入，
+            // 并将乘法的 128 位结果写入 rax:rdx。
+            "mul {}",
+            in(reg) a,
+            inlateout("rax") b =&gt; lo,
+            lateout("rdx") hi
+        );
+    }
+
+    ((hi as u128) &lt;&lt; 64) + lo as u128
+}
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>这里使用 <code>mul</code> 指令将两个 64 位输入相乘，得到一个 128 位的结果。唯一的显式操作数是一个寄存器，我们用变量 <code>a</code> 填充它。第二个操作数是隐式的，必须是 <code>rax</code> 寄存器，我们用变量 <code>b</code> 填充它。结果的低 64 位存储在 <code>rax</code> 中，用于填充变量 <code>lo</code>。高 64 位存储在 <code>rdx</code> 中，用于填充变量 <code>hi</code>。</p>
+<h2 id="被破坏的寄存器"><a class="header" href="#被破坏的寄存器">被破坏的寄存器</a></h2>
+<p>在许多情况下，内联汇编会修改不需要作为输出的状态。这通常是因为我们必须在汇编中使用临时寄存器，或者因为指令修改了我们不需要进一步检查的状态。这种状态通常被称为"被破坏"。我们需要告知编译器这一点，因为它可能需要在内联汇编块前后保存和恢复这种状态。</p>
+<pre><pre class="playground"><code class="language-rust edition2021">use std::arch::asm;
+
+<span class="boring">#[cfg(target_arch = "x86_64")]
+</span>fn main() {
+    // 三个条目，每个四字节
+    let mut name_buf = [0_u8; 12];
+    // 字符串按顺序以 ASCII 格式存储在 ebx、edx、ecx 中
+    // 由于 ebx 是保留寄存器，汇编需要保留其值
+    // 因此我们在主要汇编代码前后执行 push 和 pop 操作
+    // 64 位处理器的 64 位模式不允许对 32 位寄存器（如 ebx）进行 push/pop 操作
+    // 所以我们必须使用扩展的 rbx 寄存器
+
+    unsafe {
+        asm!(
+            "push rbx",
+            "cpuid",
+            "mov [rdi], ebx",
+            "mov [rdi + 4], edx",
+            "mov [rdi + 8], ecx",
+            "pop rbx",
+            // 我们使用指向数组的指针来存储值，以简化 Rust 代码
+            // 虽然这会增加几条汇编指令，但更清晰地展示了汇编的工作方式
+            // 相比于使用显式寄存器输出（如 `out("ecx") val`）
+            // *指针本身*只是一个输入，尽管它在背后被写入
+            in("rdi") name_buf.as_mut_ptr(),
+            // 选择 cpuid 0，同时指定 eax 为被修改寄存器
+            inout("eax") 0 =&gt; _,
+            // cpuid 也会修改这些寄存器
+            out("ecx") _,
+            out("edx") _,
+        );
+    }
+
+    let name = core::str::from_utf8(&amp;name_buf).unwrap();
+    println!("CPU 制造商 ID：{}", name);
+}
+
+<span class="boring">#[cfg(not(target_arch = "x86_64"))]
+</span><span class="boring">fn main() {}</span></code></pre></pre>
+<p>在上面的示例中，我们使用 <code>cpuid</code> 指令读取 CPU 制造商 ID。该指令将最大支持的 <code>cpuid</code> 参数写入 <code>eax</code>，并按顺序将 CPU 制造商 ID 的 ASCII 字节写入 <code>ebx</code>、<code>edx</code> 和 <code>ecx</code>。</p>
+<p>尽管 <code>eax</code> 从未被读取，我们仍需要告知编译器该寄存器已被修改，这样编译器就可以保存汇编前这些寄存器中的任何值。我们通过将其声明为输出来实现这一点，但使用 <code>_</code> 而非变量名，表示输出值将被丢弃。</p>
+<p>这段代码还解决了 LLVM 将 <code>ebx</code> 视为保留寄存器的限制。这意味着 LLVM 假定它对该寄存器拥有完全控制权，并且必须在退出汇编块之前将其恢复到原始状态。因此，<code>ebx</code> 不能用作输入或输出，<strong>除非</strong>编译器将其用于满足通用寄存器类（如 <code>in(reg)</code>）。这使得在使用保留寄存器时，<code>reg</code> 操作数变得危险，因为我们可能会在不知情的情况下破坏输入或输出，原因是它们共享同一个寄存器。</p>
+<p>为了解决这个问题，我们采用以下策略：使用 <code>rdi</code> 存储输出数组的指针；通过 <code>push</code> 保存 <code>ebx</code>；在汇编块内从 <code>ebx</code> 读取数据到数组中；然后通过 <code>pop</code> 将 <code>ebx</code> 恢复到原始状态。<code>push</code> 和 <code>pop</code> 操作使用完整的 64 位 <code>rbx</code> 寄存器版本，以确保整个寄存器被保存。在 32 位目标上，代码会在 <code>push</code>/<code>pop</code> 操作中使用 <code>ebx</code>。</p>
+<p>这种技术还可以与通用寄存器类一起使用，以获得一个临时寄存器在汇编代码内使用：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+// 使用移位和加法将 x 乘以 6
+let mut x: u64 = 4;
+unsafe {
+    asm!(
+        "mov {tmp}, {x}",
+        "shl {tmp}, 1",
+        "shl {x}, 2",
+        "add {x}, {tmp}",
+        x = inout(reg) x,
+        tmp = out(reg) _,
+    );
+}
+assert_eq!(x, 4 * 6);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<h2 id="符号操作数和-abi-破坏"><a class="header" href="#符号操作数和-abi-破坏">符号操作数和 ABI 破坏</a></h2>
+<p>默认情况下，<code>asm!</code> 假定汇编代码会保留所有未指定为输出的寄存器的内容。<code>asm!</code> 的 <a href="https://doc.rust-lang.org/stable/reference/inline-assembly.html#abi-clobbers"><code>clobber_abi</code></a> 参数告诉编译器根据给定的调用约定 ABI 自动插入必要的破坏操作数：任何在该 ABI 中未完全保留的寄存器都将被视为被破坏。可以提供多个 <code>clobber_abi</code> 参数，所有指定 ABI 的破坏都将被插入。</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+extern "C" fn foo(arg: i32) -&gt; i32 {
+    println!("arg = {}", arg);
+    arg * 2
+}
+
+fn call_foo(arg: i32) -&gt; i32 {
+    unsafe {
+        let result;
+        asm!(
+            "call {}",
+            // 要调用的函数指针
+            in(reg) foo,
+            // 第一个参数在 rdi 中
+            in("rdi") arg,
+            // 返回值在 rax 中
+            out("rax") result,
+            // 将所有不被 "C" 调用约定保留的寄存器
+            // 标记为被破坏
+            clobber_abi("C"),
+        );
+        result
+    }
+}
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<h2 id="寄存器模板修饰符"><a class="header" href="#寄存器模板修饰符">寄存器模板修饰符</a></h2>
+<p>在某些情况下，需要对寄存器名称插入模板字符串时的格式进行精细控制。当一个架构的汇编语言对同一个寄存器有多个名称时，这种控制尤为必要。每个名称通常代表寄存器的一个子集"视图"（例如，64 位寄存器的低 32 位）。</p>
+<p>默认情况下，编译器总是会选择引用完整寄存器大小的名称（例如，在 x86-64 上是 <code>rax</code>，在 x86 上是 <code>eax</code> 等）。</p>
+<p>可以通过在模板字符串操作数上使用修饰符来覆盖这个默认设置，类似于格式字符串的用法：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut x: u16 = 0xab;
+
+unsafe {
+    asm!("mov {0:h}, {0:l}", inout(reg_abcd) x);
+}
+
+assert_eq!(x, 0xabab);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>在这个例子中，我们使用 <code>reg_abcd</code> 寄存器类来限制寄存器分配器只使用 4 个传统的 x86 寄存器（<code>ax</code>、<code>bx</code>、<code>cx</code>、<code>dx</code>）。这些寄存器的前两个字节可以独立寻址。</p>
+<p>假设寄存器分配器选择将 <code>x</code> 分配到 <code>ax</code> 寄存器。<code>h</code> 修饰符将生成该寄存器高字节的名称，而 <code>l</code> 修饰符将生成低字节的名称。因此，汇编代码将被展开为 <code>mov ah, al</code>，这条指令将值的低字节复制到高字节。</p>
+<p>如果你对操作数使用较小的数据类型（例如 <code>u16</code>）并忘记使用模板修饰符，编译器将发出警告并建议使用正确的修饰符。</p>
+<h2 id="内存地址操作数"><a class="header" href="#内存地址操作数">内存地址操作数</a></h2>
+<p>有时汇编指令需要通过内存地址或内存位置传递操作数。你必须手动使用目标架构指定的内存地址语法。例如，在使用 Intel 汇编语法的 x86/x86_64 架构上，你应该用 <code>[]</code> 包裹输入/输出，以表明它们是内存操作数：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+fn load_fpu_control_word(control: u16) {
+    unsafe {
+        asm!("fldcw [{}]", in(reg) &amp;control, options(nostack));
+    }
+}
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<h2 id="标签"><a class="header" href="#标签">标签</a></h2>
+<p>重复使用命名标签（无论是局部的还是其他类型的）可能导致汇编器或链接器错误，或引起其他异常行为。命名标签的重用可能以多种方式发生，包括：</p>
+<ul>
+<li>显式重用：在一个 <code>asm!</code> 块中多次使用同一标签，或在多个块之间重复使用。</li>
+<li>通过内联隐式重用：编译器可能会创建 <code>asm!</code> 块的多个副本，例如当包含该块的函数在多处被内联时。</li>
+<li>通过 LTO 隐式重用：链接时优化（LTO）可能导致<strong>其他 crate</strong> 的代码被放置在同一代码生成单元中，从而可能引入任意标签。</li>
+</ul>
+<p>因此，你应该只在内联汇编代码中使用 GNU 汇编器的<strong>数字</strong><a href="https://sourceware.org/binutils/docs/as/Symbol-Names.html#Local-Labels">局部标签</a>。在汇编代码中定义符号可能会由于重复的符号定义而导致汇编器和/或链接器错误。</p>
+<p>此外，在 x86 架构上使用默认的 Intel 语法时，由于<a href="https://bugs.llvm.org/show_bug.cgi?id=36144">一个 LLVM 的 bug</a>，你不应使用仅由 <code>0</code> 和 <code>1</code> 组成的标签，如 <code>0</code>、<code>11</code> 或 <code>101010</code>，因为它们可能被误解为二进制值。使用 <code>options(att_syntax)</code> 可以避免这种歧义，但这会影响_整个_ <code>asm!</code> 块的语法。（关于 <code>options</code> 的更多信息，请参见下文的<a href="#options">选项</a>。）</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut a = 0;
+unsafe {
+    asm!(
+        "mov {0}, 10",
+        "2:",
+        "sub {0}, 1",
+        "cmp {0}, 3",
+        "jle 2f",
+        "jmp 2b",
+        "2:",
+        "add {0}, 2",
+        out(reg) a
+    );
+}
+assert_eq!(a, 5);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>这段代码会将 <code>{0}</code> 寄存器的值从 10 递减到 3，然后加 2 并将结果存储在 <code>a</code> 中。</p>
+<p>这个例子展示了几个要点：</p>
+<ul>
+<li>首先，同一个数字可以在同一个内联块中多次用作标签。</li>
+<li>其次，当数字标签被用作引用（例如作为指令操作数）时，应在数字标签后添加后缀 "b"（"backward"，向后）或 "f"（"forward"，向前）。这样它将引用该方向上由这个数字定义的最近的标签。</li>
+</ul>
+<h2 id="options"><a class="header" href="#options">选项</a></h2>
+<p>默认情况下，内联汇编块的处理方式与具有自定义调用约定的外部 FFI 函数调用相同：它可能读写内存，产生可观察的副作用等。然而，在许多情况下，我们希望向编译器提供更多关于汇编代码实际行为的信息，以便编译器能够进行更好的优化。</p>
+<p>让我们回顾一下之前 <code>add</code> 指令的例子：</p>
+<pre><pre class="playground"><code class="language-rust edition2021"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[cfg(target_arch = "x86_64")] {
+</span>use std::arch::asm;
+
+let mut a: u64 = 4;
+let b: u64 = 4;
+unsafe {
+    asm!(
+        "add {0}, {1}",
+        inlateout(reg) a, in(reg) b,
+        options(pure, nomem, nostack),
+    );
+}
+assert_eq!(a, 8);
+<span class="boring">}
+</span><span class="boring">}</span></code></pre></pre>
+<p>可以将选项作为可选的最后一个参数传递给 <code>asm!</code> 宏。在这个例子中，我们指定了三个选项：</p>
+<ul>
+<li><code>pure</code>：表示汇编代码没有可观察的副作用，其输出仅依赖于输入。这使得编译器优化器能够减少内联汇编的调用次数，甚至完全消除它。</li>
+<li><code>nomem</code>：表示汇编代码不读取或写入内存。默认情况下，编译器会假设内联汇编可以读写任何它可访问的内存地址（例如通过作为操作数传递的指针或全局变量）。</li>
+<li><code>nostack</code>：表示汇编代码不会向栈中压入任何数据。这允许编译器使用诸如 x86-64 上的栈红区等优化技术，以避免栈指针调整。</li>
+</ul>
+<p>这些选项使编译器能够更好地优化使用 <code>asm!</code> 的代码，例如消除那些输出未被使用的纯 <code>asm!</code> 块。</p>
+<p>有关可用选项的完整列表及其效果，请参阅<a href="https://doc.rust-lang.org/stable/reference/inline-assembly.html">参考文档</a>。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../unsafe.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../compatibility.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../unsafe.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../compatibility.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+        <script>
+            window.playground_line_numbers = true;
+        </script>
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+        <script src="../ace-2a3cd908.js"></script>
+        <script src="../mode-rust-2c9d5c9a.js"></script>
+        <script src="../editor-16ca416c.js"></script>
+        <script src="../theme-dawn-4493f9c8.js"></script>
+        <script src="../theme-tomorrow_night-9dbe62a9.js"></script>
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-9aeb6ddf.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../theme/js/language-picker-f471f317.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

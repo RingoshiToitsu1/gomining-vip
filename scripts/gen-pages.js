@@ -22,7 +22,7 @@ const SITE = 'https://gmt-optimizer.com';
 const BLOCK_SUBSIDY   = 3.125;   // BTC/block (→ 1.5625 at 2028 halving)
 const ELECTRICITY_RATE= 0.05;    // $/kWh on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
-const CONVERSION_FEE  = 0.02;    // BTC→GMT payout skim
+const CONVERSION_FEE  = 0.0225;  // BTC→GMT payout skim (calibrated 2026-07-07, matches assets/app.js)
 const EFF_BEST        = 12;      // W/TH — freshly-minted new miners
 const EFF_BASE_MAX    = 15;      // W/TH — cheaper marketplace hashrate; the base + reinvest assumption here
 const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage reward floor (stays 12)
@@ -275,7 +275,7 @@ function hashratePage(th, live, dateStr){
     <div class="stat"><div class="k">GMT to lock</div><div class="v">${usd(full.gmtLockUSD)}</div><div class="s">for the 20% discount</div></div>
     <div class="stat"><div class="k">Break-even</div><div class="v">${be(full.beMonths)}</div><div class="s">on total capital</div></div>
   </div>
-  <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the 2% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. On total capital, ${verdict(full.beMonths)}.</p>
+  <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the ${CONVERSION_FEE*100}% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. On total capital, ${verdict(full.beMonths)}.</p>
 ${scenarioBox(full)}
 ${reinvestBox(full)}
   <h2>Why the locked GMT is not a normal cost</h2>
@@ -286,7 +286,7 @@ ${reinvestBox(full)}
 ${CTA}`;
   const faq=[
     {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 12 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
-    {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the 2% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
+    {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the ${CONVERSION_FEE*100}% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
     {q:`What is the break-even for ${th} TH?`,a:`Counting both the hashrate and the GMT locked for the discount as capital (about ${usd(full.totalCapital)}), and both mining and staking as income, break-even is ${be(full.beMonths)} at a flat Bitcoin and GMT price. Bitcoin appreciation shortens it; a falling price or faster difficulty growth extends it.`}
   ];
   const related=[

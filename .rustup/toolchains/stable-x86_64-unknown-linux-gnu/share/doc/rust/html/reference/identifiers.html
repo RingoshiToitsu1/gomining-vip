@@ -1,0 +1,576 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Identifiers - The Rust Reference</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-3865ffda.css">
+        <link rel="stylesheet" href="css/general-4c35105a.css">
+        <link rel="stylesheet" href="css/chrome-c0e702bf.css">
+        <link rel="stylesheet" href="css/print-ad67d350.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome-799aeb25.css">
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight-56612340.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/reference-2fc27eaa.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex-5d1b9f75.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc-790787e7.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Rust Reference</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/reference/" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        <a href="https://github.com/rust-lang/reference/edit/master/src/identifiers.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <i id="git-edit-button" class="fa fa-edit"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <div class="rule" id="r-ident"><a class="rule-link" href="#r-ident" title="ident"><span>[ident]</span></a>
+</div>
+<h1 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h1>
+<div class="rule" id="r-ident.syntax"><a class="rule-link" href="#r-ident.syntax" title="ident.syntax"><span>[ident<wbr>.syntax]</span></a>
+</div>
+<div class="grammar-container">
+<p><strong><sup>Lexer</sup></strong>
+<br>
+<span class="grammar-text grammar-production" id="grammar-IDENTIFIER_OR_KEYWORD" onclick="show_railroad()"><a href="identifiers.html#railroad-IDENTIFIER_OR_KEYWORD">IDENTIFIER_OR_KEYWORD</a></span> → ( <span class="grammar-text"><a href="identifiers.html#grammar-XID_Start">XID_Start</a></span> | <span class="grammar-literal">_</span> ) <span class="grammar-text"><a href="identifiers.html#grammar-XID_Continue">XID_Continue</a></span><sup>*</sup></p>
+<p><span class="grammar-text grammar-production" id="grammar-XID_Start" onclick="show_railroad()"><a href="identifiers.html#railroad-XID_Start">XID_Start</a></span> → <span class="grammar-text">&lt;<code>XID_Start</code> defined by Unicode&gt;</span></p>
+<p><span class="grammar-text grammar-production" id="grammar-XID_Continue" onclick="show_railroad()"><a href="identifiers.html#railroad-XID_Continue">XID_Continue</a></span> → <span class="grammar-text">&lt;<code>XID_Continue</code> defined by Unicode&gt;</span></p>
+<p><span class="grammar-text grammar-production" id="grammar-RAW_IDENTIFIER" onclick="show_railroad()"><a href="identifiers.html#railroad-RAW_IDENTIFIER">RAW_IDENTIFIER</a></span> → <span class="grammar-literal">r#</span> <span class="grammar-text"><a href="identifiers.html#grammar-IDENTIFIER_OR_KEYWORD">IDENTIFIER_OR_KEYWORD</a></span></p>
+<p><span class="grammar-text grammar-production" id="grammar-NON_KEYWORD_IDENTIFIER" onclick="show_railroad()"><a href="identifiers.html#railroad-NON_KEYWORD_IDENTIFIER">NON_KEYWORD_IDENTIFIER</a></span> → <span class="grammar-text"><a href="identifiers.html#grammar-IDENTIFIER_OR_KEYWORD">IDENTIFIER_OR_KEYWORD</a></span><sub class="grammar-text">except a <a href="keywords.html#r-lex.keywords.strict">strict</a> or <a href="keywords.html#r-lex.keywords.reserved">reserved</a> keyword</sub></p>
+<p><span class="grammar-text grammar-production" id="grammar-IDENTIFIER" onclick="show_railroad()"><a href="identifiers.html#railroad-IDENTIFIER">IDENTIFIER</a></span> → <span class="grammar-text"><a href="identifiers.html#grammar-NON_KEYWORD_IDENTIFIER">NON_KEYWORD_IDENTIFIER</a></span> | <span class="grammar-text"><a href="identifiers.html#grammar-RAW_IDENTIFIER">RAW_IDENTIFIER</a></span></p>
+<p><span class="grammar-text grammar-production" id="grammar-RESERVED_RAW_IDENTIFIER" onclick="show_railroad()"><a href="identifiers.html#railroad-RESERVED_RAW_IDENTIFIER">RESERVED_RAW_IDENTIFIER</a></span> → <span class="grammar-literal">r#</span> ( <span class="grammar-literal">_</span> | <span class="grammar-literal">crate</span> | <span class="grammar-literal">self</span> | <span class="grammar-literal">Self</span> | <span class="grammar-literal">super</span> )</p>
+<p><button class="grammar-toggle-railroad" type="button" title="Toggle railroad display" onclick="toggle_railroad()">Show Railroad</button></p>
+</div>
+<div class="grammar-railroad grammar-hidden">
+<div style="width: 408px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-IDENTIFIER_OR_KEYWORD"><svg class="railroad" viewBox="0 0 408 120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-IDENTIFIER_OR_KEYWORD">
+<text class="comment" x="92" y="25">
+IDENTIFIER_OR_KEYWORD</text>
+</a>
+<g class="sequence">
+<path d=" M 10 66 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="choice">
+<path d=" M 35 66 h 24 m 92 0 h 24"/>
+<a class="link" xlink:href="identifiers.html#railroad-XID_Start">
+<g class="nonterminal">
+<rect height="22" width="92" x="59" y="55"/>
+<text x="105" y="71">
+XID_Start</text>
+</g>
+</a>
+<path d=" M 35 66 a 12 12 0 0 1 12 12 v 9 m 116 0 v -9 a 12 12 0 0 1 12 -12"/>
+<path d=" M 47 87 v 0 a 12 12 0 0 0 12 12 m 28 0 h 64 m -29 0 l -5 -5 m 0 10 l 5 -5 m 29 0 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="59" y="88"/>
+<text x="73" y="104">
+_</text>
+</g>
+</g>
+<g class="optional">
+<path d=" M 185 66 h 24 m -24 0 a 12 12 0 0 0 12 -12 v 0 a 12 12 0 0 1 12 -12 h 140 m -67 0 l -5 -5 m 0 10 l 5 -5 m 67 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 0 12 12 h -24"/>
+<g class="repeat">
+<path d=" M 209 66 h 12 m 116 0 h 12 m -12 0 a 12 12 0 0 1 12 12 v 0 a 12 12 0 0 1 -12 12 m 0 0 h -116 m 61 0 l 5 -5 m 0 10 l -5 -5 m -61 0 a 12 12 0 0 1 -12 -12 v 0 a 12 12 0 0 1 12 -12"/>
+<g/>
+<a class="link" xlink:href="identifiers.html#railroad-XID_Continue">
+<g class="nonterminal">
+<rect height="22" width="116" x="221" y="55"/>
+<text x="279" y="71">
+XID_Continue</text>
+</g>
+</a>
+</g>
+</g>
+<path d=" M 175 66 h 10"/>
+</g>
+<path d=" M 383 66 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 66 h 10"/>
+<path d=" M 373 66 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 338px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-XID_Start"><svg class="railroad" viewBox="0 0 338 74" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-XID_Start">
+<text class="comment" x="46" y="25">
+XID_Start</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="268" x="35" y="42"/>
+<text x="169" y="58">
+`XID_Start` defined by Unicode</text>
+</g>
+<path d=" M 313 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 303 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 362px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-XID_Continue"><svg class="railroad" viewBox="0 0 362 74" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-XID_Continue">
+<text class="comment" x="57" y="25">
+XID_Continue</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="292" x="35" y="42"/>
+<text x="181" y="58">
+`XID_Continue` defined by Unicode</text>
+</g>
+<path d=" M 337 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 327 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 312px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-RAW_IDENTIFIER"><svg class="railroad" viewBox="0 0 312 74" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-RAW_IDENTIFIER">
+<text class="comment" x="64" y="25">
+RAW_IDENTIFIER</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="36" x="35" y="42"/>
+<text x="53" y="58">
+r#</text>
+</g>
+<a class="link" xlink:href="identifiers.html#railroad-IDENTIFIER_OR_KEYWORD">
+<g class="nonterminal">
+<rect height="22" width="196" x="81" y="42"/>
+<text x="179" y="58">
+IDENTIFIER_OR_KEYWORD</text>
+</g>
+</a>
+<path d=" M 71 53 h 10"/>
+</g>
+<path d=" M 287 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 277 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 348px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-NON_KEYWORD_IDENTIFIER"><svg class="railroad" viewBox="0 0 348 118" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-NON_KEYWORD_IDENTIFIER">
+<text class="comment" x="95" y="25">
+NON_KEYWORD_IDENTIFIER</text>
+</a>
+<g class="sequence">
+<path d=" M 10 89 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="labeledbox">
+<rect height="66" width="278" x="35" y="42"/>
+<path d=" M 35 89 h 8 m 196 0 h 74 m -34 0 l -5 -5 m 0 10 l 5 -5 m 34 0"/>
+<text class="comment" x="174" y="65">
+except a strict or reserved keyword</text>
+<a class="link" xlink:href="identifiers.html#railroad-IDENTIFIER_OR_KEYWORD">
+<g class="nonterminal">
+<rect height="22" width="196" x="43" y="78"/>
+<text x="141" y="94">
+IDENTIFIER_OR_KEYWORD</text>
+</g>
+</a>
+</g>
+<path d=" M 323 89 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 89 h 10"/>
+<path d=" M 313 89 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 322px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-IDENTIFIER"><svg class="railroad" viewBox="0 0 322 107" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-IDENTIFIER">
+<text class="comment" x="50" y="25">
+IDENTIFIER</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="choice">
+<path d=" M 35 53 h 24 m 204 0 h 24"/>
+<a class="link" xlink:href="identifiers.html#railroad-NON_KEYWORD_IDENTIFIER">
+<g class="nonterminal">
+<rect height="22" width="204" x="59" y="42"/>
+<text x="161" y="58">
+NON_KEYWORD_IDENTIFIER</text>
+</g>
+</a>
+<path d=" M 35 53 a 12 12 0 0 1 12 12 v 9 m 228 0 v -9 a 12 12 0 0 1 12 -12"/>
+<path d=" M 47 74 v 0 a 12 12 0 0 0 12 12 m 132 0 h 72 m -33 0 l -5 -5 m 0 10 l 5 -5 m 33 0 a 12 12 0 0 0 12 -12 v 0"/>
+<a class="link" xlink:href="identifiers.html#railroad-RAW_IDENTIFIER">
+<g class="nonterminal">
+<rect height="22" width="132" x="59" y="75"/>
+<text x="125" y="91">
+RAW_IDENTIFIER</text>
+</g>
+</a>
+</g>
+<path d=" M 297 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 287 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+<div style="width: 224px; height: auto; max-width: 100%; max-height: 100%" class="railroad-production" id="railroad-RESERVED_RAW_IDENTIFIER"><svg class="railroad" viewBox="0 0 224 206" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<rect class="railroad_canvas" height="100%" width="100%"/>
+<g class="verticalgrid">
+<a class="link" xlink:href="identifiers.html#grammar-RESERVED_RAW_IDENTIFIER">
+<text class="comment" x="99" y="25">
+RESERVED_RAW_IDENTIFIER</text>
+</a>
+<g class="sequence">
+<path d=" M 10 53 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5 m 10 0 h 5"/>
+<g class="sequence">
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="36" x="35" y="42"/>
+<text x="53" y="58">
+r#</text>
+</g>
+<g class="choice">
+<path d=" M 81 53 h 24 m 28 0 h 56 m -25 0 l -5 -5 m 0 10 l 5 -5 m 25 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="28" x="105" y="42"/>
+<text x="119" y="58">
+_</text>
+</g>
+<path d=" M 81 53 a 12 12 0 0 1 12 12 v 9 m 84 0 v -9 a 12 12 0 0 1 12 -12"/>
+<path d=" M 93 74 v 33 m 84 0 v -33"/>
+<path d=" M 93 107 v 33 m 84 0 v -33"/>
+<path d=" M 93 140 v 33 m 84 0 v -33"/>
+<path d=" M 93 74 v 0 a 12 12 0 0 0 12 12 m 60 0 h 0 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="60" x="105" y="75"/>
+<text x="135" y="91">
+crate</text>
+</g>
+<path d=" M 93 107 v 0 a 12 12 0 0 0 12 12 m 52 0 h 8 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="52" x="105" y="108"/>
+<text x="131" y="124">
+self</text>
+</g>
+<path d=" M 93 140 v 0 a 12 12 0 0 0 12 12 m 52 0 h 8 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="52" x="105" y="141"/>
+<text x="131" y="157">
+Self</text>
+</g>
+<path d=" M 93 173 v 0 a 12 12 0 0 0 12 12 m 60 0 h 0 a 12 12 0 0 0 12 -12 v 0"/>
+<g class="terminal">
+<rect height="22" rx="10" ry="10" width="60" x="105" y="174"/>
+<text x="135" y="190">
+super</text>
+</g>
+</g>
+<path d=" M 71 53 h 10"/>
+</g>
+<path d=" M 199 53 h 5 a 5 5 0 0 1 5 -5 a 5 5 0 0 1 5 5 a 5 5 0 0 1 -5 5 a 5 5 0 0 1 -5 -5"/>
+<path d=" M 25 53 h 10"/>
+<path d=" M 189 53 h 10"/>
+</g>
+</g>
+</svg>
+</div>
+</div>
+<!-- When updating the version, update the UAX links, too. -->
+<div class="rule" id="r-ident.unicode"><a class="rule-link" href="#r-ident.unicode" title="ident.unicode"><span>[ident<wbr>.unicode]</span></a>
+<br><div class="test-link">
+<a href="javascript:void(0)" onclick="spec_toggle_tests('ident.unicode');"><span>Tests</span></a></div>
+</div>
+<div id="tests-ident.unicode" class="tests-popup popup-hidden">
+Tests with this rule:
+<ul><li><a href="https://github.com/rust-lang/rust/blob/1.93.1/tests/ui-fulldeps/lexer/unicode-version.rs">tests/ui-fulldeps/lexer/unicode-version.rs</a></li>
+</ul></div>
+<p>Identifiers follow the specification in <a href="https://www.unicode.org/reports/tr31/tr31-41.html">Unicode Standard Annex #31</a> for Unicode version 16.0, with the additions described below. Some examples of identifiers:</p>
+<ul>
+<li><code>foo</code></li>
+<li><code>_identifier</code></li>
+<li><code>r#true</code></li>
+<li><code>Москва</code></li>
+<li><code>東京</code></li>
+</ul>
+<div class="rule" id="r-ident.profile"><a class="rule-link" href="#r-ident.profile" title="ident.profile"><span>[ident<wbr>.profile]</span></a>
+</div>
+<p>The profile used from UAX #31 is:</p>
+<ul>
+<li>Start := <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AXID_Start%3A%5D&amp;abb=on&amp;g=&amp;i="><code>XID_Start</code></a>, plus the underscore character (U+005F)</li>
+<li>Continue := <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AXID_Continue%3A%5D&amp;abb=on&amp;g=&amp;i="><code>XID_Continue</code></a></li>
+<li>Medial := empty</li>
+</ul>
+<div class="alert alert-note">
+<blockquote>
+<p class="alert-title"><svg viewBox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Identifiers starting with an underscore are typically used to indicate an identifier that is intentionally unused, and will silence the unused warning in <code>rustc</code>.</p>
+</blockquote>
+</div>
+<div class="rule" id="r-ident.keyword"><a class="rule-link" href="#r-ident.keyword" title="ident.keyword"><span>[ident<wbr>.keyword]</span></a>
+</div>
+<p>Identifiers may not be a <a href="keywords.html#strict-keywords">strict</a> or <a href="keywords.html#reserved-keywords">reserved</a> keyword without the <code>r#</code> prefix described below in <a href="#raw-identifiers">raw identifiers</a>.</p>
+<div class="rule" id="r-ident.zero-width-chars"><a class="rule-link" href="#r-ident.zero-width-chars" title="ident.zero-width-chars"><span>[ident<wbr>.zero-width-chars]</span></a>
+</div>
+<p>Zero width non-joiner (ZWNJ U+200C) and zero width joiner (ZWJ U+200D) characters are not allowed in identifiers.</p>
+<div class="rule" id="r-ident.ascii-limitations"><a class="rule-link" href="#r-ident.ascii-limitations" title="ident.ascii-limitations"><span>[ident<wbr>.ascii-limitations]</span></a>
+</div>
+<p>Identifiers are restricted to the ASCII subset of <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AXID_Start%3A%5D&amp;abb=on&amp;g=&amp;i="><code>XID_Start</code></a> and <a href="http://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AXID_Continue%3A%5D&amp;abb=on&amp;g=&amp;i="><code>XID_Continue</code></a> in the following situations:</p>
+<ul>
+<li><a href="items/extern-crates.html"><code>extern crate</code></a> declarations (except the <a href="items/extern-crates.html#grammar-AsClause">AsClause</a> identifier)</li>
+<li>External crate names referenced in a <a href="paths.html">path</a></li>
+<li><a href="items/modules.html">Module</a> names loaded from the filesystem without a <a href="items/modules.html#the-path-attribute"><code>path</code> attribute</a></li>
+<li><a href="abi.html#the-no_mangle-attribute"><code>no_mangle</code></a> attributed items</li>
+<li>Item names in <a href="items/external-blocks.html">external blocks</a></li>
+</ul>
+<div class="rule" id="r-ident.normalization"><a class="rule-link" href="#r-ident.normalization" title="ident.normalization"><span>[ident<wbr>.normalization]</span></a>
+<br><div class="test-link">
+<a href="javascript:void(0)" onclick="spec_toggle_tests('ident.normalization');"><span>Tests</span></a></div>
+</div>
+<div id="tests-ident.normalization" class="tests-popup popup-hidden">
+Tests with this rule:
+<ul><li><a href="https://github.com/rust-lang/rust/blob/1.93.1/tests/ui-fulldeps/lexer/unicode-version.rs">tests/ui-fulldeps/lexer/unicode-version.rs</a></li>
+</ul></div>
+<h2 id="normalization"><a class="header" href="#normalization">Normalization</a></h2>
+<p>Identifiers are normalized using Normalization Form C (NFC) as defined in <a href="https://www.unicode.org/reports/tr15/tr15-56.html">Unicode Standard Annex #15</a>. Two identifiers are equal if their NFC forms are equal.</p>
+<p><a href="procedural-macros.html">Procedural</a> and <a href="macros-by-example.html">declarative</a> macros receive normalized identifiers in their input.</p>
+<div class="rule" id="r-ident.raw"><a class="rule-link" href="#r-ident.raw" title="ident.raw"><span>[ident<wbr>.raw]</span></a>
+</div>
+<h2 id="raw-identifiers"><a class="header" href="#raw-identifiers">Raw identifiers</a></h2>
+<div class="rule" id="r-ident.raw.intro"><a class="rule-link" href="#r-ident.raw.intro" title="ident.raw.intro"><span>[ident<wbr>.raw<wbr>.intro]</span></a>
+</div>
+<p>A raw identifier is like a normal identifier, but prefixed by <code>r#</code>. (Note that
+the <code>r#</code> prefix is not included as part of the actual identifier.)</p>
+<div class="rule" id="r-ident.raw.allowed"><a class="rule-link" href="#r-ident.raw.allowed" title="ident.raw.allowed"><span>[ident<wbr>.raw<wbr>.allowed]</span></a>
+</div>
+<p>Unlike a normal identifier, a raw identifier may be any strict or reserved
+keyword except the ones listed above for <code>RAW_IDENTIFIER</code>.</p>
+<div class="rule" id="r-ident.raw.reserved"><a class="rule-link" href="#r-ident.raw.reserved" title="ident.raw.reserved"><span>[ident<wbr>.raw<wbr>.reserved]</span></a>
+</div>
+<p>It is an error to use the <a href="identifiers.html#grammar-RESERVED_RAW_IDENTIFIER">RESERVED_RAW_IDENTIFIER</a> token.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="keywords.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="comments.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="keywords.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="comments.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-9aeb6ddf.js"></script>
+
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-9576a2db.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="theme/reference-da60281b.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,560 @@
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&family=Courier+Prime:wght@400;700&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --form:#EFE7CE; --form-deep:#E2D6B4; --ink:#2E2758; --ink-soft:#6A6290;
+  --rule:#C7B98E; --win:#2F6B4F; --out:#A8382C; --white:#FBF7EC; --shadow:rgba(46,39,88,.14);
+  --label:"Archivo Narrow","Arial Narrow",sans-serif; --type:"Courier Prime","Courier New",monospace;
+  --body:"Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--form);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  background-image:repeating-linear-gradient(180deg,transparent 0 27px,rgba(199,185,142,.35) 27px 28px)}
+.wrap{max-width:900px;margin:0 auto;padding:26px 20px 80px}
+[hidden]{display:none!important}
+
+/* ---- gate ---- */
+.gate{max-width:390px;margin:8vh auto;background:var(--white);border:1px solid var(--rule);
+  box-shadow:5px 5px 0 var(--form-deep),6px 6px 0 var(--rule);padding:30px 30px 26px;position:relative}
+.gate::before{content:"";position:absolute;left:12px;top:14px;bottom:14px;width:6px;
+  background:radial-gradient(circle,var(--rule) 1.6px,transparent 1.7px) 0 0/6px 11px repeat-y}
+.gate .inner{padding-left:20px}
+.gate h1{font-family:var(--label);text-transform:uppercase;letter-spacing:.15em;font-size:21px;margin:0 0 2px}
+.gate .sub{font-family:var(--type);font-size:11.5px;color:var(--ink-soft);margin-bottom:22px}
+.restricted{position:absolute;top:16px;right:14px;font-family:var(--label);font-weight:700;text-transform:uppercase;
+  letter-spacing:.16em;font-size:9.5px;color:var(--out);border:2px solid var(--out);padding:2px 7px;
+  transform:rotate(4deg);opacity:.8}
+
+/* ---- header ---- */
+.masthead{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  border-bottom:3px double var(--ink);padding-bottom:11px}
+.masthead h1{font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  font-size:clamp(20px,4vw,30px);margin:0;line-height:1}
+.masthead .sub{font-family:var(--type);font-size:11.5px;color:var(--ink-soft);margin-top:5px}
+.navbits{display:flex;gap:8px;align-items:center;font-family:var(--type);font-size:11.5px;color:var(--ink-soft)}
+.linkish{background:none;border:none;color:var(--ink);font-family:var(--label);text-transform:uppercase;
+  letter-spacing:.1em;font-size:11px;font-weight:700;cursor:pointer;padding:4px 6px;border-bottom:1px solid var(--rule)}
+.linkish:hover{background:var(--form-deep)}
+
+/* ---- panels & fields ---- */
+.panel{background:var(--white);border:1px solid var(--rule);padding:24px;box-shadow:0 2px 0 var(--shadow);margin-top:20px}
+.field{margin-bottom:15px}
+label,.flabel{display:block;font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;
+  font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+textarea,input,select{width:100%;font-family:var(--type);font-size:13.5px;color:var(--ink);background:var(--white);
+  border:1px solid var(--rule);padding:9px 10px;border-radius:0}
+textarea{line-height:1.6;resize:vertical;
+  background:repeating-linear-gradient(180deg,transparent 0 21px,rgba(199,185,142,.28) 21px 22px)}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--ink);outline-offset:1px}
+.row{display:flex;gap:13px;flex-wrap:wrap}.row>*{flex:1 1 180px}
+.hint{font-size:12.5px;color:var(--ink-soft);margin:6px 0 0}
+.err{color:var(--out);font-family:var(--type);font-size:12.5px;margin-top:8px}
+button{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:12px;
+  padding:11px 20px;background:var(--ink);color:var(--form);border:none;cursor:pointer;border-radius:2px}
+button:hover{background:#413878} button:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+button.ghost:hover{background:var(--form-deep)}
+button.mini{padding:5px 11px;font-size:10.5px}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.big{width:100%;padding:15px;font-size:14px}
+
+/* ---- steps ---- */
+.steps{display:flex;gap:0;margin-bottom:22px;flex-wrap:wrap}
+.step{flex:1 1 150px;border:1px solid var(--rule);border-right:none;padding:10px 13px;background:var(--form-deep)}
+.step:last-child{border-right:1px solid var(--rule)}
+.step.done{background:var(--white)}
+.step .n{font-family:var(--label);font-size:10px;letter-spacing:.14em;color:var(--ink-soft)}
+.step .t{font-family:var(--label);text-transform:uppercase;letter-spacing:.08em;font-size:12.5px;font-weight:700}
+.step.done .t::after{content:" ✓";color:var(--win)}
+
+/* ---- conversations ---- */
+.convobar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.convobar select{width:auto;flex:1 1 220px}
+.convohead{font-family:var(--type);font-size:12px;color:var(--ink-soft);margin:14px 0 4px;
+  display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.convohead b{font-family:var(--body);font-weight:600;color:var(--ink);font-size:15px}
+.plat{font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;font-size:9.5px;font-weight:700;
+  color:var(--ink);border:1px solid var(--rule);padding:2px 7px;background:var(--form-deep)}
+.transcript{max-height:360px;overflow:auto;padding:6px 2px;border-top:1px solid var(--rule);margin-top:6px}
+.bubble{margin:9px 0;display:flex}
+.bubble.me{justify-content:flex-end}
+.bubble .col{max-width:82%}
+.bubble .tag{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-size:9px;
+  color:var(--ink-soft);margin:0 0 2px 2px}
+.bubble .b{padding:8px 12px;font-size:14px;line-height:1.5;border:1px solid var(--rule);white-space:pre-wrap}
+.bubble.them .b{background:var(--white);border-left:3px solid var(--ink-soft)}
+.bubble.me .b{background:var(--form-deep);border-right:3px solid var(--ink)}
+.bubble.me .tag{text-align:right;margin:0 2px 2px 0}
+.emptyconvo{font-family:var(--type);font-size:13px;color:var(--ink-soft);padding:26px 0;text-align:center}
+
+/* ---- slip ---- */
+.slip{position:relative;background:var(--white);border:1px solid var(--rule);margin:16px 0;
+  box-shadow:3px 3px 0 var(--form-deep),4px 4px 0 var(--rule);padding:16px 18px 16px 32px}
+.slip::before{content:"";position:absolute;left:12px;top:11px;bottom:11px;width:6px;
+  background:radial-gradient(circle,var(--rule) 1.6px,transparent 1.7px) 0 0/6px 11px repeat-y}
+.slip .copytab{position:absolute;top:-1px;right:14px;background:var(--ink);color:var(--form);
+  font-family:var(--label);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 9px}
+.slip h4{font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;font-size:12px;margin:2px 0 10px}
+.slip .draft{font-family:var(--type);font-size:14px;white-space:pre-wrap;line-height:1.65;
+  border-left:2px solid var(--form-deep);padding-left:12px;margin:0 0 11px}
+textarea.draft{border:1px solid var(--rule);border-left:3px solid var(--ink);padding:11px 12px;width:100%}
+.slip .why{font-size:13px;color:var(--ink-soft);border-top:1px dashed var(--rule);padding-top:8px;margin:0}
+.slip .why b{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--ink)}
+.readout{background:var(--form-deep);border-left:4px solid var(--ink);padding:11px 15px;font-size:14px;margin:10px 0}
+.log{font-family:var(--type);font-size:12px;background:var(--form-deep);border:1px solid var(--rule);
+  padding:10px 12px;max-height:180px;overflow:auto;white-space:pre-wrap;margin-top:12px}
+pre.prompt{font-family:var(--type);font-size:11.5px;background:var(--form-deep);border:1px solid var(--rule);
+  padding:13px;white-space:pre-wrap;overflow-x:auto;line-height:1.55}
+h3.sec{font-family:var(--label);text-transform:uppercase;letter-spacing:.12em;font-size:13.5px;
+  border-bottom:1px solid var(--rule);padding-bottom:5px;margin:28px 0 12px}
+h3.sec:first-child{margin-top:0}
+details summary{font-family:var(--label);text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;
+  font-weight:700;cursor:pointer;padding:7px 0;color:var(--ink-soft)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<!-- ================= GATE ================= -->
+<div id="gate" class="gate">
+  <span class="restricted">Restricted</span>
+  <div class="inner">
+    <h1>Sales Desk</h1>
+    <div class="sub">Sign in</div>
+    <div class="field"><label for="gUser">Username</label><input id="gUser" autocomplete="username"></div>
+    <div class="field"><label for="gPass">Password</label><input id="gPass" type="password" autocomplete="current-password"></div>
+    <button class="big" id="gBtn">Unlock</button>
+    <div class="err" id="gErr"></div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="wrap" id="app" hidden>
+  <header class="masthead">
+    <div>
+      <h1>Carbon &mdash; Sales Desk</h1>
+      <div class="sub" id="tagline">every reply written in your own voice</div>
+    </div>
+    <div class="navbits">
+      <span id="statusBit"></span>
+      <button class="linkish" id="btnSetup">Setup</button>
+      <button class="linkish" id="btnLock">Lock</button>
+    </div>
+  </header>
+
+  <!-- ---- DAILY ---- -->
+  <section id="v-daily">
+    <div class="panel">
+      <div class="row">
+        <div class="field" style="flex:2 1 240px"><label for="who">Who are you talking to</label>
+          <input id="who" placeholder="e.g. bitusher"></div>
+        <div class="field" style="flex:1 1 150px"><label for="where">Where</label><select id="where"></select></div>
+        <div class="field" style="flex:1 1 170px"><label for="recall">Pick up a chat</label><select id="recall"></select></div>
+      </div>
+
+      <div id="transcriptWrap" hidden>
+        <div class="convohead"><b id="convoTitle"></b>
+          <button class="ghost mini" id="btnDelConvo" style="margin-left:auto">Delete chat</button></div>
+        <div id="transcript" class="transcript"></div>
+      </div>
+
+      <div class="field" style="margin-top:16px">
+        <label for="incoming">What did they say</label>
+        <textarea id="incoming" rows="4" placeholder="paste or type their message here"></textarea>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 1 260px"><label for="stage">Stage</label><select id="stage"></select></div>
+      </div>
+      <div class="actions">
+        <button id="btnDraft">Write my reply</button>
+        <span class="hint" id="composeStatus"></span>
+      </div>
+      <div id="out"></div>
+    </div>
+  </section>
+
+  <!-- ---- SETUP ---- -->
+  <section id="v-setup" hidden>
+    <div class="steps" id="steps">
+      <div class="step" id="st1"><div class="n">Step 1</div><div class="t">Offer sheet</div></div>
+      <div class="step" id="st2"><div class="n">Step 2</div><div class="t">Your messages</div></div>
+      <div class="step" id="st3"><div class="n">Step 3</div><div class="t">Train</div></div>
+    </div>
+
+    <div class="panel">
+      <h3 class="sec">1 &mdash; Offer sheet</h3>
+      <p class="hint">The only facts it's allowed to state. Anything missing here comes back as a <code>[bracketed blank]</code> instead of an invention.</p>
+      <div class="field" style="margin-top:13px"><label for="sOffer">What you sell, and the price</label>
+        <textarea id="sOffer" rows="3" placeholder="GoMining referral. ~50% annual ROI, compounded daily. 15W miners, 1TH ≈ $33. Code RINGO5."></textarea></div>
+      <div class="field"><label for="sIcp">Who it's for</label>
+        <textarea id="sIcp" rows="2" placeholder="Crypto-curious, wants BTC exposure without running hardware, skeptical of scams."></textarea></div>
+      <div class="field"><label for="sProof">Proof you can cite by name</label>
+        <textarea id="sProof" rows="2" placeholder="7 years operating, survived the last bear, 4 USA facilities w/ 24/7 livestreams, public CEO."></textarea></div>
+      <div class="field"><label for="sRules">Hard rules</label>
+        <textarea id="sRules" rows="2" placeholder="Never promise a specific ROI as guaranteed. Answer 'scam' with proof once, don't argue ASIC mechanics."></textarea></div>
+      <div class="actions"><button class="ghost mini" id="btnSaveSetup">Save offer sheet</button><span class="hint" id="setupStatus"></span></div>
+    </div>
+
+    <div class="panel">
+      <h3 class="sec">2 &mdash; Your messages</h3>
+      <p class="hint">Paste everything you've said to prospects — whole conversations or loose messages. Mark your lines <code>ME:</code> and theirs <code>THEM:</code> where you can; not required, but it sharpens the read. This is the raw material it learns your voice and your rebuttals from. Paste more anytime and re-train.</p>
+      <div class="field" style="margin-top:13px">
+        <textarea id="corpus" rows="14" placeholder="ME: I thought it was a scam too, but if you follow the links inside the app it's legit&#10;THEM: what if btc drops?&#10;ME: this is why I recommend the 15W efficiency miners..."></textarea></div>
+      <div class="actions"><button class="ghost mini" id="btnSaveCorpus">Save messages</button><span class="hint" id="corpusStatus"></span></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="ghost mini" id="btnExport">Export backup</button>
+        <button class="ghost mini" id="btnWipe">Erase everything</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 class="sec">3 &mdash; Train</h3>
+      <p class="hint">Reads your whole corpus in batches, then compresses it into one playbook: how you type, how you answer each objection, and the talking points you reach for. Run once now, then again after you've pasted more.</p>
+      <div class="actions" style="margin-top:13px">
+        <button id="btnDistill">Train on my messages</button><span class="hint" id="distillStatus"></span></div>
+      <div class="log" id="distillLog" hidden></div>
+      <h3 class="sec">Playbook <span class="hint">&mdash; edit freely, corrections stick</span></h3>
+      <div class="field"><textarea id="playbook" rows="18" placeholder="Empty. Train above, or write your own rules here by hand."></textarea></div>
+      <div class="actions"><button class="ghost mini" id="btnSavePb">Save playbook</button><span class="hint" id="pbStatus"></span></div>
+      <details style="margin-top:20px"><summary>Raw prompts</summary>
+        <h3 class="sec">Batch analyst</h3><pre class="prompt" id="pr1"></pre>
+        <h3 class="sec">Section merge</h3><pre class="prompt" id="pr2"></pre>
+        <h3 class="sec">Reply composer</h3><pre class="prompt" id="pr3"></pre>
+      </details>
+    </div>
+  </section>
+</div>
+
+<script>
+const MODEL="claude-sonnet-4-6",MAXTOK=1000;
+const USER="ringoshi",PASS="Ringomc420!";
+const STAGES=["Cold outreach","Reply to inbound","Answering a question","Objection: is it a scam",
+  "Objection: risk / BTC drops","Objection: trust / company","Ready to buy","Gone quiet"];
+const PLATFORMS=["Reddit","Twitter / X","Telegram","Discord","Instagram","WhatsApp","Email","In person","Other"];
+const SECTIONS=[
+ {k:"VOICE",q:"how this person actually types: sentence length, greetings, sign-offs, punctuation, capitalization, emoji, contractions, line breaks, and their recurring verbatim phrases"},
+ {k:"OBJECTION HANDLING",q:"each recurring objection or hard question a prospect raises, and the exact way this seller answers it — the argument, the proof they cite, the phrasing"},
+ {k:"GO-TO TALKING POINTS",q:"the recurring value claims, numbers, proof points, analogies and phrases this seller reaches for unprompted"}];
+
+const P_ANALYST_SYS=`You are a sales-communication analyst. You reverse-engineer one specific seller's voice and objection-handling from their real messages.
+
+Rules:
+- Report only what is observable in the messages. Never generalize from sales best practice.
+- Quote the seller verbatim only in fragments of five words or fewer, to pin down phrasing.
+- Focus on two things above all: exactly how the seller writes, and exactly how they answer each objection or hard question a prospect raises.
+- Be concrete. "Builds rapport" is useless. "Answers 'is it a scam' by admitting he thought so too, then pointing inside the app" is useful.`;
+
+const P_ANALYST_USR=`Below are real messages from one seller, marked ME, inside conversations with prospects, marked THEM.
+
+{TRANSCRIPTS}
+
+Write compact analyst notes under exactly these three headings:
+
+1. VOICE — mechanics only. Sentence length, greeting and sign-off habits, punctuation, capitalization, emoji, contractions, line breaks, formatting. List recurring verbatim phrases.
+2. OBJECTION HANDLING — for each objection or hard question a prospect raises, give the seller's answer, the proof or argument they use, and their phrasing.
+3. GO-TO TALKING POINTS — the recurring claims, numbers, proof points, analogies and phrases the seller reaches for.
+
+Bullets only. No preamble. Nothing over 20 words per bullet.`;
+
+const P_MERGE_SYS=`You compress many batches of analyst notes into one operational section of a seller's playbook.
+
+Rules:
+- Keep only patterns that recur across batches, or that are stated with unusual specificity.
+- Drop anything hedged, generic, or true of all salespeople.
+- Write it as instructions to a writer who must imitate this seller, not as a report about them.
+- No preamble, no closing summary. The section content only.`;
+
+const P_MERGE_USR=`Here are analyst notes from {B} separate batches of one seller's messages.
+
+{NOTES}
+
+Write the single section titled "{SECTION}" of this seller's playbook. It should capture {DESC}.
+Bullets. Under 200 words. Specific enough that someone could imitate them from this alone.`;
+
+const P_COMPOSE_SYS=`You draft the next message for ME, a salesperson. You write AS ME — never about me, never coaching me.
+
+<playbook>
+{PLAYBOOK}
+</playbook>
+
+<offer_sheet>
+{OFFER}
+</offer_sheet>
+
+<relevant_past_messages>
+{EXEMPLARS}
+</relevant_past_messages>
+
+Rules, in priority order:
+1. Match the VOICE section exactly. If ME never uses em dashes, don't. If ME writes two-sentence messages, do not write six. If ME lowercases everything, lowercase everything. Imitating the mechanics matters more than writing well.
+2. When the prospect raises an objection or question the OBJECTION HANDLING or GO-TO TALKING POINTS sections cover, answer it the way ME does — same argument, same proof, ME's phrasing. Don't invent a new rebuttal when ME already has one.
+3. Never state a fact absent from the offer sheet or thread — no prices, guarantees, client names, timelines, capabilities. Where one is needed, write a [bracketed blank] for ME to fill.
+4. Advance the conversation exactly one step. Do not stack three asks into one message.
+5. Never open with "Great question", "I completely understand", "I hear you", or any variant.
+
+Return ONLY a JSON object, no markdown fences:
+{
+  "read": "one sentence on what their message actually signals, including what they didn't say",
+  "replies": [
+    {"label":"2-4 word name for the approach","text":"the message, ready to send","why":"one sentence on the tactic and its risk"}
+  ],
+  "risk": "the single biggest way this conversation dies from here",
+  "nudge": "what to send if they go quiet, and after how long"
+}
+Give exactly three replies. The FIRST is the one you recommend sending. The other two must differ in strategy, not tone — one that applies real pressure or names the elephant, one that opens a genuinely different path.`;
+
+const DEFAULT_CORPUS="ME: ~50% Annual Payback\nME: Earn Daily, Compound Daily.\nME: Real Miners!\nME: Do we trust GoMining?\nME: Welcome to my public group regarding GoMining.GoMining is a low cost of entry, hands off approach to Bitcoin Mining which allows for a compelling compound strategy to compound rewards daily. Creating an unstoppable investment strategy that is unheard of in the finance industry. Currently as of writing this, the ROI (return on investment) (7/26/2025) is ~43%.Base value of $1000 initial investment \u2014 With a 50% annual ROI, reinvested daily, the effective annual ROI after one year is approximately 64.87%. This means your $1,000 investment would grow to about $1,648.72, yielding a profit of $648.72.Sign up/create account quick & easy with an email and receive a bonus 16TH of computing power ($500 VALUE)\u2014 https://gomining.com/?ref=RINGO5\nME: Feel free to discuss, and ask questions. I am available exclusively for you.\nTHEM: ringoshi got hacked?\nTHEM: \ud83d\ude02ringoshi making moneyyyy\nME: We're all making money taking advantage of GoMining\nTHEM: are you telling me if I put 100k I will have 164872 after 1 year??\nME: That's the current rate, yes. Bitcoin is speculated to continue going up. Math is probably more.\nME: The math on a 3 year compound prior to the next halving is even more insane.\nME: The rewards after 3 years, with a $1,000 investment at a 50% annual ROI compounded daily, are approximately $3,481.69. Your total investment would grow to about $4,481.69.\nTHEM: What are the risk?\nME: Risk is extremely low because the Computing Power you purchase is in the form of an NFT and  they have a marketplace that you can sell it, in the event you decide you don't want to do it anymore.\nTHEM: this return is annually after 3yrs?\nTHEM: What happens if btc price drops?\nTHEM: I only see people sharing the referal link on twitter\nME: They have a great referral program, this is why. However, most people just share their referral code with zero context. I am here to teach, with my professional background in actually mining Bitcoin with my own machines.\nME: This is why I recommend purchasing the 15W efficiency rated miners. You pay a slightly higher price per TH (computing power) with the relief that if Bitcoin  price drops, you still earn vs lower efficient machines have to go offline.\nME: They currently offer 20W and 15W. Commercially available machines efficiency is currently at 9.6W. GoMining offering 15W for their current price & electricity costs are unbeatable anywhere in the world without  spending $100's of thousands of dollars on your own setup.\nTHEM: you were in REU project, am I wrong?\nME: GoMining is doing what we wanted to do with REU. We plan to reintroduce REU in the future with a partnership with GoMining. Success takes time.\nME: Here's a future forecast in 3 years with Ringoshi current mining farm.\nTHEM: so if I spend $1000... I will recieve an NFT... gain satoshis.. and then if I want to withdraw my $1000 initial I have to sell the NFT?\nME: I would not recommend ever selling the NFT... but the option is there if need be.\nME: Your  goal is to reinvest the profits into more computing power until you reach an amount that comfortable for you. Withdraw portions of the rewards and continue compounding.\nME: I call it an arms race for computing power.\nTHEM: and pray that Gomining doesn't go bankrupt\nME: They survived the entirely of the last bear market which closed many crypto companies doors. They've been in operation for 7 years.\nME: They have 4 USA facilities with 24/7 LIVEstreams and a public CEO.https://www.linkedin.com/in/mark-zalan/?originalSubdomain=es\nME: I'm  really enjoying answering questions. Please don't be afraid to ask.\nTHEM: What would happen if for some reason they closed or something happened to the facility?\nME: They have multiple facilities and I'm sure they have insurance as well with such a large scale operation and partnerships. It doesn't make sense financially for them to close their doors at this point.  They are the only ones in the industry offering this to the public.\nME: and this is a question for virtually every project. We can only look at  the track record  thus far. Which is 7 years.\nME: A message I just sent to a friend. It's very valuable information.\"I could, and have, spent $600,000 on physical Bitcoin miners, but it required to spend $100\u2019s of thousands to upgrade the electrical at the facility. Then, you think of compounding the earnings. You simply can't buy fractions of physical Bitcoin miners, so you have to wait until you have enough to make another order. The order takes days of shipping, and then physical labor to get them positioned and engineered to be turned on.All of this time, and it's virtually/physically impossible to compound daily, not even weekly. With Gomining.\" https://gomining.com/?ref=RINGO5\nME: The Top 3 earners on GoMining collectively earn my yearly salary in just a single day of mining.\nTHEM: 820K TH the one on the top\nTHEM: Crazy\nTHEM: Ringo, can you drop here your best starters set-up which is pricewise affordable for most people?\nME: If you want to go for the long term strategy (which I  recommend). You want to purchase the 15W efficiency.\nME: Best bang for your buck is making a big first initial investment using the code RINGO5 for a 5% bonus in TH power. (one time use code)\nTHEM: It took me a while to understand that 15W is better than 20W \ud83e\udd23\nME: commercially available efficiency for miners right now is about 9.6... which is insane to think about honestly. Just means they use less electricity. You want lower electricity costs long term.\nME: Welcome!!\nME: Don't forget to hit your service button every 24 hours for a total discount of 3% after 10 days in a row.\nME: Love getting this email everyday.\nME: this type of return in something like Bitcoin Mining is absolutely absurd.\nTHEM: everyone only invest an amount of money u can lose without crying\nME: Takes a lot of money to make me cry. I put in roughly $20k initially. I plan to add more.\nTHEM: Each one have their owns risks\nME: What questions do you have? I have an assigned VIP manager with GoMining\nME: I will ask then directly for you\nME: Did you complete their KYC?\nME: I\u2019ve heard of the withdraw taking a long time without KYC\nTHEM: Yes I am verified\nTHEM: Has the return always been like this from the onset?The ROI is scary\nTHEM: Seems the value of btc is what makes the return so high\nME: ROI was maybe 40-50% 3 years ago\nME: Its always been roughly 40-50%. It\u2019s the cheapest way to buy BTC long term\nME: Reaching out to them now.\nTHEM: Hi admin\nTHEM: I'm ready to invest Which is best plan\nTHEM: please guide me\nTHEM: Thank you \ud83d\ude4f\ud83c\udffb all good now\nME: Choose the 15W miner option. I recommend 10+ TH to start a good compound strategy\nTHEM: How much it costs??\nME: ~$300. 1TH = $32.99\nTHEM: What about Returns..?\nTHEM: I mean daily profits.?\nTHEM: If I buy 1TH & 15W - 33$ How long it takes to get our investment back\nTHEM: @RingoshiToitsu\nTHEM: Annual ROI about 45%~50% of your investments\nME: 45-50% but with the use of compound interest. it\u2019s more like 60-64%\nTHEM: Pure scam\nME: I thought it was a scam too, but if you followed the links from inside the app. It\u2019s legit\nME: I actually got the bonus from them \ud83d\udc4d\nTHEM: Yes it is\nTHEM: 10% is good\nME: They just dont have a means/code to provide such a bonus without people abusing it. So it\u2019s on a manual basis with the team.\nTHEM: But why do that from outside the app\u2026.\nME: If they gave the code to VIP, the VIP could leak the code to non VIP\nTHEM: I see\nTHEM: So I have to trust\nME: Congrats on getting a VIP Manager. What\u2019s his name?\nTHEM: Ryan\nME: Mine is Alan\nME: It\u2019s crazy people will just call it a scam until they see the bonus is actually provided. Anything that\u2019s not trustless in crypto just seems like a scam, but these guys are running a solid operation.\nME: All is good \ud83d\udc4d\nME: For a purchase of 500k USD you will receive a straight up discount of 50,000 USD in the form of bonus TH. I will prepare an estimated mining yields report after making this upgrade and the total TH received after the upgrade\nTHEM: I think will go for a $10K upgrade soon and get a bonus 1k in TH\nME: I met a guy on a community FB page that has 11k TH\nTHEM: Wow crazy\nME: Open to questions for the next few hours guys\nTHEM: What do you think ?\nME: absolutely insane...\nME: I'm at 664.56\nTHEM: You will beat me soon \ud83d\ude00\nTHEM: Target is 2000 TH this year\nTHEM: Now the question for you\nME: Now lets see where you'll be in 3 years starting with 1000TH and 15W efficiency\nTHEM: Exactly that \ud83d\ude00\nME: Are you going to maintain the 17% discount with GMT?\nME: or pay maintenance with rewards\nTHEM: No I will go for 20% tomorrow\nME: kk let me run the numbers\nTHEM: And sure pay maintenance with rewards\nME: Here's your 3 year outlook\nME: Absolutely absurd.\nTHEM: Insane !\nME: $150,480/year in 3 years if  Bitcoin doesn't continue going up.\nME: Then we get next halving, rewards  cut in half. bitcoin doubles. yada yada yada.  gg my friend.\nTHEM: I can just retire with that \ud83d\ude00\nME: Retire and go to Bitcoin conferences and talk about GoMining full time. ;p\nTHEM: Reward cut in half do we have to worry about?\nME: Not really. Next halving is  April 17, 2028. At this point the block reward is chopped in half, but what usually happens is the price of Bitcoin essentially doubles. It's what happened this halving\nTHEM: Understood \ud83d\udc4d\nME: 2024 Apr 17 Last halving.$61,067 Price\nME: so, block reward cut in half. Price doubled lol\nTHEM: Crazy\nTHEM: One future id like to see is to choose individually how to receive rewards for each miner\nTHEM: I have 2 miners\nTHEM: 1 would like to reinvest in th The other converted in GoMining\nTHEM: It was real bro\nTHEM: No scam at all\nTHEM: I did it\nTHEM: Legit \ud83d\udcaf\nTHEM: Ringo could u pls check ur dm\ud83d\ude4f\nME: Hi! Sorry, I was finishing work. I dm\u2019d you!\nTHEM: Got the 36 TH bonus too\nME: Congratulations Mimmo. What's your daily earnings looking like right now?\nTHEM: Thank you \ud83d\ude4f\ud83c\udffb\nTHEM: With 17% discount\nTHEM: Today I buy more GoMining to reach 20%\nME: Now let me tell you the ultimate strategy I learned. All these tokens that you have to get the 20% discount. You can lock them and earn on them weekly. Helping you pay for the maintenance. Providing a hidden discount. Right now my weekly reward is 13.80 GMT with 2559 tokens locked.\nTHEM: Not bad\nTHEM: The locked tokens do not count for the discount right ?\nME: They do!\nTHEM: That\u2019s amazing!\nME: Every month I'm topping up my balance to $500 in GMT that I use for maintenance fees. and also add $500 to my locked balance.\nTHEM: Will do it tonight\nTHEM: Thanks a lot Ringo ! \ud83d\ude4f\ud83c\udffb\nME: I'm sure overtime I won't be able to afford paying the maintenance fee in GMT tokens.\nME: but I'll be okay with that \ud83d\ude1c\nME: Right now I'm spending 1100 GMT  per month in maintenance, but I'm paying it out of pocket so it's increasing my compound strategy by a lot.\nTHEM: That\u2019s why I stopped converting in TH but just converting in GoMining\nTHEM: So I do not have to add manually\nTHEM: And I do upgrades when I can\nME: Smart. Also \u2014 when you manually upgrade your miners. You get tickets in the weekly raffle. A guy with a 0.5% chance  to win last week won $2000...\nTHEM: Yes I am in\nME: I missed out on that raffle because I reinvest in TH\nTHEM: 10% chance\nME: Those GoMiners Access Keys are worth a lot of money if you didn't know.\nTHEM: Access key ?\nME: Current raffle\nTHEM: Oh I need to check that \ud83d\ude00\nME: Right now theres none in stock w/ Access key payments, but the marketplace is selling for $30k+\nTHEM: Insane\nTHEM: Strange\nTHEM: Not the same than u\nME: Set the lock to MAX\nME: it'll unlock slightly after the next Bitcoin halving\nTHEM: I see\nME: whats it show now\nME: $1375/year just to provide yourself a discount. Sounds sick\nTHEM: Very sick\nTHEM: And reward sent every week ?\nME: yes.\nTHEM: Great \ud83d\udc4d\nME: Welcome friend!!\nME: Hitting the gym for a bit. Be back later guys!\nME: Posting from the gym lol\nME: Closing the month out nicely. 43% growth on TH in the last month\u2026 amazing growth and grinding IRL for funds.\nTHEM: Cheap\nME: holy shit thats a super good deal wtf\nME: someone will purchase it today.\nTHEM: Hi @RingoshiToitsu. Thanks for all the heads up. Did I get it right that it is a better strategy to set rewards to gain GMT instead of TH reinvest and also lock as many GMT for max period to cover maintenance fee and gain additional discounts? Thanks\nME: It\u2019s a separate strategy that involves slightly more hands on/daily intervention, sure. For the time being, I\u2019m sticking to TH reinvest until theres another cash prize raffle.& yes, locking GMT (considering this is a long term compound strategy) makes sense to get a higher discount.\nTHEM: Thanks!\nME: Yw!  I wrote this nicely considering I woke up out of a dead sleep @ 4:30 to write it\nTHEM: Now starts to be interesting \ud83d\ude00\nME: i paid my maintenance out of pocket so my reward was slightly higher than yours w/ almost 400TH less\nME: but i can only afford paying it for so long. in another year. I won't be able to.\nTHEM: Yes the difference is on the Pool Rewards\nME: don't forget to hit your service buttons guys!\nME: Don't forget to hit your service button every 24 hours for a total discount of 3% after 10 days in a row.\nTHEM: Sold yesterday yes \ud83d\ude00\nME: $23/TH is just nuts\u2026 lol\nME: Anyone make any upgrades recently?\nTHEM: You mean made or will make ?\nME: Made or will make. I am doing a $10k upgrade this week\nTHEM: Did the OTC last week Doing the same next week\nME: I have a friend thinking of doing 5000TH. I think this would be the best decision he\u2019ll ever make. Thoughts?\nTHEM: 5k TH @15 w/th ?\nTHEM: Awesome \ud83d\udc4f\ud83c\udffb\nME: just hit 700\nME: I almost missed my service button yesterday due to bad service!\nME: Signed somebody up for GoMining at the restaurant.. A guy I've been talking Bitcoin about for the last few months. Told him about GoMining. He signed up!\nME: new method. setup recurring daily purchase of GMT from KRAKEN that equals your daily maintenance fees.\nTHEM: Bought a new miner from Marketplace $27.9/TH\nTHEM: Upgraded to 256 TH\nTHEM: My Farm now\nME: Holy shit..\nTHEM: Time for another upgrade !\nME: You're double my TH now!\nME: I'll catch up to you.\nTHEM: How comes some of the miners in Marketplace are at 35wTH in efficiency ?\nME: They bought them years ago.. and instead of upgrading their efficiency. They try to sell them.\nTHEM: Ok so before the efficiency was more than 20wTH\nTHEM: Now we have just 20 or 15\nME: Yes. Maybe they will offer 10 in the coming year or so\nTHEM: I like that \ud83d\ude00\nME: 1.51 TH\nTHEM: Thinking to do a $30K OTC upgrade this week\nME: I wish \ud83e\udd2e\nME: I say go for it.\nME: There nothing in crypto allowing you to capture the power of Bitcoin Mining like this and compound daily. NOTHING\nTHEM: I think now I\u2019m ok\nME: It\u2019s going to take me a while to catch you, but I will. Mark my words \ud83d\ude02\nME: It\u2019s beautiful\nTHEM: this should give u over 100 bucks/day\nTHEM: capital should be covered by next year if the price of btc doesn't fall\nTHEM: nice one\nTHEM: My target is 5000 TH for 2026\nME: Estimated outlook if you upgrade daily until next halving.\nTHEM: Totally crazy \ud83d\ude31\nTHEM: that means 3000th would give a total of 1k/day if reinvest is turn on till next halving\nTHEM: this is insane\nME: Very insane strategy for sure.\nTHEM: Never seen something similar !\nTHEM: just push it to 3k TH\nTHEM: u have spent almost 100k\nTHEM: Yep\nME: Exactly. I am so glad I found GoMining. After years of mining Bitcoin with my own machines. I always wanted a way to compound my earnings daily. The only way to compound was WAITING until enough to buy another Machine. Once I purchase the machine, I need to wait for shipping. Then I need a day or so of maintenance/engineering to fit it in a correct spot. Just impossible to compound daily with your own miners.\nTHEM: and is also capital intensive\nTHEM: cost of 2800TH is it upto 80k?\nTHEM: Yes it\u2019s correct\nME: Well done.\nTHEM: I\u2019m peanut \ud83e\udd5c compared to those ones \ud83e\udd23\nME: theyve probably been compounding daily for years already\nTHEM: Yes for sure but it\u2019s out of my mind the daily rewards \ud83d\ude00\nTHEM: 47k per day !!!\nME: yeah $47k per day is outrageous.\nTHEM: that is rubbing a bank\nME: but its completely possible. GoMinings data centers are massive and multiple.\nTHEM: Those guys are millionaires\nTHEM: I see my retirement easy in 3 years\nTHEM: Hello Ringo Can you help with that\nTHEM: 3584TH with reinvest turned on after btc halving?\nTHEM: 3000 TH is around 100k, right? What's the reward per day?\nTHEM: My daily rewards with 2800 TH\nTHEM: I have 15% discount on maintenance\nME: Rewards end up changing to be more historically after the halving believe it or not.FOMO paired with lower efficient machines getting turned offline, creating more rewards for higher efficient machines. Halved block reward decreasing sell pressure. All these factors lead to a steady increase in rewards. Hard to run the math until we get there.\nME: 3584TH reinvested daily until halving.\nTHEM: 6 TH reinvestment in 1 day Starts to be very interesting\nME: That\u2019s a beautiful sight to see.\nTHEM: I will stop reinvesting in TH when my 20k MGT token are all gone for maintenance I think after that I wont be able to afford to pay it from my pocket \ud83d\ude05\nME: That sounds like a good strategy. I figure once I can\u2019t afford to pay with GMT, It\u2019d be making enough money anyways.\nME: Paying with GMT is just a way to increase your compound strategy quicker.\nME: Reinvesting all of the rewards instead of partial\nTHEM: Right \ud83d\udc4d\nME: For me, I can afford an extra $500/month. I don\u2019t think I can afford it once it surpasses maybe $1500 \ud83d\ude2d\nTHEM: Unfortunately same for me\nME: re-upped my maintenance fees for the next ~7 days\nME: Had to increase my daily purchase from 36 to 38 GMT\nTHEM: Yes each day by increasing mining power also maintenance goes up \ud83d\ude05\nTHEM: Hope I get a chance\nME: 6% chance.\nTHEM: Yep\nME: I'm sure you'll get one over time once you start manually upgrading. Might be the strat until you get 1 key.\nTHEM: Would be great\nTHEM: They have Gobox now\nTHEM: Just after my 35k upgrade \ud83e\udd72\nME: Prior to Gobox release, you'd get a Access Key after reaching 5000TH. They removed this and added it into GoBox exclusively... Now it's just a gamble.\nME: Yeah... I voiced my opinion to my VIP manager.\nME: Unfortunately, this decision was made by our management. Perhaps they will consider transferring the boxes to all VIP users, but unfortunately we do not have these guarantees.\nME: Theres a chance the 500TH+ users with a VIP Manager will potentially get the boxes retroactively.\nME: but we must continue to show our dis-satisfaction with their decision.\nTHEM: Would be great\nTHEM: Let me write to my VIP guy \u2026.\nME: They are out of office until Monday.\nME: You'll get the after-hours guy.\nTHEM: Ok will see that later \ud83d\ude05\nME: Rest assured, I will continue pushing for the boxes. We are owed a lot of boxes.\nTHEM: Going diamond now is far\nTHEM: Need 5000 TH\nME: exactly... It's going to take me like 3 months to reach next Platinum level.\nME: What's stopping us from selling our miner. Transferring the GMT tokens to a new account and upgrading a new miner.\nME: Rinse repeat.\nME: Im joking\nTHEM: Sure \ud83d\ude05\nTHEM: Let\u2019s see \ud83d\ude05\nME: Things dont get fixed without complaints\nTHEM: Totally insane !\nME: I wonder how long he mined to get that. Likely had to pay electric bill for months without any income from the miner. It\u2019s very risky\nTHEM: Yes I guess too\nTHEM: Today they did a wrong reinvestment calculation\nME: What do you mean?\nTHEM: Look\nTHEM: $161.22 in rewards\nTHEM: No way I get just 4 TH\nTHEM: My maintenance is paid in GoMining from my virtual wallet\nME: Let me do some math.\nTHEM: I already complained \ud83d\ude05\nME: I\u2019d like to know the explanation/math behind it when he replies.\nME: What\u2019s your cost per TH rn?\nME: Because I was suppose to get 1.97TH, but I only received 1.84TH\nTHEM: That was last Friday\nME: 6.05 down to 4.08 is a huge jump.\nTHEM: That today\nTHEM: They calculate with the wrong reward amount\nTHEM: I wait for their answer\nME: I am going to look and see if others reporting same problem.\nME: Anyone know why my rewards were only 1/10 of yesterday's? 40 total th/s\nTHEM: Ahhh\nTHEM: I\u2019m not the only one\nME: Yeah im sure they are swamped in messages\nTHEM: I think too\nME: I got 2 emails. Both of my miners were upgraded for some reason. One was 1.2 and the other .6 TH\nTHEM: They have an issue \ud83d\ude05\nME: I am confident they will fix it.\nTHEM: Sure they will\nME: OP says GoMining is actively working on a fix.\nTHEM: Cool\nME: Based on just a 3% service button discount**\nME: My VIP manager had the same issue. Any word from yours?\nTHEM: Yes now I got back my 2 TH missing\nTHEM: Hi Mimmo, yesterday the rest of reinvestment in TH was done, additional 2 TH were added.\nME: Wow.  a company that actually cares and works quickly to fix mistakes.\nTHEM: Yes \ud83d\udcaf\nME: Very pleased.\nTHEM: Me too\nTHEM: Target 5000 TH by Christmas\nME: Only 2220 more than me \ud83d\ude02\nTHEM: Imagine the rewards with BTC at 1M \ud83d\ude00\nTHEM: JUST IN: Coinbase CEO Brian Armstrong predicts Bitcoin will reach $1,000,000 by 2030.@WatcherGuru\nME: Bitcoin pumping.\nME: We\u2019re closing out the month soon. I made a few $500 upgrades this month. Reinvested every $ of rewards.\nTHEM: I\u2019m full addicted to this\nME: Welcome. Im available for any questions.\nTHEM: The hardest now are the last 1000 TH to reach my target of 5000 TH before the end of this year\nME: Theres still many people who say they just started out and only have 10-50TH and it\u2019s like damn thats going to take a long time.\nTHEM: I could not wait to go heavy on it Moved a lot of crypto gains done recently ROI 45-48% never seen anywhere else\nME: Quite frankly. Bitcoin Mining has always been around this rate, but you had to buy miners that were essentially useless once they were used and the scalability was very difficult. Now it\u2019s similar rate and extremely scalable.\nTHEM: I was lucky today\nME: WHAT DID YOU WIN?!?!?!\nME: 2% of the prize pool.\nTHEM: Yes\nME: amazing. What was the prize pool total?\nTHEM: Almost 1k GMT\nME: Massive W lol\nTHEM: Total was 47k\nME: 1 guy received 18,800 GMT. That's crazy.\nTHEM: Crazy yes\nME: New Promo Code \u2014 https://x.com/ringoshitoitsu/status/1964296321096917309?s=46\nME: What\u2019s everyone daily TH earnings??\nTHEM: Just stopped compounding for a while\nTHEM: U have increased ur TH to 6k Mimmo?\nTHEM: Yes\nTHEM: U have exceeded ur target.\nTHEM: U guys ain't playing in here\ud83d\ude01\nTHEM: That's over 150k investment\nTHEM: Yes but stopping compounding for a month\nTHEM: BTC helping me \ud83d\ude00\nME: It\u2019s good to have the option to hold or compound my friend.\nME: Prayers for Charlie Kirk.\nME: Just to let you guys know I\u2019m available full time for you if you have any questions or just want to chat.\nME: Looks like they lowered the cost per TH with this increase of difficulty and decrease of BTC price. Great time to load up on TH if you haven\u2019t already.\nME: It says you have multiple pending NFT payments. If you started one previously, you need to go back to that one. Don\u2019t forget to add the promo code RINGO5 for a bonus.\nME: this is where you\u2019d see pending upgrades/purchases\nME: To better understand Bitcoin Mining in general, they have an academy course you can take to further understand.https://app.gomining.com/academy/homeTo be short: They have 9 warehouses filled with computers that mine bitcoin. Purchasing TH on their app is like purchasing a slice of their pie. When they earn bitcoin, you get a % of their rewards. Dependent on how many TH you own.\nME: You enter it on the bottom where it asks for promo code!\nTHEM: I have a question regarding the optimal approach to a signifcant mining infrastructure investment. A key consideration for me is the potential for future resale. From a resale perspective, is it better to create several smaller mining units instead of a single, high-capacity miner? I would assume that smaller miners would offer a broader potential buyer pool in case I want to resale later. Or can high capacity miners be \"split up / divided\" into smaller USD values when selling on the go mining market place. Thanks for feedback.\nME: Thats a great option to consider. I personally won\u2019t be selling in the future, but if I did, surely a smaller miner would sell quick but I\u2019ve seen larger ones sell just as fast as long as it\u2019s sold at a reasonable rate.Theres a small discount when creating a miner that makes it cheaper the more TH the miner has or will have. So, it\u2019s a greater ROI the more it has rather than buying multiple smaller units.However, the strategy seems very safe.\nTHEM: Thank you for the feedback, much appreciated.\nME: Crossed 1000TH today!!\nTHEM: Congrats Ringo !\nME: Thank you! I received 16TH free from my GoBox.\nTHEM: Nice catch \ud83d\udc4d\nME: The TH prices are still dropped by more than 11% for 20 W/TH and 15 W/TH miners! \u2014Any plans on upgrading your farm by combining this opportunity with the 10% discount (for $10k+) which I am still offering; will in total make it a 20% discount, the current BTC market rate is 120,400 USD and the TH prices will be soon increased to the previous prices in the upcoming weeks.\nME: Strongly advise to load up on TH before they increase the cost per TH in the coming few days.\nME: It\u2019s no problem! I\u2019m here going forward to get you a 10% bonus on anything over $10k\nME: You can only use the 5% bonus as a one time opportunity. The 10% is available multiple times, but only on $10k+\nME: My brother is doing $100k in the coming weeks and he\u2019s getting a $10k bonus \ud83d\udcaa\nME: If you\u2019re into the Mining Wars game (which I don\u2019t recommend) it pays weekly. leave your clan to earn daily solo mining\nME: If you are participating in Miner Wars, it takes 1 week.\nME: When the Epoch ends. Every 7 days. I don\u2019t know the exact payout days for it. I don\u2019t participate in mining wars. It\u2019s gambling/luck based. Solo Mining is more stables\nME: Just leave the clan. I don\u2019t know how you even got into it to begin with. It takes 24 hours from the moment you leave a clan to start earning from Solo Mini g\nME: Thats not how it works.\nME: When you go to Miner Wars, Does it show you in a clan or anything?\nME: Yeah you\u2019re in Dune1 clan. Find a way to leave it. In your profile.\nME: Its automatic if you\u2019re not in a clan\nME: Nope. Once you own TH. Theres nothing you need to do further\nME: That is just an added utility\nME: Oh wow. the weekly miner wars reward was yesterday. If you left the clan. Should get reward tomorrow\nME: I just ran my personal earning numbers and it\u2019s an astonishing roi %. I implore everyone to add more if they are able to. I\u2019m working my ass off to inject more money into this beast.\nME: Turned Auto-Reinvest into TH off considering the 10% BTC dip.\nME: Stack and upgrade manually at a later date.\nME: Just hit the withdrawal button under your wallet.\nME: Follow the prompts.\nME: Select your crypto, choose amount, withdraw address etc\nME: You need to pass KYC in order to withdraw\nME: but after that, you\u2019d just enter a destination address and the amount.\nME: Of course\u2014https://discord.gg/yMNcyYSYmR\nME: Reinvest into TH is still off. Stacking BTC right now hoping for a price increase.\nME: Deposit 27552.96 GoMining into your virtual wallet. I recommend upgrading your own miner instead of marketplace.You don\u2019t get VIP levels buying from marketplace & you miss out on the chance of getting the GoBoxes. GoBoxes have a small chance to give you an \u2018Access Key\u2019 which is currently worth $6k-$8k\nME: Highly recommend not selling it. Find the miner in your dashboard and tap/click the \u201c:\u201d icon\nME: Clock the center button. looks like a fan\nME: Find your miner.\nTHEM: Click on the 3 dots button and check if you have the sell option\nTHEM: You need to mint it before selling it\nTHEM: Like an NFT\nME: click the mint button\nTHEM: You need to pass the KYC\nTHEM: Click on the KYC button\nTHEM: An follow the instructions\nTHEM: No prob bro\nTHEM: Now on pass the KYC\nME: Yes. Click Pass Kyc\nTHEM: You need an Id document\nME: Please follow the instructions on the screen\nME: Yes. Please dont be afraid to hit buttons. You can\u2019t mess anything up.\nME: Mint it on Solana. It\u2019s a cheap gas fee network\nME: Pick any chain you want. Theres no right or wrong choice.\nME: I can\u2019t choose the wallet for you.\nME: connect to your wallet. I don\u2019t know which wallet you use.\nME: Depends on if you priced it competitively. If you want it to sell fast, you need to sell it at a favorable discount for users vs just upgrading their current miner.\nME: Yes!\nME: https://www.reddit.com/r/GoMiningDiscussion/s/qcGrDTKcaZSomeone did some digging on verifying if GoMining actually mines Bitcoin or not. Because people always claim, \u201cit\u2019s cloud mining! they don\u2019t actually mine BTC\u201d.Well, this guy found their farms linked to public pools.\nME: Thousands of real machines actively producing BTC \ud83d\udcaa\nTHEM: I never doubt of that\nTHEM: We are safe here\nTHEM: I think to retire after next halving to see how it goes after that\nME: i wouldnt ever send using ETH network. Trying sending USDT using a network with lower fees\nME: I wouldn\u2019t use Trustwallet going forward. Download metamask. You can use Arbitrum network ETH Layer 2 that only charges $0.01 for a transaction.\nME: GoMining accepts these networks for USDT \u2014 Eth, BNB, Tron, Arbitrum, Solana, and Ton. \ud83e\udd29\nME: Just upgraded my miner by 128TH \ud83d\udcaa\nME: $9 for a transfer/swap is simply not being truthful.\nME: He left the group. He was trying to scam us over $9\u2026\nME: engagement farm to stay relevant https://x.com/ringoshitoitsu/status/1987639829694452140?s=46\nME: Name 1 investment in this world thats still paying roughly 30% roi excluding daily/weekly/monthly compound interest.\nME: Even with this price decrease; we\u2019re still outpacing global market trend by 500%\nTHEM: Best investment i have done\nME: Lets gooo!!\nTHEM: Trying Miner Wars this week \ud83d\ude05\nTHEM: Let\u2019s see the result on Tuesday\nTHEM: Won 9 blocks for the moment\nME: LMAO. Let me know how it goes.\nTHEM: Sure I was very curious to see\nME: You get your reward tomorrow from Mining Wars yeah?\nTHEM: Normally yes 12:00 utc\nTHEM: What is sure are my 9 blocks\nTHEM: About 400 gmt each\nTHEM: BTC fund will be a surprise good or bad\nTHEM: In any case they will deduct the services fees for 1 week\nME: interesting to know if you make more or less.\nTHEM: That\u2019s the point\nTHEM: If not will go back to solo mining\nTHEM: That\u2019s all I got this week in MW\nME: Consensus?\nTHEM: Better in solo mining for me\nTHEM: As I spent a lot for the spells\nTHEM: And paid the services fees apart\nTHEM: But good experience\nTHEM: I needed to get in to see \ud83d\ude01\nME: I\u2019m glad you experienced it, and I\u2019m kind of glad Solo is still better. I\u2019m sure if you spend more time in MinerWars; you\u2019d strike luck and it\u2019d pay off; but I prefer stability.\nTHEM: Sure at the end stability is better\nME: Cost to upgrade 15w/th was lowered btw. Huge as the price of BTC  has increased.\nME: Happy Thanksgiving to all GoMiners \u2764\ufe0f\nTHEM: So we can upgrade your miner NORTH 2306 from 2181 TH to 2660 TH or $10 016,39 + additionally you will get 96 Th as bonus. So in total you will get 575 TH.\nTHEM: Crazy\nME: That is crazy.\nTHEM: $17.5 per TH\nME: for a 15w... INSANE\nTHEM: I\u2019m thinking about it before Black Friday ends\u2026\nME: Yeah thats a solid black friday deal. I'll remember this for next black friday. LOL\nME: You  end up doing the black friday upgrade?\nME: @pullinamia\nTHEM: At the end i didn\u2019t Waiting and saving if they offer 10w/th efficiency next\nME: I\u2019m hopeful that they do.\nME: I applied to work for GoMining. Their hiring manager  received my resume yesterday.\nTHEM: Wow great Ringo !Give us some news about it\nME: Little late on this. Been busy! https://x.com/RingoshiToitsu/status/1996782441093103985?s=20\nME: Total rewards surpassed $7000!\nME: All reinvested!\nTHEM: And people still thinking if it\u2019s worth investing in GoMining \ud83d\ude00\nTHEM: Happy with my Greedy giving me 2 free TH weekly\nME: Yeah a free 2 TH per day is wild\nTHEM: Weekly \ud83d\ude09\nTHEM: Could you share the timeframe it took to make 7k rewards and the total cost for all four miners? Thank you.\nME: I started  mining on May 26th with an initial mining power of 403. I'm now at 1317 mining power.\nME: Costs roughly $19.25 per TH  of computing power.\nME: $25,352 to buy same TH as me.\nME: However; I did not bring all of that capital myself. I've reinvested the $7000 (now $8000) all into more mining power.\nME: GoMining card just released! \u2014 Head over to your wallet in the app and locate the Visa Card button.Requires KYC 1 & 2, and proof of address! Takes about 10 minutes to process and virtual card info is available. Physical card takes days.\nME: Available in USA as of now!!!\nTHEM: Cashback works great \ud83d\udc4d\nTHEM: Got 2 free th from it\nME: Guys \u2014 Get the card while it\u2019s free. I don\u2019t see them keeping this as a free option forever. You get 1TH for free for signing up. Just complete KYC and finish the setup.\nME: gomining.vip\nTHEM: 4.89 free TH on my greedy this week. It\u2019s insane !\nME: That is insane\nME: Ensure you do not have auto-reinvestment turned on. Ensure you are utilizing my website to manually purchase/lock GMT and buy TH. This is better than autoreinvest.\nME: Apologies for the Unification Validator going offline. The storage capped out... happens when you don't have any notifications anymore telling you when things are happening. (rip  other validators)I'm working on syncing the node right now and we have about 6 months before this has to be done again.\nME: Disk usage capped out at 100% and caused memory to spike to 100% as well. We've cleared and applied a snapshot to  skip the line on waiting.\nME: back online!\nTHEM: You still believe in Unification $Fund\nME: Keeping the Validator online! Very fortunate to have found Unification. Regardless of what happens. Met a lot of good people that have changed my life for the better.\nME: Happy  1st of June. Halfway done with 2026!\nTHEM: Isn\u2019t 1st of July halfway ?\nME: technically June 30th\nTHEM: Yep\nME: but I like to say 6 is half of 12 \ud83d\ude02\nME: December 1st-31st is extra days \ud83d\ude02\nTHEM: Yes \ud83d\ude00\nME: price of BTC is down but GMT is stable\nME: I\u2019m expecting a serious BTC catalyst soon\nTHEM: I hope you\u2019re right\nTHEM: Tired of seeing it in the 70\u2019s\nTHEM: MW keeps gmt price stable\nME: True!\nTHEM: Finger crossed \ud83e\udd1e\nTHEM: Hi Ringo\nTHEM: A friend used the app\nTHEM: 3197 TH shows Diamond III\nTHEM: Should be Patinum III\nME: i input that TH and the website outputs plat 3\nTHEM: He has 79000 gmt in the wallet and 32000 locked\nTHEM: That\u2019s the reason ?\nME: oooo he found a bug. our site is counting the wallet balance towards VIP when it shouldn\u2019t\nME: Thank you!\nTHEM: You\u2019re welcome \ud83d\ude09\nME: changing rn\nME: tell him to refresh\nTHEM: All good now \ud83d\udc4d\nME: Yo @pullinamia can you help me with something? What was the TH value of your greedy tuesday and how much was the upgrade?\nME: Gonna use  this to reverse engineer the math and add it to my calculator site.\nTHEM: Hi Ringo, 1959 TH on last Monday and now 1966\nTHEM: 7 to 7.5 TH every week at the moment\nME: thats a .3% increase?\nTHEM: .35 to .4\nTHEM: Depends on the weekly voting\nME: Yeah, I purchased a greedy so that I could add the greedy math into my calculator. I just need to update the weekly payout manually\nTHEM: Oh very nice\nTHEM: I sold some normal miners\nTHEM: Waiting to buy another greedy with that\nTHEM: Losing my diamond 1 status but never mind\nTHEM: Platinum 3 is ok\nME: for a loss?\nME: Yeah you lowered my daily Ambassador reward by $4/day by selling your normal machines\nTHEM: Loss compared to the original price but GMT was .23 now .28\nME: from your electricity\nME: Sad about that, but it\u2019s all g\nME: $120/month LOL\nTHEM: Wow\nTHEM: Not bad\nME: It\u2019s gone now because you sold your machines\nME: Need to ensure you\u2019re not selling miners, this is a very bad strategy. Need to be patient and stack your daily reward to buy stuff.\nTHEM: I sold about 3k TH\nME: Yes, I see that\nME: Removed 3k TH from my total referred TH :(\nME: Now I have only 14k referred TH\nTHEM: Buying a greedy and let the Weekly TH increase the power\nTHEM: New strategy as I had to lend 20k usdt to a friend\nTHEM: Now got themBack and waiting for a greedy at a good price \ud83d\ude00\nTHEM: Great \ud83d\ude0a\nME: I just bought a greedy @ $18/TH\nME: won\u2019t recoup the premium from it for 380 days\nME: after 380 days it will be profit\nME: compared to normal TH\nME: Whats your discount?\nME: There was a greedy for $11/TH @ $24k for sale last week\nTHEM: Looking for something cheaper got just $20K to spend\nME: Theres bots that buy all the good deals. I talked to a guy to lower the price of his greedy to a reasonable price and a bot sniped it in 2 seconds\nME: I\u2019d recommend just upgrading a normal machine. The premium on these is just not worth it unless you have like $50k to spend\nTHEM: For the moment I will not rush to buy\nTHEM: New efficiency 12 W/TH\nTHEM: More work for Ringo \ud83d\ude00\nME: the website is fully updated for it\nTHEM: GMT optimizer too ? \ud83d\ude00\nME: yes!!\nME: took 2 hours\nME: but i had to go back to work and i was working on a bug in the capital planner when planning large amounts of capital over 5000TH\nTHEM: Upgrade to 12 is not worth imo\nME: The capital planner will use an ai algorithm to tell you this info\nME: and it will alert you when it is more profitable to upgrade efficiency vs th/lock\nTHEM: Nice\nTHEM: Obviously no way to buy it \ud83e\udd23\nME: haha yeah i tried buy it too\nTHEM: But I got this for $8k\nME: Happy Tuesday payday @ GoMining\nME: $145 \u2764\ufe0f\nME: Whats up Nazanin?\nTHEM: Halving not so faraway We need BTC at 150k \ud83d\ude05\nTHEM: I think we will see many miners selling for cheap\nME: Why is that?\nME: You  gotta see the vision Mimmo. This is 10+ year play.\nTHEM: I see that\nTHEM: But many will not\nME: You  need $114k to get to my current setup. I'm adding more weekly\nME: I got about another $8k im gonna add.\nTHEM: How many th now ?\nME: 3,627\nTHEM: Discount ?\nME: 15.78 efficiency\nME: 27.8%\nTHEM: Very good\nME: yessir!\nME: in with the big dogs now\nTHEM: I have more Th but less discount\nME: discount saves me $10,106.09/yr\nTHEM: Yes \ud83d\ude4c\nME: only  $34,102.01 locked\nME: worth it\nTHEM: I got 35k tokens locked\nTHEM: And 25k in wallet\nME: 121k  here o.O\nTHEM: 3900 THTotal discount 16%Net daily rewards = $20\nTHEM: Very poor at the moment\nME: and whats your weekly staking?\nME: The updated meta strategy is pairing TH with max discount and staking\nTHEM: 117 gmt last week\nME: You should be staking your GMT everyday/week until you have max discount\nTHEM: hello. i want to mine. tell me more please\nME: Hey man! I started out mining back in 2021. I made a bag off of Shiba Inu & invested over $600k into Asic machines. I partnered with a hosting facility and it was really profitable. Until they caught on fire and I lost everything. In my despair, I researched and found another hosting company, but this time I don't own any physical hardware. You purchase a share of their mining facility, and in return, you earn BTC daily based on your fair share. I started with $20k, and fast forward a year later, I have over $100k invested in my farm. The current roi is ~35% per year. As BTC price goes up, this roi% goes up too.\nTHEM: ohh, thats a pyramid scam of fake mining\nME: I don't know why people think that. I've been mining with them over a year and It's very real. voskcoin just recently visited one of their facilities in texas.\nTHEM: this is a common scam called fractional reserve mining \u2014 mine a very small amount so you can fool others. this hashrate does not add up to the rented hashrate. its trivial to prove you actually have the hashrate you claim for 0 effort. every block mined can be tagged with your pool or miner name and it will shutup critics like myself and be free advertising.\nME: if it wasn't legit my friend, they wouldn't be able to offer an institutional product for Accredited & Institutional Investors Only and have this many partners in the space if it were a scam/ponzi. gomining is mining ~250BTC a month. I want a share of that without having to worry about physical machines.\nTHEM: Its not proof \u2014 they are also trying to scam bigger whales. If they are mining 250 BTC a month, let me see the published blocks in a block explorer. why won't they do that? 250 BTC is enough to justify running their own pool and would only help attract others.\nME: I'm pretty sure they are working on establishing their own pool.\nTHEM: it would take a dev under 1 hour to create a new pool. its not difficult.\nME: and to move all of their miners to that new pool? how hard would that be?\nTHEM: 1 second. have you ever owned an ASIC before?\nME: yes and it takes a long time to reconnect the asic to the pool, its not 1 second, for it to reach maximum TH.\nTHEM: dude, in the config of asics it allows you to even select backup pools for auto switching in 1 second. you should know this.\nME: everytime I've had to do maintenance on my machine, taking it offline and putting it back online would take almost 15 minutes of downtime.\nTHEM: changing the pool you mine from does not lead to any downtime, its seamless. you dont need to take the asic down to switch pools, they are designed even with fallback pools.\nME: lol ive switched pool before and it took over an hour for the TH to go back to avg rates. also its like a 3-5 minute job to go into the software to change stratum, name, and password. this is not an instant job, and multiply that by 1000's of machines. oh.. looks like they already did their own stratum v2 pool?\nTHEM: you dont need to manually update each ASIC. never heard of miner management software that automates all this? you can use an automated API to change all in an instant. Even I only have 5 ASICs and use management software.\nME: we weren't that familiar with it all. thats another reason why i went with gomining. its not user friendly, and not scalable. do you know how expensive it is to upgrade your electricity when you want to scale a physical farm? you gotta add-on transformers.\n";
+const DEFAULT_PLAYBOOK="## VOICE\n- Short, punchy messages; 1-3 sentences. Breaks a thought across several consecutive messages instead of one block.\n- Warm, high-energy openers: \"Hey man!\", \"Welcome!\", \"Welcome frens\", calls people \"my friend\".\n- Pitch mode is sentence-case; debate mode drifts to lowercase (\"lol ive switched pool before\").\n- Heavy first-person credibility \u2014 his own farm, \"$20k initially\", \"over $100k invested\", the SHIB bag, the fire.\n- Contractions throughout. Trailing \"...\" for open thoughts. Emojis rare (\ud83d\udc4d, \ud83d\ude4f\ud83c\udffb).\n- Recurring phrases: \"It's very real\", \"I thought it was a scam too\", \"arms race for computing power\", \"hands off approach\", \"cheapest way to buy BTC long term\".\n\n## OBJECTION HANDLING\n- \"It's a scam / fake mining\": admit \"I thought it was a scam too,\" then point to proof INSIDE the app; cite VoskCoin's Texas facility visit, the institutional product, 7 years operating, public CEO Mark Zalan, 4 USA facilities with 24/7 livestreams. Give proof once \u2014 do NOT get dragged into arguing ASIC firmware/pool mechanics.\n- \"What if BTC drops?\": recommend the 15W efficiency miners as downside protection \u2014 lower electricity cost means you stay profitable at lower prices.\n- \"What if they go bankrupt / facility closes?\": they survived the last bear market that closed many crypto companies; the NFT sits on a marketplace you can sell; 7 years operating.\n- \"It's just a referral link people spam on Twitter\": agree most people share the code with zero context; position yourself as the guide who actually teaches and mines himself.\n- \"Do I have to sell the NFT to withdraw my initial?\": never recommend selling; reinvest profits into more computing power, withdraw portions of rewards, compound.\n\n## GO-TO TALKING POINTS\n- ~35-50% annual ROI; \"more like 60-64%\" once compounded daily.\n- Buy 15W efficiency, not 20W; commercial efficiency is ~9.6W; 1TH \u2248 $32.99. Start 10+ TH for a real compound.\n- \"arms race for computing power\" \u2014 reinvest until the income is comfortable, then withdraw portions.\n- His story: made a bag on Shiba Inu, put $600k into ASICs, lost it to a facility fire, went hands-off with GoMining, $20k \u2192 $100k+.\n- GoMining mines ~250 BTC/month, 7 years old, survived the bear, public CEO, 24/7 livestreamed USA facilities.\n- Hit the service button 10 days straight for a 3% loyalty discount.\n- Code RINGO5 for bonus TH (handled manually by the team, not an in-app code).";
+const DEFAULT_SETUP={"offer": "GoMining referral (code RINGO5). ~35-50% annual ROI, closer to 60-64% compounded daily. Recommend 15W efficiency miners; 1TH \u2248 $32.99; start 10+ TH.", "icp": "Crypto-curious people who want BTC exposure without running physical hardware. Usually skeptical it's a scam.", "proof": "7 years operating, survived the last bear market, ~250 BTC mined/month, 4 USA facilities with 24/7 livestreams, public CEO Mark Zalan, VoskCoin visited the Texas facility, institutional product for accredited investors.", "rules": "Use referral code RINGO5. Never guarantee a specific ROI. On 'it's a scam', give proof once and do NOT argue ASIC mechanics. Recommend 15W miners. Never advise selling the NFT."};
+let S={corpus:"",playbook:"",setup:{},convos:[],activeId:null};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- gate ---------- */
+$("gBtn").onclick=()=>{
+  const u=$("gUser").value.trim(),p=$("gPass").value,e=$("gErr");e.textContent="";
+  if(u.toLowerCase()!==USER||p!==PASS){e.textContent="That doesn't match.";return;}
+  enter();
+};
+["gUser","gPass"].forEach(id=>$(id).addEventListener("keydown",ev=>{if(ev.key==="Enter")$("gBtn").click();}));
+$("btnLock").onclick=()=>{ $("app").hidden=true;$("gate").hidden=false;$("gPass").value="";$("gErr").textContent=""; };
+
+async function enter(){
+  $("gate").hidden=true;$("app").hidden=false;$("gPass").value="";
+  await load(); paint(); renderDaily();
+  if(!S.playbook) showSetup(); else showDaily();
+}
+
+/* ---------- storage ---------- */
+async function load(){
+  try{const r=await window.storage.get("carbon:corpus");S.corpus=r?r.value:DEFAULT_CORPUS;}catch(e){S.corpus=DEFAULT_CORPUS;}
+  try{const r=await window.storage.get("carbon:playbook");S.playbook=r?r.value:DEFAULT_PLAYBOOK;}catch(e){S.playbook=DEFAULT_PLAYBOOK;}
+  try{const r=await window.storage.get("carbon:setup");S.setup=r?JSON.parse(r.value):DEFAULT_SETUP;}catch(e){S.setup=DEFAULT_SETUP;}
+  try{const r=await window.storage.get("carbon:convos");const o=r?JSON.parse(r.value):null;
+    S.convos=o&&o.convos?o.convos:[];S.activeId=o?o.activeId:null;}catch(e){S.convos=[];S.activeId=null;}
+}
+const saveCorpus=()=>window.storage.set("carbon:corpus",S.corpus).catch(console.error);
+const savePb=()=>window.storage.set("carbon:playbook",S.playbook).catch(console.error);
+const saveSet=()=>window.storage.set("carbon:setup",JSON.stringify(S.setup)).catch(console.error);
+const saveConvos=()=>window.storage.set("carbon:convos",JSON.stringify({convos:S.convos,activeId:S.activeId})).catch(console.error);
+
+/* ---------- api ---------- */
+async function claude(system,userText){
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:MODEL,max_tokens:MAXTOK,system,messages:[{role:"user",content:userText}]})});
+  if(!res.ok) throw new Error("Request failed ("+res.status+"). Try again.");
+  const d=await res.json();
+  return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+}
+
+/* ---------- views ---------- */
+function showDaily(){$("v-daily").hidden=false;$("v-setup").hidden=true;$("btnSetup").textContent="Setup";}
+function showSetup(){$("v-daily").hidden=true;$("v-setup").hidden=false;$("btnSetup").textContent="Back to desk";}
+$("btnSetup").onclick=()=>{$("v-setup").hidden?showSetup():showDaily();};
+
+const meLineCount=()=>S.corpus.split("\n").filter(l=>/^\s*ME\s*:/i.test(l)).length;
+function paint(){
+  $("playbook").value=S.playbook;
+  $("corpus").value=S.corpus;
+  $("sOffer").value=S.setup.offer||"";$("sIcp").value=S.setup.icp||"";
+  $("sProof").value=S.setup.proof||"";$("sRules").value=S.setup.rules||"";
+  $("st1").classList.toggle("done",!!(S.setup.offer||"").trim());
+  $("st2").classList.toggle("done",!!S.corpus.trim());
+  $("st3").classList.toggle("done",!!S.playbook);
+  const me=meLineCount();
+  $("statusBit").textContent=S.playbook?(me?`trained · ${me} of your lines`:"trained"):"not trained yet";
+  $("tagline").textContent=S.playbook?"every reply written in your own voice":"finish setup once, then it's just paste and send";
+}
+
+/* ---------- conversations ---------- */
+const activeConvo=()=>S.convos.find(c=>c.id===S.activeId)||null;
+function renderRecall(){
+  $("recall").innerHTML=['<option value="">— new chat —</option>']
+    .concat(S.convos.map(c=>`<option value="${c.id}" ${c.id===S.activeId?"selected":""}>${esc(c.title)} · ${esc(c.platform)}</option>`))
+    .join("");
+}
+function renderDaily(){
+  renderRecall();
+  const c=activeConvo();
+  if(c){$("who").value=c.title;$("where").value=c.platform;}
+  renderTranscript();
+}
+function renderTranscript(){
+  const c=activeConvo(),w=$("transcriptWrap");
+  if(!c||!c.messages.length){w.hidden=true;$("transcript").innerHTML="";return;}
+  w.hidden=false;
+  $("convoTitle").textContent=`${c.title} · ${c.platform}`;
+  $("transcript").innerHTML=c.messages.map(m=>`<div class="bubble ${m.role}"><div class="col">
+    <div class="tag">${m.role==="me"?"You":esc(c.title)}</div><div class="b">${esc(m.text)}</div></div></div>`).join("");
+  $("transcript").scrollTop=$("transcript").scrollHeight;
+}
+// find the conversation matching the WHO + WHERE boxes, optionally creating it
+function resolveConvo(create){
+  const who=$("who").value.trim(),where=$("where").value;
+  if(!who)return null;
+  let c=S.convos.find(x=>x.title.toLowerCase()===who.toLowerCase()&&x.platform===where);
+  if(!c&&create){c={id:Date.now()+"-"+Math.random().toString(36).slice(2,7),title:who,platform:where,context:"",messages:[]};S.convos.unshift(c);}
+  if(c)S.activeId=c.id;
+  return c;
+}
+$("recall").onchange=async e=>{
+  const id=e.target.value;S.activeId=id||null;$("incoming").value="";$("out").innerHTML="";
+  if(!id){$("who").value="";}
+  await saveConvos();renderDaily();
+};
+$("btnDelConvo").onclick=async()=>{const c=activeConvo();if(!c)return;
+  if(!confirm(`Delete the chat with ${c.title}?`))return;
+  S.convos=S.convos.filter(x=>x.id!==c.id);S.activeId=null;$("who").value="";$("incoming").value="";$("out").innerHTML="";
+  await saveConvos();renderDaily();};
+
+/* ---------- corpus / setup ---------- */
+$("btnSaveCorpus").onclick=async()=>{
+  S.corpus=$("corpus").value;await saveCorpus();paint();
+  $("corpusStatus").textContent="Saved.";setTimeout(()=>$("corpusStatus").textContent="",2000);};
+$("btnExport").onclick=()=>{
+  const b=new Blob([JSON.stringify({corpus:S.corpus,playbook:S.playbook,setup:S.setup,convos:S.convos},null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="sales-desk-backup.json";a.click();};
+$("btnWipe").onclick=async()=>{
+  if(!confirm("Erase your messages, the playbook, the offer sheet and every conversation?"))return;
+  S={corpus:"",playbook:"",setup:{},convos:[],activeId:null};
+  await saveCorpus();await savePb();await saveSet();await saveConvos();
+  location.reload();
+};
+$("btnSaveSetup").onclick=async()=>{
+  S.setup={offer:$("sOffer").value,icp:$("sIcp").value,proof:$("sProof").value,rules:$("sRules").value};
+  await saveSet();paint();$("setupStatus").textContent="Saved.";setTimeout(()=>$("setupStatus").textContent="",2000);};
+$("btnSavePb").onclick=async()=>{S.playbook=$("playbook").value;await savePb();paint();
+  $("pbStatus").textContent="Saved.";setTimeout(()=>$("pbStatus").textContent="",2000);};
+
+/* ---------- train ---------- */
+function batches(){const B=[],LIM=42000;const lines=S.corpus.split("\n");let cur=[],n=0;
+  for(const ln of lines){if(n+ln.length+1>LIM&&cur.length){B.push(cur.join("\n"));cur=[];n=0;} cur.push(ln);n+=ln.length+1;}
+  if(cur.length)B.push(cur.join("\n")); return B;}
+$("btnDistill").onclick=async()=>{
+  if(!S.corpus.trim()){$("distillStatus").textContent="Paste some messages first.";return;}
+  const b=$("btnDistill");b.disabled=true;const log=$("distillLog");log.hidden=false;log.textContent="";
+  const say=t=>{log.textContent+=t+"\n";log.scrollTop=log.scrollHeight;};
+  try{
+    const B=batches();say(`corpus → ${B.length} batch${B.length>1?"es":""}`);
+    const notes=[];
+    for(let i=0;i<B.length;i++){say(`Reading batch ${i+1}…`);
+      notes.push(await claude(P_ANALYST_SYS,P_ANALYST_USR.replace("{TRANSCRIPTS}",B[i])));}
+    const joined=notes.map((n,i)=>`### BATCH ${i+1}\n${n}`).join("\n\n");
+    const out=[];
+    for(const sec of SECTIONS){say(`Compressing: ${sec.k}…`);
+      out.push(`## ${sec.k}\n`+await claude(P_MERGE_SYS,P_MERGE_USR.replace("{B}",notes.length)
+        .replace("{NOTES}",joined.slice(0,60000)).replace("{SECTION}",sec.k).replace("{DESC}",sec.q)));}
+    S.playbook=out.join("\n\n");$("playbook").value=S.playbook;await savePb();paint();
+    say("Done. Read it and fix anything it got wrong.");$("distillStatus").textContent="Trained.";
+  }catch(e){say("Stopped: "+e.message);$("distillStatus").innerHTML='<span class="err">Failed. Nothing overwritten.</span>';}
+  b.disabled=false;
+};
+
+/* ---------- retrieval ---------- */
+const STOP=new Set("the a an and or but if to of in on for with is are was were be been i you we they it this that my your our their have has had do does did not no so as at by from will can could would should about me them just get got".split(" "));
+const kws=t=>[...new Set(t.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(w=>w.length>3&&!STOP.has(w)))];
+function exchanges(){
+  const lines=S.corpus.split("\n").filter(l=>l.trim());
+  const ex=[];let buf=[];
+  for(const l of lines){
+    if(/^\s*THEM\s*:/i.test(l)&&buf.length){ex.push(buf.join("\n"));buf=[];}
+    buf.push(l);
+  }
+  if(buf.length)ex.push(buf.join("\n"));
+  return ex;
+}
+function pickExemplars(q){
+  const k=kws(q);if(!k.length)return"";
+  const sc=exchanges().map(e=>{const lo=e.toLowerCase();let s=0;k.forEach(w=>{if(lo.includes(w))s++;});return{e,s};})
+    .filter(x=>x.s>0).sort((a,b)=>b.s-a.s).slice(0,6);
+  return sc.map(x=>x.e.slice(0,1200)).join("\n\n---\n\n");
+}
+const offerSheet=()=>[["What I sell",S.setup.offer],["Who it's for",S.setup.icp],["Proof I can cite",S.setup.proof],
+  ["Hard rules",S.setup.rules]].filter(([,v])=>v&&v.trim()).map(([k,v])=>`${k}: ${v}`).join("\n")
+  ||"(nothing recorded — use [bracketed blanks] for every fact)";
+
+/* ---------- compose ---------- */
+async function logSent(text){
+  const c=activeConvo();if(!c||!text.trim())return;
+  c.messages.push({role:"me",text:text.trim()});await saveConvos();
+  $("out").innerHTML="";renderTranscript();
+  $("composeStatus").textContent="Logged. Over to them.";setTimeout(()=>$("composeStatus").textContent="",2500);
+}
+$("btnDraft").onclick=async()=>{
+  const who=$("who").value.trim();
+  if(!who){$("composeStatus").textContent="Who are you talking to?";$("who").focus();return;}
+  const inc=$("incoming").value.trim();
+  if(!inc){$("composeStatus").textContent="Paste what they said first.";return;}
+  const c=resolveConvo(true);
+  c.messages.push({role:"them",text:inc});await saveConvos();
+  $("incoming").value="";renderDaily();
+  generate("");
+};
+async function generate(tweak){
+  const c=activeConvo();if(!c)return;
+  const b=$("btnDraft");b.disabled=true;$("composeStatus").textContent="Writing…";$("out").innerHTML="";
+  try{
+    const msgs=c.messages;
+    const lastThem=[...msgs].reverse().find(m=>m.role==="them");
+    const inc=lastThem?lastThem.text:"";
+    const threadText=msgs.map(m=>`${m.role==="me"?"ME":"THEM"}: ${m.text}`).join("\n");
+    const stage=$("stage").value;
+    const sys=P_COMPOSE_SYS
+      .replace("{PLAYBOOK}",S.playbook||"(not trained yet — imitate the past messages below as closely as you can)")
+      .replace("{OFFER}",offerSheet())
+      .replace("{EXEMPLARS}",pickExemplars(inc+" "+threadText)||"(none on file)");
+    const usr=`Prospect: ${c.title} on ${c.platform}${c.context?" — "+c.context:""}
+Stage: ${stage}
+Thread so far:
+${threadText||"(none yet)"}
+
+Their latest message:
+${inc}${tweak?"\n\nExtra instruction for this draft: "+tweak:""}`;
+    const raw=await claude(sys,usr);
+    let j;try{j=JSON.parse(raw.replace(/```json|```/g,"").trim());}
+    catch(e){$("out").innerHTML=`<div class="slip"><p class="draft">${esc(raw)}</p></div>`;$("composeStatus").textContent="";b.disabled=false;return;}
+    const rs=j.replies||[];
+    $("out").innerHTML=`
+      <div class="readout"><div class="flabel">What they're really saying</div>${esc(j.read||"")}</div>
+      <div class="slip"><span class="copytab">Send this</span>
+        <h4>${esc(rs[0]?.label||"Recommended")}</h4>
+        <textarea class="draft" id="mainDraft" rows="${Math.min(14,Math.max(3,Math.ceil((rs[0]?.text||"").length/62)))}">${esc(rs[0]?.text||"")}</textarea>
+        <p class="why"><b>Why</b> &nbsp;${esc(rs[0]?.why||"")}</p>
+        <div class="actions"><button class="mini" id="copyMain">Copy</button>
+          <button class="ghost mini" id="logMain">Log as sent</button>
+          <button class="ghost mini" data-tw="Make it noticeably shorter.">Shorter</button>
+          <button class="ghost mini" data-tw="Be more direct and lower the friendliness.">Blunter</button>
+          <button class="ghost mini" data-tw="Warm it up slightly without adding length.">Warmer</button>
+          <button class="ghost mini" data-tw="">Try again</button></div></div>
+      ${rs.length>1?`<details><summary>Two other angles</summary>${rs.slice(1).map((r,i)=>`
+        <div class="slip"><span class="copytab">Option ${i+2}</span><h4>${esc(r.label||"")}</h4>
+          <p class="draft">${esc(r.text||"")}</p><p class="why"><b>Why</b> &nbsp;${esc(r.why||"")}</p>
+          <div class="actions"><button class="ghost mini" data-alt="${i}">Copy</button>
+            <button class="ghost mini" data-use="${i}">Log as sent</button></div></div>`).join("")}</details>`:""}
+      <div class="readout"><div class="flabel">Biggest risk from here</div>${esc(j.risk||"")}</div>
+      <div class="readout"><div class="flabel">If they go quiet</div>${esc(j.nudge||"")}</div>`;
+    $("copyMain").onclick=e=>{navigator.clipboard.writeText($("mainDraft").value);
+      e.target.textContent="Copied";setTimeout(()=>e.target.textContent="Copy",1500);};
+    $("logMain").onclick=()=>logSent($("mainDraft").value);
+    $("out").querySelectorAll("[data-alt]").forEach(x=>x.onclick=()=>{
+      navigator.clipboard.writeText(rs[+x.dataset.alt+1].text);
+      x.textContent="Copied";setTimeout(()=>x.textContent="Copy",1500);});
+    $("out").querySelectorAll("[data-use]").forEach(x=>x.onclick=()=>logSent(rs[+x.dataset.use+1].text));
+    $("out").querySelectorAll("[data-tw]").forEach(x=>x.onclick=()=>generate(x.dataset.tw));
+    $("composeStatus").textContent="";
+  }catch(e){$("composeStatus").innerHTML=`<span class="err">${esc(e.message)}</span>`;}
+  b.disabled=false;
+}
+
+/* ---------- boot ---------- */
+(async()=>{
+  $("stage").innerHTML=STAGES.map(s=>`<option>${s}</option>`).join("");
+  $("where").innerHTML=PLATFORMS.map(s=>`<option>${s}</option>`).join("");
+  $("pr1").textContent=P_ANALYST_SYS+"\n\n--- user ---\n\n"+P_ANALYST_USR;
+  $("pr2").textContent=P_MERGE_SYS+"\n\n--- user ---\n\n"+P_MERGE_USR;
+  $("pr3").textContent=P_COMPOSE_SYS;
+})();
+</script>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining Reinvestment Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg: #0c0b1a; --surface: #14132a; --card: #1a1836;
+    --border: #2a2650; --border-glow: #3d2f7c;
+    --text: #e8e6f0; --dim: #8886a0; --muted: #5c5a72;
+    --green: #00e676; --red: #ff5252; --gold: #ffd740;
+    --purple: #7c4dff; --purple-light: #b388ff;
+    --blue: #448aff; --orange: #ffab40;
+    --gradient-1: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+    --gradient-2: linear-gradient(135deg, #e040fb 0%, #7c4dff 100%);
+    --gradient-border: linear-gradient(135deg, #7c4dff33, #448aff33);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; gap: 12px; }
+  .header .logo { font-size: 1.3rem; font-weight: 700; }
+  .header .logo span { color: var(--purple-light); }
+  .header .tagline { color: var(--dim); font-size: 0.8rem; margin-left: auto; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gradient-1);
+    opacity: 0.6;
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card h2 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); display: inline-block; }
+
+  /* Market data */
+  .market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .market-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .market-card .token-name { color: var(--dim); font-size: 0.8rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .market-card .token-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: contain; }
+  .market-card .price { font-size: 1.5rem; font-weight: 700; margin: 4px 0; }
+  .market-card .change { font-size: 0.85rem; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .stats-row .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stats-row .stat-label { color: var(--dim); font-size: 0.75rem; margin-bottom: 4px; }
+  .stats-row .stat-val { font-size: 1rem; font-weight: 600; }
+
+  /* Input layout */
+  .input-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .input-section { display: flex; flex-direction: column; gap: 14px; }
+  .duration-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .duration-row .input-group select, .duration-row .input-group input { width: 100%; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; }
+  .input-group label { color: var(--dim); font-size: 0.78rem; font-weight: 500; }
+  .input-group input, .input-group select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--purple); }
+  .input-group select { cursor: pointer; appearance: none; }
+  .input-group .hint { color: var(--muted); font-size: 0.7rem; margin-top: 2px; }
+
+  .btn-calc {
+    background: var(--gradient-2);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-calc:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-calc:disabled { opacity: 0.4; cursor: wait; transform: none; }
+
+  /* Results */
+  .results { margin-top: 8px; }
+  .snap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .snap-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .snap-stat .snap-label { color: var(--dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
+  .snap-stat .snap-value { font-size: 1.1rem; font-weight: 700; margin-top: 6px; }
+
+  .breakeven-banner {
+    background: linear-gradient(135deg, #7c4dff22, #448aff22);
+    border: 1px solid var(--border-glow);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { background: var(--surface); color: var(--purple-light); padding: 12px 14px; text-align: right; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  th:first-child { text-align: center; }
+  td { padding: 10px 14px; text-align: right; border-top: 1px solid var(--border); white-space: nowrap; }
+  td:first-child { text-align: center; color: var(--dim); }
+  tr:hover td { background: #7c4dff08; }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* Compare */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .compare-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .compare-card .cmp-label { color: var(--dim); font-size: 0.8rem; margin-bottom: 8px; font-weight: 500; }
+  .compare-card .cmp-value { font-size: 1.5rem; font-weight: 700; }
+  .compare-card .cmp-sub { color: var(--muted); font-size: 0.75rem; margin-top: 6px; }
+  .verdict { text-align: center; padding: 14px; font-weight: 700; font-size: 0.95rem; margin-top: 12px; border-radius: 10px; }
+
+  .pos { color: var(--green); } .neg { color: var(--red); }
+  .loading { color: var(--dim); font-style: italic; padding: 20px 0; }
+  .hidden { display: none; }
+
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .market-grid, .input-grid, .compare-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    .snap-grid, .summary-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span>GoMining</span> Calculator</div>
+  <div class="tagline">Daily Compound Reinvestment Projections</div>
+</div>
+
+<div class="container">
+
+  <!-- Live Market Data -->
+  <div class="card">
+    <h2><span class="dot"></span> Live Market Data</h2>
+    <div id="market-loading" class="loading">Fetching live prices...</div>
+    <div id="market-data" class="hidden">
+      <div class="market-grid">
+        <div class="market-card">
+          <div class="token-name"><img class="token-icon" src="/static/btc-logo.webp" alt="BTC"> Bitcoin (BTC)</div>
+          <div class="price" id="btc-price">--</div>
+          <div class="change" id="btc-change">--</div>
+        </div>
+        <div class="market-card">
+          <div class="token-name"><img class="token-icon" src="/static/gmt-logo.png" alt="GMT"> GoMining (GMT)</div>
+          <div class="price" id="gmt-price">--</div>
+          <div class="change" id="gmt-change">--</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Network Hashrate</div>
+          <div class="stat-val" id="net-hash">--</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Block Reward</div>
+          <div class="stat-val">3.1416 BTC</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Satoshis per TH/day</div>
+          <div class="stat-val" id="sats-th">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calculator -->
+  <div class="card">
+    <h2><span class="dot"></span> GoMining Calculator</h2>
+    <!-- Hidden static values -->
+    <input type="hidden" id="efficiency" value="15.0">
+    <input type="hidden" id="elec-rate" value="0.06">
+    <input type="hidden" id="service-fee" value="15.0">
+    <input type="hidden" id="fee-mode" value="btc">
+    <input type="hidden" id="gmt-discount" value="0">
+    <input type="hidden" id="reinvest" value="100">
+    <input type="hidden" id="proj-days" value="365">
+
+    <div class="input-grid">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Initial Investment ($)</label>
+          <input type="number" id="investment" value="0" step="100" min="0" placeholder="e.g., 10000">
+        </div>
+        <div class="input-group">
+          <label>Cost per TH ($)</label>
+          <input type="number" id="cost-th" value="15.70" step="0.1" min="0.01" placeholder="e.g., 15.70">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Base Hashrate (TH/s)</label>
+          <input type="number" id="hashrate" value="1.0" step="0.1" min="0.01" placeholder="e.g., 100">
+          <div class="hint" id="hashrate-hint"></div>
+        </div>
+        <div class="input-group">
+          <label>Projected BTC Price ($)</label>
+          <input type="number" id="projected-btc" value="0" step="1000" min="0" placeholder="End-of-period (0 to skip)">
+        </div>
+        <div class="input-group">
+          <label>Annual Difficulty Growth (%)</label>
+          <input type="number" id="diff-growth" value="15" step="1" min="0" max="100" placeholder="e.g., 15">
+          <div class="hint">Historical avg ~15%/yr. Reduces sats/TH/day over time.</div>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Projection Period</label>
+        <select id="dur-years">
+          <option value="1" selected>1 Year</option>
+          <option value="2">2 Years</option>
+          <option value="3">3 Years</option>
+          <option value="4">4 Years</option>
+          <option value="5">5 Years</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-calc" id="calc-btn" onclick="calculate()" disabled>Loading market data...</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="results hidden">
+
+    <!-- Projection Table -->
+    <div class="card">
+      <h2 style="cursor:pointer; user-select:none;" onclick="document.getElementById('table-content').classList.toggle('hidden'); this.querySelector('.arrow').textContent = document.getElementById('table-content').classList.contains('hidden') ? '&#9654;' : '&#9660;';">
+        <span class="dot"></span> Projection Table <span class="arrow" style="margin-left:auto; font-size:0.8rem; color:var(--dim)">&#9654;</span>
+      </h2>
+      <div id="table-content" class="hidden">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Day</th><th>TH/s</th><th>Daily Gross</th><th>Daily Net</th><th>Daily BTC</th>
+              <th>Cumul Net</th><th>Cumul BTC</th><th>Cumul Gross</th><th>Reinvested</th><th>TH Growth</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h2><span class="dot"></span> Projection Summary</h2>
+      <div class="summary-grid">
+        <div class="snap-stat"><div class="snap-label">Final Hashrate</div><div class="snap-value" id="s-th" style="color:var(--gold)">--</div></div>
+        <div class="snap-stat"><div class="snap-label">TH Growth</div><div class="snap-value" id="s-growth">--</div></div>
+      </div>
+
+      <h3 style="color:var(--dim); font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Daily Reward (End of Period)</h3>
+      <div class="summary-grid">
+        <div class="snap-stat"><div class="snap-label">USD</div><div class="snap-value" id="s-daily-usd">--</div></div>
+        <div class="snap-stat"><div class="snap-label">BTC</div><div class="snap-value" id="s-daily-btc" style="color:var(--orange)">--</div></div>
+        <div class="snap-stat"><div class="snap-label">GMT</div><div class="snap-value" id="s-daily-gmt" style="color:var(--purple-light)">--</div></div>
+      </div>
+
+      <h3 style="color:var(--dim); font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Monthly Reward (End of Period)</h3>
+      <div class="summary-grid">
+        <div class="snap-stat"><div class="snap-label">USD</div><div class="snap-value" id="s-monthly-usd">--</div></div>
+        <div class="snap-stat"><div class="snap-label">BTC</div><div class="snap-value" id="s-monthly-btc" style="color:var(--orange)">--</div></div>
+        <div class="snap-stat"><div class="snap-label">GMT</div><div class="snap-value" id="s-monthly-gmt" style="color:var(--purple-light)">--</div></div>
+      </div>
+
+      <h3 style="color:var(--dim); font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px;">Locked GMT (Total Reinvested)</h3>
+      <div class="summary-grid">
+        <div class="snap-stat"><div class="snap-label">GMT</div><div class="snap-value" id="s-locked-gmt" style="color:var(--purple-light)">--</div></div>
+        <div class="snap-stat"><div class="snap-label">USD Value</div><div class="snap-value" id="s-locked-usd">--</div></div>
+        <div class="snap-stat"><div class="snap-label">BTC Value</div><div class="snap-value" id="s-locked-btc" style="color:var(--orange)">--</div></div>
+      </div>
+
+      <div id="breakeven-row" class="breakeven-banner hidden" style="margin-top:16px;"></div>
+      <div id="roi-row" class="hidden" style="text-align:center; padding:16px 0 4px; font-size:1rem; font-weight:600;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let marketCache = null;
+
+function usd(v) { return (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+function btcFmt(v) { return v.toFixed(8) + ' BTC'; }
+function pct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+function colorClass(v) { return v >= 0 ? 'pos' : 'neg'; }
+
+function updateDuration() {
+  const y = parseInt(document.getElementById('dur-years').value) || 0;
+  document.getElementById('proj-days').value = y * 365;
+}
+document.getElementById('dur-years').addEventListener('change', updateDuration);
+updateDuration();
+
+function autoFillHashrate() {
+  const inv = parseFloat(document.getElementById('investment').value) || 0;
+  const cost = parseFloat(document.getElementById('cost-th').value) || 0;
+  if (inv > 0 && cost > 0) {
+    const baseTh = inv / cost;
+    document.getElementById('hashrate').value = baseTh.toFixed(4);
+    document.getElementById('hashrate-hint').textContent =
+      baseTh.toFixed(2) + ' base + ' + (baseTh * 0.10).toFixed(2) + ' VIP (10%) = ' + (baseTh * 1.10).toFixed(2) + ' total TH';
+  } else {
+    document.getElementById('hashrate-hint').textContent = '';
+  }
+}
+document.getElementById('investment').addEventListener('input', autoFillHashrate);
+document.getElementById('cost-th').addEventListener('input', autoFillHashrate);
+
+async function fetchMarket() {
+  try {
+    const resp = await fetch('/api/market');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    marketCache = data;
+    document.getElementById('market-loading').classList.add('hidden');
+    document.getElementById('market-data').classList.remove('hidden');
+    document.getElementById('btc-price').textContent = '$' + data.btc_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const btcCh = document.getElementById('btc-change');
+    btcCh.innerHTML = (data.btc_change < 0 ? '&#9660; ' : '&#9650; ') + Math.abs(data.btc_change).toFixed(2) + '%';
+    btcCh.className = 'change ' + colorClass(data.btc_change);
+    document.getElementById('gmt-price').textContent = '$' + data.gmt_price.toFixed(4);
+    const gmtCh = document.getElementById('gmt-change');
+    gmtCh.innerHTML = (data.gmt_change < 0 ? '&#9660; ' : '&#9650; ') + Math.abs(data.gmt_change).toFixed(2) + '%';
+    gmtCh.className = 'change ' + colorClass(data.gmt_change);
+    document.getElementById('net-hash').textContent = data.hashrate_eh.toFixed(2) + ' EH/s';
+    document.getElementById('sats-th').textContent = Math.round(data.sats_per_th_day) + ' Satoshis';
+    const btn = document.getElementById('calc-btn');
+    btn.disabled = false;
+    btn.textContent = 'CALCULATE PROJECTION';
+    calculate();
+  } catch(e) {
+    document.getElementById('market-loading').textContent = 'Failed to fetch market data: ' + e.message;
+    const btn = document.getElementById('calc-btn');
+    btn.disabled = true;
+    btn.textContent = 'Market data unavailable';
+  }
+}
+
+async function calculate() {
+  if (!marketCache) { alert('Market data not loaded yet.'); return; }
+  const btn = document.getElementById('calc-btn');
+  btn.disabled = true; btn.textContent = 'Calculating...';
+
+  const body = {
+    hashrate_th: parseFloat(document.getElementById('hashrate').value),
+    efficiency_w_per_th: parseFloat(document.getElementById('efficiency').value),
+    elec_rate_usd_kwh: parseFloat(document.getElementById('elec-rate').value),
+    service_fee_pct: parseFloat(document.getElementById('service-fee').value),
+    gmt_discount_pct: parseFloat(document.getElementById('gmt-discount').value),
+    fee_mode: document.getElementById('fee-mode').value,
+    reinvest_pct: parseFloat(document.getElementById('reinvest').value),
+    projection_days: parseInt(document.getElementById('proj-days').value),
+    initial_investment_usd: parseFloat(document.getElementById('investment').value),
+    cost_per_th_usd: parseFloat(document.getElementById('cost-th').value),
+    projected_btc_price: parseFloat(document.getElementById('projected-btc').value) || 0,
+    difficulty_growth_pct: parseFloat(document.getElementById('diff-growth').value) || 0,
+    btc_price: marketCache.btc_price,
+    sats_per_th_day: marketCache.sats_per_th_day,
+  };
+
+  try {
+    const resp = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    const r = await resp.json();
+    document.getElementById('results').classList.remove('hidden');
+
+    const btcPrice = marketCache.btc_price;
+    const gmtPrice = marketCache.gmt_price;
+
+    // Projection table
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+    for (const row of r.rows) {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + row.day + '</td>' +
+        '<td style="color:var(--gold)">' + row.th.toFixed(4) + '</td>' +
+        '<td>' + usd(row.daily_gross) + '</td>' +
+        '<td class="' + colorClass(row.daily_net) + '">' + (row.daily_net >= 0 ? '+' : '-') + '$' + Math.abs(row.daily_net).toFixed(2) + '</td>' +
+        '<td style="color:var(--orange)">' + row.daily_btc.toFixed(8) + '</td>' +
+        '<td class="' + colorClass(row.cumul_net) + '">' + (row.cumul_net >= 0 ? '+' : '-') + '$' + Math.abs(row.cumul_net).toFixed(2) + '</td>' +
+        '<td style="color:var(--orange)">' + row.cumul_btc.toFixed(8) + '</td>' +
+        '<td>' + usd(row.cumul_gross) + '</td>' +
+        '<td>' + usd(row.cumul_reinvested) + '</td>' +
+        '<td class="' + colorClass(row.th_growth_pct) + '">' + pct(row.th_growth_pct) + '</td>';
+      tbody.appendChild(tr);
+    }
+
+    // Final hashrate & growth
+    document.getElementById('s-th').textContent = r.final_th.toFixed(4) + ' TH/s';
+    const sg = document.getElementById('s-growth');
+    sg.textContent = pct(r.th_growth_pct); sg.className = 'snap-value ' + colorClass(r.th_growth_pct);
+
+    // Daily reward (end of period) in USD / BTC / GMT
+    const dailyUsd = r.final_day_net;
+    const dailyBtc = dailyUsd / btcPrice;
+    const dailyGmt = dailyUsd / gmtPrice;
+    document.getElementById('s-daily-usd').textContent = usd(dailyUsd);
+    document.getElementById('s-daily-usd').className = 'snap-value ' + colorClass(dailyUsd);
+    document.getElementById('s-daily-btc').textContent = dailyBtc.toFixed(8) + ' BTC';
+    document.getElementById('s-daily-gmt').textContent = dailyGmt.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' GMT';
+
+    // Monthly reward (end of period) in USD / BTC / GMT
+    const monthlyUsd = r.thirty_day_net;
+    const monthlyBtc = monthlyUsd / btcPrice;
+    const monthlyGmt = monthlyUsd / gmtPrice;
+    document.getElementById('s-monthly-usd').textContent = usd(monthlyUsd);
+    document.getElementById('s-monthly-usd').className = 'snap-value ' + colorClass(monthlyUsd);
+    document.getElementById('s-monthly-btc').textContent = monthlyBtc.toFixed(8) + ' BTC';
+    document.getElementById('s-monthly-gmt').textContent = monthlyGmt.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' GMT';
+
+    // Locked GMT (total reinvested converted to GMT)
+    const lockedGmt = r.total_reinvested / gmtPrice;
+    const lockedBtc = r.total_reinvested / btcPrice;
+    document.getElementById('s-locked-gmt').textContent = lockedGmt.toLocaleString('en-US', {maximumFractionDigits: 2}) + ' GMT';
+    document.getElementById('s-locked-usd').textContent = usd(r.total_reinvested);
+    document.getElementById('s-locked-btc').textContent = lockedBtc.toFixed(8) + ' BTC';
+
+    // Breakeven
+    const beRow = document.getElementById('breakeven-row');
+    if (r.breakeven_days) {
+      const beDate = new Date(); beDate.setDate(beDate.getDate() + r.breakeven_days);
+      beRow.textContent = 'Breakeven in ~' + r.breakeven_days + ' days (' + beDate.toISOString().split('T')[0] + ')';
+      beRow.classList.remove('hidden');
+    } else if (body.initial_investment_usd > 0) {
+      beRow.textContent = 'Breakeven not reached within projection period';
+      beRow.classList.remove('hidden');
+    } else {
+      beRow.classList.add('hidden');
+    }
+
+    // ROI
+    const roiRow = document.getElementById('roi-row');
+    if (r.roi_pct !== null) {
+      roiRow.innerHTML = '<span style="color:var(--dim)">Mining ROI vs Investment:</span> <span class="' + colorClass(r.roi_pct) + '">' + pct(r.roi_pct) + '</span>';
+      roiRow.classList.remove('hidden');
+    } else {
+      roiRow.classList.add('hidden');
+    }
+
+    document.getElementById('results').scrollIntoView({behavior:'smooth'});
+  } catch(e) {
+    alert('Calculation failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'CALCULATE PROJECTION';
+  }
+}
+
+fetchMarket();
+</script>
+</body>
+</html>
