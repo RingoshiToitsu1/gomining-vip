@@ -5,9 +5,11 @@
  * Replaces the SMTP path: a bot token needs no app password, no 2FA dance, and
  * the message lands on your phone rather than in an inbox you have to open.
  *
- * Sends plain text (no parse_mode) deliberately — report bodies contain
- * markdown tables, underscores and brackets, and Telegram's MarkdownV2 would
- * reject or mangle them. Readability of the raw text is good enough.
+ * Renders markdown into Telegram HTML rather than sending it raw. MarkdownV2
+ * is not an option — it demands escaping of a dozen characters that appear
+ * constantly in these reports — but HTML mode needs only & < > escaped, and
+ * gives real bold plus <pre> blocks for tables, which are unreadable as raw
+ * pipe syntax on a phone.
  *
  * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
  * Usage: node scripts/notify-telegram.js --file report.md [--title "SEO report"]
@@ -27,10 +29,58 @@ if (!TOKEN || !CHAT) {
 }
 
 const file = argv('--file');
-let body = argv('--text') || (file ? fs.readFileSync(file, 'utf8') : '');
+let raw = argv('--text') || (file ? fs.readFileSync(file, 'utf8') : '');
 const title = argv('--title');
-if (!body.trim()) { console.error('nothing to send'); process.exit(1); }
-if (title) body = `${title}\n\n${body}`;
+if (!raw.trim()) { console.error('nothing to send'); process.exit(1); }
+
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Inline markdown -> Telegram HTML. Escapes first so generated tags survive.
+function inline(s) {
+  return esc(s)
+    .replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`)
+    .replace(/\*\*([^*]+)\*\*/g, (_, c) => `<b>${c}</b>`)
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,)]|$)/g, (_, p, c) => `${p}<i>${c}</i>`);
+}
+
+// A markdown table is unreadable as pipes on a phone. Re-render it as an
+// aligned monospace block, dropping the |---| separator row.
+function table(rows) {
+  const cells = rows
+    .filter(r => !/^\s*\|[\s|:-]+\|\s*$/.test(r))
+    .map(r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim()));
+  if (!cells.length) return '';
+  const w = [];
+  for (const row of cells) row.forEach((c, i) => { w[i] = Math.max(w[i] || 0, c.length); });
+  const out = cells.map(row => row.map((c, i) => (i === 0 ? c.padEnd(w[i]) : c.padStart(w[i]))).join('  ').trimEnd());
+  return `<pre>${esc(out.join('\n'))}</pre>`;
+}
+
+function toHTML(md) {
+  const lines = md.split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const ln = lines[i];
+    if (/^\s*\|.*\|\s*$/.test(ln)) {                 // gather a whole table block
+      const block = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) block.push(lines[i++]);
+      i--;
+      out.push(table(block));
+      continue;
+    }
+    const h = ln.match(/^(#{1,6})\s+(.*)$/);
+    if (h) { out.push(`<b>${inline(h[2]).replace(/<\/?b>/g, '')}</b>`); continue; }
+    const li = ln.match(/^\s*[-*]\s+(.*)$/);
+    if (li) { out.push(`• ${inline(li[1])}`); continue; }
+    out.push(inline(ln));
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Drop the document's own H1 when a title is supplied, so it isn't said twice.
+if (title) raw = raw.replace(/^\s*#\s+.*\n+/, '');
+let body = toHTML(raw);
+if (title) body = `<b>${esc(title)}</b>\n\n${body}`;
 
 // Telegram caps a message at 4096 chars. Split on blank lines so a chunk never
 // lands mid-paragraph, and fall back to a hard cut for any single huge block.
@@ -62,6 +112,7 @@ function chunk(text) {
       body: JSON.stringify({
         chat_id: CHAT,
         text: parts[i] + suffix,
+        parse_mode: 'HTML',
         disable_web_page_preview: true
       })
     });
