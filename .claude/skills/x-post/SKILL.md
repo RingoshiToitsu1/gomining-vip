@@ -3,9 +3,12 @@ name: x-post
 description: Draft an educational X post for the GMT Optimizer account, anchored to a real network event. Use when x-event.json exists or when asked to write an X/Twitter post for the brand.
 ---
 
-# X post — GMT Optimizer
+# X post — @GMT_Optimizer
 
 Read `x-event.json`, write one post to `x-draft.txt`. Nothing else.
+
+Posts go to **https://x.com/GMT_Optimizer** — the brand account, not a personal
+one. Write as the project, not as a person: "the calculator", not "I built".
 
 ## The hard rule
 

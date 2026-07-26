@@ -6,6 +6,12 @@
  * (app-only auth cannot post). Set --dry to render the request without sending,
  * which is how you should test before wiring the real credentials.
  *
+ * Target account: https://x.com/GMT_Optimizer
+ * The access token is what selects the account — it must be generated from the
+ * developer portal while signed in as @GMT_Optimizer. The API key/secret identify
+ * the app; the access token/secret identify who posts. Getting this pair from a
+ * personal account posts to the personal account.
+ *
  * Env: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET
  * Usage: node scripts/x-publish.js --draft x-draft.txt [--history seo-data/x-history.json] [--dry]
  */
