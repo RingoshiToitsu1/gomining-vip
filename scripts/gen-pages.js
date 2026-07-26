@@ -48,20 +48,14 @@ function priceAt(t, now, p0){
 const HALVING_DATES   = [Date.UTC(2028,3,15),Date.UTC(2032,3,15),Date.UTC(2036,3,15),Date.UTC(2040,3,15)];
 const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;
 // New-miner tiered $/TH (12 W/TH), interpolated by size.
+// Keep in sync with TH_TIERS_12W in assets/app.js. Repriced 2026-07-25: $19.99/TH at 1 TH and
+// $17.24/TH at 5000 TH (observed); intermediate tiers affine-rescaled from the old curve.
 const TH_TIERS_12W=[
-  {th:1,cpt:21.99},{th:2,cpt:21.50},{th:4,cpt:21.00},{th:8,cpt:20.75},
-  {th:16,cpt:20.50},{th:32,cpt:20.28},{th:48,cpt:20.06},{th:64,cpt:19.86},
-  {th:96,cpt:19.66},{th:128,cpt:19.46},{th:192,cpt:19.27},{th:256,cpt:19.07},
-  {th:384,cpt:18.88},{th:512,cpt:18.69},{th:768,cpt:18.51},{th:1024,cpt:18.32},
-  {th:1536,cpt:18.14},{th:2560,cpt:17.96},{th:3584,cpt:17.78},{th:5000,cpt:17.60}
-];
-// Cheaper 15 W/TH marketplace hashrate (used for the base farm AND weekly reinvestment here).
-const TH_TIERS_15W=[
-  {th:1,cpt:14.99},{th:2,cpt:14.00},{th:4,cpt:14.00},{th:8,cpt:13.75},
-  {th:16,cpt:13.56},{th:32,cpt:13.44},{th:48,cpt:13.29},{th:64,cpt:13.16},
-  {th:96,cpt:13.03},{th:128,cpt:12.90},{th:192,cpt:12.77},{th:256,cpt:12.64},
-  {th:384,cpt:12.51},{th:512,cpt:12.39},{th:768,cpt:12.27},{th:1024,cpt:12.14},
-  {th:1536,cpt:12.02},{th:2560,cpt:11.90},{th:3584,cpt:11.78},{th:5000,cpt:11.67}
+  {th:1,cpt:19.99},{th:2,cpt:19.68},{th:4,cpt:19.37},{th:8,cpt:19.21},
+  {th:16,cpt:19.06},{th:32,cpt:18.92},{th:48,cpt:18.78},{th:64,cpt:18.66},
+  {th:96,cpt:18.53},{th:128,cpt:18.41},{th:192,cpt:18.29},{th:256,cpt:18.16},
+  {th:384,cpt:18.04},{th:512,cpt:17.92},{th:768,cpt:17.81},{th:1024,cpt:17.69},
+  {th:1536,cpt:17.58},{th:2560,cpt:17.47},{th:3584,cpt:17.35},{th:5000,cpt:17.24}
 ];
 const FB = { btcPrice:84000, difficulty:113e12 };
 
