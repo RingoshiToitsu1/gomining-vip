@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /*
- * x-watch.js — detect a real network event worth posting about, and compute
- * every number the post is allowed to contain.
+ * network-facts.js — compute today's real Bitcoin/GoMining figures, and flag
+ * whatever is most notable about them, for the daily report to draw on.
  *
- * Design: this script does ALL the arithmetic. The language model that writes
- * the post gets a fixed set of computed figures and may not introduce others —
- * scripts/x-verify.js enforces that before anything is published. An auto-poster
- * that invents a break-even figure is far worse than one that never posts.
+ * Design: this script does ALL the arithmetic. The daily report suggests a tweet
+ * but may only quote figures that appear here — a suggestion carrying a
+ * plausible-but-invented break-even is worse than no suggestion, because you'd
+ * post it under your own name believing it was checked.
  *
- * Only fires on genuine events (difficulty retarget, halving milestone, a real
- * hashprice move). No event, no post — that is what keeps this the right side
- * of X's duplicate-content rules, and the right side of the brand.
+ * `notable` marks whether anything actually moved (difficulty retarget, halving
+ * milestone, hashprice drift). It is a hint about what is worth saying today,
+ * not a gate: this runs daily and always writes its output.
  *
- * Usage: node scripts/x-watch.js [--state path] [--out path] [--force TYPE]
- * Exit 0 = event found (JSON written). Exit 3 = nothing to post.
+ * Usage: node scripts/network-facts.js [--state path] [--out path]
+ * Exit 0 = facts written. Exit 1 = live data unavailable, nothing written.
  */
 'use strict';
 const fs = require('fs');
@@ -24,12 +24,8 @@ const rainbow = require('./rainbow.js');
 const args = process.argv.slice(2);
 const argv = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const STATE = argv('--state') || path.join(__dirname, '..', 'seo-data', 'bot-state.json');
-const OUT   = argv('--out')   || path.join(__dirname, '..', 'x-event.json');
-const FORCE = argv('--force');
+const OUT   = argv('--out')   || path.join(__dirname, '..', 'seo-data', 'network-facts.json');
 
-// Post at most this often, no matter how many events fire. Two posts in a day
-// from an automated account is how you get rate-limited.
-const MIN_HOURS_BETWEEN_POSTS = 48;
 // Thresholds for "this is actually news".
 const DIFF_MOVE_PCT = 1.0;    // difficulty retarget worth mentioning
 const SATS_MOVE_PCT = 3.0;    // sats/TH/day drift worth mentioning
@@ -82,14 +78,11 @@ function monthlyNetUSD({ th, bp, diff, disc, wth = C.EFF_BEST }) {
 const yrs = m => m == null ? null : +(m / 12).toFixed(1);
 const loadState = () => { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch (e) { return {}; } };
 
-function detect(state, mk) {
+// What, if anything, is worth leading with today. Returns null on a flat day —
+// which is a normal and useful answer, not a failure.
+function notable(state, mk) {
   const now = Date.now();
   const daysToHalving = Math.floor((C.HALVING_DATES[0] - now) / 86400000);
-
-  if (FORCE) return { type: FORCE, forced: true, daysToHalving };
-
-  // Rate limit first — an event we skip now will still be true next run.
-  if (state.lastPostAt && (now - state.lastPostAt) < MIN_HOURS_BETWEEN_POSTS * 3600000) return null;
 
   // 1. Difficulty retarget.
   if (state.difficulty > 0) {
@@ -116,13 +109,8 @@ function detect(state, mk) {
 (async () => {
   const mk = await market();
   const state = loadState();
-  const ev = detect(state, mk);
-
-  if (!ev) {
-    console.log('no event — nothing to post');
-    fs.writeFileSync(STATE, JSON.stringify({ ...state, difficulty: mk.diff, sats: mk.sats, checkedAt: Date.now() }, null, 1));
-    process.exit(3);
-  }
+  const ev = notable(state, mk);
+  const daysToHalving = Math.floor((C.HALVING_DATES[0] - Date.now()) / 86400000);
 
   const beNow = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
   const beNoDisc = breakEvenMonths({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: 0 });
@@ -144,10 +132,11 @@ function detect(state, mk) {
       monthlyNetAtStillCheap: +monthlyNetUSD({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC }).toFixed(2)
     };
   } catch (e) {
-    console.error('rainbow unavailable (posting without it):', e.message);
+    console.error('rainbow unavailable (continuing without it):', e.message);
   }
 
-  // Every figure the post is permitted to state. x-verify.js rejects anything else.
+  // Every figure a suggested post is permitted to state. Anything not in here is
+  // not a checked number, and must not appear in the report.
   const facts = {
     btcPrice: Math.round(mk.bp),
     satsPerTHDay: Math.round(mk.sats),
@@ -159,7 +148,7 @@ function detect(state, mk) {
     breakEvenYears: yrs(beNow),
     breakEvenYearsNoDiscount: yrs(beNoDisc),
     breakEvenYears15W: yrs(be15W),
-    daysToHalving: ev.daysToHalving,
+    daysToHalving,
     stakingAPR: C.STAKING_APR,
     conversionFeePct: C.CONVERSION_FEE * 100,
     maxDiscountPct: 20,
@@ -168,17 +157,19 @@ function detect(state, mk) {
     halvingYear: new Date(C.HALVING_DATES[0]).getUTCFullYear(),
     efficiencyBest: C.EFF_BEST,
     efficiencyBase: C.EFF_BASE_MAX,   // the 15 W/TH comparison point breakEvenYears15W refers to
-    ...(ev.changePct != null ? { changePct: ev.changePct } : {}),
-    ...(ev.milestone != null ? { milestone: ev.milestone } : {}),
+    ...(ev && ev.changePct != null ? { changePct: ev.changePct } : {}),
+    ...(ev && ev.milestone != null ? { milestone: ev.milestone } : {}),
     ...(rb || {})
   };
 
-  fs.writeFileSync(OUT, JSON.stringify({ event: ev, facts, generatedAt: new Date().toISOString() }, null, 1));
+  fs.writeFileSync(OUT, JSON.stringify({ notable: ev, facts, generatedAt: new Date().toISOString() }, null, 1));
   fs.writeFileSync(STATE, JSON.stringify({
     ...state, difficulty: mk.diff, sats: mk.sats, checkedAt: Date.now(),
-    lastHalvingMilestone: ev.type === 'halving_milestone' ? ev.milestone : state.lastHalvingMilestone
+    // Only advance the milestone marker when one actually fired, so each rung of
+    // the halving countdown is worth mentioning exactly once.
+    lastHalvingMilestone: ev && ev.type === 'halving_milestone' ? ev.milestone : state.lastHalvingMilestone
   }, null, 1));
 
-  console.log(`event: ${ev.type}`);
+  console.log(ev ? `notable: ${ev.type}` : 'notable: nothing moved today');
   console.log(JSON.stringify(facts, null, 1));
-})().catch(e => { console.error('x-watch failed:', e.message); process.exit(1); });
+})().catch(e => { console.error('network-facts failed:', e.message); process.exit(1); });

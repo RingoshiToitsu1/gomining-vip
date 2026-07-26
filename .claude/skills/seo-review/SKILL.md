@@ -27,6 +27,9 @@ Write three files. Only the first is delivered.
 - `seo-data/latest.json` — most recent snapshot.
 - `seo-data/gsc-*.json` — history, filename is the window END date.
 - `seo-data/backlog.md` — what was already known to be worth doing.
+- `seo-data/network-facts.json` — today's computed Bitcoin/GoMining figures, for
+  the tweet suggestion. May be absent if the price APIs were down; if so, omit
+  the tweet section entirely rather than writing one from memory.
 
 Each snapshot holds `totals`, `by_query`, `by_page`, `by_page_query`, `by_date`,
 each row with `clicks`, `impressions`, `ctr`, `position`. Compare `latest.json`
@@ -75,6 +78,12 @@ the instruction itself.
 **Why:** <one sentence of evidence — the number that justifies it>
 
 **Expect:** <what should move, and when you could tell — usually "2-4 weeks">
+
+**Tweet:**
+
+```
+<the suggested post, verbatim>
+```
 ```
 
 For a nothing-to-do day:
@@ -83,10 +92,44 @@ For a nothing-to-do day:
 # Today: nothing — <one-line reason>
 
 <One or two sentences on what you are waiting for and when it will be readable.>
+
+**Tweet:**
+
+```
+<still suggest one — a flat SEO day is not a flat Bitcoin day>
+```
 ```
 
 No tables. No impression counts beyond the single number in **Why**. No
 "here's what I looked at." They did not ask.
+
+## The tweet suggestion
+
+One post, ready to paste into @GMT_Optimizer. They post it by hand, so write the
+final text — not a brief, not options, no commentary about why you chose it.
+Put it in a fenced code block: Telegram renders that as a tap-to-copy box, and
+anything outside the fence gets copied along with it.
+
+**Every number you use must appear in `network-facts.json`.** Nothing is checking
+this before it goes out, and the reader will reasonably assume the figures were
+verified because a machine produced them. A wrong break-even published under
+their own name is the worst outcome this skill can cause. Round sensibly (7.2
+from 7.23) but never estimate, never interpolate between two facts, and never
+carry a figure over from yesterday's report.
+
+- Lead with `notable` if it is non-null — that is the day's real news. If it is
+  null, teach something evergreen from the same figures instead.
+- Under 280 characters. Count them.
+- No price predictions. The rainbow bands are a fit to past price, not a
+  forecast: "at the Still-cheap band, break-even is 4.4 years" is fine;
+  "Bitcoin is going to $103k" is not, and neither is anything shaped like it.
+- No guarantees, no "risk-free", no "passive income", no financial advice, no
+  hype register. The account's whole edge is sounding like the only honest
+  calculator in a field of shills.
+- Skip the referral code most days. It reads as an ad if it is in every post.
+
+If `network-facts.json` is missing, drop the **Tweet:** line. A day without a
+suggestion costs nothing; a fabricated one costs the account's credibility.
 
 ## Maintaining the backlog
 

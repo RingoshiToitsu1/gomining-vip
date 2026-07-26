@@ -21,9 +21,13 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const argv = k => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 
+// --dry renders the HTML to stdout without sending, so the formatting can be
+// checked without a bot token or a message landing in the chat.
+const DRY = args.includes('--dry');
+
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT  = process.env.TELEGRAM_CHAT_ID;
-if (!TOKEN || !CHAT) {
+if (!DRY && (!TOKEN || !CHAT)) {
   console.error('missing TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID');
   process.exit(1);
 }
@@ -61,6 +65,13 @@ function toHTML(md) {
   const out = [];
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i];
+    if (/^\s*```/.test(ln)) {                        // fenced block -> tap-to-copy
+      const block = [];
+      i++;                                           // skip the opening fence
+      while (i < lines.length && !/^\s*```/.test(lines[i])) block.push(lines[i++]);
+      out.push(`<pre>${esc(block.join('\n'))}</pre>`);
+      continue;                                      // outer i++ steps over the closing fence
+    }
     if (/^\s*\|.*\|\s*$/.test(ln)) {                 // gather a whole table block
       const block = [];
       while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) block.push(lines[i++]);
@@ -106,6 +117,7 @@ function chunk(text) {
   const parts = chunk(body);
   for (let i = 0; i < parts.length; i++) {
     const suffix = parts.length > 1 ? `\n\n(${i + 1}/${parts.length})` : '';
+    if (DRY) { console.log(`--- part ${i + 1}/${parts.length} ---\n${parts[i] + suffix}`); continue; }
     const r = await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,5 +131,5 @@ function chunk(text) {
     const t = await r.text();
     if (!r.ok) { console.error(`telegram ${r.status}: ${t.slice(0, 300)}`); process.exit(1); }
   }
-  console.log(`sent ${parts.length} message(s), ${body.length} chars`);
+  console.log(`${DRY ? 'rendered' : 'sent'} ${parts.length} message(s), ${body.length} chars`);
 })().catch(e => { console.error('telegram send failed:', e.message); process.exit(1); });
