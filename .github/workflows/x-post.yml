@@ -25,7 +25,7 @@ on:
       dry_run:
         description: 'Draft and verify but do not post'
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write
@@ -98,7 +98,14 @@ jobs:
       - name: Persist state
         if: always()
         run: |
-          cd .state 2>/dev/null || exit 0
+          # Only commit if .state is genuinely the seo-data checkout. If that checkout
+          # failed, .state is just a directory inside the main working tree — git would
+          # walk up to the main repo and push its HEAD over the state branch.
+          # (rev-parse alone is not enough — from a plain nested dir it walks up and
+          # happily reports the parent repo, so compare the toplevel it resolves to.)
+          top="$(git -C .state rev-parse --show-toplevel 2>/dev/null || true)"
+          [ "$top" = "$PWD/.state" ] || { echo "no state checkout; skipping"; exit 0; }
+          cd .state
           mkdir -p seo-data
           cp ../seo-data/bot-state.json seo-data/ 2>/dev/null || true
           cp ../seo-data/x-history.json seo-data/ 2>/dev/null || true
