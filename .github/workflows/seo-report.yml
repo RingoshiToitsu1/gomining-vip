@@ -88,20 +88,19 @@ jobs:
           echo "path=$f" >> "$GITHUB_OUTPUT"
           echo "subject=$(head -1 "$f" | sed 's/^#* *//' | cut -c1-120)" >> "$GITHUB_OUTPUT"
 
-      - name: Email the report
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          from: GMT Optimizer SEO <${{ secrets.MAIL_USERNAME }}>
-          to: ${{ secrets.MAIL_TO }}
-          subject: "SEO — ${{ steps.report.outputs.subject }}"
-          body: file://${{ steps.report.outputs.path }}
+      - name: Send the report to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          node scripts/notify-telegram.js \
+            --file "${{ steps.report.outputs.path }}" \
+            --title "SEO — ${{ steps.report.outputs.subject }}"
 
+      # always(): the snapshot is the durable asset and must survive a delivery
+      # failure. Previously a failed send also lost the day's data.
       - name: Commit snapshot to data branch
+        if: always()
         run: |
           cd .seo-data-branch
           git config user.name "seo-report[bot]"
