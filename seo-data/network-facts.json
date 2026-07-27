@@ -1,17 +1,22 @@
 {
  "notable": null,
  "facts": {
-  "btcPrice": 64586,
+  "btcPrice": 65290,
   "satsPerTHDay": 50,
   "difficultyT": 126.2,
   "refTH": 50,
   "refWTH": 12,
   "refDiscountPct": 20,
-  "monthlyNetUSD": 27.91,
-  "breakEvenYears": 7.2,
-  "breakEvenYearsNoDiscount": null,
-  "breakEvenYears15W": 9.6,
-  "daysToHalving": 628,
+  "monthlyNetUSD": 28.43,
+  "earned1yr": 272.94,
+  "earned3yr": 632.86,
+  "earned5yr": 981.53,
+  "earned10yr": 1853.22,
+  "dailyAt5yr": 0.48,
+  "monthlyAt5yr": 14.53,
+  "earned5yrNoDiscount": 109.84,
+  "earned5yrAt15W": 794.86,
+  "daysToHalving": 627,
   "stakingAPR": 21.73,
   "conversionFeePct": 2.25,
   "maxDiscountPct": 20,
@@ -20,12 +25,12 @@
   "halvingYear": 2028,
   "efficiencyBest": 12,
   "efficiencyBase": 15,
-  "rainbowStillCheapUSD": 103905,
-  "rainbowCenterUSD": 130808,
+  "rainbowStillCheapUSD": 103959,
+  "rainbowCenterUSD": 130876,
   "rainbowBandNow": "BUY!",
-  "rainbowUpsidePct": 60.9,
-  "breakEvenYearsAtStillCheap": 4.4,
-  "monthlyNetAtStillCheap": 57.16
+  "rainbowUpsidePct": 59.2,
+  "earned5yrAtStillCheap": 1455.99,
+  "monthlyNetAtStillCheap": 57.2
  },
- "generatedAt": "2026-07-26T20:35:13.837Z"
+ "generatedAt": "2026-07-27T10:56:18.603Z"
 }
