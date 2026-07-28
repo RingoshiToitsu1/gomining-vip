@@ -57,7 +57,27 @@
   // network's no-arbitrage break-even (difficulty is an equilibrium; it can't
   // decay past the point where the marginal miner capitulates).
   const HALVINGS = [Date.UTC(2028, 3, 15), Date.UTC(2032, 3, 15), Date.UTC(2036, 3, 15), Date.UTC(2040, 3, 15)];
-  const DIFF_G0 = 0.25, DIFF_FLOOR = 0.05, DIFF_TAU = 4;
+  // 0.37 = 3yr trailing difficulty CAGR, paired with the rainbow price path below.
+  // Mirrors DIFF_G0 in scripts/constants.js and assets/app.js.
+  const DIFF_G0 = 0.37, DIFF_FLOOR = 0.05, DIFF_TAU = 4;
+  // Bitcoin Power-Law path — price converges from today's spot onto the rainbow chart's
+  // "Still cheap" band by the next halving. Same assumption as the pages and the console,
+  // so all three quote the same price for the same date. Fit refreshed 2026-07-28; mirrors
+  // RB_FIT in scripts/constants.js.
+  const RB_FIT = { m: 2.4257730142322704, b: -16.148215459680067 };
+  const RB_GEN = Date.UTC(2009, 0, 3);
+  const RB_STILL_CHEAP_OFF = -0.10;
+  const rbDayOf = t => Math.max(1, (t - RB_GEN) / 86400000);
+  const rbBandPrice = t => Math.pow(10, RB_FIT.m * Math.log(rbDayOf(t)) + RB_FIT.b + RB_STILL_CHEAP_OFF);
+  function rbPriceAt(t, now, p0) {
+    if (t <= now) return p0;
+    let target = 0;
+    for (const h of HALVINGS) if (h > now) { target = h; break; }
+    if (!target) target = now + 1095 * 86400000;
+    const off0 = Math.log(p0 / rbBandPrice(now));
+    const progress = Math.min(1, Math.max(0, (t - now) / Math.max(1, target - now)));
+    return rbBandPrice(t) * Math.exp(off0 * (1 - progress));
+  }
   const subsidyMultAt = t => { let m = 1; for (const h of HALVINGS) if (t >= h) m *= 0.5; return m; };
   function difficultyMultAt(t) {
     const yrs = (t - Date.now()) / (365.25 * 86400000);
@@ -155,8 +175,12 @@
     const now = Date.now();
     for (let d = 1; d <= 3650; d++) {
       const t = now + d * 86400000;
-      const dbt = Math.max(dbt0 * subsidyMultAt(t) * difficultyMultAt(t), rewardFloorBTC(bp));
-      const mining = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE);
+      const bpT = rbPriceAt(t, now, bp);
+      const dbt = Math.max(dbt0 * subsidyMultAt(t) * difficultyMultAt(t), rewardFloorBTC(bpT));
+      // Fees are quoted in dollars, so they do NOT scale with the price — that gap is
+      // the whole leverage. Staking is held at today's GMT price: the token would ride
+      // BTC up on this path, and not counting that keeps the figure cash-conservative.
+      const mining = Math.max(0, dbt * th * bpT - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE);
       cum += mining + stakingToday;
       lastMining = mining;
       if (d % 365 === 0 && YEAR_MARKS.indexOf(d / 365) >= 0) {

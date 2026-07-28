@@ -26,7 +26,27 @@ const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage 
 const COV_DAYS_PER_PCT= 18;      // 18 days of fee coverage per 1% token discount (360d = 20% cap)
 
 const HALVING_DATES   = [Date.UTC(2028,3,15),Date.UTC(2032,3,15),Date.UTC(2036,3,15),Date.UTC(2040,3,15)];
-const DIFF_G0=0.25, DIFF_FLOOR=0.05, DIFF_TAU=4;
+// Difficulty grind. Paired with the RAINBOW price path below — price and difficulty are
+// anti-correlated, so a healthier price world has to carry faster hashrate growth or the
+// projection banks the upside twice. 0.37 is the 3yr trailing CAGR; the maximally
+// decelerated 2yr figure (0.25) belonged with the old flat/capitulation pricing.
+// Mirrors DIFF_G0 in assets/app.js and assets/roi-embed.js.
+const DIFF_G0=0.37, DIFF_FLOOR=0.05, DIFF_TAU=4;
+
+// ---- Bitcoin Power-Law (rainbow) price path ----
+// The single price assumption across the whole product: pages, inline calculator and
+// console all converge on the "Still cheap" band, one step below the Power-Law centre.
+// Previously the pages held price FLAT forever while the console used this, so the two
+// disagreed by ~3x on the same setup.
+// Fit refreshed 2026-07-28 from blockchain.com daily closes (2012+). Recompute with
+// scripts/rainbow.js and paste back; it moves slowly, so an occasional refresh is enough.
+const RB_FIT = { m:2.4257730142322704, b:-16.148215459680067 };
+const RB_GEN = Date.UTC(2009,0,3);        // genesis-era reference for the log-time axis
+const RB_STILL_CHEAP_OFF = -0.10;         // midpoint of the "Still cheap" band, log10 units
+const rbDayOf = t => Math.max(1,(t-RB_GEN)/86400000);
+// Band price at time t, independent of today's spot.
+const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
+  Math.pow(10, RB_FIT.m*Math.log(rbDayOf(t)) + RB_FIT.b + off);
 
 // New-miner tiered $/TH (12 W/TH). Keep in sync with TH_TIERS_12W in assets/app.js.
 // Repriced 2026-07-25 from four confirmed observations — 1 TH $19.99, 64 TH $18.33,
@@ -48,6 +68,17 @@ const BTC_ANCHORS=[
 const FB = { btcPrice:84000, difficulty:113e12 };
 
 // ---- engine ----
+// The headline price path: start at today's REAL spot and converge onto the Still-cheap
+// band by `convergeMs` (default the next halving), holding the log-deviation and decaying
+// it to zero. Identical treatment to bpForDay() in assets/app.js, so a page and the
+// console quote the same price for the same date.
+function rbPriceAt(t, now, p0, convergeMs){
+  if(t<=now)return p0;
+  const target=convergeMs||HALVING_DATES.find(h=>h>now)||(now+1095*86400000);
+  const off0=Math.log(p0/rbBandPrice(now));
+  const progress=Math.min(1,Math.max(0,(t-now)/Math.max(1,target-now)));
+  return rbBandPrice(t)*Math.exp(off0*(1-progress));
+}
 function priceAt(t, now, p0){
   if(t<=now)return p0;
   const pts=[{t:now,p:p0},...BTC_ANCHORS];
@@ -85,6 +116,7 @@ module.exports = {
   MINING_MODE, CLICK_STREAK, EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH,
   COV_DAYS_PER_PCT, HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU,
   TH_TIERS_12W, BTC_ANCHORS, FB,
+  RB_FIT, RB_GEN, RB_STILL_CHEAP_OFF, rbDayOf, rbBandPrice, rbPriceAt,
   priceAt, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
   subsidyMultAt, difficultyMultAt, rewardFloorBTC
 };

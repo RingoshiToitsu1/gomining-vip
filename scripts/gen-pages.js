@@ -23,7 +23,7 @@ const {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH, COV_DAYS_PER_PCT,
   HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU, TH_TIERS_12W, BTC_ANCHORS, FB,
-  priceAt, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
+  priceAt, rbPriceAt, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
   subsidyMultAt, difficultyMultAt, rewardFloorBTC
 } = require('./constants.js');
 
@@ -55,13 +55,14 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
   // it is on at that moment. Deliberately not a payback date — "you get your money
   // back in N years" leads with the cost and buries the income, which is the wrong
   // way round for a decision people make on what it pays them.
-  // Two price paths: (1) flat — conservative headline; (2) analyst forecast, the
-  // halving-cycle upside case, clearly labeled wherever it appears.
+  // Two price paths: (1) the rainbow Still-cheap path — the headline, and the SAME
+  // assumption the console projects on, so the two can no longer disagree; (2) price
+  // held flat forever — the downside, labeled as such wherever it appears.
   function earnings(pricePath){
     const rows=[]; let cum=0;
     for(let m=1;m<=120;m++){
       const t=now+m*30.44*86400000;
-      const price_t=pricePath?priceAt(t,now,bp):bp;
+      const price_t=pricePath?bp:rbPriceAt(t,now,bp);
       const dbt_t=Math.max(dbt*subsidyMultAt(t)*difficultyMultAt(t,now), rewardFloorBTC(price_t));
       const mining_t=Math.max(0,(dbt_t*th*price_t-dfeesUSD))*(1-CONVERSION_FEE);  // $/day, eroding reward
       const day=mining_t+stakingUSD;            // staking stays flat (GMT price held flat)
@@ -71,7 +72,7 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
     }
     return rows;
   }
-  const earn=earnings(false), earnFcast=earnings(true);
+  const earn=earnings(false), earnFlat=earnings(true);
   const at=(rows,y)=>rows.find(r=>r.years===y);
 
   // Weekly reinvest projection — same signal as the site's allocator: HOLD the 20% discount
@@ -102,8 +103,8 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
   }
   const reinvest3=reinvest(3,false), reinvest3f=reinvest(3,true);
 
-  return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,
-          hashCost,gmtLockUSD,totalCapital,cost:totalCapital,earn,earnFcast,at,
+  return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,bp0:bp,
+          hashCost,gmtLockUSD,totalCapital,cost:totalCapital,earn,earnFlat,at,
           reinvest3,reinvest3f,
           monthlyUSD:netUSD*30.44, yearlyUSD:netUSD*365.25,
           miningMonthlyUSD:miningUSD*30.44, stakingMonthlyUSD:stakingUSD*30.44};
@@ -139,7 +140,7 @@ function earningsTable(m){
 ${rows}
       </tbody>
     </table>
-    <p class="src">Cumulative net earnings and the run-rate at that point, mining plus staking on the locked GMT, after fees and the ${CONVERSION_FEE*100}% conversion. Bitcoin held flat. Halvings and rising difficulty erode the per-day figure early on, then it steadies: difficulty is an equilibrium, and it cannot grind rewards below the point where a ${EFF_BEST} W/TH miner would switch off. Income decays toward that floor rather than toward zero.</p>
+    <p class="src">Cumulative net earnings and the run-rate at that point, mining plus staking on the locked GMT, after fees and the ${CONVERSION_FEE*100}% conversion. Bitcoin follows the Power-Law curve onto its <em>Still cheap</em> band, the conservative side of the rainbow chart &mdash; the same path the projection in the calculator uses. Cash only: the locked GMT would also appreciate on this path, and none of that is counted here. Halvings and rising difficulty pull against the price, which is why the per-day figure moves far less than the price does.</p>
   </div>`;
 }
 
@@ -197,12 +198,12 @@ const CTA = `  <div class="cta">
     <a href="/console" class="btn">Open the calculator →</a>
   </div>`;
 
-// Clearly-labeled halving-cycle upside callout: the same earnings under an analyst price path.
+// The downside, stated plainly next to the headline: what if the price model is wrong.
 function scenarioBox(m){
-  const f5=m.at(m.earn,5), u5=m.at(m.earnFcast,5);
+  const r5=m.at(m.earn,5), f5=m.at(m.earnFlat,5);
   return `  <div class="scenario">
-    <strong>Holding Bitcoin flat is the pessimistic case.</strong> Bitcoin has never held one price across a halving cycle. Flat, this setup earns ${usd(f5.total)} over five years and is on ${usd(f5.monthly)}/month by the end of them. If Bitcoin instead follows published analyst forecasts, the same five years pay <span class="big">${usd(u5.total)}, ending on ${usd(u5.monthly)}/month</span>
-    <span class="src">Forecast path: ${BTC_ANCHORS.map(a=>a.src).join(', ')}, interpolated from today's price, with mining rewards still eroded by halvings and rising difficulty. A scenario, not a promise — Bitcoin could also fall.</span>
+    <strong>And if Bitcoin goes nowhere?</strong> The figures above follow the Bitcoin Power-Law &mdash; the same curve the rainbow chart draws &mdash; converging on its <em>Still cheap</em> band, one step below the centre line. If instead Bitcoin simply sits at today's ${usd(m.bp0)} for the next five years, the same setup earns <span class="big">${usd(f5.total)} instead of ${usd(r5.total)}</span>
+    <span class="src">Flat price is the floor, not the forecast &mdash; Bitcoin has never held one price across a halving cycle, in either direction. Both paths erode mining rewards through halvings and rising difficulty, and neither is a promise: the Power-Law is a fit to sixteen years of history, and history is not obliged to continue.</span>
   </div>`;
 }
 

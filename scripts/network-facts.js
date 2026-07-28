@@ -47,9 +47,10 @@ async function market() {
 }
 
 // Cumulative earnings and run-rate at each year mark, total-capital model.
-// Mirrors earnings() in scripts/gen-pages.js so a post can never contradict a page.
+// Mirrors earnings() in scripts/gen-pages.js so a post can never contradict a page:
+// same rainbow Still-cheap price path, same difficulty grind, cash only.
 const YEAR_MARKS = [1, 3, 5, 10];
-function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST }) {
+function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST, flat = false }) {
   const now = Date.now();
   const dbt = C.dailyBTCperTH(diff);
   const fee = C.feesBTC(th, wth, bp);
@@ -60,8 +61,9 @@ function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST }) {
   let cum = 0;
   for (let m = 1; m <= 120; m++) {
     const t = now + m * 30.44 * 86400000;
-    const dbt_t = Math.max(dbt * C.subsidyMultAt(t) * C.difficultyMultAt(t, now), C.rewardFloorBTC(bp));
-    const mining = Math.max(0, dbt_t * th * bp - dfeesUSD) * (1 - C.CONVERSION_FEE);
+    const bp_t = flat ? bp : C.rbPriceAt(t, now, bp);
+    const dbt_t = Math.max(dbt * C.subsidyMultAt(t) * C.difficultyMultAt(t, now), C.rewardFloorBTC(bp_t));
+    const mining = Math.max(0, dbt_t * th * bp_t - dfeesUSD) * (1 - C.CONVERSION_FEE);
     const day = mining + stakingUSD;
     cum += day * 30.44;
     if (m % 12 === 0 && YEAR_MARKS.indexOf(m / 12) >= 0)
@@ -115,23 +117,22 @@ function notable(state, mk) {
   const daysToHalving = Math.floor((C.HALVING_DATES[0] - Date.now()) / 86400000);
 
   const eNow = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
+  // The downside the pages state next to the headline: price never moves again.
+  const eFlat = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, flat: true });
   const eNoDisc = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: 0 });
   const e15W = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, wth: C.EFF_BASE_MAX });
   const net = monthlyNetUSD({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
 
-  // Rainbow-chart valuation context. Optional — if the price history is
-  // unreachable we post without it rather than not posting at all.
+  // Where price sits on the rainbow today — context for the band the projection
+  // converges on. Optional: if the history is unreachable we post without it.
   let rb = null;
   try {
     const r = await rainbow.load();
-    const sc = r.stillCheap;
     rb = {
-      rainbowStillCheapUSD: Math.round(sc),
+      rainbowStillCheapUSD: Math.round(r.stillCheap),
       rainbowCenterUSD: Math.round(r.center),
       rainbowBandNow: r.bandAt(mk.bp).label,
-      rainbowUpsidePct: +(((sc - mk.bp) / mk.bp) * 100).toFixed(1),
-      earned5yrAtStillCheap: earningsAt({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC })[5].total,
-      monthlyNetAtStillCheap: +monthlyNetUSD({ th: REF_TH, bp: sc, diff: mk.diff, disc: REF_DISC }).toFixed(2)
+      rainbowUpsidePct: +(((r.stillCheap - mk.bp) / mk.bp) * 100).toFixed(1)
     };
   } catch (e) {
     console.error('rainbow unavailable (continuing without it):', e.message);
@@ -153,6 +154,7 @@ function notable(state, mk) {
     earned10yr: eNow[10].total,
     dailyAt5yr: eNow[5].daily,
     monthlyAt5yr: eNow[5].monthly,
+    earned5yrFlatPrice: eFlat[5].total,
     earned5yrNoDiscount: eNoDisc[5].total,
     earned5yrAt15W: e15W[5].total,
     daysToHalving,
