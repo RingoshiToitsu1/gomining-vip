@@ -96,7 +96,7 @@ For a nothing-to-do day:
 **Tweet:**
 
 ```
-<still suggest one — a flat SEO day is not a flat Bitcoin day>
+<still suggest one — a quiet SEO day is not a quiet Bitcoin day>
 ```
 ```
 
@@ -126,9 +126,13 @@ and never carry a figure over from yesterday's report.
   figure in `network-facts.json` any more, and reconstructing one from the totals
   and the capital is exactly the move to avoid.
 - Under 280 characters. Count them.
-- No price predictions. The rainbow bands are a fit to past price, not a
-  forecast: "at the Still-cheap band, the same five years pay $1,455" is fine;
-  "Bitcoin is going to $103k" is not, and neither is anything shaped like it.
+- No price predictions. The figures already assume Bitcoin follows the Power-Law
+  onto the rainbow's Still-cheap band, so state them as what the model projects,
+  never as what Bitcoin will do. "On the Still-cheap path, five years pays $1,703"
+  is fine; "Bitcoin is going to $104k" is not, and neither is anything shaped like
+  it. `earned5yrLowerBand` is the downside if you want to show both.
+- Never frame anything as a flat or unchanged Bitcoin price. No projection in this
+  product holds price still, so quoting one would misdescribe the model.
 - No guarantees, no "risk-free", no "passive income", no financial advice, no
   hype register. The account's whole edge is sounding like the only honest
   calculator in a field of shills.

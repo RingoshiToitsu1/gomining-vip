@@ -50,7 +50,7 @@ async function market() {
 // Mirrors earnings() in scripts/gen-pages.js so a post can never contradict a page:
 // same rainbow Still-cheap price path, same difficulty grind, cash only.
 const YEAR_MARKS = [1, 3, 5, 10];
-function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST, flat = false }) {
+function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST, off = C.RB_STILL_CHEAP_OFF }) {
   const now = Date.now();
   const dbt = C.dailyBTCperTH(diff);
   const fee = C.feesBTC(th, wth, bp);
@@ -61,7 +61,7 @@ function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST, flat = false }) {
   let cum = 0;
   for (let m = 1; m <= 120; m++) {
     const t = now + m * 30.44 * 86400000;
-    const bp_t = flat ? bp : C.rbPriceAt(t, now, bp);
+    const bp_t = C.rbPriceAt(t, now, bp, off);
     const dbt_t = Math.max(dbt * C.subsidyMultAt(t) * C.difficultyMultAt(t, now), C.rewardFloorBTC(bp_t));
     const mining = Math.max(0, dbt_t * th * bp_t - dfeesUSD) * (1 - C.CONVERSION_FEE);
     const day = mining + stakingUSD;
@@ -117,8 +117,9 @@ function notable(state, mk) {
   const daysToHalving = Math.floor((C.HALVING_DATES[0] - Date.now()) / 86400000);
 
   const eNow = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
-  // The downside the pages state next to the headline: price never moves again.
-  const eFlat = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, flat: true });
+  // The downside the pages state next to the headline: a full band lower for the
+  // whole run. Never a flat price — a stopped clock is not a conservative forecast.
+  const eLow = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, off: C.RB_ACCUMULATE_OFF });
   const eNoDisc = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: 0 });
   const e15W = earningsAt({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC, wth: C.EFF_BASE_MAX });
   const net = monthlyNetUSD({ th: REF_TH, bp: mk.bp, diff: mk.diff, disc: REF_DISC });
@@ -154,7 +155,7 @@ function notable(state, mk) {
     earned10yr: eNow[10].total,
     dailyAt5yr: eNow[5].daily,
     monthlyAt5yr: eNow[5].monthly,
-    earned5yrFlatPrice: eFlat[5].total,
+    earned5yrLowerBand: eLow[5].total,
     earned5yrNoDiscount: eNoDisc[5].total,
     earned5yrAt15W: e15W[5].total,
     daysToHalving,

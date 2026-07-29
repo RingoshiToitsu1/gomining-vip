@@ -43,6 +43,11 @@ const DIFF_G0=0.37, DIFF_FLOOR=0.05, DIFF_TAU=4;
 const RB_FIT = { m:2.4257730142322704, b:-16.148215459680067 };
 const RB_GEN = Date.UTC(2009,0,3);        // genesis-era reference for the log-time axis
 const RB_STILL_CHEAP_OFF = -0.10;         // midpoint of the "Still cheap" band, log10 units
+const RB_ACCUMULATE_OFF  = -0.20;         // one band lower — the downside case. There is no
+                                          // flat-price scenario anywhere in this product: a
+                                          // price pinned for a decade is not a conservative
+                                          // assumption, it is an impossible one. The downside
+                                          // is a WORSE PATH, not a stopped clock.
 const rbDayOf = t => Math.max(1,(t-RB_GEN)/86400000);
 // Band price at time t, independent of today's spot.
 const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
@@ -72,12 +77,12 @@ const FB = { btcPrice:84000, difficulty:113e12 };
 // band by `convergeMs` (default the next halving), holding the log-deviation and decaying
 // it to zero. Identical treatment to bpForDay() in assets/app.js, so a page and the
 // console quote the same price for the same date.
-function rbPriceAt(t, now, p0, convergeMs){
+function rbPriceAt(t, now, p0, off=RB_STILL_CHEAP_OFF, convergeMs){
   if(t<=now)return p0;
   const target=convergeMs||HALVING_DATES.find(h=>h>now)||(now+1095*86400000);
-  const off0=Math.log(p0/rbBandPrice(now));
+  const off0=Math.log(p0/rbBandPrice(now,off));
   const progress=Math.min(1,Math.max(0,(t-now)/Math.max(1,target-now)));
-  return rbBandPrice(t)*Math.exp(off0*(1-progress));
+  return rbBandPrice(t,off)*Math.exp(off0*(1-progress));
 }
 function priceAt(t, now, p0){
   if(t<=now)return p0;
@@ -116,7 +121,7 @@ module.exports = {
   MINING_MODE, CLICK_STREAK, EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH,
   COV_DAYS_PER_PCT, HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU,
   TH_TIERS_12W, BTC_ANCHORS, FB,
-  RB_FIT, RB_GEN, RB_STILL_CHEAP_OFF, rbDayOf, rbBandPrice, rbPriceAt,
+  RB_FIT, RB_GEN, RB_STILL_CHEAP_OFF, RB_ACCUMULATE_OFF, rbDayOf, rbBandPrice, rbPriceAt,
   priceAt, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
   subsidyMultAt, difficultyMultAt, rewardFloorBTC
 };

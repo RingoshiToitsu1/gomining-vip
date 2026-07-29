@@ -166,10 +166,10 @@
     const netToday = miningToday + stakingToday;
 
     // Project forward on TOTAL capital (hashrate + GMT lock), matching the model the
-    // /gomining-*-th-roi pages publish: BTC and GMT held flat, mining reward eroded by
+    // /gomining-*-th-roi pages publish: BTC on the rainbow Still-cheap path, mining reward eroded by
     // halvings and the difficulty grind (floored at the network no-arbitrage break-even),
     // mining clamped at >=0 (a rational operator stops rather than pays fees at a loss),
-    // and staking held flat since the GMT price is held flat.
+    // and staking valued at today's GMT price rather than marked up with BTC.
     let cum = 0, lastMining = 0;
     const earn = [];
     const now = Date.now();
