@@ -46,3 +46,6 @@ x-draft.txt
 # python bytecode
 __pycache__/
 *.pyc
+
+# Claude Code transcripts + local memory — contain API keys, never publish
+.claude/projects/
