@@ -53,15 +53,19 @@ const rbDayOf = t => Math.max(1,(t-RB_GEN)/86400000);
 const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
   Math.pow(10, RB_FIT.m*Math.log(rbDayOf(t)) + RB_FIT.b + off);
 
-// New-miner tiered $/TH (12 W/TH). Keep in sync with TH_TIERS_12W in assets/app.js.
-// Repriced 2026-07-25 from four confirmed observations — 1 TH $19.99, 64 TH $18.33,
-// 512 TH $17.78, 5000 TH $17.24 — remaining tiers interpolated in log10(TH).
+// New-miner tiered $/TH (12 W/TH), LIST price. Keep in sync with TH_TIERS_12W in
+// assets/app.js and assets/roi-embed.js.
+// Repriced 2026-07-29: GoMining cut 12 W/TH pricing ~10-15%. Observed prices were net
+// of a 5% NFT holder discount, so every tier is grossed up by /0.95 to the list price a
+// new user actually pays — 1 TH reconstructs to exactly $17.00, which confirms the
+// discount is 5% off list rather than 5% added on. Do NOT paste discounted quotes in
+// here: the site must quote what its readers pay, not what one account pays.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.99},{th:2,cpt:19.71},{th:4,cpt:19.44},{th:8,cpt:19.16},
-  {th:16,cpt:18.88},{th:32,cpt:18.61},{th:48,cpt:18.44},{th:64,cpt:18.33},
-  {th:96,cpt:18.22},{th:128,cpt:18.15},{th:192,cpt:18.04},{th:256,cpt:17.96},
-  {th:384,cpt:17.86},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.62},
-  {th:1536,cpt:17.52},{th:2560,cpt:17.40},{th:3584,cpt:17.32},{th:5000,cpt:17.24}
+  {th:1,cpt:17.00},{th:2,cpt:16.95},{th:4,cpt:16.82},{th:8,cpt:16.75},
+  {th:16,cpt:16.68},{th:32,cpt:16.59},{th:48,cpt:16.51},{th:64,cpt:16.41},
+  {th:96,cpt:16.33},{th:128,cpt:16.23},{th:192,cpt:16.15},{th:256,cpt:16.07},
+  {th:384,cpt:15.99},{th:512,cpt:15.91},{th:768,cpt:15.82},{th:1024,cpt:15.75},
+  {th:1536,cpt:15.66},{th:2560,cpt:15.59},{th:3584,cpt:15.51},{th:5000,cpt:15.43}
 ];
 
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.

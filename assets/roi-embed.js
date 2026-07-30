@@ -31,11 +31,11 @@
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount.
   const TH_TIERS_12W = [
-    { th: 1, cpt: 19.99 }, { th: 2, cpt: 19.71 }, { th: 4, cpt: 19.44 }, { th: 8, cpt: 19.16 },
-    { th: 16, cpt: 18.88 }, { th: 32, cpt: 18.61 }, { th: 48, cpt: 18.44 }, { th: 64, cpt: 18.33 },
-    { th: 96, cpt: 18.22 }, { th: 128, cpt: 18.15 }, { th: 192, cpt: 18.04 }, { th: 256, cpt: 17.96 },
-    { th: 384, cpt: 17.86 }, { th: 512, cpt: 17.78 }, { th: 768, cpt: 17.68 }, { th: 1024, cpt: 17.62 },
-    { th: 1536, cpt: 17.52 }, { th: 2560, cpt: 17.40 }, { th: 3584, cpt: 17.32 }, { th: 5000, cpt: 17.24 }
+    {th:1,cpt:17.00},{th:2,cpt:16.95},{th:4,cpt:16.82},{th:8,cpt:16.75},
+    {th:16,cpt:16.68},{th:32,cpt:16.59},{th:48,cpt:16.51},{th:64,cpt:16.41},
+    {th:96,cpt:16.33},{th:128,cpt:16.23},{th:192,cpt:16.15},{th:256,cpt:16.07},
+    {th:384,cpt:15.99},{th:512,cpt:15.91},{th:768,cpt:15.82},{th:1024,cpt:15.75},
+    {th:1536,cpt:15.66},{th:2560,cpt:15.59},{th:3584,cpt:15.51},{th:5000,cpt:15.43}
   ];
 
   // VIP tiers — qualify on hashrate OR locked GMT, whichever lifts you higher.

@@ -89,11 +89,11 @@ function thForBudget(budget){
 // flattens sooner than a uniform rescale of the old shape would suggest (-$0.34/TH at 48 TH).
 // Pre-avatar-discount.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.99},{th:2,cpt:19.71},{th:4,cpt:19.44},{th:8,cpt:19.16},
-  {th:16,cpt:18.88},{th:32,cpt:18.61},{th:48,cpt:18.44},{th:64,cpt:18.33},
-  {th:96,cpt:18.22},{th:128,cpt:18.15},{th:192,cpt:18.04},{th:256,cpt:17.96},
-  {th:384,cpt:17.86},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.62},
-  {th:1536,cpt:17.52},{th:2560,cpt:17.40},{th:3584,cpt:17.32},{th:5000,cpt:17.24}
+  {th:1,cpt:17.00},{th:2,cpt:16.95},{th:4,cpt:16.82},{th:8,cpt:16.75},
+  {th:16,cpt:16.68},{th:32,cpt:16.59},{th:48,cpt:16.51},{th:64,cpt:16.41},
+  {th:96,cpt:16.33},{th:128,cpt:16.23},{th:192,cpt:16.15},{th:256,cpt:16.07},
+  {th:384,cpt:15.99},{th:512,cpt:15.91},{th:768,cpt:15.82},{th:1024,cpt:15.75},
+  {th:1536,cpt:15.66},{th:2560,cpt:15.59},{th:3584,cpt:15.51},{th:5000,cpt:15.43}
 ];
 const EFF_UPGRADE_STEP=2.67;  // $/TH to improve efficiency by 1 W/TH toward 12
 const EFF_BEST=12;            // best efficiency available now
@@ -310,19 +310,21 @@ function projectedMonthlyForCapital(capUSD){
   const ambMo=((i.amb?i.refTH:0)+refInitTH)*15*24/1000*0.005*30;
   return mineMo+stakingMo+ambMo;
 }
-// Binary-search the smallest USD capital whose projected monthly income reaches targetUSD.
-function solveCapitalForIncome(targetUSD){
-  if(!(targetUSD>0))return null;
+// Binary-search the smallest USD capital that ADDS addUSD to the farm's monthly income.
+// The target is additional income, not a total: someone already earning $2,800/mo who asks
+// for $1,500 wants to end up on $4,300, not to be told they are already there.
+function solveCapitalForIncome(addUSD){
+  if(!(addUSD>0))return null;
   const f=projectedMonthlyForCapital;
-  const base=f(0);
+  const base=f(0);                       // what the farm pays before any new capital
   if(base==null)return {cap:null,error:true};
-  if(base>=targetUSD)return {cap:0,mo:base,already:true};
+  const goal=base+addUSD;
   let hi=1000,hiMo=f(hi),iter=0;
-  while((hiMo==null||hiMo<targetUSD)&&hi<1e8&&iter<40){hi*=2;hiMo=f(hi);iter++;}
-  if(hiMo==null||hiMo<targetUSD)return {cap:null,mo:hiMo,maxTried:hi,unreachable:true};
+  while((hiMo==null||hiMo<goal)&&hi<1e8&&iter<40){hi*=2;hiMo=f(hi);iter++;}
+  if(hiMo==null||hiMo<goal)return {cap:null,mo:hiMo,maxTried:hi,base,goal,unreachable:true};
   let lo=0;
-  for(let k=0;k<44;k++){const mid=(lo+hi)/2,mo=f(mid);if(mo==null){lo=mid;continue;}mo<targetUSD?lo=mid:hi=mid;}
-  return {cap:hi,mo:f(hi),base};
+  for(let k=0;k<44;k++){const mid=(lo+hi)/2,mo=f(mid);if(mo==null){lo=mid;continue;}mo<goal?lo=mid:hi=mid;}
+  return {cap:hi,mo:f(hi),base,goal};
 }
 // Target-income mode: solve for the capital needed, fill it in, then show the normal results.
 function submitPlannerTarget(){
@@ -2401,10 +2403,11 @@ function renderPlanner(i,m){
   // capital we solved for (only while the displayed capital still matches that solve).
   const G=window._incomeGoal;
   if(G&&G.res&&Math.abs((i.cap||0)-(G.cap||0))<0.5){
-    if(G.res.already){
-      ah+=`<div class="goal-banner">🎯 You're already earning <strong>${fU(G.targetUSD)}/mo</strong> or more — no new capital needed to hit this goal.</div>`;
-    }else if(G.res.unreachable){
-      ah+=`<div class="goal-banner warn">🎯 Couldn't reach <strong>${fU(G.targetUSD)}/mo</strong> even at ${fU(G.res.maxTried)} of capital — try a lower goal.</div>`;
+    const baseMo=G.res.base||0;
+    if(G.res.unreachable){
+      ah+=`<div class="goal-banner warn">🎯 Couldn't add <strong>${fU(G.targetUSD)}/mo</strong> even at ${fU(G.res.maxTried)} of capital — try a smaller increase.</div>`;
+    }else if(baseMo>0){
+      ah+=`<div class="goal-banner">🎯 To add <strong>${fU(G.targetUSD)}/mo</strong> to the <strong>${fU(baseMo)}/mo</strong> you already earn — taking you to about <strong>${fU(G.res.goal)}/mo</strong> — invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
     }else{
       ah+=`<div class="goal-banner">🎯 To earn about <strong>${fU(G.targetUSD)}/mo</strong>, invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
     }
