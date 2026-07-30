@@ -184,7 +184,7 @@
       <span class="ob-tutorial-cap">GoMining app &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> tile</span>
       <div class="ob-field">
         <label>Total Hashrate</label>
-        <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT')"><span class="ob-unit">TH</span></div>
+        <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT','obWTH')"><span class="ob-unit">TH</span></div>
       </div>
     </div>
 
@@ -455,7 +455,7 @@
             <div class="ed-fields">
               <label class="ed-fld" for="inTH">
                 <span class="ed-fld-lbl">Hashrate <span class="tip" data-tip="Sum of all your NFT hashrates — the Power tile in the GoMining app. Includes your Greedy Machine.">?</span></span>
-                <input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH')">
+                <input type="number" id="inTH" value="0" step="0.01" min="0" oninput="autoFillCPT('inTH','inCostPerTH','inWTH')">
                 <span class="unit">TH</span>
               </label>
               <label class="ed-fld" for="inWTH">
@@ -1020,7 +1020,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=19"></script>
+<script src="/assets/app.js?v=20"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.

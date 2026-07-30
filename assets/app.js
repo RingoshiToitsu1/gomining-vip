@@ -46,6 +46,9 @@ const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;ret
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
 
 // ---- TH COST TIERS ----
+// 15 W/TH hashrate — the cheaper, less efficient curve. Applies whether you are minting
+// or adding TH: at a given efficiency the price per TH is the same either way. Unchanged
+// in the 2026-07-29 reprice, which only touched 12 W/TH (see TH_TIERS_12W).
 const TH_TIERS=[
   {th:1,cpt:14.99},{th:2,cpt:14},{th:4,cpt:14},{th:8,cpt:13.75},
   {th:16,cpt:13.56},{th:32,cpt:13.44},{th:48,cpt:13.29},{th:64,cpt:13.16},
@@ -110,9 +113,10 @@ function cptTier(tiers,th){
   return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
-// Budget → TH when MINTING A NEW MACHINE. New miners are 12 W/TH only, so this is the right
-// converter for every "spend capital on fresh hashrate" path. (thForBudget/estimateCPT price
-// hashrate UPGRADES on a machine you already own — a different product, kept on TH_TIERS.)
+// Budget → TH at 12 W/TH. Minting a new machine and adding TH to one you own cost the same
+// per TH at a given efficiency, so this is the converter for every 12 W path, purchase or
+// upgrade. thForBudget/estimateCPT are the 15 W equivalents on TH_TIERS — the split is by
+// EFFICIENCY, not by mint-versus-upgrade.
 function thForBudget12(budget){return thForBudgetTiers(budget,TH_TIERS_12W);}
 function thForBudgetTiers(budget,tiers){
   if(budget<=0)return 0;
@@ -132,14 +136,20 @@ function netMonthlyAt(i,bpOverride){
   return mo;
 }
 
-function autoFillCPT(thId,cptId){
+// Auto-estimate $/TH for a farm the user is describing. Priced off the efficiency they
+// entered: a 12 W/TH farm cost materially more per TH than a 15 W one, and defaulting
+// everyone to the 15 W curve understated the capital behind an efficient setup.
+function autoFillCPT(thId,cptId,wthId){
   const th=parseFloat(document.getElementById(thId).value)||0;
   const el=document.getElementById(cptId);
-  const est=estimateCPT(th);
+  const wEl=wthId?document.getElementById(wthId):null;
+  const w=wEl?parseFloat(wEl.value)||0:0;
+  const est=(w>0&&w<=EFF_BEST)?estimateCPT12(th):estimateCPT(th);
   el.value=est.toFixed(2);
   el.dispatchEvent(new Event('input',{bubbles:true}));
   const hint=document.getElementById('cptAutoHint');
-  if(hint&&th>0)hint.textContent='Auto-estimated ~$'+est.toFixed(2)+'/TH for '+fN(th,0)+' TH farm';
+  const curve=(w>0&&w<=EFF_BEST)?EFF_BEST+' W/TH':'15 W/TH';
+  if(hint&&th>0)hint.textContent='Auto-estimated ~$'+est.toFixed(2)+'/TH for '+fN(th,0)+' TH at '+curve;
   else if(hint)hint.textContent='';
 }
 
@@ -1470,7 +1480,7 @@ function applyInputs(d){
   if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
   if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=!!d.piVipBonus;
   if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
-  autoFillCPT('inTH','inCostPerTH');
+  autoFillCPT('inTH','inCostPerTH','inWTH');
   refreshGreedyVisibility();
 }
 
@@ -1702,7 +1712,9 @@ document.addEventListener('keydown',e=>{
   el.value=el.dataset.prevVal;el.blur();   // cancel the edit, revert
 });
 ['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
-$('inAvatarDisc').addEventListener('change',()=>autoFillCPT('inTH','inCostPerTH'));
+$('inAvatarDisc').addEventListener('change',()=>autoFillCPT('inTH','inCostPerTH','inWTH'));
+// Efficiency now selects the price curve, so the estimate has to follow it.
+$('inWTH').addEventListener('input',()=>autoFillCPT('inTH','inCostPerTH','inWTH'));
 {const pv=$('piVipBonus');if(pv)pv.addEventListener('change',()=>{autoSave();if(S.loaded)recalc();});}
 $('inAmbassador').addEventListener('change',function(){$('ambassadorFields').style.display=this.checked?'':'none'});
 
