@@ -22,8 +22,6 @@
   const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
   const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
   const EFF_BEST       = 12;      // best efficiency purchasable now (W/TH)
-  // Year marks the earnings figures are quoted at — mirrors YEAR_MARKS in scripts/gen-pages.js.
-  const YEAR_MARKS     = [1, 3, 5, 10];
   // % — GMT locked-staking APR (observed 2026-07-26). Kept in step with STAKING_APR in
   // scripts/gen-pages.js and inLockAPR in console/index.html so the cluster agrees.
   const STAKE_APR0     = 21.73;
@@ -53,39 +51,6 @@
   ];
   const vipOf = (th, veg) => { let t = TIERS[0]; for (const x of TIERS) if (th >= x.th || veg >= x.veg) t = x; return t; };
 
-  // Reward decay — halvings plus the continuous difficulty grind, floored at the
-  // network's no-arbitrage break-even (difficulty is an equilibrium; it can't
-  // decay past the point where the marginal miner capitulates).
-  const HALVINGS = [Date.UTC(2028, 3, 15), Date.UTC(2032, 3, 15), Date.UTC(2036, 3, 15), Date.UTC(2040, 3, 15)];
-  // 0.37 = 3yr trailing difficulty CAGR, paired with the rainbow price path below.
-  // Mirrors DIFF_G0 in scripts/constants.js and assets/app.js.
-  const DIFF_G0 = 0.37, DIFF_FLOOR = 0.05, DIFF_TAU = 4;
-  // Bitcoin Power-Law path — price converges from today's spot onto the rainbow chart's
-  // "Still cheap" band by the next halving. Same assumption as the pages and the console,
-  // so all three quote the same price for the same date. Fit refreshed 2026-07-28; mirrors
-  // RB_FIT in scripts/constants.js.
-  const RB_FIT = { m: 2.4257730142322704, b: -16.148215459680067 };
-  const RB_GEN = Date.UTC(2009, 0, 3);
-  const RB_STILL_CHEAP_OFF = -0.10;
-  const rbDayOf = t => Math.max(1, (t - RB_GEN) / 86400000);
-  const rbBandPrice = t => Math.pow(10, RB_FIT.m * Math.log(rbDayOf(t)) + RB_FIT.b + RB_STILL_CHEAP_OFF);
-  function rbPriceAt(t, now, p0) {
-    if (t <= now) return p0;
-    let target = 0;
-    for (const h of HALVINGS) if (h > now) { target = h; break; }
-    if (!target) target = now + 1095 * 86400000;
-    const off0 = Math.log(p0 / rbBandPrice(now));
-    const progress = Math.min(1, Math.max(0, (t - now) / Math.max(1, target - now)));
-    return rbBandPrice(t) * Math.exp(off0 * (1 - progress));
-  }
-  const subsidyMultAt = t => { let m = 1; for (const h of HALVINGS) if (t >= h) m *= 0.5; return m; };
-  function difficultyMultAt(t) {
-    const yrs = (t - Date.now()) / (365.25 * 86400000);
-    if (yrs <= 0) return 1;
-    const integral = DIFF_FLOOR * yrs + (DIFF_G0 - DIFF_FLOOR) * DIFF_TAU * (1 - Math.exp(-yrs / DIFF_TAU));
-    return 1 / Math.exp(integral);
-  }
-  const rewardFloorBTC = p => p > 0 ? (0.0012 * EFF_BEST + 0.0089) / p : 0;
 
   function cpt12(th) {
     const T = TH_TIERS_12W;
@@ -170,29 +135,13 @@
     // halvings and the difficulty grind (floored at the network no-arbitrage break-even),
     // mining clamped at >=0 (a rational operator stops rather than pays fees at a loss),
     // and staking valued at today's GMT price rather than marked up with BTC.
-    let cum = 0, lastMining = 0;
-    const earn = [];
-    const now = Date.now();
-    for (let d = 1; d <= 3650; d++) {
-      const t = now + d * 86400000;
-      const bpT = rbPriceAt(t, now, bp);
-      const dbt = Math.max(dbt0 * subsidyMultAt(t) * difficultyMultAt(t), rewardFloorBTC(bpT));
-      // Fees are quoted in dollars, so they do NOT scale with the price — that gap is
-      // the whole leverage. Staking is held at today's GMT price: the token would ride
-      // BTC up on this path, and not counting that keeps the figure cash-conservative.
-      const mining = Math.max(0, dbt * th * bpT - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE);
-      cum += mining + stakingToday;
-      lastMining = mining;
-      if (d % 365 === 0 && YEAR_MARKS.indexOf(d / 365) >= 0) {
-        const day = mining + stakingToday;
-        earn.push({ years: d / 365, total: cum, daily: day, monthly: day * 30.44, yearly: day * 365.25 });
-      }
-    }
-    // Mining margin hitting zero is the teaching case, not a payback failure: with
-    // no discount you ARE the marginal miner the reward floor is defined by.
-    const miningDead = lastMining <= 0;
+    // Mining margin at zero is the teaching case: with no discount you ARE the
+    // marginal miner the reward floor is defined by. Checked at today's rates only —
+    // this widget answers "what does this earn now", never "what will it earn".
+    const miningDead = netToday <= 0 || miningToday <= 0;
+    const yieldPct = invested > 0 ? (netToday * 365.25 / invested) * 100 : 0;
     return { dbt0, feesUSD, totD, tok, nonTok, vip, gmtFor20, invested, thCost, lockCost,
-             netToday, miningToday, stakingToday, grossToday, earn, miningDead, bp, gp };
+             netToday, miningToday, stakingToday, grossToday, miningDead, yieldPct, bp, gp };
   }
 
   // ---- render ----
@@ -200,7 +149,6 @@
   const money = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: Math.abs(n) < 100 ? 2 : 0 });
   const num = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 
-  const atYear = (rows, y) => { for (let i = 0; i < rows.length; i++) if (rows[i].years === y) return rows[i]; return null; };
 
   function render() {
     const th = Math.max(0, parseFloat($('re-th').value) || 0);
@@ -211,12 +159,10 @@
     if (th <= 0) return;
 
     const m = model(th, wth, gl, apr, streak);
-    const e5 = atYear(m.earn, 5);
-
     $('re-net').textContent = money(m.netToday * 30.44);
     $('re-disc').textContent = num(m.totD, 1) + '%';
-    $('re-be').textContent = money(e5.total);
-    $('re-be-sub').textContent = 'then on ' + money(e5.monthly) + '/mo';
+    $('re-be').textContent = money(m.netToday);
+    $('re-be-sub').textContent = num(m.yieldPct, 1) + '% a year on capital';
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
       ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'

@@ -22,16 +22,11 @@ const SITE = 'https://gmt-optimizer.com';
 const {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH, COV_DAYS_PER_PCT,
-  HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU, TH_TIERS_12W, FB,
-  rbPriceAt, RB_STILL_CHEAP_OFF, RB_ACCUMULATE_OFF, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
-  subsidyMultAt, difficultyMultAt, rewardFloorBTC
+  HALVING_DATES, TH_TIERS_12W, FB,
+  cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC
 } = require('./constants.js');
 
-// Where the earnings figures are quoted. 10 is the projection horizon; 1/3/5 span
-// the run-up to the 2028 halving and the cycle after it.
-const YEAR_MARKS=[1,3,5,10];
-
-// Full per-scenario economics + earnings projection on the rainbow price path.
+// Per-scenario economics at TODAY's price and difficulty — no forward projection.
 // Total-capital model: the GMT you must LOCK to hold the discount is
 // counted as invested capital, and the staking APR that GMT earns is counted as income.
 function model({th, bp, diff, disc, wth=EFF_BEST}){
@@ -55,60 +50,14 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
   // it is on at that moment. Deliberately not a payback date — "you get your money
   // back in N years" leads with the cost and buries the income, which is the wrong
   // way round for a decision people make on what it pays them.
-  // Two rainbow paths: (1) Still-cheap — the headline, and the SAME assumption the
-  // console projects on, so the two can no longer disagree; (2) Accumulate, one band
-  // lower — the downside. Never a flat price: pinning Bitcoin for a decade is not a
-  // conservative assumption, it is an impossible one, and quoting it as the floor
-  // made every figure on the site look three times worse than the model believed.
-  function earnings(off){
-    const rows=[]; let cum=0;
-    for(let m=1;m<=120;m++){
-      const t=now+m*30.44*86400000;
-      const price_t=rbPriceAt(t,now,bp,off);
-      const dbt_t=Math.max(dbt*subsidyMultAt(t)*difficultyMultAt(t,now), rewardFloorBTC(price_t));
-      const mining_t=Math.max(0,(dbt_t*th*price_t-dfeesUSD))*(1-CONVERSION_FEE);  // $/day, eroding reward
-      const day=mining_t+stakingUSD;            // staking held at today's GMT price (not marked up)
-      cum += day*30.44;
-      if(m%12===0 && YEAR_MARKS.includes(m/12))
-        rows.push({years:m/12, total:cum, daily:day, monthly:day*30.44, yearly:day*365.25});
-    }
-    return rows;
-  }
-  const earn=earnings(RB_STILL_CHEAP_OFF), earnLow=earnings(RB_ACCUMULATE_OFF);
-  const at=(rows,y)=>rows.find(r=>r.years===y);
+  // NO forward projection here. These pages report what a setup earns TODAY, on
+  // live price and difficulty. Projections belong in the calculator, where the user
+  // sets their own assumptions and can see them — a multi-year total baked into
+  // static HTML is a number nobody chose and everybody reads as a promise.
 
-  // Weekly reinvest projection — same signal as the site's allocator: HOLD the 20% discount
-  // (top up GMT coverage as the farm grows) and put the rest into 12 W hashrate. Each
-  // added TH costs cptTier(12W) to buy PLUS L$ of GMT to keep 360-day coverage, so the all-in
-  // cost per incremental TH bundles both. Staking on the growing lock compounds too.
-  function reinvest(years, off){
-    if(disc<=0)return null;
-    const L = COV_DAYS_PER_PCT*disc*feePerTHDay(wth);   // GMT lock $ required per TH to hold discount
-    let cTH=th, lock=L*th;
-    const weeks=Math.round(years*52.1786);
-    for(let w=1;w<=weeks;w++){
-      const t=now+w*7*86400000;
-      const price_t=rbPriceAt(t,now,bp,off);
-      const dbt_t=Math.max(dbt*subsidyMultAt(t)*difficultyMultAt(t,now), rewardFloorBTC(price_t));
-      const feeDay=feePerTHDay(wth)*cTH;                // undiscounted $/day
-      const miningWk=Math.max(0,(dbt_t*cTH*price_t-feeDay*(1-disc/100)))*(1-CONVERSION_FEE)*7;
-      const stakingWk=lock*(STAKING_APR/100)/52.1786;
-      const income=miningWk+stakingWk;
-      const dTH=income/(cptTier(cTH)+L);                // buy TH + keep coverage, in one step
-      cTH+=dTH; lock=L*cTH;                             // recompute lock for the larger farm
-    }
-    const tE=now+years*365.25*86400000, pE=rbPriceAt(tE,now,bp,off);
-    const dbtE=Math.max(dbt*subsidyMultAt(tE)*difficultyMultAt(tE,now), rewardFloorBTC(pE));
-    const miningMo=Math.max(0,(dbtE*cTH*pE-feePerTHDay(wth)*cTH*(1-disc/100)))*(1-CONVERSION_FEE)*30.44;
-    const stakingMo=lock*(STAKING_APR/100)/12;
-    return {years, endTH:cTH, endLockUSD:lock, endMonthlyUSD:miningMo+stakingMo};
-  }
-  // reinvest3 = the lower Accumulate path (the downside), reinvest3f = Still-cheap (headline).
-  const reinvest3=reinvest(3,RB_ACCUMULATE_OFF), reinvest3f=reinvest(3,RB_STILL_CHEAP_OFF);
 
   return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,bp0:bp,
-          hashCost,gmtLockUSD,totalCapital,cost:totalCapital,earn,earnLow,at,
-          reinvest3,reinvest3f,
+          hashCost,gmtLockUSD,totalCapital,cost:totalCapital,
           monthlyUSD:netUSD*30.44, yearlyUSD:netUSD*365.25,
           miningMonthlyUSD:miningUSD*30.44, stakingMonthlyUSD:stakingUSD*30.44};
 }
@@ -130,23 +79,6 @@ async function getLive(){
 const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
 const usd2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-// A year mark rendered as prose: "$1,510 by year 5, still earning $21/mo".
-const earnedBy=r=>`${usd(r.total)} by year ${r.years}`;
-const runRate=r=>`${usd2(r.daily)}/day (${usd(r.monthly)}/mo, ${usd(r.yearly)}/yr)`;
-// The earnings table every page carries. One shape, so the pages stay consistent.
-function earningsTable(m){
-  const rows=m.earn.map(r=>`      <tr><td>${r.years} year${r.years===1?'':'s'}</td><td>${usd(r.total)}</td><td>${usd2(r.daily)}</td><td>${usd(r.monthly)}</td><td>${usd(r.yearly)}</td></tr>`).join('\n');
-  return `  <div class="table-wrap">
-    <table class="earnings">
-      <thead><tr><th>Held for</th><th>Total earned</th><th>Per day</th><th>Per month</th><th>Per year</th></tr></thead>
-      <tbody>
-${rows}
-      </tbody>
-    </table>
-    <p class="src">Cumulative net earnings and the run-rate at that point, mining plus staking on the locked GMT, after fees and the ${CONVERSION_FEE*100}% conversion. Bitcoin follows the Power-Law curve onto its <em>Still cheap</em> band, the conservative side of the rainbow chart &mdash; the same path the projection in the calculator uses. Cash only: the locked GMT would also appreciate on this path, and none of that is counted here. Halvings and rising difficulty pull against the price, which is why the per-day figure moves far less than the price does.</p>
-  </div>`;
-}
-
 /* ===== shared page shell ===== */
 function shell({slug,title,desc,faq,body,related,canonicalUrl}){
   // slug is the FILENAME (foo.html); the canonical URL is extensionless. GitHub Pages
@@ -196,33 +128,11 @@ ${faqHtml}
 
 const CTA = `  <div class="cta">
     <h3>Run your own numbers — free</h3>
-    <p>Plug in your hashrate and get live P&amp;L plus a multi-year projection of what it earns.</p>
+    <p>Plug in your hashrate for live P&amp;L on today's numbers &mdash; then project it forward on assumptions you choose.</p>
     <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
     <a href="/console" class="btn">Open the calculator →</a>
   </div>`;
 
-// The downside, stated plainly next to the headline — a weaker price path, never a
-// stopped one. Bitcoin has never held a single price across a halving cycle, so a
-// flat-price "floor" is not conservative, just wrong in a direction that feels safe.
-function scenarioBox(m){
-  const r5=m.at(m.earn,5), l5=m.at(m.earnLow,5);
-  return `  <div class="scenario">
-    <strong>And if Bitcoin underperforms?</strong> The figures above follow the Bitcoin Power-Law &mdash; the curve the rainbow chart draws &mdash; onto its <em>Still cheap</em> band. Drop a full band to <em>Accumulate</em>, a market that stays cheaper for the whole five years, and the same setup earns <span class="big">${usd(l5.total)} instead of ${usd(r5.total)}</span>
-    <span class="src">Both paths erode mining rewards through halvings and rising difficulty, and neither is a promise &mdash; the Power-Law is a fit to sixteen years of history, and history is not obliged to continue. Cash only: the GMT you lock would appreciate on either path, and none of that is counted here.</span>
-  </div>`;
-}
-
-// Weekly-reinvest growth callout — kept separate so the earnings figures above stay
-// honest about what you actually receive if you spend them.
-const th0=n=>n>=100?Math.round(n):n.toFixed(1);
-function reinvestBox(m){
-  if(!m.reinvest3)return '';
-  const r=m.reinvest3, rf=m.reinvest3f;
-  return `  <div class="scenario">
-    <strong>Or reinvest instead of cashing out.</strong> The figures above assume you pocket the rewards. Feed them back in weekly — buying 12 W hashrate and topping up GMT to hold the 20% discount, the way the optimizer allocates capital — and the farm compounds. On the same Still-cheap path it grows to <span class="big">~${th0(rf.endTH)} TH earning ~${usd(rf.endMonthlyUSD)}/mo in ${rf.years} years</span>
-    <span class="src">On the lower <em>Accumulate</em> path it still reaches ~${th0(r.endTH)} TH earning ~${usd(r.endMonthlyUSD)}/month — rising difficulty caps per-TH income, so growth partly offsets decay. Compounding at ${STAKING_APR}% GMT staking plus reinvested mining. A growth path, not a promise.</span>
-  </div>`;
-}
 
 /* ===== page builders ===== */
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -244,31 +154,27 @@ function hashratePage(th, live, dateStr){
   const none=model({th,bp:live.bp,diff:live.diff,disc:0});
   const slug=`gomining-${th}-th-roi.html`;
   const title=`GoMining ${th} TH: What It Actually Earns (${dateStr.year})`;
-  const desc=`What ${th} TH on GoMining earns at today's price: ${usd(full.monthlyUSD)}/mo, ${usd(full.at(full.earn,5).total)} over five years — counting mining, staking, and the GMT you lock for the discount.`;
+  const desc=`What ${th} TH on GoMining earns at today's price: ${usd(full.monthlyUSD)}/mo on ${usd(full.totalCapital)} of capital — counting mining, staking, and the GMT you lock for the discount.`;
   const body=`  <h1>GoMining ${th} TH: What It Actually Earns</h1>
-  <p class="lead">Exactly what a ${th} TH GoMining setup pays you — per day, per month, and cumulatively over ten years — counting the GMT you must lock for the discount and the staking it earns, not just the hashrate.</p>
+  <p class="lead">Exactly what a ${th} TH GoMining setup costs and pays you at today's price and difficulty — counting the GMT you must lock for the discount and the staking it earns, not just the hashrate.</p>
   <p class="updated">Live figures &middot; Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
   <div class="stats">
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(full.totalCapital)}</div><div class="s">${usd(full.hashCost)} hashrate + ${usd(full.gmtLockUSD)} GMT lock</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">${usd(full.monthlyUSD)}</div><div class="s">${usd(full.miningMonthlyUSD)} mining + ${usd(full.stakingMonthlyUSD)} staking</div></div>
     <div class="stat"><div class="k">GMT to lock</div><div class="v">${usd(full.gmtLockUSD)}</div><div class="s">for the 20% discount</div></div>
-    <div class="stat"><div class="k">Earned in 5 years</div><div class="v">${usd(full.at(full.earn,5).total)}</div><div class="s">then on ${usd(full.at(full.earn,5).monthly)}/mo</div></div>
+    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(full.netUSD)}</div><div class="s">${(full.yearlyUSD/full.totalCapital*100).toFixed(1)}% a year on capital</div></div>
   </div>
   <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the ${CONVERSION_FEE*100}% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined, ${verdict(full)}.</p>
-  <h2>What ${th} TH earns over time</h2>
-${earningsTable(full)}
-${scenarioBox(full)}
-${reinvestBox(full)}
   <h2>Why the locked GMT is not a normal cost</h2>
   <p>Unlike the hashrate, the ${usd(full.gmtLockUSD)} in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns ${STAKING_APR}% staking. Without any discount, ${th} TH nets only about <strong>${usd(none.monthlyUSD)}/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
   <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × ${th} TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365\ntotal capital = hashrate + GMT locked for the discount</div>
-  <h2>What the projection assumes</h2>
-  <p>The projection starts at today's ${usd(live.bp)} and follows the Bitcoin Power-Law onto the rainbow chart's <em>Still cheap</em> band, the same path the calculator projects on. Against that it erodes mining rewards through halvings and rising network difficulty, which is why the per-day figure moves far less than the price does. Staking is held at today's GMT price rather than marked up, so the totals are cash you could actually take. If difficulty spikes, GMT falls, or the staking rate drops, every row worsens. Run your exact setup in the calculator for a projection you can adjust.</p>
+  <h2>Why there is no multi-year forecast on this page</h2>
+  <p>Every figure above is today's: live Bitcoin price (${usd(live.bp)}), live network difficulty, current fee rates and the ${STAKING_APR}% staking APR. None of it is projected forward, because a multi-year total printed into a static page is a number you did not choose and cannot inspect — and it will be read as a promise no matter how it is labelled. What happens next depends on the Bitcoin price, difficulty growth, the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving and whether you keep the discount funded. Those are your assumptions to set, so set them in the calculator and watch what moves.</p>
 ${CTA}`;
   const faq=[
     {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 12 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
     {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the ${CONVERSION_FEE*100}% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
-    {q:`How much does ${th} TH earn over 5 years?`,a:`About ${usd(full.at(full.earn,5).total)} in total, counting mining and the staking on the locked GMT, with Bitcoin following the Power-Law onto the rainbow chart's Still cheap band. By year five it is running at roughly ${usd(full.at(full.earn,5).monthly)}/month, and over ten years the total reaches about ${usd(full.at(full.earn,10).total)}. On the lower Accumulate path five years pays ${usd(full.at(full.earnLow,5).total)} instead.`}
+    {q:`What will ${th} TH be earning in a few years?`,a:`Nobody can tell you that, and any page quoting a single number is guessing. It depends on the Bitcoin price, how fast network difficulty grows, whether you keep the fee discount funded, and the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving cutting the block subsidy in half. What this page gives you is today's figures, computed from live data. If you want a projection, run one in the calculator where you set the assumptions yourself and can see exactly what they are.`}
   ];
   const related=[
     {href:'/gomining-roi-calculator',label:'How ROI is calculated'},
@@ -285,7 +191,7 @@ function pricePage(price, live, dateStr){
   const pk=Math.round(price/1000);
   const slug=`gomining-profit-btc-${pk}k.html`;
   const title=`Is GoMining Profitable if Bitcoin Hits $${pk}k? (${dateStr.year})`;
-  const desc=`Modeling GoMining returns at a $${pk},000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about ${usd(m.monthlyUSD)}/month, ${usd(m.at(m.earn,5).total)} over five years. Live difficulty.`;
+  const desc=`Modeling GoMining returns at a $${pk},000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about ${usd(m.monthlyUSD)}/month on ${usd(m.totalCapital)} of capital. Live difficulty.`;
   const body=`  <h1>GoMining Profitability at $${pk}k Bitcoin</h1>
   <p class="lead">What a GoMining farm would earn if Bitcoin traded at $${pk},000 — counting the GMT locked for the discount and its staking, on a reference 100 TH setup at live difficulty.</p>
   <p class="updated">Scenario price $${pk},000 &middot; live difficulty ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
@@ -293,19 +199,15 @@ function pricePage(price, live, dateStr){
     <div class="stat"><div class="k">BTC price</div><div class="v">$${pk}k</div><div class="s">scenario</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">${usd(m.monthlyUSD)}</div><div class="s">${usd(m.miningMonthlyUSD)} mining + ${usd(m.stakingMonthlyUSD)} staking</div></div>
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
-    <div class="stat"><div class="k">Earned in 5 years</div><div class="v">${usd(m.at(m.earn,5).total)}</div><div class="s">then on ${usd(m.at(m.earn,5).monthly)}/mo</div></div>
+    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
   </div>
   <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $${pk},000, the 100 TH hashrate nets about ${usd(m.miningMonthlyUSD)}/month, and the ${usd(m.gmtLockUSD)} of GMT you lock for the 20% discount adds roughly ${usd(m.stakingMonthlyUSD)}/month in staking — about ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, ${verdict(m)}.</p>
-  <h2>What it earns over time at $${pk}k</h2>
-${earningsTable(m)}
-${scenarioBox(m)}
-${reinvestBox(m)}
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
 ${CTA}`;
   const faq=[
-    {q:`Is GoMining profitable at $${pk}k Bitcoin?`,a:`At a $${pk},000 price and current difficulty, a 100 TH GoMining farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the 20% discount — around ${usd(m.monthlyUSD)} combined, or ${usd(m.at(m.earn,5).total)} across five years. Earnings scale with your hashrate.`},
+    {q:`Is GoMining profitable at $${pk}k Bitcoin?`,a:`At a $${pk},000 price and current difficulty, a 100 TH GoMining farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the 20% discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of capital. Earnings scale with your hashrate.`},
     {q:`Why does the Bitcoin price matter so much for GoMining?`,a:`Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — every dollar of price increase lands in your margin. A falling price does the opposite.`},
-    {q:`Does difficulty change these numbers?`,a:`Yes. These figures use live network difficulty and then erode rewards over time as difficulty grinds up and block subsidies halve. Rising difficulty steadily reduces sats earned per TH, which the projection accounts for.`}
+    {q:`Does difficulty change these numbers?`,a:`Yes, and this page holds it at today's level rather than guessing where it goes. Rising difficulty steadily reduces the sats each TH earns, so a figure computed at today's difficulty is a snapshot, not a forecast. The calculator lets you project difficulty growth forward and see how much it costs you.`}
   ];
   const related=[
     {href:'/is-gomining-worth-it',label:'Is GoMining worth it?'},
@@ -325,26 +227,22 @@ function monthlyPage(live, dateStr){
   // the page still exists and stays current, it just ranks under its stronger twin.
   const canonicalUrl=`${SITE}/is-gomining-worth-it`;
   const title=`Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?`;
-  const desc=`A ${MONTHS[dateStr.m]} ${dateStr.year} snapshot: with Bitcoin at ${usd(live.bp)}, a 100 TH GoMining farm plus the GMT locked for the discount nets ~${usd(m.monthlyUSD)}/mo and ${usd(m.at(m.earn,5).total)} over five years. Live numbers.`;
+  const desc=`A ${MONTHS[dateStr.m]} ${dateStr.year} snapshot: with Bitcoin at ${usd(live.bp)}, a 100 TH GoMining farm plus the GMT locked for the discount nets ~${usd(m.monthlyUSD)}/mo on ${usd(m.totalCapital)} of capital. Live numbers.`;
   const body=`  <h1>Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?</h1>
   <p class="lead">A current-conditions snapshot, computed from live Bitcoin price and network difficulty as of ${dateStr.full} — counting the GMT you lock for the discount and its staking.</p>
   <p class="updated">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
   <div class="stats">
     <div class="stat"><div class="k">BTC price now</div><div class="v">${usd(live.bp)}</div><div class="s">live</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">${usd(m.monthlyUSD)}</div><div class="s">${usd(m.miningMonthlyUSD)} mining + ${usd(m.stakingMonthlyUSD)} staking</div></div>
-    <div class="stat"><div class="k">Earned in 5 years</div><div class="v">${usd(m.at(m.earn,5).total)}</div><div class="s">then on ${usd(m.at(m.earn,5).monthly)}/mo</div></div>
+    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
   </div>
   <p>As of ${dateStr.full}, Bitcoin trades near ${usd(live.bp)} and the network mines about ${Math.round(satsPerTHDay(live.diff))} sats per TH per day. On those numbers a 100 TH GoMining farm nets roughly <strong>${usd(m.miningMonthlyUSD)}/month</strong> from mining, and the ${usd(m.gmtLockUSD)} of GMT locked for the 20% discount adds about ${usd(m.stakingMonthlyUSD)}/month in staking — around <strong>${usd(m.monthlyUSD)} combined</strong> on ${usd(m.totalCapital)} of committed capital. In short, ${verdict(m)}.</p>
-  <h2>What it earns from here</h2>
-${earningsTable(m)}
-${scenarioBox(m)}
-${reinvestBox(m)}
   <h2>What would change this</h2>
   <p>These figures move constantly. A rising Bitcoin price improves margin (fees are fixed in dollars); rising difficulty erodes sats per TH; and letting your GMT coverage lapse can wipe out the discount and gut your net. That's why it pays to check current numbers rather than trust a static estimate — run yours below.</p>
 ${CTA}`;
   const faq=[
-    {q:`Is GoMining worth it right now?`,a:`As of ${dateStr.full}, with Bitcoin near ${usd(live.bp)}, a 100 TH farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the discount — around ${usd(m.monthlyUSD)} combined, on ${usd(m.totalCapital)} of committed capital. Held five years that comes to roughly ${usd(m.at(m.earn,5).total)}. Whether that's "worth it" depends on your view of Bitcoin's price from here.`},
+    {q:`Is GoMining worth it right now?`,a:`As of ${dateStr.full}, with Bitcoin near ${usd(live.bp)}, a 100 TH farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, or ${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year. Whether that's "worth it" depends on your view of Bitcoin's price from here, which is why this page stops at today's numbers.`},
     {q:`How much can you make with GoMining in ${dateStr.year}?`,a:`Earnings scale with hashrate. At current conditions each 100 TH nets roughly ${usd(m.miningMonthlyUSD)}/month mining plus ${usd(m.stakingMonthlyUSD)} staking the GMT you lock for the discount. More hashrate earns proportionally more; the discount, staking rate and Bitcoin's price are the main swing factors.`},
     {q:`Is GoMining a scam?`,a:`GoMining is a real service that has paid users for years, though many negative reviews trace to maintenance fees spiking when a user's GMT coverage lapses and the discount is lost — a configuration issue, not a scam. Understanding the fee and discount mechanics is what separates a good outcome from a bad one.`}
   ];
@@ -401,19 +299,20 @@ function injectLiveBlocks(live,dateStr){
   // it the real numbers at both the optimised and the do-nothing end of the range.
   const good=model({th:50,bp:live.bp,diff:live.diff,disc:20});
   const bad =model({th:50,bp:live.bp,diff:live.diff,disc:0});
-  const g5=good.at(good.earn,5), b5=bad.at(bad.earn,5);
+  const yGood=good.yearlyUSD/good.totalCapital*100, yBad=bad.yearlyUSD/bad.totalCapital*100;
   const html=
 `  <div class="formula">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; updated ${dateStr.full}</div>
   <p>Take a 50 TH setup at the best available efficiency (${EFF_BEST} W/TH). Buying the hashrate costs about
   <strong>${usd(good.hashCost)}</strong>, and holding the maximum 20% fee discount means locking roughly
   <strong>${usd(good.gmtLockUSD)}</strong> of GMT — <strong>${usd(good.totalCapital)}</strong> of capital in total.
-  That pays about <strong>${usd(good.monthlyUSD)}/month</strong> today, and <strong>${usd(g5.total)}</strong>
-  across five years, ending on ${usd(g5.monthly)}/month as difficulty grinds up.</p>
-  <p>Run the same 50 TH <em>without</em> the GMT discount and five years pays <strong>${usd(b5.total)}</strong>
-  instead — the fee eats the margin as difficulty climbs. That gap is the whole answer to "is it worth it":
-  the hardware is not what decides it, the discount is. Both figures already price in the
-  ${dateStr.year < 2028 ? '2028 halving' : 'next halving'} and the difficulty grind, which is why they come in
-  below the straight-line estimates most calculators show.</p>`;
+  That pays about <strong>${usd(good.monthlyUSD)}/month</strong>, or <strong>${yGood.toFixed(1)}% a year</strong>
+  on the capital committed.</p>
+  <p>Run the same 50 TH <em>without</em> the GMT discount and the fee takes most of the margin: the same
+  hashrate nets around <strong>${usd(bad.monthlyUSD)}/month</strong> on ${usd(bad.totalCapital)} of capital,
+  <strong>${yBad.toFixed(1)}% a year</strong>. That gap is the whole answer to "is it worth it": the hardware
+  is not what decides it, the discount is. Both figures are today's, on live price and difficulty — what they
+  become depends on Bitcoin, difficulty growth and the ${dateStr.year < 2028 ? '2028 halving' : 'next halving'},
+  which is your call to model, not ours to assert.</p>`;
   injectLiveBlock('is-gomining-worth-it.html','worth-it-verdict',html);
 }
 
