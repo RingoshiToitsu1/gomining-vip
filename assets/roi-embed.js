@@ -22,6 +22,7 @@
   const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
   const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
   const EFF_BEST       = 12;      // best efficiency purchasable now (W/TH)
+  const EFF_BASE_MAX   = 15;      // cheaper marketplace hashrate (W/TH)
   // % — GMT locked-staking APR (observed 2026-07-26). Kept in step with STAKING_APR in
   // scripts/gen-pages.js and inLockAPR in console/index.html so the cluster agrees.
   const STAKE_APR0     = 21.73;
@@ -52,8 +53,19 @@
   const vipOf = (th, veg) => { let t = TIERS[0]; for (const x of TIERS) if (th >= x.th || veg >= x.veg) t = x; return t; };
 
 
-  function cpt12(th) {
-    const T = TH_TIERS_12W;
+  // 15 W/TH curve — cheaper, less efficient hashrate. Mirrors TH_TIERS in assets/app.js.
+  // Repriced 2026-07-29 from anchors at 1/2/4/8/5000 TH, grossed up /0.95 from quotes net
+  // of a 5% NFT discount. Needed here because this widget lets the user enter their own
+  // W/TH: pricing a 15 W farm off the 12 W curve overstated its capital by ~46%.
+  const TH_TIERS_15W = [
+    {th:1,cpt:11.37},{th:2,cpt:11.36},{th:4,cpt:11.35},{th:8,cpt:11.33},
+    {th:16,cpt:11.29},{th:32,cpt:11.24},{th:48,cpt:11.22},{th:64,cpt:11.20},
+    {th:96,cpt:11.18},{th:128,cpt:11.16},{th:192,cpt:11.14},{th:256,cpt:11.12},
+    {th:384,cpt:11.10},{th:512,cpt:11.08},{th:768,cpt:11.06},{th:1024,cpt:11.04},
+    {th:1536,cpt:11.02},{th:2560,cpt:10.99},{th:3584,cpt:10.97},{th:5000,cpt:10.95}
+  ];
+
+  function cptOf(th, T) {
     if (th <= 0) return T[0].cpt;
     if (th >= T[T.length - 1].th) return T[T.length - 1].cpt;
     for (let i = 0; i < T.length - 1; i++) {
@@ -61,6 +73,17 @@
       if (th >= lo.th && th <= hi.th) return lo.cpt + (hi.cpt - lo.cpt) * ((th - lo.th) / (hi.th - lo.th));
     }
     return T[0].cpt;
+  }
+  const cpt12 = th => cptOf(th, TH_TIERS_12W);
+  const cpt15 = th => cptOf(th, TH_TIERS_15W);
+  // $/TH at the efficiency the user actually entered. Interpolated linearly in W between
+  // the two published curves, clamped outside them — 12 W hashrate genuinely costs ~46%
+  // more per TH than 15 W, so charging one price for both distorts the capital that every
+  // rate on this widget is divided by.
+  function cptAtEff(th, wth) {
+    const w = Math.min(Math.max(wth || EFF_BEST, EFF_BEST), EFF_BASE_MAX);
+    const f = (w - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
+    return cpt12(th) * (1 - f) + cpt15(th) * f;
   }
 
   // ---- market data ----
@@ -120,7 +143,7 @@
     // What this setup costs to build from scratch, at live prices. Total-capital model:
     // the GMT you must lock to hold the discount counts as invested capital. Matches
     // gen-pages.js totalCapital (which excludes USD_GMT_FEE — kept consistent deliberately).
-    const thCost = th * cpt12(th);
+    const thCost = th * cptAtEff(th, wth);
     const lockCost = gmtLocked * gp;
     const invested = thCost + lockCost;
 
@@ -195,7 +218,7 @@
 
     $('re-basis').textContent = 'BTC ' + money(m.bp) + ' · GMT $' + num(m.gp, 3) + ' · ' +
       num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)');
-    $('re-cost-sub').textContent = num(th, 0) + ' TH @ ' + money(cpt12(th)) + '/TH' + (m.lockCost > 0 ? ' + GMT lock' : '');
+    $('re-cost-sub').textContent = num(th, 0) + ' TH @ ' + money(cptAtEff(th, wth)) + '/TH' + (m.lockCost > 0 ? ' + GMT lock' : '');
   }
 
   // Until the visitor touches the GMT field, keep it parked at the amount that
