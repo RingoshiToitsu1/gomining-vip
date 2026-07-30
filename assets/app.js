@@ -49,18 +49,16 @@ const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver'
 // 15 W/TH hashrate — the cheaper, less efficient curve. Applies whether you are minting
 // or adding TH: at a given efficiency the price per TH is the same either way. The split
 // against TH_TIERS_12W is by EFFICIENCY, not mint-versus-upgrade.
-// Repriced 2026-07-29 from five observations, net of a 5% NFT discount and grossed up by
-// /0.95 to list: 1 TH $10.80, 2 $10.79, 4 $10.78, 8 $10.76, 5000 $10.40 -> $11.37, $11.36,
-// $11.35, $11.33, $10.95. Intermediate tiers interpolated log10(TH)-linearly between them.
-// The curve is NOT one straight line: it falls -0.047/decade over 1-8 TH and -0.136 from
-// 8 TH up, three times steeper. Fitting only the clustered low tiers overstated every
-// large farm by up to $0.25/TH, so keep the 5000 TH anchor whenever this is recalibrated.
+// Repriced 2026-07-30 (cut ~9.5% across the curve, one day after the previous cut).
+// All twenty tiers observed this time, so nothing is extrapolated. Quotes were net of a
+// 5% NFT discount and are grossed up by /0.95 to the list price a reader actually pays;
+// every tier round-trips to the quote exactly.
 const TH_TIERS=[
-  {th:1,cpt:11.37},{th:2,cpt:11.36},{th:4,cpt:11.35},{th:8,cpt:11.33},
-  {th:16,cpt:11.29},{th:32,cpt:11.24},{th:48,cpt:11.22},{th:64,cpt:11.20},
-  {th:96,cpt:11.18},{th:128,cpt:11.16},{th:192,cpt:11.14},{th:256,cpt:11.12},
-  {th:384,cpt:11.10},{th:512,cpt:11.08},{th:768,cpt:11.06},{th:1024,cpt:11.04},
-  {th:1536,cpt:11.02},{th:2560,cpt:10.99},{th:3584,cpt:10.97},{th:5000,cpt:10.95}
+  {th:1,cpt:10.28},{th:2,cpt:10.27},{th:4,cpt:10.25},{th:8,cpt:10.23},
+  {th:16,cpt:10.21},{th:32,cpt:10.19},{th:48,cpt:10.18},{th:64,cpt:10.16},
+  {th:96,cpt:10.14},{th:128,cpt:10.12},{th:192,cpt:10.09},{th:256,cpt:10.07},
+  {th:384,cpt:10.04},{th:512,cpt:10.02},{th:768,cpt:9.99},{th:1024,cpt:9.97},
+  {th:1536,cpt:9.94},{th:2560,cpt:9.91},{th:3584,cpt:9.88},{th:5000,cpt:9.86}
 ];
 function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
 function estimateCPT(th){

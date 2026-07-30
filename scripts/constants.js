@@ -68,6 +68,18 @@ const TH_TIERS_12W=[
   {th:1536,cpt:15.66},{th:2560,cpt:15.59},{th:3584,cpt:15.51},{th:5000,cpt:15.43}
 ];
 
+// 15 W/TH hashrate — the cheaper, less efficient curve. Mirrors TH_TIERS in assets/app.js
+// and TH_TIERS_15W in assets/roi-embed.js. Repriced 2026-07-30, grossed up /0.95 from
+// quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
+// mint-versus-upgrade: at a given W/TH the price per TH is the same either way.
+const TH_TIERS_15W=[
+  {th:1,cpt:10.28},{th:2,cpt:10.27},{th:4,cpt:10.25},{th:8,cpt:10.23},
+  {th:16,cpt:10.21},{th:32,cpt:10.19},{th:48,cpt:10.18},{th:64,cpt:10.16},
+  {th:96,cpt:10.14},{th:128,cpt:10.12},{th:192,cpt:10.09},{th:256,cpt:10.07},
+  {th:384,cpt:10.04},{th:512,cpt:10.02},{th:768,cpt:9.99},{th:1024,cpt:9.97},
+  {th:1536,cpt:9.94},{th:2560,cpt:9.91},{th:3584,cpt:9.88},{th:5000,cpt:9.86}
+];
+
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.
 const BTC_ANCHORS=[
   {t:Date.UTC(2028,11,31), p:500000,  src:'Standard Chartered ($500k by 2028)'},
@@ -107,6 +119,14 @@ function cptTier(th, T=TH_TIERS_12W){
   }
   return T[0].cpt;
 }
+// $/TH at a given efficiency, interpolated linearly in W between the two published
+// curves and clamped outside them. 12 W hashrate costs ~60% more per TH than 15 W, so
+// pricing every setup off one curve distorts the capital that every rate divides by.
+function cptAtEff(th, wth){
+  const w=Math.min(Math.max(wth||EFF_BEST,EFF_BEST),EFF_BASE_MAX);
+  const f=(w-EFF_BEST)/(EFF_BASE_MAX-EFF_BEST);
+  return cptTier(th,TH_TIERS_12W)*(1-f)+cptTier(th,TH_TIERS_15W)*f;
+}
 function feePerTHDay(wth){return (ELECTRICITY_RATE*24*wth)/1000 + SERVICE_RATE;}
 function satsPerTHDay(diff){return ((1e12*86400*BLOCK_SUBSIDY)/(diff*2**32))*1e8;}
 function dailyBTCperTH(diff){return Math.round(satsPerTHDay(diff))/1e8;}
@@ -124,8 +144,8 @@ module.exports = {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   MINING_MODE, CLICK_STREAK, EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH,
   COV_DAYS_PER_PCT, HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU,
-  TH_TIERS_12W, BTC_ANCHORS, FB,
+  TH_TIERS_12W, TH_TIERS_15W, BTC_ANCHORS, FB,
   RB_FIT, RB_GEN, RB_STILL_CHEAP_OFF, RB_ACCUMULATE_OFF, rbDayOf, rbBandPrice, rbPriceAt,
-  priceAt, cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
+  priceAt, cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
   subsidyMultAt, difficultyMultAt, rewardFloorBTC
 };

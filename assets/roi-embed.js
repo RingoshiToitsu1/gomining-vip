@@ -54,15 +54,15 @@
 
 
   // 15 W/TH curve — cheaper, less efficient hashrate. Mirrors TH_TIERS in assets/app.js.
-  // Repriced 2026-07-29 from anchors at 1/2/4/8/5000 TH, grossed up /0.95 from quotes net
-  // of a 5% NFT discount. Needed here because this widget lets the user enter their own
-  // W/TH: pricing a 15 W farm off the 12 W curve overstated its capital by ~46%.
+  // Repriced 2026-07-30 from all twenty tiers, grossed up /0.95 from quotes net of a 5%
+  // NFT discount. Needed here because this widget lets the user enter their own W/TH:
+  // pricing a 15 W farm off the 12 W curve overstated its capital by ~60%.
   const TH_TIERS_15W = [
-    {th:1,cpt:11.37},{th:2,cpt:11.36},{th:4,cpt:11.35},{th:8,cpt:11.33},
-    {th:16,cpt:11.29},{th:32,cpt:11.24},{th:48,cpt:11.22},{th:64,cpt:11.20},
-    {th:96,cpt:11.18},{th:128,cpt:11.16},{th:192,cpt:11.14},{th:256,cpt:11.12},
-    {th:384,cpt:11.10},{th:512,cpt:11.08},{th:768,cpt:11.06},{th:1024,cpt:11.04},
-    {th:1536,cpt:11.02},{th:2560,cpt:10.99},{th:3584,cpt:10.97},{th:5000,cpt:10.95}
+    {th:1,cpt:10.28},{th:2,cpt:10.27},{th:4,cpt:10.25},{th:8,cpt:10.23},
+    {th:16,cpt:10.21},{th:32,cpt:10.19},{th:48,cpt:10.18},{th:64,cpt:10.16},
+    {th:96,cpt:10.14},{th:128,cpt:10.12},{th:192,cpt:10.09},{th:256,cpt:10.07},
+    {th:384,cpt:10.04},{th:512,cpt:10.02},{th:768,cpt:9.99},{th:1024,cpt:9.97},
+    {th:1536,cpt:9.94},{th:2560,cpt:9.91},{th:3584,cpt:9.88},{th:5000,cpt:9.86}
   ];
 
   function cptOf(th, T) {

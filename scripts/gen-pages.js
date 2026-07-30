@@ -23,7 +23,7 @@ const {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH, COV_DAYS_PER_PCT,
   HALVING_DATES, TH_TIERS_12W, FB,
-  cptTier, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC
+  cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC
 } = require('./constants.js');
 
 // Per-scenario economics at TODAY's price and difficulty — no forward projection.
@@ -37,7 +37,7 @@ function model({th, bp, diff, disc, wth=EFF_BEST}){
   const dfees=fee*(1-disc/100);
   const netBTC=(gross-dfees)*(1-CONVERSION_FEE);
   const miningUSD=netBTC*bp;                    // mining net, $/day
-  const hashCost=th*cptTier(th);                // USD for this hashrate at 12 W/TH new-miner pricing
+  const hashCost=th*cptAtEff(th,wth);           // priced at the efficiency modelled, not always 12 W
   // GMT you must lock to hold this discount. Coverage = 18 days of fee per 1%, so disc%
   // needs 18·disc days of the (undiscounted) fee. GMT price cancels: lock$ = days · dailyFee$.
   const gmtLockUSD = disc>0 ? COV_DAYS_PER_PCT*disc*fee*bp : 0;
