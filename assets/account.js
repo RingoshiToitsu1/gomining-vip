@@ -49,13 +49,18 @@
   Account.signUp = function (username, password) {
     if (!USERNAME_RE.test(username)) return Promise.reject(new Error('Username must be 3–20 letters, numbers or underscores.'));
     if (!password || password.length < 8) return Promise.reject(new Error('Password must be at least 8 characters.'));
+    var email = emailFor(username);
     return sb.auth.signUp({
-      email: emailFor(username), password: password,
+      email: email, password: password,
       options: { data: { username: username.trim() } }
     }).then(function (res) {
       if (res.error) throw new Error(friendly(res.error, 'signup'));
-      // With email confirmation OFF, signUp returns an active session.
-      return res.data;
+      if (res.data && res.data.session) return res.data;   // already logged in
+      // No session means the dashboard still has email-confirmation on. The
+      // auto_confirm trigger has already stamped the account, so a direct
+      // sign-in succeeds — the confirm-email toggle no longer matters.
+      return sb.auth.signInWithPassword({ email: email, password: password })
+        .then(function (r2) { if (r2.error) throw new Error(friendly(r2.error, 'signup')); return r2.data; });
     });
   };
 

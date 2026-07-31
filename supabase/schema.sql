@@ -88,6 +88,24 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- ---------------------------------------------------------------------------
+-- Auto-confirm new accounts. There is no real email to confirm, so stamp the
+-- account confirmed the moment it's created — the dashboard's email-confirmation
+-- setting then no longer matters, and login works immediately after signup.
+-- (confirmed_at is a generated column, so setting email_confirmed_at fills it.)
+-- ---------------------------------------------------------------------------
+create or replace function public.auto_confirm_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.email_confirmed_at := coalesce(new.email_confirmed_at, now());
+  return new;
+end $$;
+
+drop trigger if exists auto_confirm on auth.users;
+create trigger auto_confirm
+  before insert on auth.users
+  for each row execute function public.auto_confirm_user();
+
+-- ---------------------------------------------------------------------------
 -- Block self-promotion: a normal user cannot change their own role. Only an
 -- existing admin, or the service role (dashboard/SQL), may change it.
 -- ---------------------------------------------------------------------------
