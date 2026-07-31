@@ -82,6 +82,51 @@
       .then(function (r) { Account.profile = r.data || null; return Account.profile; });
   }
 
+  // ---- fleet (cloud store; fleet.js falls back to localStorage when logged out) ----
+  Account.getMiners = function () {
+    if (!Account.user) return Promise.resolve([]);
+    return sb.from('miners').select('collection,code,th,wth').eq('user_id', Account.user.id)
+      .order('created_at')
+      .then(function (r) {
+        if (r.error) throw r.error;
+        return (r.data || []).map(function (m) {
+          return { collection: m.collection, code: m.code, th: m.th, wth: m.wth };
+        });
+      });
+  };
+  // Replace the whole fleet: delete the user's rows, insert the current set. Not
+  // atomic, but the data is low-stakes and a fleet is a handful of rows.
+  Account.saveMiners = function (rows) {
+    if (!Account.user) return Promise.resolve();
+    var uid = Account.user.id;
+    return sb.from('miners').delete().eq('user_id', uid).then(function () {
+      var clean = (rows || []).filter(function (r) { return (+r.th || 0) > 0; }).map(function (r) {
+        return { user_id: uid, collection: r.collection || null, code: r.code || null, th: +r.th || 0, wth: +r.wth || 15 };
+      });
+      if (!clean.length) return { error: null };
+      return sb.from('miners').insert(clean);
+    }).then(function (r) { if (r && r.error) throw r.error; });
+  };
+
+  // ---- profile ----
+  Account.updateProfile = function (patch) {
+    if (!Account.user) return Promise.reject(new Error('not logged in'));
+    return sb.from('profiles').update(patch).eq('id', Account.user.id)
+      .then(function (r) { if (r.error) throw r.error; return loadProfile(); })
+      .then(function () { renderHeader(); emit(); });
+  };
+  Account.uploadAvatar = function (file) {
+    if (!Account.user) return Promise.reject(new Error('not logged in'));
+    var ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '') || 'png';
+    var path = Account.user.id + '/avatar.' + ext;
+    return sb.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
+      .then(function (r) {
+        if (r.error) throw r.error;
+        var url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?t=' + Date.now();
+        return Account.updateProfile({ avatar_url: url });
+      });
+  };
+
   // ---- session tracking ----
   function setSession(session) {
     Account.user = session ? session.user : null;
@@ -110,8 +155,13 @@
     '.gmt-modal .swap{margin-top:.9rem;text-align:center;font-size:.78rem;color:var(--text3,#8a90a0)}' +
     '.gmt-modal .swap a{color:var(--gold-soft,#ffd479);cursor:pointer}' +
     '.gmt-modal .err{margin-top:.7rem;font-size:.78rem;color:#ff8080;min-height:1em}' +
+    '.gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:#7bd88f;min-height:1em}' +
     '.gmt-modal .note{margin-top:.7rem;font-size:.7rem;color:var(--text4,#6a7080);line-height:1.4}' +
-    '.gmt-modal .x{float:right;background:none;border:none;color:var(--text4,#6a7080);font-size:1.2rem;cursor:pointer;line-height:1}';
+    '.gmt-modal .x{float:right;background:none;border:none;color:var(--text4,#6a7080);font-size:1.2rem;cursor:pointer;line-height:1}' +
+    '.gmt-acc-av{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--line,rgba(255,255,255,.2));vertical-align:middle}' +
+    '.gmt-acc-name{cursor:pointer}.gmt-acc-name:hover{text-decoration:underline}' +
+    '.gmt-prof-av{display:block;width:88px;height:88px;border-radius:50%;object-fit:cover;margin:.4rem auto .2rem;border:2px solid var(--line,rgba(255,255,255,.2));background:var(--glass-1,rgba(255,255,255,.05))}' +
+    '.gmt-prof-avwrap{text-align:center}.gmt-prof-avbtn{font-size:.74rem;color:var(--gold-soft,#ffd479);cursor:pointer;background:none;border:none}';
 
   var modal, els = {}, mode = 'login';
 
@@ -177,9 +227,13 @@
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
     if (Account.isLoggedIn()) {
-      var name = (Account.profile && Account.profile.display_name) || (Account.profile && Account.profile.username) || 'account';
-      slot.innerHTML = '<span class="gmt-acc-name">' + escapeHtml(name) + '</span>' +
+      var p = Account.profile || {};
+      var name = p.display_name || p.username || 'account';
+      var av = p.avatar_url ? '<img class="gmt-acc-av" src="' + escapeHtml(p.avatar_url) + '" alt="">' : '';
+      slot.innerHTML =
+        av + '<span class="gmt-acc-name" id="gmtProfBtn" title="Edit profile">' + escapeHtml(name) + '</span>' +
         '<button class="gmt-acc-btn" id="gmtLogout">Log out</button>';
+      slot.querySelector('#gmtProfBtn').addEventListener('click', openProfile);
       slot.querySelector('#gmtLogout').addEventListener('click', function () { Account.signOut(); });
     } else {
       slot.innerHTML = '<button class="gmt-acc-btn" id="gmtLoginBtn">Log in</button>';
@@ -187,6 +241,58 @@
     }
   }
   function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // ---- profile modal ----
+  var pModal, pEls = {};
+  function buildProfileModal() {
+    pModal = document.createElement('div'); pModal.className = 'gmt-modal-bg';
+    pModal.innerHTML =
+      '<div class="gmt-modal">' +
+        '<button class="x" data-close>&times;</button>' +
+        '<h3>Your profile</h3>' +
+        '<div class="sub" id="gmtProfUser"></div>' +
+        '<div class="gmt-prof-avwrap">' +
+          '<img class="gmt-prof-av" id="gmtProfAv" alt="">' +
+          '<button class="gmt-prof-avbtn" id="gmtProfAvBtn">Change picture</button>' +
+          '<input type="file" accept="image/*" id="gmtProfFile" style="display:none">' +
+        '</div>' +
+        '<label>Display name</label><input id="gmtProfName" maxlength="40">' +
+        '<div class="err" id="gmtProfErr"></div><div class="ok" id="gmtProfOk"></div>' +
+        '<button class="go" id="gmtProfSave">Save</button>' +
+      '</div>';
+    document.body.appendChild(pModal);
+    pEls.user = pModal.querySelector('#gmtProfUser');
+    pEls.av = pModal.querySelector('#gmtProfAv');
+    pEls.file = pModal.querySelector('#gmtProfFile');
+    pEls.name = pModal.querySelector('#gmtProfName');
+    pEls.err = pModal.querySelector('#gmtProfErr');
+    pEls.ok = pModal.querySelector('#gmtProfOk');
+    pEls.save = pModal.querySelector('#gmtProfSave');
+    pModal.addEventListener('click', function (e) { if (e.target === pModal || e.target.hasAttribute('data-close')) pModal.classList.remove('show'); });
+    pModal.querySelector('#gmtProfAvBtn').addEventListener('click', function () { pEls.file.click(); });
+    pEls.file.addEventListener('change', function () {
+      if (!pEls.file.files[0]) return;
+      pEls.err.textContent = ''; pEls.ok.textContent = 'Uploading…';
+      Account.uploadAvatar(pEls.file.files[0])
+        .then(function () { pEls.ok.textContent = 'Picture updated.'; pEls.av.src = (Account.profile && Account.profile.avatar_url) || ''; })
+        .catch(function (e) { pEls.ok.textContent = ''; pEls.err.textContent = e.message || 'Upload failed.'; });
+    });
+    pEls.save.addEventListener('click', function () {
+      pEls.err.textContent = ''; pEls.ok.textContent = ''; pEls.save.disabled = true;
+      Account.updateProfile({ display_name: pEls.name.value.trim() || null })
+        .then(function () { pEls.save.disabled = false; pEls.ok.textContent = 'Saved.'; })
+        .catch(function (e) { pEls.save.disabled = false; pEls.err.textContent = e.message || 'Save failed.'; });
+    });
+  }
+  function openProfile() {
+    if (!pModal) buildProfileModal();
+    var p = Account.profile || {};
+    pEls.user.textContent = '@' + (p.username || '');
+    pEls.name.value = p.display_name || '';
+    pEls.av.src = p.avatar_url || '';
+    pEls.err.textContent = ''; pEls.ok.textContent = '';
+    pModal.classList.add('show');
+  }
 
   Account.openLogin = function (m) { open(m); };
 

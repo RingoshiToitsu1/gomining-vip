@@ -25,16 +25,37 @@
     'The Duck Collection', 'The Go Duck Collection', 'EPIC X', 'Other'
   ];
 
-  // ---- storage (the only two functions Phase 2 will replace) ----
-  function loadFleet() {
+  // ---- storage ----
+  // Logged out (or accounts not configured): localStorage. Logged in: the
+  // Supabase `miners` table via account.js, so the fleet follows the user across
+  // devices. The routing is decided per call so a login/logout mid-session just
+  // works.
+  function acc() { return window.GMTAccount; }
+  function isCloud() { var a = acc(); return a && a.ready && a.isLoggedIn(); }
+
+  function loadLocal() {
     try { var a = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(a) ? a : []; }
     catch (e) { return []; }
   }
-  function saveFleet(rows) {
-    try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch (e) {}
+  function saveLocal(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); } catch (e) {} }
+
+  // Async load from whichever store is active.
+  function loadFleet() {
+    if (isCloud()) return acc().getMiners().catch(function () { return []; });
+    return Promise.resolve(loadLocal());
+  }
+  // Debounced save to the active store (cloud writes shouldn't fire on every keystroke).
+  var _saveT = null;
+  function saveFleet(r) {
+    if (isCloud()) {
+      clearTimeout(_saveT);
+      _saveT = setTimeout(function () { acc().saveMiners(r).catch(function () {}); }, 600);
+    } else {
+      saveLocal(r);
+    }
   }
 
-  var rows = loadFleet();
+  var rows = [];
   var el = {};   // cached DOM refs
 
   var num = function (n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); };
@@ -173,8 +194,30 @@
     el.rows.addEventListener('change', onInput);   // <select> fires change, not input
     el.rows.addEventListener('click', onClick);
     document.getElementById('fleetAdd').addEventListener('click', addRow);
-    render();
-    apply();   // if a saved fleet exists, push it into the calculator on load
+    render();   // empty first paint; data arrives async below
+
+    // React to login state. account.js loads its session asynchronously, so we
+    // both subscribe to changes and evaluate the current state once now.
+    if (acc()) { acc().onChange(onAuth); onAuth(acc()); }
+    else { loadFleet().then(function (r) { rows = r; render(); apply(); }); }
+  }
+
+  var _migrated = false;
+  function onAuth(a) {
+    if (a.isLoggedIn()) {
+      // On first login this session, lift a local fleet into the cloud if the
+      // account has none yet — so a fleet built while logged out isn't lost.
+      a.getMiners().then(function (cloud) {
+        var local = loadLocal();
+        if (!_migrated && (!cloud || !cloud.length) && local.length) {
+          _migrated = true;
+          return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
+        }
+        rows = cloud || []; render(); apply();
+      }).catch(function () { rows = loadLocal(); render(); apply(); });
+    } else {
+      rows = loadLocal(); render(); apply();
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);

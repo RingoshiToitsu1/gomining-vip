@@ -113,8 +113,10 @@ create or replace function public.guard_profile_role()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.role is distinct from old.role then
-    if auth.role() = 'service_role' then
-      return new;  -- dashboard / server: allowed
+    -- No auth context = the SQL Editor / a server connection (postgres role):
+    -- allowed, since only a trusted operator can run SQL there.
+    if auth.uid() is null or auth.role() = 'service_role' then
+      return new;
     end if;
     if exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin') then
       return new;  -- an admin is making the change: allowed
