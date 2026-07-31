@@ -102,7 +102,7 @@ function shell({slug,title,desc,faq,body,related,canonicalUrl}){
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${canonical}">
-<meta property="og:image" content="${SITE}/og-image.png?v=2">
+<meta property="og:image" content="${SITE}/og-image.png?v=3">
 <script type="application/ld+json">
 ${JSON.stringify(faqLd,null,2)}
 </script>
