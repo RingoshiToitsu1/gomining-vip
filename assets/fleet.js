@@ -42,18 +42,18 @@
 
   // ---- aggregation ----
   // Total TH is the plain sum; efficiency is TH-weighted (a big efficient miner
-  // should move the average more than a tiny inefficient one); cost/TH is the
-  // total USD paid over the total TH. Rows with 0 TH are ignored so a
-  // half-entered row never poisons the weighting or divides by zero.
+  // should move the average more than a tiny inefficient one). Rows with 0 TH are
+  // ignored so a half-entered row never poisons the weighting or divides by zero.
+  // No cost input: nobody remembers what they paid per miner, and the console
+  // already estimates $/TH from the tier curves off the TH + W/TH we set below.
   function aggregate() {
-    var th = 0, wSum = 0, cost = 0, count = 0;
+    var th = 0, wSum = 0, count = 0;
     rows.forEach(function (r) {
       var t = +r.th || 0; if (t <= 0) return;
       th += t; count++;
       wSum += t * (+r.wth || 0);
-      cost += (+r.cost || 0);
     });
-    return { th: th, wth: th > 0 ? wSum / th : 0, costPerTH: th > 0 ? cost / th : 0, totalCost: cost, count: count };
+    return { th: th, wth: th > 0 ? wSum / th : 0, count: count };
   }
 
   function setField(id, value) {
@@ -63,14 +63,14 @@
     f.dispatchEvent(new Event('input', { bubbles: true }));   // -> app.js recalc + autoSave
   }
 
-  // Push the aggregate into the console. Only overrides cost/TH when the user
-  // actually entered costs, otherwise the existing auto-estimate keeps working.
+  // Push the aggregate into the console. Setting inTH fires its oninput handler,
+  // which re-estimates $/TH from the tier curves — so cost stays correct without
+  // the user ever entering it.
   function apply() {
     var a = aggregate();
     if (a.count === 0) return;                 // empty fleet: leave manual fields alone
+    setField('inWTH', +a.wth.toFixed(2));      // set efficiency first: inTH's handler prices off it
     setField('inTH', +a.th.toFixed(2));
-    setField('inWTH', +a.wth.toFixed(2));
-    if (a.totalCost > 0) setField('inCostPerTH', +a.costPerTH.toFixed(2));
   }
 
   function commit() { saveFleet(rows); renderSummary(); }
@@ -89,7 +89,6 @@
         '<input class="fleet-in fleet-code" data-k="code" type="text" inputmode="numeric" placeholder="NFT code" value="' + esc(r.code) + '">' +
         '<input class="fleet-in fleet-th" data-k="th" type="number" min="0" step="0.01" placeholder="TH" value="' + (r.th != null ? esc(r.th) : '') + '">' +
         '<input class="fleet-in fleet-wth" data-k="wth" type="number" min="12" step="0.1" placeholder="W/TH" value="' + (r.wth != null ? esc(r.wth) : '') + '">' +
-        '<input class="fleet-in fleet-cost" data-k="cost" type="number" min="0" step="1" placeholder="$ cost" value="' + (r.cost != null ? esc(r.cost) : '') + '">' +
         '<button class="fleet-del" title="Remove miner" aria-label="Remove miner">&times;</button>' +
       '</div>';
   }
@@ -106,8 +105,7 @@
     el.summary.innerHTML =
       '<strong>' + a.count + '</strong> miner' + (a.count === 1 ? '' : 's') +
       ' &middot; <strong>' + num(a.th) + '</strong> TH total' +
-      ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg' +
-      (a.totalCost > 0 ? ' &middot; <strong>$' + num(a.totalCost) + '</strong> cost' : '');
+      ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg';
   }
 
   function render() {
@@ -132,7 +130,7 @@
     }
   }
   function addRow() {
-    rows.push({ collection: COLLECTIONS[0], code: '', th: '', wth: '', cost: '' });
+    rows.push({ collection: COLLECTIONS[0], code: '', th: '', wth: '' });
     render(); commit();
     // focus the TH field of the new row
     var last = el.rows.querySelector('.fleet-row:last-child .fleet-th');
@@ -147,7 +145,7 @@
     '.fleet-summary strong{color:var(--text1,#e8ecf4)}' +
     '.fleet-rows{display:flex;flex-direction:column;gap:.4rem}' +
     '.fleet-empty{font-size:.75rem;color:var(--text4,#6a7080);padding:.5rem 0}' +
-    '.fleet-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.9fr) minmax(0,.7fr) minmax(0,.7fr) minmax(0,.7fr) auto;gap:.35rem;align-items:center}' +
+    '.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto;gap:.35rem;align-items:center}' +
     '.fleet-col,.fleet-in{background:var(--glass-1,rgba(255,255,255,.04));border:1px solid var(--line,rgba(255,255,255,.1));color:var(--text1,#e8ecf4);border-radius:8px;padding:.45rem .5rem;font-size:.8rem;min-width:0;width:100%}' +
     '.fleet-col{font-size:.72rem}' +
     '.fleet-in::placeholder{color:var(--text4,#6a7080)}' +
