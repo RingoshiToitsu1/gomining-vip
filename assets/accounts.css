@@ -61,6 +61,11 @@
 .gmt-modal .go:disabled{opacity:.55;cursor:default}
 .gmt-modal .swap{margin-top:.9rem;text-align:center;font-size:.78rem;color:var(--text3)}
 .gmt-modal .swap a{color:var(--purple-soft);cursor:pointer}
+.gmt-modal .pw-hint{margin-top:.35rem;font-size:.7rem;color:var(--text4)}
+.gmt-modal .gmt-inapp{margin:.2rem 0 1rem;padding:.6rem .7rem;font-size:.76rem;line-height:1.5;
+  color:var(--warm,#FFF4E0);background:rgba(245,166,35,.1);border:1px solid var(--card-border);border-radius:10px}
+.gmt-inapp-copy{margin-top:.4rem;background:var(--purple);color:#0A0A0A;border:none;border-radius:8px;
+  padding:.35rem .7rem;font-size:.74rem;font-weight:700;font-family:var(--sans);cursor:pointer;display:inline-block}
 .gmt-modal .err{margin-top:.7rem;font-size:.78rem;color:var(--red);min-height:1em}
 .gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:#7bd88f;min-height:1em}
 .gmt-modal .note{margin-top:.7rem;font-size:.7rem;color:var(--text4);line-height:1.45}

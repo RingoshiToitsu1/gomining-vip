@@ -18,6 +18,13 @@
   var READY = CFG.url && CFG.anonKey &&
     CFG.url.indexOf('PASTE_') === -1 && CFG.anonKey.indexOf('PASTE_') === -1;
 
+  // In-app browsers (Telegram, Instagram, Facebook, etc.) run an embedded WebView
+  // that restricts the storage Supabase auth needs, so signup/login silently fails.
+  // We can't fix their WebView — we detect it and tell the user to open in a real
+  // browser. Critical here because the launch link is posted to Telegram.
+  var UA = navigator.userAgent || '';
+  var IN_APP = /Telegram|Instagram|FBAN|FBAV|FB_IAB|FBIOS|MicroMessenger|Line\/|Snapchat|Twitter|TikTok/i.test(UA);
+
   // Public API stub so callers (fleet.js later) can always reference it safely.
   var Account = window.GMTAccount = {
     ready: READY, user: null, profile: null,
@@ -186,8 +193,10 @@
         '<button class="x" data-close>&times;</button>' +
         '<h3 id="gmtModalTitle">Log in</h3>' +
         '<div class="sub" id="gmtModalSub">Welcome back.</div>' +
+        '<div class="gmt-inapp" id="gmtInApp" style="display:none"></div>' +
         '<label>Username</label><input id="gmtU" autocomplete="username" maxlength="20">' +
-        '<label>Password</label><input id="gmtP" type="password" autocomplete="current-password">' +
+        '<label>Password</label><input id="gmtP" type="password" autocomplete="current-password" minlength="8">' +
+        '<div class="pw-hint">Must be at least 8 characters.</div>' +
         '<div class="err" id="gmtErr"></div>' +
         '<button class="go" id="gmtGo">Log in</button>' +
         '<div class="note" id="gmtNote"></div>' +
@@ -224,12 +233,34 @@
     els.swap.querySelector('a').addEventListener('click', function () { setMode(this.getAttribute('data-to')); });
   }
 
-  function open(m) { setMode(m || 'login'); modal.classList.add('show'); setTimeout(function () { els.u.focus(); }, 30); }
+  function open(m) {
+    setMode(m || 'login');
+    var w = modal.querySelector('#gmtInApp');
+    if (w) {
+      if (IN_APP) {
+        w.style.display = 'block';
+        w.innerHTML = '⚠️ You\'re in an in-app browser (Telegram, Instagram, etc.), which can block sign-in. ' +
+          'Open this page in your normal browser: <button class="gmt-inapp-copy" type="button">Copy link</button>';
+        var btn = w.querySelector('.gmt-inapp-copy');
+        btn.addEventListener('click', function () {
+          var url = location.href;
+          var done = function () { btn.textContent = 'Copied — paste in Safari/Chrome'; };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+          else { try { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); done(); } catch (e) {} }
+        });
+      } else { w.style.display = 'none'; }
+    }
+    modal.classList.add('show'); setTimeout(function () { els.u.focus(); }, 30);
+  }
   function close() { modal.classList.remove('show'); els.u.value = ''; els.p.value = ''; els.err.textContent = ''; }
 
   function submit() {
     var u = els.u.value.trim(), p = els.p.value;
-    els.err.textContent = ''; els.go.disabled = true;
+    els.err.textContent = '';
+    // Length check up front on BOTH modes, so login gives a clear reason instead
+    // of the generic "wrong username or password".
+    if (!p || p.length < 8) { els.err.textContent = 'Password must be at least 8 characters.'; return; }
+    els.go.disabled = true;
     var op = mode === 'signup' ? Account.signUp(u, p) : Account.signIn(u, p);
     op.then(function () { els.go.disabled = false; close(); })
       .catch(function (e) { els.go.disabled = false; els.err.textContent = e.message || String(e); });
