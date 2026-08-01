@@ -111,14 +111,21 @@
       el.foot = box.querySelector('#gmtChatFoot');
       box.querySelector('.c').addEventListener('click', function () { setOpen(false); });
 
-      renderFoot(); renderOnline(); renderList();
-      A.onChange(function () { renderFoot(); });   // login/logout swaps the footer
+      renderFoot(); renderOnline(); renderList(); updateVisibility();
+      A.onChange(function () { renderFoot(); updateVisibility(); });   // auth swaps footer + gates the launcher
+    }
+
+    // The console is gated behind login, so the chat only exists when logged in.
+    function updateVisibility() {
+      if (!el.fab) return;
+      if (A.isLoggedIn()) { el.fab.style.display = openPanel ? 'none' : 'flex'; }
+      else { el.fab.style.display = 'none'; setOpen(false); }
     }
 
     function setOpen(v) {
       openPanel = v;
       el.box.classList.toggle('show', v);
-      el.fab.style.display = v ? 'none' : 'flex';
+      el.fab.style.display = (v || !A.isLoggedIn()) ? 'none' : 'flex';
       if (v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 

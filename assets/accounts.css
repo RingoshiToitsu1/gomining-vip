@@ -40,7 +40,7 @@
 
 /* ---------- modals (login + profile) ---------- */
 .gmt-modal-bg{position:fixed;inset:0;background:rgba(6,7,9,.74);backdrop-filter:blur(5px);
-  display:none;align-items:center;justify-content:center;z-index:9999}
+  display:none;align-items:center;justify-content:center;z-index:10001}
 .gmt-modal-bg.show{display:flex}
 .gmt-modal{width:min(370px,92vw);background:linear-gradient(180deg,var(--bg2),var(--bg));
   border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:1.6rem;
@@ -69,6 +69,19 @@
 .gmt-prof-av{display:block;width:88px;height:88px;border-radius:50%;object-fit:cover;
   margin:.4rem auto .2rem;border:2px solid var(--card-border);background:var(--bg-input)}
 .gmt-prof-avbtn{font-size:.74rem;color:var(--purple-soft);cursor:pointer;background:none;border:none}
+
+/* ---------- full-screen auth gate (console shows nothing until logged in) ---------- */
+body.gmt-gated{overflow:hidden}
+#gmtGate{position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;padding:1.2rem;
+  background:radial-gradient(1100px 560px at 50% 28%, rgba(245,166,35,.12), transparent 62%), var(--bg)}
+.gmt-gate-card{width:min(420px,94vw);text-align:center;background:var(--bg-card);border:1px solid var(--card-border);
+  border-radius:var(--radius-sm);padding:2.3rem 1.9rem;box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72))}
+.gmt-gate-logo{width:56px;height:56px;margin-bottom:.85rem}
+.gmt-gate-card h2{margin:0 0 .4rem;font-family:var(--sans);font-size:1.45rem;color:var(--text)}
+.gmt-gate-card p{margin:0 0 1.35rem;color:var(--text3);font-size:.86rem;line-height:1.55}
+.gmt-gate-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.gmt-gate-btns .gmt-btn-primary,.gmt-gate-btns .gmt-btn-ghost{padding:.72rem 1.25rem;font-size:.9rem}
+.gmt-gate-note{margin-top:1rem;font-size:.72rem;color:var(--text4)}
 
 /* ---------- signup / signin prompt (logged-out) ---------- */
 .gmt-welcome{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;

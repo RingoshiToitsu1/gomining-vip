@@ -205,7 +205,7 @@
     // editor now hosts the user's profile card too.
     var navLink = document.getElementById('navEditSetup');
     if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Profile' : 'Edit Setup';
-    renderWelcome();
+    renderGate();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
     if (Account.isLoggedIn()) {
@@ -279,30 +279,34 @@
     pModal.classList.add('show');
   }
 
-  // Signup / signin prompt for logged-out visitors. Dismissible for the session
-  // so it doesn't nag; hidden entirely once logged in.
-  var welcomeDismissed = false;
-  try { welcomeDismissed = sessionStorage.getItem('gmt_welcome_x') === '1'; } catch (e) {}
-  function renderWelcome() {
-    var w = document.getElementById('gmtWelcome');
-    if (!w) return;
-    if (Account.isLoggedIn() || welcomeDismissed) { w.innerHTML = ''; return; }
-    w.innerHTML =
-      '<div class="gmt-welcome">' +
-        '<div class="wtxt"><b>Save your fleet &amp; join the chat</b>' +
-          '<span>Create a free account — just a username and password — to keep your miners across devices and talk with other GoMiners.</span></div>' +
-        '<div class="wbtns">' +
-          '<button class="gmt-btn-primary" id="gmtWSignup">Create account</button>' +
-          '<button class="gmt-btn-ghost" id="gmtWLogin">Log in</button>' +
-        '</div>' +
-        '<button class="wx" id="gmtWX" title="Dismiss">&times;</button>' +
-      '</div>';
-    w.querySelector('#gmtWSignup').addEventListener('click', function () { open('signup'); });
-    w.querySelector('#gmtWLogin').addEventListener('click', function () { open('login'); });
-    w.querySelector('#gmtWX').addEventListener('click', function () {
-      welcomeDismissed = true; try { sessionStorage.setItem('gmt_welcome_x', '1'); } catch (e) {}
-      w.innerHTML = '';
-    });
+  // Full-screen auth gate: the console shows nothing until the visitor logs in
+  // or creates an account. Built once, then shown/removed as auth state changes.
+  var gate;
+  function renderGate() {
+    if (!READY) return;   // accounts not configured -> don't lock anyone out
+    if (Account.isLoggedIn()) {
+      if (gate) { gate.remove(); gate = null; }
+      document.body.classList.remove('gmt-gated');
+      return;
+    }
+    if (!gate) {
+      gate = document.createElement('div'); gate.id = 'gmtGate';
+      gate.innerHTML =
+        '<div class="gmt-gate-card">' +
+          '<img class="gmt-gate-logo" src="/gmt-optimizer-logo.svg?v=2" alt="">' +
+          '<h2>GMT Optimizer</h2>' +
+          '<p>Log in or create a free account to use the calculator, save your fleet, and join the chat.</p>' +
+          '<div class="gmt-gate-btns">' +
+            '<button class="gmt-btn-primary" id="gmtGateSignup">Create account</button>' +
+            '<button class="gmt-btn-ghost" id="gmtGateLogin">Log in</button>' +
+          '</div>' +
+          '<div class="gmt-gate-note">Just a username and password — no email required.</div>' +
+        '</div>';
+      document.body.appendChild(gate);
+      gate.querySelector('#gmtGateSignup').addEventListener('click', function () { open('signup'); });
+      gate.querySelector('#gmtGateLogin').addEventListener('click', function () { open('login'); });
+    }
+    document.body.classList.add('gmt-gated');
   }
 
   Account.openLogin = function (m) { open(m); };
