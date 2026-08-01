@@ -182,7 +182,11 @@ function _activateTab(b,push){
   // Keep the header nav links in sync no matter how the tab was switched (e.g. "Return to
   // Console" clicks the hidden tab-btn directly, bypassing consoleView) — otherwise the
   // Planner link stays highlighted after returning.
-  document.querySelectorAll('.nav-links a[data-view]').forEach(a=>a.classList.toggle('nav-active',a.dataset.view===b.dataset.tab));
+  // Clear ALL nav links first (the "My Fleet"/Edit link has no data-view, so a
+  // data-view-only toggle would leave it highlighted alongside the new tab).
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
+  const activeLink=document.querySelector(`.nav-links a[data-view="${b.dataset.tab}"]`);
+  if(activeLink)activeLink.classList.add('nav-active');
   // The Capital Planner tab relabels to "Adjust Amount" while you're on it (re-clicking adjusts).
   const pBtn=document.querySelector('[data-tab="tab-planner"]');
   if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
