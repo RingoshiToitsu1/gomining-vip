@@ -158,29 +158,27 @@
 /* detached popout window: chat fills the whole viewport */
 .gmt-chat.popout{position:fixed;inset:0;width:100%;height:100%;max-width:none;border:none;border-radius:0}
 
-/* user card (click a username in chat) */
-.gmt-uc-bg{position:fixed;inset:0;background:rgba(6,7,9,.72);backdrop-filter:blur(5px);
-  display:none;align-items:center;justify-content:center;z-index:10002;padding:1rem}
-.gmt-uc-bg.show{display:flex}
-.gmt-uc{position:relative;width:min(340px,92vw);background:linear-gradient(180deg,var(--bg2),var(--bg));
-  border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:1.5rem;
-  box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72))}
-.gmt-uc .uc-x{position:absolute;top:.6rem;right:.8rem;background:none;border:none;color:var(--text4);font-size:1.2rem;cursor:pointer}
-.uc-loading{color:var(--text3);font-size:.85rem;text-align:center;padding:1rem 0}
-.uc-head{display:flex;align-items:center;gap:.8rem;margin-bottom:.7rem}
-.uc-av{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:2px solid var(--card-border)}
+/* user card: a Twitch-style popover anchored near the clicked username */
+.gmt-uc{position:fixed;width:300px;z-index:10002;background:var(--bg-card);border:1px solid var(--card-border);
+  border-radius:var(--radius-sm);box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72));overflow:hidden;display:none}
+.gmt-uc .uc-x{position:absolute;top:.5rem;right:.6rem;z-index:2;background:rgba(0,0,0,.4);border:none;color:#fff;
+  width:22px;height:22px;border-radius:50%;font-size:1rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
+.uc-loading{color:var(--text3);font-size:.85rem;text-align:center;padding:1.4rem}
+.uc-banner{height:56px}
+.uc-head{display:flex;align-items:flex-end;gap:.7rem;padding:0 1rem;margin-top:-26px}
+.uc-av{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:3px solid var(--bg-card);background:var(--bg-input)}
 .uc-mono{display:inline-flex;align-items:center;justify-content:center;color:#0A0A0A;font-family:var(--mono);font-size:1.4rem;font-weight:700}
+.uc-idwrap{padding-bottom:.15rem;min-width:0}
 .uc-name{font-family:var(--sans);font-size:1.05rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.4rem}
-.uc-user{font-family:var(--mono);font-size:.78rem;color:var(--text3)}
+.uc-user{font-family:var(--mono);font-size:.76rem;color:var(--text3)}
 .uc-role{font-size:.6rem;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .4rem;border-radius:6px;font-weight:700}
 .uc-role-admin{background:var(--purple);color:#0A0A0A}
 .uc-role-mod{background:var(--bg-input);color:var(--purple-soft);border:1px solid var(--card-border)}
-.uc-bio{font-size:.82rem;color:var(--text2);line-height:1.5;margin:.2rem 0 .9rem}
-.uc-stats{display:flex;gap:.5rem;text-align:center}
-.uc-stats>div{flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:.6rem .3rem;
-  font-size:.66rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
-.uc-stats>div span{display:block;font-family:var(--mono);font-size:.95rem;color:var(--purple-soft);text-transform:none;letter-spacing:0;margin-bottom:.15rem}
-.uc-actions{margin-top:1rem;text-align:center}
+.uc-bio{font-size:.82rem;color:var(--text2);line-height:1.5;margin:.6rem 1rem 0}
+.uc-info{padding:.7rem 1rem 1rem;font-size:.82rem;color:var(--text2);display:flex;flex-direction:column;gap:.45rem}
+.uc-info b{color:var(--text);font-family:var(--mono)}
+.uc-ic{display:inline-block;width:1.2em;text-align:center}
+.uc-actions{padding:0 1rem 1rem;text-align:center}
 .uc-ban{color:var(--red)!important;border-color:rgba(255,77,77,.4)!important}
 .gmt-msg .mod{opacity:0;margin-left:.3rem;font-size:.72rem;cursor:pointer}
 .gmt-msg:hover .mod{opacity:.85}

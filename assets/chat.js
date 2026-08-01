@@ -192,41 +192,59 @@
       if (atBottom) el.list.scrollTop = el.list.scrollHeight;
     }
 
-    // ---- user card (click a username) ----
+    // ---- user card: a Twitch-style popover anchored near the clicked username ----
     var card;
-    function openUserCard(userId) {
+    function buildUserCard() {
+      card = document.createElement('div'); card.className = 'gmt-uc'; card.style.display = 'none';
+      document.body.appendChild(card);
+      // Close on outside click (but not when clicking another username, which reopens it).
+      document.addEventListener('mousedown', function (e) {
+        if (card.style.display === 'none') return;
+        if (card.contains(e.target)) return;
+        if (e.target.getAttribute && e.target.getAttribute('data-user')) return;
+        hideCard();
+      });
+    }
+    function hideCard() { if (card) card.style.display = 'none'; }
+    function positionCard(anchor) {
+      if (!anchor) { card.style.left = '50%'; card.style.top = '80px'; card.style.transform = 'translateX(-50%)'; return; }
+      card.style.transform = '';
+      var r = anchor.getBoundingClientRect(), cw = card.offsetWidth || 300, ch = card.offsetHeight || 260;
+      var left = r.left - cw - 12;                                   // prefer left of the name (chat is docked right)
+      if (left < 8) left = Math.min(r.right + 12, window.innerWidth - cw - 8);
+      var top = Math.min(Math.max(r.top - 10, 8), window.innerHeight - ch - 8);
+      card.style.left = left + 'px'; card.style.top = top + 'px';
+    }
+    function openUserCard(userId, anchor) {
       if (!card) buildUserCard();
-      card.classList.add('show');
-      card.querySelector('.uc-body').innerHTML = '<div class="uc-loading">Loading…</div>';
+      card.innerHTML = '<button class="uc-x" title="Close">&times;</button><div class="uc-inner"><div class="uc-loading">Loading…</div></div>';
+      card.style.display = 'block'; positionCard(anchor);
+      card.querySelector('.uc-x').addEventListener('click', hideCard);
       A.fetchUserCard(userId).then(function (d) {
         var p = d.profile || {};
-        var joined = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+        var joined = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
         var name = p.display_name || p.username || 'miner';
+        var col = color(userId);
         var roleBadge = (p.role === 'admin' || p.role === 'mod')
           ? '<span class="uc-role uc-role-' + p.role + '">' + p.role + '</span>' : '';
         var av = p.avatar_url
           ? '<img class="uc-av" src="' + esc(p.avatar_url) + '" alt="">'
-          : '<span class="uc-av uc-mono" style="background:' + color(userId) + '">' + esc((name).charAt(0).toUpperCase()) + '</span>';
+          : '<span class="uc-av uc-mono" style="background:' + col + '">' + esc(name.charAt(0).toUpperCase()) + '</span>';
         var modBtn = (A.isMod() && userId !== (A.user && A.user.id))
           ? '<button class="gmt-btn-ghost uc-ban" data-ban="' + esc(userId) + '" data-name="' + esc(name) + '">Ban user</button>' : '';
-        card.querySelector('.uc-body').innerHTML =
-          '<div class="uc-head">' + av + '<div><div class="uc-name">' + esc(name) + roleBadge + '</div>' +
+        card.querySelector('.uc-inner').innerHTML =
+          '<div class="uc-banner" style="background:linear-gradient(120deg,' + col + ',var(--bg2))"></div>' +
+          '<div class="uc-head">' + av +
+            '<div class="uc-idwrap"><div class="uc-name">' + esc(name) + roleBadge + '</div>' +
             '<div class="uc-user">@' + esc(p.username || '') + '</div></div></div>' +
           (p.bio ? '<div class="uc-bio">' + esc(p.bio) + '</div>' : '') +
-          '<div class="uc-stats">' +
-            '<div><span>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</span>TH fleet</div>' +
-            '<div><span>' + d.msgCount + '</span>messages</div>' +
-            '<div><span>' + joined + '</span>joined</div>' +
+          '<div class="uc-info">' +
+            '<div><span class="uc-ic">📅</span> Joined <b>' + joined + '</b></div>' +
+            '<div><span class="uc-ic">💬</span> <b>' + d.msgCount + '</b> message' + (d.msgCount === 1 ? '' : 's') + ' sent</div>' +
+            '<div><span class="uc-ic">⛏️</span> <b>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</b> TH fleet</div>' +
           '</div>' + (modBtn ? '<div class="uc-actions">' + modBtn + '</div>' : '');
-      }).catch(function () { card.querySelector('.uc-body').innerHTML = '<div class="uc-loading">Could not load profile.</div>'; });
-    }
-    function buildUserCard() {
-      card = document.createElement('div'); card.className = 'gmt-uc-bg';
-      card.innerHTML = '<div class="gmt-uc"><button class="uc-x" title="Close">&times;</button><div class="uc-body"></div></div>';
-      document.body.appendChild(card);
-      card.addEventListener('click', function (e) {
-        if (e.target === card || e.target.classList.contains('uc-x')) card.classList.remove('show');
-      });
+        positionCard(anchor);   // re-clamp now that the card has its real height
+      }).catch(function () { card.querySelector('.uc-inner').innerHTML = '<div class="uc-loading">Could not load profile.</div>'; });
     }
 
     // delegated actions: mod controls, username -> card, ban-from-card
@@ -236,8 +254,8 @@
       var b = t.getAttribute('data-ban');
       var u = t.getAttribute('data-user');
       if (d) del(d);
-      else if (b) { ban(b, t.getAttribute('data-name')); if (card) card.classList.remove('show'); }
-      else if (u) openUserCard(u);
+      else if (b) { ban(b, t.getAttribute('data-name')); hideCard(); }
+      else if (u) openUserCard(u, t);
     });
 
     function renderOnline() {
