@@ -2446,8 +2446,16 @@ function renderEfficiencyComparison(st){
 // Which specific miners to upgrade, worst efficiency first, until the budget's TH
 // is used up. Reads the per-miner fleet (window.GMTFleetRows).
 function upgradeOrderHTML(budgetTH){
+  const isG=r=>/greedy/i.test(r.collection||'');
   const rows=(window.GMTFleetRows||[]).filter(r=>(+r.wth||0)>EFF_BEST&&(+r.th||0)>0)
-    .sort((a,b)=>b.wth-a.wth);   // least efficient (highest W/TH) first
+    .sort((a,b)=>{
+      // Greedy Machines FIRST: they grow weekly and the new TH inherits the miner's
+      // W/TH, so upgrading them while still small is far cheaper than after they've
+      // grown. Then, among the rest, least efficient (highest W/TH) first.
+      const ga=isG(a)?1:0, gb=isG(b)?1:0;
+      if(ga!==gb)return gb-ga;
+      return b.wth-a.wth;
+    });
   if(!rows.length)return `<div class="eff-upg-note">Add your miners in <strong>My Fleet</strong> (with each one's W/TH) and this will tell you exactly which NFTs to upgrade first.</div>`;
   let left=budgetTH,out='';
   for(const r of rows){
@@ -2456,11 +2464,12 @@ function upgradeOrderHTML(budgetTH){
     const cost=upgTH*effUpgradeCostPerTH(r.wth);
     const label=r.code?`#${escapeHtml(String(r.code))}`:escapeHtml(r.collection||'miner');
     const partial=upgTH<r.th-0.5?` (${fN(upgTH,0)} of ${fN(r.th,0)} TH)`:'';
-    out+=`<div class="eff-upg-row"><span class="eff-upg-id">${label}</span>`
+    const tag=isG(r)?` <span class="eff-upg-greedy" title="Grows weekly — upgrade early while it's small">greedy · do first</span>`:'';
+    out+=`<div class="eff-upg-row"><span class="eff-upg-id">${label}${tag}</span>`
        +`<span class="eff-upg-move">${fN(r.wth,1)} → ${fN(EFF_BEST,0)} W/TH${partial}</span>`
        +`<span class="eff-upg-cost">${fU(cost,0)}</span></div>`;
   }
-  return `<div class="eff-upg"><div class="eff-upg-title">Upgrade these miners first <span>(worst efficiency → best value)</span></div>${out}</div>`;
+  return `<div class="eff-upg"><div class="eff-upg-title">Upgrade these miners first <span>(greedy machines first, then worst efficiency)</span></div>${out}</div>`;
 }
 
 // Note that new hashrate is capped at 5,000 TH per NFT, and flag any owned miner

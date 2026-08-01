@@ -138,8 +138,12 @@
   // The full console setup ("[username]" primary profile), saved by the Save button.
   Account.saveSetup = function (obj) {
     if (!Account.user) return Promise.resolve();
-    if (Account.profile) Account.profile.setup = obj;
-    return sb.from('profiles').update({ setup: obj }).eq('id', Account.user.id)
+    // th_total (shown on the chat user card) is the total farm hashrate. Set it from
+    // the setup's inTH here too, so it's right even when TH was typed directly rather
+    // than built through the fleet-miners table (which is the only other writer).
+    var th = +(obj && obj.inTH) || 0;
+    if (Account.profile) { Account.profile.setup = obj; Account.profile.th_total = th; }
+    return sb.from('profiles').update({ setup: obj, th_total: th }).eq('id', Account.user.id)
       .then(function (r) { if (r.error) throw r.error; });
   };
 
