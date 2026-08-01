@@ -136,7 +136,10 @@
       }
 
       renderFoot(); renderOnline(); renderList(); updateVisibility();
-      A.onChange(function () { renderFoot(); updateVisibility(); });
+      // Re-render the list too: mod controls depend on the role, which loads a beat
+      // after mount — without this, a mod/admin never sees delete/ban until the next
+      // message arrives.
+      A.onChange(function () { renderFoot(); updateVisibility(); renderList(); });
     }
 
     // The console is gated behind login, so the chat dock only shows when logged in.
