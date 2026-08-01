@@ -72,8 +72,11 @@
 
 /* ---------- results gate: blur the data, prompt signup (fleet stays usable) ---------- */
 .gmt-resgate{position:absolute;inset:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;
-  padding:clamp(36px,9vh,110px) 1.2rem 2rem;background:rgba(6,7,9,.5);
-  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  padding:clamp(36px,9vh,110px) 1.2rem 2rem;
+  /* Radial vignette: soft in the centre behind the card, nearly opaque toward the
+     corners so the peripheral data reads as hidden, not just blurred. */
+  background:radial-gradient(ellipse 78% 66% at 50% 30%, rgba(6,7,9,.30), rgba(6,7,9,.95) 88%);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .gmt-resgate .card{width:min(440px,94vw);text-align:center;background:var(--bg-card);border:1px solid var(--card-border);
   border-radius:var(--radius-sm);padding:2.1rem 1.85rem;box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72))}
 .gmt-resgate .card h3{margin:0 0 .5rem;font-family:var(--sans);font-size:1.3rem;color:var(--text)}
