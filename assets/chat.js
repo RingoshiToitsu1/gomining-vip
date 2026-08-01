@@ -24,7 +24,7 @@
   function start() {
     var A = window.GMTAccount, sb = A.sb;
     var LIMIT = 50, MIN_GAP = 1000, lastSent = 0;
-    var messages = [], online = 0, mounted = false, openPanel = false;
+    var messages = [], online = 0, mounted = false, collapsed = false;
     var el = {};
 
     // Deterministic Twitch-ish username color from the id.
@@ -98,51 +98,59 @@
     function mount() {
       if (mounted) return; mounted = true;
 
-      if (!POPOUT) {
-        var fab = document.createElement('button'); fab.className = 'gmt-chat-fab';
-        fab.innerHTML = '💬 Chat <span class="n" id="gmtFabN">0</span>';
-        fab.addEventListener('click', function () { setOpen(true); });
-        document.body.appendChild(fab); el.fab = fab; el.fabN = fab.querySelector('#gmtFabN');
-      }
-
-      // Header controls: pop-out (↗) opens the detached window; collapse (—) hides
-      // to the launcher. The detached window shows neither.
-      var controls = POPOUT ? '' :
-        '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
-        '<button class="ci" data-collapse title="Collapse">&minus;</button>';
-      var box = document.createElement('div'); box.className = 'gmt-chat' + (POPOUT ? ' popout' : '');
-      box.innerHTML =
-        '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div><div class="gmt-chat-ctl">' + controls + '</div></div>' +
-        '<div class="gmt-chat-list" id="gmtChatList"></div>' +
-        '<div class="gmt-chat-foot" id="gmtChatFoot"></div>';
+      // A right-side dock (Twitch-style): collapses to a thin rail at the edge and
+      // expands back out. The detached /chat window fills its viewport instead.
+      var head =
+        '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
+        '<div class="gmt-chat-ctl">' +
+          (POPOUT ? '' :
+            '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
+            '<button class="ci" data-collapse title="Collapse to the side">&#8250;</button>') +
+        '</div></div>';
+      var rail = POPOUT ? '' :
+        '<div class="gmt-chat-rail" data-expand title="Open chat">' +
+          '<button class="rail-btn">&#8249;</button><span class="rail-label">CHAT</span>' +
+          '<span class="rail-n" id="gmtRailN">0</span>' +
+        '</div>';
+      var box = document.createElement('div'); box.className = 'gmt-chat' + (POPOUT ? ' popout' : ' gmt-dock');
+      box.innerHTML = rail +
+        '<div class="gmt-chat-body">' + head +
+          '<div class="gmt-chat-list" id="gmtChatList"></div>' +
+          '<div class="gmt-chat-foot" id="gmtChatFoot"></div>' +
+        '</div>';
       document.body.appendChild(box); el.box = box;
       el.list = box.querySelector('#gmtChatList');
       el.online2 = box.querySelector('#gmtChatOnline');
       el.foot = box.querySelector('#gmtChatFoot');
-      var collapse = box.querySelector('[data-collapse]'); if (collapse) collapse.addEventListener('click', function () { setOpen(false); });
-      var pop = box.querySelector('[data-pop]'); if (pop) pop.addEventListener('click', function () {
-        window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
-        setOpen(false);
-      });
-      if (POPOUT) box.classList.add('show');   // detached window is always open
+      el.railN = box.querySelector('#gmtRailN');
+
+      if (!POPOUT) {
+        box.querySelector('[data-expand]').addEventListener('click', function () { setCollapsed(false); });
+        box.querySelector('[data-collapse]').addEventListener('click', function () { setCollapsed(true); });
+        box.querySelector('[data-pop]').addEventListener('click', function () {
+          window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
+        });
+        // Resting state: remember the user's choice; default collapsed on narrow screens.
+        var saved; try { saved = localStorage.getItem('gmt_chat_collapsed'); } catch (e) {}
+        setCollapsed(saved != null ? saved === '1' : window.innerWidth < 1000);
+      }
 
       renderFoot(); renderOnline(); renderList(); updateVisibility();
-      A.onChange(function () { renderFoot(); updateVisibility(); });   // auth swaps footer + gates the launcher
+      A.onChange(function () { renderFoot(); updateVisibility(); });
     }
 
-    // The console is gated behind login, so the chat only exists when logged in.
+    // The console is gated behind login, so the chat dock only shows when logged in.
     function updateVisibility() {
-      if (!el.fab) return;
-      if (A.isLoggedIn()) { el.fab.style.display = openPanel ? 'none' : 'flex'; }
-      else { el.fab.style.display = 'none'; setOpen(false); }
+      if (!el.box || POPOUT) return;
+      el.box.style.display = A.isLoggedIn() ? 'flex' : 'none';
     }
 
-    function setOpen(v) {
-      if (POPOUT) return;   // detached window is permanently open
-      openPanel = v;
-      el.box.classList.toggle('show', v);
-      if (el.fab) el.fab.style.display = (v || !A.isLoggedIn()) ? 'none' : 'flex';
-      if (v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
+    function setCollapsed(v) {
+      if (POPOUT) return;
+      collapsed = v;
+      el.box.classList.toggle('collapsed', v);
+      try { localStorage.setItem('gmt_chat_collapsed', v ? '1' : '0'); } catch (e) {}
+      if (!v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 
     function renderFoot() {
@@ -235,7 +243,7 @@
     function renderOnline() {
       var hdr = document.getElementById('gmtOnline');
       if (hdr) hdr.innerHTML = '<span class="dot"></span>' + online + ' online';
-      if (el.fabN) el.fabN.textContent = online;
+      if (el.railN) el.railN.textContent = online;
       if (el.online2) el.online2.textContent = online + ' online';
     }
 

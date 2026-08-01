@@ -67,14 +67,22 @@
   // ignored so a half-entered row never poisons the weighting or divides by zero.
   // No cost input: nobody remembers what they paid per miner, and the console
   // already estimates $/TH from the tier curves off the TH + W/TH we set below.
+  var DEFAULT_WTH = 15;   // marketplace default; matches the console's default efficiency
+  var isGreedy = function (c) { return /greedy/i.test(c || ''); };
   function aggregate() {
-    var th = 0, wSum = 0, count = 0;
+    var th = 0, wSum = 0, count = 0, gTH = 0, gWSum = 0;
     rows.forEach(function (r) {
       var t = +r.th || 0; if (t <= 0) return;
-      th += t; count++;
-      wSum += t * (+r.wth || 0);
+      // A blank W/TH must NOT count as 0 — that would zero the electricity fee and
+      // corrupt profit AND discount coverage. Fall back to the default efficiency.
+      var w = +r.wth || DEFAULT_WTH;
+      th += t; count++; wSum += t * w;
+      if (isGreedy(r.collection)) { gTH += t; gWSum += t * w; }   // Greedy Machine rows tracked apart
     });
-    return { th: th, wth: th > 0 ? wSum / th : 0, count: count };
+    return {
+      th: th, wth: th > 0 ? wSum / th : 0, count: count,
+      greedyTH: gTH, greedyWth: gTH > 0 ? gWSum / gTH : 0
+    };
   }
 
   function setField(id, value) {
@@ -91,7 +99,22 @@
     var a = aggregate();
     if (a.count === 0) return;                 // empty fleet: leave manual fields alone
     setField('inWTH', +a.wth.toFixed(2));      // set efficiency first: inTH's handler prices off it
-    setField('inTH', +a.th.toFixed(2));
+    setField('inTH', +a.th.toFixed(2));        // total farm TH (greedy is a SUBSET of this)
+    // Greedy Machine rows drive the console's greedy fields, so the planner treats
+    // them as separate greedy TH. inTH already includes them; inGreedyTH is the
+    // subset. Imported greedy is booked as all-"initial" (the conservative VIP
+    // case — only growth ABOVE the initial marketplace TH counts toward the tier).
+    var g = document.getElementById('inHasGreedy');
+    var hasGreedy = a.greedyTH > 0;
+    if (g && g.checked !== hasGreedy) {
+      g.checked = hasGreedy;
+      if (typeof window.toggleGreedyFields === 'function') window.toggleGreedyFields();
+    }
+    if (hasGreedy) {
+      setField('inGreedyTH', +a.greedyTH.toFixed(2));
+      setField('inGreedyWth', +a.greedyWth.toFixed(2));
+      setField('inGreedyInitial', +a.greedyTH.toFixed(2));
+    }
   }
 
   function commit() { saveFleet(rows); renderSummary(); }
