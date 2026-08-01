@@ -362,7 +362,8 @@
           ' &middot; ' + Math.round(f.th).toLocaleString('en-US') + ' TH</div>' +
         '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your fleet across devices.</p>' +
         '<div class="btns"><button class="gmt-btn-primary" data-g="signup">Create account</button>' +
-        '<button class="gmt-btn-ghost" data-g="login">Log in</button></div></div>';
+        '<button class="gmt-btn-ghost" data-g="login">Log in</button></div>' +
+        '<div class="lyd"><a data-g="fleet">Edit my fleet</a></div></div>';
     }
     return '<div class="card">' +
       '<h3>See what your fleet earns</h3>' +
