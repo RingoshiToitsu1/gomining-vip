@@ -79,7 +79,7 @@
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
     if (!Account.user) { Account.profile = null; return Promise.resolve(null); }
-    return sb.from('profiles').select('username,display_name,avatar_url,bio,role')
+    return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup')
       .eq('id', Account.user.id).single()
       .then(function (r) { Account.profile = r.data || null; return Account.profile; });
   }
@@ -128,6 +128,13 @@
     return sb.from('profiles').update({ banned: true }).eq('id', userId)
       .then(function (r) { if (r.error) throw r.error; });
   };
+  // The full console setup ("[username]" primary profile), saved by the Save button.
+  Account.saveSetup = function (obj) {
+    if (!Account.user) return Promise.resolve();
+    if (Account.profile) Account.profile.setup = obj;
+    return sb.from('profiles').update({ setup: obj }).eq('id', Account.user.id)
+      .then(function (r) { if (r.error) throw r.error; });
+  };
 
   // ---- profile ----
   Account.updateProfile = function (patch) {
@@ -149,9 +156,19 @@
   };
 
   // ---- session tracking ----
+  var _synced = false;
   function setSession(session) {
     Account.user = session ? session.user : null;
-    (Account.user ? loadProfile() : Promise.resolve()).then(function () { emit(); renderHeader(); });
+    if (!Account.user) _synced = false;
+    (Account.user ? loadProfile() : Promise.resolve()).then(function () {
+      // Once per login, hand the account's saved setup to app.js, which makes the
+      // "[username]" profile the default in Saved Setups and restores its inputs.
+      if (Account.user && !_synced && typeof window.gmtSyncAccountProfile === 'function') {
+        _synced = true;
+        try { window.gmtSyncAccountProfile(); } catch (e) {}
+      }
+      emit(); renderHeader();
+    });
   }
   sb.auth.getSession().then(function (r) { setSession(r.data.session); });
   sb.auth.onAuthStateChange(function (_evt, session) { setSession(session); });

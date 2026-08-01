@@ -38,6 +38,8 @@ create unique index if not exists profiles_username_lower_idx
 alter table public.profiles add column if not exists bio      text;
 alter table public.profiles add column if not exists banned   boolean not null default false;
 alter table public.profiles add column if not exists th_total numeric not null default 0;
+-- Full console setup (all My Setup inputs) saved to the account by the Save button.
+alter table public.profiles add column if not exists setup    jsonb;
 
 -- ---------------------------------------------------------------------------
 -- miners: the cloud-saved fleet. One row per NFT, replacing localStorage once a

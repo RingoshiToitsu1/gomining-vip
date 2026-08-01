@@ -1545,7 +1545,9 @@ function saveActiveProfile(){
   if(!p){saveAsNewProfile();return;}   // nothing selected yet -> save as new
   p.data=readInputs();
   saveProfilesState(state);
-  flashStatus('Saved to "'+p.name+'"');
+  // The primary "[username]" profile mirrors to the cloud so it follows the account.
+  if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn())GMTAccount.saveSetup(p.data);
+  flashStatus(isAccountProfile(p)?'Saved to your profile':'Saved to "'+p.name+'"');
   editLoadClose('Saved to "'+p.name+'"');
 }
 function saveAsNewProfile(){
@@ -1644,11 +1646,40 @@ function clearInputs(){
   flashStatus('Inputs cleared');
 }
 
+// The logged-in user's PRIMARY setup profile, named after their username and backed
+// by the cloud (profiles.setup). Any other Saved Setups are local scratch profiles —
+// tinkering, referral quotes, etc. Called by account.js once per login.
+function accountProfileId(){return (window.GMTAccount&&GMTAccount.user)?('acct_'+GMTAccount.user.id):null}
+function isAccountProfile(p){return !!(p&&p.account)}
+window.gmtSyncAccountProfile=function(){
+  const A=window.GMTAccount; if(!A||!A.isLoggedIn())return;
+  const uname=(A.profile&&A.profile.username)||'my setup';
+  const cloudSetup=A.profile&&A.profile.setup;
+  const pid=accountProfileId();
+  const state=loadProfilesState();
+  let p=state.profiles.find(x=>x.id===pid);
+  if(!p){
+    // First login on this device: seed the primary profile from the cloud setup,
+    // or from whatever's on screen if the account has no saved setup yet.
+    p={id:pid,name:uname,account:true,data:cloudSetup||readInputs()};
+    state.profiles.unshift(p);
+  }else{
+    p.name=uname; p.account=true;
+    if(cloudSetup)p.data=cloudSetup;   // cloud is the source of truth for the primary
+  }
+  state.activeId=pid;
+  saveProfilesState(state);
+  renderProfileSelect();
+  applyInputs(p.data);
+  if(S.loaded)recalc();
+};
+
 function deleteActiveProfile(){
   const state=loadProfilesState();
   if(!state.activeId)return;
   const p=state.profiles.find(x=>x.id===state.activeId);
   if(!p)return;
+  if(isAccountProfile(p)){alert('This is your account profile — it can’t be deleted. Create a separate setup for tinkering or referral quotes.');return;}
   if(!confirm('Delete profile "'+p.name+'"? (Inputs stay on screen.)'))return;
   state.profiles=state.profiles.filter(x=>x.id!==state.activeId);
   state.activeId=null;
