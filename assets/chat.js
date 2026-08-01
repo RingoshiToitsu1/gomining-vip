@@ -210,7 +210,11 @@
     }
     function hideCard() { if (card) card.style.display = 'none'; }
     function positionCard(anchor) {
-      if (!anchor) { card.style.left = '50%'; card.style.top = '80px'; card.style.transform = 'translateX(-50%)'; return; }
+      // On a phone, anchoring beside a tapped name is fiddly — just center it.
+      if (!anchor || window.innerWidth <= 700) {
+        card.style.left = '50%'; card.style.top = '50%'; card.style.transform = 'translate(-50%,-50%)';
+        return;
+      }
       card.style.transform = '';
       var r = anchor.getBoundingClientRect(), cw = card.offsetWidth || 300, ch = card.offsetHeight || 260;
       var left = r.left - cw - 12;                                   // prefer left of the name (chat is docked right)

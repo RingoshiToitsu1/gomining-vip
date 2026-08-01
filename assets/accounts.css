@@ -141,7 +141,6 @@
   background:var(--bg-card);border-radius:8px;padding:.15rem .25rem;margin-top:auto;margin-bottom:.6rem}
 .gmt-chat-head{display:flex;align-items:center;justify-content:space-between;padding:.7rem .95rem;
   border-bottom:1px solid var(--border)}
-@media(max-width:560px){.gmt-chat:not(.collapsed){width:min(340px,90vw)}}
 .gmt-chat-head .t{font-weight:700;color:var(--text);font-size:.9rem;font-family:var(--sans)}
 .gmt-chat-head .o{font-family:var(--mono);font-size:.7rem;color:var(--text3)}
 .gmt-chat-ctl{display:flex;align-items:center;gap:.2rem}
@@ -158,8 +157,30 @@
 /* detached popout window: chat fills the whole viewport */
 .gmt-chat.popout{position:fixed;inset:0;width:100%;height:100%;max-width:none;border:none;border-radius:0}
 
+/* ---- mobile: a side dock is awkward on a phone ----
+   Collapsed = a floating pill button bottom-right; expanded = full screen. */
+@media(max-width:700px){
+  .gmt-chat.gmt-dock.collapsed{top:auto;bottom:16px;right:16px;height:auto;width:auto;
+    background:transparent;border:none;box-shadow:none}
+  .gmt-chat.gmt-dock.collapsed .gmt-chat-rail{flex-direction:row;width:auto;height:auto;flex:none;
+    padding:.6rem .95rem;gap:.4rem;background:var(--purple);color:#0A0A0A;border-radius:24px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);align-items:center}
+  .gmt-chat.gmt-dock.collapsed .gmt-chat-rail::before{content:'💬';font-size:1rem}
+  .gmt-chat.gmt-dock.collapsed .rail-btn{display:none}
+  .gmt-chat.gmt-dock.collapsed .rail-label{writing-mode:horizontal-tb;font-size:.8rem;letter-spacing:0;
+    color:#0A0A0A;font-weight:700}
+  .gmt-chat.gmt-dock.collapsed .rail-n{margin:0;background:rgba(0,0,0,.22);color:#0A0A0A}
+  .gmt-chat.gmt-dock:not(.collapsed){inset:0;width:100vw;height:100dvh;border-left:none;border-radius:0}
+  .gmt-chat-ctl [data-pop]{display:none}            /* popout window is pointless on mobile */
+  .gmt-chat-head{padding:.85rem 1rem}               /* bigger tap targets */
+  .gmt-chat-ctl .ci{font-size:1.4rem;padding:.2rem .45rem}
+  .gmt-chat-list{padding:.7rem 1rem;gap:.6rem}
+  .gmt-chat-foot{padding:.7rem 1rem env(safe-area-inset-bottom,1rem)}
+  #gmtOnline{display:none}                          /* redundant on mobile — the chat pill shows it */
+}
+
 /* user card: a Twitch-style popover anchored near the clicked username */
-.gmt-uc{position:fixed;width:300px;z-index:10002;background:var(--bg-card);border:1px solid var(--card-border);
+.gmt-uc{position:fixed;width:min(300px,92vw);z-index:10002;background:var(--bg-card);border:1px solid var(--card-border);
   border-radius:var(--radius-sm);box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72));overflow:hidden;display:none}
 .gmt-uc .uc-x{position:absolute;top:.5rem;right:.6rem;z-index:2;background:rgba(0,0,0,.4);border:none;color:#fff;
   width:22px;height:22px;border-radius:50%;font-size:1rem;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
