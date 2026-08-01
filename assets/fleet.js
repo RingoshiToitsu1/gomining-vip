@@ -158,28 +158,10 @@
     if (last) last.focus();
   }
 
-  // ---- mount ----
-  var STYLE =
-    '.fleet-panel{margin:.2rem 0 .4rem}' +
-    '.fleet-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.5rem}' +
-    '.fleet-summary{font-family:var(--mono,monospace);font-size:.72rem;color:var(--text3,#8a90a0)}' +
-    '.fleet-summary strong{color:var(--text1,#e8ecf4)}' +
-    '.fleet-rows{display:flex;flex-direction:column;gap:.4rem}' +
-    '.fleet-empty{font-size:.75rem;color:var(--text4,#6a7080);padding:.5rem 0}' +
-    '.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto;gap:.35rem;align-items:center}' +
-    '.fleet-col,.fleet-in{background:var(--glass-1,rgba(255,255,255,.04));border:1px solid var(--line,rgba(255,255,255,.1));color:var(--text1,#e8ecf4);border-radius:8px;padding:.45rem .5rem;font-size:.8rem;min-width:0;width:100%}' +
-    '.fleet-col{font-size:.72rem}' +
-    '.fleet-in::placeholder{color:var(--text4,#6a7080)}' +
-    '.fleet-del{background:none;border:none;color:var(--text4,#6a7080);font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1}' +
-    '.fleet-del:hover{color:#ff6b6b}' +
-    '.fleet-add{background:var(--glass-1,rgba(255,255,255,.05));border:1px dashed var(--line,rgba(255,255,255,.18));color:var(--text2,#c4cad6);border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem}' +
-    '.fleet-add:hover{border-color:var(--gold,#f5a623);color:var(--gold-soft,#ffd479)}' +
-    '@media(max-width:560px){.fleet-row{grid-template-columns:1fr 1fr auto;grid-auto-rows:auto}.fleet-col{grid-column:1/3}.fleet-code{grid-column:3/4}}';
-
+  // ---- mount ---- (styles live in assets/accounts.css)
   function mount() {
     var host = document.getElementById('fleetGroup');
     if (!host) return;
-    var style = document.createElement('style'); style.textContent = STYLE; document.head.appendChild(style);
     host.className = 'ed-group';
     host.innerHTML =
       '<div class="ed-group-title">My Fleet <span class="ed-toggle-note" style="font-weight:400">(optional — adds up your miners for you)</span></div>' +

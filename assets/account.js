@@ -140,35 +140,10 @@
   // ===========================================================================
   // UI: a header slot + a modal. Self-contained so the console HTML barely changes.
   // ===========================================================================
-  var STYLE =
-    '#gmtAccountSlot{display:flex;align-items:center;gap:.5rem;font-size:.82rem}' +
-    '.gmt-acc-btn{background:var(--glass-1,rgba(255,255,255,.06));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem}' +
-    '.gmt-acc-btn:hover{border-color:var(--gold,#f5a623);color:var(--gold-soft,#ffd479)}' +
-    '.gmt-acc-name{font-family:var(--mono,monospace);color:var(--gold-soft,#ffd479)}' +
-    '.gmt-modal-bg{position:fixed;inset:0;background:rgba(4,6,12,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999}' +
-    '.gmt-modal-bg.show{display:flex}' +
-    '.gmt-modal{width:min(360px,92vw);background:linear-gradient(180deg,#141824,#0e111a);border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;padding:1.5rem;box-shadow:0 20px 60px rgba(0,0,0,.5)}' +
-    '.gmt-modal h3{margin:0 0 .3rem;font-size:1.15rem;color:var(--text1,#e8ecf4)}' +
-    '.gmt-modal .sub{font-size:.78rem;color:var(--text3,#8a90a0);margin-bottom:1rem}' +
-    '.gmt-modal label{display:block;font-size:.72rem;color:var(--text3,#8a90a0);margin:.6rem 0 .25rem}' +
-    '.gmt-modal input{width:100%;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.6rem .7rem;font-size:.9rem}' +
-    '.gmt-modal .go{width:100%;margin-top:1rem;background:var(--gold,#f5a623);color:#1a1205;border:none;border-radius:10px;padding:.7rem;font-weight:700;cursor:pointer;font-size:.9rem}' +
-    '.gmt-modal .go:disabled{opacity:.6;cursor:default}' +
-    '.gmt-modal .swap{margin-top:.9rem;text-align:center;font-size:.78rem;color:var(--text3,#8a90a0)}' +
-    '.gmt-modal .swap a{color:var(--gold-soft,#ffd479);cursor:pointer}' +
-    '.gmt-modal .err{margin-top:.7rem;font-size:.78rem;color:#ff8080;min-height:1em}' +
-    '.gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:#7bd88f;min-height:1em}' +
-    '.gmt-modal .note{margin-top:.7rem;font-size:.7rem;color:var(--text4,#6a7080);line-height:1.4}' +
-    '.gmt-modal .x{float:right;background:none;border:none;color:var(--text4,#6a7080);font-size:1.2rem;cursor:pointer;line-height:1}' +
-    '.gmt-acc-av{width:24px;height:24px;border-radius:50%;object-fit:cover;border:1px solid var(--line,rgba(255,255,255,.2));vertical-align:middle}' +
-    '.gmt-acc-name{cursor:pointer}.gmt-acc-name:hover{text-decoration:underline}' +
-    '.gmt-prof-av{display:block;width:88px;height:88px;border-radius:50%;object-fit:cover;margin:.4rem auto .2rem;border:2px solid var(--line,rgba(255,255,255,.2));background:var(--glass-1,rgba(255,255,255,.05))}' +
-    '.gmt-prof-avwrap{text-align:center}.gmt-prof-avbtn{font-size:.74rem;color:var(--gold-soft,#ffd479);cursor:pointer;background:none;border:none}';
-
+  // (styles live in assets/accounts.css)
   var modal, els = {}, mode = 'login';
 
   function buildModal() {
-    var s = document.createElement('style'); s.textContent = STYLE; document.head.appendChild(s);
     modal = document.createElement('div'); modal.className = 'gmt-modal-bg';
     modal.innerHTML =
       '<div class="gmt-modal">' +
@@ -230,6 +205,7 @@
     // editor now hosts the user's profile card too.
     var navLink = document.getElementById('navEditSetup');
     if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Profile' : 'Edit Setup';
+    renderWelcome();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
     if (Account.isLoggedIn()) {
@@ -301,6 +277,32 @@
     pEls.av.src = p.avatar_url || '';
     pEls.err.textContent = ''; pEls.ok.textContent = '';
     pModal.classList.add('show');
+  }
+
+  // Signup / signin prompt for logged-out visitors. Dismissible for the session
+  // so it doesn't nag; hidden entirely once logged in.
+  var welcomeDismissed = false;
+  try { welcomeDismissed = sessionStorage.getItem('gmt_welcome_x') === '1'; } catch (e) {}
+  function renderWelcome() {
+    var w = document.getElementById('gmtWelcome');
+    if (!w) return;
+    if (Account.isLoggedIn() || welcomeDismissed) { w.innerHTML = ''; return; }
+    w.innerHTML =
+      '<div class="gmt-welcome">' +
+        '<div class="wtxt"><b>Save your fleet &amp; join the chat</b>' +
+          '<span>Create a free account — just a username and password — to keep your miners across devices and talk with other GoMiners.</span></div>' +
+        '<div class="wbtns">' +
+          '<button class="gmt-btn-primary" id="gmtWSignup">Create account</button>' +
+          '<button class="gmt-btn-ghost" id="gmtWLogin">Log in</button>' +
+        '</div>' +
+        '<button class="wx" id="gmtWX" title="Dismiss">&times;</button>' +
+      '</div>';
+    w.querySelector('#gmtWSignup').addEventListener('click', function () { open('signup'); });
+    w.querySelector('#gmtWLogin').addEventListener('click', function () { open('login'); });
+    w.querySelector('#gmtWX').addEventListener('click', function () {
+      welcomeDismissed = true; try { sessionStorage.setItem('gmt_welcome_x', '1'); } catch (e) {}
+      w.innerHTML = '';
+    });
   }
 
   Account.openLogin = function (m) { open(m); };

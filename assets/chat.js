@@ -90,33 +90,10 @@
     });
 
     // ===========================================================================
-    // UI
+    // UI  (styles live in assets/accounts.css)
     // ===========================================================================
-    var STYLE =
-      '#gmtOnline{font-family:var(--mono,monospace);font-size:.72rem;color:var(--text3,#8a90a0);display:inline-flex;align-items:center;gap:.35rem}' +
-      '#gmtOnline .dot{width:7px;height:7px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84}' +
-      '.gmt-chat-fab{position:fixed;right:18px;bottom:18px;z-index:9998;background:var(--gold,#f5a623);color:#1a1205;border:none;border-radius:24px;padding:.6rem .9rem;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;align-items:center;gap:.45rem}' +
-      '.gmt-chat-fab .n{background:rgba(0,0,0,.22);border-radius:10px;padding:0 .4rem;font-size:.72rem}' +
-      '.gmt-chat{position:fixed;right:18px;bottom:18px;z-index:9999;width:min(360px,94vw);height:min(520px,76vh);background:linear-gradient(180deg,#141824,#0e111a);border:1px solid var(--line,rgba(255,255,255,.12));border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);display:none;flex-direction:column;overflow:hidden}' +
-      '.gmt-chat.show{display:flex}' +
-      '.gmt-chat-head{display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border-bottom:1px solid var(--line,rgba(255,255,255,.1))}' +
-      '.gmt-chat-head .t{font-weight:700;color:var(--text1,#e8ecf4);font-size:.9rem}' +
-      '.gmt-chat-head .o{font-family:var(--mono,monospace);font-size:.7rem;color:var(--text3,#8a90a0)}' +
-      '.gmt-chat-head .c{background:none;border:none;color:var(--text4,#6a7080);font-size:1.2rem;cursor:pointer}' +
-      '.gmt-chat-list{flex:1;overflow-y:auto;padding:.6rem .8rem;display:flex;flex-direction:column;gap:.35rem}' +
-      '.gmt-msg{font-size:.82rem;line-height:1.4;color:var(--text2,#c4cad6);word-break:break-word}' +
-      '.gmt-msg .u{font-weight:700;cursor:default}' +
-      '.gmt-msg .mod{opacity:0;margin-left:.3rem;font-size:.72rem;cursor:pointer}' +
-      '.gmt-msg:hover .mod{opacity:.8}' +
-      '.gmt-msg .mod:hover{opacity:1}' +
-      '.gmt-chat-foot{padding:.6rem .8rem;border-top:1px solid var(--line,rgba(255,255,255,.1))}' +
-      '.gmt-chat-foot textarea{width:100%;resize:none;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:10px;padding:.5rem .6rem;font-size:.85rem;font-family:inherit;height:38px}' +
-      '.gmt-chat-login{width:100%;background:var(--gold,#f5a623);color:#1a1205;border:none;border-radius:10px;padding:.55rem;font-weight:700;cursor:pointer}' +
-      '.gmt-flash{font-size:.72rem;color:#ffb060;min-height:1em;margin-top:.25rem}';
-
     function mount() {
       if (mounted) return; mounted = true;
-      var s = document.createElement('style'); s.textContent = STYLE; document.head.appendChild(s);
 
       var fab = document.createElement('button'); fab.className = 'gmt-chat-fab';
       fab.innerHTML = '💬 Chat <span class="n" id="gmtFabN">0</span>';

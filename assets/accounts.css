@@ -1,0 +1,136 @@
+/* GMT Optimizer — accounts / fleet / chat styling.
+   ================================================
+   One themed stylesheet for every Phase 2/3 component, built on the console's
+   own design tokens (assets/app.css) so the login, profile, fleet and chat read
+   as the same product — warm dark cards, the #F5A623 amber accent, Share Tech
+   Mono for figures. The JS modules only emit class names; all look lives here. */
+
+/* ---------- shared primitives ---------- */
+.gmt-btn-primary{
+  background:var(--purple);color:#0A0A0A;border:none;border-radius:12px;
+  padding:.65rem 1rem;font-weight:700;font-family:var(--sans);font-size:.88rem;
+  cursor:pointer;transition:var(--transition)}
+.gmt-btn-primary:hover{background:var(--purple-soft)}
+.gmt-btn-primary:disabled{opacity:.55;cursor:default}
+.gmt-btn-ghost{
+  background:var(--bg-input);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:.42rem .8rem;font-size:.8rem;font-family:var(--sans);
+  cursor:pointer;transition:var(--transition)}
+.gmt-btn-ghost:hover{border-color:var(--purple);color:var(--purple-soft)}
+.gmt-field{
+  width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:.6rem .7rem;font-size:.9rem;font-family:var(--sans)}
+.gmt-field:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.gmt-field::placeholder{color:var(--text4)}
+
+/* ---------- header: account slot + online count ---------- */
+#gmtAccountSlot{display:flex;align-items:center;gap:.5rem;font-size:.82rem}
+.gmt-acc-btn{
+  background:var(--bg-input);border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;font-family:var(--sans);
+  transition:var(--transition)}
+.gmt-acc-btn:hover{border-color:var(--purple);color:var(--purple-soft)}
+.gmt-acc-name{font-family:var(--mono);color:var(--purple-soft);cursor:pointer}
+.gmt-acc-name:hover{text-decoration:underline}
+.gmt-acc-av{width:24px;height:24px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--card-border);vertical-align:middle}
+#gmtOnline{display:inline-flex;align-items:center;gap:.35rem;
+  font-family:var(--mono);font-size:.72rem;color:var(--text3)}
+#gmtOnline .dot{width:7px;height:7px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84}
+
+/* ---------- modals (login + profile) ---------- */
+.gmt-modal-bg{position:fixed;inset:0;background:rgba(6,7,9,.74);backdrop-filter:blur(5px);
+  display:none;align-items:center;justify-content:center;z-index:9999}
+.gmt-modal-bg.show{display:flex}
+.gmt-modal{width:min(370px,92vw);background:linear-gradient(180deg,var(--bg2),var(--bg));
+  border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:1.6rem;
+  box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72))}
+.gmt-modal h3{margin:0 0 .25rem;font-size:1.15rem;color:var(--text);font-family:var(--sans)}
+.gmt-modal .sub{font-size:.78rem;color:var(--text3);margin-bottom:1rem}
+.gmt-modal label{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text3);margin:.7rem 0 .28rem;font-weight:700}
+.gmt-modal input,.gmt-modal textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;padding:.6rem .7rem;font-size:.9rem;font-family:var(--sans)}
+.gmt-modal textarea{resize:vertical;font-family:inherit}
+.gmt-modal input:focus,.gmt-modal textarea:focus{outline:none;border-color:var(--purple);
+  box-shadow:0 0 0 3px var(--purple-glow)}
+.gmt-modal .go{width:100%;margin-top:1rem;background:var(--purple);color:#0A0A0A;border:none;
+  border-radius:12px;padding:.72rem;font-weight:700;cursor:pointer;font-size:.9rem;font-family:var(--sans);
+  transition:var(--transition)}
+.gmt-modal .go:hover{background:var(--purple-soft)}
+.gmt-modal .go:disabled{opacity:.55;cursor:default}
+.gmt-modal .swap{margin-top:.9rem;text-align:center;font-size:.78rem;color:var(--text3)}
+.gmt-modal .swap a{color:var(--purple-soft);cursor:pointer}
+.gmt-modal .err{margin-top:.7rem;font-size:.78rem;color:var(--red);min-height:1em}
+.gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:#7bd88f;min-height:1em}
+.gmt-modal .note{margin-top:.7rem;font-size:.7rem;color:var(--text4);line-height:1.45}
+.gmt-modal .x{float:right;background:none;border:none;color:var(--text4);font-size:1.2rem;cursor:pointer;line-height:1}
+.gmt-prof-avwrap{text-align:center}
+.gmt-prof-av{display:block;width:88px;height:88px;border-radius:50%;object-fit:cover;
+  margin:.4rem auto .2rem;border:2px solid var(--card-border);background:var(--bg-input)}
+.gmt-prof-avbtn{font-size:.74rem;color:var(--purple-soft);cursor:pointer;background:none;border:none}
+
+/* ---------- signup / signin prompt (logged-out) ---------- */
+.gmt-welcome{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);
+  padding:.9rem 1.1rem;margin:0 auto 1rem;max-width:920px}
+.gmt-welcome .wtxt{flex:1;min-width:200px}
+.gmt-welcome .wtxt b{color:var(--text);font-family:var(--sans);font-size:.95rem}
+.gmt-welcome .wtxt span{display:block;color:var(--text3);font-size:.78rem;margin-top:.15rem}
+.gmt-welcome .wbtns{display:flex;gap:.5rem}
+.gmt-welcome .wx{background:none;border:none;color:var(--text4);font-size:1.1rem;cursor:pointer}
+
+/* ---------- fleet builder ---------- */
+.fleet-panel{margin:.2rem 0 .4rem}
+.fleet-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.5rem}
+.fleet-summary{font-family:var(--mono);font-size:.72rem;color:var(--text3)}
+.fleet-summary strong{color:var(--purple-soft)}
+.fleet-rows{display:flex;flex-direction:column;gap:.4rem}
+.fleet-empty{font-size:.75rem;color:var(--text4);padding:.5rem 0}
+.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto;
+  gap:.35rem;align-items:center}
+.fleet-col,.fleet-in{background:var(--bg-input);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:.45rem .5rem;font-size:.8rem;min-width:0;width:100%;font-family:var(--sans)}
+.fleet-in{font-family:var(--mono)}
+.fleet-col{font-size:.72rem}
+.fleet-in:focus,.fleet-col:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+.fleet-in::placeholder{color:var(--text4)}
+.fleet-del{background:none;border:none;color:var(--text4);font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1}
+.fleet-del:hover{color:var(--red)}
+.fleet-add{background:var(--bg-input);border:1px dashed var(--card-border);color:var(--text2);
+  border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem;font-family:var(--sans)}
+.fleet-add:hover{border-color:var(--purple);color:var(--purple-soft)}
+@media(max-width:560px){
+  .fleet-row{grid-template-columns:1fr 1fr auto;grid-auto-rows:auto}
+  .fleet-col{grid-column:1/3}.fleet-code{grid-column:3/4}}
+
+/* ---------- chat + presence launcher ---------- */
+.gmt-chat-fab{position:fixed;right:18px;bottom:18px;z-index:9998;background:var(--purple);color:#0A0A0A;
+  border:none;border-radius:24px;padding:.6rem .95rem;font-weight:700;font-size:.85rem;cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);display:flex;align-items:center;gap:.45rem;font-family:var(--sans)}
+.gmt-chat-fab:hover{background:var(--purple-soft)}
+.gmt-chat-fab .n{background:rgba(0,0,0,.22);border-radius:10px;padding:0 .4rem;font-size:.72rem;font-family:var(--mono)}
+.gmt-chat{position:fixed;right:18px;bottom:18px;z-index:9999;width:min(360px,94vw);height:min(520px,76vh);
+  background:linear-gradient(180deg,var(--bg2),var(--bg));border:1px solid var(--card-border);
+  border-radius:var(--radius-sm);box-shadow:var(--sh,0 26px 64px -18px rgba(0,0,0,.72));
+  display:none;flex-direction:column;overflow:hidden}
+.gmt-chat.show{display:flex}
+.gmt-chat-head{display:flex;align-items:center;justify-content:space-between;padding:.7rem .95rem;
+  border-bottom:1px solid var(--border)}
+.gmt-chat-head .t{font-weight:700;color:var(--text);font-size:.9rem;font-family:var(--sans)}
+.gmt-chat-head .o{font-family:var(--mono);font-size:.7rem;color:var(--text3)}
+.gmt-chat-head .c{background:none;border:none;color:var(--text4);font-size:1.3rem;cursor:pointer;line-height:1}
+.gmt-chat-list{flex:1;overflow-y:auto;padding:.6rem .85rem;display:flex;flex-direction:column;gap:.35rem}
+.gmt-msg{font-size:.82rem;line-height:1.4;color:var(--text2);word-break:break-word}
+.gmt-msg .u{font-weight:700;font-family:var(--mono)}
+.gmt-msg .mod{opacity:0;margin-left:.3rem;font-size:.72rem;cursor:pointer}
+.gmt-msg:hover .mod{opacity:.85}
+.gmt-msg .mod:hover{opacity:1}
+.gmt-chat-foot{padding:.6rem .85rem;border-top:1px solid var(--border)}
+.gmt-chat-foot textarea{width:100%;resize:none;background:var(--bg-input);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;padding:.5rem .6rem;font-size:.85rem;font-family:var(--sans);height:38px}
+.gmt-chat-foot textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+.gmt-chat-login{width:100%;background:var(--purple);color:#0A0A0A;border:none;border-radius:10px;
+  padding:.55rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.gmt-chat-login:hover{background:var(--purple-soft)}
+.gmt-flash{font-size:.72rem;color:var(--amber,#FF8A3D);min-height:1em;margin-top:.25rem}

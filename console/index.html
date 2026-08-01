@@ -54,6 +54,7 @@
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
 <link rel="stylesheet" href="/assets/app.css?v=25">
 <link rel="stylesheet" href="/assets/design.css?v=7">
+<link rel="stylesheet" href="/assets/accounts.css?v=1">
 </head>
 <body>
 <!-- ===== GALAXY BACKDROP (scoped .rd; dimmed for the console) ===== -->
@@ -376,6 +377,9 @@
 
 <!-- ==================== MY SETUP ==================== -->
 <div class="tab-content active" id="tab-current">
+
+  <!-- Signup / signin prompt for logged-out users (account.js fills + toggles it) -->
+  <div id="gmtWelcome"></div>
 
   <!-- HERO SUMMARY -->
   <div class="sec-head reveal">
@@ -1025,12 +1029,12 @@
 </div>
 
 <script src="/assets/app.js?v=22"></script>
-<script src="/assets/fleet.js?v=3"></script>
+<script src="/assets/fleet.js?v=4"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/supabase-config.js?v=2"></script>
-<script src="/assets/account.js?v=3"></script>
-<script src="/assets/chat.js?v=1"></script>
+<script src="/assets/account.js?v=4"></script>
+<script src="/assets/chat.js?v=2"></script>
 <script src="/assets/chrome.js?v=2"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
