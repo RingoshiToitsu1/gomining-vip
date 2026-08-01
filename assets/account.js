@@ -268,10 +268,10 @@
 
   // ---- header slot ----
   function renderHeader() {
-    // When logged in, the "Edit Setup" nav link reads "My Profile" — the setup
-    // editor now hosts the user's profile card too.
+    // When logged in, the "Edit Setup" nav link reads "My Fleet" — it's where you
+    // build your fleet and edit your setup/profile.
     var navLink = document.getElementById('navEditSetup');
-    if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Profile' : 'Edit Setup';
+    if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Fleet' : 'Edit Setup';
     renderGate();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
