@@ -2418,8 +2418,44 @@ function renderEfficiencyComparison(st){
     ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
   ],effThreshBp?effGauge(effThreshBp,bp):'');
   g+=`</div>`;
+  // Per-miner upgrade order: map the efficiency-upgrade budget onto the actual
+  // fleet, least-efficient miner first, naming NFT codes. Only shown when the plan
+  // upgrades efficiency AND the user built a fleet.
+  if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
+  // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
+  if(addTH>0)g+=buyCapHTML(addTH);
   g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
   return h+bar+g;
+}
+
+// Which specific miners to upgrade, worst efficiency first, until the budget's TH
+// is used up. Reads the per-miner fleet (window.GMTFleetRows).
+function upgradeOrderHTML(budgetTH){
+  const rows=(window.GMTFleetRows||[]).filter(r=>(+r.wth||0)>EFF_BEST&&(+r.th||0)>0)
+    .sort((a,b)=>b.wth-a.wth);   // least efficient (highest W/TH) first
+  if(!rows.length)return `<div class="eff-upg-note">Add your miners in <strong>My Fleet</strong> (with each one's W/TH) and this will tell you exactly which NFTs to upgrade first.</div>`;
+  let left=budgetTH,out='';
+  for(const r of rows){
+    if(left<=0.5)break;
+    const upgTH=Math.min(r.th,left); left-=upgTH;
+    const cost=upgTH*effUpgradeCostPerTH(r.wth);
+    const label=r.code?`#${escapeHtml(String(r.code))}`:escapeHtml(r.collection||'miner');
+    const partial=upgTH<r.th-0.5?` (${fN(upgTH,0)} of ${fN(r.th,0)} TH)`:'';
+    out+=`<div class="eff-upg-row"><span class="eff-upg-id">${label}</span>`
+       +`<span class="eff-upg-move">${fN(r.wth,1)} → ${fN(EFF_BEST,0)} W/TH${partial}</span>`
+       +`<span class="eff-upg-cost">${fU(cost,0)}</span></div>`;
+  }
+  return `<div class="eff-upg"><div class="eff-upg-title">Upgrade these miners first <span>(worst efficiency → best value)</span></div>${out}</div>`;
+}
+
+// Note that new hashrate is capped at 5,000 TH per NFT, and flag any owned miner
+// already near the cap.
+function buyCapHTML(addTH){
+  const near=(window.GMTFleetRows||[]).filter(r=>(+r.th||0)>=4500);
+  let msg=`New hashrate is capped at <strong>5,000 TH per miner</strong>`;
+  if(addTH>5000)msg+=` — this ${fN(addTH,0)} TH needs at least ${Math.ceil(addTH/5000)} miners`;
+  if(near.length)msg+=`. ${near.length===1?'One miner is':near.length+' miners are'} near the cap; put new TH on a fresh NFT`;
+  return `<div class="eff-upg-note">${msg}.</div>`;
 }
 
 function renderPlanner(i,m){

@@ -145,9 +145,15 @@
 
   function renderSummary() {
     var a = aggregate();
-    // Broadcast fleet state so the results gate (account.js) can adapt its card
-    // from "add your miners" to "your fleet is ready".
-    try { window.GMTFleet = { count: a.count, th: a.th }; document.dispatchEvent(new CustomEvent('gmt-fleet')); } catch (e) {}
+    // Broadcast fleet state so the results gate (account.js) can adapt its card,
+    // and expose the per-miner rows so the planner can name which miner to upgrade.
+    try {
+      window.GMTFleet = { count: a.count, th: a.th };
+      window.GMTFleetRows = rows.filter(function (r) { return (+r.th || 0) > 0; }).map(function (r) {
+        return { collection: r.collection, code: r.code, th: +r.th || 0, wth: +r.wth || DEFAULT_WTH };
+      });
+      document.dispatchEvent(new CustomEvent('gmt-fleet'));
+    } catch (e) {}
     if (!el.summary) return;
     if (a.count === 0) { el.summary.innerHTML = ''; return; }
     el.summary.innerHTML =
