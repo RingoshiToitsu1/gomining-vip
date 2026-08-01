@@ -122,6 +122,10 @@
 
   function renderSummary() {
     var a = aggregate();
+    // Broadcast fleet state so the results gate (account.js) can adapt its card
+    // from "add your miners" to "your fleet is ready".
+    try { window.GMTFleet = { count: a.count, th: a.th }; document.dispatchEvent(new CustomEvent('gmt-fleet')); } catch (e) {}
+    if (!el.summary) return;
     if (a.count === 0) { el.summary.innerHTML = ''; return; }
     el.summary.innerHTML =
       '<strong>' + a.count + '</strong> miner' + (a.count === 1 ? '' : 's') +

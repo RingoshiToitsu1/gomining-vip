@@ -279,38 +279,62 @@
     pModal.classList.add('show');
   }
 
-  // Full-screen auth gate: the console shows nothing until the visitor logs in
-  // or creates an account. Built once, then shown/removed as auth state changes.
-  var gate;
+  // Results gate: let a logged-out visitor build their fleet freely (the fleet
+  // editor is a fixed .sp-page that floats above this), but blur the calculated
+  // data and prompt them to make an account to reveal it and save the fleet.
+  // The card adapts to whether they've entered any miners yet (window.GMTFleet,
+  // broadcast by fleet.js via the 'gmt-fleet' event).
+  var GATE_IDS = ['tab-current', 'tab-planner'];
+  function fleetState() { return window.GMTFleet || { count: 0, th: 0 }; }
+  function gateCardHTML() {
+    var f = fleetState();
+    if (f.count > 0) {
+      return '<div class="card">' +
+        '<h3>Your fleet is ready</h3>' +
+        '<div class="fleetstat">' + f.count + ' miner' + (f.count === 1 ? '' : 's') +
+          ' &middot; ' + Math.round(f.th).toLocaleString('en-US') + ' TH</div>' +
+        '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your fleet across devices.</p>' +
+        '<div class="btns"><button class="gmt-btn-primary" data-g="signup">Create account</button>' +
+        '<button class="gmt-btn-ghost" data-g="login">Log in</button></div></div>';
+    }
+    return '<div class="card">' +
+      '<h3>See what your fleet earns</h3>' +
+      '<p>Add your miners and we\'ll calculate your live P&amp;L, fee discount, and multi-year projections — free.</p>' +
+      '<div class="btns"><button class="gmt-btn-primary" data-g="fleet">Add my miners</button></div>' +
+      '<div class="lyd">Already have an account? <a data-g="login">Log in</a></div></div>';
+  }
+  function wireGate(g) {
+    g.querySelectorAll('[data-g]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var k = b.getAttribute('data-g');
+        if (k === 'signup') open('signup');
+        else if (k === 'login') open('login');
+        else if (k === 'fleet' && typeof window.openEditSetup === 'function') window.openEditSetup();
+      });
+    });
+  }
   function renderGate() {
-    if (!READY) return;   // accounts not configured -> don't lock anyone out
-    if (Account.isLoggedIn()) {
-      if (gate) { gate.remove(); gate = null; }
-      document.body.classList.remove('gmt-gated');
-      return;
-    }
-    if (!gate) {
-      gate = document.createElement('div'); gate.id = 'gmtGate';
-      gate.innerHTML =
-        '<div class="gmt-gate-card">' +
-          '<img class="gmt-gate-logo" src="/gmt-optimizer-logo.svg?v=2" alt="">' +
-          '<h2>GMT Optimizer</h2>' +
-          '<p>Log in or create a free account to use the calculator, save your fleet, and join the chat.</p>' +
-          '<div class="gmt-gate-btns">' +
-            '<button class="gmt-btn-primary" id="gmtGateSignup">Create account</button>' +
-            '<button class="gmt-btn-ghost" id="gmtGateLogin">Log in</button>' +
-          '</div>' +
-          '<div class="gmt-gate-note">Just a username and password — no email required.</div>' +
-        '</div>';
-      document.body.appendChild(gate);
-      gate.querySelector('#gmtGateSignup').addEventListener('click', function () { open('signup'); });
-      gate.querySelector('#gmtGateLogin').addEventListener('click', function () { open('login'); });
-    }
-    document.body.classList.add('gmt-gated');
+    if (!READY) return;   // accounts not configured -> don't gate anyone
+    GATE_IDS.forEach(function (id) {
+      var host = document.getElementById(id); if (!host) return;
+      var g = host.querySelector(':scope > .gmt-resgate');
+      if (Account.isLoggedIn()) { if (g) g.remove(); return; }
+      if (!g) {
+        g = document.createElement('div'); g.className = 'gmt-resgate';
+        if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+        host.appendChild(g);
+      }
+      g.innerHTML = gateCardHTML();
+      wireGate(g);
+    });
   }
 
   Account.openLogin = function (m) { open(m); };
 
-  function mount() { buildModal(); renderHeader(); }
+  function mount() {
+    buildModal(); renderHeader();
+    // Re-render the gate card when the fleet changes (empty -> has miners).
+    document.addEventListener('gmt-fleet', function () { if (!Account.isLoggedIn()) renderGate(); });
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();
