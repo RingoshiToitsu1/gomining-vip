@@ -31,9 +31,13 @@ create table if not exists public.profiles (
 create unique index if not exists profiles_username_lower_idx
   on public.profiles (lower(username));
 
--- Phase 3 fields on profiles: a short bio, and a ban flag mods can set.
-alter table public.profiles add column if not exists bio    text;
-alter table public.profiles add column if not exists banned boolean not null default false;
+-- Phase 3 fields on profiles: a short bio, a ban flag mods can set, and a cached
+-- fleet-TH total. th_total is denormalized (updated by the app when the fleet
+-- saves) so a user card can show someone's TH without reading their miner rows,
+-- which RLS keeps private — and so the site-wide total can sum one column.
+alter table public.profiles add column if not exists bio      text;
+alter table public.profiles add column if not exists banned   boolean not null default false;
+alter table public.profiles add column if not exists th_total numeric not null default 0;
 
 -- ---------------------------------------------------------------------------
 -- miners: the cloud-saved fleet. One row per NFT, replacing localStorage once a
@@ -174,9 +178,12 @@ create table if not exists public.messages (
   id         bigint generated always as identity primary key,
   user_id    uuid not null references auth.users(id) on delete cascade,
   username   text not null,
+  avatar_url text,
   body       text not null check (char_length(body) between 1 and 500),
   created_at timestamptz not null default now()
 );
+-- (idempotent for projects created before avatar snapshots existed)
+alter table public.messages add column if not exists avatar_url text;
 create index if not exists messages_created_idx on public.messages (created_at desc);
 
 alter table public.messages enable row level security;

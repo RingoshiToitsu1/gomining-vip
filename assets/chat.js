@@ -38,7 +38,7 @@
 
     // ---- data ----
     function loadHistory() {
-      return sb.from('messages').select('id,user_id,username,body,created_at')
+      return sb.from('messages').select('id,user_id,username,avatar_url,body,created_at')
         .order('created_at', { ascending: false }).limit(LIMIT)
         .then(function (r) { messages = (r.data || []).reverse(); renderList(); });
     }
@@ -51,7 +51,8 @@
       if (!A.isLoggedIn()) { flash('Log in to chat.'); return; }
       lastSent = now;
       var name = (A.profile && (A.profile.display_name || A.profile.username)) || 'miner';
-      sb.from('messages').insert({ user_id: A.user.id, username: name, body: body })
+      var av = (A.profile && A.profile.avatar_url) || null;
+      sb.from('messages').insert({ user_id: A.user.id, username: name, avatar_url: av, body: body })
         .then(function (r) { if (r.error) { flash(r.error.message || 'Could not send.'); lastSent = 0; } });
       el.input.value = '';
     }
@@ -92,24 +93,38 @@
     // ===========================================================================
     // UI  (styles live in assets/accounts.css)
     // ===========================================================================
+    var POPOUT = window.GMT_CHAT_POPOUT === true;   // running in the detached /chat window
+
     function mount() {
       if (mounted) return; mounted = true;
 
-      var fab = document.createElement('button'); fab.className = 'gmt-chat-fab';
-      fab.innerHTML = '💬 Chat <span class="n" id="gmtFabN">0</span>';
-      fab.addEventListener('click', function () { setOpen(true); });
-      document.body.appendChild(fab); el.fab = fab; el.fabN = fab.querySelector('#gmtFabN');
+      if (!POPOUT) {
+        var fab = document.createElement('button'); fab.className = 'gmt-chat-fab';
+        fab.innerHTML = '💬 Chat <span class="n" id="gmtFabN">0</span>';
+        fab.addEventListener('click', function () { setOpen(true); });
+        document.body.appendChild(fab); el.fab = fab; el.fabN = fab.querySelector('#gmtFabN');
+      }
 
-      var box = document.createElement('div'); box.className = 'gmt-chat';
+      // Header controls: pop-out (↗) opens the detached window; collapse (—) hides
+      // to the launcher. The detached window shows neither.
+      var controls = POPOUT ? '' :
+        '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
+        '<button class="ci" data-collapse title="Collapse">&minus;</button>';
+      var box = document.createElement('div'); box.className = 'gmt-chat' + (POPOUT ? ' popout' : '');
       box.innerHTML =
-        '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div><button class="c" title="Close">&minus;</button></div>' +
+        '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div><div class="gmt-chat-ctl">' + controls + '</div></div>' +
         '<div class="gmt-chat-list" id="gmtChatList"></div>' +
         '<div class="gmt-chat-foot" id="gmtChatFoot"></div>';
       document.body.appendChild(box); el.box = box;
       el.list = box.querySelector('#gmtChatList');
       el.online2 = box.querySelector('#gmtChatOnline');
       el.foot = box.querySelector('#gmtChatFoot');
-      box.querySelector('.c').addEventListener('click', function () { setOpen(false); });
+      var collapse = box.querySelector('[data-collapse]'); if (collapse) collapse.addEventListener('click', function () { setOpen(false); });
+      var pop = box.querySelector('[data-pop]'); if (pop) pop.addEventListener('click', function () {
+        window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
+        setOpen(false);
+      });
+      if (POPOUT) box.classList.add('show');   // detached window is always open
 
       renderFoot(); renderOnline(); renderList(); updateVisibility();
       A.onChange(function () { renderFoot(); updateVisibility(); });   // auth swaps footer + gates the launcher
@@ -123,9 +138,10 @@
     }
 
     function setOpen(v) {
+      if (POPOUT) return;   // detached window is permanently open
       openPanel = v;
       el.box.classList.toggle('show', v);
-      el.fab.style.display = (v || !A.isLoggedIn()) ? 'none' : 'flex';
+      if (el.fab) el.fab.style.display = (v || !A.isLoggedIn()) ? 'none' : 'flex';
       if (v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 
@@ -146,6 +162,12 @@
     }
     function flash(m) { if (el.flash) { el.flash.textContent = m; setTimeout(function () { if (el.flash) el.flash.textContent = ''; }, 2500); } }
 
+    function avatarHTML(m) {
+      if (m.avatar_url) return '<img class="gmt-msg-av" src="' + esc(m.avatar_url) + '" alt="">';
+      // Fallback monogram tinted to the user's color.
+      var initial = (m.username || '?').charAt(0).toUpperCase();
+      return '<span class="gmt-msg-av gmt-msg-mono" style="background:' + color(m.user_id) + '">' + esc(initial) + '</span>';
+    }
     function renderList() {
       if (!el.list) return;
       var mine = A.isLoggedIn() ? A.user.id : null, mod = A.isMod();
@@ -155,17 +177,59 @@
         var controls = '';
         if (canDel) controls += '<span class="mod" data-del="' + m.id + '" title="Delete">✕</span>';
         if (mod && (!mine || m.user_id !== mine)) controls += '<span class="mod" data-ban="' + esc(m.user_id) + '" data-name="' + esc(m.username) + '" title="Ban user">🚫</span>';
-        return '<div class="gmt-msg"><span class="u" style="color:' + color(m.user_id) + '">' + esc(m.username) + '</span> ' + esc(m.body) + controls + '</div>';
+        return '<div class="gmt-msg">' + avatarHTML(m) +
+          '<div class="gmt-msg-txt"><span class="u" data-user="' + esc(m.user_id) + '" style="color:' + color(m.user_id) + '" title="View profile">' + esc(m.username) + '</span> ' +
+          esc(m.body) + controls + '</div></div>';
       }).join('');
       if (atBottom) el.list.scrollTop = el.list.scrollHeight;
     }
 
-    // delegated mod actions
+    // ---- user card (click a username) ----
+    var card;
+    function openUserCard(userId) {
+      if (!card) buildUserCard();
+      card.classList.add('show');
+      card.querySelector('.uc-body').innerHTML = '<div class="uc-loading">Loading…</div>';
+      A.fetchUserCard(userId).then(function (d) {
+        var p = d.profile || {};
+        var joined = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+        var name = p.display_name || p.username || 'miner';
+        var roleBadge = (p.role === 'admin' || p.role === 'mod')
+          ? '<span class="uc-role uc-role-' + p.role + '">' + p.role + '</span>' : '';
+        var av = p.avatar_url
+          ? '<img class="uc-av" src="' + esc(p.avatar_url) + '" alt="">'
+          : '<span class="uc-av uc-mono" style="background:' + color(userId) + '">' + esc((name).charAt(0).toUpperCase()) + '</span>';
+        var modBtn = (A.isMod() && userId !== (A.user && A.user.id))
+          ? '<button class="gmt-btn-ghost uc-ban" data-ban="' + esc(userId) + '" data-name="' + esc(name) + '">Ban user</button>' : '';
+        card.querySelector('.uc-body').innerHTML =
+          '<div class="uc-head">' + av + '<div><div class="uc-name">' + esc(name) + roleBadge + '</div>' +
+            '<div class="uc-user">@' + esc(p.username || '') + '</div></div></div>' +
+          (p.bio ? '<div class="uc-bio">' + esc(p.bio) + '</div>' : '') +
+          '<div class="uc-stats">' +
+            '<div><span>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</span>TH fleet</div>' +
+            '<div><span>' + d.msgCount + '</span>messages</div>' +
+            '<div><span>' + joined + '</span>joined</div>' +
+          '</div>' + (modBtn ? '<div class="uc-actions">' + modBtn + '</div>' : '');
+      }).catch(function () { card.querySelector('.uc-body').innerHTML = '<div class="uc-loading">Could not load profile.</div>'; });
+    }
+    function buildUserCard() {
+      card = document.createElement('div'); card.className = 'gmt-uc-bg';
+      card.innerHTML = '<div class="gmt-uc"><button class="uc-x" title="Close">&times;</button><div class="uc-body"></div></div>';
+      document.body.appendChild(card);
+      card.addEventListener('click', function (e) {
+        if (e.target === card || e.target.classList.contains('uc-x')) card.classList.remove('show');
+      });
+    }
+
+    // delegated actions: mod controls, username -> card, ban-from-card
     document.addEventListener('click', function (e) {
-      var d = e.target.getAttribute && e.target.getAttribute('data-del');
-      var b = e.target.getAttribute && e.target.getAttribute('data-ban');
+      var t = e.target; if (!t.getAttribute) return;
+      var d = t.getAttribute('data-del');
+      var b = t.getAttribute('data-ban');
+      var u = t.getAttribute('data-user');
       if (d) del(d);
-      else if (b) ban(b, e.target.getAttribute('data-name'));
+      else if (b) { ban(b, t.getAttribute('data-name')); if (card) card.classList.remove('show'); }
+      else if (u) openUserCard(u);
     });
 
     function renderOnline() {

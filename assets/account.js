@@ -97,17 +97,36 @@
       });
   };
   // Replace the whole fleet: delete the user's rows, insert the current set. Not
-  // atomic, but the data is low-stakes and a fleet is a handful of rows.
+  // atomic, but the data is low-stakes and a fleet is a handful of rows. Also
+  // caches the total TH on the profile (for user cards + the site-wide total).
   Account.saveMiners = function (rows) {
     if (!Account.user) return Promise.resolve();
     var uid = Account.user.id;
+    var clean = (rows || []).filter(function (r) { return (+r.th || 0) > 0; }).map(function (r) {
+      return { user_id: uid, collection: r.collection || null, code: r.code || null, th: +r.th || 0, wth: +r.wth || 15 };
+    });
+    var total = clean.reduce(function (s, r) { return s + r.th; }, 0);
     return sb.from('miners').delete().eq('user_id', uid).then(function () {
-      var clean = (rows || []).filter(function (r) { return (+r.th || 0) > 0; }).map(function (r) {
-        return { user_id: uid, collection: r.collection || null, code: r.code || null, th: +r.th || 0, wth: +r.wth || 15 };
-      });
-      if (!clean.length) return { error: null };
-      return sb.from('miners').insert(clean);
-    }).then(function (r) { if (r && r.error) throw r.error; });
+      return clean.length ? sb.from('miners').insert(clean) : { error: null };
+    }).then(function (r) {
+      if (r && r.error) throw r.error;
+      return sb.from('profiles').update({ th_total: total }).eq('id', uid);
+    }).then(function () {});
+  };
+
+  // Public user card: profile fields anyone may read, plus their message count.
+  Account.fetchUserCard = function (userId) {
+    return Promise.all([
+      sb.from('profiles').select('username,display_name,avatar_url,bio,created_at,th_total,role')
+        .eq('id', userId).single(),
+      sb.from('messages').select('id', { count: 'exact', head: true }).eq('user_id', userId)
+    ]).then(function (res) {
+      return { profile: res[0].data || {}, msgCount: res[1].count || 0 };
+    });
+  };
+  Account.banUser = function (userId) {
+    return sb.from('profiles').update({ banned: true }).eq('id', userId)
+      .then(function (r) { if (r.error) throw r.error; });
   };
 
   // ---- profile ----
