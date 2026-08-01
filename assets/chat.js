@@ -94,6 +94,16 @@
     // UI  (styles live in assets/accounts.css)
     // ===========================================================================
     var POPOUT = window.GMT_CHAT_POPOUT === true;   // running in the detached /chat window
+    var POPOUT_KEY = 'gmt_chat_popout';             // localStorage flag: a detached window is open
+    function popoutIsOpen() { try { return localStorage.getItem(POPOUT_KEY) === '1'; } catch (e) { return false; } }
+    // The detached window owns the flag: sets it while alive, clears it on close, so
+    // the main window's dock hides while it's out — even across a main-window reload.
+    if (POPOUT) {
+      try { localStorage.setItem(POPOUT_KEY, '1'); } catch (e) {}
+      var _clr = function () { try { localStorage.removeItem(POPOUT_KEY); } catch (e) {} };
+      window.addEventListener('pagehide', _clr);
+      window.addEventListener('beforeunload', _clr);
+    }
 
     function mount() {
       if (mounted) return; mounted = true;
@@ -128,8 +138,17 @@
         box.querySelector('[data-expand]').addEventListener('click', function () { setCollapsed(false); });
         box.querySelector('[data-collapse]').addEventListener('click', function () { setCollapsed(true); });
         box.querySelector('[data-pop]').addEventListener('click', function () {
-          window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
+          var w = window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
+          if (w) {
+            try { localStorage.setItem(POPOUT_KEY, '1'); } catch (e) {}   // hide the dock immediately
+            updateVisibility();
+            var t = setInterval(function () {   // restore the dock when the window closes
+              if (w.closed) { clearInterval(t); try { localStorage.removeItem(POPOUT_KEY); } catch (e) {} updateVisibility(); }
+            }, 600);
+          }
         });
+        // React to the flag changing in the other window (open/close of the popout).
+        window.addEventListener('storage', function (e) { if (e.key === POPOUT_KEY) updateVisibility(); });
         // Resting state: remember the user's choice; default collapsed on narrow screens.
         var saved; try { saved = localStorage.getItem('gmt_chat_collapsed'); } catch (e) {}
         setCollapsed(saved != null ? saved === '1' : window.innerWidth < 1000);
@@ -145,7 +164,8 @@
     // The console is gated behind login, so the chat dock only shows when logged in.
     function updateVisibility() {
       if (!el.box || POPOUT) return;
-      el.box.style.display = A.isLoggedIn() ? 'flex' : 'none';
+      // Hidden when logged out, or while a detached popout window is open.
+      el.box.style.display = (A.isLoggedIn() && !popoutIsOpen()) ? 'flex' : 'none';
     }
 
     function setCollapsed(v) {

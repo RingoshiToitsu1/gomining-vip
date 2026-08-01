@@ -1513,7 +1513,11 @@ function renderProfileSelect(){
   const state=loadProfilesState();
   const cur=state.activeId||'';
   sel.innerHTML='<option value="">Setup</option>'+
-    state.profiles.map(p=>`<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(p.name)}</option>`).join('');
+    state.profiles.map(p=>{
+      // The primary account profile is starred + labelled so it's obviously the main one.
+      const label=p.account?('★ '+p.name+' (your profile)'):p.name;
+      return `<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(label)}</option>`;
+    }).join('');
   const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
 }
 
@@ -1583,10 +1587,17 @@ function openEditSetup(){
   }
   showPanelView('secInputs');
   refreshGreedyVisibility();
+  // Highlight the "My Profile" nav item, not "Console" — clicking tab-current above
+  // set Console active, so override it here.
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
+  const nl=$('navEditSetup');if(nl)nl.classList.add('nav-active');
   try{history.replaceState({panel:'edit'},'','/edit'+location.hash);}catch(e){}   // its own URL
 }
 function closeEditSetup(){
   hidePanelView('secInputs');
+  // Restore the Console nav highlight.
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
+  const cn=document.querySelector('.nav-links a[data-view="tab-current"]');if(cn)cn.classList.add('nav-active');
   try{history.replaceState({},'','/console'+location.hash);}catch(e){}
   refreshMySetupAnimation();   // return to the dashboard with the fresh count-up
 }
