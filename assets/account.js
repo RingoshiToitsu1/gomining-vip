@@ -22,6 +22,8 @@
   var Account = window.GMTAccount = {
     ready: READY, user: null, profile: null,
     isLoggedIn: function () { return !!Account.user; },
+    role: function () { return (Account.profile && Account.profile.role) || 'user'; },
+    isMod: function () { var r = Account.role(); return r === 'mod' || r === 'admin'; },
     _listeners: [],
     onChange: function (cb) { Account._listeners.push(cb); }
   };
@@ -77,7 +79,7 @@
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
     if (!Account.user) { Account.profile = null; return Promise.resolve(null); }
-    return sb.from('profiles').select('username,display_name,avatar_url,role')
+    return sb.from('profiles').select('username,display_name,avatar_url,bio,role')
       .eq('id', Account.user.id).single()
       .then(function (r) { Account.profile = r.data || null; return Account.profile; });
   }
@@ -224,6 +226,10 @@
 
   // ---- header slot ----
   function renderHeader() {
+    // When logged in, the "Edit Setup" nav link reads "My Profile" — the setup
+    // editor now hosts the user's profile card too.
+    var navLink = document.getElementById('navEditSetup');
+    if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Profile' : 'Edit Setup';
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
     if (Account.isLoggedIn()) {
@@ -257,6 +263,7 @@
           '<input type="file" accept="image/*" id="gmtProfFile" style="display:none">' +
         '</div>' +
         '<label>Display name</label><input id="gmtProfName" maxlength="40">' +
+        '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
         '<div class="err" id="gmtProfErr"></div><div class="ok" id="gmtProfOk"></div>' +
         '<button class="go" id="gmtProfSave">Save</button>' +
       '</div>';
@@ -265,6 +272,7 @@
     pEls.av = pModal.querySelector('#gmtProfAv');
     pEls.file = pModal.querySelector('#gmtProfFile');
     pEls.name = pModal.querySelector('#gmtProfName');
+    pEls.bio = pModal.querySelector('#gmtProfBio');
     pEls.err = pModal.querySelector('#gmtProfErr');
     pEls.ok = pModal.querySelector('#gmtProfOk');
     pEls.save = pModal.querySelector('#gmtProfSave');
@@ -279,7 +287,7 @@
     });
     pEls.save.addEventListener('click', function () {
       pEls.err.textContent = ''; pEls.ok.textContent = ''; pEls.save.disabled = true;
-      Account.updateProfile({ display_name: pEls.name.value.trim() || null })
+      Account.updateProfile({ display_name: pEls.name.value.trim() || null, bio: pEls.bio.value.trim() || null })
         .then(function () { pEls.save.disabled = false; pEls.ok.textContent = 'Saved.'; })
         .catch(function (e) { pEls.save.disabled = false; pEls.err.textContent = e.message || 'Save failed.'; });
     });
@@ -289,6 +297,7 @@
     var p = Account.profile || {};
     pEls.user.textContent = '@' + (p.username || '');
     pEls.name.value = p.display_name || '';
+    pEls.bio.value = p.bio || '';
     pEls.av.src = p.avatar_url || '';
     pEls.err.textContent = ''; pEls.ok.textContent = '';
     pModal.classList.add('show');

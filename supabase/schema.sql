@@ -31,6 +31,10 @@ create table if not exists public.profiles (
 create unique index if not exists profiles_username_lower_idx
   on public.profiles (lower(username));
 
+-- Phase 3 fields on profiles: a short bio, and a ban flag mods can set.
+alter table public.profiles add column if not exists bio    text;
+alter table public.profiles add column if not exists banned boolean not null default false;
+
 -- ---------------------------------------------------------------------------
 -- miners: the cloud-saved fleet. One row per NFT, replacing localStorage once a
 -- user is logged in. Collection and code are labels; th/wth feed the calculator.
@@ -151,3 +155,54 @@ create policy avatars_update_own on storage.objects for update
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy avatars_delete_own on storage.objects for delete
   using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- ===========================================================================
+-- PHASE 3: global chat + moderation
+-- ===========================================================================
+
+-- Is the current user a mod or admin? Used by chat delete/ban policies.
+create or replace function public.is_mod()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profiles
+                 where id = auth.uid() and role in ('mod','admin'));
+$$;
+
+-- Chat messages. username is snapshotted so old messages keep their name even if
+-- the author later renames. Moderation is a hard delete (see policies), so a
+-- removed message vanishes for everyone via the realtime DELETE event.
+create table if not exists public.messages (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  username   text not null,
+  body       text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+create index if not exists messages_created_idx on public.messages (created_at desc);
+
+alter table public.messages enable row level security;
+
+drop policy if exists messages_read   on public.messages;
+drop policy if exists messages_insert  on public.messages;
+drop policy if exists messages_delete  on public.messages;
+-- Anyone (even logged out) may read the chat.
+create policy messages_read on public.messages for select using (true);
+-- Post only as yourself, and only if you are not banned.
+create policy messages_insert on public.messages for insert
+  with check (
+    auth.uid() = user_id
+    and not exists (select 1 from public.profiles p where p.id = auth.uid() and p.banned)
+  );
+-- Delete your own message, or any message if you are a mod/admin.
+create policy messages_delete on public.messages for delete
+  using (auth.uid() = user_id or public.is_mod());
+
+-- Mods/admins may update any profile's ban flag (and role, still gated to admins
+-- by the guard trigger). This is what powers "ban user" from the chat.
+drop policy if exists profiles_mod_update on public.profiles;
+create policy profiles_mod_update on public.profiles for update using (public.is_mod());
+
+-- Broadcast inserts and deletes to subscribed clients (the live chat feed).
+do $$ begin
+  alter publication supabase_realtime add table public.messages;
+exception when duplicate_object then null; end $$;
+
