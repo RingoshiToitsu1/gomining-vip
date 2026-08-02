@@ -170,10 +170,12 @@
   var _synced = false;
   function setSession(session) {
     Account.user = session ? session.user : null;
-    if (!Account.user) _synced = false;
     (Account.user ? loadProfile() : Promise.resolve()).then(function () {
-      // Once per login, hand the account's saved setup to app.js, which makes the
-      // "[username]" profile the default in Saved Setups and restores its inputs.
+      // Restore the saved setup ONCE per login. Crucially, _synced is reset only on
+      // a real SIGNED_OUT (below) — never here on a transient null session — because
+      // Supabase can briefly emit one during an hourly token refresh, and re-applying
+      // the saved setup then would clobber the user's live, unsaved edits (e.g. a
+      // planner capital they just typed).
       if (Account.user && !_synced && typeof window.gmtSyncAccountProfile === 'function') {
         _synced = true;
         try { window.gmtSyncAccountProfile(); } catch (e) {}
@@ -182,7 +184,10 @@
     });
   }
   sb.auth.getSession().then(function (r) { setSession(r.data.session); });
-  sb.auth.onAuthStateChange(function (_evt, session) { setSession(session); });
+  sb.auth.onAuthStateChange(function (evt, session) {
+    if (evt === 'SIGNED_OUT') _synced = false;   // real logout: allow the next login to restore
+    setSession(session);
+  });
 
   // ===========================================================================
   // UI: a header slot + a modal. Self-contained so the console HTML barely changes.
