@@ -1661,8 +1661,7 @@ function refreshGreedyVisibility(){
 }
 
 function clearInputs(){
-  // Wipes the form for a fresh demo. Saved profiles are untouched; auto-save is paused
-  // until a profile is loaded or "Save as…" is used.
+  // Blanks the form. Stays on the CURRENT setup so Save updates it without renaming.
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
@@ -1671,14 +1670,9 @@ function clearInputs(){
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
     piVipBonus:false
   });
-  const state=loadProfilesState();
-  state.activeId=null;
-  saveProfilesState(state);
-  // Also empty the fleet builder so "Clear inputs" is a true blank slate. activeId is
-  // now null (not the account profile), so this clears the LOCAL fleet only — the
-  // real cloud fleet is untouched and returns when you reselect your profile.
-  if(window.GMTFleetClear)window.GMTFleetClear();
-  renderProfileSelect();
+  // Empty the fleet builder too — but ONLY on a scratch/no profile, never on the
+  // account profile, so the real cloud fleet is never wiped by a clear.
+  if(!gmtOnAccountProfile()&&window.GMTFleetClear)window.GMTFleetClear();
   if(S.loaded)recalc();
   flashStatus('Inputs cleared');
 }
