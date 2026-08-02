@@ -316,6 +316,14 @@ input[type=number]{-moz-appearance:textfield}
 .eff-upg-id{font-family:var(--mono);color:var(--purple-soft);font-weight:700}
 .eff-upg-greedy{font-family:var(--sans);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--green);background:var(--green-glow);border-radius:5px;padding:.05rem .3rem;margin-left:.3rem;white-space:nowrap}
 .eff-upg-greedynote{font-size:.72rem;color:var(--text2);line-height:1.5;margin:.15rem 0 .55rem;padding:.45rem .6rem;background:var(--green-glow);border:1px solid var(--border);border-radius:9px}
+/* plain-language "Do this" plan (top of the planner result) */
+.eff-plainplan{margin:.7rem 0;padding:.8rem .95rem;background:var(--bg-input);border:1px solid var(--card-border);border-radius:var(--radius-sm)}
+.eff-plainplan-lbl{display:inline-block;font-family:var(--sans);font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.4rem}
+.eff-plainplan ol{margin:.2rem 0 0;padding-left:1.3rem;display:flex;flex-direction:column;gap:.35rem}
+.eff-plainplan li{font-size:.86rem;color:var(--text);line-height:1.45}
+.eff-plainplan li strong{color:var(--purple-soft);font-family:var(--mono)}
+.eff-plainplan-why{color:var(--text3);font-size:.8rem}
+.eff-plainplan-foot{margin-top:.6rem;font-size:.72rem;color:var(--text4);line-height:1.5}
 .eff-upg-move{color:var(--text3)}
 .eff-upg-cost{color:var(--text);font-weight:600;font-family:var(--mono)}
 .eff-upg-note{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.5rem;padding:.5rem .7rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)}

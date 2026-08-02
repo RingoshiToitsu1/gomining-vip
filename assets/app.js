@@ -2414,6 +2414,15 @@ function renderEfficiencyComparison(st){
     :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.'}</div>`;
   h+=`</div>`;
 
+  // Plain-language bottom line — the whole plan as numbered steps, in order, so the
+  // least-technical user knows exactly what to do. Everything below is just detail.
+  const _greedyRoom=(window.GMTFleetRows||[]).some(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP);
+  const _steps=[];
+  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-why">— holds your 20% fee discount</span>`);
+  if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-why">— the miners named below</span>`);
+  if(addTH>0.5)_steps.push(`Add ~<strong>${fN(addTH,1)} TH</strong> at ${fN(EFF_BEST,0)} W/TH${_greedyRoom?` <span class="eff-plainplan-why">— onto your Greedy Machine first (see below)</span>`:''}`);
+  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">That's the single best use of your ${fU(K,0)} at today's price — the breakdown below just shows the split.</div></div>`:'';
+
   const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
   let bar=`<div class="eff-splitbar">`;
@@ -2442,16 +2451,14 @@ function renderEfficiencyComparison(st){
     ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
   ],effThreshBp?effGauge(effThreshBp,bp):'');
   g+=`</div>`;
-  // Per-miner upgrade order (by NFT code, greedy first). ALWAYS shown when the fleet
-  // has any miner above 12 W/TH — even if the plan's headline is "buy TH" — so an
-  // existing fleet always gets a which-miner-to-upgrade recommendation. When the plan
-  // did budget for upgrades, cap the list to that budget; otherwise recommend in full.
-  const _hasUpgradeable=(window.GMTFleetRows||[]).some(r=>(+r.wth||0)>EFF_BEST&&(+r.th||0)>0);
-  if(_hasUpgradeable)g+=upgradeOrderHTML(effRoom&&effTHupg>0?effTHupg:0);
+  // Per-miner upgrade order (by NFT code, greedy first) — shown ONLY when the plan
+  // actually allocates to efficiency, so it never contradicts a "buy TH" plan. When
+  // upgrading isn't in the plan, the plan simply doesn't tell you to upgrade.
+  if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
   // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
   if(addTH>0)g+=buyCapHTML(addTH);
   g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
-  return h+bar+g;
+  return h+plain+bar+g;
 }
 
 // Which specific miners to upgrade, worst efficiency first, until the budget's TH
