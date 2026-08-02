@@ -2350,10 +2350,15 @@ function renderEfficiencyComparison(st){
   if(!st)return '';
   const i=st.i, K=st.K, gp=st.gp, bp=st.bp;
   if(!i||!(K>0))return '';
-  const cf=CONVERSION_FEE, dbt=dailyBTCperTH(), d=(calc(i).totD)/100;
+  const cf=CONVERSION_FEE, dbt=dailyBTCperTH(), _m0=calc(i), d=_m0.totD/100, nonTokD=(_m0.nonTokD||0)/100;
   let lockUSD=Math.max(0,st.lockUSD||0), thUSD=Math.max(0,st.thUSD||0);
   const thUSD0=thUSD, glAdd=Math.max(0,st.glAdd||0);
   let addTH=Math.max(0,st.addTH||0);
+  // GMT-lock capital freed per TH by upgrading to 12 W/TH. The lock for max discount is
+  // 20×18 = 360 days of fee coverage; a lower fee (from better efficiency) needs less
+  // coverage, so upgrading returns real capital — worth ~$1.24/TH at 15→12 W. Crediting
+  // it against the upgrade cost is what lets the split correctly prefer upgrading.
+  const lockFreedPerTH=(i.wth>EFF_BEST)?(18*20)*(0.0012*(i.wth-EFF_BEST))*(1-nonTokD):0;
 
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
   // dollar than buying new TH, divert that slice of the TH budget into the upgrade (whole farm).
@@ -2361,16 +2366,18 @@ function renderEfficiencyComparison(st){
   const effRoom=hasEffRoom(i);   // false ⇒ everything is already at 12 W/TH; never offer the upgrade
   if(effRoom && i.th>0 && i.wth>EFF_BEST && thUSD>0){
     const cptU=effUpgradeCostPerTH(i.wth);
+    const cptUnet=Math.max(0.01,cptU-lockFreedPerTH);   // net of the freed GMT-lock capital
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
       const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
-      const upgradeCost=cap*cptU;
-      upgradeROI=upgradeCost>0?savedMo*12/upgradeCost:0;
+      // ROI on the NET cost — the upgrade both saves fees AND frees GMT-lock capital.
+      upgradeROI=savedMo*12/(cap*cptUnet);
       // The alternative to upgrading is MINTING a new machine — 12 W/TH, priced off TH_TIERS_12W.
       const cptTH=estimateCPT12((i.th+addTH)||1);
       const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
+        const upgradeCost=cap*cptU;   // actual cash outlay (the freed lock isn't a discount on the bill)
         effUSD=Math.min(thUSD,upgradeCost);
         effTHupg=effUSD/cptU;
         thUSD-=effUSD;
@@ -2393,7 +2400,9 @@ function renderEfficiencyComparison(st){
   // newThROI(bp*) = upgradeROI ⇒ bp* = [M(1-d) + cptTH·0.0012·(wth-12)(1-d)/cptU] / dbt.
   let effThreshBp=null;
   if(i.th>0 && i.wth>EFF_BEST){
-    const cptU=effUpgradeCostPerTH(i.wth);
+    // Use the NET upgrade cost (after the freed GMT-lock credit), so the gauge agrees
+    // with the split decision above — upgrading wins up to a higher BTC price now.
+    const cptU=Math.max(0.01,effUpgradeCostPerTH(i.wth)-lockFreedPerTH);
     if(cptU>0){
       const M=0.0012*EFF_BEST+0.0089, cptTH=estimateCPT12((i.th+addTH)||1);
       const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
@@ -2499,7 +2508,7 @@ function upgradeOrderHTML(budgetTH){
        +`<span class="eff-upg-cost">${fU(cost,0)}</span></div>`;
   }
   const anyGreedy=rows.some(isG);
-  const note=anyGreedy?`<div class="eff-upg-greedynote">Upgrade your Greedy Machine's efficiency while it's still small — its free weekly TH inherits its W/TH, so fixing it to ${fN(EFF_BEST,0)} W now means all that future growth is efficient too.</div>`:'';
+  const note=`<div class="eff-upg-greedynote">${anyGreedy?`Upgrade your Greedy Machine's efficiency while it's still small — its free weekly TH inherits its W/TH, so future growth stays efficient. `:''}Upgrading also cuts the GMT you must lock for max discount (a lower fee needs less coverage), so it frees capital too — that's already credited in this plan.</div>`;
   const title=fullMode?'Upgrade these miners':'Upgrade these miners first';
   const sub=fullMode?'(recommended for an existing fleet — greedy first)':'(greedy machines first, then worst efficiency)';
   return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
