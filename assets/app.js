@@ -2418,10 +2418,11 @@ function renderEfficiencyComparison(st){
   // least-technical user knows exactly what to do. Everything below is just detail.
   const _greedyRoom=(window.GMTFleetRows||[]).some(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP);
   const _steps=[];
-  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-why">— holds your 20% fee discount</span>`);
-  if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-why">— the miners named below</span>`);
-  if(addTH>0.5)_steps.push(`Add ~<strong>${fN(addTH,1)} TH</strong> at ${fN(EFF_BEST,0)} W/TH${_greedyRoom?` <span class="eff-plainplan-why">— onto your Greedy Machine first (see below)</span>`:''}`);
-  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">That's the single best use of your ${fU(K,0)} at today's price — the breakdown below just shows the split.</div></div>`:'';
+  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
+  if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
+  if(addTH>0.5)_steps.push(`Add ~<strong>${fN(addTH,1)} TH</strong> at ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_greedyRoom?'onto your Greedy Machine first (see below)':'a new 12 W machine'}</span>`);
+  const _spent=lockUSD+effUSD+thUSD;
+  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — all one plan. The upgrade comes out of the hashrate budget, it is not extra.</div></div>`:'';
 
   const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
