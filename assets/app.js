@@ -2485,7 +2485,7 @@ function upgradeOrderHTML(budgetTH){
        +`<span class="eff-upg-cost">${fU(cost,0)}</span></div>`;
   }
   const anyGreedy=rows.some(isG);
-  const note=anyGreedy?`<div class="eff-upg-greedynote">Your Greedy Machine grows every week and its new TH inherits its W/TH — upgrading it to ${fN(EFF_BEST,0)} W now is cheaper than after it grows, and usually beats buying a new ${fN(EFF_BEST,0)} W machine.</div>`:'';
+  const note=anyGreedy?`<div class="eff-upg-greedynote">Upgrade your Greedy Machine's efficiency while it's still small — its free weekly TH inherits its W/TH, so fixing it to ${fN(EFF_BEST,0)} W now means all that future growth is efficient too.</div>`:'';
   const title=fullMode?'Upgrade these miners':'Upgrade these miners first';
   const sub=fullMode?'(recommended for an existing fleet — greedy first)':'(greedy machines first, then worst efficiency)';
   return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
@@ -2494,6 +2494,30 @@ function upgradeOrderHTML(budgetTH){
 // Note that new hashrate is capped at 5,000 TH per NFT, and flag any owned miner
 // already near the cap.
 function buyCapHTML(addTH){
+  const isG=r=>/greedy/i.test(r.collection||'');
+  // Put new TH on the GREEDY machine first, up to the 5,000 cap. Its free weekly
+  // growth is a % of its size, so a bigger greedy compounds harder — and you can add
+  // the TH at 12 W/TH, so it's the same efficiency as a new machine but it grows.
+  const greedy=(window.GMTFleetRows||[]).filter(r=>isG(r)&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
+    .sort((a,b)=>b.th-a.th);   // fill the biggest first — it already earns the most weekly
+  let left=addTH,rows='';
+  for(const g of greedy){
+    if(left<=0.5)break;
+    const room=MINER_CAP-(+g.th||0);
+    const add=Math.min(left,room); if(add<=0.5)continue; left-=add;
+    const label=g.code?`#${escapeHtml(String(g.code))}`:'your greedy machine';
+    rows+=`<div class="eff-upg-row"><span class="eff-upg-id">${label} <span class="eff-upg-greedy">greedy</span></span>`
+       +`<span class="eff-upg-move">+${fN(add,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(g.th,0)} → ${fN((+g.th||0)+add,0)})</span>`
+       +`<span class="eff-upg-cost">${fU(add*estimateCPT12((+g.th||0)+add),0)}</span></div>`;
+  }
+  if(rows){
+    let out=`<div class="eff-upg"><div class="eff-upg-title">Where to add the TH <span>(grow the greedy first)</span></div>`
+      +`<div class="eff-upg-greedynote">Add new TH to your Greedy Machine before minting a new one — its weekly free TH is a % of its size, so a bigger greedy earns more every week. Buy it at ${fN(EFF_BEST,0)} W/TH and it's the same efficiency as a new machine, but it compounds.</div>`
+      +rows;
+    if(left>0.5)out+=`<div class="eff-upg-row"><span class="eff-upg-id">New machine</span><span class="eff-upg-move">+${fN(left,0)} TH @ ${fN(EFF_BEST,0)} W (greedy full at 5,000)</span><span class="eff-upg-cost">${fU(left*estimateCPT12(left),0)}</span></div>`;
+    return out+`</div>`;
+  }
+  // No greedy room: just the cap advisory.
   const near=(window.GMTFleetRows||[]).filter(r=>(+r.th||0)>=4500);
   let msg=`New hashrate is capped at <strong>5,000 TH per miner</strong>`;
   if(addTH>5000)msg+=` — this ${fN(addTH,0)} TH needs at least ${Math.ceil(addTH/5000)} miners`;
