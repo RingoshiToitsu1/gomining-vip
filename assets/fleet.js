@@ -233,20 +233,26 @@
     else { loadFleet().then(function (r) { rows = r; render(); apply(); }); }
   }
 
-  var _migrated = false;
+  var _migrated = false, _authHandled = false;
   function onAuth(a) {
     if (a.isLoggedIn()) {
-      // On first login this session, lift a local fleet into the cloud if the
-      // account has none yet — so a fleet built while logged out isn't lost.
+      // Load the fleet ONCE per login. Account.onChange also fires on the hourly
+      // token refresh; without this guard the fleet would reload from the cloud
+      // then and clobber whatever the user has cleared or is working on.
+      if (_authHandled) return;
+      _authHandled = true;
       a.getMiners().then(function (cloud) {
         var local = loadLocal();
+        // First login: lift a locally-built fleet into an empty cloud account.
         if (!_migrated && (!cloud || !cloud.length) && local.length) {
           _migrated = true;
           return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
         }
-        rows = cloud || []; render(); apply();
+        // Otherwise load from whichever store the active profile uses.
+        return loadFleet().then(function (r) { rows = r || []; render(); apply(); });
       }).catch(function () { rows = loadLocal(); render(); apply(); });
     } else {
+      _authHandled = false;
       rows = loadLocal(); render(); apply();
     }
   }
