@@ -1551,12 +1551,24 @@ function onProfileChange(){
 
 function saveActiveProfile(){
   const state=loadProfilesState();
-  const p=state.activeId&&state.profiles.find(x=>x.id===state.activeId);
-  if(!p){saveAsNewProfile();return;}   // nothing selected yet -> save as new
+  let p=state.activeId&&state.profiles.find(x=>x.id===state.activeId);
+  if(!p){
+    // No profile selected. If logged in, default to the account profile — "Save"
+    // saves to your profile without prompting. Only prompt (Save as) when there's
+    // no account to fall back on.
+    const pid=accountProfileId();
+    if(pid&&window.GMTAccount&&GMTAccount.isLoggedIn()){
+      p=state.profiles.find(x=>x.id===pid);
+      const uname=(GMTAccount.profile&&GMTAccount.profile.username)||'my setup';
+      if(!p){p={id:pid,name:uname,account:true,data:readInputs()};state.profiles.unshift(p);}
+      state.activeId=pid;
+    }else{saveAsNewProfile();return;}
+  }
   p.data=readInputs();
   saveProfilesState(state);
   // The primary "[username]" profile mirrors to the cloud so it follows the account.
   if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn())GMTAccount.saveSetup(p.data);
+  renderProfileSelect();   // reflect the now-active profile (esp. if we just adopted the account one)
   flashStatus(isAccountProfile(p)?'Saved to your profile':'Saved to "'+p.name+'"');
   editLoadClose('Saved to "'+p.name+'"');
 }
