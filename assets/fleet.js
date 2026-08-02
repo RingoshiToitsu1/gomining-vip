@@ -145,6 +145,7 @@
   }
 
   function renderRows() {
+    if (!el.rows) return;   // may be called before the panel mounts
     el.rows.innerHTML = rows.length
       ? rows.map(rowHTML).join('')
       : '<div class="fleet-empty">No miners yet. Add your first below — or keep using the simple Hashrate field above.</div>';
@@ -225,37 +226,34 @@
     el.rows.addEventListener('change', onInput);   // <select> fires change, not input
     el.rows.addEventListener('click', onClick);
     document.getElementById('fleetAdd').addEventListener('click', addRow);
-    render();   // empty first paint; data arrives async below
+    render();   // empty first paint; data arrives via the load below
 
-    // React to login state. account.js loads its session asynchronously, so we
-    // both subscribe to changes and evaluate the current state once now.
-    if (acc()) { acc().onChange(onAuth); onAuth(acc()); }
-    else { loadFleet().then(function (r) { rows = r; render(); apply(); }); }
+    // If already logged in when we mount, do the one-time cloud load now; otherwise
+    // show the local fleet. The cloud load is NOT driven off Account.onChange —
+    // account.js calls GMTFleetLoginLoad exactly once per real login (below), so
+    // token refreshes and realtime auth churn can never reload/clobber the fleet.
+    if (acc() && acc().ready && acc().isLoggedIn()) { window.GMTFleetLoginLoad(); }
+    else { loadFleet().then(function (r) { rows = r || []; render(); apply(); }); }
   }
 
+  // Called ONCE per real login by account.js. Idempotent via _authHandled.
   var _migrated = false, _authHandled = false;
-  function onAuth(a) {
-    if (a.isLoggedIn()) {
-      // Load the fleet ONCE per login. Account.onChange also fires on the hourly
-      // token refresh; without this guard the fleet would reload from the cloud
-      // then and clobber whatever the user has cleared or is working on.
-      if (_authHandled) return;
-      _authHandled = true;
-      a.getMiners().then(function (cloud) {
-        var local = loadLocal();
-        // First login: lift a locally-built fleet into an empty cloud account.
-        if (!_migrated && (!cloud || !cloud.length) && local.length) {
-          _migrated = true;
-          return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
-        }
-        // Otherwise load from whichever store the active profile uses.
-        return loadFleet().then(function (r) { rows = r || []; render(); apply(); });
-      }).catch(function () { rows = loadLocal(); render(); apply(); });
-    } else {
-      _authHandled = false;
-      rows = loadLocal(); render(); apply();
-    }
-  }
+  window.GMTFleetLoginLoad = function () {
+    var a = acc();
+    if (!a || !a.ready || !a.isLoggedIn() || _authHandled) return;
+    _authHandled = true;
+    a.getMiners().then(function (cloud) {
+      var local = loadLocal();
+      // First login on this device: lift a locally-built fleet into an empty cloud account.
+      if (!_migrated && (!cloud || !cloud.length) && local.length) {
+        _migrated = true;
+        return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
+      }
+      return loadFleet().then(function (r) { rows = r || []; render(); apply(); });
+    }).catch(function () { rows = loadLocal(); render(); apply(); });
+  };
+  // Called by account.js on a real SIGNED_OUT.
+  window.GMTFleetLogout = function () { _authHandled = false; rows = loadLocal(); render(); apply(); };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();

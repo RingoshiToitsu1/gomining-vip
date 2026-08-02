@@ -176,16 +176,23 @@
       // Supabase can briefly emit one during an hourly token refresh, and re-applying
       // the saved setup then would clobber the user's live, unsaved edits (e.g. a
       // planner capital they just typed).
-      if (Account.user && !_synced && typeof window.gmtSyncAccountProfile === 'function') {
+      if (Account.user && !_synced) {
         _synced = true;
-        try { window.gmtSyncAccountProfile(); } catch (e) {}
+        // Once per real login: restore the saved setup and load the cloud fleet.
+        // Both are driven here (not off emit/onChange) so token refreshes never
+        // re-fire them and clobber the user's live edits.
+        try { if (typeof window.gmtSyncAccountProfile === 'function') window.gmtSyncAccountProfile(); } catch (e) {}
+        try { if (typeof window.GMTFleetLoginLoad === 'function') window.GMTFleetLoginLoad(); } catch (e) {}
       }
       emit(); renderHeader();
     });
   }
   sb.auth.getSession().then(function (r) { setSession(r.data.session); });
   sb.auth.onAuthStateChange(function (evt, session) {
-    if (evt === 'SIGNED_OUT') _synced = false;   // real logout: allow the next login to restore
+    if (evt === 'SIGNED_OUT') {   // real logout: reset so the next login restores + reloads
+      _synced = false;
+      try { if (typeof window.GMTFleetLogout === 'function') window.GMTFleetLogout(); } catch (e) {}
+    }
     setSession(session);
   });
 
