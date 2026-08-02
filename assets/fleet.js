@@ -111,17 +111,18 @@
     // them as separate greedy TH. inTH already includes them; inGreedyTH is the
     // subset. Imported greedy is booked as all-"initial" (the conservative VIP
     // case — only growth ABOVE the initial marketplace TH counts toward the tier).
-    var g = document.getElementById('inHasGreedy');
+    // Greedy is auto-detected — no manual toggle. Drive the greedy fields straight
+    // from the fleet's greedy-collection rows, and clear them when there are none.
     var hasGreedy = a.greedyTH > 0;
-    if (g && g.checked !== hasGreedy) {
-      g.checked = hasGreedy;
-      if (typeof window.toggleGreedyFields === 'function') window.toggleGreedyFields();
-    }
     if (hasGreedy) {
       setField('inGreedyTH', +a.greedyTH.toFixed(2));
       setField('inGreedyWth', +a.greedyWth.toFixed(2));
       setField('inGreedyInitial', +a.greedyTH.toFixed(2));
+    } else {
+      setField('inGreedyTH', 0);
+      setField('inGreedyInitial', 0);
     }
+    if (typeof window.refreshGreedyVisibility === 'function') window.refreshGreedyVisibility();
   }
 
   function commit() { saveFleet(rows); renderSummary(); }

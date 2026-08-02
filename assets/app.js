@@ -1639,26 +1639,16 @@ function editLoadClose(msg){
 }
 function submitEditSetup(){editLoadClose();}
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
-function toggleGreedyFields(){
-  const cb=$('inHasGreedy');const on=cb&&cb.checked;
-  const fields=document.querySelectorAll('.greedy-field');
-  fields.forEach(el=>el.style.display=on?'':'none');
-  if(on){
-    // Flash the freshly-revealed fields so they don't blend in.
-    fields.forEach((el,idx)=>{el.classList.remove('flash');void el.offsetWidth;el.style.setProperty('--flash-delay',(idx*0.07)+'s');el.classList.add('flash');});
-    setTimeout(()=>fields.forEach(el=>el.classList.remove('flash')),1500);
-  }else{
-    ['inGreedyTH','inGreedyInitial'].forEach(id=>{const e=$(id);if(e)e.value=0;});
-  }
-  autoSave();
-  if(S.loaded)recalc();
-}
-// Sync the checkbox + field visibility from the current data (greedy on iff TH>0).
+// Greedy is auto-detected from the fleet (a "Greedy Machines" collection miner) —
+// there is no manual "I own a greedy machine" toggle. The Greedy Machine group
+// shows only when there's greedy TH.
 function refreshGreedyVisibility(){
-  const cb=$('inHasGreedy');if(!cb)return;
-  cb.checked=(+($('inGreedyTH')&&$('inGreedyTH').value)||0)>0;
-  document.querySelectorAll('.greedy-field').forEach(el=>el.style.display=cb.checked?'':'none');
+  const grp=$('greedyGroup');if(!grp)return;
+  const has=(+($('inGreedyTH')&&$('inGreedyTH').value)||0)>0;
+  grp.style.display=has?'':'none';
 }
+// Back-compat shim: fleet.js and applyInputs call this after setting greedy fields.
+function toggleGreedyFields(){refreshGreedyVisibility();}
 
 function clearInputs(){
   // Blanks the form. Stays on the CURRENT setup so Save updates it without renaming.
@@ -2452,10 +2442,12 @@ function renderEfficiencyComparison(st){
     ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
   ],effThreshBp?effGauge(effThreshBp,bp):'');
   g+=`</div>`;
-  // Per-miner upgrade order: map the efficiency-upgrade budget onto the actual
-  // fleet, least-efficient miner first, naming NFT codes. Only shown when the plan
-  // upgrades efficiency AND the user built a fleet.
-  if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
+  // Per-miner upgrade order (by NFT code, greedy first). ALWAYS shown when the fleet
+  // has any miner above 12 W/TH — even if the plan's headline is "buy TH" — so an
+  // existing fleet always gets a which-miner-to-upgrade recommendation. When the plan
+  // did budget for upgrades, cap the list to that budget; otherwise recommend in full.
+  const _hasUpgradeable=(window.GMTFleetRows||[]).some(r=>(+r.wth||0)>EFF_BEST&&(+r.th||0)>0);
+  if(_hasUpgradeable)g+=upgradeOrderHTML(effRoom&&effTHupg>0?effTHupg:0);
   // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
   if(addTH>0)g+=buyCapHTML(addTH);
   g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
@@ -2464,6 +2456,9 @@ function renderEfficiencyComparison(st){
 
 // Which specific miners to upgrade, worst efficiency first, until the budget's TH
 // is used up. Reads the per-miner fleet (window.GMTFleetRows).
+// budgetTH>0 caps the list to the plan's efficiency-upgrade budget. A non-positive
+// budget means "recommend regardless" — list every upgradeable miner at full cost,
+// which is what surfaces the greedy-first advice even when the plan bought TH.
 function upgradeOrderHTML(budgetTH){
   const isG=r=>/greedy/i.test(r.collection||'');
   const rows=(window.GMTFleetRows||[]).filter(r=>(+r.wth||0)>EFF_BEST&&(+r.th||0)>0)
@@ -2475,8 +2470,9 @@ function upgradeOrderHTML(budgetTH){
       if(ga!==gb)return gb-ga;
       return b.wth-a.wth;
     });
-  if(!rows.length)return `<div class="eff-upg-note">Add your miners in <strong>My Fleet</strong> (with each one's W/TH) and this will tell you exactly which NFTs to upgrade first.</div>`;
-  let left=budgetTH,out='';
+  if(!rows.length)return '';
+  const fullMode=!(budgetTH>0&&isFinite(budgetTH));
+  let left=fullMode?Infinity:budgetTH,out='';
   for(const r of rows){
     if(left<=0.5)break;
     const upgTH=Math.min(r.th,left); left-=upgTH;
@@ -2488,7 +2484,11 @@ function upgradeOrderHTML(budgetTH){
        +`<span class="eff-upg-move">${fN(r.wth,1)} → ${fN(EFF_BEST,0)} W/TH${partial}</span>`
        +`<span class="eff-upg-cost">${fU(cost,0)}</span></div>`;
   }
-  return `<div class="eff-upg"><div class="eff-upg-title">Upgrade these miners first <span>(greedy machines first, then worst efficiency)</span></div>${out}</div>`;
+  const anyGreedy=rows.some(isG);
+  const note=anyGreedy?`<div class="eff-upg-greedynote">Your Greedy Machine grows every week and its new TH inherits its W/TH — upgrading it to ${fN(EFF_BEST,0)} W now is cheaper than after it grows, and usually beats buying a new ${fN(EFF_BEST,0)} W machine.</div>`:'';
+  const title=fullMode?'Upgrade these miners':'Upgrade these miners first';
+  const sub=fullMode?'(recommended for an existing fleet — greedy first)':'(greedy machines first, then worst efficiency)';
+  return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
 }
 
 // Note that new hashrate is capped at 5,000 TH per NFT, and flag any owned miner
