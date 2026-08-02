@@ -1539,6 +1539,8 @@ function onProfileChange(){
   if(id){
     const p=state.profiles.find(x=>x.id===id);
     if(p){applyInputs(p.data);applyDiscountOverrideFor(p.data);if(S.loaded)recalc();}
+    // Switching profiles switches fleet stores (account=cloud, scratch=local).
+    if(window.GMTFleetReload)window.GMTFleetReload();
     flashStatus('Loaded "'+(p?p.name:'')+'"');
   }else{
     // Switched to demo / no setup — drop any override carried over from a previous setup.
@@ -1656,6 +1658,10 @@ function clearInputs(){
   const state=loadProfilesState();
   state.activeId=null;
   saveProfilesState(state);
+  // Also empty the fleet builder so "Clear inputs" is a true blank slate. activeId is
+  // now null (not the account profile), so this clears the LOCAL fleet only — the
+  // real cloud fleet is untouched and returns when you reselect your profile.
+  if(window.GMTFleetClear)window.GMTFleetClear();
   renderProfileSelect();
   if(S.loaded)recalc();
   flashStatus('Inputs cleared');
@@ -1666,6 +1672,9 @@ function clearInputs(){
 // tinkering, referral quotes, etc. Called by account.js once per login.
 function accountProfileId(){return (window.GMTAccount&&GMTAccount.user)?('acct_'+GMTAccount.user.id):null}
 function isAccountProfile(p){return !!(p&&p.account)}
+// True when the active Saved Setup is the primary account profile. The cloud fleet
+// syncs only here; scratch profiles keep a local fleet (see fleet.js isCloud).
+window.gmtOnAccountProfile=function(){const pid=accountProfileId();if(!pid)return false;const s=loadProfilesState();return s.activeId===pid};
 window.gmtSyncAccountProfile=function(){
   const A=window.GMTAccount; if(!A||!A.isLoggedIn())return;
   const uname=(A.profile&&A.profile.username)||'my setup';

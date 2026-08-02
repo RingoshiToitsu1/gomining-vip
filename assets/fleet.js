@@ -31,7 +31,14 @@
   // devices. The routing is decided per call so a login/logout mid-session just
   // works.
   function acc() { return window.GMTAccount; }
-  function isCloud() { var a = acc(); return a && a.ready && a.isLoggedIn(); }
+  function isCloud() {
+    var a = acc();
+    if (!(a && a.ready && a.isLoggedIn())) return false;
+    // The cloud fleet belongs to the ACCOUNT profile only. Scratch / referral-quote
+    // profiles use a local fleet, so entering or clearing them never touches the
+    // user's real cloud fleet.
+    return (typeof window.gmtOnAccountProfile === 'function') ? window.gmtOnAccountProfile() : true;
+  }
 
   function loadLocal() {
     try { var a = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(a) ? a : []; }
@@ -190,6 +197,15 @@
     var last = el.rows.querySelector('.fleet-row:last-child .fleet-th');
     if (last) last.focus();
   }
+
+  // Reload the fleet from whichever store is now active (called on profile switch).
+  window.GMTFleetReload = function () {
+    loadFleet().then(function (r) { rows = r || []; render(); apply(); });
+  };
+  // Empty the fleet in the active store — used by "Clear inputs" on a scratch
+  // profile. Because scratch profiles are never cloud (isCloud is account-only),
+  // this clears the local fleet and never deletes the real cloud one.
+  window.GMTFleetClear = function () { rows = []; commit(); render(); };
 
   // ---- mount ---- (styles live in assets/accounts.css)
   function mount() {
