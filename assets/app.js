@@ -2384,6 +2384,20 @@ function renderEfficiencyComparison(st){
       }
     }
   }
+  // If the plan buys TH and the best home for it is a greedy above 12 W, that greedy
+  // must be efficiency-upgraded first (one W/TH per NFT). Book that upgrade as an
+  // EFFICIENCY allocation — not hidden inside Buy TH — so its % shows in the Upgrade
+  // Efficiency card. Only when the whole-farm upgrade above wasn't already chosen.
+  if(effUSD<=0 && thUSD>0){
+    const gr=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP&&(+r.wth||15)>EFF_BEST).sort((a,b)=>b.th-a.th)[0];
+    if(gr){
+      const gCptU=effUpgradeCostPerTH(+gr.wth||15);
+      if(gCptU>0){
+        const gEff=Math.min(thUSD,(+gr.th)*gCptU);
+        effUSD+=gEff; effTHupg+=gEff/gCptU; thUSD-=gEff;
+      }
+    }
+  }
   if(thUSD0>0)addTH=addTH*thUSD/thUSD0;   // fewer TH bought once efficiency takes a slice
 
   const tot=lockUSD+thUSD+effUSD;
@@ -2432,12 +2446,12 @@ function renderEfficiencyComparison(st){
   if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
   if(addTH>0.5){
     const _why=_greedy
-      ?(_greedyNeedsEff?`grow your Greedy Machine — upgrade it to ${fN(EFF_BEST,0)} W first, then add TH (see below)`:`onto your Greedy Machine first (see below)`)
+      ?(_greedyNeedsEff?`grow your Greedy Machine — its ${fN(EFF_BEST,0)} W upgrade is the step above, so this just adds TH (see below)`:`onto your Greedy Machine first (see below)`)
       :`a new ${fN(EFF_BEST,0)} W machine`;
     _steps.push(`Put ~<strong>${fN(thUSD,0)}</strong> into hashrate <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
   }
   const _spent=lockUSD+effUSD+thUSD;
-  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — all one plan. The upgrade comes out of the hashrate budget, it is not extra.</div></div>`:'';
+  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — each step is a separate part of the one plan, not extra.</div></div>`:'';
 
   const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
@@ -2472,7 +2486,7 @@ function renderEfficiencyComparison(st){
   // upgrading isn't in the plan, the plan simply doesn't tell you to upgrade.
   if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
   // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
-  if(addTH>0)g+=buyCapHTML(addTH,thUSD);
+  if(addTH>0)g+=buyCapHTML(addTH);
   g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
   return h+plain+bar+g;
 }
@@ -2514,39 +2528,28 @@ function upgradeOrderHTML(budgetTH){
   return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
 }
 
-// Where the hashrate budget (thUSD) actually goes. Prefer growing the greedy —
-// but a miner has ONE efficiency for the whole NFT, so to grow a >12 W greedy at
-// 12 W you must upgrade its efficiency FIRST, then add TH. This sequences and
-// prices that correctly within the budget, so the recommendation is buildable.
-function buyCapHTML(addTH,thUSD){
+// Where the hashrate budget goes: onto the greedy first (it compounds weekly),
+// then a new machine. If the greedy is above 12 W, its efficiency upgrade is booked
+// in the Upgrade Efficiency card above, so here we just place the power at 12 W.
+function buyCapHTML(addTH){
   const isG=r=>/greedy/i.test(r.collection||'');
   const g=(window.GMTFleetRows||[]).filter(r=>isG(r)&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
     .sort((a,b)=>b.th-a.th)[0];   // the biggest greedy — it already earns the most weekly
-  const capNote=()=>{
+  if(!g){
     const near=(window.GMTFleetRows||[]).filter(r=>(+r.th||0)>=4500);
     let msg=`New hashrate is capped at <strong>5,000 TH per miner</strong>`;
     if(addTH>5000)msg+=` — this ${fN(addTH,0)} TH needs at least ${Math.ceil(addTH/5000)} miners`;
     if(near.length)msg+=`. ${near.length===1?'One miner is':near.length+' miners are'} near the cap; put new TH on a fresh NFT`;
     return `<div class="eff-upg-note">${msg}.</div>`;
-  };
-  if(!g)return capNote();
+  }
   const gw=+g.wth||15, gTH=+g.th||0, room=MINER_CAP-gTH;
   const label=g.code?`#${escapeHtml(String(g.code))}`:'your greedy machine';
-  let out=`<div class="eff-upg"><div class="eff-upg-title">Where to add the TH <span>(grow the greedy)</span></div>`;
-  if(gw>EFF_BEST){
-    // Upgrade the greedy's existing TH to 12 W first, then spend the rest on power.
-    const effCost=gTH*effUpgradeCostPerTH(gw);
-    const forTH=Math.max(0,(thUSD||0)-effCost);
-    const addG=Math.min(room, forTH>0?forTH/estimateCPT12(gTH+room):0);
-    out+=`<div class="eff-upg-greedynote">A miner has one efficiency for the whole NFT, so you can't add 12 W TH to a ${fN(gw,0)} W machine. Upgrade ${label} to ${fN(EFF_BEST,0)} W <em>first</em> — then its new TH and its weekly free growth all run at ${fN(EFF_BEST,0)} W.</div>`
-      +`<div class="eff-upg-row"><span class="eff-upg-id">1. Upgrade ${label} <span class="eff-upg-greedy">greedy</span></span><span class="eff-upg-move">${fN(gw,0)} → ${fN(EFF_BEST,0)} W/TH (${fN(gTH,0)} TH)</span><span class="eff-upg-cost">${fU(effCost,0)}</span></div>`
-      +`<div class="eff-upg-row"><span class="eff-upg-id">2. Add TH to ${label}</span><span class="eff-upg-move">+${fN(addG,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(gTH,0)} → ${fN(gTH+addG,0)})</span><span class="eff-upg-cost">${fU(forTH,0)}</span></div>`;
-  }else{
-    const addG=Math.min(room, addTH);
-    out+=`<div class="eff-upg-greedynote">Add new TH to ${label} before minting a new one — its weekly free TH is a % of its size, so a bigger greedy earns more every week, and it's already at ${fN(EFF_BEST,0)} W.</div>`
-      +`<div class="eff-upg-row"><span class="eff-upg-id">${label} <span class="eff-upg-greedy">greedy</span></span><span class="eff-upg-move">+${fN(addG,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(gTH,0)} → ${fN(gTH+addG,0)})</span><span class="eff-upg-cost">${fU(addG*estimateCPT12(gTH+addG),0)}</span></div>`;
-    if(addTH-addG>0.5)out+=`<div class="eff-upg-row"><span class="eff-upg-id">New machine</span><span class="eff-upg-move">+${fN(addTH-addG,0)} TH @ ${fN(EFF_BEST,0)} W (greedy full at 5,000)</span><span class="eff-upg-cost">${fU((addTH-addG)*estimateCPT12(addTH-addG),0)}</span></div>`;
-  }
+  const addG=Math.min(room, addTH);
+  const effLine=gw>EFF_BEST?` Its efficiency is upgraded to ${fN(EFF_BEST,0)} W in the Upgrade Efficiency step above, so the added TH runs at ${fN(EFF_BEST,0)} W too.`:``;
+  let out=`<div class="eff-upg"><div class="eff-upg-title">Where to add the TH <span>(grow the greedy first)</span></div>`
+    +`<div class="eff-upg-greedynote">Put the new TH on ${label} before minting a new one — its weekly free TH is a % of its size, so a bigger greedy earns more every week.${effLine}</div>`
+    +`<div class="eff-upg-row"><span class="eff-upg-id">${label} <span class="eff-upg-greedy">greedy</span></span><span class="eff-upg-move">+${fN(addG,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(gTH,0)} → ${fN(gTH+addG,0)})</span><span class="eff-upg-cost">${fU(addG*estimateCPT12(gTH+addG),0)}</span></div>`;
+  if(addTH-addG>0.5)out+=`<div class="eff-upg-row"><span class="eff-upg-id">New machine</span><span class="eff-upg-move">+${fN(addTH-addG,0)} TH @ ${fN(EFF_BEST,0)} W (greedy full at 5,000)</span><span class="eff-upg-cost">${fU((addTH-addG)*estimateCPT12(addTH-addG),0)}</span></div>`;
   return out+`</div>`;
 }
 
