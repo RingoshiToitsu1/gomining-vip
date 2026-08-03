@@ -379,18 +379,28 @@ function projectedMonthlyForCapital(capUSD){
   const i=inp();i.cap=Math.max(0,capUSD||0);
   const m=calc(i),bp=m.bp,gp=m.gp,dbt=dailyBTCperTH();
   const a=solvePlannerAllocation(i,bp,gp,dbt);
-  let mineMo,locked,refInitTH;
+  let mineMo,locked,refInitTH,gTHf,gWf;
   if(a){
-    const gr=dbt*a.nt,df=a.newF.t*(1-a.td2/100);
-    mineMo=(gr-df)*bp*30;locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
+    // Mirror the displayed "Projected monthly" EXACTLY (else target-income overshoots/undershoots):
+    // price the efficiency-inclusive total (finTH) and value the greedy's free weekly growth.
+    const usdToTH=a.usdCapAfter-a.sol.usdSpentOnGMT;
+    const ep=computeEffPlan({i,K:a.totalValue,gp,bp,
+      lockUSD:a.sol.usdSpentOnGMT+a.sol.fromPool*gp, glAdd:a.sol.lock,
+      thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth});
+    const projTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, projWth=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
+    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*bp*30;
+    locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
+    gTHf=(ep&&ep.gTHf>0)?ep.gTHf:(a.greedyTot||0);gWf=(ep&&ep.gWthf>0)?ep.gWthf:(a.gwthAfter||15);
   }else{
     // Nothing to allocate (e.g. zero capital on a blank/empty setup): the farm just
     // earns its current income — a $0 baseline on a blank setup, not an error.
-    mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;
+    mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
   }
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
   const ambMo=((i.amb?i.refTH:0)+refInitTH)*15*24/1000*0.005*30;
-  return mineMo+stakingMo+ambMo;
+  const gGrow=+(i.ggrow||0);
+  const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
+  return mineMo+stakingMo+ambMo+greedyMo;
 }
 // Binary-search the smallest USD capital that ADDS addUSD to the farm's monthly income.
 // The target is additional income, not a total: someone already earning $2,800/mo who asks
