@@ -1662,7 +1662,7 @@ function clearInputs(){
   // Blanks the form. Stays on the CURRENT setup so Save updates it without renaming.
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
-    inCapital:'5000',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
+    inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
