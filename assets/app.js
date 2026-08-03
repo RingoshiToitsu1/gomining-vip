@@ -1957,6 +1957,18 @@ function recalc(){
   animateMetric($('heroYearly'),moUSD*12,v=>fU(v,0)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   animateMetric($('heroDiscount'),m.totD,fP);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
+  // Compounding velocity — how fast the farm grows if you reinvest every dollar you earn
+  // into hashrate, plus the Greedy Machine's free weekly growth. A rate at TODAY's prices
+  // (income ÷ productive capital), not a forward projection. Base = TH value + locked GMT.
+  const totTHv=m.totTH||0, cptNow=estimateCPT12(totTHv||1);
+  const farmValueUSD=totTHv*cptNow+Math.max(0,i.gl||0)*m.gp;
+  const reinvestPct=(moUSD>0&&farmValueUSD>0)?(moUSD*12)/farmValueUSD*100:0;
+  const ggrow=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
+  const greedyPct=totTHv>0?((m.gth||0)*ggrow/100*52)/totTHv*100:0;
+  const velocity=reinvestPct+greedyPct;
+  animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
+  const velSub=$('heroVelocitySub');
+  if(velSub)velSub.textContent=greedyPct>0.5?`${fN(reinvestPct,0)}% reinvest + ${fN(greedyPct,0)}% greedy growth`:'reinvest all earnings into hashrate';
   // Reflect manual override state on the "Incorrect discount?" control.
   const ovrToggle=$('discOverrideToggle'),ovrReset=$('discOverrideReset');
   if(ovrToggle){
@@ -2844,7 +2856,7 @@ function openSetupProjection(mode){
 // Re-run the fresh-load feel for the My Setup dashboard: hero values count up
 // from 0 again and the cards re-enter, just like a page refresh.
 function refreshMySetupAnimation(){
-  ['heroDailyNet','heroMonthly','heroYearly','heroDiscount'].forEach(id=>{const e=$(id);if(e)e._cur=0;});
+  ['heroDailyNet','heroMonthly','heroYearly','heroDiscount','heroVelocity'].forEach(id=>{const e=$(id);if(e)e._cur=0;});
   document.querySelectorAll('#heroGrid .hero-card').forEach(c=>{c.style.animation='none';void c.offsetWidth;c.style.animation='';});
   if(S.loaded)recalc();
 }

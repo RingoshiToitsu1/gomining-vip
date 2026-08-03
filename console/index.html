@@ -349,7 +349,7 @@
   <div class="header-inner">
     <a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
     <div class="nav-links">
-      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit Setup</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a>
+      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit Setup</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a><a href="#" id="navProjection" onclick="openSetupProjection();return false">Projection</a>
     </div>
     <div id="gmtOnline"></div>
     <div id="gmtAccountSlot"></div>
@@ -414,11 +414,11 @@
         </div>
       </div>
     </div>
-    <div class="hero-card orange-accent reveal hero-card-action" onclick="openSetupProjection()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSetupProjection()}" title="Project your farm's growth over time">
-      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>PROJECT</span><span>◈</span></div>
-      <div class="hero-label">Plan Ahead</div>
-      <div class="hero-cta"><svg class="hero-cta-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L10 12 L14 15 L20 7"/><path d="M15 7 H20 V12"/></svg>Growth Projection</div>
-      <div class="hero-cta-btn">Run projection <span class="hero-cta-arrow">&rarr;</span></div>
+    <div class="hero-card orange-accent reveal" title="How fast your farm compounds if you reinvest every dollar you earn back into hashrate — plus your Greedy Machine's free weekly growth. A rate at today's prices, not a forecast.">
+      <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>VELOCITY</span><span>◈</span></div>
+      <div class="hero-label">Compounding Velocity</div>
+      <div class="hero-val orange" id="heroVelocity"><span class="skel"></span></div>
+      <div class="hero-sub" id="heroVelocitySub">reinvest to grow your farm</div>
     </div>
   </div>
 
@@ -1021,7 +1021,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=40"></script>
+<script src="/assets/app.js?v=41"></script>
 <script src="/assets/fleet.js?v=11"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
