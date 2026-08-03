@@ -1941,18 +1941,28 @@ function recalc(){
   const heroIsAmb=$('inAmbassador').checked;
   const heroRefTH=heroIsAmb?(+$('inReferredTH').value||0):0;
   const heroAmbDaily=heroRefTH*15*24/1000*0.005;
-  const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily;
+  // Greedy Machine free weekly growth is real value in the form of TH credits: the free
+  // TH it accrues × the marketplace cost of that TH at the greedy's own efficiency
+  // (12 W priced off the 12 W curve, else the 15 W curve). Counted as income below.
+  const ggrow=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
+  const greedyWkTH=(m.gth||0)*ggrow/100, gwv=m.gwth||0;
+  const cptGreedy=(gwv>0&&gwv<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1);
+  const greedyDailyUSD=greedyWkTH/7*cptGreedy, greedyMonthlyUSD=greedyWkTH*4.33*cptGreedy;
+  const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily+greedyDailyUSD;
   // Monthly must equal the "Total monthly income" breakdown below, which uses
   // 4.33 weeks/month for staking (52/12), not daily×30/7. Compose it the same way.
   const stakingMonthlyUSD=m.wkGMT*m.gp*4.33;
-  const moUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;
+  const cashMoUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;   // reinvestable cash income
+  const moUSD=cashMoUSD+greedyMonthlyUSD;                        // + greedy TH-credit value
   animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
+  if(greedyDailyUSD>0)heroSub+=' + '+fU(greedyDailyUSD)+' greedy growth';
   $('heroDailyBTC').textContent=heroSub;
   animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
+  if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
   $('heroMonthlyBTC').textContent=heroMoSub;
   animateMetric($('heroYearly'),moUSD*12,v=>fU(v,0)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   animateMetric($('heroDiscount'),m.totD,fP);
@@ -1962,9 +1972,8 @@ function recalc(){
   // (income ÷ productive capital), not a forward projection. Base = TH value + locked GMT.
   const totTHv=m.totTH||0, cptNow=estimateCPT12(totTHv||1);
   const farmValueUSD=totTHv*cptNow+Math.max(0,i.gl||0)*m.gp;
-  const reinvestPct=(moUSD>0&&farmValueUSD>0)?(moUSD*12)/farmValueUSD*100:0;
-  const ggrow=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
-  const greedyPct=totTHv>0?((m.gth||0)*ggrow/100*52)/totTHv*100:0;
+  const reinvestPct=(cashMoUSD>0&&farmValueUSD>0)?(cashMoUSD*12)/farmValueUSD*100:0;
+  const greedyPct=totTHv>0?(greedyWkTH*52)/totTHv*100:0;
   const velocity=reinvestPct+greedyPct;
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
@@ -2035,11 +2044,20 @@ function recalc(){
   const refTH=isAmb?(+$('inReferredTH').value||0):0;
   const ambDaily=refTH*15*24/1000*0.005;
   const ambMonthly=ambDaily*30;
-  const totalMonthly=miningMonthly+stakingMonthly+ambMonthly;
+  // Greedy Machine free weekly growth, valued as TH credits (see hero card) — free TH
+  // accrued × the cost of that TH at the greedy's efficiency. Real income, in hashrate.
+  const ggrowB=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
+  const greedyWkTHb=(m.gth||0)*ggrowB/100, gwvb=m.gwth||0;
+  const cptGreedyB=(gwvb>0&&gwvb<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1);
+  const greedyMonthlyB=greedyWkTHb*4.33*cptGreedyB;
+  const totalMonthly=miningMonthly+stakingMonthly+ambMonthly+greedyMonthlyB;
   g+=row('TH mining income',`${fU(miningMonthly)}/mo`,miningMonthly>=0?'green':'red');
   g+=row('Staking income',`${fU(stakingMonthly)}/mo`,'green');
   if(isAmb&&refTH>0){
     g+=row('Ambassador rewards',`${fU(ambMonthly)}/mo<span class="sub">${fU(ambDaily)}/day USDT &middot; ${fN(refTH,0)} referred TH</span>`,'green');
+  }
+  if(greedyMonthlyB>0){
+    g+=row('Greedy Machine growth',`${fU(greedyMonthlyB)}/mo<span class="sub">+${fN(greedyWkTHb,2)} TH/wk &middot; ${fU(cptGreedyB)}/TH credit @ ${fN(gwvb,0)} W</span>`,'green');
   }
   g+=`<div class="divider"></div>`;
   g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
@@ -2850,6 +2868,10 @@ function openSetupProjection(mode){
   spShowForm();
   syncPayoutUnit();
   showPanelView('setupProjModal');
+  // Its own page: reflect /projection in the URL and highlight the nav item (like /edit).
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
+  const npl=$('navProjection');if(npl)npl.classList.add('nav-active');
+  try{history.replaceState({panel:'projection'},'','/projection'+location.hash);}catch(e){}
   const btn=document.getElementById('spRunBtn');
   if(btn)btn.disabled=false;
 }
@@ -2932,6 +2954,9 @@ function closeSetupProjection(){
     spShowForm();   // reset for next open
     if(load)load.style.display='none';
     if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
+    document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
+    const cn=document.querySelector('.nav-links a[data-view="tab-current"]');if(cn)cn.classList.add('nav-active');
+    try{history.replaceState({},'','/console'+location.hash);}catch(e){}
     refreshMySetupAnimation();
   },650);
 }
@@ -3626,7 +3651,9 @@ function obPreview(){
     const isAmb=$('inAmbassador').checked;
     const refTH=isAmb?(+$('inReferredTH').value||0):0;
     const ambDaily=refTH*15*24/1000*0.005;
-    const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily;
+    const gWk=(m.gth||0)*((+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100), gwp=m.gwth||0;
+    const gDaily=gWk/7*((gwp>0&&gwp<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1));
+    const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily+gDaily;
     document.getElementById('obPrevDaily').textContent=fU(totalDailyUSD);
     document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*30);
     document.getElementById('obPrevDiscount').textContent=fP(m.totD);
