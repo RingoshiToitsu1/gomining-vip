@@ -2402,11 +2402,27 @@ function renderEfficiencyComparison(st){
 
   const tot=lockUSD+thUSD+effUSD;
   if(tot<=0)return '';
-  const lockPct=lockUSD/tot*100, thPct=thUSD/tot*100, effPct=effUSD/tot*100;
-  const finTH=i.th+addTH;
-  const finWth=finTH>0?((i.th-effTHupg)*i.wth+effTHupg*EFF_BEST+addTH*EFF_BEST)/finTH:i.wth;
+
+  // Rebuild the WHOLE farm. i.th/i.wth describe only the NON-greedy portion; the greedy
+  // (i.gth @ i.gwth) is a separate component that calc() re-adds internally (totTH=i.th+gth,
+  // bwth=(i.th·i.wth+gth·gwth)/totTH). Tracking both makes "farm becomes X TH @ Y W/TH" and
+  // the earnings delta include the greedy, and routes each move's efficiency change correctly.
+  const _greedy=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP).sort((a,b)=>b.th-a.th)[0];
+  const gthv=Math.max(0,i.gth||0), gwthv=gthv>0?(i.gwth>0?i.gwth:15):0;
+  const gCode=_greedy?(_greedy.code?`#${escapeHtml(String(_greedy.code))}`:'your greedy machine'):(gthv>0?'your greedy machine':'');
+  const addG=gthv>0?Math.min(Math.max(0,MINER_CAP-gthv),addTH):0;   // TH that grows the greedy
+  const addNew=Math.max(0,addTH-addG);                              // TH needing a fresh 12 W machine
+  // Efficiency spend targets the greedy (its whole TH ≤ the budget) or the non-greedy farm.
+  const effIsGreedy=gthv>0&&gwthv>EFF_BEST&&effTHupg>0.5&&effTHupg<=gthv+1;
+  const gUpg=effIsGreedy?Math.min(gthv,effTHupg):0, ngUpg=effIsGreedy?0:Math.min(i.th,effTHupg);
+  // Post-plan component watts (watts = TH × W/TH); new TH lands at EFF_BEST.
+  const ngWatts=(i.th-ngUpg)*i.wth+ngUpg*EFF_BEST+addNew*EFF_BEST, ngTHf=i.th+addNew, ngWthf=ngTHf>0?ngWatts/ngTHf:i.wth;
+  const gWatts=(gthv-gUpg)*gwthv+gUpg*EFF_BEST+addG*EFF_BEST, gTHf=gthv+addG, gWthf=gTHf>0?gWatts/gTHf:gwthv;
+  const curTH=i.th+gthv, curWth=curTH>0?(i.th*i.wth+gthv*gwthv)/curTH:i.wth;
+  const finTH=curTH+addTH, finWth=finTH>0?(ngWatts+gWatts)/finTH:curWth;
+
   const baseMo=calc(i).net*bp*30;
-  const newMo=calc({...i,th:finTH,wth:finWth,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
+  const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
   // BTC-price threshold below which upgrading efficiency out-yields buying TH. Upgrade ROI is
@@ -2432,18 +2448,10 @@ function renderEfficiencyComparison(st){
 
   // ── Next-Best-Move queue ──────────────────────────────────────────────────
   // Reinvestment is sequential, not simultaneous: do the highest return-per-$ move
-  // first, then the next. The allocation math above already sized each move; here we
-  // just rank them into one ordered to-do list (no more "which of the 3 is optimal?").
-  const _greedy=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP).sort((a,b)=>b.th-a.th)[0];
-  const _greedyNeedsEff=_greedy&&(+_greedy.wth||15)>EFF_BEST;
+  // first, then the next. The allocation math above already sized each move (and the
+  // greedy/non-greedy split); here we just rank them into one ordered to-do list.
   const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;   // $/mo per new 12 W TH
-  const gCode=_greedy?(_greedy.code?`#${escapeHtml(String(_greedy.code))}`:'your greedy machine'):'';
-  const gTHnow=_greedy?(+_greedy.th||0):0;
-  const addG=_greedy?Math.min(Math.max(0,MINER_CAP-gTHnow),addTH):0;   // TH that grows the greedy
-  const addNew=Math.max(0,addTH-addG);                                  // TH that needs a fresh machine
-  // Is the efficiency spend just the one greedy, or a whole-farm upgrade across miners?
-  const effIsGreedy=_greedy&&_greedyNeedsEff&&effTHupg>0.5&&effTHupg<=gTHnow+1;
-  const effFromW=effIsGreedy?(+_greedy.wth||15):i.wth;
+  const effFromW=effIsGreedy?gwthv:i.wth;
   const effMo=effTHupg>0?effTHupg*0.0012*(effFromW-EFF_BEST)*(1-d)*(1-cf)*30:0;
   const lockMo=glAdd>0?glAdd*(i.apr||0)/100/12*gp:0;
 
@@ -2455,7 +2463,7 @@ function renderEfficiencyComparison(st){
   });
   if(addG>0.5)moves.push({
     title:`Grow ${gCode} · +${fN(addG,0)} TH`, tag:'greedy · biggest compounder',
-    cost:addG*estimateCPT12(gTHnow+addG), mo:addG*thNetMo,
+    cost:addG*estimateCPT12(gthv+addG), mo:addG*thNetMo,
     why:'its free weekly TH is a % of its size — a bigger greedy earns more every week'
   });
   if(glAdd>0.5)moves.push({
@@ -2464,7 +2472,7 @@ function renderEfficiencyComparison(st){
   });
   if(addNew>0.5)moves.push({
     title:`Mint a new ${fN(EFF_BEST,0)} W machine · +${fN(addNew,0)} TH`, tag:'', cost:addNew*estimateCPT12(addNew), mo:addNew*thNetMo,
-    why:_greedy?`${gCode} is full at ${fN(MINER_CAP,0)} TH — extra hashrate needs a fresh NFT`:'fresh hashrate at the best efficiency available'
+    why:gthv>0?`${gCode} is full at ${fN(MINER_CAP,0)} TH — extra hashrate needs a fresh NFT`:'fresh hashrate at the best efficiency available'
   });
 
   let h=`<div class="eff-verdict"><div class="eff-verdict-main">Your reinvestment plan for ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
@@ -2484,10 +2492,10 @@ function renderEfficiencyComparison(st){
 
   // One greyed-out forward hint: what to do next as future earnings come in.
   let backlog='';
-  if(_greedy && gTHnow+addG < MINER_CAP-1){
+  if(gthv>0 && gthv+addG < MINER_CAP-1){
     backlog=`<div class="nbm-item nbm-locked"><div class="nbm-rank">${moves.length+1}</div>`
       +`<div class="nbm-body"><div class="nbm-title">Keep growing ${gCode} toward ${fN(MINER_CAP,0)} TH</div>`
-      +`<div class="nbm-why">+${fN(MINER_CAP-(gTHnow+addG),0)} TH left to the cap · feed future earnings here first — it's your biggest weekly compounder</div></div>`
+      +`<div class="nbm-why">+${fN(MINER_CAP-(gthv+addG),0)} TH left to the cap · feed future earnings here first — it's your biggest weekly compounder</div></div>`
       +`<div class="nbm-cost">next</div></div>`;
   }else{
     backlog=`<div class="nbm-item nbm-locked"><div class="nbm-rank">${moves.length+1}</div>`
