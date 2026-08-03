@@ -117,6 +117,10 @@ function cptTier(tiers,th){
   return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+// Marginal cost to grow a 12 W miner from `cur` TH by `add` TH — the slice of the price curve
+// from cur → cur+add. Topping up an existing miner is CHEAPER than a new one, which re-pays the
+// pricey 0 → add slice: a miner already at `cur` starts lower on the descending curve.
+function costToGrow12(cur,add){ if(!(add>0))return 0; cur=Math.max(0,cur); return Math.max(0,(cur+add)*estimateCPT12(cur+add)-cur*estimateCPT12(cur)); }
 // $/TH at a FRACTIONAL efficiency, interpolated linearly in W between the 12 W and 15 W
 // curves and clamped to [12,15]. A 12.9 W miner is priced ~30% of the way from the 12 W
 // curve toward 15 W — not snapped to either cliff. Mirrors cptAtEff in scripts/constants.js.
@@ -2495,15 +2499,16 @@ function renderEfficiencyComparison(st){
 
   const lockPct=lockUSD/tot*100, thPct=thUSD/tot*100, effPct=effUSD/tot*100;
   const _greedyNeedsEff=gthv>0&&gwthv>EFF_BEST;
+  const hasExistingRoom=(window.GMTFleetRows||[]).some(r=>(+r.th||0)>0&&(+r.th||0)<MINER_CAP);   // a miner we can top up (cheaper than new)
 
   // Plain-language bottom line — the whole plan as numbered steps, in order.
   const _steps=[];
   if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
   if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
   if(addTH>0.5){
-    const _why=gthv>0
-      ?(_greedyNeedsEff?`grow your Greedy Machine — its ${fN(EFF_BEST,0)} W upgrade is the step above, so this just adds TH (see below)`:`onto your Greedy Machine first (see below)`)
-      :`a new ${fN(EFF_BEST,0)} W machine`;
+    const _why=hasExistingRoom
+      ? `top up your existing miners first — cheaper per TH than a new NFT (see below)`
+      : `a new ${fN(EFF_BEST,0)} W machine`;
     _steps.push(`Put ~<strong>${fN(thUSD,0)}</strong> into hashrate <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
   }
   const _spent=lockUSD+effUSD+thUSD;
@@ -2530,7 +2535,7 @@ function renderEfficiencyComparison(st){
   ]);
   g+=card('Buy TH',thPct,thUSD,[
     ['Adds',addTH>0?`+${fN(addTH,1)} TH @ ${fN(EFF_BEST,0)}W`:'—'],
-    ['Source',addTH>0?(addG>0.5?'grow greedy first':'new 12 W machine'):'—']
+    ['Source',addTH>0?(hasExistingRoom?'top up existing first':'new 12 W machine'):'—']
   ]);
   // The "upgrade wins under $X BTC" gauge frames efficiency as a price-dependent bet vs
   // buying TH — right for a whole-farm upgrade, but NOT for a greedy upgrade, which is a
@@ -2590,28 +2595,41 @@ function upgradeOrderHTML(budgetTH){
   return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
 }
 
-// Where the hashrate budget goes: onto the greedy first (it compounds weekly),
-// then a new machine. If the greedy is above 12 W, its efficiency upgrade is booked
-// in the Upgrade Efficiency card above, so here we just place the power at 12 W.
+// Where the hashrate budget goes. Topping up a miner you ALREADY own is cheaper per TH than a
+// new one — you skip the pricey first-TH tiers and stay on the descending part of the curve. So
+// fill existing miners toward the 5,000 cap first (greedy first, since it also compounds weekly,
+// then biggest-first for the cheapest tier), and only mint new NFTs for the spill-over. Each
+// upgrade is priced at its marginal slice of the curve via costToGrow12.
 function buyCapHTML(addTH){
+  if(!(addTH>0.5))return '';
   const isG=r=>/greedy/i.test(r.collection||'');
-  const g=(window.GMTFleetRows||[]).filter(r=>isG(r)&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
-    .sort((a,b)=>b.th-a.th)[0];   // the biggest greedy — it already earns the most weekly
-  if(!g){
-    const near=(window.GMTFleetRows||[]).filter(r=>(+r.th||0)>=4500);
-    let msg=`New hashrate is capped at <strong>5,000 TH per miner</strong>`;
-    if(addTH>5000)msg+=` — this ${fN(addTH,0)} TH needs at least ${Math.ceil(addTH/5000)} miners`;
-    if(near.length)msg+=`. ${near.length===1?'One miner is':near.length+' miners are'} near the cap; put new TH on a fresh NFT`;
-    return `<div class="eff-upg-note">${msg}.</div>`;
+  const rows=(window.GMTFleetRows||[])
+    .filter(r=>(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
+    .map(r=>({code:r.code,th:+r.th||0,greedy:isG(r)}))
+    .sort((a,b)=>(b.greedy-a.greedy)||(b.th-a.th));   // greedy first, then largest (cheapest tier)
+  let left=addTH; const steps=[];
+  for(const r of rows){
+    if(left<=0.5)break;
+    const add=Math.min(MINER_CAP-r.th,left); if(add<0.5)continue;
+    left-=add;
+    const label=r.code?`#${escapeHtml(String(r.code))}`:'an existing miner';
+    steps.push({label,greedy:r.greedy,from:r.th,add,cost:costToGrow12(r.th,add),existing:true});
   }
-  const gw=+g.wth||15, gTH=+g.th||0, room=MINER_CAP-gTH;
-  const label=g.code?`#${escapeHtml(String(g.code))}`:'your greedy machine';
-  const addG=Math.min(room, addTH);
-  const effLine=gw>EFF_BEST?` Its efficiency is upgraded to ${fN(EFF_BEST,0)} W in the Upgrade Efficiency step above, so the added TH runs at ${fN(EFF_BEST,0)} W too.`:``;
-  let out=`<div class="eff-upg"><div class="eff-upg-title">Where to add the TH <span>(grow the greedy first)</span></div>`
-    +`<div class="eff-upg-greedynote">Put the new TH on ${label} before minting a new one — its weekly free TH is a % of its size, so a bigger greedy earns more every week.${effLine}</div>`
-    +`<div class="eff-upg-row"><span class="eff-upg-id">${label} <span class="eff-upg-greedy">greedy</span></span><span class="eff-upg-move">+${fN(addG,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(gTH,0)} → ${fN(gTH+addG,0)})</span><span class="eff-upg-cost">${fU(addG*estimateCPT12(gTH+addG),0)}</span></div>`;
-  if(addTH-addG>0.5)out+=`<div class="eff-upg-row"><span class="eff-upg-id">New machine</span><span class="eff-upg-move">+${fN(addTH-addG,0)} TH @ ${fN(EFF_BEST,0)} W (greedy full at 5,000)</span><span class="eff-upg-cost">${fU((addTH-addG)*estimateCPT12(addTH-addG),0)}</span></div>`;
+  while(left>0.5){
+    const add=Math.min(MINER_CAP,left); left-=add;
+    steps.push({label:'New machine',greedy:false,from:0,add,cost:costToGrow12(0,add),existing:false});
+  }
+  if(!steps.length)return '';
+  const anyExisting=steps.some(s=>s.existing);
+  let out=`<div class="eff-upg"><div class="eff-upg-title">Where to add the TH <span>(${anyExisting?'top up existing miners first':'new NFTs'})</span></div>`;
+  if(anyExisting)out+=`<div class="eff-upg-greedynote">Adding TH to a miner you already own is cheaper per TH than a new one — you skip the pricey first-TH tiers and stay on the lower part of the price curve. Fill your biggest miners toward the ${fN(MINER_CAP,0)} TH cap before minting a new NFT.</div>`;
+  steps.forEach(s=>{
+    const tag=s.greedy?` <span class="eff-upg-greedy">greedy</span>`:'';
+    const move=s.existing
+      ?`+${fN(s.add,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(s.from,0)} → ${fN(s.from+s.add,0)})`
+      :`+${fN(s.add,0)} TH @ ${fN(EFF_BEST,0)} W (new NFT)`;
+    out+=`<div class="eff-upg-row"><span class="eff-upg-id">${s.label}${tag}</span><span class="eff-upg-move">${move}</span><span class="eff-upg-cost">${fU(s.cost,0)}</span></div>`;
+  });
   return out+`</div>`;
 }
 
