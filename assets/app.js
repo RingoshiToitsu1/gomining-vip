@@ -2430,65 +2430,75 @@ function renderEfficiencyComparison(st){
       +`<div class="eff-gauge-lbl">${winning?'<b style="color:var(--green)">Worth it now</b> &middot; ':''}upgrade wins under <b>${fU(thresh,0)}</b> BTC</div></div>`;
   };
 
-  let h=`<div class="eff-verdict">`;
-  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
-  h+=`<div class="eff-verdict-sub">${effRoom
-    ?'Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.'
-    :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.'}</div>`;
-  h+=`</div>`;
-
-  // Plain-language bottom line — the whole plan as numbered steps, in order, so the
-  // least-technical user knows exactly what to do. Everything below is just detail.
+  // ── Next-Best-Move queue ──────────────────────────────────────────────────
+  // Reinvestment is sequential, not simultaneous: do the highest return-per-$ move
+  // first, then the next. The allocation math above already sized each move; here we
+  // just rank them into one ordered to-do list (no more "which of the 3 is optimal?").
   const _greedy=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP).sort((a,b)=>b.th-a.th)[0];
   const _greedyNeedsEff=_greedy&&(+_greedy.wth||15)>EFF_BEST;
-  const _steps=[];
-  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
-  if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
-  if(addTH>0.5){
-    const _why=_greedy
-      ?(_greedyNeedsEff?`grow your Greedy Machine — its ${fN(EFF_BEST,0)} W upgrade is the step above, so this just adds TH (see below)`:`onto your Greedy Machine first (see below)`)
-      :`a new ${fN(EFF_BEST,0)} W machine`;
-    _steps.push(`Put ~<strong>${fN(thUSD,0)}</strong> into hashrate <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
+  const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;   // $/mo per new 12 W TH
+  const gCode=_greedy?(_greedy.code?`#${escapeHtml(String(_greedy.code))}`:'your greedy machine'):'';
+  const gTHnow=_greedy?(+_greedy.th||0):0;
+  const addG=_greedy?Math.min(Math.max(0,MINER_CAP-gTHnow),addTH):0;   // TH that grows the greedy
+  const addNew=Math.max(0,addTH-addG);                                  // TH that needs a fresh machine
+  // Is the efficiency spend just the one greedy, or a whole-farm upgrade across miners?
+  const effIsGreedy=_greedy&&_greedyNeedsEff&&effTHupg>0.5&&effTHupg<=gTHnow+1;
+  const effFromW=effIsGreedy?(+_greedy.wth||15):i.wth;
+  const effMo=effTHupg>0?effTHupg*0.0012*(effFromW-EFF_BEST)*(1-d)*(1-cf)*30:0;
+  const lockMo=glAdd>0?glAdd*(i.apr||0)/100/12*gp:0;
+
+  const moves=[];
+  if(effTHupg>0.5)moves.push({
+    title:effIsGreedy?`Upgrade ${gCode} to ${fN(EFF_BEST,0)} W`:`Upgrade ${fN(effTHupg,0)} TH to ${fN(EFF_BEST,0)} W`,
+    tag:effIsGreedy?'greedy · do first':(effTHupg>0?'do first':''), cost:effUSD, mo:effMo,
+    why:effIsGreedy?`cuts fees & frees locked GMT — and its free weekly TH then inherits ${fN(EFF_BEST,0)} W`:'lifts the farm to the best efficiency and frees locked GMT — do before adding TH'
+  });
+  if(addG>0.5)moves.push({
+    title:`Grow ${gCode} · +${fN(addG,0)} TH`, tag:'greedy · biggest compounder',
+    cost:addG*estimateCPT12(gTHnow+addG), mo:addG*thNetMo,
+    why:'its free weekly TH is a % of its size — a bigger greedy earns more every week'
+  });
+  if(glAdd>0.5)moves.push({
+    title:`Lock ${fN(glAdd,0)} GMT`, tag:'', cost:lockUSD, mo:lockMo,
+    why:`holds your 20% fee discount as the farm grows${lockMo>0.5?' — plus staking yield':''}`
+  });
+  if(addNew>0.5)moves.push({
+    title:`Mint a new ${fN(EFF_BEST,0)} W machine · +${fN(addNew,0)} TH`, tag:'', cost:addNew*estimateCPT12(addNew), mo:addNew*thNetMo,
+    why:_greedy?`${gCode} is full at ${fN(MINER_CAP,0)} TH — extra hashrate needs a fresh NFT`:'fresh hashrate at the best efficiency available'
+  });
+
+  let h=`<div class="eff-verdict"><div class="eff-verdict-main">Your reinvestment plan for ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-sub">Ranked by return per dollar — work top-down. Each move sets up the one below it.</div></div>`;
+
+  if(!moves.length)return h+`<div class="nbm"><div class="nbm-empty">Nothing to reinvest yet — add capital in the planner above to see your next move.</div></div>`;
+
+  let list='';
+  moves.forEach((mv,idx)=>{
+    const roi=mv.cost>0?mv.mo*12/mv.cost*100:0;
+    list+=`<div class="nbm-item${idx===0?' nbm-active':''}">`
+      +`<div class="nbm-rank">${idx===0?'<span class="nbm-arrow">&#9654;</span>':''}${idx+1}</div>`
+      +`<div class="nbm-body"><div class="nbm-title">${mv.title}${mv.tag?` <span class="nbm-tag">${mv.tag}</span>`:''}</div>`
+      +`<div class="nbm-why"><b>+${fU(mv.mo,0)}/mo</b>${roi>0?` · ${fN(roi,0)}%/yr`:''} · ${mv.why}</div></div>`
+      +`<div class="nbm-cost">${fU(mv.cost,0)}</div></div>`;
+  });
+
+  // One greyed-out forward hint: what to do next as future earnings come in.
+  let backlog='';
+  if(_greedy && gTHnow+addG < MINER_CAP-1){
+    backlog=`<div class="nbm-item nbm-locked"><div class="nbm-rank">${moves.length+1}</div>`
+      +`<div class="nbm-body"><div class="nbm-title">Keep growing ${gCode} toward ${fN(MINER_CAP,0)} TH</div>`
+      +`<div class="nbm-why">+${fN(MINER_CAP-(gTHnow+addG),0)} TH left to the cap · feed future earnings here first — it's your biggest weekly compounder</div></div>`
+      +`<div class="nbm-cost">next</div></div>`;
+  }else{
+    backlog=`<div class="nbm-item nbm-locked"><div class="nbm-rank">${moves.length+1}</div>`
+      +`<div class="nbm-body"><div class="nbm-title">Mint another ${fN(EFF_BEST,0)} W machine</div>`
+      +`<div class="nbm-why">once this round is deployed, keep compounding earnings into fresh hashrate</div></div>`
+      +`<div class="nbm-cost">next</div></div>`;
   }
-  const _spent=lockUSD+effUSD+thUSD;
-  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — each step is a separate part of the one plan, not extra.</div></div>`:'';
 
-  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
-  if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
-  let bar=`<div class="eff-splitbar">`;
-  segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
-  bar+=`</div>`;
-
-  const card=(label,p,amt,rows,extra)=>{
-    let s=`<div class="eff-card${(p<0.5&&!extra)?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
-    s+=`<div class="eff-card-mo">${fN(p,0)}%</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
-    rows.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
-    s+=`</div>`;
-    if(extra)s+=extra;
-    return s+`</div>`;
-  };
-  let g=`<div class="eff-grid${effRoom?'':' eff-grid-2'}">`;
-  g+=card('Lock GMT',lockPct,lockUSD,[
-    ['Locks',glAdd>0?`+${fN(glAdd,0)} GMT`:'—'],
-    ['Effect',lockPct>0.5?'holds 20% discount':'—']
-  ]);
-  g+=card('Buy TH',thPct,thUSD,[
-    ['Adds',addTH>0?`+${fN(addTH,1)} TH @ ${fN(EFF_BEST,0)}W`:'—'],
-    ['Source',addTH>0?'new 12 W machine':'—']
-  ]);
-  if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
-    ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
-    ['Farm avg',effTHupg>0?`${fN(i.wth,2)} → ${fN(finWth,2)}`:'—']
-  ],effThreshBp?effGauge(effThreshBp,bp):'');
-  g+=`</div>`;
-  // Per-miner upgrade order (by NFT code, greedy first) — shown ONLY when the plan
-  // actually allocates to efficiency, so it never contradicts a "buy TH" plan. When
-  // upgrading isn't in the plan, the plan simply doesn't tell you to upgrade.
-  if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
-  // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
-  if(addTH>0)g+=buyCapHTML(addTH);
-  g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
-  return h+plain+bar+g;
+  const gauge=effThreshBp?`<div class="nbm-gauge">${effGauge(effThreshBp,bp)}</div>`:'';
+  const foot=`<div class="nbm-foot">${fU(K,0)} covers ${moves.length>1?`steps 1–${moves.length}`:'step 1'} &rarr; together <b>+${fU(totalMo,0)}/mo</b> · your farm becomes <b>${fN(finTH,0)} TH</b> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''}.</div>`;
+  return h+`<div class="nbm"><div class="nbm-head">Your next moves <span>ranked by return per $</span></div><div class="nbm-list">${list}${backlog}</div>${gauge}${foot}</div>`;
 }
 
 // Which specific miners to upgrade, worst efficiency first, until the budget's TH

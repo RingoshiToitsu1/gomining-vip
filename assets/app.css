@@ -279,6 +279,28 @@ input[type=number]{-moz-appearance:textfield}
 .eff-verdict-roi{color:var(--green);font-weight:800;font-size:.82rem;white-space:nowrap}
 .eff-verdict-sub{font-size:.74rem;color:var(--text3);line-height:1.5;margin-top:.35rem}
 .eff-verdict-sub strong{color:var(--text)}
+/* ── Next-Best-Move queue: the reinvestment plan as a ranked to-do list ── */
+.nbm{margin-top:.2rem}
+.nbm-head{display:flex;align-items:baseline;gap:.5rem;font-size:.72rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);margin-bottom:.5rem}
+.nbm-head span{font-weight:500;letter-spacing:0;text-transform:none;color:var(--text4)}
+.nbm-list{display:flex;flex-direction:column;gap:.4rem}
+.nbm-item{display:grid;grid-template-columns:auto 1fr auto;gap:.6rem;align-items:center;padding:.6rem .7rem;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.nbm-item.nbm-active{border-color:var(--purple);background:linear-gradient(135deg,rgba(245,166,35,.12),rgba(245,166,35,.03));box-shadow:0 0 0 1px var(--purple-glow)}
+.nbm-item.nbm-locked{opacity:.5;border-style:dashed;background:transparent}
+.nbm-rank{display:flex;align-items:center;gap:.15rem;font-family:var(--mono);font-size:.95rem;font-weight:800;color:var(--text3);min-width:1.4em;justify-content:flex-end}
+.nbm-active .nbm-rank{color:var(--purple-soft)}
+.nbm-arrow{color:var(--purple);font-size:.7rem}
+.nbm-body{min-width:0}
+.nbm-title{font-size:.82rem;font-weight:700;color:var(--text);line-height:1.3}
+.nbm-tag{display:inline-block;font-size:.56rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#062;background:var(--green);padding:.1rem .4rem;border-radius:7px;vertical-align:middle;margin-left:.15rem;white-space:nowrap}
+.nbm-why{font-size:.68rem;color:var(--text3);line-height:1.45;margin-top:.2rem}
+.nbm-why b{color:var(--green);font-weight:800}
+.nbm-cost{font-family:var(--mono);font-size:.9rem;font-weight:800;color:var(--text);white-space:nowrap;text-align:right}
+.nbm-locked .nbm-cost{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text4)}
+.nbm-gauge{margin-top:.6rem}
+.nbm-foot{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.6rem;padding:.5rem .7rem;background:var(--bg-input);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.nbm-foot b{color:var(--text)}
+.nbm-empty{font-size:.76rem;color:var(--text3);text-align:center;padding:1rem}
 .eff-control{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.45rem;font-size:.76rem;color:var(--text3);margin:-.1rem 0 .7rem}
 .eff-control input{width:88px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.82rem;font-weight:700;text-align:center;padding:.4rem .5rem;outline:none}
 .eff-control input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
