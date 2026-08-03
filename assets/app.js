@@ -1480,7 +1480,7 @@ function applyInputs(d){
   if(d.inWTH!=null)$('inWTH').value=d.inWTH;
   if(d.inGMTLocked!=null)$('inGMTLocked').value=d.inGMTLocked;
   if(d.inGMTWallet!=null)$('inGMTWallet').value=d.inGMTWallet;
-  if(d.inCapital!=null)$('inCapital').value=d.inCapital;
+  $('inCapital').value='0';   // capital-to-deploy is transient — always start at $0, never restored from a saved setup
   if(d.inMpTH!=null)$('inMpTH').value=d.inMpTH;
   if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
@@ -2743,9 +2743,9 @@ function renderPlanner(i,m){
   ph+=`<span style="font-size:.8rem;color:var(--text3)">New VIP:</span>${badge(nv)}`;
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
-  const nonVipTH=(a.gInit||0)+mpTH;
-  const vipTHe=Math.max(0,projTH-nonVipTH);   // VIP-counting TH within the efficiency-inclusive total
-  ph+=row('New hashrate',`${fN(projTH,1)} TH`+(nonVipTH>0?`<span class="sub">${fN(vipTHe,1)} TH counts toward VIP &middot; ${fN(nonVipTH,0)} TH marketplace (non-VIP)</span>`:`<span class="sub">all counts toward VIP</span>`));
+  // VIP qualifies on locked GMT (or TH, whichever is higher), so the TH VIP-eligibility
+  // breakdown is noise here — just show the resulting hashrate.
+  ph+=row('New hashrate',`${fN(projTH,1)} TH`);
   if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(projWth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(projWth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
