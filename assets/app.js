@@ -2384,18 +2384,21 @@ function updateEffCompare(){
 // Capital split — driven by the planner's solver (Lock GMT vs Buy TH, consistent with the
 // Resource Breakdown), with an Upgrade-Efficiency overlay that only takes funds when upgrading
 // the whole existing farm to 12 W/TH yields more than buying new hashrate.
-function renderEfficiencyComparison(st){
-  if(!st)return '';
+// Single source of truth for the "deploy this capital" plan: the Lock GMT / Buy TH split
+// from the solver PLUS the Upgrade-Efficiency overlay (whole-farm, or greedy-prerequisite).
+// Returns the greedy-, efficiency- and marketplace-inclusive totals so the allocation cards,
+// the "New hashrate" row and the post-investment projection all agree on ONE plan.
+function computeEffPlan(st){
   const i=st.i, K=st.K, gp=st.gp, bp=st.bp;
-  if(!i||!(K>0))return '';
+  if(!i||!(K>0))return null;
   const cf=CONVERSION_FEE, dbt=dailyBTCperTH(), _m0=calc(i), d=_m0.totD/100, nonTokD=(_m0.nonTokD||0)/100;
   let lockUSD=Math.max(0,st.lockUSD||0), thUSD=Math.max(0,st.thUSD||0);
   const thUSD0=thUSD, glAdd=Math.max(0,st.glAdd||0);
   let addTH=Math.max(0,st.addTH||0);
+  const mpTH=Math.max(0,st.mpTH||0), mpWth=(+st.mpWth||EFF_BASE_MAX);   // marketplace miner — part of the resulting farm
   // GMT-lock capital freed per TH by upgrading to 12 W/TH. The lock for max discount is
   // 20×18 = 360 days of fee coverage; a lower fee (from better efficiency) needs less
-  // coverage, so upgrading returns real capital — worth ~$1.24/TH at 15→12 W. Crediting
-  // it against the upgrade cost is what lets the split correctly prefer upgrading.
+  // coverage, so upgrading returns real capital — worth ~$1.24/TH at 15→12 W.
   const lockFreedPerTH=(i.wth>EFF_BEST)?(18*20)*(0.0012*(i.wth-EFF_BEST))*(1-nonTokD):0;
 
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
@@ -2408,24 +2411,21 @@ function renderEfficiencyComparison(st){
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
       const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
-      // ROI on the NET cost — the upgrade both saves fees AND frees GMT-lock capital.
-      upgradeROI=savedMo*12/(cap*cptUnet);
-      // The alternative to upgrading is MINTING a new machine — 12 W/TH, priced off TH_TIERS_12W.
-      const cptTH=estimateCPT12((i.th+addTH)||1);
+      upgradeROI=savedMo*12/(cap*cptUnet);   // ROI on the NET cost (saves fees AND frees GMT-lock capital)
+      const cptTH=estimateCPT12((i.th+addTH)||1);   // alternative is MINTING new 12 W TH
       const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
-        const upgradeCost=cap*cptU;   // actual cash outlay (the freed lock isn't a discount on the bill)
+        const upgradeCost=cap*cptU;
         effUSD=Math.min(thUSD,upgradeCost);
         effTHupg=effUSD/cptU;
         thUSD-=effUSD;
       }
     }
   }
-  // If the plan buys TH and the best home for it is a greedy above 12 W, that greedy
-  // must be efficiency-upgraded first (one W/TH per NFT). Book that upgrade as an
-  // EFFICIENCY allocation — not hidden inside Buy TH — so its % shows in the Upgrade
-  // Efficiency card. Only when the whole-farm upgrade above wasn't already chosen.
+  // If the plan buys TH and the best home is a greedy above 12 W, that greedy must be
+  // efficiency-upgraded first (one W/TH per NFT). Book it as an EFFICIENCY allocation, only
+  // when the whole-farm upgrade above wasn't chosen.
   if(effUSD<=0 && thUSD>0){
     const gr=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP&&(+r.wth||15)>EFF_BEST).sort((a,b)=>b.th-a.th)[0];
     if(gr){
@@ -2439,37 +2439,29 @@ function renderEfficiencyComparison(st){
   if(thUSD0>0)addTH=addTH*thUSD/thUSD0;   // fewer TH bought once efficiency takes a slice
 
   const tot=lockUSD+thUSD+effUSD;
-  if(tot<=0)return '';
 
   // Rebuild the WHOLE farm. i.th/i.wth describe only the NON-greedy portion; the greedy
-  // (i.gth @ i.gwth) is a separate component that calc() re-adds internally (totTH=i.th+gth,
-  // bwth=(i.th·i.wth+gth·gwth)/totTH). Tracking both makes "farm becomes X TH @ Y W/TH" and
-  // the earnings delta include the greedy, and routes each move's efficiency change correctly.
+  // (i.gth @ i.gwth) is a separate component that calc() re-adds internally. Include the
+  // marketplace miner (mpTH @ mpWth) so the resulting total matches the projection.
   const _greedy=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP).sort((a,b)=>b.th-a.th)[0];
   const gthv=Math.max(0,i.gth||0), gwthv=gthv>0?(i.gwth>0?i.gwth:15):0;
   const gCode=_greedy?(_greedy.code?`#${escapeHtml(String(_greedy.code))}`:'your greedy machine'):(gthv>0?'your greedy machine':'');
   const addG=gthv>0?Math.min(Math.max(0,MINER_CAP-gthv),addTH):0;   // TH that grows the greedy
   const addNew=Math.max(0,addTH-addG);                              // TH needing a fresh 12 W machine
-  // Efficiency spend targets the greedy (its whole TH ≤ the budget) or the non-greedy farm.
   const effIsGreedy=gthv>0&&gwthv>EFF_BEST&&effTHupg>0.5&&effTHupg<=gthv+1;
   const gUpg=effIsGreedy?Math.min(gthv,effTHupg):0, ngUpg=effIsGreedy?0:Math.min(i.th,effTHupg);
-  // Post-plan component watts (watts = TH × W/TH); new TH lands at EFF_BEST.
   const ngWatts=(i.th-ngUpg)*i.wth+ngUpg*EFF_BEST+addNew*EFF_BEST, ngTHf=i.th+addNew, ngWthf=ngTHf>0?ngWatts/ngTHf:i.wth;
   const gWatts=(gthv-gUpg)*gwthv+gUpg*EFF_BEST+addG*EFF_BEST, gTHf=gthv+addG, gWthf=gTHf>0?gWatts/gTHf:gwthv;
   const curTH=i.th+gthv, curWth=curTH>0?(i.th*i.wth+gthv*gwthv)/curTH:i.wth;
-  const finTH=curTH+addTH, finWth=finTH>0?(ngWatts+gWatts)/finTH:curWth;
+  const finTH=curTH+addTH+mpTH, finWth=finTH>0?(ngWatts+gWatts+mpTH*mpWth)/finTH:curWth;
 
   const baseMo=calc(i).net*bp*30;
   const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
-  // BTC-price threshold below which upgrading efficiency out-yields buying TH. Upgrade ROI is
-  // BTC-independent; new-TH ROI rises with BTC — so below this price the upgrade wins.
-  // newThROI(bp*) = upgradeROI ⇒ bp* = [M(1-d) + cptTH·0.0012·(wth-12)(1-d)/cptU] / dbt.
+  // BTC-price threshold below which upgrading the WHOLE FARM out-yields buying TH.
   let effThreshBp=null;
   if(i.th>0 && i.wth>EFF_BEST){
-    // Use the NET upgrade cost (after the freed GMT-lock credit), so the gauge agrees
-    // with the split decision above — upgrading wins up to a higher BTC price now.
     const cptU=Math.max(0.01,effUpgradeCostPerTH(i.wth)-lockFreedPerTH);
     if(cptU>0){
       const M=0.0012*EFF_BEST+0.0089, cptTH=estimateCPT12((i.th+addTH)||1);
@@ -2477,6 +2469,16 @@ function renderEfficiencyComparison(st){
       if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
     }
   }
+  return {i,K,gp,bp,cf,dbt,d,nonTokD,lockUSD,thUSD,glAdd,addTH,mpTH,mpWth,effUSD,effTHupg,effRoom,tot,
+    _greedy,gthv,gwthv,gCode,addG,addNew,effIsGreedy,curTH,curWth,ngTHf,ngWthf,gTHf,gWthf,finTH,finWth,totalMo,roiB,effThreshBp};
+}
+
+function renderEfficiencyComparison(st){
+  if(!st)return '';
+  const P=computeEffPlan(st);
+  if(!P||P.tot<=0)return '';
+  const {i,K,gp,bp,cf,dbt,d,lockUSD,thUSD,glAdd,addTH,effUSD,effTHupg,effRoom,tot,
+    gthv,gwthv,gCode,addG,addNew,effIsGreedy,curWth,finTH,finWth,totalMo,roiB,effThreshBp}=P;
   const effGauge=(thresh,now)=>{
     const hi=Math.max(thresh,now)*1.4||1;
     const tPos=Math.min(100,thresh/hi*100), nPos=Math.max(2,Math.min(98,now/hi*100)), winning=now<=thresh;
@@ -2685,8 +2687,17 @@ function renderPlanner(i,m){
   // — no 5,000 TH cap on the farm total). Efficiency upgrade is layered on as an overlay.
   window._effCmp={i,K:totalValue,gp,bp,
     lockUSD:usdSpentOnGMT+gmtFromPool*gp, glAdd:gmtLock,
-    thUSD:usdToTH+gmtSell*gp, addTH:at};
+    thUSD:usdToTH+gmtSell*gp, addTH:at, mpTH:mpTH, mpWth:mpWth};
   ah+=effCompareShell(i);
+  // Same plan the allocation cards render, so the post-investment projection agrees with the
+  // "Result" total: the efficiency overlay diverts part of the TH budget into upgrades, so the
+  // resulting hashrate (finTH) is lower than the solver's all-to-TH nt. Use it below.
+  const _ep=computeEffPlan(window._effCmp);
+  const projTH=(_ep&&_ep.finTH>0)?_ep.finTH:nt;      // greedy-, efficiency- & marketplace-inclusive total
+  const projWth=(_ep&&_ep.finWth>0)?_ep.finWth:bwth;
+  // Mining monthly for THAT total (same formula as the solver's `mo`, but on the efficiency-
+  // inclusive TH/efficiency) so the "Projected monthly" headline matches the projection table.
+  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*bp*30;
 
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
@@ -2725,7 +2736,7 @@ function renderPlanner(i,m){
 
   // --- Post-investment projections ---
   const ov=vipOf(i.th,i.gl),tc=nv.n!==ov.n;
-  const curMo=m.net*m.bp*30,imp=mo-curMo;
+  const curMo=m.net*m.bp*30,imp=projMoMining-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
   let ph='<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
@@ -2733,8 +2744,9 @@ function renderPlanner(i,m){
   if(tc)ph+=` <span class="badge green">TIER UP from ${ov.n}</span>`;
   ph+='</div>';
   const nonVipTH=(a.gInit||0)+mpTH;
-  ph+=row('New hashrate',`${fN(nt,1)} TH`+(nonVipTH>0?`<span class="sub">${fN(vipTH,1)} TH counts toward VIP &middot; ${fN(nonVipTH,0)} TH marketplace (non-VIP)</span>`:`<span class="sub">all counts toward VIP</span>`));
-  if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(bwth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(bwth,2)} blended</span>`);
+  const vipTHe=Math.max(0,projTH-nonVipTH);   // VIP-counting TH within the efficiency-inclusive total
+  ph+=row('New hashrate',`${fN(projTH,1)} TH`+(nonVipTH>0?`<span class="sub">${fN(vipTHe,1)} TH counts toward VIP &middot; ${fN(nonVipTH,0)} TH marketplace (non-VIP)</span>`:`<span class="sub">all counts toward VIP</span>`));
+  if(at>0&&i.th>0&&Math.abs(i.wth-15)>0.01)ph+=row('New avg efficiency',`${fN(projWth,2)} W/TH<span class="sub">${fN(i.wth,2)}→${fN(projWth,2)} blended</span>`);
   ph+=row('New token discount',fP(ntd),'cyan');
   ph+=row('New total discount',fP(td2),'cyan');
   ph+=`<div class="divider"></div>`;
@@ -2746,7 +2758,7 @@ function renderPlanner(i,m){
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
   const projAmbDaily=projTotalRefTH*15*24/1000*0.005;
   const projAmbMo=projAmbDaily*30;
-  const projMoTotal=mo+projMoStaking+projAmbMo;
+  const projMoTotal=projMoMining+projMoStaking+projAmbMo;
   const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'');
   ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">${projSub}</span>`,projMoTotal>=0?'green':'red');
   if(projAmbMo>0){
@@ -2777,11 +2789,11 @@ function renderPlanner(i,m){
 
   // BTC price projections (includes mining + staking + ambassador)
   const moStakingUSD=newWkStake*gp*4.33;
-  const projLabel=`Projected monthly income at ${fN(nt,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''})`;
+  const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''})`;
   // Current (pre-investment) state, for the before/after comparison.
   const curAmbMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
   const curP={th:m.totTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.totTH,stakingMo:curStakingMo,ambMo:curAmbMo};
-  $('projTable').innerHTML=renderProjections(nt,bwth,td2,projLabel,moStakingUSD,projAmbMo,curP);
+  $('projTable').innerHTML=renderProjections(projTH,projWth,td2,projLabel,moStakingUSD,projAmbMo,curP);
   updateProjCell();
 
 }
