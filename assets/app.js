@@ -2148,7 +2148,7 @@ function recalc(){
   renderPlanner(i,m);
 }
 
-function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP){
+function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP,greedyMoUSD){
   moStakingUSD=moStakingUSD||0;
   moAmbUSD=moAmbUSD||0;
   const cur=S.btcPrice;
@@ -2156,7 +2156,7 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP){
   const dbt=dailyBTCperTH();
   const grossBTC=dbt*th;
   // Store params for dropdown recalc
-  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,grossBTC,cur,gp,curP:curP||null};
+  window._projParams={th,wth,totD,moStakingUSD,moAmbUSD,greedyMoUSD:greedyMoUSD||0,grossBTC,cur,gp,curP:curP||null};
 
   const prices=[50000,60000,70000,80000,90000,100000,110000,120000,130000,140000,150000];
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
@@ -2179,7 +2179,8 @@ function moAtBTC(P,bp,gmtScale){
   const f=fees(Math.max(0.0001,P.th),P.wth||15,bp);
   const dfees=f.t*(1-(P.totD||0)/100);
   const netBTC=((P.grossBTC||0)-dfees)*(1-CONVERSION_FEE);
-  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/30+(P.ambMo||0)/30;
+  // Greedy free-growth income is a USD TH-credit value (BTC-independent) — add it flat.
+  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/30+(P.ambMo||0)/30+(P.greedyMo||0)/30;
   return{daily,mo:daily*30};
 }
 function updateProjCell(){
@@ -2198,7 +2199,7 @@ function updateProjCell(){
     }else{gmtScale=bp/p.cur;}
   }
   // After investment
-  const after=moAtBTC({th:p.th,wth:p.wth,totD:p.totD,grossBTC:p.grossBTC,stakingMo:p.moStakingUSD,ambMo:p.moAmbUSD},bp,gmtScale);
+  const after=moAtBTC({th:p.th,wth:p.wth,totD:p.totD,grossBTC:p.grossBTC,stakingMo:p.moStakingUSD,ambMo:p.moAmbUSD,greedyMo:p.greedyMoUSD},bp,gmtScale);
   // Current (before)
   const before=p.curP?moAtBTC(p.curP,bp,gmtScale):{daily:0,mo:0};
   const uplift=before.mo>0?(after.mo-before.mo)/before.mo*100:0;
@@ -2828,8 +2829,14 @@ function renderPlanner(i,m){
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
   const projAmbDaily=projTotalRefTH*15*24/1000*0.005;
   const projAmbMo=projAmbDaily*30;
-  const projMoTotal=projMoMining+projMoStaking+projAmbMo;
-  const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'');
+  // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
+  // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
+  const gGrow=+(i.ggrow||0);
+  const _gTHf=(_ep&&_ep.gTHf>0)?_ep.gTHf:(m.gth||0), _gWf=(_ep&&_ep.gWthf>0)?_ep.gWthf:(m.gwth||15);
+  const greedyMoAfter=(_gTHf>0&&gGrow>0)?(_gTHf*gGrow/100)*4.33*cptAtEff(_gTHf,_gWf):0;
+  const greedyMoBefore=((m.gth||0)>0&&gGrow>0)?(m.gth*gGrow/100)*4.33*cptAtEff(m.gth,m.gwth||15):0;
+  const projMoTotal=projMoMining+projMoStaking+projAmbMo+greedyMoAfter;
+  const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'')+(greedyMoAfter>0?' + greedy growth':'');
   ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">${projSub}</span>`,projMoTotal>=0?'green':'red');
   if(projAmbMo>0){
     const ambSub=refInitTH>0&&i.amb&&i.refTH>0
@@ -2837,10 +2844,13 @@ function renderPlanner(i,m){
       : refInitTH>0 ? `${fN(refInitTH,1)} TH from referral plan` : `${fN(i.refTH,0)} referred TH`;
     ph+=row('↳ Ambassador uplift',`+${fU(projAmbMo)}/mo<span class="sub">${ambSub}</span>`,'green');
   }
+  if(greedyMoAfter>0){
+    ph+=row('↳ Greedy growth',`+${fU(greedyMoAfter)}/mo<span class="sub">${fN(_gTHf*gGrow/100,2)} free TH/wk @ ${fN(_gWf,1)} W${_gTHf>(m.gth||0)+0.5?` · grown to ${fN(_gTHf,0)} TH`:''}</span>`,'green');
+  }
   const newWkStake=(newLocked*i.apr/100)/52;
   const newStakingMo=newWkStake*gp*4.33;
   const curStakingMo=m.wkGMT*m.gp*4.33;
-  const totalImp=imp+(newStakingMo-curStakingMo);
+  const totalImp=imp+(newStakingMo-curStakingMo)+(greedyMoAfter-greedyMoBefore);
   ph+=row('Monthly improvement',`${totalImp>=0?'+':''}${fU(totalImp)}<span class="sub">mining + staking</span>`,totalImp>=0?'green':'red');
   ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
   ph+=`<div class="divider"></div>`;
@@ -2859,11 +2869,11 @@ function renderPlanner(i,m){
 
   // BTC price projections (includes mining + staking + ambassador)
   const moStakingUSD=newWkStake*gp*4.33;
-  const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''})`;
+  const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''}${greedyMoAfter>0?' + greedy growth':''})`;
   // Current (pre-investment) state, for the before/after comparison.
   const curAmbMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
-  const curP={th:m.totTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.totTH,stakingMo:curStakingMo,ambMo:curAmbMo};
-  $('projTable').innerHTML=renderProjections(projTH,projWth,td2,projLabel,moStakingUSD,projAmbMo,curP);
+  const curP={th:m.totTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.totTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
+  $('projTable').innerHTML=renderProjections(projTH,projWth,td2,projLabel,moStakingUSD,projAmbMo,curP,greedyMoAfter);
   updateProjCell();
 
 }
