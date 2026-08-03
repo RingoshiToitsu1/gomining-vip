@@ -36,6 +36,106 @@
     }
     function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+    // ---- @mentions + local notifications ------------------------------------
+    // No backend: realtime already delivers every message to every client, so each
+    // client checks incoming messages against ITS OWN name and notifies itself
+    // (beep + highlight, plus an OS Notification when its tab isn't focused).
+    var presenceUsers = [];
+    function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9_]/g, ''); }
+    function myNames() {
+      var out = [];
+      if (A.profile) {
+        if (A.profile.username) out.push(norm(A.profile.username));
+        if (A.profile.display_name) out.push(norm(A.profile.display_name));
+      }
+      return out.filter(Boolean);
+    }
+    function isMe(token) { var t = norm(token); return !!t && myNames().indexOf(t) >= 0; }
+    function mentionsMe(body) {
+      var names = myNames(); if (!names.length) return false;
+      var re = /@(\w{1,32})/g, m;
+      while ((m = re.exec(String(body || '')))) { if (names.indexOf(norm(m[1])) >= 0) return true; }
+      return false;
+    }
+    // Escape first, THEN wrap @tokens (word chars only, so safe on the escaped string).
+    function renderBody(body) {
+      return esc(body).replace(/@(\w{1,32})/g, function (full, name) {
+        return '<span class="gmt-mention' + (isMe(name) ? ' gmt-mention-me' : '') + '">@' + name + '</span>';
+      });
+    }
+    var audioCtx;
+    function beep() {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime;
+        o.type = 'sine'; o.frequency.setValueAtTime(880, t); o.frequency.setValueAtTime(660, t + 0.09);
+        g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        o.connect(g); g.connect(audioCtx.destination); o.start(t); o.stop(t + 0.24);
+      } catch (e) {}
+    }
+    function ensureNotifyPermission() {
+      try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+    }
+    function notifyIfMentioned(m) {
+      if (!A.isLoggedIn() || !m || m.user_id === A.user.id) return;   // never notify me for my own message
+      if (!mentionsMe(m.body)) return;
+      beep();
+      if (collapsed && el.box) el.box.classList.add('mention-alert');   // pulse the rail when docked away
+      var away = document.hidden || collapsed;                           // not actively watching the chat
+      if (away && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          var n = new Notification((m.username || 'Someone') + ' mentioned you in GMT chat', {
+            body: String(m.body || '').slice(0, 140),
+            icon: location.origin + '/gmt-optimizer-logo.svg?v=2', tag: 'gmt-mention', renotify: true
+          });
+          n.onclick = function () { try { window.focus(); if (!POPOUT) setCollapsed(false); } catch (e) {} n.close(); };
+        } catch (e) {}
+      }
+    }
+
+    // ---- @mention autocomplete (composer) ----
+    var acItems = [], acSel = 0, acStart = 0, acEnd = 0;
+    function candidates(prefix) {
+      var seen = {}, out = [], me = myNames();
+      function add(name) {
+        var n = String(name == null ? '' : name).replace(/\s+/g, ''); if (!n) return;
+        var k = n.toLowerCase(); if (seen[k] || me.indexOf(norm(n)) >= 0) return; seen[k] = 1; out.push(n);
+      }
+      presenceUsers.forEach(add);
+      for (var i = messages.length - 1; i >= 0 && out.length < 60; i--) add(messages[i].username);
+      var p = (prefix || '').toLowerCase();
+      return out.filter(function (n) { return n.toLowerCase().indexOf(p) === 0; }).slice(0, 6);
+    }
+    function acScan() {
+      if (!el.input) return acHide();
+      var pos = el.input.selectionStart, before = el.input.value.slice(0, pos);
+      var mm = before.match(/(?:^|\s)@(\w*)$/);
+      if (!mm) return acHide();
+      acItems = candidates(mm[1]);
+      if (!acItems.length) return acHide();
+      acSel = 0; acStart = pos - mm[1].length - 1; acEnd = pos;   // acStart points at the '@'
+      renderAc();
+    }
+    function renderAc() {
+      if (!el.ac) return;
+      el.ac.innerHTML = acItems.map(function (n, i) {
+        return '<div class="gmt-ac-item' + (i === acSel ? ' sel' : '') + '" data-i="' + i + '">@' + esc(n) + '</div>';
+      }).join('');
+      el.ac.style.display = 'block';
+    }
+    function acMove(d) { if (acItems.length) { acSel = (acSel + d + acItems.length) % acItems.length; renderAc(); } }
+    function acHide() { acItems = []; if (el.ac) el.ac.style.display = 'none'; }
+    function acAccept() {
+      if (!acItems.length || !el.input) return acHide();
+      var name = acItems[acSel], v = el.input.value;
+      el.input.value = v.slice(0, acStart) + '@' + name + ' ' + v.slice(acEnd);
+      var caret = acStart + name.length + 2;
+      try { el.input.setSelectionRange(caret, caret); } catch (e) {}
+      ensureNotifyPermission();   // user gesture — good moment to ask
+      acHide(); el.input.focus();
+    }
+
     // ---- data ----
     function loadHistory() {
       return sb.from('messages').select('id,user_id,username,avatar_url,body,created_at')
@@ -72,6 +172,7 @@
     sb.channel('chat-room')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function (p) {
         messages.push(p.new); if (messages.length > 200) messages.shift(); renderList();
+        notifyIfMentioned(p.new);
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, function (p) {
         messages = messages.filter(function (m) { return String(m.id) !== String(p.old.id); }); renderList();
@@ -84,7 +185,10 @@
     catch (e) { myKey = 'a' + Math.random().toString(36).slice(2); }
     var pres = sb.channel('online', { config: { presence: { key: myKey } } });
     pres.on('presence', { event: 'sync' }, function () {
-      online = Object.keys(pres.presenceState()).length; renderOnline();
+      var st = pres.presenceState(); online = Object.keys(st).length;
+      presenceUsers = [];
+      Object.keys(st).forEach(function (k) { (st[k] || []).forEach(function (meta) { if (meta && meta.user) presenceUsers.push(meta.user); }); });
+      renderOnline();
     });
     pres.subscribe(function (status) {
       if (status === 'SUBSCRIBED') pres.track({ at: Date.now(), user: A.isLoggedIn() ? (A.profile && A.profile.username) : null });
@@ -173,16 +277,29 @@
       collapsed = v;
       el.box.classList.toggle('collapsed', v);
       try { localStorage.setItem('gmt_chat_collapsed', v ? '1' : '0'); } catch (e) {}
-      if (!v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
+      if (!v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); if (el.box) el.box.classList.remove('mention-alert'); }
     }
 
     function renderFoot() {
       if (!el.foot) return;
       if (A.isLoggedIn()) {
-        el.foot.innerHTML = '<textarea id="gmtChatIn" maxlength="500" placeholder="Message…"></textarea><div class="gmt-flash" id="gmtFlash"></div>';
+        el.foot.innerHTML = '<div class="gmt-mention-ac" id="gmtMentionAc" style="display:none"></div><textarea id="gmtChatIn" maxlength="500" placeholder="Message…  (@ to mention)"></textarea><div class="gmt-flash" id="gmtFlash"></div>';
         el.input = el.foot.querySelector('#gmtChatIn');
         el.flash = el.foot.querySelector('#gmtFlash');
+        el.ac = el.foot.querySelector('#gmtMentionAc');
+        el.ac.addEventListener('mousedown', function (e) {
+          var it = e.target.closest ? e.target.closest('.gmt-ac-item') : null;
+          if (it) { e.preventDefault(); acSel = +it.getAttribute('data-i') || 0; acAccept(); }
+        });
+        el.input.addEventListener('input', acScan);
+        el.input.addEventListener('blur', function () { setTimeout(acHide, 120); });
         el.input.addEventListener('keydown', function (e) {
+          if (el.ac && el.ac.style.display !== 'none' && acItems.length) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); acMove(1); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); acMove(-1); return; }
+            if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); acAccept(); return; }
+            if (e.key === 'Escape') { e.preventDefault(); acHide(); return; }
+          }
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(el.input.value); }
         });
       } else {
@@ -208,9 +325,10 @@
         var controls = '';
         if (canDel) controls += '<span class="mod" data-del="' + m.id + '" title="Delete">✕</span>';
         if (mod && (!mine || m.user_id !== mine)) controls += '<span class="mod" data-ban="' + esc(m.user_id) + '" data-name="' + esc(m.username) + '" title="Ban user">🚫</span>';
-        return '<div class="gmt-msg">' + avatarHTML(m) +
+        var mentioned = m.user_id !== mine && mentionsMe(m.body);   // a message that @mentions me
+        return '<div class="gmt-msg' + (mentioned ? ' mentioned' : '') + '">' + avatarHTML(m) +
           '<div class="gmt-msg-txt"><span class="u" data-user="' + esc(m.user_id) + '" style="color:' + color(m.user_id) + '" title="View profile">' + esc(m.username) + '</span> ' +
-          esc(m.body) + controls + '</div></div>';
+          renderBody(m.body) + controls + '</div></div>';
       }).join('');
       if (atBottom) el.list.scrollTop = el.list.scrollHeight;
     }
