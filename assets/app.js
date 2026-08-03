@@ -117,6 +117,14 @@ function cptTier(tiers,th){
   return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+// $/TH at a FRACTIONAL efficiency, interpolated linearly in W between the 12 W and 15 W
+// curves and clamped to [12,15]. A 12.9 W miner is priced ~30% of the way from the 12 W
+// curve toward 15 W — not snapped to either cliff. Mirrors cptAtEff in scripts/constants.js.
+function cptAtEff(th,wth){
+  const w=Math.min(Math.max(wth||EFF_BEST,EFF_BEST),EFF_BASE_MAX);
+  const f=(w-EFF_BEST)/(EFF_BASE_MAX-EFF_BEST);
+  return cptTier(TH_TIERS_12W,th)*(1-f)+cptTier(TH_TIERS,th)*f;
+}
 // Budget → TH at 12 W/TH. Minting a new machine and adding TH to one you own cost the same
 // per TH at a given efficiency, so this is the converter for every 12 W path, purchase or
 // upgrade. thForBudget/estimateCPT are the 15 W equivalents on TH_TIERS — the split is by
@@ -1946,7 +1954,7 @@ function recalc(){
   // (12 W priced off the 12 W curve, else the 15 W curve). Counted as income below.
   const ggrow=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
   const greedyWkTH=(m.gth||0)*ggrow/100, gwv=m.gwth||0;
-  const cptGreedy=(gwv>0&&gwv<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1);
+  const cptGreedy=cptAtEff(m.gth||1,gwv);   // interpolated by the greedy's exact W/TH
   const greedyDailyUSD=greedyWkTH/7*cptGreedy, greedyMonthlyUSD=greedyWkTH*4.33*cptGreedy;
   const totalDailyUSD=netUSD+dailyStakeUSD+heroAmbDaily+greedyDailyUSD;
   // Monthly must equal the "Total monthly income" breakdown below, which uses
@@ -2048,7 +2056,7 @@ function recalc(){
   // accrued × the cost of that TH at the greedy's efficiency. Real income, in hashrate.
   const ggrowB=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
   const greedyWkTHb=(m.gth||0)*ggrowB/100, gwvb=m.gwth||0;
-  const cptGreedyB=(gwvb>0&&gwvb<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1);
+  const cptGreedyB=cptAtEff(m.gth||1,gwvb);   // interpolated by the greedy's exact W/TH
   const greedyMonthlyB=greedyWkTHb*4.33*cptGreedyB;
   const totalMonthly=miningMonthly+stakingMonthly+ambMonthly+greedyMonthlyB;
   g+=row('TH mining income',`${fU(miningMonthly)}/mo`,miningMonthly>=0?'green':'red');
@@ -2057,7 +2065,7 @@ function recalc(){
     g+=row('Ambassador rewards',`${fU(ambMonthly)}/mo<span class="sub">${fU(ambDaily)}/day USDT &middot; ${fN(refTH,0)} referred TH</span>`,'green');
   }
   if(greedyMonthlyB>0){
-    g+=row('Greedy Machine growth',`${fU(greedyMonthlyB)}/mo<span class="sub">+${fN(greedyWkTHb,2)} TH/wk &middot; ${fU(cptGreedyB)}/TH credit @ ${fN(gwvb,0)} W</span>`,'green');
+    g+=row('Greedy Machine growth',`${fU(greedyMonthlyB)}/mo<span class="sub">+${fN(greedyWkTHb,2)} TH/wk &middot; ${fU(cptGreedyB)}/TH credit @ ${fN(gwvb,1)} W</span>`,'green');
   }
   g+=`<div class="divider"></div>`;
   g+=row('Total monthly income',fU(totalMonthly),totalMonthly>=0?'green':'red');
@@ -3652,7 +3660,7 @@ function obPreview(){
     const refTH=isAmb?(+$('inReferredTH').value||0):0;
     const ambDaily=refTH*15*24/1000*0.005;
     const gWk=(m.gth||0)*((+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100), gwp=m.gwth||0;
-    const gDaily=gWk/7*((gwp>0&&gwp<=EFF_BEST)?estimateCPT12(m.gth||1):estimateCPT(m.gth||1));
+    const gDaily=gWk/7*cptAtEff(m.gth||1,gwp);
     const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily+gDaily;
     document.getElementById('obPrevDaily').textContent=fU(totalDailyUSD);
     document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*30);
