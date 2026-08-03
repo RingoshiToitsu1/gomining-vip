@@ -24,6 +24,7 @@
   function start() {
     var A = window.GMTAccount, sb = A.sb;
     var LIMIT = 50, MIN_GAP = 1000, lastSent = 0;
+    var MAX_AGE_MS = 24 * 60 * 60 * 1000;   // keep chat clean: only the last day is shown/kept
     var messages = [], online = 0, mounted = false, collapsed = false;
     var el = {};
 
@@ -139,6 +140,7 @@
     // ---- data ----
     function loadHistory() {
       return sb.from('messages').select('id,user_id,username,avatar_url,body,created_at')
+        .gte('created_at', new Date(Date.now() - MAX_AGE_MS).toISOString())   // last day only
         .order('created_at', { ascending: false }).limit(LIMIT)
         .then(function (r) { messages = (r.data || []).reverse(); renderList(); });
     }
@@ -320,7 +322,8 @@
       if (!el.list) return;
       var mine = A.isLoggedIn() ? A.user.id : null, mod = A.isMod();
       var atBottom = el.list.scrollHeight - el.list.scrollTop - el.list.clientHeight < 40;
-      el.list.innerHTML = messages.map(function (m) {
+      var cutoff = Date.now() - MAX_AGE_MS;
+      el.list.innerHTML = messages.filter(function (m) { return new Date(m.created_at).getTime() >= cutoff; }).map(function (m) {
         var canDel = mod || (mine && m.user_id === mine);
         var controls = '';
         if (canDel) controls += '<span class="mod" data-del="' + m.id + '" title="Delete">✕</span>';
@@ -411,6 +414,12 @@
     }
 
     loadHistory();
+    // Age messages out of a long-open session too, so nothing older than a day lingers.
+    setInterval(function () {
+      var cutoff = Date.now() - MAX_AGE_MS, before = messages.length;
+      messages = messages.filter(function (m) { return new Date(m.created_at).getTime() >= cutoff; });
+      if (messages.length !== before) renderList();
+    }, 60000);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
   }
 })();

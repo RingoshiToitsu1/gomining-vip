@@ -215,3 +215,13 @@ do $$ begin
   alter publication supabase_realtime add table public.messages;
 exception when duplicate_object then null; end $$;
 
+-- Keep the chat clean: delete messages older than a day, hourly (the client also only
+-- loads/shows the last 24h, so this is DB hygiene so the table can't grow without bound).
+-- pg_cron must be enabled (Dashboard → Database → Extensions, or the create extension below).
+create extension if not exists pg_cron with schema extensions;
+do $$ begin
+  perform cron.unschedule('purge-old-messages');   -- drop a prior copy so re-running doesn't duplicate
+exception when others then null; end $$;
+select cron.schedule('purge-old-messages', '0 * * * *',
+  $$ delete from public.messages where created_at < now() - interval '1 day' $$);
+
