@@ -388,7 +388,7 @@ function projectedMonthlyForCapital(capUSD){
       lockUSD:a.sol.usdSpentOnGMT+a.sol.fromPool*gp, glAdd:a.sol.lock,
       thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth});
     const projTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, projWth=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
-    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*bp*30;
+    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee
     locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
     gTHf=(ep&&ep.gTHf>0)?ep.gTHf:(a.greedyTot||0);gWf=(ep&&ep.gWthf>0)?ep.gWthf:(a.gwthAfter||15);
   }else{
@@ -2778,7 +2778,7 @@ function renderPlanner(i,m){
   const projWth=(_ep&&_ep.finWth>0)?_ep.finWth:bwth;
   // Mining monthly for THAT total (same formula as the solver's `mo`, but on the efficiency-
   // inclusive TH/efficiency) so the "Projected monthly" headline matches the projection table.
-  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*bp*30;
+  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
 
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
