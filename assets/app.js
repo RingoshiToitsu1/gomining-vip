@@ -402,14 +402,26 @@ function projectedMonthlyForCapital(capUSD){
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
 }
+// The farm's CURRENT monthly income, computed exactly like the "Current" card / console hero
+// (calc()-based), so the target banner's "you already earn" matches to the dollar — the $0-capital
+// solve routes through a different discount path and drifts a few dollars.
+function currentMonthlyIncomeUSD(){
+  const i=inp(),m=calc(i),gp=m.gp;
+  const mineMo=m.net*m.bp*30;                                   // includes discount + 2.25% conversion fee
+  const stakingMo=m.wkGMT*gp*4.33;
+  const ambMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
+  const gGrow=+(i.ggrow||0);
+  const greedyMo=((m.gth||0)>0&&gGrow>0)?(m.gth*gGrow/100)*4.33*cptAtEff(m.gth,m.gwth||15):0;
+  return mineMo+stakingMo+ambMo+greedyMo;
+}
 // Binary-search the smallest USD capital that ADDS addUSD to the farm's monthly income.
 // The target is additional income, not a total: someone already earning $2,800/mo who asks
 // for $1,500 wants to end up on $4,300, not to be told they are already there.
 function solveCapitalForIncome(addUSD){
   if(!(addUSD>0))return null;
   const f=projectedMonthlyForCapital;
-  const base=f(0);                       // what the farm pays before any new capital
-  if(base==null)return {cap:null,error:true};
+  const base=currentMonthlyIncomeUSD();   // the real current income (matches the Current card)
+  if(base==null||!isFinite(base))return {cap:null,error:true};
   const goal=base+addUSD;
   let hi=1000,hiMo=f(hi),iter=0;
   while((hiMo==null||hiMo<goal)&&hi<1e8&&iter<40){hi*=2;hiMo=f(hi);iter++;}
