@@ -120,40 +120,59 @@ function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
 // Marginal cost to grow a 12 W miner from `cur` TH by `add` TH — the slice of the price curve
 // from cur → cur+add. Topping up an existing miner is CHEAPER than a new one, which re-pays the
 // pricey 0 → add slice: a miner already at `cur` starts lower on the descending curve.
-function costToGrow12(cur,add){ if(!(add>0))return 0; cur=Math.max(0,cur); return Math.max(0,(cur+add)*estimateCPT12(cur+add)-cur*estimateCPT12(cur)); }
-// Existing miners we can top up with 12 W TH, largest first (largest = cheapest marginal tier).
-// A >12 W miner can't take 12 W TH without an efficiency upgrade first — EXCEPT the greedy,
-// which the plan upgrades to 12 W, so it's included.
-function existingMinerSizes(){
+// --- Tiered top-up pricing --------------------------------------------------------------
+// Adding TH to a miner you already own is cheaper than a new one: you skip the pricey first-TH
+// tiers and stay on the descending part of the curve. These helpers are curve-agnostic (12 W or
+// 15 W) and track per-miner fleet state, so the planner AND the forward projection price it right.
+function costToGrowTiers(cur,add,tiers){ if(!(add>0))return 0; cur=Math.max(0,cur); return Math.max(0,(cur+add)*cptTier(tiers,cur+add)-cur*cptTier(tiers,cur)); }
+function costToGrow12(cur,add){ return costToGrowTiers(cur,add,TH_TIERS_12W); }
+// TH a `budget` adds to ONE miner already at `cur` TH (single miner, uncapped — used for the greedy).
+function thToGrowTiers(cur,budget,tiers){
+  if(!(budget>0))return 0;
+  var lo=0,hi=budget/(tiers[tiers.length-1].cpt*avatarDiscMult()),g=0;
+  while(costToGrowTiers(cur,hi,tiers)<budget&&g++<40)hi*=2;
+  for(var k=0;k<60;k++){var m=(lo+hi)/2;if(costToGrowTiers(cur,m,tiers)<budget)lo=m;else hi=m;}
+  return(lo+hi)/2;
+}
+// Min cost to add `x` TH given a fleet of miner sizes: fill existing miners toward the 5,000 cap
+// first (cheapest marginal tier), then mint new NFTs.
+function costToAddTiers(x,sizes,tiers){
+  if(!(x>0))return 0;
+  var cost=0,left=x,i,add;
+  for(i=0;i<sizes.length&&left>0.0001;i++){ add=Math.min(MINER_CAP-sizes[i],left); if(add<=0)continue; cost+=costToGrowTiers(sizes[i],add,tiers); left-=add; }
+  while(left>0.0001){ add=Math.min(MINER_CAP,left); cost+=costToGrowTiers(0,add,tiers); left-=add; }
+  return cost;
+}
+// Budget → TH, crediting the top-up of existing miners. Falls back to fresh-miner pricing when
+// there are no per-miner sizes to top up.
+function thForBudgetFromSizes(budget,sizes,tiers){
+  if(!(budget>0))return 0;
+  if(!sizes||!sizes.length)return thForBudgetTiers(budget,tiers);
+  var lo=0,hi=budget/(tiers[tiers.length-1].cpt*avatarDiscMult()),g=0;
+  while(costToAddTiers(hi,sizes,tiers)<budget&&g++<40)hi*=2;
+  for(var k=0;k<60;k++){var m=(lo+hi)/2;if(costToAddTiers(m,sizes,tiers)<budget)lo=m;else hi=m;}
+  return(lo+hi)/2;
+}
+// Add `x` TH to a fleet (fill largest first, then new 5,000-cap NFTs). Returns the new size list
+// with capped miners dropped — they can't be topped up, so they don't affect future pricing.
+function applyAddSizes(sizes,x){
+  sizes=sizes.slice().sort(function(a,b){return b-a;});
+  var left=x,i,add;
+  for(i=0;i<sizes.length&&left>0.0001;i++){ add=Math.min(MINER_CAP-sizes[i],left); if(add>0){ sizes[i]+=add; left-=add; } }
+  while(left>0.0001){ add=Math.min(MINER_CAP,left); sizes.push(add); left-=add; }
+  return sizes.filter(function(s){return s<MINER_CAP-1e-6;});
+}
+// The user's real miners we can top up with 12 W TH, largest first. A >12 W miner needs an
+// efficiency upgrade before it takes 12 W TH — except the greedy, which the plan upgrades.
+// inclGreedy=false excludes the greedy (the projection tracks it as its own miner).
+function existingMinerSizes(inclGreedy){
   return (window.GMTFleetRows||[])
-    .filter(function(r){var g=/greedy/i.test(r.collection||'');return (+r.th||0)>0&&(+r.th||0)<MINER_CAP&&((+r.wth||15)<=EFF_BEST||g);})
+    .filter(function(r){var g=/greedy/i.test(r.collection||'');return (+r.th||0)>0&&(+r.th||0)<MINER_CAP&&((+r.wth||15)<=EFF_BEST||(inclGreedy!==false&&g));})
     .map(function(r){return +r.th||0;})
     .sort(function(a,b){return b-a;});
 }
-// Min cost to add `x` TH at 12 W: fill existing miners toward the 5,000 cap first (cheapest
-// marginal slice of the curve), then mint new NFTs. Cheaper than pricing it all as a fresh miner.
-function costToAdd12(x,sizes){
-  if(!(x>0))return 0;
-  sizes=sizes||existingMinerSizes();
-  var cost=0,left=x,i,room,add;
-  for(i=0;i<sizes.length&&left>0.0001;i++){
-    room=MINER_CAP-sizes[i]; add=Math.min(room,left); if(add<=0)continue;
-    cost+=costToGrow12(sizes[i],add); left-=add;
-  }
-  while(left>0.0001){ add=Math.min(MINER_CAP,left); cost+=costToGrow12(0,add); left-=add; }
-  return cost;
-}
-// Budget → TH at 12 W, crediting the cheaper top-up of existing miners. Falls back to the
-// fresh-miner curve (thForBudget12) when there are no per-miner sizes to top up.
-function thForBudget12Ex(budget){
-  if(!(budget>0))return 0;
-  var sizes=existingMinerSizes();
-  if(!sizes.length)return thForBudget12(budget);
-  var lo=0,hi=budget/(TH_TIERS_12W[TH_TIERS_12W.length-1].cpt*avatarDiscMult()),guard=0;
-  while(costToAdd12(hi,sizes)<budget&&guard++<40)hi*=2;
-  for(var k=0;k<60;k++){var mid=(lo+hi)/2;if(costToAdd12(mid,sizes)<budget)lo=mid;else hi=mid;}
-  return(lo+hi)/2;
-}
+function costToAdd12(x,sizes){ return costToAddTiers(x,sizes||existingMinerSizes(),TH_TIERS_12W); }
+function thForBudget12Ex(budget){ return thForBudgetFromSizes(budget,existingMinerSizes(),TH_TIERS_12W); }
 // $/TH at a FRACTIONAL efficiency, interpolated linearly in W between the 12 W and 15 W
 // curves and clamped to [12,15]. A 12.9 W miner is priced ~30% of the way from the 12 W
 // curve toward 15 W — not snapped to either cliff. Mirrors cptAtEff in scripts/constants.js.
@@ -3195,6 +3214,10 @@ function computeSetupProjection(){
 
   const daily=[];
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
+  // Real per-miner state for the VIP (non-greedy) farm, so each week's TH purchase prices against
+  // the evolving fleet (topping up existing miners is cheaper than minting new). The greedy is a
+  // single miner tracked by greedyTH, priced separately on the 15 W curve.
+  let vipSizes=existingMinerSizes(false);
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
     gp=gpForDay(d);      // dailyNet/gmtDeficit close over gp, so staking value, burn, coverage
@@ -3223,10 +3246,10 @@ function computeSetupProjection(){
         if(i.payG){
           // Size the lock off the SAME price table the reinvest step actually buys at (12W),
           // otherwise the cheaper 15W curve overestimates the TH bought and over-locks GMT.
-          const allTH=th+thForBudget12(netUSD);
+          const allTH=th+thForBudgetFromSizes(netUSD,vipSizes,TH_TIERS_12W);
           if(gmtDeficit(allTH,gmtLocked)>0){
             let lo=0,hi=netUSD;
-            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudget12(thRem):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
+            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudgetFromSizes(thRem,vipSizes,TH_TIERS_12W):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
             gmtSpend=hi;
           }
         }
@@ -3244,14 +3267,14 @@ function computeSetupProjection(){
           for(let s=0;s<STEPS;s++){
             // --- option BUY: greedy-fill first @15W, remainder a new 12W VIP machine ---
             let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH;
-            const t15=thForBudget(incr);
+            const t15=thToGrowTiers(greedyTH,incr,TH_TIERS);   // greedy tops up its own miner (15 W curve), not a fresh one
             if(HAS_GREEDY&&greedyTH<GREEDY_CAP&&t15>0){
               const gAdd=Math.min(t15,GREEDY_CAP-greedyTH);
               gW2=(greedyTH*greedyWTH+gAdd*15)/(greedyTH+gAdd);gTH2=greedyTH+gAdd;
               const rem=incr*(1-gAdd/t15);
-              if(rem>0){const vAdd=thForBudgetTiers(rem,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
+              if(rem>0){const vAdd=thForBudgetFromSizes(rem,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
             }else{
-              const vAdd=thForBudgetTiers(incr,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
+              const vAdd=thForBudgetFromSizes(incr,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
             // --- option EFF: drive efficiency toward 12 W/TH ($2.67/TH per W-step). ---
@@ -3280,10 +3303,10 @@ function computeSetupProjection(){
             const headroom=effApply!=null;
             const rescuable=dailyNet(th,gmtLocked,{wth:EFF_BEST,greedyWTH:Math.min(greedyWTH,EFF_BEST)}).mining>0;
             if(headroom&&(dn.mining>0||rescuable)){
-              if(buyNet>=effNet&&buyNet>base+eps){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              if(buyNet>=effNet&&buyNet>base+eps){vipSizes=applyAddSizes(vipSizes,Math.max(0,vTH2-th));greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
               else{effApply();}
             }else if(Math.max(buyNet,effNet)>lockNet+eps){
-              if(buyNet>=effNet){greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              if(buyNet>=effNet){vipSizes=applyAddSizes(vipSizes,Math.max(0,vTH2-th));greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
               else{effApply();}
             }else{gmtLocked+=addG;}
           }
