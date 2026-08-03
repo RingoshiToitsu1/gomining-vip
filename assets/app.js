@@ -2530,10 +2530,17 @@ function renderEfficiencyComparison(st){
     ['Adds',addTH>0?`+${fN(addTH,1)} TH @ ${fN(EFF_BEST,0)}W`:'—'],
     ['Source',addTH>0?(addG>0.5?'grow greedy first':'new 12 W machine'):'—']
   ]);
+  // The "upgrade wins under $X BTC" gauge frames efficiency as a price-dependent bet vs
+  // buying TH — right for a whole-farm upgrade, but NOT for a greedy upgrade, which is a
+  // prerequisite to growing the greedy at 12 W (one efficiency per NFT). This branch only
+  // fires when the whole-farm upgrade LOST to buying TH, so the gauge would contradict it.
+  const effExtra=effIsGreedy
+    ? `<div class="eff-gauge-lbl" style="margin-top:.55rem">Required first — one efficiency per NFT, so ${gCode} must reach ${fN(EFF_BEST,0)} W before its new (and free weekly) TH can run at ${fN(EFF_BEST,0)} W.</div>`
+    : (effThreshBp?effGauge(effThreshBp,bp):'');
   if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
     ['Farm avg',effTHupg>0?`${fN(curWth,2)} → ${fN(finWth,2)}`:'—']
-  ],effThreshBp?effGauge(effThreshBp,bp):'');
+  ],effExtra);
   g+=`</div>`;
   // Per-miner upgrade order (by NFT code, greedy first) — shown ONLY when the plan
   // actually allocates to efficiency, so it never contradicts a "buy TH" plan.
