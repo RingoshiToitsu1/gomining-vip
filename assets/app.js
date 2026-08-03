@@ -2876,10 +2876,19 @@ function openSetupProjection(mode){
   spShowForm();
   syncPayoutUnit();
   showPanelView('setupProjModal');
-  // Its own page: reflect /projection in the URL and highlight the nav item (like /edit).
+  // Its own page. The planner-mode projection (projecting the RECOMMENDED allocation) is
+  // separate logic from the setup projection, so it gets its own nested URL /planner/projection
+  // and keeps the Planner nav highlighted; the setup projection is /projection.
+  const backLabel=(window._spMode==='planner')?'← Return to Planner':'← Return to Console';
+  document.querySelectorAll('#setupProjModal .sp-back-btn').forEach(b=>{b.textContent=backLabel;});
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
-  const npl=$('navProjection');if(npl)npl.classList.add('nav-active');
-  try{history.replaceState({panel:'projection'},'','/projection'+location.hash);}catch(e){}
+  if(window._spMode==='planner'){
+    const pl=document.querySelector('.nav-links a[data-view="tab-planner"]');if(pl)pl.classList.add('nav-active');
+    try{history.replaceState({panel:'projection',mode:'planner'},'','/planner/projection'+location.hash);}catch(e){}
+  }else{
+    const npl=$('navProjection');if(npl)npl.classList.add('nav-active');
+    try{history.replaceState({panel:'projection'},'','/projection'+location.hash);}catch(e){}
+  }
   const btn=document.getElementById('spRunBtn');
   if(btn)btn.disabled=false;
 }
@@ -2963,9 +2972,15 @@ function closeSetupProjection(){
     if(load)load.style.display='none';
     if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
     document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
-    const cn=document.querySelector('.nav-links a[data-view="tab-current"]');if(cn)cn.classList.add('nav-active');
-    try{history.replaceState({},'','/console'+location.hash);}catch(e){}
-    refreshMySetupAnimation();
+    // Return to wherever this projection was launched from: planner-mode → /planner, else /console.
+    if(window._spMode==='planner'){
+      const pl=document.querySelector('.nav-links a[data-view="tab-planner"]');if(pl)pl.classList.add('nav-active');
+      try{history.replaceState({},'','/planner'+location.hash);}catch(e){}
+    }else{
+      const cn=document.querySelector('.nav-links a[data-view="tab-current"]');if(cn)cn.classList.add('nav-active');
+      try{history.replaceState({},'','/console'+location.hash);}catch(e){}
+      refreshMySetupAnimation();
+    }
   },650);
 }
 function newSetupProjection(){
