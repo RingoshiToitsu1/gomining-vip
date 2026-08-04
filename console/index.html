@@ -638,6 +638,10 @@
           <label>Referral's Planned Capital <span class="tip" data-tip="Optional. Capital your referral plans to invest, following the same TH/GMT strategy as you. Their TH adds to your Ambassador rewards, and they reinvest along with you in projections.">?</span></label>
           <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
+        <div class="field">
+          <label>Referral Bonus % <span class="tip" data-tip="Your ambassador commission on a referral's TH spend, paid to you in GMT. GoMining's rate is tiered — 5% base, rising with your ambassador rank (e.g. 14%). Set yours here.">?</span></label>
+          <div class="field-input"><input type="number" id="inRefBonusPct" value="5" step="0.5" min="0" max="100"><span class="unit">%</span></div>
+        </div>
       </div>
       <div id="capInMarketplace" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Buy a specific marketplace miner <span style="color:var(--text4);font-weight:400">(optional)</span></label>
@@ -799,7 +803,12 @@
             <input type="number" id="piRefCapInput" value="0" step="100" min="0">
             <span class="pi-unit">USD</span>
           </label>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Capital your referral plans to invest. You receive <strong style="color:var(--green)">5% of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">Your Referral Bonus <span style="color:var(--text4)">(ambassador tier — 5% up to 14%+)</span></label>
+          <label class="pi-field-box" for="piRefBonus">
+            <input type="number" id="piRefBonus" value="5" step="0.5" min="0" max="100">
+            <span class="pi-unit">%</span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">You receive <strong style="color:var(--green)">this % of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
           </div>
         </div>
         <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
@@ -1021,7 +1030,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=56"></script>
+<script src="/assets/app.js?v=57"></script>
 <script src="/assets/fleet.js?v=11"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

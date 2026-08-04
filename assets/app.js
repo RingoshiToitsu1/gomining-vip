@@ -311,6 +311,7 @@ function openPlannerForm(){
   document.getElementById('piCapitalInput').value=$('inCapital').value;
   document.getElementById('piGMTInput').value=$('inGMTWallet').value;
   document.getElementById('piRefCapInput').value=$('inRefCapital').value;
+  if($('piRefBonus')&&$('inRefBonusPct'))$('piRefBonus').value=$('inRefBonusPct').value;
   document.getElementById('piMpTH').value=$('inMpTH').value;
   document.getElementById('piMpGMT').value=$('inMpGMT').value;
   document.getElementById('piMpWth').value=$('inMpWth').value;
@@ -342,6 +343,7 @@ function submitPlannerCapital(){
     $('inCapital').value=val;
     if(gmtVal>0)$('inGMTWallet').value=gmtVal;
     $('inRefCapital').value=refCapVal;
+    if($('piRefBonus')&&$('inRefBonusPct'))$('inRefBonusPct').value=parseFloat($('piRefBonus').value)||5;
     $('inMpTH').value=parseFloat(document.getElementById('piMpTH').value)||0;
     $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
     const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
@@ -442,6 +444,7 @@ function submitPlannerTarget(){
     const refCapVal=parseFloat($('piRefCapInput').value)||0;
     if(gmtVal>0)$('inGMTWallet').value=gmtVal;
     $('inRefCapital').value=refCapVal;
+    if($('piRefBonus')&&$('inRefBonusPct'))$('inRefBonusPct').value=parseFloat($('piRefBonus').value)||5;
     $('inMpTH').value=parseFloat($('piMpTH').value)||0;
     $('inMpGMT').value=parseFloat($('piMpGMT').value)||0;
     const mpWthVal=parseFloat($('piMpWth').value);$('inMpWth').value=(mpWthVal>0?mpWthVal:15);
@@ -1439,7 +1442,10 @@ function inp(){
   gwth:(+($('inGreedyWth')?$('inGreedyWth').value:0)||0)||wth,
   ggrow:+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0,
   amb:$('inAmbassador').checked, refTH:+$('inReferredTH').value||0,
-  refCap:+$('inRefCapital').value||0
+  refCap:+$('inRefCapital').value||0,
+  // Ambassador commission on a referral's TH spend, paid to you in GMT. Tiered (5%→~14%+),
+  // so it's user-editable; default 5%.
+  refBonusPct:(+($('inRefBonusPct')?$('inRefBonusPct').value:0)||0)||5
 }}
 function $(id){return document.getElementById(id)}
 
@@ -1539,6 +1545,7 @@ function readInputs(){
     inAvatarDisc:$('inAvatarDisc').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
+    inRefBonusPct:$('inRefBonusPct')?$('inRefBonusPct').value:'5',
     inCurrency:$('inCurrency').value,
     piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false,
     // Manual discount override travels WITH the setup so it never leaks across profiles.
@@ -1572,6 +1579,7 @@ function applyInputs(d){
   if(d.inAmbassador!==undefined){$('inAmbassador').checked=!!d.inAmbassador;$('ambassadorFields').style.display=d.inAmbassador?'':'none'}
   if(d.inReferredTH!=null)$('inReferredTH').value=d.inReferredTH;
   if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
+  if(d.inRefBonusPct!=null&&$('inRefBonusPct'))$('inRefBonusPct').value=d.inRefBonusPct;
   if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=!!d.piVipBonus;
   if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
   autoFillCPT('inTH','inCostPerTH','inWTH');
@@ -1743,7 +1751,7 @@ function clearInputs(){
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
-    inAmbassador:false,inReferredTH:'0',inRefCapital:'0',
+    inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',
     piVipBonus:false
   });
   // Empty the fleet builder too — but ONLY on a scratch/no profile, never on the
@@ -1828,7 +1836,7 @@ function autoSave(){
     saveProfilesState(state);
   }catch(e){}
 }
-['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inRefBonusPct','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
 
@@ -2284,7 +2292,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
   const vipBonus=false;
   const VIP_BONUS_MIN=10000, VIP_BONUS_MULT=1.10;
-  const REF_GMT_BONUS=0.05; // 5% of referral's TH spend, paid in GMT to the referrer
+  const REF_GMT_BONUS=(i.refBonusPct>0?i.refBonusPct:5)/100; // ambassador tier commission on referral's TH spend, paid in GMT (user-editable)
 
   function solveReferral(refCap){
     if(refCap<=0)return null;
@@ -2812,7 +2820,7 @@ function renderPlanner(i,m){
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
-    if(refBonusGMT>0)ah+=row('+ Referral 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (5% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
+    if(refBonusGMT>0)ah+=row(`+ Referral ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
     if(gmtForMiner>0)ah+=row('→ Marketplace miner',`${fN(gmtForMiner,0)} GMT<span class="sub">${fU(gmtForMiner*gp)}</span>`,'purple');
     if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
     if(gmtSell>0)ah+=row('→ Upgrade TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
@@ -2885,7 +2893,7 @@ function renderPlanner(i,m){
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(refInitTH*(i.cpt||0))}</span>`,'cyan');
     ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
     ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
-    if(refBonusGMT>0)ph+=row('Your 5% GMT bonus',`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
+    if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
 
