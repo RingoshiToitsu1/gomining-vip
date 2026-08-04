@@ -2890,8 +2890,11 @@ function renderPlanner(i,m){
   if(ref){
     ph+=`<div class="divider"></div>`;
     ph+=`<div class="sub-title">Referral's planned allocation (${fU(i.refCap)})</div>`;
-    ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(refInitTH*(i.cpt||0))}</span>`,'cyan');
-    ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(refInitLocked*gp)}</span>`,'cyan');
+    // Show the actual USD ALLOCATED to each (TH budget + GMT budget = refCap exactly). Pricing
+    // the TH at the user's own i.cpt was wrong — a referral mints NEW 12 W machines (~$15/TH), so
+    // the old line under-counted and the split didn't sum to the capital they invested.
+    ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(ref.thUSD)} invested</span>`,'cyan');
+    ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(Math.max(0,i.refCap-ref.thUSD))} invested</span>`,'cyan');
     ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
     if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
