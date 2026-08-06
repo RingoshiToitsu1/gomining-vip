@@ -1460,7 +1460,11 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=0.7;
+const MINING_MODE_DEFAULT=0.88;
+// Every rate this input has ever shipped with. `base` was written from
+// MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
+// saved value matching any past rate is a stale default, not a user's own number.
+const MINING_MODE_PAST_DEFAULTS=[0.7,0.83];
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
@@ -1470,9 +1474,10 @@ function loadMiningMode(){
     if(raw===null)return;
     let parsed=null;try{parsed=JSON.parse(raw)}catch(e){}
     if(parsed&&typeof parsed==='object'&&'v' in parsed){
-      // If the cached value was the default at save time AND the default has changed,
-      // the user wasn't customizing — honor the new default.
-      if(Number(parsed.base)!==MINING_MODE_DEFAULT&&Number(parsed.v)===Number(parsed.base))return;
+      // A saved value that was simply the default of its day isn't a customization —
+      // leave the input alone so the current default wins.
+      const v=Number(parsed.v);
+      if(v===Number(parsed.base)||MINING_MODE_PAST_DEFAULTS.includes(v))return;
       if($('inMiningMode'))$('inMiningMode').value=parsed.v;
       return;
     }
