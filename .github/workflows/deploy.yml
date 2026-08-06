@@ -2,6 +2,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:   # manual trigger, for when a push doesn't create a run
 permissions:
   contents: read
   pages: write
