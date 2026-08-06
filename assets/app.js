@@ -296,15 +296,29 @@ function showPanelView(id){
   el.scrollTop=0;
   try{window.scrollTo(0,0);}catch(e){}
 }
+// Panels are in-flow and scroll with the document, so leaving one must never leave the
+// body scroll-locked. Any overlay that locked it (chart screenshot, onboarding, donate)
+// is gone by the time we get here — clear the lock rather than trust every close path.
+const _LOCKING_OVERLAYS=['onboarding','newUserModal','chartShotModal','donateModal'];
+function releaseScrollLock(){
+  // Don't yank the lock out from under an overlay that's legitimately still open.
+  const held=_LOCKING_OVERLAYS.some(function(id){
+    const el=document.getElementById(id);
+    return el&&getComputedStyle(el).display!=='none';
+  });
+  if(!held)document.body.style.overflow='';
+}
 function hidePanelView(id){
   const el=document.getElementById(id);if(el){el.style.display='none';el.classList.remove('sp-view');}
   document.body.classList.remove(_PANEL_CLASS[id]||'planning');
+  releaseScrollLock();
 }
 // Close every in-flow panel and clear all panel state. Called on any tab switch so
 // navigating to Console / Planner from an open panel always lands on a clean page.
 function closeAllPanels(){
   _PANEL_IDS.forEach(function(pid){const p=document.getElementById(pid);if(p){p.style.display='none';p.classList.remove('sp-view');}});
   document.body.classList.remove('editing','planning','projecting','charting');
+  releaseScrollLock();
 }
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){
@@ -981,7 +995,10 @@ async function createChartShot(){
 function closeChartShot(){
   document.getElementById('chartShotModal').style.display='none';
   closeChartShare();
-  document.body.style.overflow='hidden'; // the chart page underneath still locks scroll
+  // The chart page underneath used to be a fixed full-screen overlay that needed the body
+  // locked. It's an in-flow panel now (.sp-page.sp-view scrolls with the document), so
+  // re-locking here stranded the whole site unscrollable until a reload.
+  document.body.style.overflow='';
 }
 // ---- share sheet (YouTube-Music style) ----
 const CHART_SHARE_BASE='https://gmt-optimizer.com';
