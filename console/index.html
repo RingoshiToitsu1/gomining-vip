@@ -52,7 +52,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=31">
+<link rel="stylesheet" href="/assets/app.css?v=32">
 <link rel="stylesheet" href="/assets/design.css?v=7">
 <link rel="stylesheet" href="/assets/accounts.css?v=11">
 </head>
@@ -450,7 +450,7 @@
               <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
               <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
             </div>
-            <span id="saveStatus"></span>
+            <span id="saveStatus" class="ed-save-status"></span>
           </div>
 
           <div id="fleetGroup"></div>
@@ -529,6 +529,15 @@
           </div>
 
         </div>
+
+        <!-- Second save row. Everything you actually edit — Liquid GMT, Greedy, Options —
+             sits below My Fleet, so the only Save button being up in "Saved Setups" meant
+             scrolling back to the top to commit a one-field change. -->
+        <div class="ed-saved-btns ed-foot-save">
+          <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
+          <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+        </div>
+        <span class="ed-save-status"></span>
 
         <!-- Advanced inputs kept for the math, hidden from the form -->
         <div style="display:none">
@@ -1030,7 +1039,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=58"></script>
+<script src="/assets/app.js?v=59"></script>
 <script src="/assets/fleet.js?v=11"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

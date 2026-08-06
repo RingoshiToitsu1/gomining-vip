@@ -778,7 +778,9 @@ html.show-onboarding #onboarding{display:flex}
 #secInputs .ed-sbtn:hover{border-color:var(--purple);color:var(--text)}
 #secInputs .ed-sbtn-primary{background:linear-gradient(135deg,var(--purple),var(--cyan));border-color:transparent;color:#000;font-weight:800;box-shadow:0 2px 10px rgba(245,166,35,.25)}
 #secInputs .ed-sbtn-primary:hover{filter:brightness(1.07);color:#000;border-color:transparent}
-#secInputs #saveStatus{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
+#secInputs .ed-save-status{display:block;text-align:center;font-size:.68rem;color:var(--green);opacity:0;transition:opacity .3s;height:0;margin-top:.15rem}
+/* Bottom save row — sits outside the .ed-group cards, so it needs its own breathing room. */
+#secInputs .ed-foot-save{margin-top:.2rem;padding-bottom:.2rem}
 @media(max-width:600px){
   #secInputs .ed-groups{column-count:1}
   #secInputs .sp-page-inner{padding:.15rem .7rem .5rem}

@@ -1641,10 +1641,14 @@ function renderProfileSelect(){
   const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
 }
 
+// The edit form carries two save rows (top and bottom), so flash the confirmation on both —
+// whichever one you clicked is the one you're looking at.
 function flashStatus(msg){
-  const el=$('saveStatus');if(!el)return;
-  el.textContent=msg;el.style.opacity='1';
-  setTimeout(()=>el.style.opacity='0',2000);
+  const els=document.querySelectorAll('.ed-save-status');if(!els.length)return;
+  els.forEach(el=>{
+    el.textContent=msg;el.style.opacity='1';
+    setTimeout(()=>el.style.opacity='0',2000);
+  });
 }
 
 function onProfileChange(){
