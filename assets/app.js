@@ -3953,3 +3953,30 @@ document.querySelectorAll('.reveal').forEach(el=>revealObs.observe(el));
 try{const sc=localStorage.getItem('gm_currency');if(sc&&sc!=='USD')setCurrency(sc)}catch(e){}
 fetchData();
 initOnboarding();
+// /planner, /projection and /planner/projection are static stubs that land here as
+// /console?view=<name> (a plain <a href="/planner"> can't deep-link a tab or panel).
+// Nothing read that param, so every one of those URLs silently dumped you on My Setup.
+function _activateTabById(id){
+  const b=document.querySelector('[data-tab="'+id+'"]');
+  if(b)_activateTab(b,false);   // false = don't push history; we own the URL below
+}
+(function routeViewParam(){
+  const view=new URLSearchParams(location.search).get('view');
+  if(!view)return;
+  // Onboarding covers the page and chooses its own destination — just drop the query.
+  if(document.documentElement.classList.contains('show-onboarding')){
+    try{history.replaceState({},'',location.pathname+location.hash);}catch(e){}
+    return;
+  }
+  // Panel views each write their own pretty URL when opened, and need the right tab
+  // underneath so that closing them returns where the stub implied.
+  switch(view){
+    case 'edit':               openEditSetup(); return;
+    case 'rainbow':            openRainbow();   return;
+    case 'projection':         _activateTabById('tab-current'); openSetupProjection('setup');   return;
+    case 'planner-projection': _activateTabById('tab-planner'); openSetupProjection('planner'); return;
+  }
+  // Plain tab views own no panel, so set the URL here.
+  _activateTabById(view==='planner'?'tab-planner':'tab-current');
+  try{history.replaceState({},'',(view==='planner'?'/planner':'/console')+location.hash);}catch(e){}
+})();
