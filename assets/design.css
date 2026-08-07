@@ -374,22 +374,23 @@
 /* JS on: the stage pins and the page scrolls "through" it. */
 .rd.cine-on .cine{height:420vh}
 /* svh, so a collapsing mobile toolbar doesn't resize the pinned stage mid-scrub.
-   isolation makes this the stacking context the layers below sort inside; it does
-   NOT make it a containing block, so the fixed veil still resolves to the viewport. */
+   No overflow:hidden — nothing here overflows, and clipping on a sticky ancestor
+   is exactly what would trap the fixed veil back inside this box. */
 .rd.cine-on .cine-stage{position:sticky;top:0;height:100vh;height:100svh;padding:0;
-  background:transparent;overflow:hidden;isolation:isolate}
+  background:transparent}
 /* The backdrop that hides the site's world layer during the intro.
-   FIXED to the viewport, not absolute to the stage: any pixel the stage box didn't
-   cover — above it under the nav, or down the side — showed the world's gold orbs
-   through, leaving a hard rectangular seam. Fixed can't seam. cine.js fades --veil
-   1 -> 0 across the last third, so the orbs, grid floor and star canvas rise into
-   view *before* the sticky stage releases, blending in rather than snapping on. */
-.rd.cine-on .cine-stage::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+   Hung off the SECTION, not the stage, and fixed to the viewport: any pixel the
+   stage box didn't cover — above it under the nav, or below where it ends — showed
+   the world's gold orbs through and left a hard horizontal cut. This covers exactly
+   the same pixels as .world, so fading it crossfades the whole screen at once.
+   Paints before .cine-stage in DOM order, so it stays behind the canvas and copy. */
+.rd.cine-on .cine::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:var(--bg);opacity:var(--veil,1)}
-/* Softens the bottom edge into the hero below. */
-.rd.cine-on .cine-stage::after{content:'';position:absolute;left:0;right:0;bottom:0;height:30vh;
-  z-index:3;pointer-events:none;
-  background:linear-gradient(to bottom,transparent,rgba(6,7,9,.55) 55%,var(--bg))}
+/* NO bottom gradient here. A fade ending in solid var(--bg) at the stage's lower
+   edge is precisely what produced the visible cut: black above the boundary, the
+   warm world layer below it. The veil above is viewport-fixed and covers the same
+   pixels as .world, so fading it alone crossfades the whole screen at once —
+   which is the only way this seams nowhere. */
 /* Intro already burned four screens; the hero doesn't need its full lead-in too. */
 .rd.cine-on .hero{padding-top:70px}
 .rd.cine-on #cineCanvas{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:1}

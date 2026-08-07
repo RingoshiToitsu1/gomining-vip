@@ -243,11 +243,14 @@
         beats[i].style.visibility = o < 0.01 ? 'hidden' : 'visible';
       }
       sec.style.setProperty('--cp', p.toFixed(4));
-      /* Hand-off to the rest of the site. The stage sits on an opaque veil so the
-         intro reads clean; from 70% that veil lifts, letting the page's own world
-         layer (orbs, grid, stars) bleed through before the sticky stage releases —
-         otherwise the site appeared all at once at a hard seam. */
-      sec.style.setProperty('--veil', clamp((0.97 - p) / 0.27).toFixed(4));
+      /* Hand-off to the rest of the site. The stage sits on a viewport-fixed veil
+         so the intro reads clean; across the last fifth that veil lifts, letting
+         the page's own world layer (orbs, grid floor, star canvas) rise into view
+         while the stage is still pinned. Because the veil and .world are both
+         fixed and cover identical pixels, this crossfades the entire screen
+         uniformly — there is no edge anywhere for a seam to appear at. Held until
+         0.78 so the chart is essentially drawn before the warm backdrop arrives. */
+      sec.style.setProperty('--veil', clamp((1 - p) / 0.22).toFixed(4));
       /* The chart softens as it hands over, rather than being clipped away. */
       cvs.style.opacity = (1 - 0.45 * clamp((p - 0.90) / 0.10)).toFixed(3);
     }
