@@ -341,6 +341,49 @@
   body.rd .foot-cols{gap:26px}
   body.rd .foot-col a{padding:3px 0}
 }
+/* ============ CINEMATIC SCROLL INTRO ============
+   Default (no JS / reduced motion): an ordinary title block, normal height, all
+   three beats stacked and readable, canvas hidden. cine.js adds .cine-on to
+   <body> to opt into the tall sticky stage — so a reader who never gets the
+   script never gets screens of empty scroll either. */
+.rd .cine{position:relative}
+.rd .cine-stage{position:relative;display:flex;align-items:center;justify-content:center;
+  padding:120px 0 40px}
+.rd #cineCanvas{display:none}
+.rd .cine-beats{position:relative;width:100%;max-width:1180px;margin:0 auto;padding:0 34px;
+  display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center}
+.rd .cine-beat h1{font-size:clamp(2.4rem,7vw,5.2rem);font-weight:600;line-height:1.02;
+  letter-spacing:-.035em;color:var(--warm)}
+.rd .cine-beat h1 .line2{display:block}
+/* chrome.js's decode effect rewrites these spans character by character —
+   inline-block stops each rewrite reflowing the line. */
+.rd .cine-beat h1 .dec{display:inline-block}
+.rd .cine-lead{font-size:clamp(1.15rem,2.6vw,1.9rem);color:var(--ink);letter-spacing:-.01em}
+.rd .cine-lead b{color:var(--warm);font-weight:600}
+.rd .cine-sub,.rd .cine-cue{font-family:var(--mono);font-size:.74rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--ink3)}
+.rd .cine-cue{display:block;margin-top:26px;animation:cueBob 2.4s var(--ease) infinite}
+@keyframes cueBob{0%,100%{opacity:.35;transform:translateY(0)}50%{opacity:.9;transform:translateY(6px)}}
+
+/* JS on: the stage pins and the page scrolls "through" it. */
+.rd.cine-on .cine{height:420vh}
+/* svh, so a collapsing mobile toolbar doesn't resize the pinned stage mid-scrub. */
+.rd.cine-on .cine-stage{position:sticky;top:0;height:100vh;height:100svh;padding:0;
+  background:var(--bg);overflow:hidden}
+.rd.cine-on #cineCanvas{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.rd.cine-on .cine-beats{position:absolute;inset:0;display:block;z-index:1;padding:0}
+/* Beats stack on the same centre line; cine.js cross-fades between them. */
+.rd.cine-on .cine-beat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(1080px,88vw);text-align:center;opacity:0;visibility:hidden;
+  will-change:opacity,filter,transform}
+.rd.cine-on .cine-beat>*+*{margin-top:16px}
+/* The canvas already carries the motion — a drop shadow keeps copy legible
+   wherever the constellation happens to sit behind it. */
+.rd.cine-on .cine-beat h1,.rd.cine-on .cine-lead{text-shadow:0 4px 34px rgba(4,6,12,.92)}
+@media(max-width:760px){
+  .rd.cine-on .cine{height:340vh}
+}
+
 /* ============ SCROLL-DRIVEN LAYER ============
    Motion tied to scroll POSITION rather than fired once on entry. Native CSS
    scroll timelines where supported; the IntersectionObserver reveal above stays

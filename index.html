@@ -100,7 +100,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="assets/design.css?v=8">
+<link rel="stylesheet" href="assets/design.css?v=9">
 </head>
 <body class="rd">
 
@@ -143,12 +143,35 @@
   <a href="/console" class="nav-cta" data-magnetic>Launch Console</a>
 </nav>
 
+<!-- ===== CINEMATIC INTRO =====
+     Scroll-scrubbed canvas: galaxy -> clusters -> mesh -> a rising earnings chart.
+     Without JS this collapses to a plain title block (see .cine-on in design.css),
+     so the h1 and both lines are always in the markup and always readable. -->
+<section class="cine" id="cine">
+  <div class="cine-stage">
+    <canvas id="cineCanvas" aria-hidden="true"></canvas>
+    <div class="cine-beats">
+      <!-- in/full negative so the title is already at full strength at scroll 0 -->
+      <div class="cine-beat" data-beat data-in="-1" data-full="0" data-hold="0.26" data-out="0.36">
+        <h1><span class="dec" data-dec>Plan your work.</span><span class="line2 grad dec" data-dec>Work your plan.</span></h1>
+      </div>
+      <div class="cine-beat" data-beat data-in="0.44" data-full="0.54" data-hold="0.66" data-out="0.76">
+        <p class="cine-lead">Live BTC difficulty. Halving decay. <b>Every sat modelled.</b></p>
+        <p class="cine-sub">No fantasy math. No ads. Ever.</p>
+      </div>
+      <div class="cine-beat" data-beat data-in="0.86" data-full="0.96" data-hold="9" data-out="9">
+        <p class="cine-lead">So — what does your farm <b>actually earn?</b></p>
+        <span class="cine-cue" aria-hidden="true">keep scrolling</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== HERO ===== -->
 <header class="hero">
   <div class="wrap hero-inner">
     <div class="hero-copy">
       <span class="tag reveal"><span class="dot"></span>AI-Driven Mining Optimizer <span class="idx">// v2.0</span></span>
-      <h1 class="reveal d1"><span class="dec" data-dec>Plan your work.</span><span class="line2 grad dec" data-dec>Work your plan.</span></h1>
       <p class="hero-sub reveal d2">The free, ad-free GoMining profit optimizer that finds your perfect capital split — then tracks it live, sat by sat.</p>
       <div class="hero-ctas reveal d3">
         <a class="btn btn-primary" href="/console" data-magnetic>I'm already mining<small>Enter my GoMining setup</small></a>
@@ -432,6 +455,7 @@
 </footer>
 
 <script src="assets/chrome.js?v=3"></script>
+<script src="assets/cine.js?v=1"></script>
 <script>
 /* Live quotron — real network data (same sources + sats/TH/day formula as the tool). */
 (function(){
