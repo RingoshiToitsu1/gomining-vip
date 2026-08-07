@@ -24,7 +24,9 @@
   var GOLD  = '245,166,35';           // glow                 (--gold)
   var WARM  = '255,244,224';          // leading spark core   (--warm)
 
-  var N = 170;                        // particle count — O(n^2) link pass, keep modest
+  /* Particle count — the link pass is O(n^2), so phones get a lighter field.
+     Recomputed in build() because it depends on viewport width. */
+  var N = 170;
   var dpr = Math.min(devicePixelRatio || 1, 2);
   var W = 0, H = 0, running = false, p = 0, drawn = -1;
   var beats = [].slice.call(sec.querySelectorAll('[data-beat]'));
@@ -66,23 +68,31 @@
     }
   }
 
+  /* Vertical working area. A portrait phone is roughly twice as tall as it is
+     wide, so sizing these shapes off H alone stretched the mesh and the chart
+     into near-vertical scribbles. Tying the band to the NARROWER axis keeps every
+     formation the same shape on a phone as on a desktop; it just gets more
+     letterboxing above and below. */
+  function band() { return Math.min(H, W * 1.35); }
+  function midY() { return H * 0.5; }
+
   /* Five loose knots, the stage where the reference reads as constellations. */
   function fClusters() {
-    var r = mk(23), out = [], K = 5;
-    var cxs = [0.13, 0.32, 0.52, 0.72, 0.9], cys = [0.34, 0.62, 0.44, 0.66, 0.38];
+    var r = mk(23), out = [], K = 5, B = band(), M = midY();
+    var cxs = [0.13, 0.32, 0.52, 0.72, 0.9], cys = [-0.17, 0.15, -0.06, 0.19, -0.13];
     for (var i = 0; i < N; i++) {
-      var k = i % K, rad = Math.min(W, H) * (0.05 + r() * 0.06), a = r() * 6.2832;
-      out.push({ x: W * cxs[k] + Math.cos(a) * rad, y: H * cys[k] + Math.sin(a) * rad });
+      var k = i % K, rad = B * (0.06 + r() * 0.07), a = r() * 6.2832;
+      out.push({ x: W * cxs[k] + Math.cos(a) * rad, y: M + B * cys[k] + Math.sin(a) * rad });
     }
     return out;
   }
 
   /* The knots merge into one wide banner that spans the viewport. */
   function fMesh() {
-    var r = mk(41), out = [];
+    var r = mk(41), out = [], B = band(), M = midY();
     for (var i = 0; i < N; i++) {
       var t = i / (N - 1);
-      var y = H * 0.5 + Math.sin(t * 5.2) * H * 0.1 + (r() - 0.5) * H * 0.22;
+      var y = M + Math.sin(t * 5.2) * B * 0.13 + (r() - 0.5) * B * 0.29;
       out.push({ x: W * 0.05 + t * W * 0.9 + (r() - 0.5) * W * 0.03, y: y });
     }
     return out;
@@ -90,26 +100,50 @@
 
   /* Random walk with an upward drift — reads as a real price series, not an arc. */
   function fChart() {
-    var r = mk(97), out = [], y = H * 0.74;
+    var r = mk(97), out = [], B = band(), M = midY();
+    var y = M + B * 0.30, lo = M - B * 0.36, hi = M + B * 0.38;
     for (var i = 0; i < N; i++) {
       var t = i / (N - 1);
-      y += (r() - 0.44) * H * 0.045;     // volatility
-      y -= (H * 0.42) / N;               // trend
-      y = Math.max(H * 0.14, Math.min(H * 0.84, y));
+      y += (r() - 0.44) * B * 0.058;     // volatility
+      y -= (B * 0.60) / N;               // trend
+      y = Math.max(lo, Math.min(hi, y));
       out.push({ x: W * 0.05 + t * W * 0.9, y: y });
     }
     return out;
   }
 
-  var F = [];
+  var F = [], lastW = 0, lastH = 0;
+
+  /* Backing store only — the element's CSS box is 100%/100% of the stage, which is
+     sized in svh. Measuring the box rather than innerHeight keeps the two in step
+     when a mobile toolbar is showing. */
+  function sizeCanvas() {
+    var r = cvs.getBoundingClientRect();
+    W = cvs.width = Math.max(1, Math.floor(r.width * dpr));
+    H = cvs.height = Math.max(1, Math.floor(r.height * dpr));
+  }
+
   function build() {
-    W = cvs.width = Math.floor(innerWidth * dpr);
-    H = cvs.height = Math.floor(innerHeight * dpr);
-    cvs.style.width = innerWidth + 'px';
-    cvs.style.height = innerHeight + 'px';
+    dpr = Math.min(devicePixelRatio || 1, innerWidth < 760 ? 1.75 : 2);
+    N = innerWidth < 560 ? 105 : innerWidth < 900 ? 130 : 170;
+    sizeCanvas();
     F = [fStars(), fClusters(), fMesh(), fChart()];
     buildDrift();
+    lastW = innerWidth; lastH = innerHeight;
     drawn = -1;
+  }
+
+  /* Mobile browsers fire resize every time the address bar collapses or returns —
+     mid-scroll, repeatedly. Rebuilding the formations there would reshuffle every
+     particle under the reader. Height-only changes just re-measure the canvas;
+     only a width change (a real rotate or window resize) rebuilds the field. */
+  function onResize() {
+    if (innerWidth === lastW && Math.abs(innerHeight - lastH) < 200) {
+      sizeCanvas();
+      lastH = innerHeight;
+      return;
+    }
+    build();
   }
 
   /* ---- scrub ---- */
@@ -250,7 +284,12 @@
          fixed and cover identical pixels, this crossfades the entire screen
          uniformly — there is no edge anywhere for a seam to appear at. Held until
          0.78 so the chart is essentially drawn before the warm backdrop arrives. */
-      sec.style.setProperty('--veil', clamp((1 - p) / 0.22).toFixed(4));
+      var veil = clamp((1 - p) / 0.22);
+      sec.style.setProperty('--veil', veil.toFixed(4));
+      /* While the veil is solid, the world layer's galaxy canvas is completely
+         hidden behind it — a second full-screen rAF loop rendering nothing anyone
+         can see. Costly on a phone, so chrome.js parks it on this flag. */
+      window.__cineVeiled = veil > 0.985;
       /* The chart softens as it hands over, rather than being clipped away. */
       cvs.style.opacity = (1 - 0.45 * clamp((p - 0.90) / 0.10)).toFixed(3);
     }
@@ -258,7 +297,8 @@
   }
 
   build();
-  addEventListener('resize', build);
+  addEventListener('resize', onResize);
+  addEventListener('orientationchange', build);
 
   /* Only burn frames while the stage is actually on screen. */
   new IntersectionObserver(function (es) {

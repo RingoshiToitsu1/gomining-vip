@@ -153,6 +153,10 @@
   }
   build();addEventListener('resize',build);
   function draw(){
+    /* Parked while the cinematic intro's veil is opaque — this canvas is fully
+       covered then, so drawing it is invisible work. Keep the loop alive so it
+       resumes the moment the veil starts lifting. */
+    if(window.__cineVeiled){requestAnimationFrame(draw);return;}
     ctx.clearRect(0,0,W,H);
     for(var k=0;k<bg.length;k++){var s=bg[k];s.tw+=s.tws;var o=(Math.sin(s.tw)*.5+.5)*.45;
       ctx.beginPath();ctx.arc(s.x,s.y,s.sz,0,6.28);ctx.fillStyle='rgba(255,225,175,'+o+')';ctx.fill();}
