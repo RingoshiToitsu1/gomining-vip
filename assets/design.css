@@ -341,8 +341,69 @@
   body.rd .foot-cols{gap:26px}
   body.rd .foot-col a{padding:3px 0}
 }
+/* ============ SCROLL-DRIVEN LAYER ============
+   Motion tied to scroll POSITION rather than fired once on entry. Native CSS
+   scroll timelines where supported; the IntersectionObserver reveal above stays
+   the baseline everywhere else, so nothing here is required for the page to work
+   or for its content to be readable. All of it is decoration — the markup is
+   unchanged and stays server-rendered for crawlers. */
+
+/* Reading-progress rail, pinned above the ticker. */
+.rd .sprog{position:fixed;top:0;left:0;right:0;height:2px;z-index:60;pointer-events:none;
+  transform:scaleX(var(--sp,0));transform-origin:0 50%;
+  background:linear-gradient(90deg,var(--gold),var(--gold-soft) 55%,var(--amber));
+  box-shadow:0 0 14px rgba(245,166,35,.55)}
+
+/* Section headings get a light sweep as they cross the viewport. */
+.rd .sec-head{position:relative}
+.rd .sec-head::after{content:'';position:absolute;left:0;right:0;bottom:-10px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--line-hi) 22%,var(--gold) 50%,var(--line-hi) 78%,transparent);
+  transform:scaleX(var(--sw,0));transform-origin:0 50%;opacity:.85}
+
+/* Active section in the nav — set by chrome.js from an IntersectionObserver. */
+.rd .nav-links a.on{color:var(--warm)}
+.rd .nav-links a.on::after{width:100%}
+
+@keyframes sprogGrow{to{transform:scaleX(1)}}
+@keyframes revealScrub{from{opacity:0;transform:translateY(30px);filter:blur(6px)}
+  to{opacity:1;transform:none;filter:none}}
+@keyframes headSweep{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes heroExit{to{opacity:0;transform:translateY(-46px)}}
+
+/* Native scroll timelines. Everything in here is an enhancement over the
+   transition-based reveal, so unsupported browsers simply keep the old behaviour. */
+@supports (animation-timeline:view()){
+  .rd .sprog{animation:sprogGrow linear both;animation-timeline:scroll(root block)}
+
+  /* Reveals scrub with scroll position instead of snapping on once. The .in class
+     the observer still adds is harmless — an animation outranks it in the cascade. */
+  .rd .reveal{animation:revealScrub linear both;animation-timeline:view(block);
+    animation-range:entry 6% cover 28%}
+  /* Stagger by shifting each card's range rather than by transition-delay, so the
+     offset holds no matter how fast you scroll. */
+  .rd .d1{animation-range:entry 11% cover 33%}
+  .rd .d2{animation-range:entry 16% cover 38%}
+  .rd .d3{animation-range:entry 21% cover 43%}
+  .rd .d4{animation-range:entry 26% cover 48%}
+  .rd .d5{animation-range:entry 31% cover 53%}
+
+  .rd .sec-head::after{animation:headSweep linear both;animation-timeline:view(block);
+    animation-range:entry 20% cover 40%}
+
+  /* Hero drifts up and dissolves as it leaves — the parallax that sells the scroll.
+     Scoped to .hero-copy: .instrument carries .reveal and must not get two
+     transform animations fighting over the same property. */
+  .rd .hero-copy{animation:heroExit linear both;animation-timeline:view(block);
+    animation-range:exit 10% exit 90%}
+}
+
 @media(prefers-reduced-motion:reduce){
   .rd *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
   .rd .reveal{opacity:1!important;transform:none!important;filter:none!important}
   .rd .orb,.rd .holo svg,.rd .telem,.rd .r-spin,.rd .r-spin-rev,.rd .radar,.rd .ticker,.rd .mq-track{animation:none!important}
+  /* Scroll timelines ignore animation-duration, so they need switching off by name. */
+  .rd .reveal,.rd .sec-head::after,.rd .hero-copy,.rd .sprog{animation-timeline:none!important;animation:none!important}
+  .rd .hero-copy{opacity:1!important;transform:none!important}
+  .rd .sec-head::after{transform:scaleX(1)!important}
+  .rd .sprog{display:none}
 }

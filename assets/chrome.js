@@ -18,6 +18,60 @@
   });},{threshold:.16,rootMargin:'0px 0px -6% 0px'});
   root.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
 
+  /* ---- scroll-driven layer ----
+     CSS scroll timelines do the work where they exist (see design.css). This
+     covers what they can't: the nav's active-section state everywhere, and a
+     rAF fallback for the progress rail + heading sweeps on older browsers. */
+  var hasTimeline = !reduce && window.CSS && CSS.supports && CSS.supports('animation-timeline','view()');
+
+  /* nav: light up the section you're actually looking at */
+  var navLinks = {}, navTargets = [];
+  root.querySelectorAll('.nav-links a[href^="#"]').forEach(function(a){
+    var el = root.querySelector(a.getAttribute('href'));
+    if(el){ navLinks[el.id] = a; navTargets.push(el); }
+  });
+  if(navTargets.length){
+    /* Bottom-weighted margin so a section counts as "current" once it owns the
+       upper half of the viewport, not the moment its first pixel appears. */
+    var spy = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        var a = navLinks[e.target.id];
+        if(!a) return;
+        if(e.isIntersecting){
+          for(var id in navLinks) navLinks[id].classList.remove('on');
+          a.classList.add('on');
+        }
+      });
+    },{rootMargin:'-45% 0px -50% 0px'});
+    navTargets.forEach(function(el){ spy.observe(el); });
+  }
+
+  if(!reduce && !hasTimeline){
+    var rail = root.querySelector('.sprog');
+    var heads = [].slice.call(root.querySelectorAll('.sec-head'));
+    var ticking = false;
+    var onScroll = function(){
+      if(ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        if(rail){
+          var max = document.documentElement.scrollHeight - innerHeight;
+          rail.style.setProperty('--sp', max > 0 ? Math.min(1, scrollY/max) : 0);
+        }
+        heads.forEach(function(h){
+          var r = h.getBoundingClientRect();
+          /* 0 while still below the fold, 1 once it has risen a fifth of the viewport */
+          var p = (innerHeight - r.top) / (innerHeight * 0.42);
+          h.style.setProperty('--sw', Math.max(0, Math.min(1, p)));
+        });
+        ticking = false;
+      });
+    };
+    addEventListener('scroll', onScroll, {passive:true});
+    addEventListener('resize', onScroll, {passive:true});
+    onScroll();
+  }
+
   /* FAQ */
   root.querySelectorAll('.faq-q').forEach(function(q){q.addEventListener('click',function(){
     var it=q.parentElement,a=it.querySelector('.faq-a');var open=it.classList.toggle('open');
