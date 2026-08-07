@@ -92,12 +92,19 @@
 .rd .ticker{display:inline-flex;gap:34px;white-space:nowrap;padding-left:100%;animation:ticker 34s linear infinite}
 .rd .ticker b{color:var(--gold-soft);font-weight:400}.rd .ticker .up{color:#57d9a3}.rd .ticker .li{color:var(--gold)}
 @keyframes ticker{to{transform:translateX(-100%)}}
-.rd nav{position:fixed;top:42px;left:50%;transform:translateX(-50%);z-index:50;
-  width:min(1160px,calc(100% - 28px));display:flex;align-items:center;justify-content:space-between;
-  padding:11px 14px 11px 20px;border-radius:18px;
-  background:linear-gradient(180deg,rgba(20,22,30,.7),rgba(10,12,18,.66));backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
-  border:1px solid var(--line);box-shadow:0 12px 44px rgba(0,0,0,.5);transition:top .4s var(--ease),padding .35s var(--ease),background .35s var(--ease)}
-.rd nav.shrunk{top:34px;padding:7px 14px 7px 20px;background:linear-gradient(180deg,rgba(14,16,22,.86),rgba(8,10,14,.82))}
+/* Full-bleed bar sitting flush under the 30px ticker — not a floating pill. The
+   asymmetric padding centres the contents on the same 1160px column the rest of
+   the page uses, while the bar itself still spans edge to edge. */
+.rd nav{position:fixed;top:30px;left:0;right:0;transform:none;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px max(22px,calc((100% - 1160px) / 2));border-radius:0;
+  background:linear-gradient(180deg,rgba(10,12,18,.88),rgba(8,10,14,.74));
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:0;border-bottom:1px solid var(--line);box-shadow:0 10px 34px rgba(0,0,0,.42);
+  transition:padding .35s var(--ease),background .35s var(--ease)}
+/* Stays put on scroll now that it's docked; it just tightens and darkens. */
+.rd nav.shrunk{padding-top:8px;padding-bottom:8px;
+  background:linear-gradient(180deg,rgba(8,10,14,.95),rgba(6,8,12,.9))}
 .rd .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--warm);letter-spacing:.01em;font-size:1.02rem;text-decoration:none}
 .rd .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
 .rd .brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px;margin-left:2px}
@@ -109,8 +116,7 @@
   background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden}
 .rd .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 @media(max-width:820px){
-  .rd nav{flex-wrap:wrap;row-gap:9px;top:12px}
-  .rd nav.shrunk{top:8px}
+  .rd nav{flex-wrap:wrap;row-gap:9px;padding-left:16px;padding-right:16px}
   .rd .nav-links{display:flex;order:3;width:100%;justify-content:center;gap:15px;flex-wrap:wrap}
   .rd .util{display:none}
 }
@@ -367,11 +373,27 @@
 
 /* JS on: the stage pins and the page scrolls "through" it. */
 .rd.cine-on .cine{height:420vh}
-/* svh, so a collapsing mobile toolbar doesn't resize the pinned stage mid-scrub. */
+/* svh, so a collapsing mobile toolbar doesn't resize the pinned stage mid-scrub.
+   isolation makes this the stacking context the layers below sort inside; it does
+   NOT make it a containing block, so the fixed veil still resolves to the viewport. */
 .rd.cine-on .cine-stage{position:sticky;top:0;height:100vh;height:100svh;padding:0;
-  background:var(--bg);overflow:hidden}
-.rd.cine-on #cineCanvas{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:0}
-.rd.cine-on .cine-beats{position:absolute;inset:0;display:block;z-index:1;padding:0}
+  background:transparent;overflow:hidden;isolation:isolate}
+/* The backdrop that hides the site's world layer during the intro.
+   FIXED to the viewport, not absolute to the stage: any pixel the stage box didn't
+   cover — above it under the nav, or down the side — showed the world's gold orbs
+   through, leaving a hard rectangular seam. Fixed can't seam. cine.js fades --veil
+   1 -> 0 across the last third, so the orbs, grid floor and star canvas rise into
+   view *before* the sticky stage releases, blending in rather than snapping on. */
+.rd.cine-on .cine-stage::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:var(--bg);opacity:var(--veil,1)}
+/* Softens the bottom edge into the hero below. */
+.rd.cine-on .cine-stage::after{content:'';position:absolute;left:0;right:0;bottom:0;height:30vh;
+  z-index:3;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,rgba(6,7,9,.55) 55%,var(--bg))}
+/* Intro already burned four screens; the hero doesn't need its full lead-in too. */
+.rd.cine-on .hero{padding-top:70px}
+.rd.cine-on #cineCanvas{display:block;position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.rd.cine-on .cine-beats{position:absolute;inset:0;display:block;z-index:2;padding:0}
 /* Beats stack on the same centre line; cine.js cross-fades between them. */
 .rd.cine-on .cine-beat{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:min(1080px,88vw);text-align:center;opacity:0;visibility:hidden;
