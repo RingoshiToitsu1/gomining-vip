@@ -113,14 +113,25 @@
 .fleet-summary strong{color:var(--purple-soft)}
 .fleet-rows{display:flex;flex-direction:column;gap:.4rem}
 .fleet-empty{font-size:.75rem;color:var(--text4);padding:.5rem 0}
-.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto auto;
+.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,.85fr) auto auto;
   gap:.35rem;align-items:center}
-.fleet-col,.fleet-in{background:var(--bg-input);border:1px solid var(--border);color:var(--text);
-  border-radius:8px;padding:.45rem .5rem;font-size:.8rem;min-width:0;width:100%;font-family:var(--sans)}
-.fleet-in{font-family:var(--mono)}
-.fleet-col{font-size:.72rem}
-.fleet-in:focus,.fleet-col:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+/* Labelled field, same shape as #secInputs .ed-fld: name left, value right, one
+   border around both — so a field still says what it is once it has a value in it. */
+.fleet-f{display:flex;align-items:center;gap:.35rem;background:var(--bg-input);
+  border:1px solid var(--border);border-radius:8px;padding:.38rem .55rem;cursor:text;
+  min-width:0;transition:var(--transition)}
+.fleet-f:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+.fleet-lbl{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap}
+.fleet-in{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;
+  text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text)}
 .fleet-in::placeholder{color:var(--text4)}
+.fleet-col{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;
+  color:var(--text);font-family:var(--sans);font-size:.74rem;cursor:pointer;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  text-align:right;text-align-last:right}
+/* The dropdown paints its own list background in some engines; keep options readable. */
+.fleet-col option{background:var(--bg-card,#12151a);color:var(--text)}
 .fleet-del{background:none;border:none;color:var(--text4);font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1}
 .fleet-del:hover{color:var(--red)}
 /* Active / inactive switch. An inactive miner earns nothing but is still billed,
@@ -134,9 +145,9 @@
 .fleet-pwr:hover{border-color:var(--text4);color:var(--text2)}
 .fleet-row.is-off .fleet-pwr{color:var(--orange,#f5a623)}
 .fleet-row.is-off .fleet-pwr-dot{background:var(--text4);box-shadow:none}
-/* Inputs dim, but TH/W-TH stay legible: they still drive the fee you're paying. */
-.fleet-row.is-off .fleet-col,.fleet-row.is-off .fleet-code{opacity:.42}
-.fleet-row.is-off .fleet-th,.fleet-row.is-off .fleet-wth{opacity:.72}
+/* Identity dims, but TH/W-TH stay legible: they still drive the fee you're paying. */
+.fleet-row.is-off .f-col,.fleet-row.is-off .f-code{opacity:.45}
+.fleet-row.is-off .f-th,.fleet-row.is-off .f-wth{opacity:.75}
 .fleet-offnote{color:var(--orange,#f5a623)}
 .fleet-add{background:var(--bg-input);border:1px dashed var(--card-border);color:var(--text2);
   border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem;font-family:var(--sans)}
@@ -148,10 +159,10 @@
      BOTH rows. Collection and code get a full row each; the numbers, the switch and
      delete share the last one. */
   .fleet-row{grid-template-columns:1fr 1fr auto auto;grid-auto-rows:auto;gap:.4rem}
-  .fleet-col{grid-column:1/-1}
-  .fleet-code{grid-column:1/-1}
-  .fleet-th{grid-column:1/2}
-  .fleet-wth{grid-column:2/3}
+  .f-col{grid-column:1/-1}
+  .f-code{grid-column:1/-1}
+  .f-th{grid-column:1/2}
+  .f-wth{grid-column:2/3}
   .fleet-pwr{grid-column:3/4;justify-self:end}
   .fleet-del{grid-column:4/5;justify-self:end;padding:0 .1rem}
   /* Rows are two-deep now, so separate them more than the within-row gap. */

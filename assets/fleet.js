@@ -144,14 +144,26 @@
     }).join('');
   }
 
+  // Each field is a labelled box in the same shape the rest of the editor uses
+  // (.ed-fld): name on the left, value right-aligned, all inside one border. The
+  // old layout leaned on placeholders alone, so the moment you typed anything the
+  // row became four anonymous numbers — worst on mobile, where they stack.
+  function fieldHTML(cls, label, inner) {
+    return '<label class="fleet-f ' + cls + '"><span class="fleet-lbl">' + label + '</span>' + inner + '</label>';
+  }
+
   function rowHTML(r, i) {
     var off = !!r.off;
     return '' +
       '<div class="fleet-row' + (off ? ' is-off' : '') + '" data-i="' + i + '">' +
-        '<select class="fleet-col" data-k="collection" title="Collection">' + optionList(r.collection) + '</select>' +
-        '<input class="fleet-in fleet-code" data-k="code" type="text" inputmode="numeric" placeholder="NFT code" value="' + esc(r.code) + '">' +
-        '<input class="fleet-in fleet-th" data-k="th" type="number" min="0" step="0.01" placeholder="TH" value="' + (r.th != null ? esc(r.th) : '') + '">' +
-        '<input class="fleet-in fleet-wth" data-k="wth" type="number" min="12" step="0.1" placeholder="W/TH" value="' + (r.wth != null ? esc(r.wth) : '') + '">' +
+        fieldHTML('f-col', 'Miner',
+          '<select class="fleet-col" data-k="collection" title="Collection">' + optionList(r.collection) + '</select>') +
+        fieldHTML('f-code', 'Code',
+          '<input class="fleet-in fleet-code" data-k="code" type="text" inputmode="numeric" placeholder="NFT #" value="' + esc(r.code) + '">') +
+        fieldHTML('f-th', 'TH',
+          '<input class="fleet-in fleet-th" data-k="th" type="number" min="0" step="0.01" placeholder="0" value="' + (r.th != null ? esc(r.th) : '') + '">') +
+        fieldHTML('f-wth', 'W/TH',
+          '<input class="fleet-in fleet-wth" data-k="wth" type="number" min="12" step="0.1" placeholder="15" value="' + (r.wth != null ? esc(r.wth) : '') + '">') +
         '<button class="fleet-pwr" aria-pressed="' + (off ? 'false' : 'true') + '" ' +
           'title="' + (off ? 'Inactive — earns nothing, still billed and still counts toward VIP. Click to reactivate.' : 'Active and mining. Click to mark inactive.') + '" ' +
           'aria-label="' + (off ? 'Miner inactive' : 'Miner active') + '">' +
