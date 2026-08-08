@@ -76,19 +76,26 @@
   // already estimates $/TH from the tier curves off the TH + W/TH we set below.
   var DEFAULT_WTH = 15;   // marketplace default; matches the console's default efficiency
   var isGreedy = function (c) { return /greedy/i.test(c || ''); };
+  // Switched-off miners are aggregated SEPARATELY, never folded into the earning
+  // totals: they mine nothing, but you still own them, so they keep costing
+  // electricity and still count toward the VIP tier. calc() puts them back into
+  // the fee and coverage basis without ever crediting them with a reward.
   function aggregate() {
-    var th = 0, wSum = 0, count = 0, gTH = 0, gWSum = 0;
+    var th = 0, wSum = 0, count = 0, gTH = 0, gWSum = 0, offTH = 0, offWSum = 0, offCount = 0;
     rows.forEach(function (r) {
       var t = +r.th || 0; if (t <= 0) return;
       // A blank W/TH must NOT count as 0 — that would zero the electricity fee and
       // corrupt profit AND discount coverage. Fall back to the default efficiency.
       var w = +r.wth || DEFAULT_WTH;
-      th += t; count++; wSum += t * w;
+      count++;
+      if (r.off) { offTH += t; offWSum += t * w; offCount++; return; }
+      th += t; wSum += t * w;
       if (isGreedy(r.collection)) { gTH += t; gWSum += t * w; }   // Greedy Machine rows tracked apart
     });
     return {
       th: th, wth: th > 0 ? wSum / th : 0, count: count,
-      greedyTH: gTH, greedyWth: gTH > 0 ? gWSum / gTH : 0
+      greedyTH: gTH, greedyWth: gTH > 0 ? gWSum / gTH : 0,
+      offTH: offTH, offWth: offTH > 0 ? offWSum / offTH : 0, offCount: offCount
     };
   }
 
@@ -122,6 +129,9 @@
       setField('inGreedyTH', 0);
       setField('inGreedyInitial', 0);
     }
+    // Switched-off hashrate: earns nothing, still billed, still counts for VIP.
+    setField('inInactiveTH', +a.offTH.toFixed(2));
+    setField('inInactiveWth', +a.offWth.toFixed(2));
     if (typeof window.refreshGreedyVisibility === 'function') window.refreshGreedyVisibility();
   }
 
@@ -135,12 +145,18 @@
   }
 
   function rowHTML(r, i) {
+    var off = !!r.off;
     return '' +
-      '<div class="fleet-row" data-i="' + i + '">' +
+      '<div class="fleet-row' + (off ? ' is-off' : '') + '" data-i="' + i + '">' +
         '<select class="fleet-col" data-k="collection" title="Collection">' + optionList(r.collection) + '</select>' +
         '<input class="fleet-in fleet-code" data-k="code" type="text" inputmode="numeric" placeholder="NFT code" value="' + esc(r.code) + '">' +
         '<input class="fleet-in fleet-th" data-k="th" type="number" min="0" step="0.01" placeholder="TH" value="' + (r.th != null ? esc(r.th) : '') + '">' +
         '<input class="fleet-in fleet-wth" data-k="wth" type="number" min="12" step="0.1" placeholder="W/TH" value="' + (r.wth != null ? esc(r.wth) : '') + '">' +
+        '<button class="fleet-pwr" aria-pressed="' + (off ? 'false' : 'true') + '" ' +
+          'title="' + (off ? 'Inactive — earns nothing, still billed and still counts toward VIP. Click to reactivate.' : 'Active and mining. Click to mark inactive.') + '" ' +
+          'aria-label="' + (off ? 'Miner inactive' : 'Miner active') + '">' +
+          '<span class="fleet-pwr-dot"></span>' + (off ? 'OFF' : 'ON') +
+        '</button>' +
         '<button class="fleet-del" title="Remove miner" aria-label="Remove miner">&times;</button>' +
       '</div>';
   }
@@ -157,18 +173,23 @@
     // Broadcast fleet state so the results gate (account.js) can adapt its card,
     // and expose the per-miner rows so the planner can name which miner to upgrade.
     try {
-      window.GMTFleet = { count: a.count, th: a.th };
+      window.GMTFleet = { count: a.count, th: a.th, offTH: a.offTH, offCount: a.offCount };
       window.GMTFleetRows = rows.filter(function (r) { return (+r.th || 0) > 0; }).map(function (r) {
-        return { collection: r.collection, code: r.code, th: +r.th || 0, wth: +r.wth || DEFAULT_WTH };
+        return { collection: r.collection, code: r.code, th: +r.th || 0, wth: +r.wth || DEFAULT_WTH, off: !!r.off };
       });
       document.dispatchEvent(new CustomEvent('gmt-fleet'));
     } catch (e) {}
     if (!el.summary) return;
     if (a.count === 0) { el.summary.innerHTML = ''; return; }
+    // TH total reads as the MINING total; switched-off hashrate is called out
+    // separately so it never looks like it was silently dropped.
     el.summary.innerHTML =
       '<strong>' + a.count + '</strong> miner' + (a.count === 1 ? '' : 's') +
-      ' &middot; <strong>' + num(a.th) + '</strong> TH total' +
-      ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg';
+      ' &middot; <strong>' + num(a.th) + '</strong> TH mining' +
+      ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg' +
+      (a.offCount > 0
+        ? ' &middot; <span class="fleet-offnote">' + a.offCount + ' inactive (' + num(a.offTH) + ' TH, still billed)</span>'
+        : '');
   }
 
   function render() {
@@ -190,10 +211,18 @@
       var row = e.target.closest('.fleet-row'); var i = +row.getAttribute('data-i');
       rows.splice(i, 1);
       render(); commit(); apply();
+      return;
+    }
+    var pwr = e.target.closest ? e.target.closest('.fleet-pwr') : null;
+    if (pwr) {
+      var pr = pwr.closest('.fleet-row'); var pi = +pr.getAttribute('data-i');
+      if (!rows[pi]) return;
+      rows[pi].off = !rows[pi].off;
+      render(); commit(); apply();
     }
   }
   function addRow() {
-    rows.push({ collection: COLLECTIONS[0], code: '', th: '', wth: '' });
+    rows.push({ collection: COLLECTIONS[0], code: '', th: '', wth: '', off: false });
     render(); commit();
     // focus the TH field of the new row
     var last = el.rows.querySelector('.fleet-row:last-child .fleet-th');

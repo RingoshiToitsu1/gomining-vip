@@ -1448,6 +1448,11 @@ function inp(){
   apr:+$('inLockAPR').value||0,
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
   mm:+$('inMiningMode').value||0, od:0, cpt:+$('inCostPerTH').value||0,
+  // Hashrate switched off in the fleet — excluded from rawTH above, so nothing
+  // downstream mistakes it for earning power. calc() adds it back into the fee
+  // and VIP basis only.
+  offTH:+($('inInactiveTH')?$('inInactiveTH').value:0)||0,
+  offWth:+($('inInactiveWth')?$('inInactiveWth').value:0)||0,
   cap:+$('inCapital').value||0,
   mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
   mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
@@ -1563,6 +1568,8 @@ function readInputs(){
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inGreedyWth:($('inGreedyWth')?$('inGreedyWth').value:''),
+    inInactiveTH:($('inInactiveTH')?$('inInactiveTH').value:'0'),
+    inInactiveWth:($('inInactiveWth')?$('inInactiveWth').value:'0'),
     inClickStreak:$('inClickStreak').checked, inPayGMT:$('inPayGMT').checked,
     inAvatarDisc:$('inAvatarDisc').checked,
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
@@ -1594,6 +1601,10 @@ function applyInputs(d){
   if(d.inGreedyTH!=null)$('inGreedyTH').value=d.inGreedyTH;
   if(d.inGreedyInitial!=null)$('inGreedyInitial').value=d.inGreedyInitial;
   if(d.inGreedyWth!=null&&$('inGreedyWth'))$('inGreedyWth').value=d.inGreedyWth;
+  // Older saved setups predate the active/inactive toggle — default to all-active
+  // rather than leaving a stale value from whatever setup was loaded before.
+  if($('inInactiveTH'))$('inInactiveTH').value=(d.inInactiveTH!=null?d.inInactiveTH:'0');
+  if($('inInactiveWth'))$('inInactiveWth').value=(d.inInactiveWth!=null?d.inInactiveWth:'0');
   if(d.inGreedyGrowth!=null)$('inGreedyGrowth').value=d.inGreedyGrowth;
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
@@ -1977,9 +1988,15 @@ function calc(i){
   // (passive + reinvested upgrades) is VIP-eligible.
   const gth=Math.max(0,i.gth||0),gwth=gth>0?(i.gwth>0?i.gwth:15):0;
   const gInit=Math.min(Math.max(0,i.gInit||0),gth);
-  const vipTH=i.th+Math.max(0,gth-gInit);   // VIP tier basis
-  const totTH=i.th+gth,bwth=totTH>0?(i.th*i.wth+gth*gwth)/totTH:i.wth;
-  const gross=dbt*totTH,f=fees(totTH,bwth,bp);
+  // Hashrate switched off in the fleet. A miner you've turned off mines nothing,
+  // but you still own it: GoMining still bills its electricity, and it still counts
+  // toward your VIP tier. So it enters the FEE and VIP basis and never the reward.
+  const offTH=Math.max(0,i.offTH||0),offWth=offTH>0?(i.offWth>0?i.offWth:15):0;
+  const vipTH=i.th+Math.max(0,gth-gInit)+offTH;   // VIP tier basis — owned, not earning
+  const earnTH=i.th+gth;                          // hashrate that actually mines
+  const totTH=earnTH+offTH;                       // hashrate you pay fees on
+  const bwth=totTH>0?(i.th*i.wth+gth*gwth+offTH*offWth)/totTH:i.wth;
+  const gross=dbt*earnTH,f=fees(totTH,bwth,bp);
   const vip=vipOf(vipTH,i.gl),nxt=nextVip(vipTH,i.gl);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
@@ -2003,7 +2020,7 @@ function calc(i){
   }
   const dfees=f.t*(1-totD/100),net=(gross-dfees)*(1-CONVERSION_FEE),save=f.t*(totD/100);
   const wkGMT=(i.gl*i.apr/100)/52;
-  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,gth,gwth,vipTH,feesGMT,nonTokD,cov}
+  return{dbt,gross,f,vip,nxt,vd,cb,tok,totD,dfees,net,save,eTok,wkGMT,bp,gp,ovr,bwth,totTH,earnTH,offTH,offWth,gth,gwth,vipTH,feesGMT,nonTokD,cov}
 }
 
 // ---- RENDER HELPERS ----
@@ -2151,6 +2168,13 @@ function recalc(){
   dh+=row('Total Discount',fP(m.totD),'cyan');
   dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
   dh+=row('Yearly savings',`${fU(m.save*m.bp*30*12)}/yr`,'green');
+  // Switched-off miners are pure cost — they earn nothing yet still raise the fee
+  // your coverage has to stretch over, which is exactly what drags the discount down.
+  if(m.offTH>0){
+    const offFeeMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*30;
+    dh+=row('Inactive hashrate',`${fN(m.offTH,2)} TH @ ${fN(m.offWth,1)} W/TH`,'orange');
+    dh+=row('↳ Costs you',`${fU(offFeeMo)}/mo<span class="sub">earns nothing · still counts toward VIP &amp; coverage</span>`,'red');
+  }
   $('discountDisplay').innerHTML=dh;
 
   // Combined: Daily Operation & Rewards
@@ -2931,7 +2955,9 @@ function renderPlanner(i,m){
   const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''}${greedyMoAfter>0?' + greedy growth':''})`;
   // Current (pre-investment) state, for the before/after comparison.
   const curAmbMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
-  const curP={th:m.totTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.totTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
+  // earnTH, not totTH: switched-off miners must not be credited with rewards in the
+  // "before" baseline, or the projection would show income they can't produce.
+  const curP={th:m.earnTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.earnTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
   $('projTable').innerHTML=renderProjections(projTH,projWth,td2,projLabel,moStakingUSD,projAmbMo,curP,greedyMoAfter);
   updateProjCell();
 

@@ -113,7 +113,7 @@
 .fleet-summary strong{color:var(--purple-soft)}
 .fleet-rows{display:flex;flex-direction:column;gap:.4rem}
 .fleet-empty{font-size:.75rem;color:var(--text4);padding:.5rem 0}
-.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto;
+.fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,.8fr) auto auto;
   gap:.35rem;align-items:center}
 .fleet-col,.fleet-in{background:var(--bg-input);border:1px solid var(--border);color:var(--text);
   border-radius:8px;padding:.45rem .5rem;font-size:.8rem;min-width:0;width:100%;font-family:var(--sans)}
@@ -123,12 +123,27 @@
 .fleet-in::placeholder{color:var(--text4)}
 .fleet-del{background:none;border:none;color:var(--text4);font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1}
 .fleet-del:hover{color:var(--red)}
+/* Active / inactive switch. An inactive miner earns nothing but is still billed,
+   so the row is dimmed rather than hidden — it's still costing money. */
+.fleet-pwr{display:inline-flex;align-items:center;gap:.32rem;background:var(--bg-input);
+  border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.08em;
+  padding:.34rem .42rem;line-height:1;transition:.18s}
+.fleet-pwr-dot{width:6px;height:6px;border-radius:50%;background:var(--green,#3ddc97);
+  box-shadow:0 0 7px var(--green,#3ddc97);flex:0 0 auto}
+.fleet-pwr:hover{border-color:var(--text4);color:var(--text2)}
+.fleet-row.is-off .fleet-pwr{color:var(--orange,#f5a623)}
+.fleet-row.is-off .fleet-pwr-dot{background:var(--text4);box-shadow:none}
+/* Inputs dim, but TH/W-TH stay legible: they still drive the fee you're paying. */
+.fleet-row.is-off .fleet-col,.fleet-row.is-off .fleet-code{opacity:.42}
+.fleet-row.is-off .fleet-th,.fleet-row.is-off .fleet-wth{opacity:.72}
+.fleet-offnote{color:var(--orange,#f5a623)}
 .fleet-add{background:var(--bg-input);border:1px dashed var(--card-border);color:var(--text2);
   border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem;font-family:var(--sans)}
 .fleet-add:hover{border-color:var(--purple);color:var(--purple-soft)}
 @media(max-width:560px){
-  .fleet-row{grid-template-columns:1fr 1fr auto;grid-auto-rows:auto}
-  .fleet-col{grid-column:1/3}.fleet-code{grid-column:3/4}}
+  .fleet-row{grid-template-columns:1fr 1fr auto auto;grid-auto-rows:auto}
+  .fleet-col{grid-column:1/4}.fleet-code{grid-column:4/5}}
 
 /* ---------- chat: right-side dock (collapses to a rail) ---------- */
 .gmt-chat{position:fixed;top:0;right:0;height:100vh;height:100dvh;width:340px;z-index:500;
