@@ -12,7 +12,13 @@
   var sec = document.getElementById('cine');
   var cvs = document.getElementById('cineCanvas');
   if (!sec || !cvs || !cvs.getContext) return;
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  /* Reduced motion used to skip the intro entirely, which is why it appeared to be
+     missing on phones — iOS "Reduce Motion" is widely enabled, and the section then
+     fell back to its static title block. The effect now runs everywhere; what the
+     setting turns off is the AUTONOMOUS motion (idle drift and twinkle). The morph
+     itself is scroll-linked, i.e. driven by the reader's own input and stationary
+     whenever they are, which is the part reduced-motion is actually about. */
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   var ctx = cvs.getContext('2d');
 
@@ -119,8 +125,12 @@
      when a mobile toolbar is showing. */
   function sizeCanvas() {
     var r = cvs.getBoundingClientRect();
-    W = cvs.width = Math.max(1, Math.floor(r.width * dpr));
-    H = cvs.height = Math.max(1, Math.floor(r.height * dpr));
+    /* Fall back to the viewport if the box measures degenerate — a 1x1 backing
+       store would silently render nothing at all rather than fail loudly. */
+    var cw = r.width > 1 ? r.width : innerWidth;
+    var chh = r.height > 1 ? r.height : innerHeight;
+    W = cvs.width = Math.max(1, Math.floor(cw * dpr));
+    H = cvs.height = Math.max(1, Math.floor(chh * dpr));
   }
 
   function build() {
@@ -179,9 +189,10 @@
        no constellation — and back out again as the chart takes over. */
     var webness = clamp(p / (STOPS[1] * 0.9)) * (1 - chartness);
     /* Idle float belongs to the resting starfield; it settles once shapes form,
-       so the morph stays crisp and the chart doesn't wobble. */
-    var dAmt = 1 - clamp(p / 0.28);
-    var T = now / 1000;
+       so the morph stays crisp and the chart doesn't wobble. Reduced motion pins
+       it at zero — the field then only ever moves when the reader scrolls. */
+    var dAmt = reduce ? 0 : 1 - clamp(p / 0.28);
+    var T = reduce ? 0 : now / 1000;
 
     ctx.clearRect(0, 0, W, H);
 
@@ -260,8 +271,9 @@
 
     /* Always redraw: the stars drift and twinkle even when the page is still. The
        expensive O(n^2) link pass is skipped while webness is ~0, which is exactly
-       the resting state, so idling costs 170 arcs a frame. */
-    render(now || performance.now());
+       the resting state, so idling costs 170 arcs a frame. Under reduced motion
+       nothing changes between scrolls, so only redraw when the scroll moved. */
+    if (!reduce || moved) render(now || performance.now());
 
     /* Beat styling only needs touching when the scroll actually moved. */
     if (moved) {

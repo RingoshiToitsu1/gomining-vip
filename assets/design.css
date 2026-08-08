@@ -116,7 +116,8 @@
   background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--ease),box-shadow .25s;overflow:hidden}
 .rd .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 @media(max-width:820px){
-  .rd nav{flex-wrap:wrap;row-gap:9px;padding-left:16px;padding-right:16px}
+  /* .util is hidden just below, so the bar docks to the very top instead of under it. */
+  .rd nav{flex-wrap:wrap;row-gap:9px;top:0;padding-left:16px;padding-right:16px}
   .rd .nav-links{display:flex;order:3;width:100%;justify-content:center;gap:15px;flex-wrap:wrap}
   .rd .util{display:none}
 }
