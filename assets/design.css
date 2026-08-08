@@ -465,12 +465,17 @@
 }
 
 @media(prefers-reduced-motion:reduce){
-  .rd *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-  .rd .reveal{opacity:1!important;transform:none!important;filter:none!important}
-  .rd .orb,.rd .holo svg,.rd .telem,.rd .r-spin,.rd .r-spin-rev,.rd .radar,.rd .ticker,.rd .mq-track{animation:none!important}
-  /* Scroll timelines ignore animation-duration, so they need switching off by name. */
-  .rd .reveal,.rd .sec-head::after,.rd .hero-copy,.rd .sprog{animation-timeline:none!important;animation:none!important}
-  .rd .hero-copy{opacity:1!important;transform:none!important}
-  .rd .sec-head::after{transform:scaleX(1)!important}
-  .rd .sprog{display:none}
+  /* The distinction drawn here is autonomous vs reader-driven motion.
+     What goes: anything that loops on its own with the page sitting still —
+     drifting orbs, sweeping beams, the scrolling ticker and marquee, spinning
+     reticles, the shimmer. That is what this setting exists to stop.
+     What stays: scroll-linked motion — reveals, heading sweeps, the progress rail
+     and the cinematic intro — because it only moves while the reader is moving and
+     is stationary the instant they stop. A blanket `.rd *` animation/transition kill
+     used to take the second group with the first, which is why the site looked
+     materially different on any phone with Reduce Motion switched on. */
+  .rd{scroll-behavior:auto!important}
+  .rd .orb,.rd .beam,.rd .grid-floor,.rd .grad,.rd .holo svg,.rd .telem,
+  .rd .r-spin,.rd .r-spin-rev,.rd .radar,.rd .ticker,.rd .mq-track,
+  .rd .cine-cue,.rd .lp-aurora,.rd .lp-rings{animation:none!important}
 }

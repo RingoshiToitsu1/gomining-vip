@@ -103,29 +103,33 @@
     top.classList.toggle('show',y>320);
   },{passive:true});
 
-  if(reduce)return;
+  /* Pointer-only effects: nothing for a touch device to do, and they're the
+     continuous motion reduced-motion is asking to be spared. Everything AFTER
+     this block — scroll reveals and the galaxy backdrop — runs everywhere, so a
+     content page looks the same on a phone as on a desktop. */
+  if(!reduce){
+    /* ---- cursor spotlight (sets --mx/--my for the ::after glow) ---- */
+    document.querySelectorAll('.stat,.scenario,.cta,.claim-card').forEach(function(el){
+      el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
+        el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+        el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
+    });
 
-  /* ---- cursor spotlight (sets --mx/--my for the ::after glow) ---- */
-  document.querySelectorAll('.stat,.scenario,.cta,.claim-card').forEach(function(el){
-    el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
-      el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
-      el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
-  });
-
-  /* ---- magnetic hover on every clickable button (mirrors the landing page) ---- */
-  (function(){
-    var SEL='button, a.nav-cta, a.btn, a.ri-btn', cur=null;
-    function clr(){ if(cur){cur.style.transform='';cur=null;} }
-    document.addEventListener('pointermove',function(e){
-      var b=(e.target&&e.target.closest)?e.target.closest(SEL):null;
-      if(b!==cur)clr();
-      if(!b)return;
-      cur=b;var r=b.getBoundingClientRect();
-      b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';
-    },{passive:true});
-    document.addEventListener('pointerleave',clr,{passive:true});
-    addEventListener('blur',clr);
-  })();
+    /* ---- magnetic hover on every clickable button (mirrors the landing page) ---- */
+    (function(){
+      var SEL='button, a.nav-cta, a.btn, a.ri-btn', cur=null;
+      function clr(){ if(cur){cur.style.transform='';cur=null;} }
+      document.addEventListener('pointermove',function(e){
+        var b=(e.target&&e.target.closest)?e.target.closest(SEL):null;
+        if(b!==cur)clr();
+        if(!b)return;
+        cur=b;var r=b.getBoundingClientRect();
+        b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';
+      },{passive:true});
+      document.addEventListener('pointerleave',clr,{passive:true});
+      addEventListener('blur',clr);
+    })();
+  }
 
   /* ---- reveal-on-scroll (matches landing; flash-free — only pre-hides blocks below the fold) ---- */
   (function(){

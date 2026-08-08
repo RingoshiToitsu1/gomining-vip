@@ -593,7 +593,8 @@ html.show-onboarding #onboarding{display:flex}
 /* scroll reveal — matched to the landing (.rd .reveal): soft blur-up, .9s ease2 */
 .reveal{opacity:0;transform:translateY(30px);filter:blur(6px);transition:opacity .9s var(--ease2),transform .9s var(--ease2),filter .9s var(--ease2)}
 .reveal.visible{opacity:1;transform:none;filter:none}
-@media(prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important;filter:none!important}}
+/* Reveals stay under reduced motion here too — they're scroll-driven, and pinning
+   them visible was one more thing that made the console differ by device. */
 .ob-step-reveal{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}
 .ob-step.active .ob-step-reveal{opacity:1;transform:translateY(0)}
 .ob-field,.ob-toggle-row,.ob-preview-card,.ob-preview-grid{opacity:0;transform:translateY(12px);transition:opacity .4s ease,transform .4s ease}

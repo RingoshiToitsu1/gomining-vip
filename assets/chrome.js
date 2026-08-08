@@ -22,7 +22,10 @@
      CSS scroll timelines do the work where they exist (see design.css). This
      covers what they can't: the nav's active-section state everywhere, and a
      rAF fallback for the progress rail + heading sweeps on older browsers. */
-  var hasTimeline = !reduce && window.CSS && CSS.supports && CSS.supports('animation-timeline','view()');
+  /* Pure capability check — not gated on reduced motion, or a reduced-motion reader
+     on a browser without scroll timelines would get neither the CSS path nor this
+     fallback, and the rail would sit frozen at zero. */
+  var hasTimeline = window.CSS && CSS.supports && CSS.supports('animation-timeline','view()');
 
   /* nav: light up the section you're actually looking at */
   var navLinks = {}, navTargets = [];
@@ -46,7 +49,7 @@
     navTargets.forEach(function(el){ spy.observe(el); });
   }
 
-  if(!reduce && !hasTimeline){
+  if(!hasTimeline){
     var rail = root.querySelector('.sprog');
     var heads = [].slice.call(root.querySelectorAll('.sec-head'));
     var ticking = false;
@@ -81,59 +84,67 @@
   function runCount(el){
     if(el.dataset.done)return;el.dataset.done=1;
     var to=parseFloat(el.dataset.to),dec=parseInt(el.dataset.dec||0),pre=el.dataset.prefix||'',suf=el.dataset.suffix||'';
-    if(reduce){el.textContent=pre+to.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;return;}
+    /* Counts up everywhere. Like the decode, this fires once when the card scrolls
+       into view rather than looping, so it isn't the motion reduced-motion targets —
+       and gating it was another silent desktop/mobile split. */
     var t0=performance.now(),dur=1300;
     (function step(t){var p=Math.min((t-t0)/dur,1);var e=1-Math.pow(1-p,3);var v=to*e;
       el.textContent=pre+v.toLocaleString(undefined,{minimumFractionDigits:dec,maximumFractionDigits:dec})+suf;
       if(p<1)requestAnimationFrame(step);})(t0);
   }
 
-  /* decode headline */
-  if(!reduce){
-    var GL='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
-    root.querySelectorAll('[data-dec]').forEach(function(el,i){
-      var full=el.textContent,out=el.textContent.split(''),done=0;
-      el.textContent='';
-      setTimeout(function(){
-        var iv=setInterval(function(){
-          var s='';
-          for(var k=0;k<full.length;k++){
-            if(full[k]===' '){s+=' ';continue;}
-            if(k<done)s+=full[k];else s+=GL[Math.floor(Math.random()*GL.length)];
-          }
-          el.textContent=s;done+=0.7;
-          if(done>=full.length){el.textContent=full;clearInterval(iv);}
-        },28);
-      },200+i*380);
-    });
-  }
+  /* Decode headline. Deliberately NOT gated on reduced motion: this was why the
+     wordmark just appeared plainly on phones while it decoded on desktop — iOS
+     "Reduce Motion" is widely on, and the whole effect was being skipped. It's a
+     one-shot ~1s reveal on load, so it runs everywhere for a consistent open. */
+  var GL='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+  root.querySelectorAll('[data-dec]').forEach(function(el,i){
+    var full=el.textContent,done=0;
+    el.textContent='';
+    setTimeout(function(){
+      var iv=setInterval(function(){
+        var s='';
+        for(var k=0;k<full.length;k++){
+          if(full[k]===' '){s+=' ';continue;}
+          if(k<done)s+=full[k];else s+=GL[Math.floor(Math.random()*GL.length)];
+        }
+        el.textContent=s;done+=0.7;
+        if(done>=full.length){el.textContent=full;clearInterval(iv);}
+      },28);
+    },200+i*380);
+  });
 
-  if(reduce)return;
-
-  /* pointer parallax + tilt + magnetic + spotlight */
-  var depths=[].slice.call(root.querySelectorAll('[data-depth]'));
+  /* Pointer state, shared by the parallax layers and the galaxy's core offset.
+     Stays at 0 on touch, which simply leaves the galaxy centred. */
   var mx=0,my=0,cx=0,cy=0;
-  addEventListener('pointermove',function(e){mx=(e.clientX/innerWidth-.5);my=(e.clientY/innerHeight-.5);},{passive:true});
-  root.querySelectorAll('[data-tilt]').forEach(function(el){
-    el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
-      var px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;
-      el.style.transform='perspective(820px) rotateX('+(-py*6)+'deg) rotateY('+(px*8)+'deg) translateY(-4px)';});
-    el.addEventListener('pointerleave',function(){el.style.transform='';});
-  });
-  root.querySelectorAll('.spot').forEach(function(el){
-    el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
-      el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
-      el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
-  });
-  root.querySelectorAll('[data-magnetic]').forEach(function(b){
-    b.addEventListener('pointermove',function(e){var r=b.getBoundingClientRect();
-      b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';});
-    b.addEventListener('pointerleave',function(){b.style.transform='';});
-  });
-  (function loop(){cx+=(mx-cx)*.06;cy+=(my-cy)*.06;
-    depths.forEach(function(el){var d=parseFloat(el.getAttribute('data-depth'))*100;
-      el.style.transform='translate('+(-cx*d)+'px,'+(-cy*d)+'px)';});
-    requestAnimationFrame(loop);})();
+
+  /* Parallax, tilt, magnetic buttons and card spotlights are all pointer-driven —
+     nothing for a touch device to do — and they're the continuous motion a
+     reduced-motion reader is actually asking to be spared. Skipped there. */
+  if(!reduce){
+    var depths=[].slice.call(root.querySelectorAll('[data-depth]'));
+    addEventListener('pointermove',function(e){mx=(e.clientX/innerWidth-.5);my=(e.clientY/innerHeight-.5);},{passive:true});
+    root.querySelectorAll('[data-tilt]').forEach(function(el){
+      el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
+        var px=(e.clientX-r.left)/r.width-.5,py=(e.clientY-r.top)/r.height-.5;
+        el.style.transform='perspective(820px) rotateX('+(-py*6)+'deg) rotateY('+(px*8)+'deg) translateY(-4px)';});
+      el.addEventListener('pointerleave',function(){el.style.transform='';});
+    });
+    root.querySelectorAll('.spot').forEach(function(el){
+      el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
+        el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+        el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
+    });
+    root.querySelectorAll('[data-magnetic]').forEach(function(b){
+      b.addEventListener('pointermove',function(e){var r=b.getBoundingClientRect();
+        b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';});
+      b.addEventListener('pointerleave',function(){b.style.transform='';});
+    });
+    (function loop(){cx+=(mx-cx)*.06;cy+=(my-cy)*.06;
+      depths.forEach(function(el){var d=parseFloat(el.getAttribute('data-depth'))*100;
+        el.style.transform='translate('+(-cx*d)+'px,'+(-cy*d)+'px)';});
+      requestAnimationFrame(loop);})();
+  }
 
   /* ---- SPIRAL GALAXY BACKDROP (guarded — needs the #stars canvas) ---- */
   var cvs=root.querySelector('#stars');
