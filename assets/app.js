@@ -2560,16 +2560,32 @@ function computeEffPlan(st){
       }
     }
   }
-  // If the plan buys TH and the best home is a greedy above 12 W, that greedy must be
-  // efficiency-upgraded first (one W/TH per NFT). Book it as an EFFICIENCY allocation, only
-  // when the whole-farm upgrade above wasn't chosen.
+  // A Greedy Machine is a genuine special case: its free weekly TH inherits the machine's
+  // W/TH, so upgrading it early makes every future free TH cheaper to run for good. That
+  // argument is real — but it used to be applied with NO comparison whatsoever, diverting
+  // the hashrate budget into the upgrade however poor the return. It now has to win the
+  // same test the whole-farm overlay does, with its expected growth credited to it: the
+  // saving accrues on the grown machine, while the upgrade is only paid for once.
   if(effUSD<=0 && thUSD>0){
     const gr=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP&&(+r.wth||15)>EFF_BEST).sort((a,b)=>b.th-a.th)[0];
     if(gr){
-      const gCptU=effUpgradeCostPerTH(+gr.wth||15);
-      if(gCptU>0){
-        const gEff=Math.min(thUSD,(+gr.th)*gCptU);
-        effUSD+=gEff; effTHupg+=gEff/gCptU; thUSD-=gEff;
+      const gwth=+gr.wth||EFF_BASE_MAX, gth=+gr.th||0;
+      const gCptU=effUpgradeCostPerTH(gwth);
+      if(gCptU>0&&gth>0){
+        const gGrow=(+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100;   // free growth, fraction/wk
+        // Mean TH across the next year at weekly compounding — the base the saving really lands on.
+        const grownAvg=gGrow>0?gth*((Math.pow(1+gGrow,52)-1)/(52*gGrow)):gth;
+        const gLockFreed=(18*20)*(0.0012*(gwth-EFF_BEST))*(1-nonTokD);
+        const gCptUnet=Math.max(0.01,gCptU-gLockFreed);
+        const gSavedYrPerTH=0.0012*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
+        const gROI=(gSavedYrPerTH*grownAvg)/(gth*gCptUnet);
+        const cptTHg=estimateCPT12((i.th+addTH)||1);
+        const thNetMoG=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
+        const thROIg=cptTHg>0?thNetMoG*12/cptTHg:0;
+        if(gROI>thROIg){
+          const gEff=Math.min(thUSD,gth*gCptU);
+          effUSD+=gEff; effTHupg+=gEff/gCptU; thUSD-=gEff;
+        }
       }
     }
   }
