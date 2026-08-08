@@ -141,9 +141,25 @@
 .fleet-add{background:var(--bg-input);border:1px dashed var(--card-border);color:var(--text2);
   border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem;font-family:var(--sans)}
 .fleet-add:hover{border-color:var(--purple);color:var(--purple-soft)}
-@media(max-width:560px){
-  .fleet-row{grid-template-columns:1fr 1fr auto auto;grid-auto-rows:auto}
-  .fleet-col{grid-column:1/4}.fleet-code{grid-column:4/5}}
+@media(max-width:620px){
+  /* Every cell is placed explicitly. Letting them auto-flow through mixed fr/auto
+     tracks dropped the NFT code into a content-sized `auto` column and squashed it,
+     while the two auto columns were being sized by whatever landed in them across
+     BOTH rows. Collection and code get a full row each; the numbers, the switch and
+     delete share the last one. */
+  .fleet-row{grid-template-columns:1fr 1fr auto auto;grid-auto-rows:auto;gap:.4rem}
+  .fleet-col{grid-column:1/-1}
+  .fleet-code{grid-column:1/-1}
+  .fleet-th{grid-column:1/2}
+  .fleet-wth{grid-column:2/3}
+  .fleet-pwr{grid-column:3/4;justify-self:end}
+  .fleet-del{grid-column:4/5;justify-self:end;padding:0 .1rem}
+  /* Rows are two-deep now, so separate them more than the within-row gap. */
+  .fleet-rows{gap:.75rem}
+  .fleet-row{padding-bottom:.6rem;border-bottom:1px solid var(--card-border)}
+  .fleet-row:last-child{border-bottom:0;padding-bottom:0}
+  .fleet-summary{line-height:1.55}
+}
 
 /* ---------- chat: right-side dock (collapses to a rail) ---------- */
 .gmt-chat{position:fixed;top:0;right:0;height:100vh;height:100dvh;width:340px;z-index:500;
