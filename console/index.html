@@ -52,7 +52,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=34">
+<link rel="stylesheet" href="/assets/app.css?v=35">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -584,18 +584,6 @@
     </div>
   </div>
 
-  <!-- REINVEST SIGNAL -->
-  <div class="section reveal" id="secSignal">
-    <div class="section-header" onclick="toggleSection('secSignal')">
-      <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M7 22 L13 22 L16 13 L20 28 L24 16 L27 22 L33 22"/></g></svg> Reinvestment Signal</div>
-      <div class="section-toggle">&#9662;</div>
-    </div>
-    <div class="section-desc">Based on current BTC price, should you buy more hashrate or accumulate more GMT?</div>
-    <div class="section-body">
-      <div id="reinvestSignal"></div>
-    </div>
-  </div>
-
   <!-- SHARE THIS SETUP -->
   <div class="reveal" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
     <button class="share-plan-btn" onclick="sharePlan(this)" title="Copy a link to your current setup so anyone can view these numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this setup</button>
@@ -1043,7 +1031,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=62"></script>
+<script src="/assets/app.js?v=63"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -2216,21 +2216,6 @@ function recalc(){
 
   $('gmtCoverage').innerHTML=g;
 
-  // Signal
-  let sg='';
-  if(m.bp>80000){
-    sg+=`<div class="signal th"><div class="signal-head">REINVEST IN TH</div><div class="signal-body">BTC is at ${fU(m.bp)} (above $80K). Convert BTC rewards to hashrate -- purchasing power is elevated.`;
-    if(m.vip.rb>0)sg+=` Your ${m.vip.n} tier gives +${m.vip.rb}% TH reinvest bonus.`;
-    const nv=nextVip(i.th,i.gl);
-    if(nv&&nv.rb>0)sg+=` Reaching ${nv.n} (${nv.th} TH) unlocks +${nv.rb}% reinvest bonus.`;
-    sg+='</div></div>';
-  }else if(m.bp>=60000){
-    sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (mid-range). Build discount coverage -- maintenance savings compound and protect margins if BTC pulls back.</div></div>`;
-  }else{
-    sg+=`<div class="signal gmt"><div class="signal-head">REINVEST IN GMT</div><div class="signal-body">BTC at ${fU(m.bp)} (below $60K). Accumulate GMT while cheap. Discount savings outweigh TH growth since hashrate ROI compresses at lower prices.</div></div>`;
-  }
-  $('reinvestSignal').innerHTML=sg;
-
   // Capital planner (includes projections)
   renderPlanner(i,m);
 }

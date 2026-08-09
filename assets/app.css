@@ -204,16 +204,6 @@ input[type=number]{-moz-appearance:textfield}
 .ds-token{background:var(--cyan)}.ds-vip{background:var(--purple-soft)}.ds-click{background:var(--green)}.ds-mining{background:#e879f9}.ds-other{background:var(--orange)}
 
 /* ---- SIGNAL BOX ---- */
-.signal{border-radius:var(--radius);padding:1rem 1.2rem;border:1px solid;position:relative;overflow:hidden}
-.signal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.signal.th{border-color:rgba(52,211,153,.25);background:var(--green-glow)}
-.signal.th::before{background:var(--green)}
-.signal.gmt{border-color:rgba(0,194,255,.25);background:var(--cyan-glow)}
-.signal.gmt::before{background:var(--cyan)}
-.signal-head{font-size:1rem;font-weight:700;margin-bottom:.3rem}
-.signal.th .signal-head{color:var(--green)}
-.signal.gmt .signal-head{color:var(--cyan)}
-.signal-body{font-size:.8rem;color:var(--text2);line-height:1.5}
 
 /* ---- BADGES ---- */
 .badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .55rem;border-radius:5px;font-size:.75rem;font-weight:600}
@@ -412,9 +402,6 @@ input[type=number]{-moz-appearance:textfield}
   .gmt-tier{padding:.5rem .6rem}
   .gmt-tier .t-pct{font-size:.9rem}
   .gmt-tier .t-need{font-size:.7rem}
-  .signal{padding:.8rem}
-  .signal-head{font-size:.9rem}
-  .signal-body{font-size:.75rem}
   .discount-visual{height:20px}
   .discount-visual div{font-size:.55rem;min-width:18px}
   .tier-progress{padding:.5rem .6rem}
