@@ -1989,14 +1989,18 @@ function calc(i){
   const gth=Math.max(0,i.gth||0),gwth=gth>0?(i.gwth>0?i.gwth:15):0;
   const gInit=Math.min(Math.max(0,i.gInit||0),gth);
   // Hashrate switched off in the fleet. A miner you've turned off mines nothing,
-  // but you still own it: GoMining still bills its electricity, and it still counts
-  // toward your VIP tier. So it enters the FEE and VIP basis and never the reward.
+  // but you still own it, so it still counts toward your VIP tier. It is switched off,
+  // so it enters NEITHER the reward nor the fee basis — only the VIP one.
   const offTH=Math.max(0,i.offTH||0),offWth=offTH>0?(i.offWth>0?i.offWth:15):0;
-  const vipTH=i.th+Math.max(0,gth-gInit)+offTH;   // VIP tier basis — owned, not earning
-  const earnTH=i.th+gth;                          // hashrate that actually mines
-  const totTH=earnTH+offTH;                       // hashrate you pay fees on
-  const bwth=totTH>0?(i.th*i.wth+gth*gwth+offTH*offWth)/totTH:i.wth;
-  const gross=dbt*earnTH,f=fees(totTH,bwth,bp);
+  const vipTH=i.th+Math.max(0,gth-gInit)+offTH;   // VIP tier basis — still owned, so it still counts
+  const earnTH=i.th+gth;                          // hashrate that mines AND is billed
+  const totTH=earnTH+offTH;                       // hashrate OWNED (farm value, VIP) — not the fee basis
+  // A paused miner is switched off: it mines nothing and it is billed nothing. Fees and
+  // the blended efficiency they're computed on therefore cover the ACTIVE hashrate only.
+  // Pausing consequently lifts the token discount slightly, because there is less daily
+  // fee for the same GMT coverage to stretch over — which is the real-world effect.
+  const bwth=earnTH>0?(i.th*i.wth+gth*gwth)/earnTH:i.wth;
+  const gross=dbt*earnTH,f=fees(earnTH,bwth,bp);
   const vip=vipOf(vipTH,i.gl),nxt=nextVip(vipTH,i.gl);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
@@ -2168,12 +2172,15 @@ function recalc(){
   dh+=row('Total Discount',fP(m.totD),'cyan');
   dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
   dh+=row('Yearly savings',`${fU(m.save*m.bp*30*12)}/yr`,'green');
-  // Switched-off miners are pure cost — they earn nothing yet still raise the fee
-  // your coverage has to stretch over, which is exactly what drags the discount down.
+  // Paused hashrate: off the books entirely on both sides — no rewards, no fees — but
+  // still owned, so it still counts toward the VIP tier. Show the fee it would incur if
+  // switched back on, since that's the number that decides whether it's worth running.
   if(m.offTH>0){
-    const offFeeMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*30;
-    dh+=row('Inactive hashrate',`${fN(m.offTH,2)} TH @ ${fN(m.offWth,1)} W/TH`,'orange');
-    dh+=row('↳ Costs you',`${fU(offFeeMo)}/mo<span class="sub">earns nothing · still counts toward VIP &amp; coverage</span>`,'red');
+    const wouldCostMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*30;
+    const wouldEarnMo=m.dbt*m.offTH*m.bp*30;
+    dh+=row('Paused hashrate',`${fN(m.offTH,2)} TH @ ${fN(m.offWth,1)} W/TH`,'orange');
+    dh+=row('↳ If switched on',`${fU(wouldEarnMo-wouldCostMo)}/mo<span class="sub">${fU(wouldEarnMo)} mined − ${fU(wouldCostMo)} fees · counts toward VIP either way</span>`,
+      (wouldEarnMo-wouldCostMo)>0?'green':'red');
   }
   $('discountDisplay').innerHTML=dh;
 

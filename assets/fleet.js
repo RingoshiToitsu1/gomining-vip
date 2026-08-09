@@ -76,10 +76,10 @@
   // already estimates $/TH from the tier curves off the TH + W/TH we set below.
   var DEFAULT_WTH = 15;   // marketplace default; matches the console's default efficiency
   var isGreedy = function (c) { return /greedy/i.test(c || ''); };
-  // Switched-off miners are aggregated SEPARATELY, never folded into the earning
-  // totals: they mine nothing, but you still own them, so they keep costing
-  // electricity and still count toward the VIP tier. calc() puts them back into
-  // the fee and coverage basis without ever crediting them with a reward.
+  // Paused miners are aggregated SEPARATELY, never folded into the earning totals:
+  // switched off, they mine nothing and are billed nothing. calc() keeps them out of
+  // both the reward and the fee basis; they still count toward the VIP tier, because
+  // you continue to own the hashrate whether or not it is running.
   function aggregate() {
     var th = 0, wSum = 0, count = 0, gTH = 0, gWSum = 0, offTH = 0, offWSum = 0, offCount = 0;
     rows.forEach(function (r) {
@@ -129,7 +129,7 @@
       setField('inGreedyTH', 0);
       setField('inGreedyInitial', 0);
     }
-    // Switched-off hashrate: earns nothing, still billed, still counts for VIP.
+    // Paused hashrate: earns nothing, billed nothing, still counts toward VIP.
     setField('inInactiveTH', +a.offTH.toFixed(2));
     setField('inInactiveWth', +a.offWth.toFixed(2));
     if (typeof window.refreshGreedyVisibility === 'function') window.refreshGreedyVisibility();
@@ -165,7 +165,7 @@
         fieldHTML('f-wth', 'W/TH',
           '<input class="fleet-in fleet-wth" data-k="wth" type="number" min="12" step="0.1" placeholder="15" value="' + (r.wth != null ? esc(r.wth) : '') + '">') +
         '<button class="fleet-pwr" aria-pressed="' + (off ? 'false' : 'true') + '" ' +
-          'title="' + (off ? 'Inactive — earns nothing, still billed and still counts toward VIP. Click to reactivate.' : 'Active and mining. Click to mark inactive.') + '" ' +
+          'title="' + (off ? 'Paused — mines nothing and is billed nothing, but still counts toward your VIP tier. Click to switch back on.' : 'Active and mining. Click to pause.') + '" ' +
           'aria-label="' + (off ? 'Miner inactive' : 'Miner active') + '">' +
           '<span class="fleet-pwr-dot"></span>' + (off ? 'OFF' : 'ON') +
         '</button>' +
@@ -193,14 +193,14 @@
     } catch (e) {}
     if (!el.summary) return;
     if (a.count === 0) { el.summary.innerHTML = ''; return; }
-    // TH total reads as the MINING total; switched-off hashrate is called out
-    // separately so it never looks like it was silently dropped.
+    // TH total reads as the MINING total; paused hashrate is called out separately so
+    // it never looks like it was silently dropped.
     el.summary.innerHTML =
       '<strong>' + a.count + '</strong> miner' + (a.count === 1 ? '' : 's') +
       ' &middot; <strong>' + num(a.th) + '</strong> TH mining' +
       ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg' +
       (a.offCount > 0
-        ? ' &middot; <span class="fleet-offnote">' + a.offCount + ' inactive (' + num(a.offTH) + ' TH, still billed)</span>'
+        ? ' &middot; <span class="fleet-offnote">' + a.offCount + ' paused (' + num(a.offTH) + ' TH, no fees)</span>'
         : '');
   }
 
