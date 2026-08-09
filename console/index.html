@@ -52,7 +52,7 @@
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=35">
+<link rel="stylesheet" href="/assets/app.css?v=36">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -559,6 +559,10 @@
     </div>
   </div>
 
+  <!-- VIP + DAILY OPERATION — paired side by side on wide screens. Both are
+       read-only readouts of the same setup, so sitting them together cuts a
+       screenful of scrolling before the planner. Stacks below 900px. -->
+  <div class="section-pair">
   <!-- VIP & DISCOUNTS -->
   <div class="section reveal" id="secVip">
     <div class="section-header" onclick="toggleSection('secVip')">
@@ -583,6 +587,7 @@
       <div id="gmtCoverage"></div>
     </div>
   </div>
+  </div><!-- /.section-pair -->
 
   <!-- SHARE THIS SETUP -->
   <div class="reveal" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
