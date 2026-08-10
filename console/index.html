@@ -45,7 +45,10 @@
   ]
 }
 </script>
-<script>/* Show onboarding for new visitors before paint (no dashboard flash). */try{if(!localStorage.getItem('gm_onboarded'))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
+<script>/* The setup wizard is opt-in now — no first-visit popup gated on a localStorage flag.
+   It opens only when the landing page sends you here: ?setup=1 from "I'm already mining",
+   ?new=1 from "New to GoMining". Set before paint so the dashboard never flashes behind it. */
+try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classList.add('show-onboarding')}catch(e){}</script>
 <link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1036,7 +1039,7 @@
 </footer>
 </div>
 
-<script src="/assets/app.js?v=63"></script>
+<script src="/assets/app.js?v=64"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1050,8 +1053,10 @@
 function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');if(b)b.click();document.querySelectorAll('.nav-links a[data-view]').forEach(function(a){a.classList.toggle('nav-active',a.dataset.view===tab);});try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}}
 (function(){try{
   var qs=location.search;
-  if(/[?&]new=1/.test(qs)){ if(typeof obNewUser==='function') obNewUser(); return; }
-  if(!localStorage.getItem('gm_onboarded')){ if(typeof obGoStep==='function') obGoStep(1); return; }
+  if(/[?&]new=1/.test(qs)){ if(typeof obNewUser==='function') obNewUser();
+    try{history.replaceState({},'',location.pathname+location.hash);}catch(e){} return; }
+  /* ?setup=1 is handled by initOnboarding() in app.js, which runs before this. */
+  if(/[?&]setup=1/.test(qs)) return;
   var view=(qs.match(/[?&]view=([a-z]+)/)||[])[1];
   if(view==='planner'){ if(typeof consoleView==='function') consoleView('tab-planner'); }
   else if(view==='planner-projection'){ if(typeof consoleView==='function') consoleView('tab-planner'); if(typeof openSetupProjection==='function') openSetupProjection('planner'); }

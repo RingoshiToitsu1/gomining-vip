@@ -3805,10 +3805,18 @@ function togglePiOpt(btn,id){
 }
 let obCur=0;
 function initOnboarding(){
-  try{if(localStorage.getItem('gm_onboarded'))return}catch(e){}
+  // Opt-in only. This used to fire for anyone without a gm_onboarded flag, so a cleared
+  // cache or a new browser meant being ambushed by a full-screen wizard before you could
+  // see the tool. It now opens solely on request from the landing page's CTAs.
+  if(!/[?&]setup=1/.test(location.search))return;
   document.getElementById('onboarding').style.display='';
   document.body.style.overflow='hidden';
-  obGoStep(0);   // landing page: applies the step-0 state (hides wizard dots + nav)
+  // Straight into entering the farm — step 0 is the "new or existing?" chooser, and
+  // clicking "I'm already mining" has already answered it.
+  obGoStep(1);
+  // Drop the param once it's been acted on, so refreshing or sharing the URL afterwards
+  // lands on the console rather than reopening the wizard.
+  try{history.replaceState({},'',location.pathname+location.hash);}catch(e){}
 }
 const OB_LAST_STEP=6;
 function obGoStep(n){
@@ -3966,8 +3974,9 @@ function submitNewUserBudget(){
   },800);
 }
 function resetOnboarding(){
-  try{localStorage.removeItem('gm_onboarded')}catch(e){}
-  location.reload();
+  // Nothing gates on the old gm_onboarded flag any more, so clearing it and reloading
+  // would do nothing. Reopening the wizard now means asking for it by URL.
+  location.href='/console?setup=1';
 }
 
 // ---- SCROLL REVEAL ----
