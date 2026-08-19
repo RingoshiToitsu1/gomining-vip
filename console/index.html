@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=36">
+<link rel="stylesheet" href="/assets/app.css?v=37">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -426,7 +426,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
   </div>
 
   <!-- FARM SCREENSHOT — branded, shareable card of the four headline stats above -->
-  <div class="reveal" style="display:flex;justify-content:center;margin:1.5rem 0 .2rem">
+  <div class="reveal hero-shot-row">
     <button class="share-plan-btn chart-shot-btn" onclick="createFarmShot(this)" title="Generate a branded, shareable image of your live farm numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg> Create farm screenshot</button>
   </div>
 
