@@ -919,6 +919,9 @@ function buildChart(symbol,allowChange){
 // GMT-Optimizer + GoMining branding (deliberately NO promo code).
 // ============================================================
 let _chartShotCanvas=null, _chartShotBlob=null;
+// Which snapshot currently sits in the modal — the share sheet, filename and caption
+// all key off this ('chart' = candles, 'farm' = the user's live farm stats card).
+let _shotKind='chart';
 const _csImgCache={};
 function _csImg(src){
   if(_csImgCache[src])return _csImgCache[src];
@@ -965,6 +968,7 @@ async function fetchGmtCandles(hours){
   return null;
 }
 async function createChartShot(){
+  _shotKind='chart';
   const asset=window._chartAsset||{kind:'btc',name:'Bitcoin',pair:'BTC / USD',icon:'/btc36.png'};
   const modal=document.getElementById('chartShotModal');
   const load=document.getElementById('chartShotLoading');
@@ -1002,20 +1006,29 @@ function closeChartShot(){
 }
 // ---- share sheet (YouTube-Music style) ----
 const CHART_SHARE_BASE='https://gmt-optimizer.com';
-// Per-asset shareable link — gmt-optimizer.com/bitcoin or /gmt.
-function _csChartUrl(){
-  const a=window._chartAsset||{kind:'btc'};
-  return CHART_SHARE_BASE+(a.kind==='gmt'?'/gmt':'/bitcoin');
+// Everything the share sheet needs for whichever snapshot is on screen: the link it
+// points at, the caption, the native-share title and the PNG filename.
+function _shotInfo(){
+  if(_shotKind==='farm')return{
+    url:CHART_SHARE_BASE+'/console',
+    title:'My GoMining farm — live numbers',
+    text:'My GoMining farm right now — daily & monthly earnings, discount and compounding velocity. Model yours free at GMT-Optimizer.com',
+    file:'gmt-optimizer-my-farm.png'
+  };
+  const a=window._chartAsset||{kind:'btc',name:'Bitcoin'};
+  return{
+    url:CHART_SHARE_BASE+(a.kind==='gmt'?'/gmt':'/bitcoin'),
+    title:a.name+' — 1H chart',
+    text:'Live '+a.name+' chart — plan your GoMining ROI, discount & earnings free at GMT-Optimizer.com',
+    file:'gmt-optimizer-'+(a.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png'
+  };
 }
-function _csShareText(){
-  const a=window._chartAsset||{name:'Bitcoin'};
-  return 'Live '+a.name+' chart — plan your GoMining ROI, discount & earnings free at GMT-Optimizer.com';
-}
+function _csChartUrl(){return _shotInfo().url;}
+function _csShareText(){return _shotInfo().text;}
 // Build a File from the cached PNG blob (present once the shot is rendered).
 function _chartShotFile(){
   if(!_chartShotBlob)return null;
-  const a=window._chartAsset||{kind:'btc'};
-  return new File([_chartShotBlob],'gmt-optimizer-'+(a.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png',{type:'image/png'});
+  return new File([_chartShotBlob],_shotInfo().file,{type:'image/png'});
 }
 function _canShareImage(){const f=_chartShotFile();return !!(f&&navigator.canShare&&navigator.canShare({files:[f]}));}
 // "Share": always open our custom YouTube-style bottom sheet (the user prefers it over the
@@ -1051,11 +1064,12 @@ async function chartShareTo(net){
 // "Share with other apps" row — native image share, else save the PNG.
 async function chartShareNative(){
   const f=_chartShotFile();if(!f)return;
+  const info=_shotInfo();
   try{
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      await navigator.share({files:[f],url:_csChartUrl(),title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+_csChartUrl()});return;
+      await navigator.share({files:[f],url:info.url,title:info.title,text:info.text+' '+info.url});return;
     }
-    if(navigator.share){await navigator.share({title:(window._chartAsset||{}).name+' — 1H chart',text:_csShareText()+' '+_csChartUrl()});return;}
+    if(navigator.share){await navigator.share({title:info.title,text:info.text+' '+info.url});return;}
   }catch(e){if(e&&e.name==='AbortError')return;}
   downloadChartShot();csToast('⬇ Image saved — attach it anywhere');
 }
@@ -1072,10 +1086,9 @@ async function copyChartShot(silent){
 }
 async function downloadChartShot(btn){
   if(!_chartShotCanvas&&!_chartShotBlob)return;
-  const asset=window._chartAsset||{kind:'btc'};
   try{
     const blob=_chartShotBlob||await canvasToBlob(_chartShotCanvas);
-    downloadBlob(blob,'gmt-optimizer-'+(asset.kind==='btc'?'bitcoin':'gmt')+'-1h-chart.png');
+    downloadBlob(blob,_shotInfo().file);
     if(btn){const orig=btn.innerHTML;btn.innerHTML='⬇ Saved';setTimeout(()=>{btn.innerHTML=orig;},2000);}
   }catch(e){}
 }
@@ -1166,6 +1179,165 @@ function buildChartShotCanvas(asset,data,imgs){
   x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px "Share Tech Mono",monospace';
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   x.fillText(now+'   ·   not financial advice',W-44,footY-2);
+  x.textAlign='left';
+  return c;
+}
+
+// ============================================================
+// FARM SCREENSHOT — branded, shareable card of the live hero stats
+// Same modal + share sheet as the chart snapshot, but the picture is the four
+// headline numbers on My Setup (daily, monthly, discount, velocity) plus the
+// setup they come from. Numbers are read from window._farmShot, stashed by recalc().
+// ============================================================
+// Shrink a font until the string fits maxW; returns the size actually used.
+function _fsFit(x,text,maxW,weight,size,family){
+  let sz=size;
+  for(;sz>10;sz--){x.font=weight+' '+sz+'px '+family;if(x.measureText(text).width<=maxW)break;}
+  return sz;
+}
+// Greedy word wrap, capped at `max` lines (last line gets an ellipsis if it overflows).
+function _fsWrap(x,text,maxW,max){
+  const words=String(text||'').split(/\s+/).filter(Boolean),lines=[];
+  let cur='';
+  for(const w of words){
+    const t=cur?cur+' '+w:w;
+    if(!cur||x.measureText(t).width<=maxW)cur=t;
+    else{lines.push(cur);cur=w;if(lines.length===max)break;}
+  }
+  if(lines.length<max&&cur)lines.push(cur);
+  if(lines.length===max){
+    let last=lines[max-1];
+    const more=words.join(' ').length>lines.join(' ').length;
+    if(more){while(last.length>1&&x.measureText(last+'…').width>maxW)last=last.slice(0,-1);lines[max-1]=last+'…';}
+  }
+  return lines;
+}
+async function createFarmShot(){
+  const d=window._farmShot;
+  const modal=document.getElementById('chartShotModal');
+  if(!modal)return;
+  _shotKind='farm';
+  const load=document.getElementById('chartShotLoading');
+  const img=document.getElementById('chartShotImg');
+  const actions=document.getElementById('chartShotActions');
+  document.getElementById('chartShotTitle').textContent='Your farm — live snapshot';
+  document.getElementById('chartShotLoadTxt').textContent='Rendering your farm card…';
+  img.style.display='none';actions.style.display='none';load.style.display='flex';
+  modal.style.display='flex';document.body.style.overflow='hidden';
+  _chartShotCanvas=null;_chartShotBlob=null;   // never share a stale image
+  try{
+    if(!d)throw new Error('no data');
+    const [logoOpt,token,coin]=await Promise.all([
+      _csImg('/gmt-optimizer-logo.svg?v=2'),_csImg('/gmt36.png'),_csImg('/btc36.png')
+    ]);
+    _chartShotCanvas=buildFarmShotCanvas(d,{logoOpt,token,coin});
+    img.src=_chartShotCanvas.toDataURL('image/png');
+    _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
+    img.style.display='';load.style.display='none';actions.style.display='flex';
+  }catch(e){
+    document.getElementById('chartShotLoadTxt').textContent='Enter your setup first — there are no numbers to snapshot yet.';
+  }
+}
+function buildFarmShotCanvas(d,imgs){
+  const SC=2,W=1200,H=675;
+  const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
+  const x=c.getContext('2d');x.scale(SC,SC);
+  const MONO='"Share Tech Mono",monospace',SANS='"Space Grotesk",system-ui,sans-serif';
+  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A',GPALE='#FFE0A8',RED='#FF4D4D';
+  // background — the site's gold-on-black
+  const bgG=x.createLinearGradient(0,0,W,H);
+  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  x.fillStyle=bgG;x.fillRect(0,0,W,H);
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  orb(150,60,380,0.17);orb(1070,150,320,0.11);orb(600,780,420,0.07);
+  x.strokeStyle='rgba(245,166,35,0.04)';x.lineWidth=0.5;
+  for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
+  for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
+  const pad=44;
+  // ---- header: brand left, VIP tier right ----
+  let bx=pad;
+  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
+  x.textAlign='left';x.fillStyle='#fff';x.font='800 26px '+SANS;
+  x.fillText('GMT Optimizer',bx,48);
+  x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px '+MONO;
+  x.fillText('gmt-optimizer.com',pad,74);
+  x.textAlign='right';x.fillStyle='#fff';x.font='800 26px '+SANS;
+  x.fillText('My GoMining Farm',W-pad,46);
+  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px '+MONO;
+  x.fillText('VIP '+(d.vip||'—')+'   ·   '+fN(d.th,1)+' TH   ·   live snapshot',W-pad,70);
+  const lg=x.createLinearGradient(pad,0,W-pad,0);
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
+  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,100);x.lineTo(W-pad,100);x.stroke();
+  // ---- the four headline stats ----
+  const neg=d.dailyUSD<0;
+  const cards=[
+    {id:'DAILY.NET',  label:'Daily Net Profit',      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:d.dailySub},
+    {id:'MONTH.YIELD',label:'Monthly Earnings',      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:fU(d.yearlyUSD,0)+' / yr'},
+    {id:'COVERAGE',   label:'Total Discount',        val:fP(d.disc),              accent:GOLD,         sub:'Saving '+fU(d.saveMoUSD)+'/mo on fees'},
+    {id:'VELOCITY',   label:'Compounding Velocity',  val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:d.velSub}
+  ];
+  const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
+  cards.forEach((cd,i)=>{
+    const cx=pad+i*(cardW+gap);
+    const cbg=x.createLinearGradient(cx,cardY,cx,cardY+cardH);
+    cbg.addColorStop(0,'rgba(245,166,35,0.07)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
+    x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.fill();
+    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
+    // accent bar along the top edge, like the hero cards on the site
+    x.shadowColor=cd.accent;x.shadowBlur=14;x.strokeStyle=cd.accent;x.lineWidth=3;
+    x.beginPath();x.moveTo(cx+16,cardY);x.lineTo(cx+cardW-16,cardY);x.stroke();x.shadowBlur=0;
+    const ix=cx+22,iw=cardW-44;
+    x.textAlign='left';
+    x.fillStyle='rgba(255,255,255,0.32)';x.font='700 12px '+MONO;
+    x.fillText(cd.id,ix,cardY+38);
+    x.fillStyle='rgba(255,255,255,0.62)';
+    const lsz=_fsFit(x,cd.label,iw,'700',17,SANS);x.font='700 '+lsz+'px '+SANS;
+    x.fillText(cd.label,ix,cardY+66);
+    const vsz=_fsFit(x,cd.val,iw,'bold',40,MONO);
+    x.font='bold '+vsz+'px '+MONO;x.fillStyle=cd.accent;
+    x.shadowColor='rgba(245,166,35,0.45)';x.shadowBlur=18;
+    x.fillText(cd.val,ix,cardY+126);x.shadowBlur=0;
+    x.fillStyle='rgba(255,255,255,0.5)';x.font='13px '+MONO;
+    _fsWrap(x,cd.sub,iw,4).forEach((ln,k)=>x.fillText(ln,ix,cardY+164+k*20));
+  });
+  // ---- supporting pills ----
+  const pills=[
+    {label:'HASHRATE',   val:fN(d.th,1)+' TH'},
+    {label:'EFFICIENCY', val:fN(d.wth,1)+' W/TH'},
+    {label:'GMT LOCKED', val:fN(d.gmtLocked,0)},
+    {label:'GMT VALUE',  val:fU(d.gmtValueUSD,0)},
+    {label:'VIP TIER',   val:d.vip||'—'},
+    {label:'BTC',        val:fmtBTCPrice(d.btc)}
+  ];
+  const pillY=cardY+cardH+26,pillH=68,pillPad=18,pillGap=12;
+  const pw=pills.map(p=>{x.font='bold 14px '+MONO;const lw=x.measureText(p.label).width;x.font='bold 22px '+MONO;const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
+  const totalW=pw.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
+  let px=(W-totalW)/2;
+  pills.forEach((p,i)=>{const w=pw[i];
+    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.fill();
+    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.stroke();
+    x.textAlign='center';
+    x.fillStyle='rgba(255,255,255,0.55)';x.font='bold 14px '+MONO;x.fillText(p.label,px+w/2,pillY+26);
+    x.fillStyle=GSOFT;x.font='bold 22px '+MONO;x.fillText(p.val,px+w/2,pillY+55);
+    px+=w+pillGap;
+  });
+  // ---- strapline ----
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.6)';x.font='700 18px '+SANS;
+  x.fillText('Free GoMining ROI, discount & compounding optimizer',W/2,pillY+pillH+46);
+  // ---- footer ----
+  const footY=H-34;
+  const fg=x.createLinearGradient(pad,0,W-pad,0);
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-24);x.lineTo(W-pad,footY-24);x.stroke();
+  let fx=pad;
+  if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-8,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-19,22,22);x.restore();fx+=30;}
+  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='700 19px '+SANS;
+  x.fillText('gmt-optimizer.com',fx,footY-1);
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  x.fillText(now+'   ·   not financial advice',W/2,footY-1);
+  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px '+MONO;
+  x.fillText('use code RINGO5',W-pad,footY-1);
   x.textAlign='left';
   return c;
 }
@@ -2119,6 +2291,17 @@ function recalc(){
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
   if(velSub)velSub.textContent=greedyPct>0.5?`${fN(reinvestPct,0)}% reinvest + ${fN(greedyPct,0)}% greedy growth`:'reinvest all earnings into hashrate';
+  // Stash the headline numbers so "Create farm screenshot" can render a shareable card
+  // without recomputing anything — same values the hero cards are showing.
+  window._farmShot={
+    dailyUSD:totalDailyUSD, dailySub:heroSub,
+    monthlyUSD:moUSD, yearlyUSD:moUSD*12, monthlySub:heroMoSub,
+    disc:m.totD, saveMoUSD:m.save*m.bp*30,
+    velocity, velSub:velSub?velSub.textContent:'',
+    th:m.totTH||0, wth:m.bwth||0,
+    gmtLocked:Math.max(0,i.gl||0), gmtValueUSD:Math.max(0,i.gl||0)*m.gp,
+    vip:(m.vip&&m.vip.n)||'—', btc:m.bp, farmValueUSD
+  };
   // Reflect manual override state on the "Incorrect discount?" control.
   const ovrToggle=$('discOverrideToggle'),ovrReset=$('discOverrideReset');
   if(ovrToggle){
