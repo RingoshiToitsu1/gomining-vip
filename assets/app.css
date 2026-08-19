@@ -71,10 +71,11 @@ input[type=number]{-moz-appearance:textfield}
 .planner-open-btn:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 
 /* ---- HERO CARDS ---- */
-.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-bottom:1.5rem}
-/* Screenshot button sits between the hero stats and the read-out sections: closer to the
-   stats it captures than to the sections below, so it reads as part of that stack. */
-.hero-shot-row{display:flex;justify-content:center;margin:0 0 2.6rem}
+.hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-bottom:2rem}
+/* Screenshot button sits between the hero stats and the read-out sections below. The gap
+   above it is hero-grid's bottom margin and the gap below is this row's — keep the two
+   values equal so the button is optically centred in the space between the two blocks. */
+.hero-shot-row{display:flex;justify-content:center;margin:0 0 2rem}
 .hero-shot-row .share-plan-btn{padding:.6rem 1.25rem}
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
@@ -387,8 +388,8 @@ input[type=number]{-moz-appearance:textfield}
   #updatedChip .lbl{display:none}
   #updatedChip .val{white-space:nowrap}
   .container{padding:0 .5rem 3rem}
-  .hero-grid{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.7rem}
-  .hero-shot-row{margin-bottom:1.1rem}
+  .hero-grid{grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem}
+  .hero-shot-row{margin-bottom:1rem}
   .hero-shot-row .share-plan-btn{padding:.5rem 1rem}
   .hero-card{padding:.7rem}
   .hero-val{font-size:1.05rem}
