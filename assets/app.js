@@ -24,6 +24,16 @@ const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passive growth compounds past this
 
+// ---- AMBASSADOR (referral) COMMISSION ----
+// GoMining pays an ambassador $0.005 per kWh their referrals' miners consume, so the stream is
+// driven by the referral's ENERGY draw — hashrate x W/TH — not by hashrate alone. A referral who
+// mints today runs at 12 W/TH and therefore pays 20% less than the 15 W/TH machines this used to
+// assume for everyone. Hand-entered "Referred TH" keeps the 15 W default (their vintage is unknown);
+// TH the Capital Planner mints for a referral is priced at EFF_BEST, because that is what it buys.
+const AMB_RATE_PER_KWH = 0.005;
+const AMB_DEFAULT_WTH  = 15;
+function ambDailyUSD(th,wth){return Math.max(0,+th||0)*((wth>0?wth:AMB_DEFAULT_WTH)*24/1000)*AMB_RATE_PER_KWH;}
+
 // ---- VIP TIERS ----
 const TIERS=[
   {n:'Bronze I',th:0,veg:0,d:0,rb:0},{n:'Bronze II',th:5,veg:50,d:.3,rb:0},
@@ -326,6 +336,7 @@ function openPlannerForm(){
   document.getElementById('piGMTInput').value=$('inGMTWallet').value;
   document.getElementById('piRefCapInput').value=$('inRefCapital').value;
   if($('piRefBonus')&&$('inRefBonusPct'))$('piRefBonus').value=$('inRefBonusPct').value;
+  if($('piRefReinvest')&&$('inRefReinvest'))$('piRefReinvest').value=$('inRefReinvest').value;
   document.getElementById('piMpTH').value=$('inMpTH').value;
   document.getElementById('piMpGMT').value=$('inMpGMT').value;
   document.getElementById('piMpWth').value=$('inMpWth').value;
@@ -358,6 +369,7 @@ function submitPlannerCapital(){
     if(gmtVal>0)$('inGMTWallet').value=gmtVal;
     $('inRefCapital').value=refCapVal;
     if($('piRefBonus')&&$('inRefBonusPct'))$('inRefBonusPct').value=parseFloat($('piRefBonus').value)||5;
+    if($('piRefReinvest')&&$('inRefReinvest'))$('inRefReinvest').value=parseFloat($('piRefReinvest').value)||0;
     $('inMpTH').value=parseFloat(document.getElementById('piMpTH').value)||0;
     $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
     const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
@@ -413,7 +425,7 @@ function projectedMonthlyForCapital(capUSD){
     mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
   }
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
-  const ambMo=((i.amb?i.refTH:0)+refInitTH)*15*24/1000*0.005*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST))*30;
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -425,7 +437,7 @@ function currentMonthlyIncomeUSD(){
   const i=inp(),m=calc(i),gp=m.gp;
   const mineMo=m.net*m.bp*30;                                   // includes discount + 2.25% conversion fee
   const stakingMo=m.wkGMT*gp*4.33;
-  const ambMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
+  const ambMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
   const gGrow=+(i.ggrow||0);
   const greedyMo=((m.gth||0)>0&&gGrow>0)?(m.gth*gGrow/100)*4.33*cptAtEff(m.gth,m.gwth||15):0;
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -459,6 +471,7 @@ function submitPlannerTarget(){
     if(gmtVal>0)$('inGMTWallet').value=gmtVal;
     $('inRefCapital').value=refCapVal;
     if($('piRefBonus')&&$('inRefBonusPct'))$('inRefBonusPct').value=parseFloat($('piRefBonus').value)||5;
+    if($('piRefReinvest')&&$('inRefReinvest'))$('inRefReinvest').value=parseFloat($('piRefReinvest').value)||0;
     $('inMpTH').value=parseFloat($('piMpTH').value)||0;
     $('inMpGMT').value=parseFloat($('piMpGMT').value)||0;
     const mpWthVal=parseFloat($('piMpWth').value);$('inMpWth').value=(mpWthVal>0?mpWthVal:15);
@@ -1639,7 +1652,9 @@ function inp(){
   refCap:+$('inRefCapital').value||0,
   // Ambassador commission on a referral's TH spend, paid to you in GMT. Tiered (5%→~14%+),
   // so it's user-editable; default 5%.
-  refBonusPct:(+($('inRefBonusPct')?$('inRefBonusPct').value:0)||0)||5
+  refBonusPct:(+($('inRefBonusPct')?$('inRefBonusPct').value:0)||0)||5,
+  // Opt-in: % of their own rewards the referral reinvests. 0 (default) = don't model their growth.
+  refReinvest:+($('inRefReinvest')?$('inRefReinvest').value:0)||0
 }}
 function $(id){return document.getElementById(id)}
 
@@ -1747,6 +1762,7 @@ function readInputs(){
     inAmbassador:$('inAmbassador').checked, inReferredTH:$('inReferredTH').value,
     inRefCapital:$('inRefCapital').value,
     inRefBonusPct:$('inRefBonusPct')?$('inRefBonusPct').value:'5',
+    inRefReinvest:$('inRefReinvest')?$('inRefReinvest').value:'0',
     inCurrency:$('inCurrency').value,
     piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false,
     // Manual discount override travels WITH the setup so it never leaks across profiles.
@@ -1785,6 +1801,7 @@ function applyInputs(d){
   if(d.inReferredTH!=null)$('inReferredTH').value=d.inReferredTH;
   if(d.inRefCapital!=null)$('inRefCapital').value=d.inRefCapital;
   if(d.inRefBonusPct!=null&&$('inRefBonusPct'))$('inRefBonusPct').value=d.inRefBonusPct;
+  if(d.inRefReinvest!=null&&$('inRefReinvest'))$('inRefReinvest').value=d.inRefReinvest;
   if(d.piVipBonus!==undefined&&$('piVipBonus'))$('piVipBonus').checked=!!d.piVipBonus;
   if(d.inCurrency&&typeof setCurrency==='function')setCurrency(d.inCurrency);
   autoFillCPT('inTH','inCostPerTH','inWTH');
@@ -1960,7 +1977,7 @@ function clearInputs(){
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
-    inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',
+    inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',
     piVipBonus:false
   });
   // Empty the fleet builder too — but ONLY on a scratch/no profile, never on the
@@ -2045,7 +2062,7 @@ function autoSave(){
     saveProfilesState(state);
   }catch(e){}
 }
-['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inRefBonusPct','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
+['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inRefBonusPct','inRefReinvest','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
 
@@ -2253,7 +2270,7 @@ function recalc(){
   const netUSD=m.net*m.bp;
   const heroIsAmb=$('inAmbassador').checked;
   const heroRefTH=heroIsAmb?(+$('inReferredTH').value||0):0;
-  const heroAmbDaily=heroRefTH*15*24/1000*0.005;
+  const heroAmbDaily=ambDailyUSD(heroRefTH,AMB_DEFAULT_WTH);
   // Greedy Machine free weekly growth is real value in the form of TH credits: the free
   // TH it accrues × the marketplace cost of that TH at the greedy's own efficiency
   // (12 W priced off the 12 W curve, else the 15 W curve). Counted as income below.
@@ -2376,7 +2393,7 @@ function recalc(){
   const miningMonthly=m.net*m.bp*30;
   const isAmb=$('inAmbassador').checked;
   const refTH=isAmb?(+$('inReferredTH').value||0):0;
-  const ambDaily=refTH*15*24/1000*0.005;
+  const ambDaily=ambDailyUSD(refTH,AMB_DEFAULT_WTH);
   const ambMonthly=ambDaily*30;
   // Greedy Machine free weekly growth, valued as TH credits (see hero card) — free TH
   // accrued × the cost of that TH at the greedy's efficiency. Real income, in hashrate.
@@ -3098,7 +3115,7 @@ function renderPlanner(i,m){
 
   const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
-  const projAmbDaily=projTotalRefTH*15*24/1000*0.005;
+  const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST);
   const projAmbMo=projAmbDaily*30;
   // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
   // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
@@ -3136,7 +3153,7 @@ function renderPlanner(i,m){
     // the old line under-counted and the split didn't sum to the capital they invested.
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(ref.thUSD)} invested</span>`,'cyan');
     ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(Math.max(0,i.refCap-ref.thUSD))} invested</span>`,'cyan');
-    ph+=row('Adds to your ambassador',`${fU(refInitTH*15*24/1000*0.005*30)}/mo`,'green');
+    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_BEST)*30)}/mo`,'green');
     if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
@@ -3145,7 +3162,7 @@ function renderPlanner(i,m){
   const moStakingUSD=newWkStake*gp*4.33;
   const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''}${greedyMoAfter>0?' + greedy growth':''})`;
   // Current (pre-investment) state, for the before/after comparison.
-  const curAmbMo=(i.amb?(+i.refTH||0):0)*15*24/1000*0.005*30;
+  const curAmbMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
   // earnTH, not totTH: switched-off miners must not be credited with rewards in the
   // "before" baseline, or the projection would show income they can't produce.
   const curP={th:m.earnTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.earnTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
@@ -3403,6 +3420,9 @@ function computeSetupProjection(){
   //      otherwise the current My Setup state (no new capital deployed). ----
   const fromPlanner=(window._spMode==='planner');
   let MP_TH,MP_WTH,HAS_GREEDY,GGROW,GINIT,greedyTH,greedyWTH,th,curWTH,gmtLocked,gmtW,startTH,startLocked;
+  // The referral your Capital Planner just funded: their fleet, so their hashrate feeds YOUR
+  // ambassador stream for the whole run instead of being dropped at the planner's results page.
+  let refFleetTH=0, refFleetLocked=0;
   // apr0 = the APR observed today; apr walks down it across the simulated years (see stakeAprAt).
   const apr0=i.apr||0;
   let apr=apr0;
@@ -3421,6 +3441,7 @@ function computeSetupProjection(){
     gmtW=a.gmtReserve;
     startTH=a.nt;                                          // total post-investment hashrate
     startLocked=a.newLocked;
+    if(a.ref){refFleetTH=Math.max(0,a.ref.at||0);refFleetLocked=Math.max(0,a.ref.ag||0);}
   }else{
     MP_TH=0; MP_WTH=15;
     HAS_GREEDY=(i.gth||0)>0;
@@ -3439,10 +3460,16 @@ function computeSetupProjection(){
   // Starting blended efficiency (across VIP + marketplace + greedy) — to show any reinvested upgrade.
   const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
 
-  // Existing referred TH pays flat ambassador USDT (no referral-reinvest sim here).
+  // Ambassador USDT = hand-entered referred TH (efficiency unknown -> 15 W) plus the referral the
+  // Capital Planner just funded (minted at 12 W). `ambDaily` is a LET: with a referral reinvest
+  // rate set it is re-derived every week as their fleet grows.
   const manualRefTH=i.amb?Math.max(0,i.refTH||0):0;
-  const ambDaily=manualRefTH*15*24/1000*0.005;
-  let totalAmbUSD=0;
+  // Opt-in: what share of their own rewards the referral ploughs back in. 0 = a static fleet,
+  // which is the default because this forecasts somebody else's behaviour, not yours.
+  const refReinvest=Math.max(0,Math.min(100,+i.refReinvest||0))/100;
+  const refBonusRate=(i.refBonusPct>0?i.refBonusPct:5)/100;
+  let ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refFleetTH,EFF_BEST);
+  let totalAmbUSD=0, totalRefBonusUSD=0, refFleetStartTH=refFleetTH;
 
   let bpToday=bpStart;
   const projStartMs=Date.now();
@@ -3488,6 +3515,33 @@ function computeSetupProjection(){
     const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
     return{net:miningUSD+stakingUSD+ambDaily,reinvest:miningUSD+ambDaily,mining:miningUSD,staking:stakingUSD,amb:ambDaily,disc:fd,tokD:td,vip:v.n};
   }
+  // The referral's farm, run on the same rules as yours: each week their rewards top their own
+  // coverage back to 360 days first, then mint fresh 12 W hashrate. You are paid `refBonusRate`
+  // of that TH spend, returned here as reinvestable income so the allocator splits it like any
+  // other dollar. Their growing fleet also lifts `ambDaily`. Runs only when the user has opted
+  // in with a reinvest rate — at 0 their fleet stays exactly as the planner bought it.
+  function refFleetWeek(){
+    if(!(refFleetTH>0&&refReinvest>0))return 0;
+    refFleetLocked+=refFleetLocked*(apr/100)/52;              // their locked GMT stakes too
+    const f=fees(refFleetTH,EFF_BEST,bpToday);
+    const v=vipOf(refFleetTH,refFleetLocked);
+    const ntd=Math.min(30,v.d);                                // VIP only — their streak/mode is unknown
+    const burn=(f.t*(1-ntd/100)*bpToday)/gp;                   // their daily GMT fee burn
+    const cov=burn>0?refFleetLocked/burn:Infinity;
+    const td=i.payG?Math.min(20,Math.floor(cov/18)):0;
+    const fd=Math.min(30,td+ntd);
+    const netWk=Math.max(0,(dbtToday*refFleetTH-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE))*7;
+    const spend=netWk*refReinvest;
+    if(!(spend>0))return 0;
+    const gmtSpend=i.payG?Math.min(spend,Math.max(0,burn*360-refFleetLocked)*gp):0;
+    refFleetLocked+=gmtSpend/gp;
+    const thSpend=spend-gmtSpend;
+    if(thSpend>0)refFleetTH+=thForBudget12(thSpend);
+    ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refFleetTH,EFF_BEST);
+    const bonus=thSpend*refBonusRate;                          // your commission on their TH spend
+    totalRefBonusUSD+=bonus;
+    return bonus;
+  }
   function gmtDeficit(curTH,curLocked){
     const totTH=curTH+MP_TH+greedyTH;
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
@@ -3518,6 +3572,7 @@ function computeSetupProjection(){
     }
     const dn=dailyNet(th,gmtLocked);
     weeklyGrossUSD+=Math.max(0,dn.reinvest);
+    if(d%7===0)weeklyGrossUSD+=refFleetWeek();   // their reinvestment pays you a commission
     let postDN=dn;
     if(d%7===0){
       const pctPortion=weeklyGrossUSD*distPct;
@@ -3647,6 +3702,23 @@ function computeSetupProjection(){
       <div class="ri-headline green">${roiYr>=0?'+':''}${fN(roiYr,1)}%<span style="font-size:.95rem;color:var(--text3);font-weight:600"> / yr</span></div>
       <div class="ri-breakdown">${ssPct>=0?'+':''}${fN(ssPct,1)}% reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
     </div>`;
+  }
+  if(refFleetStartTH>0){
+    const grew=refFleetTH-refFleetStartTH;
+    h+=`<div class="ri-single-card">
+      <div class="ri-label">Your Referral's Fleet (End of Period)</div>
+      <div class="ri-headline cyan">${fN(refFleetTH,1)} TH</div>
+      <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 12 W/TH${refReinvest>0?` &middot; reinvesting ${fN(refReinvest*100,0)}% of their rewards`:' &middot; static (no reinvest rate set)'}</div>
+      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_BEST)*30)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
+    </div>`;
+    if(totalRefBonusUSD>0){
+      h+=`<div class="ri-single-card">
+        <div class="ri-label">Referral Commission (over period)</div>
+        <div class="ri-headline green">${fU(totalRefBonusUSD)}</div>
+        <div class="ri-usd-value">${fN(refBonusRate*100,0)}% of every TH purchase they make, paid in GMT</div>
+        <div class="ri-gain">reinvested alongside your own rewards</div>
+      </div>`;
+    }
   }
   if(totalDistributionUSD>0){
     const wks=days/7, payRate=ptype==='pct'?fP(pval)+' of weekly rewards':fU(pval)+'/wk';
@@ -4057,7 +4129,7 @@ function obPreview(){
     const dailyStakeUSD=(m.wkGMT/7)*m.gp;
     const isAmb=$('inAmbassador').checked;
     const refTH=isAmb?(+$('inReferredTH').value||0):0;
-    const ambDaily=refTH*15*24/1000*0.005;
+    const ambDaily=ambDailyUSD(refTH,AMB_DEFAULT_WTH);
     const gWk=(m.gth||0)*((+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100), gwp=m.gwth||0;
     const gDaily=gWk/7*cptAtEff(m.gth||1,gwp);
     const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily+gDaily;
