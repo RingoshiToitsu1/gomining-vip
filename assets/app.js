@@ -3218,6 +3218,49 @@ function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
+// Resolve what the "Project To" control is actually asking for — a halving from the dropdown,
+// or a hand-set horizon and BTC price. ONE source of truth for the preview, the run and the
+// results narrative, so they can never disagree about the window being projected.
+//   custom     — user picked their own horizon
+//   userPriced — user also typed an end price, so the run leaves the rainbow curve behind
+//   modelEnd   — what the fair-value model says for that date, for comparison
+const SP_MAX_DAYS=7300;   // 20 years — beyond this the difficulty/APR decay curves are meaningless
+function spSelection(){
+  const sel=document.getElementById('spTarget'), now=Date.now();
+  if(sel&&sel.value==='custom'){
+    const amt=Math.max(0,+(($('spCustomAmt')||{}).value)||0)||12;
+    const unit=(($('spCustomUnit')||{}).value)||'m';
+    const days=Math.min(SP_MAX_DAYS,Math.max(1,Math.round(amt*(unit==='y'?365.25:30.4375))));
+    const targetMs=now+days*86400000;
+    const modelEnd=_rbFit?rbProjPrice(targetMs):S.btcPrice;
+    const typed=+(($('spCustomBtc')||{}).value)||0;
+    return{custom:true,userPriced:typed>0,targetMs,days,bpEnd:typed>0?typed:modelEnd,modelEnd};
+  }
+  let targetMs=sel?parseFloat(sel.value):0;
+  if(!(targetMs>now)){const fut=HALVING_DATES.filter(h=>h>now);targetMs=fut.length?fut[0]:now+1095*86400000;}
+  const days=Math.min(SP_MAX_DAYS,Math.max(1,Math.round((targetMs-now)/86400000)));
+  const modelEnd=_rbFit?rbProjPrice(targetMs):S.btcPrice;
+  return{custom:false,userPriced:false,targetMs,days,bpEnd:modelEnd,modelEnd};
+}
+// Show/hide the custom inputs, and seed the price box with the model's own figure the first
+// time — so "custom" starts as the rainbow projection and the user edits away from it.
+function onSpTargetChange(){
+  const sel=document.getElementById('spTarget'), row=document.getElementById('spCustomRow');
+  const custom=!!(sel&&sel.value==='custom');
+  if(row)row.style.display=custom?'':'none';
+  if(custom){
+    const box=$('spCustomBtc');
+    if(box&&!(+box.value>0))box.value=Math.round(spSelection().modelEnd||S.btcPrice||0);
+  }
+  updateSpTargetPreview();
+}
+// Put the model's fair value back in the price box for the chosen horizon.
+function spResetCustomPrice(){
+  const box=$('spCustomBtc');if(!box)return;
+  box.value='';                                   // clear so spSelection() reports the model figure
+  box.value=Math.round(spSelection().modelEnd||S.btcPrice||0);
+  updateSpTargetPreview();
+}
 // Populate the "Project To" dropdown with each upcoming halving and its projected
 // Still-cheap band price, so the user sees the target the projection will converge on.
 function populateSpTargets(){
@@ -3232,24 +3275,32 @@ function populateSpTargets(){
     const fv=rbProjPrice(h);
     const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; '+fmtBTCPrice(fv);
     return `<option value="${h}">${label}</option>`;
-  }).join('');
+  }).join('')+'<option value="custom">Custom &mdash; my own horizon &amp; BTC price</option>';
   if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
-  updateSpTargetPreview();
+  onSpTargetChange();
 }
 // Live preview under the dropdown: horizon, the BTC price path (today → HODL fair value),
 // and which halving(s) the projection crosses.
 function updateSpTargetPreview(){
-  const el=document.getElementById('spTargetPreview'),sel=document.getElementById('spTarget');
-  if(!el||!sel)return;
-  const targetMs=parseFloat(sel.value);
-  if(!_rbFit||!(targetMs>Date.now())){el.innerHTML='';return;}
-  const now=Date.now(), days=Math.round((targetMs-now)/86400000), yrs=days/365;
-  const P0=S.btcPrice||0, target=rbProjPrice(targetMs);
+  const el=document.getElementById('spTargetPreview');
+  if(!el)return;
+  const sp=spSelection();
+  if(!_rbFit||!(sp.targetMs>Date.now())){el.innerHTML='';return;}
+  const days=sp.days, yrs=days/365;
+  const P0=S.btcPrice||0;
   const hv=halvingsInWindow(days);
+  const endLbl=sp.userPriced?'BTC: today &rarr; your figure':'BTC: today &rarr; Still cheap (rainbow)';
+  const cagr=(P0>0&&sp.bpEnd>0&&yrs>0)?(Math.pow(sp.bpEnd/P0,1/yrs)-1)*100:0;
   el.innerHTML=
     `<div class="sp-prev-chip"><div class="sp-prev-val">${yrs.toFixed(1)} yr</div><div class="sp-prev-lbl">horizon (${days} days)</div></div>`+
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(target)}</div><div class="sp-prev-lbl">BTC: today &rarr; Still cheap (rainbow)</div></div>`+
+    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(sp.bpEnd)}</div><div class="sp-prev-lbl">${endLbl} &middot; ${cagr>=0?'+':''}${fN(cagr,0)}%/yr</div></div>`+
     `<div class="sp-prev-chip"><div class="sp-prev-val">${hv.length?hv.join(' &amp; '):'—'}</div><div class="sp-prev-lbl">halving${hv.length===1?'':'s'} crossed${hv.length?' (−50% reward each)':''}</div></div>`;
+  // Difficulty is paired to the model's price path. Set a price far above it and you are banking
+  // a bull case while still paying the difficulty grind of a modest one — say so rather than
+  // quietly returning a flattering number.
+  if(sp.userPriced&&sp.modelEnd>0&&sp.bpEnd>sp.modelEnd*1.5){
+    el.innerHTML+=`<div class="sp-prev-note">&#9888; ${fmtBTCPrice(sp.bpEnd)} is ${fN(sp.bpEnd/sp.modelEnd,1)}&times; the fair-value band for that date (${fmtBTCPrice(sp.modelEnd)}). The difficulty grind stays as modelled, so a price that high would in reality pull more hashrate in and erode reward faster than this shows.</div>`;
+  }
 }
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
@@ -3406,15 +3457,18 @@ function computeSetupProjection(){
   // Need the HODL (Power-Law) fit and a target halving to auto-scale the price.
   if(!_rbFit){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Loading the fair-value model…</div>';ensureRainbowFit(()=>runSetupProjection());return;}
   const nowMs=Date.now();
-  const selEl=$('spTarget');
-  let targetMs=selEl?parseFloat(selEl.value):0;
-  if(!(targetMs>nowMs)){const fut=HALVING_DATES.filter(h=>h>nowMs);targetMs=fut.length?fut[0]:nowMs+1095*86400000;}
-  const days=Math.min(7300,Math.max(1,Math.round((targetMs-nowMs)/86400000)));
-  const centerNow=rbProjPrice(nowMs), bpEnd=rbProjPrice(targetMs);
+  const spSel=spSelection();
+  const targetMs=spSel.targetMs, days=spSel.days, bpEnd=spSel.bpEnd;
+  // A hand-set end price replaces the rainbow band as the destination; a custom horizon on its
+  // own still rides the band, just to a date of the user's choosing.
+  const customPath=spSel.userPriced;
+  const centerNow=rbProjPrice(nowMs);
   if(!bpStart||!bpEnd||!centerNow||!gp0||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
   // Convergence: start at today's real price, converge onto the Still-cheap band by the target.
   const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from that band
-  const btcSel={mode:'powerlaw',label:'Still cheap '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
+  const btcSel=customPath
+    ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
+    : {mode:'powerlaw',label:'Still cheap '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
@@ -3479,6 +3533,9 @@ function computeSetupProjection(){
   function bpForDay(d){
     const t=projStartMs+(d-1)*86400000;
     const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
+    // Hand-set target: walk today's price to it geometrically (a constant %/yr), which is the
+    // honest reading of "BTC is $X by then" — no shape smuggled in that the user didn't ask for.
+    if(customPath)return bpStart*Math.pow(bpEnd/bpStart,progress);
     const c=rbProjPrice(t)||bpEnd;
     return c*Math.exp(offset0*(1-progress));
   }
@@ -3670,8 +3727,13 @@ function computeSetupProjection(){
   const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*30,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
-  const btcModeBadge='<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">WORST CASE</span>';
-  const btcRangeLine=`BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
+  const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
+  const btcModeBadge=customPath
+    ? '<span class="badge" style="background:rgba(245,166,35,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">YOUR PRICE</span>'
+    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">WORST CASE</span>';
+  const btcRangeLine=customPath
+    ? `BTC walks from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> — the figure you set — at a steady ${fN((Math.pow(bpEnd/bpStart,365/Math.max(1,days))-1)*100,0)}%/yr (${days}d). Fair-value band for that date: ${fmtBTCPrice(spSel.modelEnd)}`
+    : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);

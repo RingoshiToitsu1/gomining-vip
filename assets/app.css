@@ -77,6 +77,23 @@ input[type=number]{-moz-appearance:textfield}
    values equal so the button is optically centred in the space between the two blocks. */
 .hero-shot-row{display:flex;justify-content:center;margin:0 0 2rem}
 .hero-shot-row .share-plan-btn{padding:.6rem 1.25rem}
+
+/* Growth Projection — custom horizon + BTC price (shown only for the "Custom" target) */
+.sp-custom-row{display:grid;grid-template-columns:1fr;gap:.9rem;max-width:430px;margin:.9rem auto 0}
+.sp-custom-horizon{display:flex;gap:.5rem;align-items:stretch}
+.sp-custom-horizon input{flex:1 1 0;min-width:0;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:.95rem;font-weight:700;padding:.6rem .7rem}
+.sp-custom-horizon .sp-selwrap{flex:0 0 46%}
+.sp-custom-price{display:flex;align-items:center;gap:.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:.15rem .5rem .15rem .7rem}
+.sp-custom-price .unit{color:var(--text3);font-family:var(--mono);font-weight:700}
+.sp-custom-price input{flex:1 1 0;min-width:0;background:none;border:none;color:var(--text);font-family:var(--mono);font-size:.95rem;font-weight:700;padding:.55rem 0}
+.sp-custom-price input:focus{outline:none}
+.sp-custom-reset{flex:0 0 auto;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.28);border-radius:7px;color:var(--gold-soft);font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.3rem .5rem;cursor:pointer}
+.sp-custom-reset:hover{background:rgba(245,166,35,.2);color:var(--text)}
+.sp-prev-note{flex:1 1 100%;margin-top:.5rem;font-size:.72rem;line-height:1.5;color:var(--text3);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:.55rem .7rem}
+@media(max-width:600px){
+  .sp-custom-row{gap:.7rem}
+  .sp-custom-reset{font-size:.6rem;padding:.28rem .42rem}
+}
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}

@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=38">
+<link rel="stylesheet" href="/assets/app.css?v=39">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -965,8 +965,8 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 
         <div class="input-grid sp-form-grid">
           <div class="field">
-            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using the rainbow chart's Still-cheap band: BTC starts at today's real price and converges onto that band by the halving. One step below the Power-Law centre — conservative, but not the cyclical-bottom price. Mining reward also halves at each halving crossed.">?</span></label>
-            <div class="field-input sp-selwrap"><select id="spTarget" onchange="updateSpTargetPreview()"><option value="">Loading fair-value model…</option></select></div>
+            <label>Project To <span class="tip" data-tip="Projects to a Bitcoin halving using the rainbow chart's Still-cheap band: BTC starts at today's real price and converges onto that band by the halving. One step below the Power-Law centre — conservative, but not the cyclical-bottom price. Mining reward also halves at each halving crossed. Or pick Custom to set your own horizon in months/years and your own BTC price at that date.">?</span></label>
+            <div class="field-input sp-selwrap"><select id="spTarget" onchange="onSpTargetChange()"><option value="">Loading fair-value model…</option></select></div>
           </div>
           <div class="field">
             <label>Weekly Payout <span class="tip" data-tip="Take some of each week's mining rewards as income instead of reinvesting. Choose % of rewards or a fixed $ amount, then enter the value. 0 = full compounding.">?</span></label>
@@ -980,6 +980,28 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
                 <span class="unit" id="spPayoutUnit">%</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        <!-- CUSTOM HORIZON + BTC PRICE — revealed by the "Custom" option above -->
+        <div class="sp-custom-row" id="spCustomRow" style="display:none">
+          <div class="field">
+            <label>Project Forward <span class="tip" data-tip="How far ahead to run the projection. Capped at 20 years — past that the difficulty and staking-APR decay curves stop meaning anything.">?</span></label>
+            <div class="sp-custom-horizon">
+              <input type="number" id="spCustomAmt" value="12" min="1" step="1" inputmode="numeric" oninput="updateSpTargetPreview()">
+              <div class="field-input sp-selwrap"><select id="spCustomUnit" onchange="updateSpTargetPreview()">
+                <option value="m" selected>months</option>
+                <option value="y">years</option>
+              </select></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>BTC Price At That Date <span class="tip" data-tip="What you think BTC will be worth at the end of the horizon. The projection walks today's real price to your figure at a steady rate per year. Starts pre-filled with the fair-value model's own number for that date — edit it to run your own scenario.">?</span></label>
+            <label class="sp-custom-price" for="spCustomBtc">
+              <span class="unit">$</span>
+              <input type="number" id="spCustomBtc" min="0" step="1000" inputmode="decimal" placeholder="0" oninput="updateSpTargetPreview()">
+              <button type="button" class="sp-custom-reset" onclick="spResetCustomPrice()" title="Put the fair-value model's figure for this date back">model</button>
+            </label>
           </div>
         </div>
 
@@ -1054,7 +1076,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=66"></script>
+<script src="/assets/app.js?v=67"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
