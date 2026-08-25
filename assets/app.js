@@ -172,12 +172,20 @@ function applyAddSizes(sizes,x){
   while(left>0.0001){ add=Math.min(MINER_CAP,left); sizes.push(add); left-=add; }
   return sizes.filter(function(s){return s<MINER_CAP-1e-6;});
 }
-// The user's real miners we can top up with 12 W TH, largest first. A >12 W miner needs an
-// efficiency upgrade before it takes 12 W TH — except the greedy, which the plan upgrades.
-// inclGreedy=false excludes the greedy (the projection tracks it as its own miner).
+// The user's real miners we can top up with 12 W TH, largest first. A miner has ONE efficiency
+// rating: hashrate added to a 15 W machine is 15 W hashrate. So a >12 W miner is only 12 W-toppable
+// after an efficiency upgrade is actually paid for — the greedy included. It used to be waved
+// through unconditionally ("the plan upgrades it"), which priced 15 W top-ups off the 12 W curve
+// and reported them as 12 W even when the plan spent $0 on upgrades.
+// inclGreedy=false excludes the greedy outright (the projection tracks it as its own miner).
 function existingMinerSizes(inclGreedy){
   return (window.GMTFleetRows||[])
-    .filter(function(r){var g=/greedy/i.test(r.collection||'');return (+r.th||0)>0&&(+r.th||0)<MINER_CAP&&((+r.wth||15)<=EFF_BEST||(inclGreedy!==false&&g));})
+    .filter(function(r){
+      var g=/greedy/i.test(r.collection||'');
+      if(!((+r.th||0)>0&&(+r.th||0)<MINER_CAP))return false;
+      if(g&&inclGreedy===false)return false;
+      return (+r.wth||15)<=EFF_BEST+1e-6;
+    })
     .map(function(r){return +r.th||0;})
     .sort(function(a,b){return b-a;});
 }
@@ -2576,7 +2584,9 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // VIP-only blended efficiency (existing farm + freshly minted TH, which is 12 W/TH only).
   function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_BEST)/(i.th+addTH):i.wth}
   // Total blended efficiency including the marketplace miner — drives fees.
-  function blendWTH(addTH){const tot=i.th+addTH+mpTH+gth0;return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+gth0*gwth0)/tot:i.wth}
+  // addTH = freshly minted hashrate (12 W by definition). addG = hashrate added to the greedy,
+  // which inherits THAT machine's rating — a 15 W greedy grows by 15 W TH, it does not self-heal.
+  function blendWTH(addTH,addG){const aG=Math.max(0,addG||0);const tot=i.th+addTH+mpTH+gth0+aG;return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+(gth0+aG)*gwth0)/tot:i.wth}
 
   let reserveNeeded=0;
   function calcReserve(totFeeTH,vipBasis,lockedGMT){
@@ -2604,22 +2614,32 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       // Leftover USD routes through GMT to mint TH, so it eats the 2% fee too;
       // existing pool GMT (gmtSell) is already GMT, so it's spent at face value.
       const thBudgetUSD=(usdCap-usdSpentOnGMT)*(1-USD_GMT_FEE)+(gmtSell*gp);
-      const baseTH=thBudgetUSD>0?thForBudget12Ex(thBudgetUSD):0;   // credits cheaper top-up of existing miners
+      // Greedy-first: the capital's TH budget fills an owned greedy machine up to 5k (non-VIP)
+      // before minting VIP-eligible TH. A miner carries ONE efficiency rating, so hashrate added
+      // to a 15 W greedy is 15 W hashrate and prices off the 15 W curve — cheaper per TH, but it
+      // leaves the machine at 15 W. Only a greedy already at 12 W takes 12 W TH. This used to buy
+      // the whole budget at 12 W prices and then pour part of it into a 15 W machine, which both
+      // overstated the price per greedy TH and reported the farm as more efficient than it is.
+      const gRoom=(gth0>0)?Math.max(0,GREEDY_CAP-gth0):0;
+      const gTiers=(gwth0<=EFF_BEST+1e-6)?TH_TIERS_12W:TH_TIERS;
+      let addGreedy=0,thLeftUSD=thBudgetUSD;
+      if(gRoom>0&&thLeftUSD>0){
+        addGreedy=Math.min(gRoom,thToGrowTiers(gth0,thLeftUSD,gTiers));
+        thLeftUSD=Math.max(0,thLeftUSD-costToGrowTiers(gth0,addGreedy,gTiers));
+      }
+      // Whatever is left mints fresh 12 W hashrate, topping up other 12 W miners first.
+      const baseVipTH=thLeftUSD>0?thForBudgetFromSizes(thLeftUSD,existingMinerSizes(false),TH_TIERS_12W):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
-      const atTest=bonusActive?baseTH*VIP_BONUS_MULT:baseTH;
+      const addVip=bonusActive?baseVipTH*VIP_BONUS_MULT:baseVipTH;
+      const baseTH=addGreedy+baseVipTH;
+      const atTest=addGreedy+addVip;
       const bonusTH=atTest-baseTH;
-      // Greedy-first: the capital's TH budget fills an owned greedy machine up to
-      // 5k (non-VIP) before minting VIP-eligible TH. Total fee TH is unchanged —
-      // only the VIP tier basis shrinks by whatever went to the greedy machine.
-      const gRoom=GREEDY_CAP-gth0;
-      const addGreedy=(gth0>0&&gRoom>0)?Math.min(atTest,gRoom):0;
-      const addVip=atTest-addGreedy;
       const greedyTot=gth0+addGreedy;
       const feeTH=i.th+addVip+greedyTot+mpTH;                 // total hashrate (fees + rewards)
       const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit);   // VIP basis: all but initial mkt greedy + mpTH
       const totalLocked=i.gl+totalGmtLock;
       const walletAfter=reserve;
-      const bwth=blendWTH(atTest);
+      const bwth=blendWTH(addVip,addGreedy);
       const fTest=fees(feeTH,bwth,bp);
       const vTest=vipOf(vipTH,totalLocked);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
@@ -2666,7 +2686,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit); // VIP tier basis (excl. initial mkt greedy + mpTH)
   const nt=i.th+addVip+greedyTot+mpTH; // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(sol.addTH);      // total blended efficiency (all new TH @12W, greedy/VIP split-agnostic)
+  const bwth=blendWTH(addVip,addGreedy);   // minted TH at 12 W, greedy top-up at the greedy's own rating
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
@@ -2944,21 +2964,24 @@ function upgradeOrderHTML(budgetTH){
 function buyCapHTML(addTH){
   if(!(addTH>0.5))return '';
   const isG=r=>/greedy/i.test(r.collection||'');
+  // Every miner keeps its OWN efficiency: TH added to a 15 W machine is 15 W TH and prices off
+  // the 15 W curve, so both the cost and the "@ N W" label track the machine, not a wish.
   const rows=(window.GMTFleetRows||[])
-    .filter(r=>(+r.th||0)>0&&(+r.th||0)<MINER_CAP&&((+r.wth||15)<=EFF_BEST||isG(r)))   // 12 W miners (+ the upgraded greedy) are toppable
-    .map(r=>({code:r.code,th:+r.th||0,greedy:isG(r)}))
-    .sort((a,b)=>(b.greedy-a.greedy)||(b.th-a.th));   // greedy first, then largest (cheapest tier)
+    .filter(r=>(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
+    .map(r=>({code:r.code,th:+r.th||0,wth:Math.min(EFF_BASE_MAX,Math.max(EFF_BEST,+r.wth||EFF_BASE_MAX)),greedy:isG(r)}))
+    .sort((a,b)=>(a.wth-b.wth)||(b.greedy-a.greedy)||(b.th-a.th));   // efficient first, then greedy, then largest
   let left=addTH; const steps=[];
   for(const r of rows){
     if(left<=0.5)break;
     const add=Math.min(MINER_CAP-r.th,left); if(add<0.5)continue;
     left-=add;
     const label=r.code?`#${escapeHtml(String(r.code))}`:'an existing miner';
-    steps.push({label,greedy:r.greedy,from:r.th,add,cost:costToGrow12(r.th,add),existing:true});
+    const tiers=r.wth<=EFF_BEST+1e-6?TH_TIERS_12W:TH_TIERS;
+    steps.push({label,greedy:r.greedy,from:r.th,add,wth:r.wth,cost:costToGrowTiers(r.th,add,tiers),existing:true});
   }
   while(left>0.5){
     const add=Math.min(MINER_CAP,left); left-=add;
-    steps.push({label:'New machine',greedy:false,from:0,add,cost:costToGrow12(0,add),existing:false});
+    steps.push({label:'New machine',greedy:false,from:0,add,wth:EFF_BEST,cost:costToGrow12(0,add),existing:false});
   }
   if(!steps.length)return '';
   const anyExisting=steps.some(s=>s.existing);
@@ -2967,7 +2990,7 @@ function buyCapHTML(addTH){
   steps.forEach(s=>{
     const tag=s.greedy?` <span class="eff-upg-greedy">greedy</span>`:'';
     const move=s.existing
-      ?`+${fN(s.add,0)} TH @ ${fN(EFF_BEST,0)} W (${fN(s.from,0)} → ${fN(s.from+s.add,0)})`
+      ?`+${fN(s.add,0)} TH @ ${fN(s.wth,s.wth%1?1:0)} W (${fN(s.from,0)} → ${fN(s.from+s.add,0)})`
       :`+${fN(s.add,0)} TH @ ${fN(EFF_BEST,0)} W (new NFT)`;
     out+=`<div class="eff-upg-row"><span class="eff-upg-id">${s.label}${tag}</span><span class="eff-upg-move">${move}</span><span class="eff-upg-cost">${fU(s.cost,0)}</span></div>`;
   });
