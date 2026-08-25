@@ -3298,8 +3298,10 @@ function updateSpTargetPreview(){
   // Difficulty is paired to the model's price path. Set a price far above it and you are banking
   // a bull case while still paying the difficulty grind of a modest one — say so rather than
   // quietly returning a flattering number.
-  if(sp.userPriced&&sp.modelEnd>0&&sp.bpEnd>sp.modelEnd*1.5){
-    el.innerHTML+=`<div class="sp-prev-note">&#9888; ${fmtBTCPrice(sp.bpEnd)} is ${fN(sp.bpEnd/sp.modelEnd,1)}&times; the fair-value band for that date (${fmtBTCPrice(sp.modelEnd)}). The difficulty grind stays as modelled, so a price that high would in reality pull more hashrate in and erode reward faster than this shows.</div>`;
+  if(sp.userPriced){
+    const skipped=Math.round((1-difficultyMultAt(sp.targetMs))*100);
+    const rich=sp.modelEnd>0&&sp.bpEnd>sp.modelEnd*1.5;
+    el.innerHTML+=`<div class="sp-prev-note">&#9888; <strong style="color:var(--text2)">Difficulty growth is off</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, so applying it to your own would stack two different scenarios. Reward moves only on halvings and the no-arbitrage floor; the model would otherwise have taken <strong style="color:var(--text2)">−${skipped}%</strong> off reward per TH over ${fN(sp.days/365,1)} yr.${rich?` Your ${fmtBTCPrice(sp.bpEnd)} is also ${fN(sp.bpEnd/sp.modelEnd,1)}&times; the fair-value band for that date (${fmtBTCPrice(sp.modelEnd)}).`:''}</div>`;
   }
 }
 function openSetupProjection(mode){
@@ -3462,6 +3464,13 @@ function computeSetupProjection(){
   // A hand-set end price replaces the rainbow band as the destination; a custom horizon on its
   // own still rides the band, just to a date of the user's choosing.
   const customPath=spSel.userPriced;
+  // The modelled difficulty grind (DIFF_G0/TAU) is CALIBRATED TO PAIR with the rainbow price path
+  // — a better-funded network adds hashrate. Bolting it onto a price the user set themselves
+  // double-stacks two unrelated scenarios, so a manual projection runs without it: reward then
+  // moves only on halvings (dated, certain) and the no-arbitrage floor (a constraint, and one
+  // that tracks whatever price was entered). Removing the grind is a LARGE change — over 5 years
+  // it is most of the erosion — so the preview and the results both say so outright.
+  const applyDiffGrind=!customPath;
   const centerNow=rbProjPrice(nowMs);
   if(!bpStart||!bpEnd||!centerNow||!gp0||!dbt){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Waiting for live market data to load…</div>';return;}
   // Convergence: start at today's real price, converge onto the Still-cheap band by the target.
@@ -3620,7 +3629,7 @@ function computeSetupProjection(){
     gp=gpForDay(d);      // dailyNet/gmtDeficit close over gp, so staking value, burn, coverage
                          // and every GMT purchase reprice off the walking token price
     apr=stakeAprAt(apr0,(d-1)/365.25);   // and the staking yield relaxes toward its funded floor
-    dbtToday=Math.max(dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*difficultyMultAt(projStartMs+(d-1)*86400000), rewardFloorBTC(bpToday));  // halving + difficulty grind, floored at the network no-arbitrage break-even
+    dbtToday=Math.max(dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*(applyDiffGrind?difficultyMultAt(projStartMs+(d-1)*86400000):1), rewardFloorBTC(bpToday));  // halving (+ difficulty grind, unless the price is hand-set), floored at the network no-arbitrage break-even
     if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
     totalAmbUSD+=ambDaily;
     if(d%7===0){
@@ -3736,10 +3745,13 @@ function computeSetupProjection(){
     : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
   const hwS=halvingsInWindow(days);
-  const diffPenaltyPct=Math.round((1-difficultyMultAt(targetMs))*100);
+  const diffPenaltyPct=applyDiffGrind?Math.round((1-difficultyMultAt(targetMs))*100):0;
+  const diffSkippedPct=applyDiffGrind?0:Math.round((1-difficultyMultAt(targetMs))*100);
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
   const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
-  const halvingNoteS=`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`+effNoteS;
+  const halvingNoteS=(applyDiffGrind
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`
+    : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
