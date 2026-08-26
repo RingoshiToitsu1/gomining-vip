@@ -419,10 +419,7 @@ function projectedMonthlyForCapital(capUSD){
   if(a){
     // Mirror the displayed "Projected monthly" EXACTLY (else target-income overshoots/undershoots):
     // price the efficiency-inclusive total (finTH) and value the greedy's free weekly growth.
-    const usdToTH=a.usdCapAfter-a.sol.usdSpentOnGMT;
-    const ep=computeEffPlan({i,K:a.totalValue,gp,bp,
-      lockUSD:a.sol.usdSpentOnGMT+a.sol.fromPool*gp, glAdd:a.sol.lock,
-      thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth});
+    const ep=computeEffPlan(effStateFrom(i,a,gp,bp));
     const projTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, projWth=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
     mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee
     locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
@@ -2426,6 +2423,48 @@ function recalc(){
 
   // Capital planner (includes projections)
   renderPlanner(i,m);
+  // ...and the same solve run automatically on the GMT already sitting in your wallet
+  renderIdleGmt(i,m);
+}
+
+// ---- My Setup: what to do with the GMT you are already holding ----
+// The Capital Planner pre-loads your wallet GMT as deployable capital, but you only see the
+// answer if you go there and press Calculate. This runs the identical solve automatically on
+// My Setup with NO new USD, so idle GMT always shows its optimal split. Wallet GMT is not free
+// to spend — it already counts toward your fee coverage — so the solver keeps whatever holds
+// the discount and only deploys the genuine surplus.
+function renderIdleGmt(i,m){
+  const host=$('idleGmtCard');if(!host)return;
+  const hide=()=>{host.innerHTML='';host.style.display='none';};
+  const gw=Math.max(0,i.gw||0), gp=m.gp, bp=m.bp, usd=gw*gp;
+  if(!(gw>0&&usd>=1&&bp>0&&gp>0))return hide();
+  // Same setup, but nothing new deployed: the wallet GMT is the only capital in play.
+  const i2=Object.assign({},i,{cap:0,mpTH:0,mpGMT:0,refCap:0});
+  const a=solvePlannerAllocation(i2,bp,gp,dailyBTCperTH());
+  const P=a?computeEffPlan(effStateFrom(i2,a,gp,bp)):null;
+  if(!P||!(P.tot>0.5))return hide();
+  const legs=[
+    {k:'Lock GMT',v:P.lockUSD,sub:P.glAdd>0.5?fN(P.glAdd,0)+' GMT':'nothing'},
+    {k:'Buy TH',v:P.thUSD,sub:P.addTH>0.5?'+'+fN(P.addTH,1)+' TH':'nothing'}
+  ];
+  if(P.effRoom)legs.push({k:'Upgrade Efficiency',v:P.effUSD,sub:P.effTHupg>0.5?fN(P.effTHupg,0)+' TH \u2192 12 W':'nothing'});
+  const pc=v=>Math.max(0,v/P.tot*100);
+  const held=gw-(a.sol.deployable||0);   // kept back as the fee reserve / to hold the discount
+  let h=`<div class="idle-gmt">
+    <div class="idle-gmt-head">
+      <div>
+        <div class="idle-gmt-title">Your idle GMT, put to work</div>
+        <div class="idle-gmt-sub">${fN(gw,0)} GMT in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
+        ${(i.cap||0)>0?`<div class="idle-gmt-note">Your Capital Planner is already deploying this GMT alongside ${fU(i.cap,0)} of new capital — open it for the combined plan. This card is the GMT on its own.</div>`:''}
+      </div>
+      <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
+    </div>
+    <div class="idle-gmt-bar">${legs.map((l,n)=>`<div class="idle-gmt-seg s${n}" style="width:${pc(l.v)}%"></div>`).join('')}</div>
+    <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div><div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}</div><div class="idle-gmt-leg-s">${l.sub}</div></div></div>`).join('')}</div>
+    <div class="idle-gmt-foot">Result: <strong>${fN(P.finTH,0)} TH</strong> @ ${fN(P.finWth,2)} W/TH
+      <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
+  </div>`;
+  host.innerHTML=h;host.style.display='';
 }
 
 function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP,greedyMoUSD){
@@ -2718,6 +2757,15 @@ function hasEffRoom(i){
   if(!i)return false;
   const gwth=(i.gth>0)?(i.gwth>0?i.gwth:EFF_BASE_MAX):0;
   return (i.th>0&&i.wth>EFF_BEST+1e-6)||(i.gth>0&&gwth>EFF_BEST+1e-6);
+}
+// The eff-plan state implied by a solved allocation. ONE builder, so the planner, the
+// target-income solver and My Setup's idle-GMT card all describe the same plan.
+function effStateFrom(i,a,gp,bp){
+  if(!a||!a.sol)return null;
+  const usdToTH=a.usdCapAfter-a.sol.usdSpentOnGMT;
+  return {i,K:a.totalValue,gp,bp,
+    lockUSD:a.sol.usdSpentOnGMT+a.sol.fromPool*gp, glAdd:a.sol.lock,
+    thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth};
 }
 function effCompareShell(i){
   const t=hasEffRoom(i)?'Efficiency vs. Hashrate vs. Discount':'Hashrate vs. Discount';

@@ -94,6 +94,35 @@ input[type=number]{-moz-appearance:textfield}
   .sp-custom-row{gap:.7rem}
   .sp-custom-reset{font-size:.6rem;padding:.28rem .42rem}
 }
+
+/* My Setup — idle-GMT optimal split (auto-solved from your wallet balance) */
+.idle-gmt{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.1rem 1.2rem;margin-bottom:1.6rem}
+.idle-gmt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.idle-gmt-title{font-family:var(--sans);font-size:1rem;font-weight:700;color:var(--text)}
+.idle-gmt-sub{margin-top:.2rem;font-size:.74rem;color:var(--text3);font-family:var(--mono)}
+.idle-gmt-note{margin-top:.4rem;max-width:46ch;font-size:.7rem;line-height:1.5;color:var(--text4)}
+.idle-gmt-gain{text-align:right;font-family:var(--mono);font-size:1.35rem;font-weight:800;color:var(--gold-soft);line-height:1.1}
+.idle-gmt-gain span{font-size:.8rem;color:var(--text3);font-weight:700}
+.idle-gmt-roi{font-size:.72rem;color:var(--text3);font-weight:700;margin-top:.15rem}
+.idle-gmt-bar{display:flex;height:9px;border-radius:6px;overflow:hidden;background:var(--bg-input);margin:.9rem 0 .8rem}
+.idle-gmt-seg{height:100%;transition:width .5s var(--ease)}
+.idle-gmt-seg.s0,.idle-gmt-dot.s0{background:var(--gold)}
+.idle-gmt-seg.s1,.idle-gmt-dot.s1{background:var(--gold-soft)}
+.idle-gmt-seg.s2,.idle-gmt-dot.s2{background:var(--cyan)}
+.idle-gmt-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+.idle-gmt-leg{display:flex;align-items:flex-start;gap:.5rem}
+.idle-gmt-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:.32rem}
+.idle-gmt-leg-k{font-size:.76rem;font-weight:700;color:var(--text2)}
+.idle-gmt-leg-v{font-family:var(--mono);font-size:.86rem;font-weight:800;color:var(--text)}
+.idle-gmt-leg-s{font-size:.7rem;color:var(--text4)}
+.idle-gmt-foot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.95rem;padding-top:.8rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text3)}
+.idle-gmt-btn{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;border:none;border-radius:9px;font-family:var(--sans);font-size:.76rem;font-weight:700;padding:.45rem .9rem;cursor:pointer;box-shadow:0 6px 18px rgba(245,166,35,.26)}
+.idle-gmt-btn:hover{box-shadow:0 9px 24px rgba(245,166,35,.4)}
+@media(max-width:600px){
+  .idle-gmt{padding:.85rem .9rem;border-radius:10px;margin-bottom:.6rem}
+  .idle-gmt-gain{font-size:1.15rem}
+  .idle-gmt-foot{font-size:.72rem}
+}
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
 .hero-card:hover{border-color:var(--purple);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}

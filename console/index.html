@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=39">
+<link rel="stylesheet" href="/assets/app.css?v=40">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -597,6 +597,9 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
   </div>
   </div><!-- /.section-pair -->
 
+  <!-- IDLE GMT — the Capital Planner's solve, run automatically on the GMT you already hold -->
+  <div id="idleGmtCard" style="display:none"></div>
+
   <!-- SHARE THIS SETUP -->
   <div class="reveal" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
     <button class="share-plan-btn" onclick="sharePlan(this)" title="Copy a link to your current setup so anyone can view these numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this setup</button>
@@ -1076,7 +1079,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=69"></script>
+<script src="/assets/app.js?v=70"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
