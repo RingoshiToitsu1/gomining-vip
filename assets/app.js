@@ -2443,11 +2443,18 @@ function renderIdleGmt(i,m){
   const a=solvePlannerAllocation(i2,bp,gp,dailyBTCperTH());
   const P=a?computeEffPlan(effStateFrom(i2,a,gp,bp)):null;
   if(!P||!(P.tot>0.5))return hide();
+  // Same resolver the planner uses, so this card names the same machine at the same watts.
+  const fs=buyFillSummary(buyFillPlan(P.addTH));
+  const wLbl=w=>fN(w,Math.abs(w-Math.round(w))>0.05?1:0);
   const legs=[
     {k:'Lock GMT',v:P.lockUSD,sub:P.glAdd>0.5?fN(P.glAdd,0)+' GMT':'nothing'},
-    {k:'Buy TH',v:P.thUSD,sub:P.addTH>0.5?'+'+fN(P.addTH,1)+' TH':'nothing'}
+    {k:'Buy TH',v:P.thUSD,
+     sub:(P.addTH>0.5&&fs)?`+${fN(P.addTH,1)} TH @ ${wLbl(fs.wth)} W${fs.mixed?' avg':''}`:(P.addTH>0.5?`+${fN(P.addTH,1)} TH`:'nothing'),
+     into:(P.addTH>0.5&&fs)?`${fs.name}${fs.more>0?` +${fs.more} more`:''}`:''}
   ];
-  if(P.effRoom)legs.push({k:'Upgrade Efficiency',v:P.effUSD,sub:P.effTHupg>0.5?fN(P.effTHupg,0)+' TH \u2192 12 W':'nothing'});
+  if(P.effRoom)legs.push({k:'Upgrade Efficiency',v:P.effUSD,
+    sub:P.effTHupg>0.5?`${fN(P.effTHupg,0)} TH \u2192 12 W`:'nothing',
+    into:(P.effTHupg>0.5&&P.effIsGreedy&&P.gCode)?P.gCode+' (greedy)':''});
   const pc=v=>Math.max(0,v/P.tot*100);
   const held=gw-(a.sol.deployable||0);   // kept back as the fee reserve / to hold the discount
   let h=`<div class="idle-gmt">
@@ -2460,7 +2467,7 @@ function renderIdleGmt(i,m){
       <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
     </div>
     <div class="idle-gmt-bar">${legs.map((l,n)=>`<div class="idle-gmt-seg s${n}" style="width:${pc(l.v)}%"></div>`).join('')}</div>
-    <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div><div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}</div><div class="idle-gmt-leg-s">${l.sub}</div></div></div>`).join('')}</div>
+    <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div><div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}</div><div class="idle-gmt-leg-s">${l.sub}</div>${l.into?`<div class="idle-gmt-leg-into">into ${l.into}</div>`:''}</div></div>`).join('')}</div>
     <div class="idle-gmt-foot">Result: <strong>${fN(P.finTH,0)} TH</strong> @ ${fN(P.finWth,2)} W/TH
       <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
   </div>`;

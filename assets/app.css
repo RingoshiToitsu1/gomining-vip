@@ -115,6 +115,7 @@ input[type=number]{-moz-appearance:textfield}
 .idle-gmt-leg-k{font-size:.76rem;font-weight:700;color:var(--text2)}
 .idle-gmt-leg-v{font-family:var(--mono);font-size:.86rem;font-weight:800;color:var(--text)}
 .idle-gmt-leg-s{font-size:.7rem;color:var(--text4)}
+.idle-gmt-leg-into{margin-top:.1rem;font-size:.7rem;font-weight:700;color:var(--gold-soft)}
 .idle-gmt-foot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.95rem;padding-top:.8rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text3)}
 .idle-gmt-btn{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;border:none;border-radius:9px;font-family:var(--sans);font-size:.76rem;font-weight:700;padding:.45rem .9rem;cursor:pointer;box-shadow:0 6px 18px rgba(245,166,35,.26)}
 .idle-gmt-btn:hover{box-shadow:0 9px 24px rgba(245,166,35,.4)}
