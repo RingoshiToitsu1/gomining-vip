@@ -356,10 +356,17 @@ function openPlannerForm(){
   const rr=document.getElementById('piReturnResults');if(rr)rr.style.display=window._plannerCalcDone?'':'none';
 }
 // Dismiss the form back to the already-computed Capital Planner results (no recalculation).
-function returnToPlannerResults(){
-  closePlannerIntro();
+// The planner form is a full-page panel, so it can be opened from ANY tab — the Capital Planner
+// tab, or My Setup's idle-GMT card. Closing it just reveals whatever tab is underneath, which
+// meant calculating from My Setup dropped you back on My Setup with the plan you just asked for
+// hidden a tab away. Every exit that should show a plan routes through here instead.
+function gotoPlannerTab(){
   const pBtn=document.querySelector('[data-tab="tab-planner"]');
   if(pBtn&&!pBtn.classList.contains('active'))pBtn.click();
+}
+function returnToPlannerResults(){
+  closePlannerIntro();
+  gotoPlannerTab();
 }
 function submitPlannerCapital(){
   // Brief "calculating" state so the optimal-split solve feels tangible.
@@ -386,6 +393,7 @@ function submitPlannerCapital(){
     window._incomeGoal=null;   // amount mode: drop any prior income-goal banner
     recalc();
     hidePanelView('plannerIntro');
+    gotoPlannerTab();           // show the plan, not whichever tab the form was opened from
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
     animatePlannerResults();   // fresh-load feel: count the allocation up from 0
@@ -491,6 +499,7 @@ function submitPlannerTarget(){
     window._incomeGoal={targetUSD,targetDisp,cap,res};
     recalc();
     hidePanelView('plannerIntro');
+    gotoPlannerTab();           // show the plan, not whichever tab the form was opened from
     if(load)load.style.display='none';
     if(btn)btn.disabled=false;
     animatePlannerResults();
