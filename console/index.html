@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=49">
+<link rel="stylesheet" href="/assets/app.css?v=50">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -936,12 +936,16 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
       </div>
     </div>
     <div class="cmb-controls">
+      <div class="btc-chart-mode" id="cmbModeNav">
+        <button class="active" onclick="setCmbMode('compare',this)">Compare</button>
+        <button onclick="setCmbMode('signal',this)">Buy / sell signal</button>
+      </div>
       <div class="btc-chart-mode" id="cmbRange">
         <button onclick="setCmbRange(90,this)">90d</button>
         <button class="active" onclick="setCmbRange(180,this)">180d</button>
         <button onclick="setCmbRange(365,this)">1y</button>
       </div>
-      <div class="cmb-weight">
+      <div class="cmb-weight" id="cmbWeightWrap">
         <label for="cmbWeight">EMA blend</label>
         <input type="range" id="cmbWeight" min="0" max="100" step="5" value="50" oninput="setCmbWeight(this.value)">
         <span id="cmbWeightLab"></span>
@@ -952,7 +956,10 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <div class="btc-rainbow-legend" id="cmbLegend"></div>
         <canvas id="cmbCanvas"></canvas>
         <div class="btc-rainbow-tip" id="cmbTip" style="display:none"></div>
-        <div class="btc-rainbow-foot"><span id="cmbCorrNote"></span> Both re-based to 100 at the left edge, so the lines compare like for like. The green line is a 50-day EMA of the weighted blend. Daily closes, not financial advice.</div>
+        <div class="btc-rainbow-foot"><span id="cmbCorrNote"></span>
+          <span id="cmbFootNote"> Both re-based to 100 at the left edge, so the lines compare like for like. The green line is a 50-day EMA of the weighted blend. Daily closes, not financial advice.</span>
+          <span id="cmbSignalFoot" style="display:none"> GMT priced in BTC, against its own 50-day EMA (dashed) with the &plusmn;1 and &plusmn;2 standard-deviation envelopes. Green band = GMT cheap for what BTC is doing, red = rich. Bands use only data up to each day, so the history is what the signal would have said at the time. Mean reversion assumes the BTC&ndash;GMT relationship holds &mdash; it breaks on tokenomics changes, listings or project news. Not financial advice.</span>
+        </div>
         <div class="btc-rainbow-msg" id="cmbMsg" style="display:none">Loading daily price history&hellip;</div>
       </div>
     </div>
@@ -1138,7 +1145,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=89"></script>
+<script src="/assets/app.js?v=90"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

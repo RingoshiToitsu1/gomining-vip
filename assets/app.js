@@ -1012,7 +1012,7 @@ function buildChart(symbol,allowChange){
 // question ("do they rise and fall together?") instead of hugging opposite corners. On top sits
 // a blended index, weighted between the two, and its 50-day EMA.
 // ============================================================
-let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbW=50, _cmbHover=null;
+let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbW=50, _cmbHover=null, _cmbMode='compare';
 const CMB_EMA_N=50;
 const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
 
@@ -1106,7 +1106,63 @@ function cmbCorrelation(rows){
   for(let i=0;i<n;i++){const db=rb[i]-mb,dg=rg[i]-mg;sbg+=db*dg;sbb+=db*db;sgg+=dg*dg;}
   return (sbb>0&&sgg>0)?sbg/Math.sqrt(sbb*sgg):null;
 }
+// ---- GMT/BTC relative-value signal ----
+// GMT mostly rides Bitcoin, so its own chart says little that BTC's doesn't. Dividing the two
+// strips the shared move out and leaves the part that is actually about GMT: what a unit of GMT
+// costs in Bitcoin. That ratio is mean-reverting in a way neither price is, which is what makes
+// it usable as a timing tool — for converting mining rewards into GMT, above all.
+// z = how far today's ratio sits from its own 50-day EMA, in standard deviations of that same
+// deviation. Log deviations, so a 20% premium and a 20% discount are symmetric.
+function cmbRatioSeries(rows){
+  const out=rows.map(r=>({t:r.t,btc:r.btc,gmt:r.gmt,ratio:r.gmt/r.btc}));
+  if(out.length<CMB_EMA_N+10)return out;
+  let e=0;for(let i=0;i<CMB_EMA_N;i++)e+=out[i].ratio;e/=CMB_EMA_N;
+  const k=2/(CMB_EMA_N+1);
+  out[CMB_EMA_N-1].ema=e;
+  for(let i=CMB_EMA_N;i<out.length;i++){e=out[i].ratio*k+e*(1-k);out[i].ema=e;}
+  for(let i=0;i<out.length;i++)if(out[i].ema>0)out[i].dev=Math.log(out[i].ratio/out[i].ema);
+  // Trailing dispersion, never forward-looking: each day's bands use only days up to that day,
+  // so the history on screen is what the signal would genuinely have said at the time.
+  for(let i=0;i<out.length;i++){
+    if(out[i].dev==null)continue;
+    const win=[];
+    for(let j=Math.max(0,i-CMB_EMA_N+1);j<=i;j++)if(out[j].dev!=null)win.push(out[j].dev);
+    if(win.length<12)continue;
+    const mu=win.reduce((a,c)=>a+c,0)/win.length;
+    const sd=Math.sqrt(win.reduce((a,c)=>a+(c-mu)*(c-mu),0)/win.length);
+    out[i].mu=mu;out[i].sd=sd;
+    out[i].z=sd>1e-9?(out[i].dev-mu)/sd:0;
+  }
+  return out;
+}
+// Slope of the ratio's own EMA over the last month — the trend filter. "Cheap" in a ratio that
+// is still falling means cheap and getting cheaper, which is a different trade from cheap and
+// stabilising, and the wording has to say so rather than flash a green light either way.
+function cmbRatioSlope(R){
+  const withEma=R.filter(p=>p.ema>0);
+  if(withEma.length<25)return 0;
+  const a=withEma[withEma.length-22].ema, b=withEma[withEma.length-1].ema;
+  return a>0?(b/a-1):0;
+}
+// Deliberately NOT a trade instruction. It states where the ratio sits and what that has meant,
+// and the caller renders the caveat alongside — a z-score is a description of the present, not a
+// forecast, and it breaks whenever the relationship itself breaks (tokenomics, listings, news).
+function cmbVerdict(z,slope){
+  if(z==null)return null;
+  const falling=slope<-0.02, rising=slope>0.02;
+  if(z<=-2)return{tone:'buy',label:'GMT unusually cheap vs BTC',
+    body:'The ratio is more than 2 standard deviations below its 50-day average — a level it has historically spent little time at. '+(falling?'It is still trending down, though, so cheap can get cheaper; scaling in beats going all at once.':'The trend has flattened, which is the setup mean reversion actually needs.')};
+  if(z<=-1)return{tone:'buy',label:'GMT cheap vs BTC',
+    body:'Below its 50-day average against Bitcoin. '+(falling?'The downtrend is intact, so treat this as a better-than-average entry, not a bottom.':'A reasonable window to convert mining rewards into GMT.')};
+  if(z<1)return{tone:'neutral',label:'GMT fairly priced vs BTC',
+    body:'Within a standard deviation of its 50-day average — the ratio is telling you nothing much. Convert on your normal schedule.'};
+  if(z<2)return{tone:'sell',label:'GMT rich vs BTC',
+    body:'Above its 50-day average against Bitcoin. '+(rising?'Momentum is with it, so this is a reason to wait rather than to sell.':'If you were going to hold rewards in BTC for a while, this is the better end of the range to do it.')};
+  return{tone:'sell',label:'GMT unusually rich vs BTC',
+    body:'More than 2 standard deviations above its 50-day average. '+(rising?'Still climbing — stretched is not the same as finished.':'Historically a poor moment to be buying GMT with BTC.')};
+}
 function cmbPads(W){return W<480?{l:8,r:46,t:14,b:40}:{l:10,r:66,t:16,b:44};}
+function sm0(W){return W<480;}
 function drawCombined(){
   const page=document.getElementById('cmbPage');
   const wrap=document.getElementById('cmbWrap'), cv=document.getElementById('cmbCanvas');
@@ -1125,6 +1181,7 @@ function drawCombined(){
   // computed over a padded slice and only the visible part is drawn.
   const all=_cmbData, n=all.length;
   const want=Math.min(n,_cmbDays);
+  if(_cmbMode==='signal'){drawCmbSignal(x,all,want,W,H,sm0(W));return;}
   const padStart=Math.max(0,n-want-CMB_EMA_N);
   const padded=cmbSeries(all.slice(padStart),_cmbW);
   const skip=(n-want)-padStart;
@@ -1218,6 +1275,101 @@ function drawCombined(){
     :corr>=0.15?'Loosely linked — GMT is mostly driven by something other than BTC right now.'
     :corr>=-0.15?'Effectively unlinked over this window.'
     :'They have been moving in opposite directions over this window.';
+}
+// Signal view: the GMT/BTC ratio against its own 50-day EMA, with the +/-1 and +/-2 sd envelopes
+// the z-score is measured in. Everything is indexed to the EMA (=100), so the y-axis reads as
+// "percent rich/cheap versus the average" rather than as an unreadable 0.0000051 ratio.
+function drawCmbSignal(x,all,want,W,H,sm){
+  const pad=Math.max(0,all.length-want-CMB_EMA_N);
+  const R=cmbRatioSeries(all.slice(pad));
+  const S=R.slice(Math.max(0,(all.length-want)-pad)).filter(p=>p.ema>0);
+  if(S.length<2){const msg=document.getElementById('cmbMsg');if(msg){msg.textContent='Not enough overlapping history for the 50-day signal yet.';msg.style.display='';}return;}
+  const P=cmbPads(W),L=P.l,Rr=W-P.r,T=P.t,B=H-P.b,pw=Rr-L,ph=B-T;
+  const rel=p=>p.ratio/p.ema*100;
+  const band=(p,k)=>Math.exp((p.mu||0)+k*(p.sd||0))*100;
+  let lo=Infinity,hi=-Infinity;
+  S.forEach(p=>{[rel(p),band(p,2),band(p,-2)].forEach(v=>{if(isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
+  const padv=(hi-lo)*0.08||4;lo-=padv;hi+=padv;
+  const t0=S[0].t,t1=S[S.length-1].t;
+  const X=t=>L+pw*((t-t0)/((t1-t0)||1));
+  const Y=v=>T+ph*(1-((v-lo)/((hi-lo)||1)));
+
+  const zone=(kA,kB,fill)=>{
+    x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
+    x.beginPath();
+    S.forEach((p,idx)=>{const px=X(p.t),py=Y(band(p,kA));idx?x.lineTo(px,py):x.moveTo(px,py);});
+    for(let idx=S.length-1;idx>=0;idx--){const p=S[idx];x.lineTo(X(p.t),Y(band(p,kB)));}
+    x.closePath();x.fillStyle=fill;x.fill();x.restore();
+  };
+  zone(2,1,'rgba(234,57,67,0.10)');      // rich
+  zone(-1,-2,'rgba(22,199,132,0.10)');   // cheap
+  zone(1,-1,'rgba(255,255,255,0.03)');   // fair
+
+  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  for(let k=0;k<=4;k++){
+    const v=lo+(hi-lo)*k/4,gy=Y(v);
+    x.strokeStyle='rgba(245,166,35,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.45)';x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',Rr+6,gy+4);
+  }
+  x.textAlign='center';let lastM=null;
+  S.forEach(p=>{const d=new Date(p.t),mk=d.getUTCFullYear()+'-'+d.getUTCMonth();
+    if(mk!==lastM){lastM=mk;const gx=X(p.t);
+      x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
+      x.fillStyle='rgba(255,255,255,0.4)';x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+
+  const path=(fn,col,wd,dash)=>{
+    x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
+    x.strokeStyle=col;x.lineWidth=wd;x.lineJoin='round';x.setLineDash(dash||[]);
+    x.beginPath();S.forEach((p,idx)=>{const px=X(p.t),py=Y(fn(p));idx?x.lineTo(px,py):x.moveTo(px,py);});
+    x.stroke();x.setLineDash([]);x.restore();
+  };
+  path(()=>100,'rgba(255,255,255,0.45)',1.4,[5,4]);   // the 50-day EMA itself
+  path(p=>band(p,1),'rgba(234,57,67,0.5)',1);
+  path(p=>band(p,-1),'rgba(22,199,132,0.5)',1);
+  path(rel,'#FFCF7A',2.4);                            // GMT priced in BTC
+
+  const last=S[S.length-1];
+  if(_cmbHover!=null){
+    const frac=Math.max(0,Math.min(1,(_cmbHover-L)/(pw||1)));
+    const p=S[Math.round(frac*(S.length-1))];
+    if(p){
+      const px=X(p.t);
+      x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
+      x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
+      x.fillStyle='#FFCF7A';x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
+      const tip=document.getElementById('cmbTip');
+      if(tip){
+        tip.style.display='';
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+          +`<div class="rb-tip-actual">GMT ${'$'+p.gmt.toFixed(4)} &middot; BTC ${fmtBTCPrice(p.btc)}</div>`
+          +`<div class="rb-tip-row"><span class="rb-tip-lbl">vs 50d avg</span><span class="rb-tip-px">${(rel(p)>=100?'+':'')+(rel(p)-100).toFixed(1)}%</span></div>`
+          +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#16c784':p.z>=1?'#ea3943':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
+        const tw=tip.offsetWidth||150;
+        tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';tip.style.top=(T+6)+'px';
+      }
+    }
+  }else{const tip=document.getElementById('cmbTip');if(tip)tip.style.display='none';}
+
+  const slope=cmbRatioSlope(R), v=cmbVerdict(last.z,slope);
+  const lg=document.getElementById('cmbLegend');
+  if(lg)lg.innerHTML=
+     `<span class="rb-pill" style="border-left-color:#FFCF7A">GMT/BTC ${(rel(last)>=100?'+':'')+(rel(last)-100).toFixed(1)}% vs 50d</span>`
+    +`<span class="rb-pill" style="border-left-color:${last.z<=-1?'#16c784':last.z>=1?'#ea3943':'rgba(255,255,255,.4)'}">z ${last.z!=null?last.z.toFixed(2):'—'}</span>`
+    +`<span class="rb-pill" style="border-left-color:${slope>0.02?'#16c784':slope<-0.02?'#ea3943':'rgba(255,255,255,.4)'}">30d trend ${(slope>=0?'+':'')+(slope*100).toFixed(1)}%</span>`;
+  const note=document.getElementById('cmbCorrNote');
+  if(note&&v)note.innerHTML=`<strong style="color:${v.tone==='buy'?'#16c784':v.tone==='sell'?'#ea3943':'var(--text2)'}">${v.label}.</strong> ${v.body}`;
+}
+function setCmbMode(mode,btn){
+  _cmbMode=mode;
+  const nav=document.getElementById('cmbModeNav');
+  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+  const wt=document.getElementById('cmbWeightWrap');
+  if(wt)wt.style.display=(mode==='compare')?'':'none';
+  const ft=document.getElementById('cmbFootNote');
+  if(ft)ft.style.display=(mode==='compare')?'':'none';
+  const sf=document.getElementById('cmbSignalFoot');
+  if(sf)sf.style.display=(mode==='signal')?'':'none';
+  drawCombined();
 }
 function setCmbRange(days,btn){
   _cmbDays=days;
