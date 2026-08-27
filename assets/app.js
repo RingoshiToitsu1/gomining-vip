@@ -2837,6 +2837,9 @@ const DIFF_G0=0.37, DIFF_FLOOR=0.05, DIFF_TAU=4;   // paired with the Still-chea
 // but lands ~11% below today's ratio — scaling, without quietly turning the projection bullish.
 // NOT enforced by any arbitrage (unlike the reward floor): emissions or tokenomics changes could
 // reset it permanently. Treat as a calibrated assumption, not a law.
+// Explicitly seeded. Left undefined, `_spMode==='planner'` reads false and the projection
+// quietly seeds from the current farm instead of the plan — a wrong answer with no error.
+window._spMode=window._spMode||'setup';
 const GMT_BTC_RATIO=4.02e-6;
 // ---- How hard GMT actually moves with BTC ----
 // The projection used to scale GMT 1:1 with Bitcoin. Measured on daily log returns that
@@ -4332,8 +4335,7 @@ function openSetupProjection(mode){
   // from a calculated plan used to silently project the CURRENT farm instead, so day 1 came back
   // at today's income and the plan looked like it had earned nothing. Two doors to one page that
   // answer different questions have to pick the one the user is standing in front of.
-  if(mode==null&&window._plannerCalcDone&&document.body.classList.contains('planning'))mode='planner';
-  if(mode==null&&window._plannerCalcDone&&document.querySelector('[data-tab="tab-planner"].active'))mode='planner';
+  if(mode==null&&plannerHasPlan()&&onPlannerTab())mode='planner';
   window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
@@ -4365,18 +4367,35 @@ function openSetupProjection(mode){
 }
 // The projection answers one of two different questions and the answer is nowhere near the same
 // number. Name which one is on screen, and let it be switched without leaving the page.
+// Whether there is a plan to project. NOT window._plannerCalcDone: that flag is only set by the
+// wizard's Calculate button, so a planner rendered from saved inputs on page load has a full
+// allocation on screen while the flag is still undefined. The honest test is whether the solver
+// returns one for the inputs as they stand.
+function plannerHasPlan(){
+  try{
+    const i=inp();
+    if(!((i.cap||0)>0||(i.gw||0)>0||(i.mpTH||0)>0))return false;
+    const m=calc(i);
+    return !!solvePlannerAllocation(i,m.bp,m.gp,dailyBTCperTH());
+  }catch(e){return false;}
+}
+function onPlannerTab(){
+  if(document.body.classList.contains('planning'))return true;
+  const b=document.querySelector('[data-tab="tab-planner"]');
+  return !!(b&&b.classList.contains('active'));
+}
 function renderSpModeSwitch(){
   const el=document.getElementById('spModeSwitch');
   if(!el)return;
   const planner=window._spMode==='planner';
-  const havePlan=!!window._plannerCalcDone;
+  const havePlan=plannerHasPlan();
   el.innerHTML=
      `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Setup</button>`
     +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My Plan</button>`;
   el.style.display='';
 }
 function setSpMode(mode){
-  if(mode==='planner'&&!window._plannerCalcDone)return;
+  if(mode==='planner'&&!plannerHasPlan())return;
   if(window._spMode===mode)return;
   openSetupProjection(mode);
 }
