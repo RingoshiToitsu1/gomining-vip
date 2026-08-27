@@ -259,6 +259,13 @@
       '<div class="ed-group-title">My Fleet <span class="ed-toggle-note" style="font-weight:400">(optional — adds up your miners for you)</span></div>' +
       '<div class="fleet-panel">' +
         '<div class="fleet-head"><div class="fleet-summary" id="fleetSummary"></div></div>' +
+        // Column headings, desktop only. Fifteen rows x four labelled boxes is sixty little
+        // borders saying the same four words — naming each column once turns the same data into
+        // a table you can scan down. Mobile keeps its per-field labels: there are no columns to
+        // head there, since each miner stacks.
+        '<div class="fleet-thead" aria-hidden="true">' +
+          '<span>Miner</span><span>Code</span><span class="num">TH</span><span class="num">W/TH</span><span></span><span></span>' +
+        '</div>' +
         '<div class="fleet-rows" id="fleetRows"></div>' +
         '<button class="fleet-add" id="fleetAdd">+ Add a miner</button>' +
       '</div>';

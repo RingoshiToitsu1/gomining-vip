@@ -111,16 +111,41 @@
 .fleet-head{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.5rem}
 .fleet-summary{font-family:var(--mono);font-size:.72rem;color:var(--text3)}
 .fleet-summary strong{color:var(--purple-soft)}
-.fleet-rows{display:flex;flex-direction:column;gap:.4rem}
+.fleet-rows{display:flex;flex-direction:column}
+/* Desktop reads as a table: headings once at the top, rows borderless and aligned beneath.
+   The grid template is shared with .fleet-row so the columns actually line up. */
+.fleet-thead{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,.85fr) auto auto;
+  gap:.35rem;padding:0 .55rem .3rem .95rem;border-bottom:1px solid var(--card-border)}
+.fleet-thead span{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text4);font-weight:700}
+.fleet-thead .num{text-align:right;padding-right:.4rem}
+/* A 15-row table has no business living in the 600px column the rest of the editor uses.
+   Let this one group break out of it when the viewport can actually spare the width. */
+@media(min-width:900px){#secInputs #fleetGroup{margin-left:-90px;margin-right:-90px}}
+@media(min-width:1180px){#secInputs #fleetGroup{margin-left:-190px;margin-right:-190px}}
 .fleet-empty{font-size:.75rem;color:var(--text4);padding:.5rem 0}
 .fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,.85fr) auto auto;
-  gap:.35rem;align-items:center}
+  gap:.35rem;align-items:center;padding:.1rem .55rem;border-radius:8px;
+  border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+.fleet-row:hover{background:rgba(255,255,255,.025)}
+.fleet-row:last-child{border-bottom:0}
 /* Labelled field, same shape as #secInputs .ed-fld: name left, value right, one
    border around both — so a field still says what it is once it has a value in it. */
 .fleet-f{display:flex;align-items:center;gap:.35rem;background:var(--bg-input);
   border:1px solid var(--border);border-radius:8px;padding:.38rem .55rem;cursor:text;
   min-width:0;transition:var(--transition)}
 .fleet-f:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+@media(min-width:621px){
+  /* Sixty boxed pills is what made this look busy. On desktop the fields are plain text that
+     only reveals its edit affordance on hover or focus, so the eye follows the columns. */
+  .fleet-f{background:none;border-color:transparent;padding:.3rem .4rem;border-radius:6px}
+  .fleet-f:hover{background:var(--bg-input);border-color:var(--border)}
+  .fleet-f:focus-within{background:var(--bg-input)}
+  .fleet-lbl{display:none}
+  .fleet-col,.fleet-code{text-align:left;text-align-last:left}
+  .fleet-col{font-size:.78rem}
+  .fleet-in{font-size:.8rem}
+}
 .fleet-lbl{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
   text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap}
 .fleet-in{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;
@@ -153,6 +178,7 @@
   border-radius:10px;padding:.55rem;width:100%;cursor:pointer;font-size:.8rem;margin-top:.5rem;font-family:var(--sans)}
 .fleet-add:hover{border-color:var(--purple);color:var(--purple-soft)}
 @media(max-width:620px){
+  .fleet-thead{display:none}
   /* Every cell is placed explicitly. Letting them auto-flow through mixed fr/auto
      tracks dropped the NFT code into a content-sized `auto` column and squashed it,
      while the two auto columns were being sized by whatever landed in them across
@@ -167,7 +193,8 @@
   .fleet-del{grid-column:4/5;justify-self:end;padding:0 .1rem}
   /* Rows are two-deep now, so separate them more than the within-row gap. */
   .fleet-rows{gap:.75rem}
-  .fleet-row{padding-bottom:.6rem;border-bottom:1px solid var(--card-border)}
+  .fleet-row{padding:0 0 .6rem;border-radius:0;border-bottom:1px solid var(--card-border)}
+  .fleet-row:hover{background:none}
   .fleet-row:last-child{border-bottom:0;padding-bottom:0}
   .fleet-summary{line-height:1.55}
 }
