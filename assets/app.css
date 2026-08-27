@@ -791,6 +791,21 @@ html.show-onboarding #onboarding{display:flex}
   #btcChartPage .sp-page-inner{padding:.5rem .6rem .8rem}
 }
 /* combined-chart controls: range pills on the left, EMA blend slider on the right */
+/* the answer, before any chart: hold GMT or sit in stables */
+.cmb-verdict{border:1px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;margin:0 0 .7rem;background:var(--bg-card)}
+.cmb-verdict.hold{border-color:rgba(22,199,132,.45);background:linear-gradient(160deg,rgba(22,199,132,.12),rgba(22,199,132,.02))}
+.cmb-verdict.out{border-color:rgba(245,166,35,.45);background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.02))}
+.cmb-verdict-head{font-family:var(--sans);font-weight:800;font-size:1.35rem;letter-spacing:.02em;line-height:1.15}
+.cmb-verdict.hold .cmb-verdict-head{color:#16c784}
+.cmb-verdict.out .cmb-verdict-head{color:var(--orange)}
+.cmb-verdict-why{color:var(--text2);font-size:.85rem;line-height:1.5;margin-top:.3rem}
+.cmb-verdict-sub{color:var(--text3);font-size:.72rem;line-height:1.5;margin-top:.35rem}
+@media(max-width:600px){
+  .cmb-verdict{padding:.7rem .8rem;margin-bottom:.55rem}
+  .cmb-verdict-head{font-size:1.15rem}
+  .cmb-verdict-why{font-size:.78rem}
+  .cmb-verdict-sub{font-size:.66rem}
+}
 .cmb-controls{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;padding:0 0 .6rem}
 .cmb-controls .btc-chart-mode button.active{background:var(--purple);color:#fff}
 .cmb-weight{display:flex;align-items:center;gap:.55rem;font-size:.72rem;color:var(--text3);min-width:0}
