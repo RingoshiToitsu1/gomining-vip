@@ -1093,7 +1093,7 @@ function openChartShare(){
   if(nat&&ntx){
     const withFile=_canShareImage();
     nat.style.order=withFile?'-1':'';
-    ntx.textContent=withFile?'Share image to another app':(navigator.share?'Share a link to other apps':'Save the image');
+    ntx.textContent=withFile?'Share image to another app':'Copy or save the image';
   }
   document.getElementById('chartShareSheet').style.display='flex';
 }
@@ -1108,6 +1108,13 @@ function csToast(msg){
 // clipboard first and open the app's composer — the user pastes the ready image into the post.
 const _CS_NET={telegram:'Telegram',x:'X',whatsapp:'WhatsApp',facebook:'Facebook',reddit:'Reddit'};
 async function chartShareTo(net){
+  // Phones: a web composer (t.me/share, twitter/intent, …) can only carry a link — tapping
+  // "Telegram" here used to post a bare URL with no image at all. Where the OS can hand over
+  // the actual PNG, go through the system sheet instead and let them pick the same app there.
+  if(_canShareImage()){
+    csToast('Choose '+(_CS_NET[net]||'the app')+' — the image goes with it');
+    return chartShareNative();
+  }
   await copyChartShot(true);   // silent copy
   const link=_csChartUrl(),u=encodeURIComponent(link),te=encodeURIComponent(_csShareText());
   const urls={
@@ -1120,17 +1127,21 @@ async function chartShareTo(net){
   if(urls[net])window.open(urls[net],'_blank','noopener,noreferrer');
   csToast('✓ Image copied — paste it into '+(_CS_NET[net]||'the post'));
 }
-// "Share with other apps" row — native image share, else save the PNG.
+// "Share with other apps" row — hand the OS the actual PNG.
 async function chartShareNative(){
   const f=_chartShotFile();if(!f)return;
   const info=_shotInfo();
   try{
     if(navigator.canShare&&navigator.canShare({files:[f]})){
-      await navigator.share({files:[f],url:info.url,title:info.title,text:info.text+' '+info.url});return;
+      // NO `url:` here. When a share payload carries both files and a url, iOS and most
+      // Android targets take the link and silently drop the image — which is exactly how
+      // "share the image" turned into "post a link". The link rides along inside `text`.
+      await navigator.share({files:[f],title:info.title,text:info.text+' '+info.url});return;
     }
-    if(navigator.share){await navigator.share({title:info.title,text:info.text+' '+info.url});return;}
   }catch(e){if(e&&e.name==='AbortError')return;}
-  downloadChartShot();csToast('⬇ Image saved — attach it anywhere');
+  // No file sharing on this browser. Never fall back to sharing a bare link from a button that
+  // promised the image — put the PNG somewhere the user can actually attach it.
+  return copyChartShot();
 }
 async function copyChartShot(silent){
   if(!_chartShotCanvas&&!_chartShotBlob)return;
