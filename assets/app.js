@@ -1012,6 +1012,11 @@ function buildChart(symbol,allowChange){
 // question ("do they rise and fall together?") instead of hugging opposite corners. On top sits
 // a blended index, weighted between the two, and its 50-day EMA.
 // ============================================================
+// The hold/convert verdict, the GMT/BTC signal view and the swap levels are PARKED, not deleted:
+// the maths is sound but the product question behind it is not settled. Everything below still
+// works — flip this one flag to true to bring the whole thing back. Until then /combined is the
+// comparison chart only, and nothing on the page offers a trading opinion.
+const CMB_SIGNAL_ON=false;
 let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbW=50, _cmbHover=null, _cmbMode='compare';
 const CMB_EMA_N=50;
 const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
@@ -1256,7 +1261,7 @@ function drawCombined(){
   // computed over a padded slice and only the visible part is drawn.
   const all=_cmbData, n=all.length;
   const want=Math.min(n,_cmbDays);
-  if(_cmbMode==='signal'){drawCmbSignal(x,all,want,W,H,sm0(W));return;}
+  if(CMB_SIGNAL_ON&&_cmbMode==='signal'){drawCmbSignal(x,all,want,W,H,sm0(W));return;}
   const padStart=Math.max(0,n-want-CMB_EMA_N);
   const padded=cmbSeries(all.slice(padStart),_cmbW);
   const skip=(n-want)-padStart;
@@ -1437,6 +1442,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
 function renderCmbVerdict(){
   const el=document.getElementById('cmbVerdict');
   if(!el)return;
+  if(!CMB_SIGNAL_ON){el.style.display='none';return;}
   const sig=cmbHoldSignal(_cmbData);
   if(!sig){el.style.display='none';return;}
   el.style.display='';
@@ -1519,6 +1525,12 @@ function openCombined(){
   try{history.replaceState({},'','/combined'+location.hash);}catch(e){}
   showPanelView('cmbPage');
   const wrap=document.getElementById('cmbWrap');if(wrap)wrap.classList.add('show');
+  if(!CMB_SIGNAL_ON){
+    _cmbMode='compare';
+    ['cmbModeNav','cmbBandNav','cmbVerdict'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
+    const sf=document.getElementById('cmbSignalFoot');if(sf)sf.style.display='none';
+    const ft=document.getElementById('cmbFootNote');if(ft)ft.style.display='';
+  }
   setCmbWeight(_cmbW);
   loadCombined();
   bindCmbPointer();
