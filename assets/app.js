@@ -1018,12 +1018,15 @@ function buildChart(symbol,allowChange){
 // comparison chart only, and nothing on the page offers a trading opinion.
 const CMB_SIGNAL_ON=false;
 let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='compare';
-// Candles need horizontal room, and two overlaid candle series at 180 daily bars is a smear.
-// So one asset draws as candles and the other stays a line — you still read both, and the one
-// you came to look at gets the detail. _cmbCandle picks which.
-let _cmbStyle='line', _cmbCandle='btc';
+// Line or candle for BOTH series; candles pair inside each day rather than overlapping.
+let _cmbStyle='line';
 const CMB_EMA_N=50;
 const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
+// Two candle series on one chart need two palettes, or you cannot tell whose day was green.
+// Bitcoin keeps the classic green/red; GMT takes blue/purple, which is its own line colour and
+// the purple already used across the app. Up tones are the brighter of each pair.
+const CMB_BTC_UP='#16c784', CMB_BTC_DN='#ea3943';
+const CMB_GMT_UP='#7FB0FF', CMB_GMT_DN='#A78BFA';
 
 // Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
 async function cmbFetchBTC(){
@@ -1265,11 +1268,11 @@ function drawCombined(){
   let lo=Infinity,hi=-Infinity;
   S.forEach(p=>{[p.biR,p.giR].forEach(v=>{if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
   if(_cmbStyle==='candle'){
-    // Wicks reach past the closes the lines are drawn from; fit them or the highs and lows clip.
-    const isB=_cmbCandle==='btc', key=isB?'btcC':'gmtC';
-    const base=isB?S[0].btc:S[0].gmt;
-    S.forEach(p=>{const k=p[key];if(!k)return;
-      [k.h,k.l].forEach(v=>{const r=v/base*100;if(r<lo)lo=r;if(r>hi)hi=r;});});
+    // Wicks reach past the closes the lines are drawn from; fit BOTH assets' or they clip.
+    [['btcC',S[0].btc],['gmtC',S[0].gmt]].forEach(([key,base])=>{
+      S.forEach(p=>{const k=p[key];if(!k)return;
+        [k.h,k.l].forEach(v=>{const r=v/base*100;if(r<lo)lo=r;if(r>hi)hi=r;});});
+    });
   }
   const padv=(hi-lo)*0.08||8;lo-=padv;hi+=padv;
   const t0=S[0].t,t1=S[S.length-1].t;
@@ -1303,26 +1306,30 @@ function drawCombined(){
     x.setLineDash([]);x.restore();
   };
   if(_cmbStyle==='candle'){
-    const isB=_cmbCandle==='btc';
-    // Each candle is re-based on the SAME divisor as its line, so switching style never moves
-    // the series — the axis keeps meaning "% change since the left edge".
-    const base=isB?S[0].btc:S[0].gmt;   // same divisor the lines use, so styles never disagree
-    const key=isB?'btcC':'gmtC';
+    // Both assets, paired inside each day: Bitcoin on the left half of the slot, GMT on the
+    // right. Overlaying them would hide whichever drew second; side by side you can read both
+    // days at a glance and the pairing itself shows where they diverged.
     const slot=pw/Math.max(1,S.length);
-    const bw=Math.max(1,Math.min(11,slot*0.66));
+    const half=slot/2;
+    const bw=Math.max(1,Math.min(9,half*0.72));
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
-    S.forEach((p,ix)=>{
-      const k=p[key];if(!k)return;
-      const cx=L+(ix+0.5)*slot;
-      const up=k.c>=k.o, col=up?'#16c784':'#ea3943';
+    const draw=(key,base,upC,dnC,offset)=>{
+      // Re-based on the SAME divisor as that asset's line, so switching style never moves the
+      // series and the axis keeps meaning "% change since the left edge".
       const Yv=v=>Y(v/base*100);
-      x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(1,slot*0.12);
-      x.beginPath();x.moveTo(cx,Yv(k.h));x.lineTo(cx,Yv(k.l));x.stroke();
-      const yo=Yv(k.o),yc=Yv(k.c);
-      x.fillRect(cx-bw/2,Math.min(yo,yc),bw,Math.max(1.5,Math.abs(yc-yo)));
-    });
+      S.forEach((p,ix)=>{
+        const k=p[key];if(!k)return;
+        const cx=L+ix*slot+offset;
+        const col=(k.c>=k.o)?upC:dnC;
+        x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(1,half*0.16);
+        x.beginPath();x.moveTo(cx,Yv(k.h));x.lineTo(cx,Yv(k.l));x.stroke();
+        const yo=Yv(k.o),yc=Yv(k.c);
+        x.fillRect(cx-bw/2,Math.min(yo,yc),bw,Math.max(1.5,Math.abs(yc-yo)));
+      });
+    };
+    draw('btcC',S[0].btc,CMB_BTC_UP,CMB_BTC_DN,half*0.5);
+    draw('gmtC',S[0].gmt,CMB_GMT_UP,CMB_GMT_DN,half*1.5);
     x.restore();
-    line(isB?'giR':'biR',isB?CMB_GMT:CMB_BTC,1.8);   // the other asset stays a line for context
   }else{
     line('biR',CMB_BTC,2);
     line('giR',CMB_GMT,2);
@@ -1346,11 +1353,13 @@ function drawCombined(){
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
           +(function(){
             if(_cmbStyle!=='candle')return '';
-            const isB=_cmbCandle==='btc', k=isB?p.btcC:p.gmtC;
-            if(!k)return '';
-            const q=v=>isB?fmtBTCPrice(v):('$'+v.toFixed(4));
-            return `<div class="rb-tip-row" style="margin-top:.2rem;border-top:1px solid var(--border);padding-top:.25rem"><span class="rb-tip-lbl">${isB?'BTC':'GMT'} O/C</span><span class="rb-tip-px">${q(k.o)} / ${q(k.c)}</span></div>`
-              +`<div class="rb-tip-row"><span class="rb-tip-lbl">H/L</span><span class="rb-tip-px">${q(k.h)} / ${q(k.l)}</span></div>`;
+            let out='';
+            [['BTC',p.btcC,v=>fmtBTCPrice(v)],['GMT',p.gmtC,v=>'$'+v.toFixed(4)]].forEach(([nm,k,q],ix)=>{
+              if(!k)return;
+              out+=`<div class="rb-tip-row"${ix===0?' style="margin-top:.2rem;border-top:1px solid var(--border);padding-top:.25rem"':''}><span class="rb-tip-lbl">${nm} O/C</span><span class="rb-tip-px">${q(k.o)} / ${q(k.c)}</span></div>`
+                 +`<div class="rb-tip-row"><span class="rb-tip-lbl">&nbsp;&nbsp;H/L</span><span class="rb-tip-px">${q(k.h)} / ${q(k.l)}</span></div>`;
+            });
+            return out;
           })();
         const tw=tip.offsetWidth||150;
         tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';
@@ -1364,9 +1373,11 @@ function drawCombined(){
   const corr=cmbCorrelation(all.slice(-want));
   const pct=v=>(v>=100?'+':'')+(v-100).toFixed(1)+'%';
   const lg=document.getElementById('cmbLegend');
+  const sw=(a,b)=>`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${a};margin-right:2px"></span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${b};margin-right:5px"></span>`;
+  const cndl=_cmbStyle==='candle';
   if(lg)lg.innerHTML=
-     `<span class="rb-pill" style="border-left-color:${CMB_BTC}">BTC ${pct(last.biR)} &middot; ${fmtBTCPrice(last.btc)}</span>`
-    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">GMT ${pct(last.giR)} &middot; $${last.gmt.toFixed(4)}</span>`
+     `<span class="rb-pill" style="border-left-color:${CMB_BTC}">${cndl?sw(CMB_BTC_UP,CMB_BTC_DN):''}BTC ${pct(last.biR)} &middot; ${fmtBTCPrice(last.btc)}</span>`
+    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">${cndl?sw(CMB_GMT_UP,CMB_GMT_DN):''}GMT ${pct(last.giR)} &middot; $${last.gmt.toFixed(4)}</span>`
     +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#16c784':corr>=0.2?'#f3a93a':'#ea3943'}">correlation ${corr.toFixed(2)}</span>`:'');
   const note=document.getElementById('cmbCorrNote');
   if(note)note.textContent=corr==null?''
@@ -1530,14 +1541,6 @@ function setCmbMode(mode,btn){
 function setCmbStyle(style,btn){
   _cmbStyle=style;
   const nav=document.getElementById('cmbStyleNav');
-  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
-  const pick=document.getElementById('cmbCandlePick');
-  if(pick)pick.style.display=(style==='candle')?'':'none';
-  drawCombined();
-}
-function setCmbCandleAsset(which,btn){
-  _cmbCandle=which;
-  const nav=document.getElementById('cmbCandlePick');
   if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
   drawCombined();
 }
