@@ -3332,11 +3332,19 @@ function renderPlanner(i,m){
   // The greedy-machine-first allocation is computed in `a` and used by the projections, but
   // not surfaced here (backend detail). The box is omitted entirely when there's nothing to say.
   const usdToTH=usdCapAfter-usdSpentOnGMT;
+  // Wallet GMT is spent before the referral commission, so the miner's price can be attributed.
+  const minerFromWallet=Math.min(gmtForMiner,baseGmtAvail);
+  const minerFromBonus=Math.max(0,gmtForMiner-minerFromWallet);
   let exp='';
   if(mpTHraw>0){
     exp+=`<strong style="color:var(--purple-soft)">Marketplace miner${mpIsGreedy?` (greedy${i.mpCode?' '+escapeHtml('#'+String(i.mpCode).replace(/^#/,'')):''})`:''}:</strong> +${fN(mpTHraw,0)} TH for ${fN(mpGmtCost,0)} GMT`;
-    if(usdForMiner>0)exp+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
-    else exp+=` (from your GMT)`;
+    {
+      const src=[];
+      if(minerFromWallet>0)src.push(`${fN(minerFromWallet,0)} GMT on hand`);
+      if(minerFromBonus>0)src.push(`${fN(minerFromBonus,0)} GMT referral bonus`);
+      if(usdForMiner>0)src.push(fU(usdForMiner)+' capital');
+      if(src.length)exp+=` (paid with ${src.join(' + ')})`;
+    }
     exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
@@ -3357,7 +3365,7 @@ function renderPlanner(i,m){
   // Optimal allocation split — efficiency vs hashrate vs discount (greedy marginal allocator).
   // GMT on hand spends fee-free; only USD capital pays the 2% conversion fee. The per-miner
   // upgrade input re-renders just the comparison body via updateEffCompare().
-  const hasGMT=gmtAvail>0;
+  const hasGMT=(baseGmtAvail>0||refBonusGMT>0||gmtForMiner>0||gmtAvail>0);
   // Split is driven by the SAME solver as Path-to-20% / Resource Breakdown (consistent + unbounded
   // — no 5,000 TH cap on the farm total). Efficiency upgrade is layered on as an overlay.
   window._effCmp={i,K:totalValue,gp,bp,
@@ -3396,9 +3404,11 @@ function renderPlanner(i,m){
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
     if(refBonusGMT>0)ah+=row(`+ Referral ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
-    if(gmtForMiner>0)ah+=row('→ Marketplace miner',`${fN(gmtForMiner,0)} GMT<span class="sub">${fU(gmtForMiner*gp)}</span>`,'purple');
+    if(gmtForMiner>0)ah+=row('→ Marketplace miner',`${fN(gmtForMiner,0)} GMT<span class="sub">${fU(gmtForMiner*gp)}${minerFromBonus>0&&minerFromWallet>0?` · ${fN(minerFromWallet,0)} on hand + ${fN(minerFromBonus,0)} referral bonus`:(minerFromBonus>0?' · from the referral bonus':'')}</span>`,'purple');
     if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
     if(gmtSell>0)ah+=row('→ Upgrade TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
+    // Closes the trail: whatever is neither spent nor locked is the fee float held in the wallet.
+    if(gmtReserve>0.5)ah+=row('→ Kept in wallet for fees',`${fN(gmtReserve,0)} GMT<span class="sub">${fU(gmtReserve*gp)}</span>`);
   }
   if(usdCap>0){
     ah+=row('USD capital',`${fU(usdCap)}`);
