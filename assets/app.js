@@ -428,7 +428,13 @@ function setPlannerMode(mode){
 // USD capital, mirroring renderPlanner's "Projected monthly" — used to goal-seek a target income.
 function projectedMonthlyForCapital(capUSD){
   const i=inp();i.cap=Math.max(0,capUSD||0);
-  const m=calc(i),bp=m.bp,gp=m.gp,dbt=dailyBTCperTH();
+  const m=calc(i);
+  return projectedMonthlyFor(i,m,m.bp,m.gp,dailyBTCperTH());
+}
+// The planner's headline monthly income for an ARBITRARY model — same composition the results
+// show. Lets the planner price a counterfactual ("what if I didn't buy this miner?") against the
+// exact number it displays, instead of a second, subtly different formula.
+function projectedMonthlyFor(i,m,bp,gp,dbt){
   const a=solvePlannerAllocation(i,bp,gp,dbt);
   let mineMo,locked,refInitTH,gTHf,gWf;
   if(a){
@@ -449,6 +455,7 @@ function projectedMonthlyForCapital(capUSD){
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
+
 }
 // The farm's CURRENT monthly income, computed exactly like the "Current" card / console hero
 // (calc()-based), so the target banner's "you already earn" matches to the dollar — the $0-capital
@@ -3467,6 +3474,30 @@ function renderPlanner(i,m){
   const projMoTotal=projMoMining+projMoStaking+projAmbMo+greedyMoAfter;
   const projSub='mining + staking'+(projAmbMo>0?' + ambassador':'')+(greedyMoAfter>0?' + greedy growth':'');
   ph+=row('Projected monthly',`${fU(projMoTotal)}<span class="sub">${projSub}</span>`,projMoTotal>=0?'green':'red');
+  // A marketplace miner is a forced purchase, not something the optimizer chose — and when it is
+  // paid for in GMT, that GMT is no longer locked while the new hashrate raises the fee bill the
+  // lock has to cover. The token discount can fall several points across the WHOLE farm, which
+  // easily outweighs what the miner earns. Price the same plan without it and say so outright,
+  // rather than leaving a lower headline with no explanation.
+  if(mpTHraw>0){
+    const iNoMiner=Object.assign({},i,{mpTH:0,mpGMT:0,mpWth:0,mpGreedy:false});
+    const aNo=solvePlannerAllocation(iNoMiner,bp,gp,dbt);
+    const moNoMiner=projectedMonthlyFor(iNoMiner,m,bp,gp,dbt);
+    const delta=projMoTotal-moNoMiner;
+    if(isFinite(moNoMiner)&&aNo){
+      const dTok=(aNo.ntd||0)-(ntd||0);
+      const cost=`${fN(mpGmtCost,0)} GMT`;
+      if(delta<-0.5){
+        ph+=`<div class="warn" style="margin:.5rem 0;background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.28);color:var(--text2);font-size:.8rem;line-height:1.55">
+          <strong style="color:#fca5a5">This miner costs you ${fU(-delta)}/mo.</strong> The same plan without it projects <strong>${fU(moNoMiner)}/mo</strong>.
+          Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fN(aNo.ntd,0)}%</strong> instead of <strong>${fN(ntd,0)}%</strong>`:''} — and ${dTok>0?'that discount applies to your whole farm, not just the new hashrate, so the loss is bigger than what the miner earns':'the extra hashrate does not earn back what the GMT would'}.
+          <span style="color:var(--text3)">Worth buying only if you can fund it without touching the GMT that holds your coverage.</span>
+        </div>`;
+      }else if(delta>0.5){
+        ph+=row('↳ This miner adds',`+${fU(delta)}/mo<span class="sub">vs ${fU(moNoMiner)}/mo without it${dTok>0?` · token discount ${fN(ntd,0)}% vs ${fN(aNo.ntd,0)}%`:''}</span>`,'green');
+      }
+    }
+  }
   if(projAmbMo>0){
     const ambSub=refInitTH>0&&i.amb&&i.refTH>0
       ? `${fN(i.refTH,0)} existing + ${fN(refInitTH,1)} from referral plan = ${fN(projTotalRefTH,1)} TH`
