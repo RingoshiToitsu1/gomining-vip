@@ -799,11 +799,13 @@ html.show-onboarding #onboarding{display:flex}
 .cmb-verdict.hold .cmb-verdict-head{color:#16c784}
 .cmb-verdict.out .cmb-verdict-head{color:var(--orange)}
 .cmb-verdict-why{color:var(--text2);font-size:.85rem;line-height:1.5;margin-top:.3rem}
+.cmb-verdict-level{font-family:var(--mono);color:var(--text);font-size:.8rem;line-height:1.5;margin-top:.45rem;padding-top:.45rem;border-top:1px solid var(--border)}
 .cmb-verdict-sub{color:var(--text3);font-size:.72rem;line-height:1.5;margin-top:.35rem}
 @media(max-width:600px){
   .cmb-verdict{padding:.7rem .8rem;margin-bottom:.55rem}
   .cmb-verdict-head{font-size:1.15rem}
   .cmb-verdict-why{font-size:.78rem}
+  .cmb-verdict-level{font-size:.72rem}
   .cmb-verdict-sub{font-size:.66rem}
 }
 .cmb-controls{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;padding:0 0 .6rem}

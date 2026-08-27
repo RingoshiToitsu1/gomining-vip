@@ -1130,7 +1130,12 @@ function cmbHoldSignal(rows){
   let days=1;
   for(let j=i-1;j>=CMB_EMA_N-1;j--){if(above(j)!==above(i))break;days++;}
   const gap=(rows[i].gmt/ema[i]-1)*100;
-  return {hold:above(i),gap,days,price:rows[i].gmt,ema:ema[i],fresh:days<=5,flat:Math.abs(gap)<DEAD*100};
+  // The level the verdict actually turns on, in dollars. "Below its average" is not something you
+  // can put a limit order at; a price is. Note the EMA drifts each day, so this is today's line,
+  // not a standing one — the card says so.
+  const trigger=ema[i]*(1-DEAD);
+  return {hold:above(i),gap,days,price:rows[i].gmt,ema:ema[i],trigger,
+    away:(trigger/rows[i].gmt-1)*100,fresh:days<=5,flat:Math.abs(gap)<DEAD*100};
 }
 // ---- GMT/BTC relative-value signal ----
 // GMT mostly rides Bitcoin, so its own chart says little that BTC's doesn't. Dividing the two
@@ -1401,6 +1406,10 @@ function renderCmbVerdict(){
      `<div class="cmb-verdict-head">${sig.hold?'HOLD GMT':'CONVERT TO STABLECOIN'}</div>`
     +`<div class="cmb-verdict-why">GMT is <strong>${sig.gap>=0?'+':''}${sig.gap.toFixed(1)}%</strong> ${sig.gap>=0?'above':'below'} its 50-day average `
     +`($${sig.price.toFixed(4)} vs $${sig.ema.toFixed(4)}) &mdash; ${sig.flat?'sitting right on it, so there is no trend either way and nothing to act on.':(sig.hold?'the trend is up.':'the trend is down.')}${rel}</div>`
+    +`<div class="cmb-verdict-level">${sig.hold
+        ? `Converts if GMT closes below <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> below today's price.`
+        : `Back to hold once GMT closes above <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> above today's price.`}
+        <span style="color:var(--text3)">The average moves daily, so this level drifts with it.</span></div>`
     +`<div class="cmb-verdict-sub">${sig.fresh?`Signal flipped <strong>${sig.days} day${sig.days===1?'':'s'}</strong> ago &mdash; fresh flips are where this rule whipsaws most, so treat it as early rather than confirmed.`:`Held for <strong>${sig.days} days</strong>.`} `
     +`Locked GMT is what holds your fee discount &mdash; this is about spare GMT, not your coverage.</div>`;
 }
