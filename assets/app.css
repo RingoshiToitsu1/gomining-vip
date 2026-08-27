@@ -968,6 +968,11 @@ html.show-onboarding #onboarding{display:flex}
 .sp-run-wrap{text-align:center;margin-top:1.5rem}
 .sp-run-wrap .ri-btn{font-size:.95rem;padding:.72rem 2.2rem}
 /* Growth Projection — new Power-Law model banner + live target preview */
+/* Which farm is being projected — the current one, or the plan. Those two answers differ by the
+   whole investment, so this is a label first and a control second. */
+.sp-mode-switch{display:flex;width:max-content;margin:0 auto .6rem;justify-content:center}
+.sp-mode-switch button[disabled]{opacity:.4;cursor:not-allowed}
+.sp-mode-switch button[disabled]:hover{background:none;color:var(--text3)}
 .sp-model-banner{display:flex;gap:.7rem;align-items:flex-start;max-width:520px;margin:0 auto 1.1rem;padding:.75rem .9rem;background:linear-gradient(135deg,rgba(126,232,250,.09),rgba(167,139,250,.06));border:1px solid rgba(126,232,250,.25);border-radius:12px;text-align:left}
 .sp-model-banner svg{flex:0 0 auto;color:var(--cyan);margin-top:2px}
 .sp-model-title{font-size:.82rem;font-weight:800;color:var(--text)}
