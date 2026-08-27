@@ -1090,14 +1090,29 @@ function openChartShare(){
   // the top of the sheet and name it plainly. Elsewhere it degrades to a link-only share, so it
   // stays below "Copy image", which is what actually works on a desktop browser.
   const nat=document.getElementById('cshareNativeRow'),ntx=document.getElementById('cshareNativeTxt');
+  const withFile=_canShareImage();
   if(nat&&ntx){
-    const withFile=_canShareImage();
     nat.style.order=withFile?'-1':'';
-    ntx.textContent=withFile?'Share image to another app':'Copy or save the image';
+    ntx.textContent=withFile?'Share image to another app'
+      :(_IS_IOS?'Press & hold the image to save it':'Copy or save the image');
+  }
+  const hint=document.getElementById('cshareHint');
+  if(hint){
+    const msg=withFile?''
+      :(_IOS_INAPP?'This in-app browser can\u2019t hand over images. Tap \u22ef and "Open in Safari" for one-tap sharing.'
+      :(_IS_IOS?'This browser can\u2019t hand over images \u2014 open the page in Safari for one-tap sharing.':''));
+    hint.textContent=msg;hint.style.display=msg?'block':'none';
   }
   document.getElementById('chartShareSheet').style.display='flex';
 }
 function closeChartShare(){const s=document.getElementById('chartShareSheet');if(s)s.style.display='none';}
+// iOS can't be treated as one browser. Safari carries files through navigator.share; an in-app
+// WebView (a link opened inside Telegram, Instagram, X…) has no Safari/ token in its UA, usually
+// refuses file shares, blocks window.open, and ignores <a download> entirely — so every fallback
+// we had ended in nothing visibly happening. Long-pressing the preview image always works there.
+const _UA=navigator.userAgent||'';
+const _IS_IOS=/iP(hone|od|ad)/.test(_UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const _IOS_INAPP=_IS_IOS&&!/Safari\//.test(_UA)&&!/CriOS|FxiOS|EdgiOS/.test(_UA);
 let _csToastT=null;
 function csToast(msg){
   const el=document.getElementById('chartShareToast');if(!el)return;
@@ -1124,7 +1139,11 @@ async function chartShareTo(net){
     facebook:'https://www.facebook.com/sharer/sharer.php?u='+u,
     reddit:'https://www.reddit.com/submit?url='+u+'&title='+te
   };
-  if(urls[net])window.open(urls[net],'_blank','noopener,noreferrer');
+  // In-app WebViews block window.open outright — navigate instead of doing nothing at all.
+  if(urls[net]){
+    const w=window.open(urls[net],'_blank','noopener,noreferrer');
+    if(!w){location.href=urls[net];return;}
+  }
   csToast('✓ Image copied — paste it into '+(_CS_NET[net]||'the post'));
 }
 // "Share with other apps" row — hand the OS the actual PNG.
@@ -1141,7 +1160,18 @@ async function chartShareNative(){
   }catch(e){if(e&&e.name==='AbortError')return;}
   // No file sharing on this browser. Never fall back to sharing a bare link from a button that
   // promised the image — put the PNG somewhere the user can actually attach it.
+  if(_IS_IOS)return _imageFallback();
   return copyChartShot();
+}
+// Last resort when neither native file-share nor the clipboard is available. On iOS a download
+// is a no-op, so point the user at the preview image they're already looking at.
+function _imageFallback(){
+  if(_IS_IOS){
+    closeChartShare();
+    csToast('Press and hold the image to save or share it');
+    return;
+  }
+  downloadChartShot();csToast('⬇ Image saved — attach it anywhere');
 }
 async function copyChartShot(silent){
   if(!_chartShotCanvas&&!_chartShotBlob)return;
@@ -1152,7 +1182,7 @@ async function copyChartShot(silent){
       if(silent!==true)csToast('✓ Image copied — paste anywhere');return;
     }
   }catch(e){}
-  if(silent!==true){downloadChartShot();csToast('⬇ Image saved');}
+  if(silent!==true)_imageFallback();
 }
 async function downloadChartShot(btn){
   if(!_chartShotCanvas&&!_chartShotBlob)return;
