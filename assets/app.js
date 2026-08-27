@@ -3305,6 +3305,18 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // greedy hashrate, so it inherits free weekly growth, greedy-first reinvestment and the 5k cap
   // for nothing extra. Its GMT price is already fixed above, so the purchase still bills.
   const mpIsGreedy=!!i.mpGreedy&&mpTHraw>0;
+  // A Greedy Machine's free weekly TH inherits ITS OWN rating, so buying one worse than the
+  // 15 W baseline compounds that handicap for as long as you own it — every free TH it ever
+  // grows arrives at the bad rating. So the upgrade to 15 W is paid FIRST, off the top, before
+  // a dollar reaches hashrate or lock.
+  // Note effUpgradeCostPerTH() prices anything at or above 15 AS 15 (that is the GoMining
+  // upgrade path this app models), so it cannot price the leg above 15 at all. This leg is
+  // charged at the same per-W-step rate the rest of the model uses.
+  const mpWthBought=mpWth;
+  const mpUpgSteps=(mpIsGreedy&&mpWth>EFF_BASE_MAX)?(mpWth-EFF_BASE_MAX):0;
+  const mpUpgUSD=mpUpgSteps>0?mpUpgSteps*EFF_UPGRADE_STEP*mpTHraw:0;
+  if(mpUpgSteps>0)mpWth=EFF_BASE_MAX;   // the fleet below is built from the UPGRADED machine
+  const mpWthPlanned=mpWth;             // captured now: mpWth is zeroed once the miner is re-homed
   // The greedy fleet as SEPARATE NFTs. Each machine owns its efficiency and its own 5,000 TH
   // cap, so a second one must never be averaged into the first: blending would hand the pair a
   // single shared cap and a single upgrade target. They are summed only for fees, rewards and
@@ -3340,7 +3352,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   }
   // The model as the planner sees it: identical to `i` except the flagged miner now sits in the
   // greedy fields, so computeEffPlan builds the same farm the projection will run.
-  const iP=mpIsGreedy?Object.assign({},i,{gth:gth0,gwth:gwth0,gInit,mpTH:0,mpWth:0}):i;
+  const iP=mpIsGreedy?Object.assign({},i,{gth:gth0,gwth:gwth0,gInit,mpTH:0,mpWth:0,mpWthUpgraded:mpWth}):i;
   // VIP 10% bonus disabled — GoMining is not currently offering this promo.
   // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
   const vipBonus=false;
@@ -3379,6 +3391,9 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const minerShortfallUSD=Math.max(0,usdForMiner-usdCap);
   const gmtAvail=gmtAvailPre-gmtForMiner;
   usdCap=Math.max(0,usdCap-usdForMiner);
+  // Off the top, straight after the miner itself: bring it to 15 W before anything is optimized.
+  const mpUpgShortfallUSD=Math.max(0,mpUpgUSD-usdCap);
+  usdCap=Math.max(0,usdCap-mpUpgUSD);
   const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0&&mpTHraw<=0)return null;
 
@@ -3512,6 +3527,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
     vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
     iP, mpIsGreedy, mpTHraw, mpWthRaw:(mpTHraw>0?(i.mpWth>0?i.mpWth:15):0),
+    mpWthBought, mpWthAfter:mpWthPlanned, mpUpgSteps, mpUpgUSD, mpUpgShortfallUSD,
     gth:gth0, gInit, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy, vipStandalone,
     greedyList
   };
@@ -3857,7 +3873,8 @@ function renderPlanner(i,m){
          newNonTokD, newDailyBurnGMT, gmtNeededNew, ntd, td2,
          canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN,
          mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter, vipTH,
-         mpTHraw, mpWthRaw, mpIsGreedy}=a;
+         mpTHraw, mpWthRaw, mpIsGreedy, mpWthBought, mpWthAfter, mpUpgSteps, mpUpgUSD,
+         mpUpgShortfallUSD}=a;
   const gmtDeployable=sol.deployable, gmtLock=sol.lock, gmtSell=sol.sell;
   const gmtFromPool=sol.fromPool, gmtFromUSD=sol.fromUSD, usdSpentOnGMT=sol.usdSpentOnGMT;
   let at=sol.addTH, tu=sol.thUSD;
@@ -3903,6 +3920,10 @@ function renderPlanner(i,m){
     }
     exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
+    if(mpUpgSteps>0){
+      exp+=`<strong style="color:var(--cyan)">Upgraded first:</strong> at ${fN(mpWthBought,1)} W/TH this miner is worse than the ${fN(EFF_BASE_MAX,0)} W baseline, and a greedy machine's free weekly TH inherits its rating &mdash; so <strong>${fU(mpUpgUSD)}</strong> takes it to <strong>${fN(EFF_BASE_MAX,0)} W/TH</strong> before anything else is allocated. <span style="color:var(--text3)">Everything below is planned with the remaining balance.</span><br>`;
+      if(mpUpgShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(mpUpgShortfallUSD)} short of that upgrade — figures assume it is funded.</strong><br>`;
+    }
   }
   // The referral's capital is a large number that shapes this whole plan (it funds the ambassador
   // stream and the GMT bonus), but it isn't yours to allocate — say so here rather than leaving
@@ -3969,7 +3990,8 @@ function renderPlanner(i,m){
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
   if(mpTHraw>0){
     ah+=row(mpIsGreedy?`Marketplace miner (greedy${i.mpCode?' '+escapeHtml('#'+String(i.mpCode).replace(/^#/,'')):''})`:'Marketplace miner',
-      `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
+      `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${mpUpgSteps>0?`${fN(mpWthBought,1)}→${fN(mpWthAfter,1)}`:fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
+    if(mpUpgSteps>0)ah+=row('→ Efficiency upgrade first',`${fU(mpUpgUSD)}<span class="sub">${fN(mpWthBought,1)} → ${fN(EFF_BASE_MAX,0)} W/TH on ${fN(mpTHraw,0)} TH · paid before the split</span>`,'cyan');
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
