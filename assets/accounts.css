@@ -119,10 +119,7 @@
 .fleet-thead span{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
   color:var(--text4);font-weight:700}
 .fleet-thead .num{text-align:right;padding-right:.4rem}
-/* A 15-row table has no business living in the 600px column the rest of the editor uses.
-   Let this one group break out of it when the viewport can actually spare the width. */
-@media(min-width:900px){#secInputs #fleetGroup{margin-left:-90px;margin-right:-90px}}
-@media(min-width:1180px){#secInputs #fleetGroup{margin-left:-190px;margin-right:-190px}}
+
 .fleet-empty{font-size:.75rem;color:var(--text4);padding:.5rem 0}
 .fleet-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,.85fr) auto auto;
   gap:.35rem;align-items:center;padding:.1rem .55rem;border-radius:8px;

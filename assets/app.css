@@ -851,6 +851,27 @@ html.show-onboarding #onboarding{display:flex}
 #secInputs .ed-form{max-width:600px;text-align:left;margin:0 auto}
 #secInputs .ed-form .pi-title{text-align:center;font-size:1.15rem;margin-bottom:.55rem}
 #secInputs .ed-groups{column-count:1}
+/* Desktop: stop rendering a phone page in the middle of a 1900px screen. The fleet is the one
+   thing here that genuinely wants width (fifteen rows, six columns), so it takes a tall left
+   column and everything you actually edit stacks in a rail beside it — all of it on screen at
+   once instead of a metre of scrolling. Below 1100px it stays the single centred column. */
+@media(min-width:1100px){
+  #secInputs .sp-page-inner{max-width:1360px;padding-left:1.4rem;padding-right:1.4rem}
+  #secInputs .ed-form{max-width:none}
+  #secInputs .ed-groups{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+    gap:.7rem .9rem;align-items:start}
+  #secInputs #fleetGroup{grid-column:1;grid-row:1/span 99}
+  #secInputs .ed-groups>.ed-group:not(#fleetGroup){grid-column:2}
+  #secInputs .ed-form .pi-title{text-align:left;margin-left:.2rem}
+  #secInputs .ed-group-title{text-align:left}
+  /* Short two-value rows in the rail sit two-up; the width is the whole point of doing this. */
+  #secInputs .ed-fields{display:grid;grid-template-columns:1fr 1fr;gap:.35rem .5rem}
+  #secInputs #greedyGroup .ed-fields{grid-template-columns:1fr}
+}
+@media(min-width:1500px){
+  #secInputs .sp-page-inner{max-width:1560px}
+  #secInputs .ed-groups{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}
+}
 #secInputs .ed-group{break-inside:avoid;display:inline-block;width:100%;background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius-sm);padding:.6rem .8rem;margin-bottom:.6rem}
 #secInputs .ed-group-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple-soft);margin-bottom:.45rem;text-align:center}
 #secInputs .ed-fields{display:flex;flex-direction:column;gap:.35rem}
