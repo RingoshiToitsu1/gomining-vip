@@ -3522,7 +3522,11 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
       return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:feeTH,
-        addGreedy,addVip,greedyTot,
+        // gAdds is the PER-MACHINE split of addGreedy and it has to travel with it: greedyList
+        // is rebuilt from it, and greedyList is what the projection seeds its greedy fleet from.
+        // Omitted, every machine got +0 while greedyTot still reported the total — so the plan's
+        // hashrate showed up in the headline and vanished from the simulation.
+        addGreedy,addGreedyWatts,gAdds,addVip,greedyTot,
         fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD,baseTH,bonusActive,bonusTH};
     }
     let lock=0;
