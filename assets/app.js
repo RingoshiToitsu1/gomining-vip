@@ -1137,6 +1137,49 @@ function cmbHoldSignal(rows){
   return {hold:above(i),gap,days,price:rows[i].gmt,ema:ema[i],trigger,
     away:(trigger/rows[i].gmt-1)*100,fresh:days<=5,flat:Math.abs(gap)<DEAD*100};
 }
+// ---- Sell-high / buy-back-low levels on GMT itself ----
+// The 50-day trend rule above exits AFTER a top and re-enters AFTER a bottom — by construction it
+// never sells high or buys low. Doing that needs a valuation band instead: how stretched GMT is
+// against its own average, in standard deviations of the log deviation. Same maths as the
+// GMT/BTC view, pointed at GMT's dollar price, and trailing-only so no day sees its own future.
+function cmbGmtBands(rows){
+  const out=rows.map(r=>({t:r.t,v:r.gmt}));
+  if(out.length<CMB_EMA_N+10)return out;
+  const k=2/(CMB_EMA_N+1);
+  let e=0;for(let i=0;i<CMB_EMA_N;i++)e+=out[i].v;e/=CMB_EMA_N;
+  out[CMB_EMA_N-1].ema=e;
+  for(let i=CMB_EMA_N;i<out.length;i++){e=out[i].v*k+e*(1-k);out[i].ema=e;}
+  for(let i=0;i<out.length;i++)if(out[i].ema>0)out[i].dev=Math.log(out[i].v/out[i].ema);
+  for(let i=0;i<out.length;i++){
+    if(out[i].dev==null)continue;
+    const w=[];
+    for(let j=Math.max(0,i-CMB_EMA_N+1);j<=i;j++)if(out[j].dev!=null)w.push(out[j].dev);
+    if(w.length<20)continue;
+    const mu=w.reduce((a,c)=>a+c,0)/w.length;
+    const sd=Math.sqrt(w.reduce((a,c)=>a+(c-mu)*(c-mu),0)/w.length);
+    out[i].mu=mu;out[i].sd=sd;
+    out[i].z=sd>1e-9?(out[i].dev-mu)/sd:0;
+    out[i].sell=out[i].ema*Math.exp(mu+K_SWAP*sd);
+    out[i].buy=out[i].ema*Math.exp(mu-K_SWAP*sd);
+  }
+  return out;
+}
+let K_SWAP=1.0;   // band width in sd; 1.0 traded most often on the history we can see
+// What this rule would ACTUALLY have done on the history on screen, measured in GMT — the only
+// unit that matters to someone who needs GMT for coverage. Swapping out and back is only worth
+// doing if it ends with MORE GMT than never moving, so that is what gets reported, including
+// when the answer is "less".
+function cmbSwapBacktest(B){
+  const live=B.filter(p=>p.z!=null);
+  if(live.length<30)return null;
+  let gmt=1000,usd=0,inGmt=true,trips=0,lastAt=null;
+  for(const p of live){
+    if(inGmt&&p.z>=K_SWAP){usd=gmt*p.v;gmt=0;inGmt=false;trips++;lastAt={side:'stable',t:p.t,v:p.v};}
+    else if(!inGmt&&p.z<=-K_SWAP){gmt=usd/p.v;usd=0;inGmt=true;trips++;lastAt={side:'gmt',t:p.t,v:p.v};}
+  }
+  const end=inGmt?gmt:usd/live[live.length-1].v;
+  return {trips,endGmt:end,edge:(end/1000-1)*100,days:live.length,inGmt,lastAt};
+}
 // ---- GMT/BTC relative-value signal ----
 // GMT mostly rides Bitcoin, so its own chart says little that BTC's doesn't. Dividing the two
 // strips the shared move out and leaves the part that is actually about GMT: what a unit of GMT
@@ -1410,8 +1453,43 @@ function renderCmbVerdict(){
         ? `Converts if GMT closes below <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> below today's price.`
         : `Back to hold once GMT closes above <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> above today's price.`}
         <span style="color:var(--text3)">The average moves daily, so this level drifts with it.</span></div>`
+    +cmbSwapBlock()
     +`<div class="cmb-verdict-sub">${sig.fresh?`Signal flipped <strong>${sig.days} day${sig.days===1?'':'s'}</strong> ago &mdash; fresh flips are where this rule whipsaws most, so treat it as early rather than confirmed.`:`Held for <strong>${sig.days} days</strong>.`} `
     +`Locked GMT is what holds your fee discount &mdash; this is about spare GMT, not your coverage.</div>`;
+}
+function cmbSwapBlock(){
+  const B=cmbGmtBands(_cmbData||[]);
+  const last=B.length?B[B.length-1]:null;
+  if(!last||last.sell==null)return '';
+  const bt=cmbSwapBacktest(B);
+  const px=v=>'$'+v.toFixed(4);
+  const now=last.v;
+  const stretched=last.z>=K_SWAP?'sell':last.z<=-K_SWAP?'buy':'';
+  // The two rules on this card can disagree, and often do at exactly the moments that matter:
+  // an asset well above its average is both "trending up" (hold) and "stretched" (sell). Saying
+  // so is more useful than silently showing a green verdict above a red level.
+  const trend=cmbHoldSignal(_cmbData);
+  const clash=(trend&&trend.hold&&stretched==='sell')
+    ? 'The two rules disagree right now: the trend is up, but GMT is stretched above its average. Trend-followers hold and ride it; mean-reverters take the swap here. Both are defensible — what is not defensible is switching rules based on which one is currently winning.'
+    : (trend&&!trend.hold&&stretched==='buy')
+    ? 'The two rules disagree right now: the trend is down, but GMT is stretched below its average. Buying here is catching the falling knife on purpose — size it accordingly.'
+    : '';
+  return `<div class="cmb-swap">
+    <div class="cmb-swap-title">Swap levels <span>&middot; sell high, buy back low &middot; &plusmn;${K_SWAP.toFixed(1)}&sigma;</span></div>
+    <div class="cmb-swap-row">
+      <span class="cmb-swap-leg ${stretched==='sell'?'hit':''}"><b>Swap to stablecoin above</b> ${px(last.sell)} <i>${((last.sell/now-1)*100>=0?'+':'')+((last.sell/now-1)*100).toFixed(1)}%</i></span>
+      <span class="cmb-swap-leg ${stretched==='buy'?'hit':''}"><b>Swap back to GMT below</b> ${px(last.buy)} <i>${((last.buy/now-1)*100).toFixed(1)}%</i></span>
+    </div>
+    ${bt?`<div class="cmb-swap-bt">On the last <strong>${bt.days}</strong> days this rule made <strong>${bt.trips}</strong> swap${bt.trips===1?'':'s'} and ended with <strong style="color:${bt.edge>=0?'#16c784':'#ea3943'}">${(bt.edge>=0?'+':'')+bt.edge.toFixed(1)}%</strong> ${bt.edge>=0?'more':'less'} GMT than never moving.
+      ${bt.trips<8?`That is only ${bt.trips} trade${bt.trips===1?'':'s'} &mdash; far too few to call it an edge rather than luck.`:''}</div>`:''}
+    ${clash?`<div class="cmb-swap-clash">${clash}</div>`:''}
+  </div>`;
+}
+function setCmbBand(k,btn){
+  K_SWAP=k;
+  const nav=document.getElementById('cmbBandNav');
+  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+  renderCmbVerdict();drawCombined();
 }
 function setCmbMode(mode,btn){
   _cmbMode=mode;

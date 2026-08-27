@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=52">
+<link rel="stylesheet" href="/assets/app.css?v=53">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=14">
 </head>
@@ -941,6 +941,11 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <button class="active" onclick="setCmbMode('compare',this)">Compare</button>
         <button onclick="setCmbMode('signal',this)">Buy / sell signal</button>
       </div>
+      <div class="btc-chart-mode" id="cmbBandNav">
+        <button class="active" onclick="setCmbBand(1.0,this)">&plusmn;1&sigma;</button>
+        <button onclick="setCmbBand(1.5,this)">&plusmn;1.5&sigma;</button>
+        <button onclick="setCmbBand(2.0,this)">&plusmn;2&sigma;</button>
+      </div>
       <div class="btc-chart-mode" id="cmbRange">
         <button onclick="setCmbRange(90,this)">90d</button>
         <button class="active" onclick="setCmbRange(180,this)">180d</button>
@@ -1146,7 +1151,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=92"></script>
+<script src="/assets/app.js?v=93"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
