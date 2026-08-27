@@ -300,8 +300,8 @@ addEventListener('popstate',function(){
 // ---- In-flow panel views (Edit Setup, Planner form, Growth Projection, Charts) ----
 // Replace the old full-screen overlays: hide the dashboard but keep the sticky
 // header + quotron and the footer, scrolling with the page instead of covering it.
-const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting',rainbowPage:'charting'};
-const _PANEL_IDS=['secInputs','plannerIntro','setupProjModal','btcChartPage','rainbowPage'];
+const _PANEL_CLASS={secInputs:'editing',plannerIntro:'planning',setupProjModal:'projecting',btcChartPage:'charting',rainbowPage:'charting',cmbPage:'charting'};
+const _PANEL_IDS=['secInputs','plannerIntro','setupProjModal','btcChartPage','rainbowPage','cmbPage'];
 function showPanelView(id){
   const el=document.getElementById(id);if(!el)return;
   // Each panel is its own page — close any other that's already open (e.g. open Edit
@@ -585,9 +585,10 @@ function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live 
 // auto-open the matching chart on first load.
 function maybeOpenChartFromURL(){
   let which=new URLSearchParams(location.search).get('chart');
-  if(!which){const seg=location.pathname.replace(/\/+$/,'').split('/').pop();if(seg==='bitcoin'||seg==='gmt')which=seg;}
+  if(!which){const seg=location.pathname.replace(/\/+$/,'').split('/').pop();if(seg==='bitcoin'||seg==='gmt'||seg==='combined')which=seg;}
   if(which==='bitcoin')openBtcChart();
   else if(which==='gmt')openGmtChart();
+  else if(which==='combined')openCombined();
 }
 function closeBtcChart(){
   try{history.replaceState({},'','/console'+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
@@ -1003,6 +1004,260 @@ function buildChart(symbol,allowChange){
   s.src='https://s3.tradingview.com/tv.js';s.async=true;s.onload=make;
   document.head.appendChild(s);
 }
+
+// ============================================================
+// BTC + GMT COMBINED CHART (/combined)
+// Two assets whose prices differ by five orders of magnitude can only be compared as INDEXES,
+// so both are re-based to 100 at the left edge of the window — the lines then answer the real
+// question ("do they rise and fall together?") instead of hugging opposite corners. On top sits
+// a blended index, weighted between the two, and its 50-day EMA.
+// ============================================================
+let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbW=50, _cmbHover=null;
+const CMB_EMA_N=50;
+const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
+
+// Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
+async function cmbFetchBTC(){
+  try{   // Coinbase daily candles: [time(s),low,high,open,close,vol], newest first, max ~300
+    const r=await fetchTO('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400',14000);
+    if(Array.isArray(r)&&r.length>60)return r.map(c=>({t:c[0]*1000,v:+c[4]})).sort((a,b)=>a.t-b.t);
+  }catch(e){}
+  try{   // CoinGecko daily market chart
+    const r=await fetchTO('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily',14000);
+    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1]}));
+  }catch(e){}
+  return null;
+}
+async function cmbFetchGMT(){
+  try{   // Bitget daily candles: [ts(ms),open,high,low,close,...]
+    const r=await fetchTO('https://api.bitget.com/api/v2/spot/market/candles?symbol=GOMININGUSDT&granularity=1day&limit=400',14000);
+    const d=r&&r.data;
+    if(Array.isArray(d)&&d.length>60)return d.map(c=>({t:+c[0],v:+c[4]})).sort((a,b)=>a.t-b.t);
+  }catch(e){}
+  try{
+    const r=await fetchTO('https://api.coingecko.com/api/v3/coins/gmt-token/market_chart?vs_currency=usd&days=365&interval=daily',14000);
+    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1]}));
+  }catch(e){}
+  return null;
+}
+// Snap to UTC days and keep only the days BOTH assets traded, so every comparison, return and
+// correlation below lines up date-for-date instead of drifting between two exchange calendars.
+function cmbAlign(a,b){
+  const day=t=>Math.floor(t/86400000)*86400000;
+  const ma=new Map(),mb=new Map();
+  a.forEach(p=>{if(p.v>0)ma.set(day(p.t),p.v)});
+  b.forEach(p=>{if(p.v>0)mb.set(day(p.t),p.v)});
+  const out=[];
+  Array.from(ma.keys()).sort((x,y)=>x-y).forEach(t=>{if(mb.has(t))out.push({t,btc:ma.get(t),gmt:mb.get(t)})});
+  return out;
+}
+function loadCombined(force){
+  if(_cmbLoading)return;
+  if(_cmbData&&!force){drawCombined();return;}
+  _cmbLoading=true;
+  const msg=document.getElementById('cmbMsg');
+  if(msg){msg.textContent='Loading daily price history…';msg.style.display='';}
+  Promise.all([cmbFetchBTC(),cmbFetchGMT()]).then(([b,g])=>{
+    _cmbLoading=false;
+    const rows=(b&&g)?cmbAlign(b,g):[];
+    if(rows.length<CMB_EMA_N+10){
+      if(msg){msg.textContent='Couldn’t load enough overlapping daily history right now — try again shortly.';msg.style.display='';}
+      return;
+    }
+    _cmbData=rows;
+    if(msg)msg.style.display='none';
+    drawCombined();
+  }).catch(()=>{
+    _cmbLoading=false;
+    if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
+  });
+}
+// The blended index and its EMA. Both legs are re-based to the window start so the weight is
+// applied to comparable numbers — blending a $78,000 price with a $0.33 one directly would just
+// return BTC. Seeded with the SMA of the first N points so the EMA starts on a real level.
+function cmbSeries(rows,wPct){
+  const w=Math.max(0,Math.min(100,wPct))/100;
+  const b0=rows[0].btc, g0=rows[0].gmt;
+  const out=rows.map(r=>{
+    const bi=r.btc/b0*100, gi=r.gmt/g0*100;
+    return {t:r.t,btc:r.btc,gmt:r.gmt,bi,gi,blend:w*bi+(1-w)*gi};
+  });
+  if(out.length>=CMB_EMA_N){
+    let e=0;for(let i=0;i<CMB_EMA_N;i++)e+=out[i].blend;e/=CMB_EMA_N;
+    const k=2/(CMB_EMA_N+1);
+    out[CMB_EMA_N-1].ema=e;
+    for(let i=CMB_EMA_N;i<out.length;i++){e=out[i].blend*k+e*(1-k);out[i].ema=e;}
+  }
+  return out;
+}
+// Pearson correlation of DAILY LOG RETURNS — the honest measure of "do they move together".
+// Correlating the price levels themselves would report ~1 for any two things that both trended.
+function cmbCorrelation(rows){
+  const rb=[],rg=[];
+  for(let i=1;i<rows.length;i++){
+    if(rows[i].btc>0&&rows[i-1].btc>0&&rows[i].gmt>0&&rows[i-1].gmt>0){
+      rb.push(Math.log(rows[i].btc/rows[i-1].btc));
+      rg.push(Math.log(rows[i].gmt/rows[i-1].gmt));
+    }
+  }
+  const n=rb.length;if(n<10)return null;
+  const mb=rb.reduce((a,c)=>a+c,0)/n, mg=rg.reduce((a,c)=>a+c,0)/n;
+  let sbg=0,sbb=0,sgg=0;
+  for(let i=0;i<n;i++){const db=rb[i]-mb,dg=rg[i]-mg;sbg+=db*dg;sbb+=db*db;sgg+=dg*dg;}
+  return (sbb>0&&sgg>0)?sbg/Math.sqrt(sbb*sgg):null;
+}
+function cmbPads(W){return W<480?{l:8,r:46,t:14,b:40}:{l:10,r:66,t:16,b:44};}
+function drawCombined(){
+  const page=document.getElementById('cmbPage');
+  const wrap=document.getElementById('cmbWrap'), cv=document.getElementById('cmbCanvas');
+  // Bail on a hidden page BEFORE the zero-size retry below, or leaving the chart open would
+  // leave a requestAnimationFrame loop spinning against a 0x0 canvas forever.
+  if(!cv||!wrap||!page||page.style.display==='none'||!wrap.classList.contains('show'))return;
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||wrap.clientWidth, H=cv.clientHeight;
+  if(W<10||H<10){requestAnimationFrame(drawCombined);return;}
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const x=cv.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+  if(!_cmbData||_cmbData.length<2)return;
+
+  // Window first, THEN re-base: the index has to read 100 at the left edge of what's on screen,
+  // not at the start of everything we downloaded. The EMA still needs its 50-day run-up, so it is
+  // computed over a padded slice and only the visible part is drawn.
+  const all=_cmbData, n=all.length;
+  const want=Math.min(n,_cmbDays);
+  const padStart=Math.max(0,n-want-CMB_EMA_N);
+  const padded=cmbSeries(all.slice(padStart),_cmbW);
+  const skip=(n-want)-padStart;
+  const S=padded.slice(skip);
+  if(S.length<2)return;
+  // Re-base the drawn window to 100 (the padded slice was based further back).
+  const rb0=S[0].bi, rg0=S[0].gi, rblend0=S[0].blend;
+  S.forEach(p=>{p.biR=p.bi/rb0*100;p.giR=p.gi/rg0*100;p.blendR=p.blend/rblend0*100;
+    if(p.ema!=null)p.emaR=p.ema/rblend0*100;});
+
+  const sm=W<480, P=cmbPads(W);
+  const L=P.l,R=W-P.r,T=P.t,B=H-P.b, pw=R-L, ph=B-T;
+  let lo=Infinity,hi=-Infinity;
+  S.forEach(p=>{[p.biR,p.giR,p.blendR,p.emaR].forEach(v=>{if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
+  const padv=(hi-lo)*0.08||8;lo-=padv;hi+=padv;
+  const t0=S[0].t,t1=S[S.length-1].t;
+  const X=t=>L+pw*((t-t0)/((t1-t0)||1));
+  const Y=v=>T+ph*(1-((v-lo)/((hi-lo)||1)));
+
+  // grid + right axis, labelled as % change since the left edge
+  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  for(let k=0;k<=4;k++){
+    const v=lo+(hi-lo)*k/4, gy=Y(v);
+    x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(245,166,35,0.07)';
+    x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(R,gy);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.45)';
+    x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',R+6,gy+4);
+  }
+  // month gridlines
+  x.textAlign='center';let lastM=null;
+  S.forEach(p=>{const d=new Date(p.t),mk=d.getUTCFullYear()+'-'+d.getUTCMonth();
+    if(mk!==lastM){lastM=mk;const gx=X(p.t);
+      x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
+      x.fillStyle='rgba(255,255,255,0.4)';
+      x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+
+  const line=(key,col,wd,dash)=>{
+    x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
+    x.strokeStyle=col;x.lineWidth=wd;x.lineJoin='round';x.setLineDash(dash||[]);
+    let started=false;
+    S.forEach(p=>{const v=p[key];if(v==null||!isFinite(v))return;
+      const px=X(p.t),py=Y(v);if(!started){x.beginPath();x.moveTo(px,py);started=true;}else x.lineTo(px,py);});
+    if(started)x.stroke();
+    x.setLineDash([]);x.restore();
+  };
+  line('biR',CMB_BTC,1.8);
+  line('giR',CMB_GMT,1.8);
+  line('blendR','rgba(255,255,255,0.28)',1.2,[4,4]);
+  line('emaR',CMB_EMA,2.6);
+
+  // crosshair readout
+  if(_cmbHover!=null){
+    const frac=Math.max(0,Math.min(1,(_cmbHover-L)/(pw||1)));
+    const p=S[Math.round(frac*(S.length-1))];
+    if(p){
+      const px=X(p.t);
+      x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
+      x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
+      [['biR',CMB_BTC],['giR',CMB_GMT],['emaR',CMB_EMA]].forEach(([k,c])=>{
+        if(p[k]==null)return;x.fillStyle=c;x.beginPath();x.arc(px,Y(p[k]),3.2,0,7);x.fill();});
+      const tip=document.getElementById('cmbTip');
+      if(tip){
+        tip.style.display='';
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_BTC}"></span><span class="rb-tip-lbl">BTC</span><span class="rb-tip-px">${fmtBTCPrice(p.btc)}</span></div>`
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
+          +(p.emaR!=null?`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_EMA}"></span><span class="rb-tip-lbl">${CMB_EMA_N}d EMA</span><span class="rb-tip-px">${(p.emaR>=100?'+':'')+ (p.emaR-100).toFixed(1)}%</span></div>`:'')
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:rgba(255,255,255,.4)"></span><span class="rb-tip-lbl">blend</span><span class="rb-tip-px">${(p.blendR>=100?'+':'')+(p.blendR-100).toFixed(1)}%</span></div>`;
+        const tw=tip.offsetWidth||150;
+        tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';
+        tip.style.top=(T+6)+'px';
+      }
+    }
+  }else{const tip=document.getElementById('cmbTip');if(tip)tip.style.display='none';}
+
+  // legend + stats
+  const last=S[S.length-1];
+  const corr=cmbCorrelation(all.slice(-want));
+  const pct=v=>(v>=100?'+':'')+(v-100).toFixed(1)+'%';
+  const lg=document.getElementById('cmbLegend');
+  if(lg)lg.innerHTML=
+     `<span class="rb-pill" style="border-left-color:${CMB_BTC}">BTC ${pct(last.biR)}</span>`
+    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">GMT ${pct(last.giR)}</span>`
+    +`<span class="rb-pill" style="border-left-color:${CMB_EMA}">${CMB_EMA_N}d EMA ${last.emaR!=null?pct(last.emaR):'—'}</span>`
+    +`<span class="rb-pill" style="border-left-color:rgba(255,255,255,.4)">blend ${_cmbW}/${100-_cmbW} ${pct(last.blendR)}</span>`
+    +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#16c784':corr>=0.2?'#f3a93a':'#ea3943'}">correlation ${corr.toFixed(2)}</span>`:'');
+  const note=document.getElementById('cmbCorrNote');
+  if(note)note.textContent=corr==null?''
+    :corr>=0.7?'They move together closely — GMT is largely riding Bitcoin day to day.'
+    :corr>=0.4?'They move together more often than not, with GMT adding its own swings.'
+    :corr>=0.15?'Loosely linked — GMT is mostly driven by something other than BTC right now.'
+    :corr>=-0.15?'Effectively unlinked over this window.'
+    :'They have been moving in opposite directions over this window.';
+}
+function setCmbRange(days,btn){
+  _cmbDays=days;
+  const nav=document.getElementById('cmbRange');
+  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+  drawCombined();
+}
+function setCmbWeight(v){
+  _cmbW=Math.max(0,Math.min(100,+v||0));
+  const lab=document.getElementById('cmbWeightLab');
+  if(lab)lab.innerHTML=`<strong style="color:${CMB_BTC}">${_cmbW}% BTC</strong> &middot; <strong style="color:${CMB_GMT}">${100-_cmbW}% GMT</strong>`;
+  drawCombined();
+}
+function openCombined(){
+  try{history.replaceState({},'','/combined'+location.hash);}catch(e){}
+  showPanelView('cmbPage');
+  const wrap=document.getElementById('cmbWrap');if(wrap)wrap.classList.add('show');
+  setCmbWeight(_cmbW);
+  loadCombined();
+  bindCmbPointer();
+}
+function closeCombined(){
+  try{history.replaceState({},'','/console'+location.hash);}catch(e){}
+  hidePanelView('cmbPage');
+  const wrap=document.getElementById('cmbWrap');if(wrap)wrap.classList.remove('show');
+  const setupBtn=document.querySelector('[data-tab="tab-current"]');
+  if(setupBtn)setupBtn.click();
+}
+let _cmbBound=false;
+function bindCmbPointer(){
+  const cv=document.getElementById('cmbCanvas');
+  if(!cv||_cmbBound)return;_cmbBound=true;
+  const at=e=>{const r=cv.getBoundingClientRect();const cx=(e.touches?e.touches[0].clientX:e.clientX);_cmbHover=cx-r.left;drawCombined();};
+  cv.addEventListener('mousemove',at);
+  cv.addEventListener('mouseleave',()=>{_cmbHover=null;drawCombined();});
+  cv.addEventListener('touchstart',at,{passive:true});
+  cv.addEventListener('touchmove',e=>{at(e);},{passive:true});
+  cv.addEventListener('touchend',()=>{_cmbHover=null;drawCombined();});
+}
+window.addEventListener('resize',()=>{const w=document.getElementById('cmbWrap');if(w&&w.classList.contains('show'))drawCombined();});
 
 // ============================================================
 // CHART SCREENSHOT — branded, shareable candlestick snapshot

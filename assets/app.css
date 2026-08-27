@@ -753,7 +753,7 @@ html.show-onboarding #onboarding{display:flex}
 .live-chip-btn:hover{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
 /* chart page fills the viewport exactly — kill page-level scroll so touch-drag pans the chart instead of scrolling/rubber-banding the page on mobile */
 #btcChartPage{overflow:hidden;overscroll-behavior:none}
-#btcChartPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
+#btcChartPage .sp-page-inner,#cmbPage .sp-page-inner{max-width:1180px;height:100%;display:flex;flex-direction:column;padding:.6rem 1rem 1rem}
 .btc-chart-title{font-size:.92rem;font-weight:700;color:var(--text2);display:flex;align-items:center;white-space:nowrap}
 .btc-chart-wrap{flex:1 1 auto;min-height:0;border:1px solid var(--card-border);border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-card);position:relative;touch-action:none;overscroll-behavior:contain}
 .btc-chart-wrap #btcChartWidget iframe{touch-action:none}
@@ -777,9 +777,9 @@ html.show-onboarding #onboarding{display:flex}
   .btc-chart-title{font-size:.8rem}
   .btc-chart-mode button{font-size:.72rem;padding:.35rem .6rem}
   /* one compact row: back · title · rainbow · snapshot — every pixel saved is chart height */
-  #btcChartPage .sp-page-head,#rainbowPage .sp-page-head{gap:.4rem;padding:.4rem 0 .5rem;flex-wrap:nowrap}
-  #btcChartPage .sp-back-btn,#rainbowPage .sp-back-btn{padding:.42rem .7rem;font-size:.75rem;flex:0 0 auto}
-  #btcChartPage .btc-chart-title,#rainbowPage .btc-chart-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #btcChartPage .sp-page-head,#rainbowPage .sp-page-head,#cmbPage .sp-page-head{gap:.4rem;padding:.4rem 0 .5rem;flex-wrap:nowrap}
+  #btcChartPage .sp-back-btn,#rainbowPage .sp-back-btn,#cmbPage .sp-back-btn{padding:.42rem .7rem;font-size:.75rem;flex:0 0 auto}
+  #btcChartPage .btc-chart-title,#rainbowPage .btc-chart-title,#cmbPage .btc-chart-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
   .chart-shot-btn{padding:.42rem .65rem;font-size:.72rem;flex:0 0 auto}
   /* legend becomes a single horizontally-scrollable row so it doesn't eat chart height */
   .btc-rainbow-legend{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:.4rem .3rem .1rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -789,6 +789,18 @@ html.show-onboarding #onboarding{display:flex}
   .rb-tip-date{font-size:.66rem}
   .btc-rainbow-foot{font-size:.55rem;padding:.25rem .4rem .35rem}
   #btcChartPage .sp-page-inner{padding:.5rem .6rem .8rem}
+}
+/* combined-chart controls: range pills on the left, EMA blend slider on the right */
+.cmb-controls{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap;padding:0 0 .6rem}
+.cmb-weight{display:flex;align-items:center;gap:.55rem;font-size:.72rem;color:var(--text3);min-width:0}
+.cmb-weight label{font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.cmb-weight input[type=range]{width:150px;max-width:38vw;accent-color:var(--orange);cursor:pointer}
+.cmb-weight span{font-family:var(--mono);white-space:nowrap}
+#cmbCanvas{cursor:crosshair}
+@media(max-width:600px){
+  .cmb-controls{gap:.45rem;padding-bottom:.45rem}
+  .cmb-weight{font-size:.66rem;gap:.4rem}
+  .cmb-weight input[type=range]{width:110px}
 }
 .rb-tip-date{font-weight:800;color:var(--text);font-size:.72rem;margin-bottom:.15rem}
 .rb-tip-actual{font-family:var(--mono);color:var(--text2);margin-bottom:.35rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
@@ -1304,10 +1316,10 @@ body.editing #tab-planner{display:none}
 body.planning .container,body.projecting .container,body.charting .container{display:none}
 /* Chart panel: the flex column relied on a fixed-overlay 100% height, so give the chart
    an explicit height now that it flows normally. */
-#btcChartPage.sp-view,#rainbowPage.sp-view{overflow:visible;overscroll-behavior:auto}
-#btcChartPage.sp-view .sp-page-inner,#rainbowPage.sp-view .sp-page-inner{height:auto}
-#btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}
+#btcChartPage.sp-view,#rainbowPage.sp-view,#cmbPage.sp-view{overflow:visible;overscroll-behavior:auto}
+#btcChartPage.sp-view .sp-page-inner,#rainbowPage.sp-view .sp-page-inner,#cmbPage.sp-view .sp-page-inner{height:auto}
+#btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap,#cmbPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}
 /* phones: the header is one short row now, so hand the reclaimed space to the candles */
 @media(max-width:600px){
-  #btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap{height:min(78vh,620px);min-height:340px}
+  #btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap,#cmbPage.sp-view .btc-chart-wrap{height:min(78vh,620px);min-height:340px}
 }
