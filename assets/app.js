@@ -3389,11 +3389,20 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const gmtForMiner=Math.min(mpGmtCost,gmtAvailPre);
   const usdForMiner=(mpGmtCost-gmtForMiner)*gp/(1-USD_GMT_FEE);
   const minerShortfallUSD=Math.max(0,usdForMiner-usdCap);
-  const gmtAvail=gmtAvailPre-gmtForMiner;
+  let gmtAvail=gmtAvailPre-gmtForMiner;
   usdCap=Math.max(0,usdCap-usdForMiner);
   // Off the top, straight after the miner itself: bring it to 15 W before anything is optimized.
-  const mpUpgShortfallUSD=Math.max(0,mpUpgUSD-usdCap);
-  usdCap=Math.max(0,usdCap-mpUpgUSD);
+  // It is a cost like any other, so it draws on the same two pockets in the same order the rest
+  // of the plan does — USD capital first, then GMT on hand at face value (existing GMT is
+  // already GMT; only deployed USD pays the conversion fee). Charging it to USD alone reported a
+  // shortfall for anyone holding their capital as GMT, which is the normal case here: the
+  // planner is fed from a GoMining wallet, and USD capital is the optional field.
+  const mpUpgFromUSD=Math.min(mpUpgUSD,usdCap);
+  usdCap-=mpUpgFromUSD;
+  const mpUpgRemUSD=mpUpgUSD-mpUpgFromUSD;
+  const mpUpgFromGMT=(gp>0)?Math.min(gmtAvail,mpUpgRemUSD/gp):0;
+  gmtAvail-=mpUpgFromGMT;
+  const mpUpgShortfallUSD=Math.max(0,mpUpgRemUSD-mpUpgFromGMT*gp);
   const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0&&mpTHraw<=0)return null;
 
@@ -3528,6 +3537,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
     iP, mpIsGreedy, mpTHraw, mpWthRaw:(mpTHraw>0?(i.mpWth>0?i.mpWth:15):0),
     mpWthBought, mpWthAfter:mpWthPlanned, mpUpgSteps, mpUpgUSD, mpUpgShortfallUSD,
+    mpUpgFromUSD, mpUpgFromGMT,
     gth:gth0, gInit, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy, vipStandalone,
     greedyList
   };
@@ -3874,7 +3884,7 @@ function renderPlanner(i,m){
          canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN,
          mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter, vipTH,
          mpTHraw, mpWthRaw, mpIsGreedy, mpWthBought, mpWthAfter, mpUpgSteps, mpUpgUSD,
-         mpUpgShortfallUSD}=a;
+         mpUpgShortfallUSD, mpUpgFromUSD, mpUpgFromGMT}=a;
   const gmtDeployable=sol.deployable, gmtLock=sol.lock, gmtSell=sol.sell;
   const gmtFromPool=sol.fromPool, gmtFromUSD=sol.fromUSD, usdSpentOnGMT=sol.usdSpentOnGMT;
   let at=sol.addTH, tu=sol.thUSD;
@@ -3991,7 +4001,12 @@ function renderPlanner(i,m){
   if(mpTHraw>0){
     ah+=row(mpIsGreedy?`Marketplace miner (greedy${i.mpCode?' '+escapeHtml('#'+String(i.mpCode).replace(/^#/,'')):''})`:'Marketplace miner',
       `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${mpUpgSteps>0?`${fN(mpWthBought,1)}→${fN(mpWthAfter,1)}`:fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
-    if(mpUpgSteps>0)ah+=row('→ Efficiency upgrade first',`${fU(mpUpgUSD)}<span class="sub">${fN(mpWthBought,1)} → ${fN(EFF_BASE_MAX,0)} W/TH on ${fN(mpTHraw,0)} TH · paid before the split</span>`,'cyan');
+    if(mpUpgSteps>0){
+      const src=[];
+      if(mpUpgFromGMT>0)src.push(`${fN(mpUpgFromGMT,0)} GMT`);
+      if(mpUpgFromUSD>0)src.push(fU(mpUpgFromUSD));
+      ah+=row('→ Efficiency upgrade first',`${fU(mpUpgUSD)}<span class="sub">${fN(mpWthBought,1)} → ${fN(EFF_BASE_MAX,0)} W/TH on ${fN(mpTHraw,0)} TH${src.length?' · paid with '+src.join(' + '):''}</span>`,'cyan');
+    }
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
