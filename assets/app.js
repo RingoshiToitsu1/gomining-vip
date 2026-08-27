@@ -2838,6 +2838,51 @@ const DIFF_G0=0.37, DIFF_FLOOR=0.05, DIFF_TAU=4;   // paired with the Still-chea
 // NOT enforced by any arbitrage (unlike the reward floor): emissions or tokenomics changes could
 // reset it permanently. Treat as a calibrated assumption, not a law.
 const GMT_BTC_RATIO=4.02e-6;
+// ---- How hard GMT actually moves with BTC ----
+// The projection used to scale GMT 1:1 with Bitcoin. Measured on daily log returns that
+// elasticity is nowhere near 1, and — this is the part that matters — it explains very little:
+// R^2 sits around 0.07, so ~93% of GMT's daily movement has nothing to do with BTC. The fit is
+// therefore used to produce a CENTRE and a BAND, never a forecast. Beta is clamped because a
+// short window can throw a silly number, and the residual is what the band is drawn from.
+let _gmtBeta=null;                       // {beta,resid,r2,n,at}
+const GMT_BETA_KEY='gmtopt_gmt_beta_v1';
+const GMT_BETA_MIN=0.05, GMT_BETA_MAX=1.5;
+function fitGmtBeta(rows){
+  if(!rows||rows.length<60)return null;
+  const rb=[],rg=[];
+  for(let i=1;i<rows.length;i++){
+    const b0=rows[i-1].btc,b1=rows[i].btc,g0=rows[i-1].gmt,g1=rows[i].gmt;
+    if(b0>0&&b1>0&&g0>0&&g1>0){rb.push(Math.log(b1/b0));rg.push(Math.log(g1/g0));}
+  }
+  const n=rb.length;if(n<50)return null;
+  const mB=rb.reduce((a,c)=>a+c,0)/n, mG=rg.reduce((a,c)=>a+c,0)/n;
+  let sbg=0,sbb=0,sgg=0;
+  for(let i=0;i<n;i++){const db=rb[i]-mB,dg=rg[i]-mG;sbg+=db*dg;sbb+=db*db;sgg+=dg*dg;}
+  if(!(sbb>0&&sgg>0))return null;
+  const beta=sbg/sbb, r2=(sbg/Math.sqrt(sbb*sgg))**2;
+  let ss=0;for(let i=0;i<n;i++){const e=(rg[i]-mG)-beta*(rb[i]-mB);ss+=e*e;}
+  return {beta,r2,n,resid:Math.sqrt(ss/Math.max(1,n-2)),at:Date.now()};
+}
+function gmtBetaClamped(){
+  if(!_gmtBeta||!isFinite(_gmtBeta.beta))return null;
+  return Math.max(GMT_BETA_MIN,Math.min(GMT_BETA_MAX,_gmtBeta.beta));
+}
+// Fitted once per session off the same daily series the BTC+GMT chart uses, and cached for a day
+// — a beta that moves between page loads would make two identical projections disagree.
+function ensureGmtBeta(){
+  if(_gmtBeta)return Promise.resolve(_gmtBeta);
+  try{
+    const raw=localStorage.getItem(GMT_BETA_KEY);
+    if(raw){const c=JSON.parse(raw);
+      if(c&&isFinite(c.beta)&&c.at&&Date.now()-c.at<86400000){_gmtBeta=c;return Promise.resolve(c);}}
+  }catch(e){}
+  return Promise.all([cmbFetchBTC(),cmbFetchGMT()]).then(([b,g])=>{
+    const rows=(b&&g)?cmbAlign(b,g):null;
+    const fit=fitGmtBeta(rows);
+    if(fit){_gmtBeta=fit;try{localStorage.setItem(GMT_BETA_KEY,JSON.stringify(fit));}catch(e){}}
+    return fit;
+  }).catch(()=>null);
+}
 // GMT staking APR decay. The headline ~23.1% CANNOT persist: GMT is FIXED SUPPLY
 // (total_supply === max_supply === 404,266,808, zero inflation headroom), so staking rewards come
 // from a finite pool / protocol revenue, never from emissions. A staker is owed S((1+r)^n − 1):
@@ -4414,10 +4459,16 @@ function runSetupProjection(){
   const load=document.getElementById('spPageLoading');
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
-  setTimeout(function(){
+  const go=function(){
     try{computeSetupProjection();spShowResults();animateSetupResults();}
     finally{if(load)load.style.display='none';if(btn)btn.disabled=false;}
-  },750);
+  };
+  // The GMT elasticity is fitted from daily history; wait for it behind the overlay that is
+  // already showing rather than running the first projection on the fallback path. It is cached
+  // for a day, so this only ever costs the first run of a session, and a failed fetch just
+  // proceeds — the fallback is the model this always used.
+  Promise.race([ensureGmtBeta(),new Promise(r=>setTimeout(r,4000))])
+    .then(()=>setTimeout(go,300)).catch(()=>setTimeout(go,300));
 }
 function computeSetupProjection(){
   if(!S.loaded)return;
@@ -4540,11 +4591,27 @@ function computeSetupProjection(){
   // reinvested farm's end value, and coverage needs FEWER tokens as GMT rises (burn ∝ 1/gp).
   const gpRatioNow=bpStart>0?gp0/bpStart:GMT_BTC_RATIO;
   const gpOffset0=Math.log((gpRatioNow>0?gpRatioNow:GMT_BTC_RATIO)/GMT_BTC_RATIO);
+  // Where the measured elasticity is available, GMT moves with BTC by THAT much rather than 1:1:
+  // gp = gp0 * (bp/bp0)^beta, anchored on today's real price. Beta near 0.4 means a BTC double
+  // lifts GMT by roughly a third, not double — which is what 300 days of daily returns actually
+  // show. Without the fit (no history loaded) it falls back to the original ratio-convergence
+  // path, so a projection never silently changes model because a fetch failed.
+  const GB=gmtBetaClamped();
   function gpForDay(d){
+    if(GB!=null){
+      const b=bpForDay(d);
+      return (bpStart>0&&b>0)?gp0*Math.pow(b/bpStart,GB):gp0;
+    }
     const t=projStartMs+(d-1)*86400000;
     const progress=Math.min(1,Math.max(0,(t-projStartMs)/Math.max(1,targetMs-projStartMs)));
     return bpForDay(d)*GMT_BTC_RATIO*Math.exp(gpOffset0*(1-progress));
   }
+  // The band the centre line sits inside. Residual dispersion is per DAY, so it widens with the
+  // square root of the horizon — the honest statement is a range, and the range is wide.
+  const gpEnd=gpForDay(days);
+  const gpSigma=(GB!=null&&_gmtBeta&&_gmtBeta.resid>0)?_gmtBeta.resid*Math.sqrt(Math.max(1,days)):0;
+  const gpLo=gpSigma>0?gpEnd*Math.exp(-gpSigma):gpEnd;
+  const gpHi=gpSigma>0?gpEnd*Math.exp(gpSigma):gpEnd;
 
   // ov (optional) overrides closure state for trial evaluation in the reinvest allocator:
   // {wth} = VIP blended efficiency, {greedyTH,greedyWTH} = greedy fleet. Defaults to live state.
@@ -4745,12 +4812,17 @@ function computeSetupProjection(){
     ? `BTC walks from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> — the figure you set — at a steady ${fN((Math.pow(bpEnd/bpStart,365/Math.max(1,days))-1)*100,0)}%/yr (${days}d). Fair-value band for that date: ${fmtBTCPrice(spSel.modelEnd)}`
     : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
 
+  // Say plainly what the GMT leg is and how little it is worth trusting. The centre is a rough
+  // average, not a forecast, and the band is the point of showing it at all.
+  const gmtNoteS=(GB!=null&&_gmtBeta)
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9878; GMT is modelled at <strong style="color:var(--text2)">&beta; ${fN(GB,2)}</strong> to Bitcoin (measured on ${fN(_gmtBeta.n,0)} days of daily returns): <strong style="color:var(--text2)">$${gp0.toFixed(4)} &rarr; $${gpEnd.toFixed(4)}</strong> by ${_endWhen}, 1&sigma; range <strong style="color:var(--text2)">$${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}</strong>. Bitcoin explains only <strong style="color:var(--text2)">${fN(_gmtBeta.r2*100,0)}%</strong> of GMT's daily movement, so treat this leg as a rough average with a wide band, not a forecast.</div>`
+    : '';
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=applyDiffGrind?Math.round((1-difficultyMultAt(targetMs))*100):0;
   const diffSkippedPct=applyDiffGrind?0:Math.round((1-difficultyMultAt(targetMs))*100);
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
   const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
-  const halvingNoteS=(applyDiffGrind
+  const halvingNoteS=gmtNoteS+(applyDiffGrind
     ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`
     : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
@@ -4760,6 +4832,18 @@ function computeSetupProjection(){
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
 
+  // Re-price the FINAL state at each end of the GMT band. dailyNet reads gp from this scope, so
+  // this is the same end-state farm valued at a cheaper and a dearer GMT — no re-simulation, and
+  // it isolates exactly what the GMT assumption is worth to the answer.
+  let gmtRangeNote='';
+  if(gpSigma>0){
+    const _gpSave=gp;
+    gp=gpLo; const loMo=dailyNet(th,gmtLocked).net*30;
+    gp=gpHi; const hiMo=dailyNet(th,gmtLocked).net*30;
+    gp=_gpSave;
+    const a=Math.min(loMo,hiMo), b=Math.max(loMo,hiMo);
+    gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range ($${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
+  }
   const fb=dailyNet(th,gmtLocked);
   const breakdownMonthly=`mining ${fU(fb.mining*30)} + staking ${fU(fb.staking*30)}${ambDaily>0?` + ambassador ${fU(fb.amb*30)}`:''}`;
   h+=`<div class="ri-single-card">
@@ -4767,6 +4851,7 @@ function computeSetupProjection(){
     <div class="ri-headline cyan">${fU(finalMonthly)}</div>
     <div class="ri-mo-yr alt"><span class="v">${fU(finalSS)}<i>/day</i></span><span class="ri-sep">&bull;</span><span class="v">${fU(finalYearly)}<i>/yr</i></span></div>
     <div class="ri-breakdown">${breakdownMonthly}</div>
+    ${gmtRangeNote}
     <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
   {
