@@ -1036,6 +1036,16 @@ const CHART_SHARE_BASE='https://gmt-optimizer.com';
 // Everything the share sheet needs for whichever snapshot is on screen: the link it
 // points at, the caption, the native-share title and the PNG filename.
 function _shotInfo(){
+  if(_shotKind==='projection'){
+    const d=window._shareData||{};
+    const dys=d.days?fN(d.days,0)+'-day':'';
+    return{
+      url:CHART_SHARE_BASE+'/console',
+      title:(dys?dys+' ':'')+'GoMining growth projection',
+      text:'Where my GoMining farm lands after '+(dys||'the period')+' of auto-reinvesting rewards. Model yours free at GMT-Optimizer.com',
+      file:'gmt-optimizer-projection.png'
+    };
+  }
   if(_shotKind==='farm')return{
     url:CHART_SHARE_BASE+'/console',
     title:'My GoMining farm — live numbers',
@@ -1063,6 +1073,15 @@ function _canShareImage(){const f=_chartShotFile();return !!(f&&navigator.canSha
 // "Share with other apps" row, which carries the actual PNG where file-sharing is supported.
 function openChartShare(){
   if(!_chartShotBlob)return;
+  // Where the OS can take the actual PNG (most phones), that's the one-tap route — float it to
+  // the top of the sheet and name it plainly. Elsewhere it degrades to a link-only share, so it
+  // stays below "Copy image", which is what actually works on a desktop browser.
+  const nat=document.getElementById('cshareNativeRow'),ntx=document.getElementById('cshareNativeTxt');
+  if(nat&&ntx){
+    const withFile=_canShareImage();
+    nat.style.order=withFile?'-1':'';
+    ntx.textContent=withFile?'Share image to another app':(navigator.share?'Share a link to other apps':'Save the image');
+  }
   document.getElementById('chartShareSheet').style.display='flex';
 }
 function closeChartShare(){const s=document.getElementById('chartShareSheet');if(s)s.style.display='none';}
@@ -1474,32 +1493,35 @@ function downloadBlob(blob,name){
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);
 }
 function canvasToBlob(c){return new Promise(res=>c.toBlob(res,'image/png'));}
-// Generate the rich projection card (buildShareCanvas) and copy it to the clipboard (download
-// fallback), with a 'Generating…' loading state that ends with a paste hint in the same region.
-async function copyProjectionImage(btn){
-  const d=window._shareData;if(!d){return;}
-  const load=document.getElementById('spPageLoading');
-  const spin=load?load.querySelector('.sp-spinner'):null;
-  const txt=load?load.querySelector('.sp-loading-txt'):null,prev=txt?txt.textContent:'';
-  if(spin)spin.style.display='';
-  if(txt)txt.textContent='Generating pastable image…';
-  if(load)load.style.display='flex';
-  // iOS Safari won't always start a CSS animation on an element revealed from a display:none
-  // ancestor — force a reflow-driven restart so the spinner actually spins on mobile.
-  if(spin){spin.style.animation='none';void spin.offsetWidth;spin.style.animation='';}
-  const finish=(msg)=>{
-    if(spin)spin.style.display='none';
-    if(txt)txt.textContent=msg;
-    setTimeout(()=>{if(load)load.style.display='none';if(spin)spin.style.display='';if(txt)txt.textContent=prev;},2200);
-  };
-  // blob promise carries a delay so the "generating" state is visible; passed to ClipboardItem so
-  // write() is still called within the click gesture (required by browsers).
-  const blobP=(async()=>{await new Promise(r=>setTimeout(r,1400));return canvasToBlob(buildShareCanvas(d));})();
-  if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
-    try{await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);finish('✓ Paste the image anywhere you like');return;}catch(e){}
+// Render the projection card and hand it to the shared snapshot modal — preview, then the
+// YouTube-style share sheet (native OS share with the PNG attached on mobile, copy-image or a
+// one-tap app composer on desktop). Downloading a file the user then has to find and attach is
+// the last resort, not the default.
+async function shareProjectionImage(btn){
+  const d=window._shareData;if(!d)return;
+  const modal=document.getElementById('chartShotModal');
+  if(!modal){return copyProjectionImageFallback(d);}
+  _shotKind='projection';
+  const load=document.getElementById('chartShotLoading');
+  const img=document.getElementById('chartShotImg');
+  const actions=document.getElementById('chartShotActions');
+  document.getElementById('chartShotTitle').textContent='Your projection — shareable card';
+  document.getElementById('chartShotLoadTxt').textContent='Rendering your projection card…';
+  img.style.display='none';actions.style.display='none';load.style.display='flex';
+  modal.style.display='flex';document.body.style.overflow='hidden';
+  _chartShotCanvas=null;_chartShotBlob=null;   // never share a stale image
+  try{
+    _chartShotCanvas=buildShareCanvas(d);
+    img.src=_chartShotCanvas.toDataURL('image/png');
+    _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
+    img.style.display='';load.style.display='none';actions.style.display='flex';
+  }catch(e){
+    document.getElementById('chartShotLoadTxt').textContent='Couldn’t build the image — please run the projection again.';
   }
-  try{downloadBlob(await blobP,'gmt-optimizer-projection.png');finish('⬇ Image saved — paste or attach it anywhere');}
-  catch(e){finish('Couldn’t make image');}
+}
+// Only reachable if the snapshot modal isn't on the page (e.g. an embed) — save the PNG.
+async function copyProjectionImageFallback(d){
+  try{downloadBlob(await canvasToBlob(buildShareCanvas(d)),'gmt-optimizer-projection.png');}catch(e){}
 }
 
 // ---- API ----
@@ -3945,7 +3967,7 @@ function computeSetupProjection(){
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
   </div>`;
   out.innerHTML=h;
-  // Stash the key results so "Copy projection image" can render a shareable card.
+  // Stash the key results so "Share projection image" can render a shareable card.
   window._shareData={
     days, startTH, startSS, startLocked, th:totEndTH, finalSS, gmtLocked, gp,
     // Only a Capital-Planner projection deploys new capital; a My Setup projection invests nothing.
