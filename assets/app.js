@@ -348,6 +348,10 @@ function openPlannerForm(){
   document.getElementById('piMpTH').value=$('inMpTH').value;
   document.getElementById('piMpGMT').value=$('inMpGMT').value;
   document.getElementById('piMpWth').value=$('inMpWth').value;
+  if($('piMpGreedy')&&$('inMpGreedy')){
+    $('piMpGreedy').checked=$('inMpGreedy').checked;
+    const n=$('piMpGreedyNote');if(n)n.style.display=$('piMpGreedy').checked?'':'none';
+  }
   if(window._incomeGoal&&isFinite(window._incomeGoal.targetDisp))document.getElementById('piTargetInput').value=Math.round(window._incomeGoal.targetDisp);
   setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
   showPanelView('plannerIntro');
@@ -389,6 +393,7 @@ function submitPlannerCapital(){
     $('inMpGMT').value=parseFloat(document.getElementById('piMpGMT').value)||0;
     const mpWthVal=parseFloat(document.getElementById('piMpWth').value);
     $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
+    if($('piMpGreedy')&&$('inMpGreedy'))$('inMpGreedy').checked=$('piMpGreedy').checked;
     window._plannerCalcDone=true;
     window._incomeGoal=null;   // amount mode: drop any prior income-goal banner
     recalc();
@@ -488,6 +493,7 @@ function submitPlannerTarget(){
     $('inMpTH').value=parseFloat($('piMpTH').value)||0;
     $('inMpGMT').value=parseFloat($('piMpGMT').value)||0;
     const mpWthVal=parseFloat($('piMpWth').value);$('inMpWth').value=(mpWthVal>0?mpWthVal:15);
+    if($('piMpGreedy')&&$('inMpGreedy'))$('inMpGreedy').checked=$('piMpGreedy').checked;
     // Target income is entered in the display currency; solve in USD.
     const targetDisp=parseFloat($('piTargetInput').value)||0;
     const targetUSD=targetDisp/(S.fxRate||1);
@@ -2714,18 +2720,42 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   let gth0=Math.max(0,i.gth||0);
   let gwth0=gth0>0?(i.gwth>0?i.gwth:15):0;
   let gInit=Math.min(Math.max(0,i.gInit||0),gth0);   // initial marketplace greedy — never VIP-eligible
-  // A marketplace miner flagged as greedy is re-homed into the greedy slot: from here on it is
-  // simply greedy hashrate, so it inherits free weekly growth, greedy-first reinvestment and the
-  // 5k cap for nothing extra. Its GMT price is already fixed above, so the purchase still bills.
-  // Owning one already? The two are blended into a single machine at their weighted efficiency —
-  // the model carries one greedy, so the 5k cap then applies to the pair, not to each.
+  // A marketplace miner flagged as greedy is re-homed into the greedy fleet: from here on it is
+  // greedy hashrate, so it inherits free weekly growth, greedy-first reinvestment and the 5k cap
+  // for nothing extra. Its GMT price is already fixed above, so the purchase still bills.
   const mpIsGreedy=!!i.mpGreedy&&mpTHraw>0;
+  // The greedy fleet as SEPARATE NFTs. Each machine owns its efficiency and its own 5,000 TH
+  // cap, so a second one must never be averaged into the first: blending would hand the pair a
+  // single shared cap and a single upgrade target. They are summed only for fees, rewards and
+  // the VIP basis, all of which are linear in TH (and in TH x W/TH), where a sum is exact.
+  const GRD0=[];
+  if(gth0>0)GRD0.push({th:gth0,wth:gwth0,init:gInit});
+  if(mpIsGreedy)GRD0.push({th:mpTHraw,wth:mpWth,init:mpTHraw});   // bought, not minted ⇒ outside the VIP basis
+  const gSum=l=>l.reduce((s,m)=>s+m.th,0);
+  const gWattSum=l=>l.reduce((s,m)=>s+m.th*m.wth,0);
+  const gAvgW=l=>{const t=gSum(l);return t>0?gWattSum(l)/t:15;};
   if(mpIsGreedy){
-    const both=gth0+mpTHraw;
-    gwth0=both>0?((gth0*gwth0)+(mpTHraw*mpWth))/both:mpWth;
-    gth0=both;
-    gInit=Math.min(gInit+mpTHraw,gth0);   // bought, not minted ⇒ outside the VIP basis
+    gth0=gSum(GRD0);gwth0=gAvgW(GRD0);gInit=GRD0.reduce((s,m)=>s+m.init,0);
     mpTH=0;mpWth=0;
+  }
+  // Spend a TH budget across the greedy machines, biggest first — the cheapest marginal tier —
+  // each stopping at its OWN cap and priced on its OWN efficiency curve.
+  function fillGreedy(budgetUSD){
+    const add=GRD0.map(()=>0);
+    let left=Math.max(0,budgetUSD);
+    const order=GRD0.map((m,ix)=>({ix,m})).sort((a,b)=>b.m.th-a.m.th);
+    for(const o of order){
+      const room=Math.max(0,GREEDY_CAP-o.m.th);
+      if(room<=0||left<=0)continue;
+      const tiers=(o.m.wth<=EFF_BEST+1e-6)?TH_TIERS_12W:TH_TIERS;
+      const a=Math.min(room,thToGrowTiers(o.m.th,left,tiers));
+      if(a<=0)continue;
+      add[o.ix]=a;left=Math.max(0,left-costToGrowTiers(o.m.th,a,tiers));
+    }
+    const tot=add.reduce((s,v)=>s+v,0);
+    // Added TH inherits the machine it lands on — a 15 W greedy grows by 15 W TH.
+    const watts=add.reduce((s,v,ix)=>s+v*GRD0[ix].wth,0);
+    return {add,left,tot,watts};
   }
   // The model as the planner sees it: identical to `i` except the flagged miner now sits in the
   // greedy fields, so computeEffPlan builds the same farm the projection will run.
@@ -2778,7 +2808,12 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // Total blended efficiency including the marketplace miner — drives fees.
   // addTH = freshly minted hashrate (12 W by definition). addG = hashrate added to the greedy,
   // which inherits THAT machine's rating — a 15 W greedy grows by 15 W TH, it does not self-heal.
-  function blendWTH(addTH,addG){const aG=Math.max(0,addG||0);const tot=i.th+addTH+mpTH+gth0+aG;return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+(gth0+aG)*gwth0)/tot:i.wth}
+  function blendWTH(addTH,addG,addGWatts){
+    const aG=Math.max(0,addG||0);
+    const tot=i.th+addTH+mpTH+gth0+aG;
+    const gWatts=(gth0*gwth0)+(addGWatts!=null?addGWatts:aG*gwth0);
+    return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+gWatts)/tot:i.wth;
+  }
 
   let reserveNeeded=0;
   function calcReserve(totFeeTH,vipBasis,lockedGMT){
@@ -2812,13 +2847,9 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       // leaves the machine at 15 W. Only a greedy already at 12 W takes 12 W TH. This used to buy
       // the whole budget at 12 W prices and then pour part of it into a 15 W machine, which both
       // overstated the price per greedy TH and reported the farm as more efficient than it is.
-      const gRoom=(gth0>0)?Math.max(0,GREEDY_CAP-gth0):0;
-      const gTiers=(gwth0<=EFF_BEST+1e-6)?TH_TIERS_12W:TH_TIERS;
-      let addGreedy=0,thLeftUSD=thBudgetUSD;
-      if(gRoom>0&&thLeftUSD>0){
-        addGreedy=Math.min(gRoom,thToGrowTiers(gth0,thLeftUSD,gTiers));
-        thLeftUSD=Math.max(0,thLeftUSD-costToGrowTiers(gth0,addGreedy,gTiers));
-      }
+      const gFill=fillGreedy(thBudgetUSD);
+      const addGreedy=gFill.tot, addGreedyWatts=gFill.watts, gAdds=gFill.add;
+      let thLeftUSD=addGreedy>0?gFill.left:thBudgetUSD;
       // Whatever is left mints fresh 12 W hashrate, topping up other 12 W miners first.
       const baseVipTH=thLeftUSD>0?thForBudgetFromSizes(thLeftUSD,existingMinerSizes(false),TH_TIERS_12W):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
@@ -2831,7 +2862,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit);   // VIP basis: all but initial mkt greedy + mpTH
       const totalLocked=i.gl+totalGmtLock;
       const walletAfter=reserve;
-      const bwth=blendWTH(addVip,addGreedy);
+      const bwth=blendWTH(addVip,addGreedy,addGreedyWatts);
       const fTest=fees(feeTH,bwth,bp);
       const vTest=vipOf(vipTH,totalLocked);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
@@ -2854,7 +2885,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     return{lock,fromPool:r.fromPool,fromUSD:r.fromUSD,usdSpentOnGMT:r.usdSpentOnGMT,
       sell:r.gmtSell,deployable,addTH:r.at,thUSD:r.thBudgetUSD,
       baseTH:r.baseTH,bonusActive:r.bonusActive,bonusTH:r.bonusTH,
-      addGreedy:r.addGreedy,addVip:r.addVip,greedyTot:r.greedyTot,
+      addGreedy:r.addGreedy,addGreedyWatts:r.addGreedyWatts,gAdds:r.gAdds,addVip:r.addVip,greedyTot:r.greedyTot,
       finalFeeTH:i.th+r.addVip+r.greedyTot+mpTH,
       finalVipBasis:i.th+r.addVip+Math.max(0,r.greedyTot-gInit),
       finalTH:i.th+r.at,finalLocked:i.gl+lock};
@@ -2870,15 +2901,16 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   const greedyTot=sol.greedyTot!=null?sol.greedyTot:gth0;
   const addGreedy=sol.addGreedy||0;
-  // addGreedy is hashrate added to the EXISTING greedy machine (up to its 5k cap), and adding TH
-  // to a miner never changes that miner's W/TH rating — so the greedy keeps the efficiency it owns.
-  const greedyWthAfter=gwth0;
+  // Adding TH to a miner never changes that miner's W/TH rating, so each greedy keeps the
+  // efficiency it owns — the fleet average only moves because the machines grew unevenly.
+  const greedyList=GRD0.map((m,ix)=>({th:m.th+((sol.gAdds&&sol.gAdds[ix])||0),wth:m.wth,init:m.init}));
+  const greedyWthAfter=gAvgW(greedyList);
   const addVip=sol.addVip!=null?sol.addVip:sol.addTH;
   const vipStandalone=i.th+addVip;     // non-greedy VIP TH — the projection's compounding base
   const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit); // VIP tier basis (excl. initial mkt greedy + mpTH)
   const nt=i.th+addVip+greedyTot+mpTH; // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(addVip,addGreedy);   // minted TH at 12 W, greedy top-up at the greedy's own rating
+  const bwth=blendWTH(addVip,addGreedy,sol.addGreedyWatts);   // minted TH at 12 W, greedy top-up at its own machine's rating
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
@@ -2899,7 +2931,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
     vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
     iP, mpIsGreedy, mpTHraw, mpWthRaw:(mpTHraw>0?(i.mpWth>0?i.mpWth:15):0),
-    gth:gth0, gInit, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy, vipStandalone
+    gth:gth0, gInit, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy, vipStandalone,
+    greedyList
   };
 }
 
@@ -3279,7 +3312,7 @@ function renderPlanner(i,m){
     exp+=`<strong style="color:var(--purple-soft)">Marketplace miner${mpIsGreedy?' (greedy)':''}:</strong> +${fN(mpTHraw,0)} TH for ${fN(mpGmtCost,0)} GMT`;
     if(usdForMiner>0)exp+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
     else exp+=` (from your GMT)`;
-    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to the ${fN(MINER_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
+    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
   if(!i.payG){
@@ -3741,7 +3774,15 @@ function computeSetupProjection(){
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
   const fromPlanner=(window._spMode==='planner');
-  let MP_TH,MP_WTH,HAS_GREEDY,GGROW,GINIT,greedyTH,greedyWTH,th,curWTH,gmtLocked,gmtW,startTH,startLocked;
+  let MP_TH,MP_WTH,GGROW,GINIT,greedyTH,greedyWTH,th,curWTH,gmtLocked,gmtW,startTH,startLocked;
+  // The greedy fleet, one entry per NFT — each with its own efficiency and its own 5,000 TH cap.
+  // greedyTH / greedyWTH stay as the fleet totals every reward, fee and VIP calculation reads;
+  // those are linear in TH (and TH x W/TH), so a sum is exact. Only the decisions that belong to
+  // a single machine — filling toward the cap, buying an efficiency upgrade — walk the list.
+  let GRD=[];
+  const gTot=()=>GRD.reduce((s,m)=>s+m.th,0);
+  const gWattsTot=()=>GRD.reduce((s,m)=>s+m.th*m.wth,0);
+  const syncGreedy=()=>{const t=gTot();greedyTH=t;greedyWTH=t>0?gWattsTot()/t:15;};
   // The referral your Capital Planner just funded: their fleet, so their hashrate feeds YOUR
   // ambassador stream for the whole run instead of being dropped at the planner's results page.
   let refFleetTH=0, refFleetLocked=0;
@@ -3752,11 +3793,11 @@ function computeSetupProjection(){
     const a=solvePlannerAllocation(i,bpStart,gp0,dbt);   // allocation is a purchase TODAY -> spot GMT
     if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital Planner</strong> first, then project.</div>';return;}
     MP_TH=a.mpTH||0; MP_WTH=a.mpWth>0?a.mpWth:15;
-    HAS_GREEDY=(a.gth||0)>0;
     GGROW=(a.ggrow||0)/100;
     GINIT=a.gInit||0;
-    greedyTH=a.greedyTot!=null?a.greedyTot:(a.gth||0);
-    greedyWTH=a.gwthAfter>0?a.gwthAfter:(a.gwth>0?a.gwth:15);
+    GRD=(a.greedyList||[]).filter(m=>m&&m.th>0).map(m=>({th:m.th,wth:m.wth>0?m.wth:15}));
+    if(!GRD.length&&(a.greedyTot||0)>0)GRD=[{th:a.greedyTot,wth:a.gwthAfter>0?a.gwthAfter:15}];
+    syncGreedy();
     th=a.vipStandalone!=null?a.vipStandalone:a.vipTH;     // post-investment standalone VIP TH
     curWTH=a.vipWth>0?a.vipWth:15;
     gmtLocked=a.newLocked;
@@ -3766,11 +3807,10 @@ function computeSetupProjection(){
     if(a.ref){refFleetTH=Math.max(0,a.ref.at||0);refFleetLocked=Math.max(0,a.ref.ag||0);}
   }else{
     MP_TH=0; MP_WTH=15;
-    HAS_GREEDY=(i.gth||0)>0;
     GGROW=(i.ggrow||0)/100;
     GINIT=Math.min(Math.max(0,i.gInit||0),Math.max(0,i.gth||0));
-    greedyTH=Math.max(0,i.gth||0);
-    greedyWTH=i.gwth>0?i.gwth:15;
+    GRD=(i.gth||0)>0?[{th:Math.max(0,i.gth),wth:i.gwth>0?i.gwth:15}]:[];
+    syncGreedy();
     th=Math.max(0,i.th||0);
     curWTH=i.wth>0?i.wth:15;
     gmtLocked=Math.max(0,i.gl||0);
@@ -3779,6 +3819,7 @@ function computeSetupProjection(){
     startLocked=gmtLocked;
   }
   if(startTH<=0&&gmtLocked<=0){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Add your hashrate and locked GMT in <strong>My Setup</strong> first, then project.</div>';return;}
+  const GRD_START=GRD.map(m=>({th:m.th,wth:m.wth}));   // per-machine snapshot for the results card
   // Starting blended efficiency (across VIP + marketplace + greedy) — to show any reinvested upgrade.
   const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
 
@@ -3880,8 +3921,8 @@ function computeSetupProjection(){
   const daily=[];
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
   // Real per-miner state for the VIP (non-greedy) farm, so each week's TH purchase prices against
-  // the evolving fleet (topping up existing miners is cheaper than minting new). The greedy is a
-  // single miner tracked by greedyTH, priced separately on the 15 W curve.
+  // the evolving fleet (topping up existing miners is cheaper than minting new). The greedy
+  // machines are tracked one-by-one in GRD, each priced on its own efficiency curve.
   let vipSizes=existingMinerSizes(false);
   for(let d=1;d<=days;d++){
     bpToday=bpForDay(d);
@@ -3893,7 +3934,7 @@ function computeSetupProjection(){
     totalAmbUSD+=ambDaily;
     if(d%7===0){
       gmtLocked+=gmtLocked*(apr/100)/52;            // weekly staking yield auto-compounds
-      if(greedyTH>0&&GGROW>0)greedyTH*=(1+GGROW);    // greedy passive growth (compounds past 5k cap)
+      if(GGROW>0&&GRD.length){GRD.forEach(m=>{m.th*=(1+GGROW);});syncGreedy();}   // passive growth, per machine (compounds past the 5k cap)
     }
     const dn=dailyNet(th,gmtLocked);
     weeklyGrossUSD+=Math.max(0,dn.reinvest);
@@ -3927,17 +3968,22 @@ function computeSetupProjection(){
         // earning longer, which the myopic daily-ROI of staking ignores. Staking only wins once the
         // farm is fully efficient (12 W) or mining is truly dead (even a 12 W farm nets $0) — we never
         // bank GMT while a cheaper miner could still be saved, nor fund hashrate that can't earn.
-        // New VIP TH is priced as a 12 W/TH machine; greedy fills first @15W.
+        // New VIP TH is priced as a 12 W/TH machine; greedy fills first, each machine on its own curve.
         if(budget>0){
           const STEPS=12, incr=budget/STEPS;
           for(let s=0;s<STEPS;s++){
-            // --- option BUY: greedy-fill first @15W, remainder a new 12W VIP machine ---
-            let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH;
-            const t15=thToGrowTiers(greedyTH,incr,TH_TIERS);   // greedy tops up its own miner (15 W curve), not a fresh one
-            if(HAS_GREEDY&&greedyTH<GREEDY_CAP&&t15>0){
-              const gAdd=Math.min(t15,GREEDY_CAP-greedyTH);
-              gW2=(greedyTH*greedyWTH+gAdd*15)/(greedyTH+gAdd);gTH2=greedyTH+gAdd;
-              const rem=incr*(1-gAdd/t15);
+            // --- option BUY: fill a greedy machine first, remainder a new 12 W VIP machine ---
+            let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH,gFillIx=-1,gFillAdd=0;
+            // Biggest machine with room first (cheapest marginal tier). The cap belongs to the
+            // machine, not the fleet: a full one is skipped while its sibling keeps filling, and
+            // the TH is priced on that machine's own curve and inherits its rating.
+            const gCand=GRD.map((m,ix)=>({ix,m})).filter(o=>o.m.th<GREEDY_CAP).sort((a,b)=>b.m.th-a.m.th)[0];
+            const gT=gCand?thToGrowTiers(gCand.m.th,incr,gCand.m.wth<=EFF_BEST+1e-6?TH_TIERS_12W:TH_TIERS):0;
+            if(gCand&&gT>0){
+              gFillIx=gCand.ix;gFillAdd=Math.min(gT,GREEDY_CAP-gCand.m.th);
+              gTH2=greedyTH+gFillAdd;
+              gW2=gTH2>0?(gWattsTot()+gFillAdd*gCand.m.wth)/gTH2:greedyWTH;
+              const rem=incr*(1-gFillAdd/gT);
               if(rem>0){const vAdd=thForBudgetFromSizes(rem,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
             }else{
               const vAdd=thForBudgetFromSizes(incr,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
@@ -3950,10 +3996,16 @@ function computeSetupProjection(){
             // TH inherits whatever rating the machine already has, so it never self-heals, and the
             // upgrade bill grows with the machine (delaying 5 yr at 1%/wk costs 13x more).
             let effNet=-Infinity, effApply=null;
-            const vipRoom=(curWTH>EFF_BEST+1e-6&&th>0), grdRoom=(HAS_GREEDY&&greedyTH>0&&greedyWTH>EFF_BEST+1e-6);
-            if(grdRoom){
-              const dW=Math.min(greedyWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*greedyTH));const gw2=greedyWTH-dW;
-              effNet=dailyNet(th,gmtLocked,{greedyWTH:gw2}).net;effApply=()=>{greedyWTH=gw2;};
+            const vipRoom=(curWTH>EFF_BEST+1e-6&&th>0);
+            // Efficiency is a per-NFT purchase, so upgrade a single machine — the worst-rated one
+            // — rather than nudging a fleet average that no real miner has.
+            const gUp=GRD.map((m,ix)=>({ix,m})).filter(o=>o.m.wth>EFF_BEST+1e-6&&o.m.th>0).sort((a,b)=>b.m.wth-a.m.wth)[0];
+            if(gUp){
+              const dW=Math.min(gUp.m.wth-EFF_BEST,incr/(EFF_UPGRADE_STEP*gUp.m.th));
+              const gw2=gUp.m.wth-dW;
+              const fleetW2=greedyTH>0?(gWattsTot()-gUp.m.th*gUp.m.wth+gUp.m.th*gw2)/greedyTH:greedyWTH;
+              effNet=dailyNet(th,gmtLocked,{greedyWTH:fleetW2}).net;
+              effApply=()=>{GRD[gUp.ix].wth=gw2;syncGreedy();};
             }else if(vipRoom){
               const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));const cw2=curWTH-dW;
               effNet=dailyNet(th,gmtLocked,{wth:cw2}).net;effApply=()=>{curWTH=cw2;};
@@ -3968,11 +4020,16 @@ function computeSetupProjection(){
             const eps=1e-9, base=dailyNet(th,gmtLocked).net;
             const headroom=effApply!=null;
             const rescuable=dailyNet(th,gmtLocked,{wth:EFF_BEST,greedyWTH:Math.min(greedyWTH,EFF_BEST)}).mining>0;
+            const applyBuy=()=>{
+              vipSizes=applyAddSizes(vipSizes,Math.max(0,vTH2-th));
+              if(gFillIx>=0&&gFillAdd>0){GRD[gFillIx].th+=gFillAdd;syncGreedy();}
+              th=vTH2;curWTH=vW2;
+            };
             if(headroom&&(dn.mining>0||rescuable)){
-              if(buyNet>=effNet&&buyNet>base+eps){vipSizes=applyAddSizes(vipSizes,Math.max(0,vTH2-th));greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              if(buyNet>=effNet&&buyNet>base+eps)applyBuy();
               else{effApply();}
             }else if(Math.max(buyNet,effNet)>lockNet+eps){
-              if(buyNet>=effNet){vipSizes=applyAddSizes(vipSizes,Math.max(0,vTH2-th));greedyTH=gTH2;greedyWTH=gW2;th=vTH2;curWTH=vW2;}
+              if(buyNet>=effNet)applyBuy();
               else{effApply();}
             }else{gmtLocked+=addG;}
           }
@@ -4062,13 +4119,21 @@ function computeSetupProjection(){
       <div class="ri-gain">taken as income instead of reinvested</div>
     </div>`;
   }
-  if(HAS_GREEDY){
-    const greedyGain=greedyTH-Math.max(0,i.gth||0);
-    const capped=greedyTH>=GREEDY_CAP;
+  if(GRD.length){
+    const gStart=GRD_START.reduce((s,m)=>s+m.th,0);
+    const greedyGain=greedyTH-gStart;
+    const multi=GRD.length>1;
+    // "Capped" is a property of a machine, not the fleet — only say it when every one is full.
+    const capped=GRD.every(m=>m.th>=GREEDY_CAP-1e-6);
+    const per=multi?`<div class="ri-breakdown">${GRD.map((m,ix)=>{
+      const st=GRD_START[ix]?GRD_START[ix].th:0;
+      return `#${ix+1}: ${fN(st,0)}&rarr;${fN(m.th,0)} TH @ ${fN(m.wth,1)} W${m.th>=GREEDY_CAP-1e-6?' &middot; at cap':''}`;
+    }).join('<br>')}</div>`:'';
     h+=`<div class="ri-single-card">
-      <div class="ri-label">Greedy Machine TH (End of Period)</div>
+      <div class="ri-label">Greedy Machine${multi?'s':''} TH (End of Period)</div>
       <div class="ri-headline cyan">${fN(greedyTH,1)} TH</div>
-      <div class="ri-usd-value">from ${fN(Math.max(0,i.gth||0),1)} TH start &middot; ${fP(i.ggrow)}/wk passive${capped?' &middot; at 5k cap, passive only':''}</div>
+      <div class="ri-usd-value">from ${fN(gStart,1)} TH start${multi?` across ${GRD.length} machines`:''} &middot; ${fP(i.ggrow)}/wk passive${capped?` &middot; ${multi?'all':''} at the ${fN(GREEDY_CAP,0)} TH cap, passive only`:''}</div>
+      ${per}
       <div class="ri-gain">+${fN(greedyGain,1)} TH &middot; ~${fU(greedyGain*estimateCPT(greedyTH),0)} free hashrate</div>
     </div>`;
   }

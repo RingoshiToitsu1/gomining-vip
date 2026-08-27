@@ -818,6 +818,11 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
               <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">W/TH</div>
             </div>
           </div>
+          <div class="toggle-row ed-toggle" style="margin-top:.6rem;justify-content:center">
+            <label class="toggle"><input type="checkbox" id="piMpGreedy" onchange="document.getElementById('piMpGreedyNote').style.display=this.checked?'':'none'"><span class="toggle-track"></span></label>
+            <span class="toggle-label" onclick="document.getElementById('piMpGreedy').click()">It&rsquo;s a Greedy Machine</span>
+          </div>
+          <div id="piMpGreedyNote" style="display:none;font-size:.65rem;color:var(--text4);margin-top:.35rem;text-align:center">Grows free every week, reinvested rewards fill it first, and it keeps its own 5,000 TH cap &mdash; set the weekly % on the Investment tab.</div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
           </div>
         </div>
@@ -1088,7 +1093,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=82"></script>
+<script src="/assets/app.js?v=83"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
