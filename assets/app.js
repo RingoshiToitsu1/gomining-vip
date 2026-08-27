@@ -4844,6 +4844,18 @@ function computeSetupProjection(){
     const a=Math.min(loMo,hiMo), b=Math.max(loMo,hiMo);
     gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range ($${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
   }
+  // The Capital Planner's "Projected monthly" ADDS the greedy's free weekly TH valued as income;
+  // dailyNet() here does not, and must not. Inside a projection that free TH is actually granted
+  // — the machine grows every week — so it is already earning inside the figure below as
+  // hashrate. Counting it as income too would bank it twice. But the two headlines then differ
+  // by exactly that amount with nothing on screen to explain it, which reads as the projection
+  // losing money the moment you run it. So say it.
+  let greedyNote='';
+  if(GRD.length&&GGROW>0){
+    const gT=gTot(), gWv=gWattsTot()/(gT||1);
+    const gCredit=gT*GGROW*4.33*cptAtEff(gT,gWv);
+    if(gCredit>0.5)greedyNote=`<div class="ri-breakdown" style="margin-top:.3rem;color:var(--text4)">excludes ${fU(gCredit)}/mo of free greedy TH &mdash; here it arrives as hashrate and is already earning above, so it is not banked twice. The planner adds it as income because a snapshot has no growth to show; that is the whole gap between the two figures.</div>`;
+  }
   const fb=dailyNet(th,gmtLocked);
   const breakdownMonthly=`mining ${fU(fb.mining*30)} + staking ${fU(fb.staking*30)}${ambDaily>0?` + ambassador ${fU(fb.amb*30)}`:''}`;
   h+=`<div class="ri-single-card">
@@ -4852,6 +4864,7 @@ function computeSetupProjection(){
     <div class="ri-mo-yr alt"><span class="v">${fU(finalSS)}<i>/day</i></span><span class="ri-sep">&bull;</span><span class="v">${fU(finalYearly)}<i>/yr</i></span></div>
     <div class="ri-breakdown">${breakdownMonthly}</div>
     ${gmtRangeNote}
+    ${greedyNote}
     <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
   {
