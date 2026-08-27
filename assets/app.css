@@ -858,10 +858,16 @@ html.show-onboarding #onboarding{display:flex}
 @media(min-width:1100px){
   #secInputs .sp-page-inner{max-width:1360px;padding-left:1.4rem;padding-right:1.4rem}
   #secInputs .ed-form{max-width:none}
+  /* Two real columns. Spanning the fleet across a made-up number of rows instead left the
+     grid with dozens of empty ones, and every gap between them counted — that was the canyon
+     between the last miner and the Save buttons. Saved Setups spans the top; below it the fleet
+     and the rail are one grid cell each, so neither can invent rows the other has to pay for. */
   #secInputs .ed-groups{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
     gap:.7rem .9rem;align-items:start}
-  #secInputs #fleetGroup{grid-column:1;grid-row:1/span 99}
-  #secInputs .ed-groups>.ed-group:not(#fleetGroup){grid-column:2}
+  #secInputs .ed-groups>.ed-group:first-child{grid-column:1/-1}
+  #secInputs #fleetGroup{grid-column:1;margin-bottom:0}
+  #secInputs .ed-rail{grid-column:2;display:flex;flex-direction:column;gap:.7rem}
+  #secInputs .ed-rail>.ed-group{margin-bottom:0}
   #secInputs .ed-form .pi-title{text-align:left;margin-left:.2rem}
   #secInputs .ed-group-title{text-align:left}
   /* Short two-value rows in the rail sit two-up; the width is the whole point of doing this. */
