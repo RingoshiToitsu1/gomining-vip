@@ -1021,12 +1021,14 @@ let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='co
 // Line or candle for BOTH series; candles pair inside each day rather than overlapping.
 let _cmbStyle='line';
 const CMB_EMA_N=50;
-const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
-// Two candle series on one chart need two palettes, or you cannot tell whose day was green.
-// Bitcoin keeps the classic green/red; GMT takes blue/purple, which is its own line colour and
-// the purple already used across the app. Up tones are the brighter of each pair.
-const CMB_BTC_UP='#16c784', CMB_BTC_DN='#ea3943';
-const CMB_GMT_UP='#7FB0FF', CMB_GMT_DN='#A78BFA';
+const CMB_BTC='#F5A623', CMB_GMT='#A78BFA', CMB_EMA='#16c784';
+// Two candle series need two palettes, or you cannot tell whose day was up. Each asset keeps its
+// brand colour for up days and goes near-white for down days. The two whites are TINTED — warm
+// for Bitcoin, cool for GMT — because a shared pure white would make a down day on one
+// indistinguishable from a down day on the other, which is the one thing the pairing exists to
+// show. They still read as white next to a saturated orange or purple.
+const CMB_BTC_UP='#F5A623', CMB_BTC_DN='#FFEFD2';
+const CMB_GMT_UP='#A78BFA', CMB_GMT_DN='#EAE4FF';
 
 // Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
 async function cmbFetchBTC(){
