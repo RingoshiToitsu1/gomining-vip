@@ -3879,12 +3879,12 @@ function computeSetupProjection(){
   h+=buildReinvestChart(daily,days,gp);
 
   const fb=dailyNet(th,gmtLocked);
-  const breakdownDaily=`mining ${fU(fb.mining)} + staking ${fU(fb.staking)}${ambDaily>0?` + ambassador ${fU(fb.amb)}`:''}`;
+  const breakdownMonthly=`mining ${fU(fb.mining*30)} + staking ${fU(fb.staking*30)}${ambDaily>0?` + ambassador ${fU(fb.amb*30)}`:''}`;
   h+=`<div class="ri-single-card">
-    <div class="ri-label">Daily Reward (End of Period)</div>
-    <div class="ri-headline cyan">${fU(finalSS)}</div>
-    <div class="ri-mo-yr big"><span class="mo">${fU(finalMonthly)}<i>/mo</i></span><span class="ri-sep">&bull;</span><span class="yr">${fU(finalYearly)}<i>/yr</i></span></div>
-    <div class="ri-breakdown">${breakdownDaily}</div>
+    <div class="ri-label">Monthly Reward (End of Period)</div>
+    <div class="ri-headline cyan">${fU(finalMonthly)}</div>
+    <div class="ri-mo-yr alt"><span class="v">${fU(finalSS)}<i>/day</i></span><span class="ri-sep">&bull;</span><span class="v">${fU(finalYearly)}<i>/yr</i></span></div>
+    <div class="ri-breakdown">${breakdownMonthly}</div>
     <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
   {

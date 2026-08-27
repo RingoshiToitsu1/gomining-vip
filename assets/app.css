@@ -1041,12 +1041,9 @@ html.show-onboarding #onboarding{display:flex}
 .ri-single-card .ri-headline.green{color:var(--green)}
 .ri-single-card .ri-mo-yr{font-family:var(--mono);font-size:.82rem;color:var(--text2);margin-top:.35rem;letter-spacing:.02em}
 .ri-single-card .ri-mo-yr .ri-sep{color:var(--text4);margin:0 .45rem}
-/* monthly/yearly is what people actually read — give it headline weight */
-.ri-single-card .ri-mo-yr.big{display:flex;flex-direction:column;align-items:center;gap:.1rem;margin-top:.45rem;line-height:1.15}
-.ri-single-card .ri-mo-yr.big .ri-sep{display:none}
-.ri-single-card .ri-mo-yr.big .mo{font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:0}
-.ri-single-card .ri-mo-yr.big .yr{font-size:1.05rem;font-weight:600;color:var(--text2)}
-.ri-single-card .ri-mo-yr.big i{font-style:normal;font-size:.6em;font-weight:600;color:var(--text3);margin-left:.12em}
+/* monthly is the headline; daily + yearly ride underneath it */
+.ri-single-card .ri-mo-yr.alt{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;font-size:1rem;font-weight:600;color:var(--text2);margin-top:.4rem;letter-spacing:0}
+.ri-single-card .ri-mo-yr.alt i{font-style:normal;font-size:.68em;font-weight:600;color:var(--text3);margin-left:.1em}
 .ri-single-card .ri-breakdown{font-family:var(--mono);font-size:.66rem;color:var(--text3);margin-top:.3rem}
 .ri-single-card .ri-usd-value{font-family:var(--mono);font-size:.9rem;color:var(--green);margin-top:.2rem;font-weight:600;opacity:.85}
 .ri-single-card .ri-gain{font-size:.66rem;color:var(--text3);margin-top:.25rem;font-family:var(--mono)}
