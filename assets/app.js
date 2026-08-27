@@ -4861,7 +4861,15 @@ function computeSetupProjection(){
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
-    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked
+    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${(function(){
+      // State the seed's OWN day-one income and discount. Every "the projection lost money"
+      // report so far has been the two screens starting from different farms — a plan with a
+      // marketplace miner in it against one without, or the current setup against the plan —
+      // and none of it was visible, because the banner named the farm without pricing it. This
+      // is the number to compare against the planner's headline; if they differ, the inputs did.
+      const d1=dailyNet(th,gmtLocked);
+      return ` &mdash; earning <strong style="color:var(--text2)">${fU(d1.net*30)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(d1.disc,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
+    })()}
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
 
