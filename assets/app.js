@@ -3348,6 +3348,15 @@ function renderPlanner(i,m){
     exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
+  // The referral's capital is a large number that shapes this whole plan (it funds the ambassador
+  // stream and the GMT bonus), but it isn't yours to allocate — say so here rather than leaving
+  // the reader to find it below the split and wonder why it isn't in the pot.
+  if(ref&&i.refCap>0){
+    exp+=`<strong style="color:var(--green)">Referral:</strong> their ${fU(i.refCap)} buys <strong>${fN(ref.at,1)} TH</strong> and locks <strong>${fN(ref.ag,0)} GMT</strong>`;
+    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_BEST)*30)}/mo</strong> in ambassador rewards`;
+    if(refBonusGMT>0)exp+=` plus a one-off <strong style="color:var(--text2)">${fN(refBonusGMT,0)} GMT</strong> bonus (${fU(refBonusUSD)}), which IS in the pot below`;
+    exp+=`. <span style="color:var(--text3)">Their ${fU(i.refCap)} is their capital, not yours — it never enters the split.</span><br>`;
+  }
   if(!i.payG){
     exp+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
   }else if(!canCover20){
@@ -3368,10 +3377,15 @@ function renderPlanner(i,m){
   const hasGMT=(baseGmtAvail>0||refBonusGMT>0||gmtForMiner>0||gmtAvail>0);
   // Split is driven by the SAME solver as Path-to-20% / Resource Breakdown (consistent + unbounded
   // — no 5,000 TH cap on the farm total). Efficiency upgrade is layered on as an overlay.
-  window._effCmp={i,K:totalValue,gp,bp,
+  // a.iP is the model with a greedy-flagged marketplace miner moved into the greedy fields. Build
+  // the plan from THAT, not the raw inputs: with the raw model the miner is neither in i.gth nor
+  // in mpTH (the solver zeroes it when re-homing), so its hashrate — and everything reinvestment
+  // adds to it — vanished from finTH, understating the projected income by the whole machine.
+  const iPlan=a.iP||i;
+  window._effCmp={i:iPlan,K:totalValue,gp,bp,
     lockUSD:usdSpentOnGMT+gmtFromPool*gp, glAdd:gmtLock,
     thUSD:usdToTH+gmtSell*gp, addTH:at, mpTH:mpTH, mpWth:mpWth};
-  ah+=effCompareShell(i);
+  ah+=effCompareShell(iPlan);
   // Same plan the allocation cards render, so the post-investment projection agrees with the
   // "Result" total: the efficiency overlay diverts part of the TH budget into upgrades, so the
   // resulting hashrate (finTH) is lower than the solver's all-to-TH nt. Use it below.
