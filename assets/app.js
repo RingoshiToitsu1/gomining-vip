@@ -1486,7 +1486,7 @@ const SHARE_FIELDS=[
   ['inTH'],['inWTH'],['inGMTLocked'],['inGMTWallet'],['inCapital'],
   ['inMpTH'],['inMpGMT'],['inMpWth'],['inGreedyTH'],['inGreedyInitial'],['inGreedyGrowth'],
   ['inClickStreak','b'],['inPayGMT','b'],['inAmbassador','b'],['inAvatarDisc','b'],
-  ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b'],['inGreedyWth']
+  ['inReferredTH'],['inRefCapital'],['inCurrency'],['piVipBonus','b'],['inGreedyWth'],['inMpGreedy','b']
 ];
 // Compact v2 share encoding (?s2=). Shorter than v1 (?s=) because:
 //  • the rarely-filled marketplace/greedy/referral fields sit at the TAIL, so they're
@@ -1497,7 +1497,7 @@ const SHARE_FIELDS=[
 const SHARE_CUR={USD:'',GBP:'G',EUR:'E'};
 function encodeShareV2(d){
   const v=x=>(x==null||x==='')?'':String(x);
-  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0);
+  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0)|(d.inMpGreedy?32:0);
   const parts=[
     v(d.inTH),v(d.inWTH),v(d.inGMTLocked),v(d.inGMTWallet),v(d.inCapital),
     flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
@@ -1514,7 +1514,7 @@ function decodeShareV2(s){
   const set=(k,i)=>{const x=g(i);if(x!==undefined)d[k]=x;};
   set('inTH',0);set('inWTH',1);set('inGMTLocked',2);set('inGMTWallet',3);set('inCapital',4);
   const flags=g(5)?(parseInt(g(5),36)||0):0;
-  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);
+  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);d.inMpGreedy=!!(flags&32);
   const cur=g(6);d.inCurrency=cur==='G'?'GBP':cur==='E'?'EUR':'USD';
   set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
   set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
@@ -1767,6 +1767,9 @@ function inp(){
   mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
   mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
   mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
+  // "This is a Greedy Machine" on the marketplace-miner block. Only the planner acts on it —
+  // the miner isn't owned yet, so it must never reach calc()'s current-farm numbers.
+  mpGreedy:!!($('inMpGreedy')&&$('inMpGreedy').checked),
   gth:gth,
   gInit:+($('inGreedyInitial')?$('inGreedyInitial').value:0)||0,
   // The Greedy Machine is a separate miner with its own W/TH rating. Blank/0 ⇒ reuse the main
@@ -1878,6 +1881,7 @@ function readInputs(){
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
+    inMpGreedy:($('inMpGreedy')?$('inMpGreedy').checked:false),
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inGreedyWth:($('inGreedyWth')?$('inGreedyWth').value:''),
     inInactiveTH:($('inInactiveTH')?$('inInactiveTH').value:'0'),
@@ -1911,6 +1915,7 @@ function applyInputs(d){
   if(d.inMpTH!=null)$('inMpTH').value=d.inMpTH;
   if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
+  if(d.inMpGreedy!==undefined&&$('inMpGreedy'))$('inMpGreedy').checked=!!d.inMpGreedy;
   if(d.inGreedyTH!=null)$('inGreedyTH').value=d.inGreedyTH;
   if(d.inGreedyInitial!=null)$('inGreedyInitial').value=d.inGreedyInitial;
   if(d.inGreedyWth!=null&&$('inGreedyWth'))$('inGreedyWth').value=d.inGreedyWth;
@@ -2100,7 +2105,7 @@ function clearInputs(){
   applyInputs({
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
-    inMpTH:'0',inMpGMT:'0',inMpWth:'15',
+    inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',
     piVipBonus:false
@@ -2215,7 +2220,7 @@ document.addEventListener('keydown',e=>{
   const el=e.target;if(!_isClearable(el)||el.dataset.prevVal===undefined)return;
   el.value=el.dataset.prevVal;el.blur();   // cancel the edit, revert
 });
-['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
+['inClickStreak','inPayGMT','inAmbassador','inAvatarDisc','inMpGreedy'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',autoSave)});
 $('inAvatarDisc').addEventListener('change',()=>autoFillCPT('inTH','inCostPerTH','inWTH'));
 // Efficiency now selects the price curve, so the estimate has to follow it.
 $('inWTH').addEventListener('input',()=>autoFillCPT('inTH','inCostPerTH','inWTH'));
@@ -2370,7 +2375,11 @@ function animateMetric(el,to,fmt){
 function updateCapInVisibility(){
   const mpEl=$('inMpTH'),gEl=$('inGreedyTH');
   const mpOn=mpEl&&(parseFloat(mpEl.value)||0)>0;
-  const gOn=gEl&&(parseFloat(gEl.value)||0)>0;
+  // A marketplace miner flagged greedy needs the weekly-growth input too, even with no greedy owned.
+  const mpG=!!($('inMpGreedy')&&$('inMpGreedy').checked)&&mpOn;
+  const gOn=(gEl&&(parseFloat(gEl.value)||0)>0)||mpG;
+  const note=document.getElementById('mpGreedyNote');
+  if(note)note.style.display=mpG?'':'none';
   const mpBlock=document.getElementById('capInMarketplace');
   const gBlock=document.getElementById('capInGreedy');
   // Don't yank a block out from under the user while they're typing inside it.
@@ -2696,14 +2705,31 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // Marketplace miner: a specific miner the user plans to buy off the GoMining
   // marketplace. Its hashrate earns rewards and incurs fees, but does NOT count
   // toward the VIP tier (terahash bonus) — so it never lifts the tier .d discount.
-  const mpTH=Math.max(0,i.mpTH||0);
-  const mpWth=mpTH>0?(i.mpWth>0?i.mpWth:15):0;
-  const mpGmtCost=mpTH>0?Math.max(0,i.mpGMT||0):0;
+  const mpTHraw=Math.max(0,i.mpTH||0);
+  let mpTH=mpTHraw;
+  let mpWth=mpTH>0?(i.mpWth>0?i.mpWth:15):0;
+  const mpGmtCost=mpTHraw>0?Math.max(0,i.mpGMT||0):0;
   // Greedy Machine: existing owned TH — earns rewards + pays fees, never VIP-eligible.
   // Reinvestment grows it (greedy-first, up to 5k) inside the projection, not here.
-  const gth0=Math.max(0,i.gth||0);
-  const gwth0=gth0>0?(i.gwth>0?i.gwth:15):0;
-  const gInit=Math.min(Math.max(0,i.gInit||0),gth0);   // initial marketplace greedy — never VIP-eligible
+  let gth0=Math.max(0,i.gth||0);
+  let gwth0=gth0>0?(i.gwth>0?i.gwth:15):0;
+  let gInit=Math.min(Math.max(0,i.gInit||0),gth0);   // initial marketplace greedy — never VIP-eligible
+  // A marketplace miner flagged as greedy is re-homed into the greedy slot: from here on it is
+  // simply greedy hashrate, so it inherits free weekly growth, greedy-first reinvestment and the
+  // 5k cap for nothing extra. Its GMT price is already fixed above, so the purchase still bills.
+  // Owning one already? The two are blended into a single machine at their weighted efficiency —
+  // the model carries one greedy, so the 5k cap then applies to the pair, not to each.
+  const mpIsGreedy=!!i.mpGreedy&&mpTHraw>0;
+  if(mpIsGreedy){
+    const both=gth0+mpTHraw;
+    gwth0=both>0?((gth0*gwth0)+(mpTHraw*mpWth))/both:mpWth;
+    gth0=both;
+    gInit=Math.min(gInit+mpTHraw,gth0);   // bought, not minted ⇒ outside the VIP basis
+    mpTH=0;mpWth=0;
+  }
+  // The model as the planner sees it: identical to `i` except the flagged miner now sits in the
+  // greedy fields, so computeEffPlan builds the same farm the projection will run.
+  const iP=mpIsGreedy?Object.assign({},i,{gth:gth0,gwth:gwth0,gInit,mpTH:0,mpWth:0}):i;
   // VIP 10% bonus disabled — GoMining is not currently offering this promo.
   // Stale localStorage entries with piVipBonus=true must NOT silently grant it.
   const vipBonus=false;
@@ -2743,7 +2769,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const gmtAvail=gmtAvailPre-gmtForMiner;
   usdCap=Math.max(0,usdCap-usdForMiner);
   const totalValue=usdCap+(gmtAvail*gp);
-  if(totalValue<=0&&mpTH<=0)return null;
+  if(totalValue<=0&&mpTHraw<=0)return null;
 
   const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
 
@@ -2872,6 +2898,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     gmtNeededNew, covAfter, ntd, td2, canCover20, gmtShortfall,
     vipBonus, VIP_BONUS_MIN, VIP_BONUS_MULT, REF_GMT_BONUS,
     vipTH, vipWth, mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter:usdCap,
+    iP, mpIsGreedy, mpTHraw, mpWthRaw:(mpTHraw>0?(i.mpWth>0?i.mpWth:15):0),
     gth:gth0, gInit, gwth:gwth0, ggrow:i.ggrow||0, greedyTot, gwthAfter:greedyWthAfter, addGreedy, vipStandalone
   };
 }
@@ -2890,7 +2917,7 @@ function hasEffRoom(i){
 function effStateFrom(i,a,gp,bp){
   if(!a||!a.sol)return null;
   const usdToTH=a.usdCapAfter-a.sol.usdSpentOnGMT;
-  return {i,K:a.totalValue,gp,bp,
+  return {i:(a.iP||i),K:a.totalValue,gp,bp,
     lockUSD:a.sol.usdSpentOnGMT+a.sol.fromPool*gp, glAdd:a.sol.lock,
     thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth};
 }
@@ -3215,7 +3242,8 @@ function renderPlanner(i,m){
          gmtReserve, reserveNeeded, nt, newLocked, bwth, newF, nv,
          newNonTokD, newDailyBurnGMT, gmtNeededNew, ntd, td2,
          canCover20, gmtShortfall, vipBonus, VIP_BONUS_MIN,
-         mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter, vipTH}=a;
+         mpTH, mpWth, mpGmtCost, gmtForMiner, usdForMiner, minerShortfallUSD, usdCapAfter, vipTH,
+         mpTHraw, mpWthRaw, mpIsGreedy}=a;
   const gmtDeployable=sol.deployable, gmtLock=sol.lock, gmtSell=sol.sell;
   const gmtFromPool=sol.fromPool, gmtFromUSD=sol.fromUSD, usdSpentOnGMT=sol.usdSpentOnGMT;
   let at=sol.addTH, tu=sol.thUSD;
@@ -3247,11 +3275,11 @@ function renderPlanner(i,m){
   // not surfaced here (backend detail). The box is omitted entirely when there's nothing to say.
   const usdToTH=usdCapAfter-usdSpentOnGMT;
   let exp='';
-  if(mpTH>0){
-    exp+=`<strong style="color:var(--purple-soft)">Marketplace miner:</strong> +${fN(mpTH,0)} TH for ${fN(mpGmtCost,0)} GMT`;
+  if(mpTHraw>0){
+    exp+=`<strong style="color:var(--purple-soft)">Marketplace miner${mpIsGreedy?' (greedy)':''}:</strong> +${fN(mpTHraw,0)} TH for ${fN(mpGmtCost,0)} GMT`;
     if(usdForMiner>0)exp+=` (${fN(gmtForMiner,0)} GMT from pool + ${fU(usdForMiner)})`;
     else exp+=` (from your GMT)`;
-    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span> Remaining balance optimized below.<br>`;
+    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to the ${fN(MINER_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
   }
   if(!i.payG){
@@ -3303,8 +3331,9 @@ function renderPlanner(i,m){
 
   // Resource breakdown
   ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
-  if(mpTH>0){
-    ah+=row('Marketplace miner',`+${fN(mpTH,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWth,1)} W/TH · non-VIP</span>`,'purple');
+  if(mpTHraw>0){
+    ah+=row(mpIsGreedy?'Marketplace miner (greedy)':'Marketplace miner',
+      `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
