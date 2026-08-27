@@ -1018,6 +1018,10 @@ function buildChart(symbol,allowChange){
 // comparison chart only, and nothing on the page offers a trading opinion.
 const CMB_SIGNAL_ON=false;
 let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='compare';
+// Candles need horizontal room, and two overlaid candle series at 180 daily bars is a smear.
+// So one asset draws as candles and the other stays a line — you still read both, and the one
+// you came to look at gets the detail. _cmbCandle picks which.
+let _cmbStyle='line', _cmbCandle='btc';
 const CMB_EMA_N=50;
 const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
 
@@ -1025,11 +1029,11 @@ const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
 async function cmbFetchBTC(){
   try{   // Coinbase daily candles: [time(s),low,high,open,close,vol], newest first, max ~300
     const r=await fetchTO('https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=86400',14000);
-    if(Array.isArray(r)&&r.length>60)return r.map(c=>({t:c[0]*1000,v:+c[4]})).sort((a,b)=>a.t-b.t);
+    if(Array.isArray(r)&&r.length>60)return r.map(c=>({t:c[0]*1000,v:+c[4],o:+c[3],h:+c[2],l:+c[1],c:+c[4]})).sort((a,b)=>a.t-b.t);
   }catch(e){}
   try{   // CoinGecko daily market chart
     const r=await fetchTO('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily',14000);
-    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1]}));
+    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1],o:+p[1],h:+p[1],l:+p[1],c:+p[1]}));
   }catch(e){}
   return null;
 }
@@ -1037,11 +1041,11 @@ async function cmbFetchGMT(){
   try{   // Bitget daily candles: [ts(ms),open,high,low,close,...]
     const r=await fetchTO('https://api.bitget.com/api/v2/spot/market/candles?symbol=GOMININGUSDT&granularity=1day&limit=400',14000);
     const d=r&&r.data;
-    if(Array.isArray(d)&&d.length>60)return d.map(c=>({t:+c[0],v:+c[4]})).sort((a,b)=>a.t-b.t);
+    if(Array.isArray(d)&&d.length>60)return d.map(c=>({t:+c[0],v:+c[4],o:+c[1],h:+c[2],l:+c[3],c:+c[4]})).sort((a,b)=>a.t-b.t);
   }catch(e){}
   try{
     const r=await fetchTO('https://api.coingecko.com/api/v3/coins/gmt-token/market_chart?vs_currency=usd&days=365&interval=daily',14000);
-    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1]}));
+    if(r&&Array.isArray(r.prices)&&r.prices.length>60)return r.prices.map(p=>({t:+p[0],v:+p[1],o:+p[1],h:+p[1],l:+p[1],c:+p[1]}));
   }catch(e){}
   return null;
 }
@@ -1050,10 +1054,17 @@ async function cmbFetchGMT(){
 function cmbAlign(a,b){
   const day=t=>Math.floor(t/86400000)*86400000;
   const ma=new Map(),mb=new Map();
-  a.forEach(p=>{if(p.v>0)ma.set(day(p.t),p.v)});
-  b.forEach(p=>{if(p.v>0)mb.set(day(p.t),p.v)});
+  // `btc`/`gmt` stay plain closing numbers — the beta fit, the ratio bands and the correlation
+  // all read them as scalars. The candle bodies ride alongside under their own keys.
+  const ohlc=p=>({o:p.o>0?p.o:p.v,h:p.h>0?p.h:p.v,l:p.l>0?p.l:p.v,c:p.c>0?p.c:p.v});
+  a.forEach(p=>{if(p.v>0)ma.set(day(p.t),p)});
+  b.forEach(p=>{if(p.v>0)mb.set(day(p.t),p)});
   const out=[];
-  Array.from(ma.keys()).sort((x,y)=>x-y).forEach(t=>{if(mb.has(t))out.push({t,btc:ma.get(t),gmt:mb.get(t)})});
+  Array.from(ma.keys()).sort((x,y)=>x-y).forEach(t=>{
+    if(!mb.has(t))return;
+    const A=ma.get(t),B=mb.get(t);
+    out.push({t,btc:A.v,gmt:B.v,btcC:ohlc(A),gmtC:ohlc(B)});
+  });
   return out;
 }
 function loadCombined(force){
@@ -1253,6 +1264,13 @@ function drawCombined(){
   const L=P.l,R=W-P.r,T=P.t,B=H-P.b, pw=R-L, ph=B-T;
   let lo=Infinity,hi=-Infinity;
   S.forEach(p=>{[p.biR,p.giR].forEach(v=>{if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
+  if(_cmbStyle==='candle'){
+    // Wicks reach past the closes the lines are drawn from; fit them or the highs and lows clip.
+    const isB=_cmbCandle==='btc', key=isB?'btcC':'gmtC';
+    const base=isB?S[0].btc:S[0].gmt;
+    S.forEach(p=>{const k=p[key];if(!k)return;
+      [k.h,k.l].forEach(v=>{const r=v/base*100;if(r<lo)lo=r;if(r>hi)hi=r;});});
+  }
   const padv=(hi-lo)*0.08||8;lo-=padv;hi+=padv;
   const t0=S[0].t,t1=S[S.length-1].t;
   const X=t=>L+pw*((t-t0)/((t1-t0)||1));
@@ -1284,8 +1302,31 @@ function drawCombined(){
     if(started)x.stroke();
     x.setLineDash([]);x.restore();
   };
-  line('biR',CMB_BTC,2);
-  line('giR',CMB_GMT,2);
+  if(_cmbStyle==='candle'){
+    const isB=_cmbCandle==='btc';
+    // Each candle is re-based on the SAME divisor as its line, so switching style never moves
+    // the series — the axis keeps meaning "% change since the left edge".
+    const base=isB?S[0].btc:S[0].gmt;   // same divisor the lines use, so styles never disagree
+    const key=isB?'btcC':'gmtC';
+    const slot=pw/Math.max(1,S.length);
+    const bw=Math.max(1,Math.min(11,slot*0.66));
+    x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
+    S.forEach((p,ix)=>{
+      const k=p[key];if(!k)return;
+      const cx=L+(ix+0.5)*slot;
+      const up=k.c>=k.o, col=up?'#16c784':'#ea3943';
+      const Yv=v=>Y(v/base*100);
+      x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(1,slot*0.12);
+      x.beginPath();x.moveTo(cx,Yv(k.h));x.lineTo(cx,Yv(k.l));x.stroke();
+      const yo=Yv(k.o),yc=Yv(k.c);
+      x.fillRect(cx-bw/2,Math.min(yo,yc),bw,Math.max(1.5,Math.abs(yc-yo)));
+    });
+    x.restore();
+    line(isB?'giR':'biR',isB?CMB_GMT:CMB_BTC,1.8);   // the other asset stays a line for context
+  }else{
+    line('biR',CMB_BTC,2);
+    line('giR',CMB_GMT,2);
+  }
 
   // crosshair readout
   if(_cmbHover!=null){
@@ -1302,7 +1343,15 @@ function drawCombined(){
         tip.style.display='';
         tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_BTC}"></span><span class="rb-tip-lbl">BTC</span><span class="rb-tip-px">${fmtBTCPrice(p.btc)}</span></div>`
-          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`;
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
+          +(function(){
+            if(_cmbStyle!=='candle')return '';
+            const isB=_cmbCandle==='btc', k=isB?p.btcC:p.gmtC;
+            if(!k)return '';
+            const q=v=>isB?fmtBTCPrice(v):('$'+v.toFixed(4));
+            return `<div class="rb-tip-row" style="margin-top:.2rem;border-top:1px solid var(--border);padding-top:.25rem"><span class="rb-tip-lbl">${isB?'BTC':'GMT'} O/C</span><span class="rb-tip-px">${q(k.o)} / ${q(k.c)}</span></div>`
+              +`<div class="rb-tip-row"><span class="rb-tip-lbl">H/L</span><span class="rb-tip-px">${q(k.h)} / ${q(k.l)}</span></div>`;
+          })();
         const tw=tip.offsetWidth||150;
         tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';
         tip.style.top=(T+6)+'px';
@@ -1476,6 +1525,20 @@ function setCmbMode(mode,btn){
   if(ft)ft.style.display=(mode==='compare')?'':'none';
   const sf=document.getElementById('cmbSignalFoot');
   if(sf)sf.style.display=(mode==='signal')?'':'none';
+  drawCombined();
+}
+function setCmbStyle(style,btn){
+  _cmbStyle=style;
+  const nav=document.getElementById('cmbStyleNav');
+  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+  const pick=document.getElementById('cmbCandlePick');
+  if(pick)pick.style.display=(style==='candle')?'':'none';
+  drawCombined();
+}
+function setCmbCandleAsset(which,btn){
+  _cmbCandle=which;
+  const nav=document.getElementById('cmbCandlePick');
+  if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
   drawCombined();
 }
 function setCmbRange(days,btn){

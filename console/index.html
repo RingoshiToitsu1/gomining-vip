@@ -950,6 +950,14 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <button onclick="setCmbBand(1.5,this)">&plusmn;1.5&sigma;</button>
         <button onclick="setCmbBand(2.0,this)">&plusmn;2&sigma;</button>
       </div>
+      <div class="btc-chart-mode" id="cmbStyleNav">
+        <button class="active" onclick="setCmbStyle('line',this)">Lines</button>
+        <button onclick="setCmbStyle('candle',this)">Candles</button>
+      </div>
+      <div class="btc-chart-mode" id="cmbCandlePick" style="display:none">
+        <button class="active" onclick="setCmbCandleAsset('btc',this)">BTC</button>
+        <button onclick="setCmbCandleAsset('gmt',this)">GMT</button>
+      </div>
       <div class="btc-chart-mode" id="cmbRange">
         <button onclick="setCmbRange(90,this)">90d</button>
         <button class="active" onclick="setCmbRange(180,this)">180d</button>
@@ -962,7 +970,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <canvas id="cmbCanvas"></canvas>
         <div class="btc-rainbow-tip" id="cmbTip" style="display:none"></div>
         <div class="btc-rainbow-foot"><span id="cmbCorrNote"></span>
-          <span id="cmbFootNote"> Both lines are re-based to 100 at the left edge, so a coin worth $79,000 and one worth $0.33 can be compared like for like &mdash; the axis reads as % change since that date. Daily closes. Not financial advice.</span>
+          <span id="cmbFootNote"> Candles show the chosen asset's daily open/high/low/close, re-based like the lines so the axis still reads as % change; the other asset stays a line for comparison. Both are re-based to 100 at the left edge, so a coin worth $79,000 and one worth $0.33 can be compared like for like &mdash; the axis reads as % change since that date. Daily closes. Not financial advice.</span>
           <span id="cmbSignalFoot" style="display:none"> GMT priced in BTC, against its own 50-day EMA (dashed) with the &plusmn;1 and &plusmn;2 standard-deviation envelopes. Green band = GMT cheap for what BTC is doing, red = rich. Bands use only data up to each day, so the history is what the signal would have said at the time. Mean reversion assumes the BTC&ndash;GMT relationship holds &mdash; it breaks on tokenomics changes, listings or project news. Not financial advice.</span>
         </div>
         <div class="btc-rainbow-msg" id="cmbMsg" style="display:none">Loading daily price history&hellip;</div>
@@ -1151,7 +1159,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=105"></script>
+<script src="/assets/app.js?v=106"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
