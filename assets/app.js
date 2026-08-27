@@ -3883,7 +3883,7 @@ function computeSetupProjection(){
   h+=`<div class="ri-single-card">
     <div class="ri-label">Daily Reward (End of Period)</div>
     <div class="ri-headline cyan">${fU(finalSS)}</div>
-    <div class="ri-mo-yr">${fU(finalMonthly)}/mo<span class="ri-sep">&bull;</span>${fU(finalYearly)}/yr</div>
+    <div class="ri-mo-yr big"><span class="mo">${fU(finalMonthly)}<i>/mo</i></span><span class="ri-sep">&bull;</span><span class="yr">${fU(finalYearly)}<i>/yr</i></span></div>
     <div class="ri-breakdown">${breakdownDaily}</div>
     <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
   </div>`;
