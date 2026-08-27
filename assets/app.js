@@ -1031,7 +1031,7 @@ async function createChartShot(){
     _chartShotCanvas=buildChartShotCanvas(asset,data,{logoOpt,coin,token});
     img.src=_chartShotCanvas.toDataURL('image/png');
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cache so Share can fire inside the click gesture
-    img.style.display='';load.style.display='none';actions.style.display='flex';
+    _shotReady();
   }catch(e){
     document.getElementById('chartShotLoadTxt').textContent='Couldn’t load price data right now — please try again in a moment.';
   }
@@ -1080,7 +1080,12 @@ function _chartShotFile(){
   if(!_chartShotBlob)return null;
   return new File([_chartShotBlob],_shotInfo().file,{type:'image/png'});
 }
-function _canShareImage(){const f=_chartShotFile();return !!(f&&navigator.canShare&&navigator.canShare({files:[f]}));}
+// Strict: only true when the browser has confirmed it will carry the file. Drives the sheet's
+// labels and hints, which must never promise something that then silently does nothing.
+function _canShareImage(){const f=_chartShotFile();return !!(f&&navigator.share&&navigator.canShare&&navigator.canShare({files:[f]}));}
+// Loose: worth *trying*. Chrome on iOS exposes navigator.share but no navigator.canShare to ask,
+// so gating the attempt on canShare meant we never tried a file share there at all.
+function _mightShareImage(){const f=_chartShotFile();return !!(f&&navigator.share);}
 // "Share": always open our custom YouTube-style bottom sheet (the user prefers it over the
 // browser's native share dialog). The native OS sheet is still reachable from the sheet's
 // "Share with other apps" row, which carries the actual PNG where file-sharing is supported.
@@ -1100,7 +1105,8 @@ function openChartShare(){
   if(hint){
     const msg=withFile?''
       :(_IOS_INAPP?'This in-app browser can\u2019t hand over images. Tap \u22ef and "Open in Safari" for one-tap sharing.'
-      :(_IS_IOS?'This browser can\u2019t hand over images \u2014 open the page in Safari for one-tap sharing.':''));
+      :(/CriOS|FxiOS|EdgiOS/.test(_UA)?'Chrome/Firefox on iOS can\u2019t pass images to other apps \u2014 press & hold the image, or open this page in Safari for one-tap sharing.'
+      :(_IS_IOS?'This browser can\u2019t hand over images \u2014 open the page in Safari for one-tap sharing.':'')));
     hint.textContent=msg;hint.style.display=msg?'block':'none';
   }
   document.getElementById('chartShareSheet').style.display='flex';
@@ -1113,6 +1119,20 @@ function closeChartShare(){const s=document.getElementById('chartShareSheet');if
 const _UA=navigator.userAgent||'';
 const _IS_IOS=/iP(hone|od|ad)/.test(_UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const _IOS_INAPP=_IS_IOS&&!/Safari\//.test(_UA)&&!/CriOS|FxiOS|EdgiOS/.test(_UA);
+// Every snapshot flow finishes here: reveal the image + actions, and where the browser can't
+// hand a file to another app, say so under the image — long-press is the route that always works.
+function _shotReady(){
+  const img=document.getElementById('chartShotImg'),load=document.getElementById('chartShotLoading');
+  const act=document.getElementById('chartShotActions'),hint=document.getElementById('chartShotHint');
+  if(img)img.style.display='';
+  if(load)load.style.display='none';
+  if(act)act.style.display='flex';
+  if(hint){
+    const show=_IS_IOS&&!_canShareImage();
+    hint.textContent=show?'Press and hold the image to save or share it — this browser can’t pass the file to other apps, but Safari can.':'';
+    hint.style.display=show?'block':'none';
+  }
+}
 let _csToastT=null;
 function csToast(msg){
   const el=document.getElementById('chartShareToast');if(!el)return;
@@ -1126,11 +1146,11 @@ async function chartShareTo(net){
   // Phones: a web composer (t.me/share, twitter/intent, …) can only carry a link — tapping
   // "Telegram" here used to post a bare URL with no image at all. Where the OS can hand over
   // the actual PNG, go through the system sheet instead and let them pick the same app there.
-  if(_canShareImage()){
+  if(_canShareImage()||(_IS_IOS&&_mightShareImage())){
     csToast('Choose '+(_CS_NET[net]||'the app')+' — the image goes with it');
     return chartShareNative();
   }
-  await copyChartShot(true);   // silent copy
+  const copied=await copyChartShot(true);   // silent copy
   const link=_csChartUrl(),u=encodeURIComponent(link),te=encodeURIComponent(_csShareText());
   const urls={
     telegram:'https://t.me/share/url?url='+u+'&text='+te,
@@ -1144,14 +1164,15 @@ async function chartShareTo(net){
     const w=window.open(urls[net],'_blank','noopener,noreferrer');
     if(!w){location.href=urls[net];return;}
   }
-  csToast('✓ Image copied — paste it into '+(_CS_NET[net]||'the post'));
+  csToast(copied?'✓ Image copied — paste it into '+(_CS_NET[net]||'the post')
+    :'Link only — press & hold the image to add it yourself');
 }
 // "Share with other apps" row — hand the OS the actual PNG.
 async function chartShareNative(){
   const f=_chartShotFile();if(!f)return;
   const info=_shotInfo();
   try{
-    if(navigator.canShare&&navigator.canShare({files:[f]})){
+    if(_mightShareImage()&&(!navigator.canShare||navigator.canShare({files:[f]}))){
       // NO `url:` here. When a share payload carries both files and a url, iOS and most
       // Android targets take the link and silently drop the image — which is exactly how
       // "share the image" turned into "post a link". The link rides along inside `text`.
@@ -1179,10 +1200,11 @@ async function copyChartShot(silent){
     if(navigator.clipboard&&window.ClipboardItem&&window.isSecureContext){
       const blobP=_chartShotBlob?Promise.resolve(_chartShotBlob):canvasToBlob(_chartShotCanvas);
       await navigator.clipboard.write([new ClipboardItem({'image/png':blobP})]);
-      if(silent!==true)csToast('✓ Image copied — paste anywhere');return;
+      if(silent!==true)csToast('✓ Image copied — paste anywhere');return true;
     }
   }catch(e){}
   if(silent!==true)_imageFallback();
+  return false;
 }
 async function downloadChartShot(btn){
   if(!_chartShotCanvas&&!_chartShotBlob)return;
@@ -1346,7 +1368,7 @@ async function createFarmShot(){
     _chartShotCanvas=buildFarmShotCanvas(d,{logoOpt,token,coin});
     img.src=_chartShotCanvas.toDataURL('image/png');
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
-    img.style.display='';load.style.display='none';actions.style.display='flex';
+    _shotReady();
   }catch(e){
     document.getElementById('chartShotLoadTxt').textContent='Enter your setup first — there are no numbers to snapshot yet.';
   }
@@ -1581,7 +1603,7 @@ async function shareProjectionImage(btn){
     _chartShotCanvas=buildShareCanvas(d);
     img.src=_chartShotCanvas.toDataURL('image/png');
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
-    img.style.display='';load.style.display='none';actions.style.display='flex';
+    _shotReady();
   }catch(e){
     document.getElementById('chartShotLoadTxt').textContent='Couldn’t build the image — please run the projection again.';
   }

@@ -922,6 +922,7 @@ html.show-onboarding #onboarding{display:flex}
 .share-plan-btn svg{flex:0 0 auto}
 /* Chart screenshot button + preview modal */
 .chart-shot-btn{white-space:nowrap}
+.cshot-hint{color:var(--text3);font-size:.76rem;line-height:1.45;text-align:center;padding:.5rem .6rem 0}
 .cshot-overlay{position:fixed;inset:0;z-index:9999;background:rgba(6,6,8,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1.2rem}
 .cshot-box{background:var(--bg-card,#111);border:1px solid var(--card-border,rgba(245,166,35,.25));border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);width:min(880px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
 .cshot-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;border-bottom:1px solid var(--card-border,rgba(245,166,35,.15));font-weight:800;font-size:.95rem;color:var(--text,#fff)}
