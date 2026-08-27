@@ -951,11 +951,6 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <button class="active" onclick="setCmbRange(180,this)">180d</button>
         <button onclick="setCmbRange(365,this)">1y</button>
       </div>
-      <div class="cmb-weight" id="cmbWeightWrap">
-        <label for="cmbWeight">EMA blend</label>
-        <input type="range" id="cmbWeight" min="0" max="100" step="5" value="50" oninput="setCmbWeight(this.value)">
-        <span id="cmbWeightLab"></span>
-      </div>
     </div>
     <div class="btc-chart-wrap">
       <div class="btc-rainbow-wrap show" id="cmbWrap">
@@ -963,7 +958,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <canvas id="cmbCanvas"></canvas>
         <div class="btc-rainbow-tip" id="cmbTip" style="display:none"></div>
         <div class="btc-rainbow-foot"><span id="cmbCorrNote"></span>
-          <span id="cmbFootNote"> Both re-based to 100 at the left edge, so the lines compare like for like. The green line is a 50-day EMA of the weighted blend. Daily closes, not financial advice.</span>
+          <span id="cmbFootNote"> Both lines are re-based to 100 at the left edge, so a coin worth $79,000 and one worth $0.33 can be compared like for like &mdash; the axis reads as % change since that date. Daily closes. Not financial advice.</span>
           <span id="cmbSignalFoot" style="display:none"> GMT priced in BTC, against its own 50-day EMA (dashed) with the &plusmn;1 and &plusmn;2 standard-deviation envelopes. Green band = GMT cheap for what BTC is doing, red = rich. Bands use only data up to each day, so the history is what the signal would have said at the time. Mean reversion assumes the BTC&ndash;GMT relationship holds &mdash; it breaks on tokenomics changes, listings or project news. Not financial advice.</span>
         </div>
         <div class="btc-rainbow-msg" id="cmbMsg" style="display:none">Loading daily price history&hellip;</div>
@@ -1151,7 +1146,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=94"></script>
+<script src="/assets/app.js?v=95"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

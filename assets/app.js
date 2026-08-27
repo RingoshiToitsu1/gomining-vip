@@ -1017,7 +1017,7 @@ function buildChart(symbol,allowChange){
 // works — flip this one flag to true to bring the whole thing back. Until then /combined is the
 // comparison chart only, and nothing on the page offers a trading opinion.
 const CMB_SIGNAL_ON=false;
-let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbW=50, _cmbHover=null, _cmbMode='compare';
+let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='compare';
 const CMB_EMA_N=50;
 const CMB_BTC='#F5A623', CMB_GMT='#7FB0FF', CMB_EMA='#16c784';
 
@@ -1076,24 +1076,6 @@ function loadCombined(force){
     _cmbLoading=false;
     if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
   });
-}
-// The blended index and its EMA. Both legs are re-based to the window start so the weight is
-// applied to comparable numbers — blending a $78,000 price with a $0.33 one directly would just
-// return BTC. Seeded with the SMA of the first N points so the EMA starts on a real level.
-function cmbSeries(rows,wPct){
-  const w=Math.max(0,Math.min(100,wPct))/100;
-  const b0=rows[0].btc, g0=rows[0].gmt;
-  const out=rows.map(r=>{
-    const bi=r.btc/b0*100, gi=r.gmt/g0*100;
-    return {t:r.t,btc:r.btc,gmt:r.gmt,bi,gi,blend:w*bi+(1-w)*gi};
-  });
-  if(out.length>=CMB_EMA_N){
-    let e=0;for(let i=0;i<CMB_EMA_N;i++)e+=out[i].blend;e/=CMB_EMA_N;
-    const k=2/(CMB_EMA_N+1);
-    out[CMB_EMA_N-1].ema=e;
-    for(let i=CMB_EMA_N;i<out.length;i++){e=out[i].blend*k+e*(1-k);out[i].ema=e;}
-  }
-  return out;
 }
 // Pearson correlation of DAILY LOG RETURNS — the honest measure of "do they move together".
 // Correlating the price levels themselves would report ~1 for any two things that both trended.
@@ -1256,26 +1238,21 @@ function drawCombined(){
   if(!_cmbData||_cmbData.length<2)return;
   renderCmbVerdict();
 
-  // Window first, THEN re-base: the index has to read 100 at the left edge of what's on screen,
-  // not at the start of everything we downloaded. The EMA still needs its 50-day run-up, so it is
-  // computed over a padded slice and only the visible part is drawn.
+  // Two price lines, nothing else. Both re-based to 100 at the LEFT EDGE OF THE WINDOW — not at
+  // the start of everything downloaded — so changing the range re-zeroes them and the chart
+  // always answers "what have these two done since the date on the left".
   const all=_cmbData, n=all.length;
   const want=Math.min(n,_cmbDays);
   if(CMB_SIGNAL_ON&&_cmbMode==='signal'){drawCmbSignal(x,all,want,W,H,sm0(W));return;}
-  const padStart=Math.max(0,n-want-CMB_EMA_N);
-  const padded=cmbSeries(all.slice(padStart),_cmbW);
-  const skip=(n-want)-padStart;
-  const S=padded.slice(skip);
+  const S=all.slice(n-want);
   if(S.length<2)return;
-  // Re-base the drawn window to 100 (the padded slice was based further back).
-  const rb0=S[0].bi, rg0=S[0].gi, rblend0=S[0].blend;
-  S.forEach(p=>{p.biR=p.bi/rb0*100;p.giR=p.gi/rg0*100;p.blendR=p.blend/rblend0*100;
-    if(p.ema!=null)p.emaR=p.ema/rblend0*100;});
+  const b0=S[0].btc, g0=S[0].gmt;
+  S.forEach(p=>{p.biR=p.btc/b0*100;p.giR=p.gmt/g0*100;});
 
   const sm=W<480, P=cmbPads(W);
   const L=P.l,R=W-P.r,T=P.t,B=H-P.b, pw=R-L, ph=B-T;
   let lo=Infinity,hi=-Infinity;
-  S.forEach(p=>{[p.biR,p.giR,p.blendR,p.emaR].forEach(v=>{if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
+  S.forEach(p=>{[p.biR,p.giR].forEach(v=>{if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v;}})});
   const padv=(hi-lo)*0.08||8;lo-=padv;hi+=padv;
   const t0=S[0].t,t1=S[S.length-1].t;
   const X=t=>L+pw*((t-t0)/((t1-t0)||1));
@@ -1307,10 +1284,8 @@ function drawCombined(){
     if(started)x.stroke();
     x.setLineDash([]);x.restore();
   };
-  line('biR',CMB_BTC,1.8);
-  line('giR',CMB_GMT,1.8);
-  line('blendR','rgba(255,255,255,0.28)',1.2,[4,4]);
-  line('emaR',CMB_EMA,2.6);
+  line('biR',CMB_BTC,2);
+  line('giR',CMB_GMT,2);
 
   // crosshair readout
   if(_cmbHover!=null){
@@ -1320,16 +1295,14 @@ function drawCombined(){
       const px=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
       x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
-      [['biR',CMB_BTC],['giR',CMB_GMT],['emaR',CMB_EMA]].forEach(([k,c])=>{
+      [['biR',CMB_BTC],['giR',CMB_GMT]].forEach(([k,c])=>{
         if(p[k]==null)return;x.fillStyle=c;x.beginPath();x.arc(px,Y(p[k]),3.2,0,7);x.fill();});
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
         tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_BTC}"></span><span class="rb-tip-lbl">BTC</span><span class="rb-tip-px">${fmtBTCPrice(p.btc)}</span></div>`
-          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
-          +(p.emaR!=null?`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_EMA}"></span><span class="rb-tip-lbl">${CMB_EMA_N}d EMA</span><span class="rb-tip-px">${(p.emaR>=100?'+':'')+ (p.emaR-100).toFixed(1)}%</span></div>`:'')
-          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:rgba(255,255,255,.4)"></span><span class="rb-tip-lbl">blend</span><span class="rb-tip-px">${(p.blendR>=100?'+':'')+(p.blendR-100).toFixed(1)}%</span></div>`;
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`;
         const tw=tip.offsetWidth||150;
         tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';
         tip.style.top=(T+6)+'px';
@@ -1343,10 +1316,8 @@ function drawCombined(){
   const pct=v=>(v>=100?'+':'')+(v-100).toFixed(1)+'%';
   const lg=document.getElementById('cmbLegend');
   if(lg)lg.innerHTML=
-     `<span class="rb-pill" style="border-left-color:${CMB_BTC}">BTC ${pct(last.biR)}</span>`
-    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">GMT ${pct(last.giR)}</span>`
-    +`<span class="rb-pill" style="border-left-color:${CMB_EMA}">${CMB_EMA_N}d EMA ${last.emaR!=null?pct(last.emaR):'—'}</span>`
-    +`<span class="rb-pill" style="border-left-color:rgba(255,255,255,.4)">blend ${_cmbW}/${100-_cmbW} ${pct(last.blendR)}</span>`
+     `<span class="rb-pill" style="border-left-color:${CMB_BTC}">BTC ${pct(last.biR)} &middot; ${fmtBTCPrice(last.btc)}</span>`
+    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">GMT ${pct(last.giR)} &middot; $${last.gmt.toFixed(4)}</span>`
     +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#16c784':corr>=0.2?'#f3a93a':'#ea3943'}">correlation ${corr.toFixed(2)}</span>`:'');
   const note=document.getElementById('cmbCorrNote');
   if(note)note.textContent=corr==null?''
@@ -1501,8 +1472,6 @@ function setCmbMode(mode,btn){
   _cmbMode=mode;
   const nav=document.getElementById('cmbModeNav');
   if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
-  const wt=document.getElementById('cmbWeightWrap');
-  if(wt)wt.style.display=(mode==='compare')?'':'none';
   const ft=document.getElementById('cmbFootNote');
   if(ft)ft.style.display=(mode==='compare')?'':'none';
   const sf=document.getElementById('cmbSignalFoot');
@@ -1515,12 +1484,6 @@ function setCmbRange(days,btn){
   if(nav)nav.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
   drawCombined();
 }
-function setCmbWeight(v){
-  _cmbW=Math.max(0,Math.min(100,+v||0));
-  const lab=document.getElementById('cmbWeightLab');
-  if(lab)lab.innerHTML=`<strong style="color:${CMB_BTC}">${_cmbW}% BTC</strong> &middot; <strong style="color:${CMB_GMT}">${100-_cmbW}% GMT</strong>`;
-  drawCombined();
-}
 function openCombined(){
   try{history.replaceState({},'','/combined'+location.hash);}catch(e){}
   showPanelView('cmbPage');
@@ -1531,7 +1494,6 @@ function openCombined(){
     const sf=document.getElementById('cmbSignalFoot');if(sf)sf.style.display='none';
     const ft=document.getElementById('cmbFootNote');if(ft)ft.style.display='';
   }
-  setCmbWeight(_cmbW);
   loadCombined();
   bindCmbPointer();
 }
