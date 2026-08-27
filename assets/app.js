@@ -4599,6 +4599,15 @@ function computeSetupProjection(){
   }
   if(startTH<=0&&gmtLocked<=0){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Add your hashrate and locked GMT in <strong>My Setup</strong> first, then project.</div>';return;}
   const GRD_START=GRD.map(m=>({th:m.th,wth:m.wth,code:m.code||''}));   // per-machine snapshot for the results card
+  // What this run actually started from, recorded where it can be read back. Three rounds of
+  // "the projection lost money" came down to the seed, and each round cost a screenshot to
+  // narrow. window._spSeed makes the seed answerable in one line.
+  try{
+    window._spSeed={mode:window._spMode,fromPlanner,startTH:+startTH.toFixed(2),
+      standaloneTH:+th.toFixed(2),greedyTH:+greedyTH.toFixed(2),greedyWTH:+greedyWTH.toFixed(2),
+      mpTH:+MP_TH.toFixed(2),locked:Math.round(startLocked),walletGMT:Math.round(gmtW),
+      curWTH:+curWTH.toFixed(2),days,bpStart:Math.round(bpStart),gp0:+gp0.toFixed(4)};
+  }catch(e){}
   // Starting blended efficiency (across VIP + marketplace + greedy) — to show any reinvested upgrade.
   const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
 
