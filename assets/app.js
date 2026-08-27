@@ -4328,6 +4328,12 @@ function updateSpTargetPreview(){
 }
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
+  // With no mode given — the top-nav "Projection" link — infer it. Opening that link straight
+  // from a calculated plan used to silently project the CURRENT farm instead, so day 1 came back
+  // at today's income and the plan looked like it had earned nothing. Two doors to one page that
+  // answer different questions have to pick the one the user is standing in front of.
+  if(mode==null&&window._plannerCalcDone&&document.body.classList.contains('planning'))mode='planner';
+  if(mode==null&&window._plannerCalcDone&&document.querySelector('[data-tab="tab-planner"].active'))mode='planner';
   window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
@@ -4338,6 +4344,7 @@ function openSetupProjection(mode){
     ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
     : 'Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
+  renderSpModeSwitch();
   syncPayoutUnit();
   showPanelView('setupProjModal');
   // Its own page. The planner-mode projection (projecting the RECOMMENDED allocation) is
@@ -4355,6 +4362,23 @@ function openSetupProjection(mode){
   }
   const btn=document.getElementById('spRunBtn');
   if(btn)btn.disabled=false;
+}
+// The projection answers one of two different questions and the answer is nowhere near the same
+// number. Name which one is on screen, and let it be switched without leaving the page.
+function renderSpModeSwitch(){
+  const el=document.getElementById('spModeSwitch');
+  if(!el)return;
+  const planner=window._spMode==='planner';
+  const havePlan=!!window._plannerCalcDone;
+  el.innerHTML=
+     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Setup</button>`
+    +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My Plan</button>`;
+  el.style.display='';
+}
+function setSpMode(mode){
+  if(mode==='planner'&&!window._plannerCalcDone)return;
+  if(window._spMode===mode)return;
+  openSetupProjection(mode);
 }
 // Re-run the fresh-load feel for the My Setup dashboard: hero values count up
 // from 0 again and the cards re-enter, just like a page refresh.

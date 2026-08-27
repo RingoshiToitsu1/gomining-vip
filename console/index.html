@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=55">
+<link rel="stylesheet" href="/assets/app.css?v=56">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=16">
 </head>
@@ -1025,6 +1025,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
       </div>
       <div class="sp-form">
         <div class="pi-title">Growth Projection</div>
+        <div class="sp-mode-switch btc-chart-mode" id="spModeSwitch" style="display:none"></div>
         <div class="pi-subtitle" id="spSubtitle">Project your farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
 
         <div class="sp-model-banner">
@@ -1150,7 +1151,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=100"></script>
+<script src="/assets/app.js?v=101"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
