@@ -685,7 +685,13 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
           <label class="toggle"><input type="checkbox" id="inMpGreedy"><span class="toggle-track"></span></label>
           <span class="toggle-label" onclick="document.getElementById('inMpGreedy').click()">This is a Greedy Machine <span class="ed-toggle-note">(grows free every week)</span></span>
         </div>
-        <div id="mpGreedyNote" style="display:none;font-size:.72rem;color:var(--text4);margin-top:.5rem;line-height:1.5">Planned as a Greedy Machine: it grows by the weekly % below with no capital, reinvested rewards fill it first up to the 5,000 TH cap, and — like any marketplace buy — it never counts toward your VIP tier.</div>
+        <div id="mpGreedyNote" style="display:none;margin-top:.5rem">
+          <div class="field" style="max-width:200px">
+            <label>Miner # <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+            <div class="field-input"><input type="text" id="inMpCode" maxlength="16" placeholder="e.g. 1366"></div>
+          </div>
+          <div style="font-size:.72rem;color:var(--text4);margin-top:.5rem;line-height:1.5">Planned as a Greedy Machine: it grows by the weekly % below with no capital, reinvested rewards fill it first up to its <strong style="color:var(--text3)">own</strong> 5,000 TH cap, and — like any marketplace buy — it never counts toward your VIP tier. Tracked as a separate NFT from any Greedy Machine you already own.</div>
+        </div>
       </div>
       <div id="capInGreedy" style="max-width:360px;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
         <label style="font-size:.85rem;color:var(--text2);font-weight:600;display:block;margin-bottom:.4rem">Greedy Machine passive growth <span style="color:var(--text4);font-weight:400">(optional)</span></label>
@@ -822,7 +828,10 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
             <label class="toggle"><input type="checkbox" id="piMpGreedy" onchange="document.getElementById('piMpGreedyNote').style.display=this.checked?'':'none'"><span class="toggle-track"></span></label>
             <span class="toggle-label" onclick="document.getElementById('piMpGreedy').click()">It&rsquo;s a Greedy Machine</span>
           </div>
-          <div id="piMpGreedyNote" style="display:none;font-size:.65rem;color:var(--text4);margin-top:.35rem;text-align:center">Grows free every week, reinvested rewards fill it first, and it keeps its own 5,000 TH cap &mdash; set the weekly % on the Investment tab.</div>
+          <div id="piMpGreedyNote" style="display:none;margin-top:.35rem">
+            <input type="text" id="piMpCode" placeholder="miner # (optional)" maxlength="16" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:8px 12px;font-size:.85rem;font-family:var(--mono);width:100%;text-align:center">
+            <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;text-align:center">Grows free every week, reinvested rewards fill it first, and it keeps its <strong style="color:var(--text3)">own</strong> 5,000 TH cap &mdash; tracked apart from any Greedy Machine you already own. Set the weekly % on the Investment tab.</div>
+          </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Its TH boosts rewards but <strong style="color:var(--text3)">not</strong> your VIP tier. The planner allocates the rest for max discount.</div>
           </div>
         </div>
@@ -1093,7 +1102,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=83"></script>
+<script src="/assets/app.js?v=84"></script>
 <script src="/assets/fleet.js?v=14"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
