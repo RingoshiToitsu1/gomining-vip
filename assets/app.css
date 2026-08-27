@@ -769,9 +769,18 @@ html.show-onboarding #onboarding{display:flex}
 .rb-pill{font-size:.66rem;font-weight:600;color:var(--text3);background:var(--bg-input);border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:.25rem .55rem;white-space:nowrap;line-height:1.2}
 .rb-pill.active{color:var(--text);border-color:var(--text2);box-shadow:0 0 0 1px var(--text3);font-weight:800}
 .btc-rainbow-tip{position:absolute;z-index:5;pointer-events:none;background:rgba(12,12,16,0.95);border:1px solid var(--border);border-radius:8px;padding:.5rem .6rem;font-size:.68rem;min-width:172px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+/* chart-page chrome swaps to short labels on phones so the header stays one row */
+.ct-short{display:none}
 @media(max-width:600px){
+  .ct-long{display:none}
+  .ct-short{display:inline}
   .btc-chart-title{font-size:.8rem}
   .btc-chart-mode button{font-size:.72rem;padding:.35rem .6rem}
+  /* one compact row: back · title · rainbow · snapshot — every pixel saved is chart height */
+  #btcChartPage .sp-page-head,#rainbowPage .sp-page-head{gap:.4rem;padding:.4rem 0 .5rem;flex-wrap:nowrap}
+  #btcChartPage .sp-back-btn,#rainbowPage .sp-back-btn{padding:.42rem .7rem;font-size:.75rem;flex:0 0 auto}
+  #btcChartPage .btc-chart-title,#rainbowPage .btc-chart-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .chart-shot-btn{padding:.42rem .65rem;font-size:.72rem;flex:0 0 auto}
   /* legend becomes a single horizontally-scrollable row so it doesn't eat chart height */
   .btc-rainbow-legend{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding:.4rem .3rem .1rem;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .btc-rainbow-legend::-webkit-scrollbar{display:none}
@@ -1296,3 +1305,7 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 #btcChartPage.sp-view,#rainbowPage.sp-view{overflow:visible;overscroll-behavior:auto}
 #btcChartPage.sp-view .sp-page-inner,#rainbowPage.sp-view .sp-page-inner{height:auto}
 #btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap{flex:none;height:min(72vh,660px);min-height:380px}
+/* phones: the header is one short row now, so hand the reclaimed space to the candles */
+@media(max-width:600px){
+  #btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap{height:min(78vh,620px);min-height:340px}
+}

@@ -558,7 +558,9 @@ function openChart(symbol,title,icon,allowChange,isBtc){
   try{history.replaceState({},'',(isBtc?'/bitcoin':'/gmt')+location.hash);}catch(e){}
   showPanelView('btcChartPage');
   const t=document.getElementById('btcChartTitle');
-  if(t)t.innerHTML='<img src="'+icon+'" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">'+title;
+  const shortT=isBtc?'Bitcoin':'GMT';
+  if(t)t.innerHTML='<img src="'+icon+'" alt="" style="height:18px;width:18px;border-radius:50%;vertical-align:middle;margin-right:.4rem">'
+    +'<span class="ct-long">'+title+'</span><span class="ct-short">'+shortT+'</span>';
   // The Rainbow Chart toggle is BTC-only; reset to the live view each open.
   const mode=document.getElementById('btcChartMode');
   if(mode)mode.style.display=isBtc?'':'none';
@@ -924,12 +926,23 @@ function buildChart(symbol,allowChange){
     if(_chartSym===symbol)return;   // already showing this symbol
     _chartSym=symbol;
     document.getElementById('btcChartWidget').innerHTML='';
+    // A phone has no room for the drawing rail or the date-range strip — the candles are the
+    // point, so hand them the full width there and keep the top toolbar for the interval switch.
+    const narrow=window.matchMedia('(max-width:700px)').matches;
     new TradingView.widget({
       container_id:'btcChartWidget', autosize:true,
       symbol:symbol, interval:'60', timezone:'Etc/UTC',
       theme:'dark', style:'1', locale:'en',
-      hide_side_toolbar:false,   // shows the drawing / TA toolbar
-      allow_symbol_change:!!allowChange, withdateranges:true, details:false,
+      hide_side_toolbar:narrow,   // drawing / TA toolbar — desktop only
+      allow_symbol_change:!!allowChange, withdateranges:!narrow, details:false,
+      // 50 EMA on every chart, every load. The study's own default is 9, so the length has to
+      // be forced through studies_overrides — embed widgets keep no saved chart state.
+      studies:['MAExp@tv-basicstudies'],
+      studies_overrides:{
+        'moving average exponential.length':50,
+        'moving average exponential.plot.color':'#F5A623',
+        'moving average exponential.plot.linewidth':2
+      },
       backgroundColor:'rgba(10,10,10,1)', gridColor:'rgba(245,166,35,0.06)'
     });
   };
@@ -1211,6 +1224,19 @@ function buildChartShotCanvas(asset,data,imgs){
     const yo=py(r.o),yc=py(r.c),top=Math.min(yo,yc),bh=Math.max(1.5,Math.abs(yc-yo));
     x.fillRect(cx-bw/2,top,bw,bh);
   });
+  // 50 EMA — same study that's pinned on the live chart, so the screenshot matches it.
+  // Seeded with the SMA of the first 50 closes and only drawn once that window is full.
+  const EMA_N=50;
+  if(n>EMA_N){
+    const k=2/(EMA_N+1);
+    let e=0;for(let i=0;i<EMA_N;i++)e+=rows[i].c;e/=EMA_N;
+    x.strokeStyle=GSOFT;x.lineWidth=2.4;x.lineJoin='round';x.beginPath();
+    x.moveTo(PL+(EMA_N-0.5)*slot,py(e));
+    for(let i=EMA_N;i<n;i++){e=rows[i].c*k+e*(1-k);x.lineTo(PL+(i+0.5)*slot,py(e));}
+    x.stroke();
+    x.fillStyle=GSOFT;x.font='bold 14px "Share Tech Mono",monospace';x.textAlign='left';
+    x.fillText('EMA 50',PL+8,PT+20);
+  }
   // plot border
   x.strokeStyle='rgba(245,166,35,0.14)';x.lineWidth=1;x.strokeRect(PL,PT,PR-PL,PB-PT);
   // ---- footer / marketing ----
