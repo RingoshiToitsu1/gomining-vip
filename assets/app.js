@@ -431,6 +431,42 @@ function projectedMonthlyForCapital(capUSD){
   const m=calc(i);
   return projectedMonthlyFor(i,m,m.bp,m.gp,dailyBTCperTH());
 }
+// Month-by-month income at TODAY's prices, for one solved plan. The headline comparison is a
+// single-month snapshot, which is the wrong lens on a Greedy Machine: it grows for free every
+// week and compounds, while the GMT it displaced earns a fixed staking yield and a discount that
+// erodes as the farm's fee bill grows. Deliberately flat prices — this answers "which plan pulls
+// ahead, and when", not "what will BTC do"; the projection page owns forecasting.
+function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
+  if(!a)return null;
+  let locked=Math.max(0,a.newLocked||0);
+  let gTH=(ep&&ep.gTHf>0)?ep.gTHf:(a.greedyTot||0);
+  const gW=(ep&&ep.gWthf>0)?ep.gWthf:(a.gwthAfter||EFF_BASE_MAX);
+  const finTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, finW=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
+  const othTH=Math.max(0,finTH-gTH);
+  const othW=othTH>0?Math.max(EFF_BEST,(finTH*finW-gTH*gW)/othTH):finW;
+  const gGrow=Math.max(0,+(i.ggrow||0))/100;
+  const WK=52/12;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_BEST))*30;
+  const gmtW=Math.max(0,a.gmtReserve||0);
+  const out=[];
+  for(let mo=1;mo<=months;mo++){
+    if(gTH>0&&gGrow>0)gTH*=Math.pow(1+gGrow,WK);          // free weekly TH, compounding
+    locked*=Math.pow(1+(i.apr/100)/52,WK);                 // staking yield auto-compounds
+    const tot=othTH+gTH, bw=tot>0?(othTH*othW+gTH*gW)/tot:othW;
+    const f=fees(tot,bw,bp);
+    const v=vipOf(othTH+Math.max(0,gTH-(a.gInit||0)),locked);
+    const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+    const burn=(f.t*(1-nonTok/100)*bp)/gp;
+    const cov=burn>0?(locked+gmtW)/burn:Infinity;
+    const tok=i.payG?Math.min(20,Math.floor(cov/18)):0;
+    const fd=Math.min(30,tok+nonTok);
+    const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*30;
+    const stakeMo=locked*(i.apr/100)/52*gp*4.33;
+    const greedyMo=(gTH>0&&gGrow>0)?(gTH*gGrow)*4.33*cptAtEff(gTH,gW):0;
+    out.push(mineMo+stakeMo+ambMo+greedyMo);
+  }
+  return out;
+}
 // The planner's headline monthly income for an ARBITRARY model — same composition the results
 // show. Lets the planner price a counterfactual ("what if I didn't buy this miner?") against the
 // exact number it displays, instead of a second, subtly different formula.
@@ -3487,11 +3523,30 @@ function renderPlanner(i,m){
     if(isFinite(moNoMiner)&&aNo){
       const dTok=(aNo.ntd||0)-(ntd||0);
       const cost=`${fN(mpGmtCost,0)} GMT`;
+      // Month one is the wrong place to stop for a greedy machine: it compounds, the GMT it
+      // displaced does not. Walk both plans forward at today's prices and find where the miner
+      // overtakes on monthly income, and where it has repaid the months it was behind.
+      const HORIZON=120;
+      const epNo=computeEffPlan(effStateFrom(iNoMiner,aNo,gp,bp));
+      const pWith=plannerMonthlyPath(a,_ep,i,bp,gp,dbt,HORIZON);
+      const pNo=plannerMonthlyPath(aNo,epNo,iNoMiner,bp,gp,dbt,HORIZON);
+      let mAhead=0,mPaid=0,cw=0,cn=0;
+      if(pWith&&pNo)for(let k=0;k<HORIZON;k++){
+        if(!mAhead&&pWith[k]>=pNo[k])mAhead=k+1;
+        cw+=pWith[k];cn+=pNo[k];
+        if(!mPaid&&cw>=cn)mPaid=k+1;
+      }
+      const yrs=n=>n>=24?`${fN(n/12,1)} years`:`${n} month${n===1?'':'s'}`;
+      const catchUp=(mAhead||mPaid)
+        ? `<div style="margin-top:.45rem;color:var(--text2)">The greedy grows <strong>${fP(i.ggrow)}/wk</strong> for free and compounds, while that GMT would only earn its staking yield — so at today's prices it out-earns the alternative from <strong style="color:var(--text)">month ${mAhead||'—'}</strong>${mPaid?`, and has repaid everything it gave up by <strong style="color:var(--text)">month ${mPaid}</strong> (${yrs(mPaid)})`:''}.</div>`
+        : `<div style="margin-top:.45rem;color:var(--text2)">Even with its free weekly growth compounding, it does not overtake within ${fN(HORIZON/12,0)} years at today's prices.</div>`;
       if(delta<-0.5){
-        ph+=`<div class="warn" style="margin:.5rem 0;background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.28);color:var(--text2);font-size:.8rem;line-height:1.55">
-          <strong style="color:#fca5a5">This miner costs you ${fU(-delta)}/mo.</strong> The same plan without it projects <strong>${fU(moNoMiner)}/mo</strong>.
-          Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fN(aNo.ntd,0)}%</strong> instead of <strong>${fN(ntd,0)}%</strong>`:''} — and ${dTok>0?'that discount applies to your whole farm, not just the new hashrate, so the loss is bigger than what the miner earns':'the extra hashrate does not earn back what the GMT would'}.
-          <span style="color:var(--text3)">Worth buying only if you can fund it without touching the GMT that holds your coverage.</span>
+        const worth=(mPaid&&mPaid<=36);
+        ph+=`<div class="warn" style="margin:.5rem 0;background:${worth?'rgba(245,166,35,.07)':'rgba(239,68,68,.07)'};border-color:${worth?'rgba(245,166,35,.3)':'rgba(239,68,68,.28)'};color:var(--text2);font-size:.8rem;line-height:1.55">
+          <strong style="color:${worth?'var(--gold-soft)':'#fca5a5'}">Starts ${fU(-delta)}/mo behind${worth?', pays for itself later':''}.</strong>
+          The same plan without this miner projects <strong>${fU(moNoMiner)}/mo</strong> today.
+          Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fN(aNo.ntd,0)}%</strong> instead of <strong>${fN(ntd,0)}%</strong>`:''} — and that discount applies to your whole farm, not just the new hashrate.
+          ${mpIsGreedy?catchUp:'<div style="margin-top:.45rem;color:var(--text3)">A plain marketplace miner does not grow on its own, so nothing recovers this gap except a higher BTC price.</div>'}
         </div>`;
       }else if(delta>0.5){
         ph+=row('↳ This miner adds',`+${fU(delta)}/mo<span class="sub">vs ${fU(moNoMiner)}/mo without it${dTok>0?` · token discount ${fN(ntd,0)}% vs ${fN(aNo.ntd,0)}%`:''}</span>`,'green');
