@@ -109,14 +109,22 @@ input[type=number]{-moz-appearance:textfield}
 .idle-gmt-seg.s0,.idle-gmt-dot.s0{background:var(--gold)}
 .idle-gmt-seg.s1,.idle-gmt-dot.s1{background:var(--gold-soft)}
 .idle-gmt-seg.s2,.idle-gmt-dot.s2{background:var(--cyan)}
-/* Editing the wallet balance in place. Looks like the sentence it sits in until you touch it,
-   so the line still reads as a fact rather than a form. */
-.idle-gmt-edit{width:5.5em;background:none;border:none;border-bottom:1px dashed var(--text4);color:var(--text2);
-  font-family:var(--mono);font-size:inherit;font-weight:700;padding:0 .1rem;text-align:right;cursor:text;
+/* Editing the wallet balance in place. This reads as a FIELD, not as prose — the balance
+   changes every day, so the affordance has to be visible at a glance rather than discovered by
+   hovering the right word. Focus selects the whole value, so updating it is click, type, Enter. */
+.idle-gmt-editwrap{display:inline-flex;align-items:center;gap:.4rem;background:var(--bg-input);
+  border:1px solid var(--border);border-radius:8px;padding:.12rem .45rem .12rem .5rem;margin-right:.15rem;
+  transition:var(--transition)}
+.idle-gmt-editwrap:hover{border-color:var(--orange)}
+.idle-gmt-editwrap:focus-within{border-color:var(--orange);box-shadow:0 0 0 2px rgba(245,166,35,.16)}
+.idle-gmt-editlbl{font-family:var(--sans);font-size:.58rem;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--text4);white-space:nowrap}
+.idle-gmt-edit{width:5.2em;background:none;border:none;color:var(--text);
+  font-family:var(--mono);font-size:.82rem;font-weight:700;padding:.12rem 0;text-align:right;cursor:text;
   -moz-appearance:textfield}
 .idle-gmt-edit::-webkit-outer-spin-button,.idle-gmt-edit::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.idle-gmt-edit:hover{border-bottom-color:var(--orange);color:var(--text)}
-.idle-gmt-edit:focus{outline:none;border-bottom-color:var(--orange);color:var(--text)}
+.idle-gmt-edit:focus{outline:none}
+.idle-gmt-editwrap:hover .idle-gmt-editlbl,.idle-gmt-editwrap:focus-within .idle-gmt-editlbl{color:var(--orange)}
 /* Empty state: the real layout blurred underneath so the shape of the answer is visible, with
    the one question it needs on top. */
 .idle-gmt-locked{position:relative}

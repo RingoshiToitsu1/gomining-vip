@@ -3402,9 +3402,9 @@ function renderIdleGmt(i,m){
     <div class="idle-gmt-head">
       <div>
         <div class="idle-gmt-title">Your idle GMT, put to work</div>
-        <div class="idle-gmt-sub"><input class="idle-gmt-edit" type="number" min="0" step="1" value="${fN(gw,0).replace(/,/g,'')}"
-          title="Unlocked GMT in your wallet — edit it here" aria-label="Liquid GMT available"
-          onchange="applyIdleGmt(this.value)" onkeydown="if(event.key==='Enter')this.blur()"> GMT in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
+        <div class="idle-gmt-sub"><span class="idle-gmt-editwrap"><span class="idle-gmt-editlbl">Liquid GMT</span><input class="idle-gmt-edit" type="number" min="0" step="1" value="${fN(gw,0).replace(/,/g,'')}"
+          title="Unlocked GMT in your wallet — type a new balance and press Enter" aria-label="Liquid GMT available"
+          onfocus="this.select()" onchange="applyIdleGmt(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></span> in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
         ${(i.cap||0)>0?`<div class="idle-gmt-note">Your Capital Planner is already deploying this GMT alongside ${fU(i.cap,0)} of new capital — open it for the combined plan. This card is the GMT on its own.</div>`:''}
       </div>
       <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
