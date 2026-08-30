@@ -2071,7 +2071,10 @@ function buildFarmShotCanvas(d,imgs){
   // ---- supporting pills ----
   const pills=[
     {label:'HASHRATE',   val:fN(d.th,1)+' TH'},
-    {label:'EFFICIENCY', val:fN(d.wth,1)+' W/TH'},
+    // m.bwth — the FLEET-WIDE weighted average, which is what fees are actually charged on, not
+    // the Efficiency field on My Setup (that one rates the main farm only). A greedy machine at a
+    // different rating pulls the two apart, so the label has to say which one this is.
+    {label:'AVG EFFICIENCY', val:fN(d.wth,1)+' W/TH'},
     {label:'GMT LOCKED', val:fN(d.gmtLocked,0)},
     {label:'GMT VALUE',  val:fU(d.gmtValueUSD,0)},
     {label:'VIP TIER',   val:d.vip||'—'},
@@ -2387,8 +2390,24 @@ function inp(){
   const rawTH=+$('inTH').value||0;
   const wth=+$('inWTH').value||0;
   const gth=+($('inGreedyTH')?$('inGreedyTH').value:0)||0;
+  const gwthIn=+($('inGreedyWth')?$('inGreedyWth').value:0)||0;
+  // Efficiency is entered as the WHOLE farm's weighted average — that is what the field says,
+  // and what the fleet auto-fills (it averages every active row, greedy included). The greedy is
+  // a SUBSET of that farm with its own rating, so handing `wth` straight to the non-greedy
+  // portion and then blending the greedy in on top counts the greedy twice and drags the farm's
+  // effective rating below the number the user actually entered: a 15.6 W farm with a 15.0 W
+  // greedy came out at 15.3, understating every fee computed from it. Back-solve the non-greedy
+  // rating so the blend reproduces the entered average.
+  const nonG=Math.max(0,rawTH-gth);
+  let wthMain=wth;
+  if(gth>0&&nonG>0&&gwthIn>0&&wth>0){
+    const solved=(rawTH*wth-gth*gwthIn)/nonG;
+    // Inconsistent inputs (a greedy rated far below a farm average it dominates) can push this
+    // to nonsense; only take it when it lands somewhere a real miner could be.
+    if(isFinite(solved)&&solved>=EFF_BEST&&solved<=60)wthMain=solved;
+  }
   return{
-  th:Math.max(0,rawTH-gth), wth:wth,
+  th:nonG, wth:wthMain,
   gl:+$('inGMTLocked').value||0, gw:+$('inGMTWallet').value||0,
   apr:+$('inLockAPR').value||0,
   click:$('inClickStreak').checked, payG:$('inPayGMT').checked,
