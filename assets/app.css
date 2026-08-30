@@ -143,6 +143,11 @@ input[type=number]{-moz-appearance:textfield}
 @media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center;align-items:center}}
 .hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.9rem;font-weight:700;line-height:1.12;letter-spacing:.01em}
+/* The dollar figure and its BTC equivalent sit on one baseline; the BTC tucks in smaller so the
+   dollars still lead. It wraps rather than shrinking the headline on a narrow card. */
+.hero-val-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:.3rem;min-width:0}
+.hero-btc{font-family:var(--mono);font-size:.9rem;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:.01em}
+@media(max-width:600px){.hero-btc{font-size:.78rem}}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}

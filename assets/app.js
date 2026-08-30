@@ -3058,6 +3058,14 @@ function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${v
 // ---- ANIMATED NUMBER COUNTER ----
 // Eases a metric from its previous value to the new one (~800ms). First render
 // counts up from 0 (el._cur undefined). Concurrent calls retarget cleanly.
+// BTC amounts span three orders of magnitude between a daily and a yearly figure, so a fixed
+// precision is wrong at one end or the other: 0.002 hides the difference between a good day and
+// a bad one, while 0.058800 is noise. Scale the decimals to the size of the number.
+function fmtBTCAmt(v){
+  if(!isFinite(v))return '0';
+  const a=Math.abs(v);
+  return v.toFixed(a>=1?3:a>=0.1?4:a>=0.01?5:6);
+}
 function animateMetric(el,to,fmt){
   if(!el)return;
   if(typeof to!=='number'||!isFinite(to)){el.textContent=fmt(to);return;}
@@ -3124,11 +3132,18 @@ function recalc(){
   const cashMoUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;   // reinvestable cash income
   const moUSD=cashMoUSD+greedyMonthlyUSD;                        // + greedy TH-credit value
   animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
+  // Always converted from the USD figure at the live BTC price — fU() renders whatever display
+  // currency is selected, so reading the formatted string back would divide GBP by a USD price.
+  const _bp=S.btcPrice||0;
+  if(_bp>0)animateMetric($('heroDailyBtcVal'),totalDailyUSD/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
+  else if($('heroDailyBtcVal'))$('heroDailyBtcVal').textContent='';
   let heroSub=fU(netUSD)+' mining + '+fU(dailyStakeUSD)+' staking';
   if(heroAmbDaily>0)heroSub+=' + '+fU(heroAmbDaily)+' ambassador';
   if(greedyDailyUSD>0)heroSub+=' + '+fU(greedyDailyUSD)+' greedy growth';
   $('heroDailyBTC').textContent=heroSub;
   animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
+  if(_bp>0)animateMetric($('heroMonthlyBtcVal'),moUSD/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
+  else if($('heroMonthlyBtcVal'))$('heroMonthlyBtcVal').textContent='';
   let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
