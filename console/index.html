@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=61">
+<link rel="stylesheet" href="/assets/app.css?v=62">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=16">
 </head>
@@ -578,7 +578,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
        screenful of scrolling before the planner. Stacks below 900px. -->
   <div class="section-pair">
   <!-- VIP & DISCOUNTS -->
-  <div class="section reveal" id="secVip">
+  <div class="section reveal section-collapsible" id="secVip">
     <div class="section-header" onclick="toggleSection('secVip')">
       <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M9 27 L11 16 L17 22 L20 12 L23 22 L29 16 L31 27 Z"/><path d="M11 30 L29 30"/></g></svg> VIP Level &amp; Discount Stack</div>
       <div class="section-toggle">&#9662;</div>
@@ -591,7 +591,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
   </div>
 
   <!-- DAILY OPERATION & REWARDS -->
-  <div class="section reveal" id="secGmt">
+  <div class="section reveal section-collapsible" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
       <div class="section-title"><svg class="thumb" viewBox="0 0 40 40"><rect class="bg" width="40" height="40" rx="10"/><g class="g"><path d="M13 26 A7 7 0 0 1 27 26"/><path d="M7 30 L33 30"/><path d="M20 12 L20 9"/><path d="M11 19 L13 21"/><path d="M29 19 L27 21"/></g></svg> Daily Operation &amp; Rewards</div>
       <div class="section-toggle">&#9662;</div>
@@ -1157,7 +1157,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=113"></script>
+<script src="/assets/app.js?v=114"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

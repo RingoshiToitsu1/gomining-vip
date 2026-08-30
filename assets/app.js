@@ -250,7 +250,26 @@ function fAxisUSD(v){const sym=({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$';c
 function fAxisGMT(v){const a=Math.abs(v);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:2);return s+' GMT';}
 
 // ---- SECTIONS ----
-function toggleSection(id){document.getElementById(id).classList.toggle('collapsed')}
+// Collapsible sections remember their state. These two open collapsed by DEFAULT — the
+// dashboard should lead with the headline cards, not a wall of reference figures — but once
+// somebody opens one they clearly want it, so it stays open next visit.
+const SECTION_KEY='gmtopt_sections_v1';
+const SECTION_DEFAULT_CLOSED=['secVip','secGmt'];
+function sectionState(){try{return JSON.parse(localStorage.getItem(SECTION_KEY))||{};}catch(e){return{};}}
+function toggleSection(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.classList.toggle('collapsed');
+  if(!el.classList.contains('section-collapsible'))return;   // the rest never actually collapse
+  const st=sectionState();st[id]=el.classList.contains('collapsed');
+  try{localStorage.setItem(SECTION_KEY,JSON.stringify(st));}catch(e){}
+}
+function applySectionState(){
+  const st=sectionState();
+  SECTION_DEFAULT_CLOSED.forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.classList.toggle('collapsed',st[id]===undefined?true:!!st[id]);
+  });
+}
 
 // ---- TABS ----
 function _activateTab(b,push){
@@ -3307,6 +3326,48 @@ function recalc(){
 // ---- My Setup: what to do with the GMT you are already holding ----
 // The Capital Planner pre-loads your wallet GMT as deployable capital, but you only see the
 // answer if you go there and press Calculate. This runs the identical solve automatically on
+// Commits a wallet-GMT edit made from the idle-GMT card straight into the real input, so the
+// card is a genuine editor rather than a second place the number lives. Fires on CHANGE, never
+// on every keystroke: recalc() re-renders this card, which would rip the focused field out from
+// under whoever is typing in it.
+function applyIdleGmt(v){
+  const el=$('inGMTWallet');if(!el)return;
+  const n=Math.max(0,parseFloat(v)||0);
+  el.value=String(n);
+  if(typeof autoSave==='function')autoSave();
+  if(S.loaded)recalc();
+}
+// The empty state: the real card's shape, blurred and inert, with the ask sitting on top of it.
+function idleGmtPrompt(host,live){
+  if(!live){host.innerHTML='';host.style.display='none';return;}
+  host.style.display='';
+  host.innerHTML=`<div class="idle-gmt idle-gmt-locked">
+    <div class="idle-gmt-ghost" aria-hidden="true">
+      <div class="idle-gmt-head">
+        <div>
+          <div class="idle-gmt-title">Your idle GMT, put to work</div>
+          <div class="idle-gmt-sub">0 GMT in your wallet &middot; $0</div>
+        </div>
+        <div class="idle-gmt-gain">+$000<span>/mo</span><div class="idle-gmt-roi">00%/yr</div></div>
+      </div>
+      <div class="idle-gmt-bar"><div class="idle-gmt-seg s0" style="width:59%"></div><div class="idle-gmt-seg s1" style="width:41%"></div></div>
+      <div class="idle-gmt-legs">
+        ${['Lock GMT','Buy TH','Upgrade Efficiency'].map((k,n)=>`<div class="idle-gmt-leg"><div class="idle-gmt-k"><span class="idle-gmt-dot d${n}"></span>${k}</div><div class="idle-gmt-v">00% &middot; $000</div><div class="idle-gmt-s">&mdash;</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="idle-gmt-ask">
+      <div class="idle-gmt-ask-title">Put your idle GMT to work</div>
+      <div class="idle-gmt-ask-sub">Enter the unlocked GMT sitting in your wallet and this shows exactly where to allocate it &mdash; lock, hashrate or efficiency.</div>
+      <div class="idle-gmt-ask-row">
+        <input type="number" id="idleGmtInput" min="0" step="1" placeholder="0" inputmode="decimal"
+          aria-label="Liquid GMT available" onkeydown="if(event.key==='Enter')applyIdleGmt(this.value)">
+        <span class="idle-gmt-ask-unit">GMT</span>
+        <button type="button" onclick="applyIdleGmt(document.getElementById('idleGmtInput').value)">Show me &rarr;</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 // My Setup with NO new USD, so idle GMT always shows its optimal split. Wallet GMT is not free
 // to spend — it already counts toward your fee coverage — so the solver keeps whatever holds
 // the discount and only deploys the genuine surplus.
@@ -3314,7 +3375,10 @@ function renderIdleGmt(i,m){
   const host=$('idleGmtCard');if(!host)return;
   const hide=()=>{host.innerHTML='';host.style.display='none';};
   const gw=Math.max(0,i.gw||0), gp=m.gp, bp=m.bp, usd=gw*gp;
-  if(!(gw>0&&usd>=1&&bp>0&&gp>0))return hide();
+  // Nothing to allocate yet. Rather than vanishing — which hides the feature from exactly the
+  // people who need it — show the card blurred behind a prompt for the one number it needs, so
+  // the wallet balance can be entered here instead of hunting for it in Edit Setup.
+  if(!(gw>0&&usd>=1&&bp>0&&gp>0))return idleGmtPrompt(host,bp>0&&gp>0);
   // Same setup, but nothing new deployed: the wallet GMT is the only capital in play.
   const i2=Object.assign({},i,{cap:0,mpTH:0,mpGMT:0,refCap:0});
   const a=solvePlannerAllocation(i2,bp,gp,dailyBTCperTH());
@@ -3338,7 +3402,9 @@ function renderIdleGmt(i,m){
     <div class="idle-gmt-head">
       <div>
         <div class="idle-gmt-title">Your idle GMT, put to work</div>
-        <div class="idle-gmt-sub">${fN(gw,0)} GMT in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
+        <div class="idle-gmt-sub"><input class="idle-gmt-edit" type="number" min="0" step="1" value="${fN(gw,0).replace(/,/g,'')}"
+          title="Unlocked GMT in your wallet — edit it here" aria-label="Liquid GMT available"
+          onchange="applyIdleGmt(this.value)" onkeydown="if(event.key==='Enter')this.blur()"> GMT in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
         ${(i.cap||0)>0?`<div class="idle-gmt-note">Your Capital Planner is already deploying this GMT alongside ${fU(i.cap,0)} of new capital — open it for the combined plan. This card is the GMT on its own.</div>`:''}
       </div>
       <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
@@ -5399,6 +5465,7 @@ function buildShareCanvas(d){
 
 // ---- REACTIVE ----
 applyHeroSubState();   // restore whether each hero breakdown was left open
+applySectionState();   // VIP + Daily Operation start collapsed unless the user opened them
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});
 
 // ---- TIMER ----

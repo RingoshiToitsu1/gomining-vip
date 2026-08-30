@@ -109,6 +109,35 @@ input[type=number]{-moz-appearance:textfield}
 .idle-gmt-seg.s0,.idle-gmt-dot.s0{background:var(--gold)}
 .idle-gmt-seg.s1,.idle-gmt-dot.s1{background:var(--gold-soft)}
 .idle-gmt-seg.s2,.idle-gmt-dot.s2{background:var(--cyan)}
+/* Editing the wallet balance in place. Looks like the sentence it sits in until you touch it,
+   so the line still reads as a fact rather than a form. */
+.idle-gmt-edit{width:5.5em;background:none;border:none;border-bottom:1px dashed var(--text4);color:var(--text2);
+  font-family:var(--mono);font-size:inherit;font-weight:700;padding:0 .1rem;text-align:right;cursor:text;
+  -moz-appearance:textfield}
+.idle-gmt-edit::-webkit-outer-spin-button,.idle-gmt-edit::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.idle-gmt-edit:hover{border-bottom-color:var(--orange);color:var(--text)}
+.idle-gmt-edit:focus{outline:none;border-bottom-color:var(--orange);color:var(--text)}
+/* Empty state: the real layout blurred underneath so the shape of the answer is visible, with
+   the one question it needs on top. */
+.idle-gmt-locked{position:relative}
+.idle-gmt-ghost{filter:blur(6px);opacity:.4;pointer-events:none;user-select:none}
+.idle-gmt-ask{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.4rem;text-align:center;padding:1rem}
+.idle-gmt-ask-title{font-family:var(--sans);font-weight:700;font-size:1.05rem;color:var(--text)}
+.idle-gmt-ask-sub{font-size:.78rem;color:var(--text3);max-width:34rem;line-height:1.5}
+.idle-gmt-ask-row{display:flex;align-items:center;gap:.45rem;margin-top:.35rem;flex-wrap:wrap;justify-content:center}
+.idle-gmt-ask-row input{width:9rem;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:var(--mono);font-size:1rem;font-weight:700;padding:.5rem .7rem;text-align:right}
+.idle-gmt-ask-row input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 2px rgba(245,166,35,.18)}
+.idle-gmt-ask-unit{font-family:var(--mono);font-size:.8rem;color:var(--text3);font-weight:700}
+.idle-gmt-ask-row button{background:var(--orange);color:#1a1206;border:none;border-radius:10px;
+  font-family:var(--sans);font-weight:800;font-size:.82rem;padding:.55rem 1rem;cursor:pointer;white-space:nowrap}
+.idle-gmt-ask-row button:hover{filter:brightness(1.06)}
+@media(max-width:600px){
+  .idle-gmt-ask-title{font-size:.95rem}
+  .idle-gmt-ask-sub{font-size:.72rem}
+  .idle-gmt-ask-row input{width:7.5rem}
+}
 .idle-gmt-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
 .idle-gmt-leg{display:flex;align-items:flex-start;gap:.5rem}
 .idle-gmt-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:.32rem}
@@ -223,6 +252,15 @@ input[type=number]{-moz-appearance:textfield}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
 .section-body{padding:.6rem 1.6rem 1.6rem;transition:var(--transition)}
 .section.collapsed .section-body{display:block}
+/* Opt-in collapsing. The pair above is reference detail — a wall of figures the dashboard does
+   not need to open with — so those sections keep their title and one-line description and put
+   the numbers behind the chevron. Every other .section still ignores .collapsed entirely. */
+.section-collapsible .section-header{cursor:pointer}
+.section-collapsible .section-toggle{display:block;margin-left:auto;color:var(--text3);font-size:.9rem;
+  transition:transform .18s ease,color var(--transition)}
+.section-collapsible .section-header:hover .section-toggle{color:var(--text2)}
+.section-collapsible.collapsed .section-body{display:none}
+.section-collapsible.collapsed .section-desc{padding-bottom:1.15rem}
 
 /* ---- INPUTS ---- */
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}
