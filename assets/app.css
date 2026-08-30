@@ -238,11 +238,11 @@ input[type=number]{-moz-appearance:textfield}
 /* ---- SECTION ---- */
 .section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:1.6rem;overflow:hidden;transition:var(--transition)}
 .section:hover{border-color:#232d48}
-/* Two read-only sections side by side, so the dashboard costs one screen instead of
-   two before you reach the planner. Items stretch to equal height so the pair reads
-   as one row of cards; safe because these sections never actually collapse
-   (.section-toggle is display:none and .collapsed still shows its body). */
-.section-pair{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
+/* Two read-only sections side by side, so the dashboard costs one screen instead of two before
+   you reach the planner. They used to stretch to equal height, which was safe only while these
+   sections could not collapse — now that each opens on its own, stretching made expanding one
+   inflate the other into a tall empty box. align-items:start lets each size to its own content. */
+.section-pair{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem;align-items:start}
 .section-pair>.section{margin-bottom:1.6rem}
 @media(max-width:900px){
   /* Back to a single column — two of these side by side get too narrow to read. */
