@@ -145,9 +145,15 @@ input[type=number]{-moz-appearance:textfield}
 .hero-val{font-family:var(--mono);font-size:1.9rem;font-weight:700;line-height:1.12;letter-spacing:.01em}
 /* The dollar figure and its BTC equivalent sit on one baseline; the BTC tucks in smaller so the
    dollars still lead. It wraps rather than shrinking the headline on a narrow card. */
-.hero-val-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:.3rem;min-width:0}
-.hero-btc{font-family:var(--mono);font-size:.9rem;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:.01em}
-@media(max-width:600px){.hero-btc{font-size:.78rem}}
+.hero-val-row{display:flex;align-items:baseline;flex-wrap:nowrap;gap:.28rem;min-width:0}
+.hero-val-row .hero-val{flex:0 1 auto;min-width:0}
+.hero-btc{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:0;flex:0 0 auto}
+/* Phones give the card far less room, so there let it drop to its own line rather than
+   overflow — but as a full-width line under the figure, not a ragged hang off the end. */
+@media(max-width:600px){
+  .hero-val-row{flex-wrap:wrap;gap:.1rem .28rem}
+  .hero-btc{font-size:.76rem;flex:1 0 100%}
+}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}

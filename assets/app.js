@@ -3064,7 +3064,10 @@ function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${v
 function fmtBTCAmt(v){
   if(!isFinite(v))return '0';
   const a=Math.abs(v);
-  return v.toFixed(a>=1?3:a>=0.1?4:a>=0.01?5:6);
+  // Capped at 5 decimals down to a milli-BTC. Six made the daily figure one character longer
+  // than the monthly, which was enough to wrap it onto its own line while the monthly card kept
+  // its BTC inline — the two cards then read as different designs.
+  return v.toFixed(a>=1?3:a>=0.1?4:a>=0.001?5:6);
 }
 function animateMetric(el,to,fmt){
   if(!el)return;
