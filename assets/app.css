@@ -148,11 +148,17 @@ input[type=number]{-moz-appearance:textfield}
 .hero-val-row{display:flex;align-items:baseline;flex-wrap:nowrap;gap:.28rem;min-width:0}
 .hero-val-row .hero-val{flex:0 1 auto;min-width:0}
 .hero-btc{font-family:var(--mono);font-size:.85rem;font-weight:600;color:var(--text3);white-space:nowrap;letter-spacing:0;flex:0 0 auto}
+/* The /yr line is already small and muted, so its BTC steps down again to stay subordinate to
+   the monthly figure above it rather than competing with it. */
+.hero-yr-row{gap:.26rem;margin-top:.1rem;margin-bottom:.15rem}
+.hero-yr-row .hero-yearly{margin-top:0;margin-bottom:0}
+.hero-btc-yr{font-size:.7rem;opacity:.85}
 /* Phones give the card far less room, so there let it drop to its own line rather than
    overflow — but as a full-width line under the figure, not a ragged hang off the end. */
 @media(max-width:600px){
   .hero-val-row{flex-wrap:wrap;gap:.1rem .28rem}
   .hero-btc{font-size:.76rem;flex:1 0 100%}
+  .hero-btc-yr{font-size:.68rem}
 }
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}

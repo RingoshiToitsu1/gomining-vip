@@ -3152,6 +3152,8 @@ function recalc(){
   if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
   $('heroMonthlyBTC').textContent=heroMoSub;
   animateMetric($('heroYearly'),moUSD*12,v=>fU(v,0)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
+  if(_bp>0)animateMetric($('heroYearlyBtcVal'),moUSD*12/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
+  else if($('heroYearlyBtcVal'))$('heroYearlyBtcVal').textContent='';
   animateMetric($('heroDiscount'),m.totD,fP);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   // Compounding velocity — how fast the farm grows if you reinvest every dollar you earn

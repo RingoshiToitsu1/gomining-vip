@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=59">
+<link rel="stylesheet" href="/assets/app.css?v=60">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=16">
 </head>
@@ -397,7 +397,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
       <span class="hspot"></span><span class="corners"></span><div class="s-id"><span>MONTH.YIELD</span><span>◈</span></div>
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val-row"><div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div><span class="hero-btc" id="heroMonthlyBtcVal"></span></div>
-      <div class="hero-yearly cyan" id="heroYearly">--</div>
+      <div class="hero-val-row hero-yr-row"><div class="hero-yearly cyan" id="heroYearly">--</div><span class="hero-btc hero-btc-yr" id="heroYearlyBtcVal"></span></div>
       <div class="hero-sub" id="heroMonthlyBTC">--</div>
     </div>
     <div class="hero-card purple-accent reveal">
@@ -1155,7 +1155,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=111"></script>
+<script src="/assets/app.js?v=112"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
