@@ -160,6 +160,17 @@ input[type=number]{-moz-appearance:textfield}
   .hero-btc{font-size:.76rem;flex:1 0 100%}
   .hero-btc-yr{font-size:.68rem}
 }
+/* The income split is reference detail, not a headline — collapsed by default so the card leads
+   with the figure, one tap away when you want to know where it came from. */
+.hero-more{display:inline-flex;align-items:center;gap:.25rem;margin-top:.35rem;padding:.18rem .45rem .18rem .5rem;
+  background:none;border:1px solid var(--border);border-radius:999px;color:var(--text3);
+  font-family:var(--sans);font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  cursor:pointer;transition:var(--transition)}
+.hero-more:hover{color:var(--text2);border-color:var(--text4)}
+.hero-more-ic{display:inline-block;font-size:.7rem;line-height:1;transition:transform .18s ease}
+.hero-more.open .hero-more-ic{transform:rotate(180deg)}
+.hero-more.open{color:var(--text2)}
+.hero-sub[hidden]{display:none}
 .hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}

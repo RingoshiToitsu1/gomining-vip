@@ -3061,6 +3061,29 @@ function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${v
 // BTC amounts span three orders of magnitude between a daily and a yearly figure, so a fixed
 // precision is wrong at one end or the other: 0.002 hides the difference between a good day and
 // a bad one, while 0.058800 is noise. Scale the decimals to the size of the number.
+// The two hero breakdowns collapse independently, and the choice sticks: someone who wants the
+// split wants it every visit, and someone who does not should not re-close it every load.
+const HERO_SUB_KEY='gmtopt_hero_sub_v1';
+const HERO_SUBS={daily:['heroDailyBTC','heroDailyMore'],monthly:['heroMonthlyBTC','heroMonthlyMore']};
+function heroSubState(){try{return JSON.parse(localStorage.getItem(HERO_SUB_KEY))||{};}catch(e){return{};}}
+function setHeroSub(which,open){
+  const pair=HERO_SUBS[which];if(!pair)return;
+  const el=document.getElementById(pair[0]),btn=document.getElementById(pair[1]);
+  if(el){if(open)el.removeAttribute('hidden');else el.setAttribute('hidden','');}
+  if(btn){btn.setAttribute('aria-expanded',open?'true':'false');btn.classList.toggle('open',!!open);}
+}
+function toggleHeroSub(which,btn){
+  const pair=HERO_SUBS[which];if(!pair)return;
+  const el=document.getElementById(pair[0]);
+  const open=!!(el&&el.hasAttribute('hidden'));
+  setHeroSub(which,open);
+  const st=heroSubState();st[which]=open;
+  try{localStorage.setItem(HERO_SUB_KEY,JSON.stringify(st));}catch(e){}
+}
+function applyHeroSubState(){
+  const st=heroSubState();
+  Object.keys(HERO_SUBS).forEach(k=>setHeroSub(k,!!st[k]));
+}
 function fmtBTCAmt(v){
   if(!isFinite(v))return '0';
   const a=Math.abs(v);
@@ -5375,6 +5398,7 @@ function buildShareCanvas(d){
 }
 
 // ---- REACTIVE ----
+applyHeroSubState();   // restore whether each hero breakdown was left open
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});
 
 // ---- TIMER ----
