@@ -666,6 +666,10 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
           <div class="field-input"><input type="number" id="inRefBonusPct" value="5" step="0.5" min="0" max="100"><span class="unit">%</span></div>
         </div>
         <div class="field">
+          <label>Their Existing TH <span class="tip" data-tip="Hashrate this referral already bought with your code, before the capital above. It joins the same fleet — earning, reinvesting and paying you your bonus alongside the new TH — instead of sitting static like the Ambassador 'referred TH' field.">?</span></label>
+          <div class="field-input"><input type="number" id="inRefPriorTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
+        </div>
+        <div class="field">
           <label>Referral Reinvests <span class="tip" data-tip="Optional. What share of their own mining rewards your referral ploughs back into hashrate. Growth projections then grow their fleet — lifting your ambassador rewards — and pay you your bonus % on every TH purchase they make. Leave at 0 to keep their fleet static: this forecasts someone else's behaviour, not yours.">?</span></label>
           <div class="field-input"><input type="number" id="inRefReinvest" value="0" step="5" min="0" max="100"><span class="unit">%</span></div>
         </div>
@@ -849,6 +853,12 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
             <input type="number" id="piRefCapInput" value="0" step="100" min="0">
             <span class="pi-unit">USD</span>
           </label>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">TH They Already Own <span style="color:var(--text4)">(bought earlier with your code)</span></label>
+          <label class="pi-field-box" for="piRefPriorTH">
+            <input type="number" id="piRefPriorTH" value="0" step="1" min="0">
+            <span class="pi-unit">TH</span>
+          </label>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Hashrate this referral bought <strong style="color:var(--text3)">before</strong> this purchase. It joins the same fleet, so it earns and reinvests alongside the new TH &mdash; and pays you your bonus on what it buys.</div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">Your Referral Bonus <span style="color:var(--text4)">(ambassador tier — 5% up to 14%+)</span></label>
           <label class="pi-field-box" for="piRefBonus">
             <input type="number" id="piRefBonus" value="5" step="0.5" min="0" max="100">
@@ -1157,7 +1167,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=115"></script>
+<script src="/assets/app.js?v=116"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
