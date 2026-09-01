@@ -508,7 +508,9 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
     mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
   }
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH+Math.max(0,i.refPriorTH||0),EFF_BEST))*30;
+  // NOT refPriorTH: that hashrate is already inside the Ambassador "referred TH" figure, so
+  // counting it here would pay the user twice for the same miners.
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST))*30;
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -4308,8 +4310,10 @@ function renderPlanner(i,m){
 
   const projMoStaking=newLocked*(i.apr/100)/52*gp*4.33;
   const refPriorTH=Math.max(0,i.refPriorTH||0);
-  const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH+refPriorTH;
-  const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH+refPriorTH,EFF_BEST);
+  // Their existing TH is already counted in the Ambassador figure above — it only joins the
+  // fleet so it COMPOUNDS. Adding it to the ambassador basis here would bill it twice.
+  const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
+  const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST);
   const projAmbMo=projAmbDaily*30;
   // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
   // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
@@ -4366,7 +4370,6 @@ function renderPlanner(i,m){
   if(projAmbMo>0){
     const _parts=[];
     if(i.amb&&i.refTH>0)_parts.push(`${fN(i.refTH,0)} existing`);
-    if(refPriorTH>0)_parts.push(`${fN(refPriorTH,0)} they already own`);
     if(refInitTH>0)_parts.push(`${fN(refInitTH,1)} from referral plan`);
     const ambSub=_parts.length>1?`${_parts.join(' + ')} = ${fN(projTotalRefTH,1)} TH`
       :(_parts.length?_parts[0]+' TH':`${fN(i.refTH,0)} referred TH`);
@@ -4780,6 +4783,11 @@ function computeSetupProjection(){
   // The referral your Capital Planner just funded: their fleet, so their hashrate feeds YOUR
   // ambassador stream for the whole run instead of being dropped at the planner's results page.
   let refFleetTH=0, refFleetLocked=0;
+  // TH inside refFleetTH that the Ambassador "referred TH" figure ALREADY accounts for. It has
+  // to compound with the fleet but must not be paid ambassador rewards a second time — so the
+  // ambassador basis is the fleet MINUS this baseline. Growth above it is new TH the setup
+  // figure has never seen, so that does lift ambassador income, correctly.
+  let REF_AMB_EXCL=0;
   // apr0 = the APR observed today; apr walks down it across the simulated years (see stakeAprAt).
   const apr0=i.apr||0;
   let apr=apr0;
@@ -4809,6 +4817,7 @@ function computeSetupProjection(){
       const perTH=refFleetTH>0?refFleetLocked/refFleetTH:0;
       refFleetTH+=_prior;
       refFleetLocked+=_prior*perTH;
+      REF_AMB_EXCL=_prior;   // already inside the Ambassador figure — see below
     }
   }else{
     MP_TH=0; MP_WTH=15;
@@ -4819,6 +4828,7 @@ function computeSetupProjection(){
       const f0=fees(refFleetTH,EFF_BEST,bpStart);
       const v0=vipOf(refFleetTH,0);
       refFleetLocked=(f0.t*(1-Math.min(30,v0.d)/100)*bpStart)/gp0*360;
+      REF_AMB_EXCL=refFleetTH;
     }
     GGROW=(i.ggrow||0)/100;
     GINIT=Math.min(Math.max(0,i.gInit||0),Math.max(0,i.gth||0));
@@ -4853,7 +4863,8 @@ function computeSetupProjection(){
   // which is the default because this forecasts somebody else's behaviour, not yours.
   const refReinvest=Math.max(0,Math.min(100,+i.refReinvest||0))/100;
   const refBonusRate=(i.refBonusPct>0?i.refBonusPct:5)/100;
-  let ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refFleetTH,EFF_BEST);
+  const refAmbBasis=()=>Math.max(0,refFleetTH-REF_AMB_EXCL);
+  let ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_BEST);
   let totalAmbUSD=0, totalRefBonusUSD=0, refFleetStartTH=refFleetTH;
 
   let bpToday=bpStart;
@@ -4950,7 +4961,7 @@ function computeSetupProjection(){
     refFleetLocked+=gmtSpend/gp;
     const thSpend=spend-gmtSpend;
     if(thSpend>0)refFleetTH+=thForBudget12(thSpend);
-    ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refFleetTH,EFF_BEST);
+    ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_BEST);
     const bonus=thSpend*refBonusRate;                          // your commission on their TH spend
     totalRefBonusUSD+=bonus;
     return bonus;
