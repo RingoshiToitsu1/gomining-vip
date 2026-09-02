@@ -2482,11 +2482,11 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.06;
+const MINING_MODE_DEFAULT=1.2;
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
-const MINING_MODE_PAST_DEFAULTS=[0.7,0.83,0.88];
+const MINING_MODE_PAST_DEFAULTS=[0.7,0.83,0.88,1.06];
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
