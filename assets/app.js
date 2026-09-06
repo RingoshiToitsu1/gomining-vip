@@ -3279,12 +3279,18 @@ function recalc(){
   // that reinvests weekly is a materially different asset from one that pays out.
   const totTHv=m.totTH||0;
   const ecr=effectiveCompoundedROI(i,m);
+  const ambDaily0=heroAmbDaily;
   const velocity=ecr?ecr.roi:0;
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
   if(velSub){
+    // Say FARM VALUE outright. Two dollar figures under a card that just showed yearly income
+    // read as income, and they are not — they are what the farm is worth before and after a
+    // year of reinvesting. Ambassador income is excluded from this ROI on purpose: it is paid
+    // on a referral's spending, not earned by this capital, so counting it would inflate the
+    // return on a farm that did not produce it.
     velSub.textContent=ecr
-      ? `${fU(ecr.start,0)} → ${fU(ecr.end,0)} in a year · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked`
+      ? `farm value ${fU(ecr.start,0)} → ${fU(ecr.end,0)} · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked${ambDaily0>0?' · excludes ambassador':''}`
       : 'reinvest all earnings into hashrate';
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
