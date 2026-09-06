@@ -127,6 +127,68 @@ function cptTier(tiers,th){
   return tiers[0].cpt*disc;
 }
 function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
+
+// ---- Effective compounded ROI ----
+// What the farm actually returns over a year if every reward is reinvested weekly. NOT
+// income divided by capital: that ignores compounding, and it ignores that reinvesting
+// changes the farm — new hashrate raises the fee bill, which eats coverage, which costs
+// discount unless some of the reward goes back into the lock. So this simulates the year
+// the way the projection does, and reports the growth in what the farm is WORTH.
+//
+// Prices are frozen at today's BTC, GMT and difficulty on purpose. This answers "what is
+// this farm returning right now, compounded", which is a property of the setup. Halvings,
+// difficulty grind and price paths are forecasting — that belongs to the projection page,
+// and mixing the two would make a headline metric move for reasons the user did not change.
+function effectiveCompoundedROI(i,m){
+  const bp=m.bp, gp=m.gp, dbt=dailyBTCperTH();
+  if(!(bp>0&&gp>0&&dbt>0))return null;
+  const gth0=Math.max(0,i.gth||0), gwth0=gth0>0?(i.gwth>0?i.gwth:EFF_BASE_MAX):0;
+  const gInit=Math.min(Math.max(0,i.gInit||0),gth0);
+  const gGrow=Math.max(0,+(i.ggrow||0))/100;
+  let th=Math.max(0,i.th||0);                     // non-greedy hashrate
+  let wth=i.wth>0?i.wth:EFF_BASE_MAX;
+  let gTH=gth0;                                   // greedy hashrate, its own rating
+  let locked=Math.max(0,i.gl||0);
+  const wallet=Math.max(0,i.gw||0);               // counts toward coverage, never spent here
+  const value=()=>{
+    const tot=th+gTH;
+    return tot*estimateCPT12(tot||1)+locked*gp;
+  };
+  const start=value();
+  if(!(start>0))return null;
+  const week=()=>{
+    const tot=th+gTH;
+    if(!(tot>0)&&!(locked>0))return;
+    const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
+    const f=fees(Math.max(tot,1e-9),bw,bp);
+    const v=vipOf(th+Math.max(0,gTH-gInit),locked);
+    const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+    const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                       // GMT/day at full fee
+    const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
+    const tokD=i.payG?Math.min(20,Math.floor(cov/18)):0;
+    const totD=Math.min(30,tokD+nonTok);
+    const mineWk=Math.max(0,(dbt*tot-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE))*7;
+    const stakeWk=locked*(i.apr/100)/52*gp;
+    let budget=mineWk+stakeWk;
+    // The greedy's free TH arrives as hashrate, not cash — it is growth, never spend.
+    if(gTH>0&&gGrow>0)gTH*=(1+gGrow);
+    if(!(budget>0))return;
+    // Coverage first, exactly as the planner prioritises it: hashrate bought without the
+    // coverage to match simply moves the fee discount down and can net less than it costs.
+    if(i.payG){
+      const need=Math.max(0,burnGMT*360-(locked+wallet))*gp;
+      const toLock=Math.min(budget,need);
+      if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
+    }
+    if(budget>0){
+      const add=thForBudget12(budget*(1-USD_GMT_FEE));
+      if(add>0){wth=(th*wth+add*EFF_BEST)/(th+add);th+=add;}
+    }
+  };
+  for(let w=0;w<52;w++)week();
+  const end=value();
+  return {roi:(end/start-1)*100,start,end,thEnd:th+gTH,lockedEnd:locked};
+}
 // Marginal cost to grow a 12 W miner from `cur` TH by `add` TH — the slice of the price curve
 // from cur → cur+add. Topping up an existing miner is CHEAPER than a new one, which re-pays the
 // pricey 0 → add slice: a miner already at `cur` starts lower on the descending curve.
@@ -2066,7 +2128,7 @@ function buildFarmShotCanvas(d,imgs){
     {id:'DAILY.NET',  label:'Daily Net Profit',      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:d.dailySub},
     {id:'MONTH.YIELD',label:'Monthly Earnings',      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:fU(d.yearlyUSD,0)+' / yr'},
     {id:'COVERAGE',   label:'Total Discount',        val:fP(d.disc),              accent:GOLD,         sub:'Saving '+fU(d.saveMoUSD)+'/mo on fees'},
-    {id:'VELOCITY',   label:'Compounding Velocity',  val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:d.velSub}
+    {id:'VELOCITY',   label:'Effective Compounded ROI', val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:d.velSub}
   ];
   const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
   cards.forEach((cd,i)=>{
@@ -3211,31 +3273,18 @@ function recalc(){
   else if($('heroYearlyBtcVal'))$('heroYearlyBtcVal').textContent='';
   animateMetric($('heroDiscount'),m.totD,fP);
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
-  // Compounding velocity — how fast the farm grows if you reinvest every dollar you earn
-  // into hashrate, plus the Greedy Machine's free weekly growth. A rate at TODAY's prices
-  // (income ÷ productive capital), not a forward projection. Base = TH value + locked GMT.
-  const totTHv=m.totTH||0, cptNow=estimateCPT12(totTHv||1);
-  const farmValueUSD=totTHv*cptNow+Math.max(0,i.gl||0)*m.gp;
-  const reinvestPct=(cashMoUSD>0&&farmValueUSD>0)?(cashMoUSD*12)/farmValueUSD*100:0;
-  const greedyPct=totTHv>0?(greedyWkTH*52)/totTHv*100:0;
-  const velocity=reinvestPct+greedyPct;
+  // Effective compounded ROI: a simulated year of weekly reinvestment at today's prices,
+  // reported as the growth in what the farm is worth. The old figure here divided income by
+  // capital, which understated the answer — it credited none of the compounding, and a farm
+  // that reinvests weekly is a materially different asset from one that pays out.
+  const totTHv=m.totTH||0;
+  const ecr=effectiveCompoundedROI(i,m);
+  const velocity=ecr?ecr.roi:0;
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
-  // This is a BLENDED return on all productive capital — hashrate AND the GMT lock — so it
-  // reads lower than the headline "miner ROI" people quote, which counts only the TH. On a
-  // maxed-discount farm the lock is a third of the capital earning staking APR, which pulls the
-  // blend down several points. Show both legs, or the number looks broken rather than honest.
   if(velSub){
-    const lockVal=Math.max(0,i.gl||0)*m.gp, thVal=Math.max(0,farmValueUSD-lockVal);
-    const mineMoOnly=netUSD*30+heroAmbDaily*30;
-    const thRoi=thVal>0?(mineMoOnly*12)/thVal*100:0;
-    const lockRoi=lockVal>0?(stakingMonthlyUSD*12)/lockVal*100:0;
-    const bits=[];
-    if(thVal>0)bits.push(`${fN(thRoi,0)}% on hashrate`);
-    if(lockVal>0)bits.push(`${fN(lockRoi,0)}% on locked GMT`);
-    if(greedyPct>0.5)bits.push(`+${fN(greedyPct,0)}% greedy growth`);
-    velSub.textContent=bits.length>1
-      ? bits.join(' · ')+' — blended on all capital'
+    velSub.textContent=ecr
+      ? `${fU(ecr.start,0)} → ${fU(ecr.end,0)} in a year · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked`
       : 'reinvest all earnings into hashrate';
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card

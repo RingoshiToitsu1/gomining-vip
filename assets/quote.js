@@ -235,6 +235,13 @@
   let mode = 'cap';
 
   function render() {
+    try { render_(); }
+    catch (e) {
+      const out = $('qOut');
+      if (out) { out.style.display = ''; out.innerHTML = '<div class="headline"><div class="lab">Could not build the quote</div><div class="note">' + String(e && e.message || e) + '</div></div>'; }
+    }
+  }
+  function render_() {
     const out = $('qOut'); if (!out) return;
     const streak = !!($('qStreak') && $('qStreak').checked);
     const a = mode === 'cap'
@@ -318,9 +325,30 @@
     presets($('qCapPresets'), [10000, 25000, 50000, 100000, 250000], 'qCap');
     presets($('qIncPresets'), [500, 1000, 2500, 5000, 10000], 'qInc');
     document.querySelectorAll('#qModes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));
-    ['qCap', 'qInc'].forEach(id => { const e = $(id); if (e) e.addEventListener('input', render); });
+    ['qCap', 'qInc'].forEach(id => {
+      const e = $(id); if (!e) return;
+      e.addEventListener('input', render);
+      // Enter is the natural "give me the answer" key in a one-field form. It already renders on
+      // input, so this mostly blurs the keyboard on mobile — but it must never do nothing.
+      e.addEventListener('keydown', ev => {
+        if (ev.key !== 'Enter') return;
+        ev.preventDefault(); render(); e.blur();
+        const o = $('qOut'); if (o && o.style.display !== 'none') o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    const go = $('qGo');
+    if (go) go.addEventListener('click', () => {
+      render();
+      const o = $('qOut'); if (o && o.style.display !== 'none') o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     const st = $('qStreak');
     if (st) st.addEventListener('change', () => { $('qStreakL').classList.toggle('on', st.checked); render(); });
+    // Draw immediately on the fallback prices, then redraw when the live ones land. Waiting for
+    // the fetch meant up to eight seconds of a blank page — which reads as "it did nothing",
+    // especially to someone who just pressed Enter.
+    S.btc = FB.btc; S.gmt = FB.gmt; S.diff = FB.diff;
+    S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
+    render();
     loadMarket().then(() => {
       const d = $('qDot'), l = $('qLive');
       if (d) d.className = 'dot' + (S.live ? '' : ' off');

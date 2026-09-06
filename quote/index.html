@@ -62,6 +62,10 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .presets button{background:var(--bg);border:1px solid var(--bd);color:var(--t3);border-radius:9px;
   font-family:var(--mono);font-size:.78rem;padding:.4rem .7rem;cursor:pointer;transition:.15s}
 .presets button:hover{border-color:var(--gold);color:var(--gold2)}
+.go{margin-left:auto;background:var(--gold);color:#1a1206;border:none;border-radius:999px;font-family:var(--sans);
+  font-weight:800;font-size:.82rem;padding:.5rem 1.1rem;cursor:pointer}
+.go:hover{filter:brightness(1.06)}
+@media(max-width:600px){.go{margin-left:0;width:100%}}
 .out{margin-top:1.5rem;display:none}
 .headline{background:linear-gradient(150deg,rgba(245,166,35,.13),rgba(245,166,35,.02));
   border:1px solid rgba(245,166,35,.32);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:1rem}
@@ -128,6 +132,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 
     <div class="opts">
       <label class="chk on" id="qStreakL"><input type="checkbox" id="qStreak" checked> Daily click bonus <span style="color:var(--t4)">(+3%)</span></label>
+      <button type="button" id="qGo" class="go">Get quote &rarr;</button>
     </div>
   </div>
 
@@ -138,6 +143,6 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   </div>
 </div>
 
-<script src="/assets/quote.js?v=1"></script>
+<script src="/assets/quote.js?v=2"></script>
 </body>
 </html>
