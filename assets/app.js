@@ -3300,9 +3300,10 @@ function recalc(){
     // year of reinvesting. Ambassador income is excluded from this ROI on purpose: it is paid
     // on a referral's spending, not earned by this capital, so counting it would inflate the
     // return on a farm that did not produce it.
+    // One short line. The farm-value and end-state figures were four numbers deep on a headline
+    // card and read as clutter, not as evidence — the ROI is the point.
     velSub.textContent=ecr
-      ? `farm value ${fU(ecr.start,0)} → ${fU(ecr.end,0)} · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked`
-        +(ecr.roiNoAmb!=null?` · ${fN(ecr.roiNoAmb,0)}% without ambassador`:'')
+      ? (ecr.roiNoAmb!=null?`${fN(ecr.roiNoAmb,0)}% without ambassador rewards`:'reinvesting every reward, weekly')
       : 'reinvest all earnings into hashrate';
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
