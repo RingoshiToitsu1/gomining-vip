@@ -238,7 +238,7 @@
     try { render_(); }
     catch (e) {
       const out = $('qOut');
-      if (out) { out.style.display = ''; out.innerHTML = '<div class="headline"><div class="lab">Could not build the quote</div><div class="note">' + String(e && e.message || e) + '</div></div>'; }
+      if (out) { out.style.display = 'block'; out.innerHTML = '<div class="headline"><div class="lab">Could not build the quote</div><div class="note">' + String(e && e.message || e) + '</div></div>'; }
     }
   }
   function render_() {
@@ -248,7 +248,9 @@
       ? allocate(Math.max(0, +$('qCap').value || 0), streak, APR)
       : capitalForMonthly(Math.max(0, +$('qInc').value || 0), streak, APR);
     if (!a || !(a.capUSD > 0)) { out.style.display = 'none'; return; }
-    out.style.display = '';
+    // NOT '' — .out carries display:none in the stylesheet, so clearing the inline style
+    // re-hides the panel. This built the whole quote and then hid it.
+    out.style.display = 'block';
     const m = a.m, mo = m.netToday * 30, yr = m.netToday * 365.25;
     const lockUSD = a.gmtUSD, thUSD = a.thUSD;
     const pct = v => Math.max(0, Math.min(100, a.capUSD > 0 ? v / a.capUSD * 100 : 0));

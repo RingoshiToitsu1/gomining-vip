@@ -145,49 +145,61 @@ function effectiveCompoundedROI(i,m){
   const gth0=Math.max(0,i.gth||0), gwth0=gth0>0?(i.gwth>0?i.gwth:EFF_BASE_MAX):0;
   const gInit=Math.min(Math.max(0,i.gInit||0),gth0);
   const gGrow=Math.max(0,+(i.ggrow||0))/100;
-  let th=Math.max(0,i.th||0);                     // non-greedy hashrate
-  let wth=i.wth>0?i.wth:EFF_BASE_MAX;
-  let gTH=gth0;                                   // greedy hashrate, its own rating
-  let locked=Math.max(0,i.gl||0);
   const wallet=Math.max(0,i.gw||0);               // counts toward coverage, never spent here
-  const value=()=>{
-    const tot=th+gTH;
-    return tot*estimateCPT12(tot||1)+locked*gp;
-  };
-  const start=value();
-  if(!(start>0))return null;
-  const week=()=>{
-    const tot=th+gTH;
-    if(!(tot>0)&&!(locked>0))return;
-    const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
-    const f=fees(Math.max(tot,1e-9),bw,bp);
-    const v=vipOf(th+Math.max(0,gTH-gInit),locked);
-    const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
-    const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                       // GMT/day at full fee
-    const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
-    const tokD=i.payG?Math.min(20,Math.floor(cov/18)):0;
-    const totD=Math.min(30,tokD+nonTok);
-    const mineWk=Math.max(0,(dbt*tot-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE))*7;
-    const stakeWk=locked*(i.apr/100)/52*gp;
-    let budget=mineWk+stakeWk;
-    // The greedy's free TH arrives as hashrate, not cash — it is growth, never spend.
-    if(gTH>0&&gGrow>0)gTH*=(1+gGrow);
-    if(!(budget>0))return;
-    // Coverage first, exactly as the planner prioritises it: hashrate bought without the
-    // coverage to match simply moves the fee discount down and can net less than it costs.
-    if(i.payG){
-      const need=Math.max(0,burnGMT*360-(locked+wallet))*gp;
-      const toLock=Math.min(budget,need);
-      if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
+  // Referral income, weekly. Held flat: their fleet growing is a forecast about someone else's
+  // behaviour, and this card describes the setup as it stands today.
+  const ambWk=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*7;
+  // One simulated year, from a clean copy of the farm each time. Parameterised on the referral
+  // stream so the with/without pair cannot drift apart or leak state between runs.
+  function run(withAmb){
+    let th=Math.max(0,i.th||0);                   // non-greedy hashrate
+    let wth=i.wth>0?i.wth:EFF_BASE_MAX;
+    let gTH=gth0;                                 // greedy hashrate, its own rating
+    let locked=Math.max(0,i.gl||0);
+    const value=()=>{const tot=th+gTH;return tot*estimateCPT12(tot||1)+locked*gp;};
+    const start=value();
+    if(!(start>0))return null;
+    for(let w=0;w<52;w++){
+      const tot=th+gTH;
+      if(!(tot>0)&&!(locked>0))continue;
+      const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
+      const f=fees(Math.max(tot,1e-9),bw,bp);
+      const v=vipOf(th+Math.max(0,gTH-gInit),locked);
+      const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+      const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                     // GMT/day at full fee
+      const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
+      const tokD=i.payG?Math.min(20,Math.floor(cov/18)):0;
+      const totD=Math.min(30,tokD+nonTok);
+      const mineWk=Math.max(0,(dbt*tot-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE))*7;
+      const stakeWk=locked*(i.apr/100)/52*gp;
+      let budget=mineWk+stakeWk+(withAmb?ambWk:0);
+      // The greedy's free TH arrives as hashrate, not cash — it is growth, never spend.
+      if(gTH>0&&gGrow>0)gTH*=(1+gGrow);
+      if(!(budget>0))continue;
+      // Coverage first, exactly as the planner prioritises it: hashrate bought without the
+      // coverage to match simply moves the fee discount down and can net less than it costs.
+      if(i.payG){
+        const need=Math.max(0,burnGMT*360-(locked+wallet))*gp;
+        const toLock=Math.min(budget,need);
+        if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
+      }
+      if(budget>0){
+        const add=thForBudget12(budget*(1-USD_GMT_FEE));
+        if(add>0){wth=(th*wth+add*EFF_BEST)/(th+add);th+=add;}
+      }
     }
-    if(budget>0){
-      const add=thForBudget12(budget*(1-USD_GMT_FEE));
-      if(add>0){wth=(th*wth+add*EFF_BEST)/(th+add);th+=add;}
-    }
-  };
-  for(let w=0;w<52;w++)week();
-  const end=value();
-  return {roi:(end/start-1)*100,start,end,thEnd:th+gTH,lockedEnd:locked};
+    return {roi:(value()/start-1)*100,start,end:value(),thEnd:th+gTH,lockedEnd:locked};
+  }
+  const full=run(true);
+  if(!full)return null;
+  // Ambassador rewards ARE counted: they land in the account weekly and get reinvested with
+  // everything else, so the hashrate they compound into is real. They are not a yield on this
+  // capital though — they are paid on a referral's spending — so the same year is run without
+  // them too, and the card shows both. One number would have had to be a lie by omission.
+  const bare=ambWk>0?run(false):null;
+  full.roiNoAmb=bare?bare.roi:null;
+  full.hasAmb=ambWk>0;
+  return full;
 }
 // Marginal cost to grow a 12 W miner from `cur` TH by `add` TH — the slice of the price curve
 // from cur → cur+add. Topping up an existing miner is CHEAPER than a new one, which re-pays the
@@ -3279,7 +3291,6 @@ function recalc(){
   // that reinvests weekly is a materially different asset from one that pays out.
   const totTHv=m.totTH||0;
   const ecr=effectiveCompoundedROI(i,m);
-  const ambDaily0=heroAmbDaily;
   const velocity=ecr?ecr.roi:0;
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
@@ -3290,7 +3301,8 @@ function recalc(){
     // on a referral's spending, not earned by this capital, so counting it would inflate the
     // return on a farm that did not produce it.
     velSub.textContent=ecr
-      ? `farm value ${fU(ecr.start,0)} → ${fU(ecr.end,0)} · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked${ambDaily0>0?' · excludes ambassador':''}`
+      ? `farm value ${fU(ecr.start,0)} → ${fU(ecr.end,0)} · ${fN(ecr.thEnd,0)} TH, ${fN(ecr.lockedEnd,0)} GMT locked`
+        +(ecr.roiNoAmb!=null?` · ${fN(ecr.roiNoAmb,0)}% without ambassador`:'')
       : 'reinvest all earnings into hashrate';
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
