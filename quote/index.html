@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quote a GoMining Setup — Capital &amp; Income Calculator | GMT Optimizer</title>
+<meta name="description" content="Quote a new GoMining setup in seconds: enter a capital amount or a monthly income target and get the optimal hashrate / locked-GMT split at live prices.">
+<link rel="canonical" href="https://gmt-optimizer.com/quote">
+<meta name="robots" content="noindex,follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GMT Optimizer">
+<meta property="og:url" content="https://gmt-optimizer.com/quote">
+<meta property="og:title" content="Quote a GoMining Setup">
+<meta property="og:description" content="Enter a capital amount or an income target — get the optimal setup at live prices.">
+<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--card:#121316;--card2:#17181c;--bd:#26272c;--gold:#F5A623;--gold2:#F7B84E;--pale:#FFCF7A;
+  --txt:#E8E8E8;--t2:#BDBDBD;--t3:#8A8A8A;--t4:#5F5F5F;--green:#16c784;--mono:'Share Tech Mono',ui-monospace,monospace;
+  --sans:'Space Grotesk',system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
+  background-image:radial-gradient(ellipse 70% 50% at 15% -10%,rgba(245,166,35,.10),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 110% 5%,rgba(245,166,35,.06),transparent 60%);
+  background-attachment:fixed;min-height:100vh}
+.wrap{max-width:1080px;margin:0 auto;padding:1.4rem 1.1rem 4rem}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.6rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1rem;letter-spacing:-.01em;color:var(--txt);text-decoration:none}
+.brand img{height:26px;width:26px}
+.back{color:var(--t3);text-decoration:none;font-size:.82rem;font-weight:600;border:1px solid var(--bd);
+  border-radius:999px;padding:.4rem .85rem;transition:.15s}
+.back:hover{color:var(--txt);border-color:var(--t4)}
+h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
+.lede{color:var(--t3);font-size:.9rem;margin:0 0 1.4rem;line-height:1.55;max-width:52rem}
+.live{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.72rem;color:var(--t3);
+  background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:.35rem .8rem;margin-bottom:1.2rem}
+.live b{color:var(--gold2);font-weight:400}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.dot.off{background:var(--t4);box-shadow:none}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem 1.2rem 1.3rem}
+.modes{display:inline-flex;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:3px;gap:3px;margin-bottom:1rem}
+.modes button{background:none;border:none;color:var(--t3);font-family:var(--sans);font-size:.84rem;font-weight:700;
+  padding:.5rem 1rem;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
+.modes button.on{background:var(--gold);color:#1a1206}
+.field{display:flex;align-items:center;gap:.6rem;background:var(--bg);border:1px solid var(--bd);border-radius:12px;
+  padding:.7rem .9rem;transition:.15s}
+.field:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+.field .cur{color:var(--t3);font-family:var(--mono);font-size:1.1rem}
+.field input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
+  font-family:var(--mono);font-size:1.5rem;font-weight:700;padding:0;-moz-appearance:textfield}
+.field input::-webkit-outer-spin-button,.field input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.field .suf{color:var(--t3);font-family:var(--mono);font-size:.85rem;white-space:nowrap}
+.hint{color:var(--t4);font-size:.72rem;margin-top:.45rem;line-height:1.5}
+.opts{display:flex;align-items:center;gap:.55rem;margin-top:.9rem;flex-wrap:wrap}
+.chk{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;color:var(--t2);font-size:.8rem;
+  border:1px solid var(--bd);border-radius:999px;padding:.4rem .8rem;transition:.15s;user-select:none}
+.chk:hover{border-color:var(--t4)}
+.chk.on{border-color:var(--gold);color:var(--txt);background:rgba(245,166,35,.08)}
+.chk input{accent-color:var(--gold);margin:0}
+.presets{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
+.presets button{background:var(--bg);border:1px solid var(--bd);color:var(--t3);border-radius:9px;
+  font-family:var(--mono);font-size:.78rem;padding:.4rem .7rem;cursor:pointer;transition:.15s}
+.presets button:hover{border-color:var(--gold);color:var(--gold2)}
+.out{margin-top:1.5rem;display:none}
+.headline{background:linear-gradient(150deg,rgba(245,166,35,.13),rgba(245,166,35,.02));
+  border:1px solid rgba(245,166,35,.32);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:1rem}
+.headline .lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.headline .big{font-family:var(--mono);font-size:clamp(2rem,6vw,2.9rem);font-weight:700;color:var(--gold);line-height:1.1;margin-top:.25rem}
+.headline .sub{color:var(--t2);font-family:var(--mono);font-size:.95rem;margin-top:.35rem}
+.headline .note{color:var(--t3);font-size:.78rem;margin-top:.5rem;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.8rem}
+.cell{background:var(--card2);border:1px solid var(--bd);border-radius:13px;padding:.9rem 1rem}
+.cell .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.cell .v{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--txt);margin-top:.25rem;line-height:1.15}
+.cell .s{color:var(--t3);font-size:.74rem;margin-top:.25rem;line-height:1.45}
+.cell.gold .v{color:var(--gold)}
+.cell.green .v{color:var(--green)}
+.split{margin-top:1rem;background:var(--card2);border:1px solid var(--bd);border-radius:13px;padding:1rem}
+.split h3{margin:0 0 .7rem;font-size:.86rem;font-weight:700;color:var(--t2)}
+.bar{display:flex;height:11px;border-radius:999px;overflow:hidden;background:var(--bg);margin-bottom:.7rem}
+.bar i{display:block;height:100%}
+.bar .th{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.bar .gm{background:linear-gradient(90deg,#A78BFA,#c4b0ff)}
+.legs{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.leg .lk{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2);font-weight:600}
+.leg .sw{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.leg .lv{font-family:var(--mono);font-size:1.05rem;font-weight:700;margin-top:.2rem}
+.leg .ls{color:var(--t3);font-size:.72rem;margin-top:.15rem}
+.foot{margin-top:1.4rem;color:var(--t4);font-size:.72rem;line-height:1.6}
+.cta{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
+.cta a,.cta button{background:var(--gold);color:#1a1206;border:none;border-radius:11px;font-family:var(--sans);
+  font-weight:800;font-size:.88rem;padding:.7rem 1.15rem;cursor:pointer;text-decoration:none;display:inline-block}
+.cta .ghost{background:none;border:1px solid var(--bd);color:var(--t2)}
+.cta .ghost:hover{border-color:var(--t4);color:var(--txt)}
+@media(max-width:600px){.legs{grid-template-columns:1fr}.wrap{padding:1rem .8rem 3rem}.panel{padding:1rem .9rem 1.1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="brand" href="/"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+    <a class="back" href="/console">Console &rarr;</a>
+  </div>
+
+  <h1>Quote a setup</h1>
+  <p class="lede">For quoting someone who is starting from zero. Enter what they want to invest, or what they want to earn each month, and this returns the split that holds the token discount at live prices. Nothing here touches your own fleet or saved setups.</p>
+
+  <div class="live"><span class="dot off" id="qDot"></span><span id="qLive">Loading live prices&hellip;</span></div>
+
+  <div class="panel">
+    <div class="modes" id="qModes">
+      <button class="on" data-m="cap">Quote a capital amount</button>
+      <button data-m="inc">Quote an income target</button>
+    </div>
+
+    <div id="qCapWrap">
+      <label class="field" for="qCap"><span class="cur">$</span><input type="number" id="qCap" min="0" step="1000" value="50000" inputmode="decimal"><span class="suf">to invest</span></label>
+      <div class="presets" id="qCapPresets"></div>
+      <div class="hint">Total capital, including the GMT they lock. That lock is what buys the fee discount &mdash; it is invested, not spent.</div>
+    </div>
+
+    <div id="qIncWrap" hidden>
+      <label class="field" for="qInc"><span class="cur">$</span><input type="number" id="qInc" min="0" step="100" value="2000" inputmode="decimal"><span class="suf">per month</span></label>
+      <div class="presets" id="qIncPresets"></div>
+      <div class="hint">Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.</div>
+    </div>
+
+    <div class="opts">
+      <label class="chk on" id="qStreakL"><input type="checkbox" id="qStreak" checked> Daily click bonus <span style="color:var(--t4)">(+3%)</span></label>
+    </div>
+  </div>
+
+  <div class="out" id="qOut"></div>
+
+  <div class="foot">
+    Live BTC, GMT and network difficulty. Assumes new 12&nbsp;W/TH hashrate and enough locked GMT to hold the token discount, with the daily solo-mining bonus applied. Today&rsquo;s rates only &mdash; no forward projection, no price forecast. Not financial advice.
+  </div>
+</div>
+
+<script src="/assets/quote.js?v=1"></script>
+</body>
+</html>

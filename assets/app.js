@@ -3221,7 +3221,23 @@ function recalc(){
   const velocity=reinvestPct+greedyPct;
   animateMetric($('heroVelocity'),velocity,v=>fN(v,0)+'%/yr');$('heroVelocity').className='hero-val orange';
   const velSub=$('heroVelocitySub');
-  if(velSub)velSub.textContent=greedyPct>0.5?`${fN(reinvestPct,0)}% reinvest + ${fN(greedyPct,0)}% greedy growth`:'reinvest all earnings into hashrate';
+  // This is a BLENDED return on all productive capital — hashrate AND the GMT lock — so it
+  // reads lower than the headline "miner ROI" people quote, which counts only the TH. On a
+  // maxed-discount farm the lock is a third of the capital earning staking APR, which pulls the
+  // blend down several points. Show both legs, or the number looks broken rather than honest.
+  if(velSub){
+    const lockVal=Math.max(0,i.gl||0)*m.gp, thVal=Math.max(0,farmValueUSD-lockVal);
+    const mineMoOnly=netUSD*30+heroAmbDaily*30;
+    const thRoi=thVal>0?(mineMoOnly*12)/thVal*100:0;
+    const lockRoi=lockVal>0?(stakingMonthlyUSD*12)/lockVal*100:0;
+    const bits=[];
+    if(thVal>0)bits.push(`${fN(thRoi,0)}% on hashrate`);
+    if(lockVal>0)bits.push(`${fN(lockRoi,0)}% on locked GMT`);
+    if(greedyPct>0.5)bits.push(`+${fN(greedyPct,0)}% greedy growth`);
+    velSub.textContent=bits.length>1
+      ? bits.join(' · ')+' — blended on all capital'
+      : 'reinvest all earnings into hashrate';
+  }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
   // without recomputing anything — same values the hero cards are showing.
   window._farmShot={
