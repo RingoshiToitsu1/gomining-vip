@@ -475,7 +475,11 @@ function submitPlannerCapital(){
   if(txt)txt.textContent='Finding your optimal split…';
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
+  // try/finally, not a bare block: this overlay covers the whole page, so anything thrown in
+  // here used to leave "Finding your optimal split…" spinning forever with no way back. The
+  // spinner must come down whether the solve succeeded or not.
   setTimeout(function(){
+   try{
     const val=parseFloat(document.getElementById('piCapitalInput').value)||0;
     const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
     const refCapVal=parseFloat(document.getElementById('piRefCapInput').value)||0;
@@ -496,9 +500,15 @@ function submitPlannerCapital(){
     recalc();
     hidePanelView('plannerIntro');
     gotoPlannerTab();           // show the plan, not whichever tab the form was opened from
-    if(load)load.style.display='none';
-    if(btn)btn.disabled=false;
     animatePlannerResults();   // fresh-load feel: count the allocation up from 0
+   }catch(e){
+    if(txt)txt.textContent='Something went wrong building the plan — please try again.';
+    setTimeout(function(){if(load)load.style.display='none';if(txt)txt.textContent='Finding your optimal split…';},2200);
+    throw e;                    // still surfaces in the console for diagnosis
+   }finally{
+    if(btn)btn.disabled=false;
+    if(!txt||txt.textContent==='Finding your optimal split…')if(load)load.style.display='none';
+   }
   },800);
 }
 // The Calculate button runs whichever planner mode is active.
@@ -625,6 +635,7 @@ function submitPlannerTarget(){
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
   setTimeout(function(){
+   try{
     // Apply the form's non-capital fields first so the goal-seek accounts for them.
     const gmtVal=parseFloat($('piGMTInput').value)||0;
     const refCapVal=parseFloat($('piRefCapInput').value)||0;
@@ -650,9 +661,15 @@ function submitPlannerTarget(){
     recalc();
     hidePanelView('plannerIntro');
     gotoPlannerTab();           // show the plan, not whichever tab the form was opened from
-    if(load)load.style.display='none';
-    if(btn)btn.disabled=false;
     animatePlannerResults();
+   }catch(e){
+    if(txt)txt.textContent='Something went wrong building the plan — please try again.';
+    setTimeout(function(){if(load)load.style.display='none';if(txt)txt.textContent='Finding your optimal split…';},2200);
+    throw e;
+   }finally{
+    if(btn)btn.disabled=false;
+    if(!txt||txt.textContent==='Finding the capital you need…')if(load)load.style.display='none';
+   }
   },800);
 }
 // "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
@@ -3315,7 +3332,10 @@ function recalc(){
     velocity, velSub:velSub?velSub.textContent:'',
     th:m.totTH||0, wth:m.bwth||0,
     gmtLocked:Math.max(0,i.gl||0), gmtValueUSD:Math.max(0,i.gl||0)*m.gp,
-    vip:(m.vip&&m.vip.n)||'—', btc:m.bp, farmValueUSD
+    vip:(m.vip&&m.vip.n)||'—', btc:m.bp,
+    // Farm capital, for the shareable card. Read off the simulation rather than recomputed, so
+    // the two can never disagree about what the farm is worth.
+    farmValueUSD:ecr?ecr.start:0
   };
   // Reflect manual override state on the "Incorrect discount?" control.
   const ovrToggle=$('discOverrideToggle'),ovrReset=$('discOverrideReset');
