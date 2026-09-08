@@ -61,11 +61,11 @@ const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
 // discount is 5% off list rather than 5% added on. Do NOT paste discounted quotes in
 // here: the site must quote what its readers pay, not what one account pays.
 const TH_TIERS_12W=[
-  {th:1,cpt:17.00},{th:2,cpt:16.95},{th:4,cpt:16.82},{th:8,cpt:16.75},
-  {th:16,cpt:16.68},{th:32,cpt:16.59},{th:48,cpt:16.51},{th:64,cpt:16.41},
-  {th:96,cpt:16.33},{th:128,cpt:16.23},{th:192,cpt:16.15},{th:256,cpt:16.07},
-  {th:384,cpt:15.99},{th:512,cpt:15.91},{th:768,cpt:15.82},{th:1024,cpt:15.75},
-  {th:1536,cpt:15.66},{th:2560,cpt:15.59},{th:3584,cpt:15.51},{th:5000,cpt:15.43}
+  {th:1,cpt:19.00},{th:2,cpt:18.95},{th:4,cpt:18.80},{th:8,cpt:18.72},
+  {th:16,cpt:18.64},{th:32,cpt:18.54},{th:48,cpt:18.45},{th:64,cpt:18.34},
+  {th:96,cpt:18.25},{th:128,cpt:18.14},{th:192,cpt:18.05},{th:256,cpt:17.96},
+  {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
+  {th:1536,cpt:17.50},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.25}
 ];
 
 // 15 W/TH hashrate — the cheaper, less efficient curve. Mirrors TH_TIERS in assets/app.js
@@ -73,11 +73,11 @@ const TH_TIERS_12W=[
 // quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
 // mint-versus-upgrade: at a given W/TH the price per TH is the same either way.
 const TH_TIERS_15W=[
-  {th:1,cpt:10.28},{th:2,cpt:10.27},{th:4,cpt:10.25},{th:8,cpt:10.23},
-  {th:16,cpt:10.21},{th:32,cpt:10.19},{th:48,cpt:10.18},{th:64,cpt:10.16},
-  {th:96,cpt:10.14},{th:128,cpt:10.12},{th:192,cpt:10.09},{th:256,cpt:10.07},
-  {th:384,cpt:10.04},{th:512,cpt:10.02},{th:768,cpt:9.99},{th:1024,cpt:9.97},
-  {th:1536,cpt:9.94},{th:2560,cpt:9.91},{th:3584,cpt:9.88},{th:5000,cpt:9.86}
+  {th:1,cpt:11.49},{th:2,cpt:11.48},{th:4,cpt:11.46},{th:8,cpt:11.43},
+  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.38},{th:64,cpt:11.36},
+  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.28},{th:256,cpt:11.26},
+  {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
+  {th:1536,cpt:11.11},{th:2560,cpt:11.08},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
 ];
 
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.
