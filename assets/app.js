@@ -113,7 +113,9 @@ const TH_TIERS_12W=[
   {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
   {th:1536,cpt:17.50},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.25}
 ];
-const EFF_UPGRADE_STEP=2.98;  // $/TH to improve efficiency by 1 W/TH toward 12 (repriced 2026-09-08 with the curve)
+// $/TH to improve efficiency by 1 W/TH toward 12. Priced INDEPENDENTLY of the TH curves and
+// confirmed unchanged through the 2026-09-08 +11.77% hashrate rise — do not scale it with them.
+const EFF_UPGRADE_STEP=2.67;
 const EFF_BEST=12;            // best efficiency available now
 const EFF_BASE_MAX=15;        // ≥15 W/TH is priced as 15 for upgrades; also the marketplace-machine baseline
 const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
