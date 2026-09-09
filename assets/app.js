@@ -2635,6 +2635,13 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
 const MINING_MODE_DEFAULT=1.36;
+// Greedy Machine free weekly growth. A platform rate, not a preference, so a saved setup still
+// carrying a previous default has to pick up the new one — but the field also invites the user
+// to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
+// mining mode above: a value matching any rate this input has ever shipped with is a stale
+// default; anything else is the user's number and is left alone.
+const GREEDY_GROWTH_DEFAULT='0.3718';
+const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
@@ -2763,7 +2770,10 @@ function applyInputs(d){
   // rather than leaving a stale value from whatever setup was loaded before.
   if($('inInactiveTH'))$('inInactiveTH').value=(d.inInactiveTH!=null?d.inInactiveTH:'0');
   if($('inInactiveWth'))$('inInactiveWth').value=(d.inInactiveWth!=null?d.inInactiveWth:'0');
-  if(d.inGreedyGrowth!=null)$('inGreedyGrowth').value=d.inGreedyGrowth;
+  if(d.inGreedyGrowth!=null){
+    const g=String(d.inGreedyGrowth).trim();
+    $('inGreedyGrowth').value=GREEDY_GROWTH_PAST_DEFAULTS.includes(g)?GREEDY_GROWTH_DEFAULT:d.inGreedyGrowth;
+  }
   if(d.inClickStreak!==undefined)$('inClickStreak').checked=!!d.inClickStreak;
   if(d.inPayGMT!==undefined)$('inPayGMT').checked=!!d.inPayGMT;
   if(d.inAvatarDisc!==undefined)$('inAvatarDisc').checked=!!d.inAvatarDisc;
@@ -2947,7 +2957,7 @@ function clearInputs(){
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,inMpCode:'',
-    inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:'0.3',
+    inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:GREEDY_GROWTH_DEFAULT,
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',inRefPriorTH:'0',
     piVipBonus:false
   });
