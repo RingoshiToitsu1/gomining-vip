@@ -155,6 +155,20 @@ document.addEventListener('click',function(e){
   el.setAttribute('hidden','');
   document.querySelectorAll('.px-badge').forEach(b=>b.classList.remove('open'));
 });
+// A hand-drawn arrow leaning toward the badge. Gold, stroked in the same gradient as the rest of
+// the chrome, and drawn on once — it points out a credential most people would never think to
+// look for. Desktop only: on a phone the badge sits under the heading with nothing to point across.
+function pxArrowSVG(){
+  return `<svg class="px-arrow" viewBox="0 0 132 34" fill="none" aria-hidden="true" focusable="false">
+    <defs><linearGradient id="pxArrowG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="var(--gold-soft,#F7B84E)" stop-opacity=".15"/>
+      <stop offset="1" stop-color="var(--gold-hi,#FFCF7A)" stop-opacity=".95"/>
+    </linearGradient></defs>
+    <path d="M3 9 C34 3, 74 4, 104 17" stroke="url(#pxArrowG)" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M93 11 L106 18 L92 24" stroke="var(--gold-hi,#FFCF7A)" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>
+  </svg>`;
+}
 function thPriceBadge(extraClass){
   return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
     title="See what these prices are and when they were last checked">
@@ -5670,7 +5684,8 @@ function buildShareCanvas(d){
 // ---- REACTIVE ----
 // Stamp the price-freshness badge wherever a plan is priced.
 ['pxBadgeAlloc','pxBadgeProj','pxBadgeHero'].forEach(function(id){
-  const el=document.getElementById(id);if(el)el.innerHTML=thPriceBadge();
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=(id==='pxBadgeHero'?pxArrowSVG():'')+thPriceBadge();
 });
 applyHeroSubState();   // restore whether each hero breakdown was left open
 applySectionState();   // VIP + Daily Operation start collapsed unless the user opened them

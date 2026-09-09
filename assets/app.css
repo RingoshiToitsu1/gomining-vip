@@ -280,8 +280,23 @@ input[type=number]{-moz-appearance:textfield}
 .sec-head{margin:0 0 1.2rem}
 /* The hero heading carries the badge on its own line, right-aligned on desktop and pulled up
    beside the title. It sits with the numbers it vouches for without competing with them. */
-.sec-head-px{margin:-.4rem 0 0}
-@media(max-width:700px){.sec-head-px{margin:.35rem 0 0;justify-content:flex-start}}
+.sec-head-px{margin:-.4rem 0 0;align-items:center;gap:.1rem}
+/* Drawn on once, on a delay, so it arrives after the page has settled rather than competing
+   with the hero numbers loading. stroke-dasharray animates the line on like a pen stroke. */
+.px-arrow{width:132px;height:34px;flex:0 0 auto;margin-right:-.35rem;overflow:visible;
+  opacity:0;animation:pxArrowIn .5s ease .9s forwards}
+.px-arrow path{stroke-dasharray:150;stroke-dashoffset:150;animation:pxArrowDraw 1s var(--ease2,ease) 1s forwards}
+.px-arrow path:last-child{animation-duration:.4s;animation-delay:1.7s}
+@keyframes pxArrowIn{to{opacity:1}}
+@keyframes pxArrowDraw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){
+  .px-arrow,.px-arrow path{animation:none;opacity:1;stroke-dashoffset:0}
+}
+@media(max-width:700px){
+  .sec-head-px{margin:.35rem 0 0;justify-content:flex-start}
+  /* Nothing to point across once the badge sits under the heading. */
+  .px-arrow{display:none}
+}
 .sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-soft)}
 .sec-head .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
 .sec-head .sec-title{font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:600;color:var(--warm);line-height:1.06;letter-spacing:-.025em;margin-top:12px}
