@@ -106,16 +106,17 @@ function thForBudget(budget){
 // Repriced 2026-07-25: GoMining cut 12 W/TH pricing, and the volume taper compressed with it —
 // 20.0% end-to-end down to 13.8%. Four CONFIRMED observations anchor the curve:
 //   1 TH $19.99 (was 21.99) · 64 TH $18.33 · 512 TH $17.78 · 5000 TH $17.24 (was 17.60)
-// The other 16 tiers interpolate piecewise-linearly in log10(TH) between those anchors, which
-// hits all four exactly and stays strictly decreasing. The real curve falls faster early and
-// flattens sooner than a uniform rescale of the old shape would suggest (-$0.34/TH at 48 TH).
-// Pre-avatar-discount.
+// All twenty tiers re-observed 2026-09-08 after the +11.77% rise and written in exactly —
+// nothing on this curve is interpolated any more. The flat scale they replace was within a
+// cent on 15 of 20 tiers and never off by more than $0.04.
+// Stored PRE-avatar-discount: quotes come net of the 5% NFT discount and are grossed up by
+// /0.95, because avatarDiscMult() applies that discount separately.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.00},{th:2,cpt:18.95},{th:4,cpt:18.80},{th:8,cpt:18.72},
-  {th:16,cpt:18.64},{th:32,cpt:18.54},{th:48,cpt:18.45},{th:64,cpt:18.34},
-  {th:96,cpt:18.25},{th:128,cpt:18.14},{th:192,cpt:18.05},{th:256,cpt:17.96},
+  {th:1,cpt:19.00},{th:2,cpt:18.91},{th:4,cpt:18.80},{th:8,cpt:18.75},
+  {th:16,cpt:18.62},{th:32,cpt:18.53},{th:48,cpt:18.44},{th:64,cpt:18.33},
+  {th:96,cpt:18.24},{th:128,cpt:18.15},{th:192,cpt:18.05},{th:256,cpt:17.96},
   {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
-  {th:1536,cpt:17.50},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.25}
+  {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
 ];
 // $/TH to improve efficiency by 1 W/TH toward 12. Priced INDEPENDENTLY of the TH curves and
 // confirmed unchanged through the 2026-09-08 +11.77% hashrate rise — do not scale it with them.
