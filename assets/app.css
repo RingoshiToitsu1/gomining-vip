@@ -191,8 +191,28 @@ input[type=number]{-moz-appearance:textfield}
 .idle-gmt-leg-k{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
 /* The instruction. Biggest thing in the leg because it is the only part you have to carry to
    the GoMining app — the % and $ underneath explain it, they are not the point. */
-.idle-gmt-leg-act{font-family:var(--mono);font-size:1.5rem;font-weight:800;line-height:1.12;
-  color:var(--gold-hi,#FFCF7A);margin-top:.12rem;letter-spacing:-.01em}
+.idle-gmt-leg-act{position:relative;display:inline-block;font-family:var(--mono);font-size:1.5rem;
+  font-weight:800;line-height:1.12;color:var(--gold-hi,#FFCF7A);margin-top:.12rem;letter-spacing:-.01em;
+  padding:.28rem .55rem;margin-left:-.55rem}
+.idle-gmt-leg-act>span{position:relative;z-index:1}
+/* The ring is sized to the number it circles and sits behind it. preserveAspectRatio="none" on
+   the SVG lets one path stretch to any label width — "935.7 TH" and "14,315 GMT" are very
+   different lengths and each still gets a ring that fits. */
+.idle-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
+  opacity:0;transform:rotate(-1.4deg)}
+.idle-ring path{stroke-dasharray:620;stroke-dashoffset:620}
+/* Drawn on only once the card is scrolled into view; the second arc trails the first so it reads
+   as a pen going round twice rather than two shapes appearing together. */
+.rings-in .idle-ring{opacity:1;transition:opacity .2s ease}
+.rings-in .idle-ring path{animation:idleRingDraw 1.05s cubic-bezier(.55,.1,.3,1) forwards}
+.rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path{animation-delay:.28s}
+.rings-in .idle-ring path:last-child{animation-duration:.5s;animation-delay:.85s}
+.rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path:last-child{animation-delay:1.13s}
+@keyframes idleRingDraw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){
+  .rings-in .idle-ring{opacity:1}
+  .rings-in .idle-ring path{animation:none;stroke-dashoffset:0}
+}
 .idle-gmt-leg-act.none{font-size:.9rem;font-weight:700;color:var(--text4)}
 .idle-gmt-leg.is-none{opacity:.5}
 .idle-gmt-leg-v{font-family:var(--mono);font-size:.74rem;font-weight:600;color:var(--text3);margin-top:.15rem}
@@ -207,7 +227,7 @@ input[type=number]{-moz-appearance:textfield}
   /* Phones stack the legs into one column, so the action line has the full width — keep it
      large there too; this is the number people screenshot and act on. */
   .idle-gmt-legs{grid-template-columns:1fr;gap:.75rem}
-  .idle-gmt-leg-act{font-size:1.35rem}
+  .idle-gmt-leg-act{font-size:1.35rem;padding:.24rem .45rem;margin-left:-.45rem}
   .idle-gmt-foot{font-size:.72rem}
 }
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
