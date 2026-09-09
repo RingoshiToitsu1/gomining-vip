@@ -156,10 +156,21 @@ input[type=number]{-moz-appearance:textfield}
 .px-badge:hover,.px-badge.open{border-color:var(--gold-soft);color:var(--text2)}
 .px-dot{width:6px;height:6px;border-radius:50%;background:var(--green,#16c784);
   box-shadow:0 0 6px var(--green,#16c784);flex:0 0 auto}
-.px-info{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:10002;
-  width:min(420px,calc(100vw - 1.6rem));background:var(--bg-card);border:1px solid var(--card-border);
-  border-radius:14px;padding:.95rem 1.05rem;box-shadow:0 18px 50px rgba(0,0,0,.6);animation:fadeIn .16s ease}
+/* Centred modal with its own backdrop. Two reasons it is not a popover anchored to the badge:
+   the badge can sit inside .reveal, whose `filter` makes it the containing block for anything
+   position:fixed — so the panel drifted to wherever that ancestor happened to be — and the
+   themed --bg-card is only 82% opaque, which left the dashboard legible straight through the
+   text. An explicit solid colour here, not a token, so a theme cannot make it transparent. */
+.px-info{position:fixed;inset:0;z-index:10002;display:flex;align-items:center;justify-content:center;
+  padding:1.2rem;background:rgba(4,4,6,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  animation:fadeIn .16s ease}
 .px-info[hidden]{display:none}
+.px-info-card{width:min(430px,100%);max-height:calc(100vh - 2.4rem);overflow-y:auto;
+  background:#111318;border:1px solid var(--card-border);border-radius:14px;
+  padding:1.05rem 1.15rem;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+.px-info-x{float:right;background:none;border:none;color:var(--text4);font-size:1.25rem;line-height:1;
+  cursor:pointer;padding:0 0 .3rem .5rem}
+.px-info-x:hover{color:var(--text2)}
 .px-info-t{font-family:var(--sans);font-weight:800;font-size:.9rem;color:var(--text);margin-bottom:.35rem}
 .px-info-b{font-size:.76rem;color:var(--text2);line-height:1.55}
 .px-tbl{width:100%;border-collapse:collapse;margin:.7rem 0 .5rem;font-family:var(--mono);font-size:.74rem}

@@ -9,6 +9,11 @@
    taken verbatim from assets/roi-embed.js. Keep the two in step when
    recalibrating; scripts/constants.js documents the cluster.
 
+   NO LOGIN, ever. This page is what gets sent to a prospect who has never heard of the site,
+   so it must render for a logged-out stranger with cookies off and storage blocked. Keep it
+   free of account.js, Supabase and localStorage — every number here comes from the inputs on
+   screen plus public price APIs, and it still renders on fallback prices when those fail.
+
    What this ADDS over roi-embed is the allocation solve: given fresh capital
    and no existing hashrate, find the TH / locked-GMT split that holds the
    token discount, which is the same problem solveReferral() answers inside

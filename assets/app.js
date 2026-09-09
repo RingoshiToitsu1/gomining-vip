@@ -134,12 +134,16 @@ function openPriceInfo(){
     // Built from the live tables, not typed out — a hand-written sample would be one more
     // thing that can go stale independently of the prices it claims to describe.
     const q=(rows,th)=>cptTier(rows,th);
-    el.innerHTML=`<div class="px-info-t">Where these numbers come from</div>
+    // The tier figures run through cptTier(), which applies the avatar discount — so with that
+    // toggle on these ARE the user's own prices, and calling them list prices would be wrong.
+    const av=(typeof avatarDiscMult==='function')&&avatarDiscMult()<1;
+    el.innerHTML=`<div class="px-info-card"><button type="button" class="px-info-x" onclick="openPriceInfo()" aria-label="Close">&times;</button>
+      <div class="px-info-t">Where these numbers come from</div>
       <div class="px-info-b">Both TH price curves were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong> — all twenty tiers of each, no interpolation. Everything the planner, the projection and the quote page cost is priced from them.</div>
       <table class="px-tbl"><tr><th>TH</th><th>New miner<span>12 W/TH</span></th><th>Add hashrate<span>15 W/TH</span></th></tr>
       ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS_12W,th))}</td><td>${fU(q(TH_TIERS,th))}</td></tr>`).join('')}
       </table>
-      <div class="px-info-n">List prices per TH, before the 5% NFT discount. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div>`;
+      <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'List prices per TH, before the 5% avatar discount'}. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div></div>`;
     el.removeAttribute('hidden');
   }else el.setAttribute('hidden','');
   document.querySelectorAll('.px-badge').forEach(b=>b.classList.toggle('open',open));
@@ -147,7 +151,7 @@ function openPriceInfo(){
 document.addEventListener('click',function(e){
   const el=document.getElementById('pxInfo');
   if(!el||el.hasAttribute('hidden'))return;
-  if(el.contains(e.target)||e.target.closest('.px-badge'))return;
+  if(e.target.closest('.px-info-card')||e.target.closest('.px-badge'))return;
   el.setAttribute('hidden','');
   document.querySelectorAll('.px-badge').forEach(b=>b.classList.remove('open'));
 });

@@ -153,6 +153,9 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   </div>
 </div>
 
-<script src="/assets/quote.js?v=8"></script>
+<!-- Deliberately the ONLY script on this page. /quote must work for a logged-out stranger on a
+     shared link: no account.js (which renders the results gate), no chat.js, no Supabase, no
+     localStorage. If you ever need one of those here, gate the feature — never the page. -->
+<script src="/assets/quote.js?v=9"></script>
 </body>
 </html>
