@@ -205,15 +205,36 @@ input[type=number]{-moz-appearance:textfield}
 .idle-ring{position:absolute;top:-.3rem;bottom:-.32rem;left:-.62rem;right:-.62rem;
   overflow:visible;pointer-events:none;opacity:0;transform:rotate(-1.4deg)}
 .idle-ring path{stroke-dasharray:620;stroke-dashoffset:620}
-/* Drawn on only once the card is scrolled into view; the second arc trails the first so it reads
-   as a pen going round twice rather than two shapes appearing together. */
+/* Drawn on once the card scrolls into view, held, then rubbed out — the ring has done its job
+   the moment your eye lands on the number, and leaving it there permanently turns a pointer
+   into a border. Erasing runs the dash the other way, from the same end it was drawn, so it
+   reads as the pen retracing rather than the shape fading.
+   One animation per path handles draw + hold + erase: the keyframe percentages ARE the timing,
+   which keeps the two arcs and the two legs in step without four separate delays to reconcile. */
 .rings-in .idle-ring{opacity:1;transition:opacity .2s ease}
-.rings-in .idle-ring path{animation:idleRingDraw 1.05s cubic-bezier(.55,.1,.3,1) forwards}
+.rings-in .idle-ring path{animation:idleRingCycle 5.4s cubic-bezier(.55,.1,.3,1) forwards}
 .rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path{animation-delay:.28s}
-.rings-in .idle-ring path:last-child{animation-duration:.5s;animation-delay:.85s}
+/* Starts 0.85s later, so it runs 0.85s shorter — both arcs of a ring then finish erasing on the
+   same frame instead of the second one hanging alone after the first has gone. */
+.rings-in .idle-ring path:last-child{animation-name:idleRingCycleShort;animation-delay:.85s;animation-duration:4.55s}
 .rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path:last-child{animation-delay:1.13s}
-@keyframes idleRingDraw{to{stroke-dashoffset:0}}
+/* 0-19% draw, hold to 74%, then erase. dashoffset going NEGATIVE walks the gap out the far end,
+   so the line disappears from where the pen started rather than snapping off. */
+@keyframes idleRingCycle{
+  0%{stroke-dashoffset:620}
+  19%{stroke-dashoffset:0}
+  74%{stroke-dashoffset:0}
+  100%{stroke-dashoffset:-620}
+}
+@keyframes idleRingCycleShort{
+  0%{stroke-dashoffset:620}
+  11%{stroke-dashoffset:0}
+  69%{stroke-dashoffset:0}
+  100%{stroke-dashoffset:-620}
+}
 @media(prefers-reduced-motion:reduce){
+  /* No drawing and no erasing — a ring that vanishes on its own is exactly the kind of motion
+     this setting asks us to stop. It simply stays. */
   .rings-in .idle-ring{opacity:1}
   .rings-in .idle-ring path{animation:none;stroke-dashoffset:0}
 }
