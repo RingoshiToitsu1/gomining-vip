@@ -73,11 +73,11 @@ const TH_TIERS_12W=[
 // quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
 // mint-versus-upgrade: at a given W/TH the price per TH is the same either way.
 const TH_TIERS_15W=[
-  {th:1,cpt:11.49},{th:2,cpt:11.48},{th:4,cpt:11.46},{th:8,cpt:11.43},
-  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.38},{th:64,cpt:11.36},
-  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.28},{th:256,cpt:11.26},
+  {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
+  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
+  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
   {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
-  {th:1536,cpt:11.11},{th:2560,cpt:11.08},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+  {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
 ];
 
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.
