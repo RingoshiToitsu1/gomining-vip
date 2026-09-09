@@ -146,11 +146,17 @@ input[type=number]{-moz-appearance:textfield}
   .idle-gmt-ask-sub{font-size:.72rem}
   .idle-gmt-ask-row input{width:7.5rem}
 }
-.idle-gmt-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem}
+.idle-gmt-legs{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:.9rem}
 .idle-gmt-leg{display:flex;align-items:flex-start;gap:.5rem}
 .idle-gmt-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;margin-top:.32rem}
-.idle-gmt-leg-k{font-size:.76rem;font-weight:700;color:var(--text2)}
-.idle-gmt-leg-v{font-family:var(--mono);font-size:.86rem;font-weight:800;color:var(--text)}
+.idle-gmt-leg-k{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+/* The instruction. Biggest thing in the leg because it is the only part you have to carry to
+   the GoMining app — the % and $ underneath explain it, they are not the point. */
+.idle-gmt-leg-act{font-family:var(--mono);font-size:1.5rem;font-weight:800;line-height:1.12;
+  color:var(--gold-hi,#FFCF7A);margin-top:.12rem;letter-spacing:-.01em}
+.idle-gmt-leg-act.none{font-size:.9rem;font-weight:700;color:var(--text4)}
+.idle-gmt-leg.is-none{opacity:.5}
+.idle-gmt-leg-v{font-family:var(--mono);font-size:.74rem;font-weight:600;color:var(--text3);margin-top:.15rem}
 .idle-gmt-leg-s{font-size:.7rem;color:var(--text4)}
 .idle-gmt-leg-into{margin-top:.1rem;font-size:.7rem;font-weight:700;color:var(--gold-soft)}
 .idle-gmt-foot{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap;margin-top:.95rem;padding-top:.8rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text3)}
@@ -159,6 +165,10 @@ input[type=number]{-moz-appearance:textfield}
 @media(max-width:600px){
   .idle-gmt{padding:.85rem .9rem;border-radius:10px;margin-bottom:.6rem}
   .idle-gmt-gain{font-size:1.15rem}
+  /* Phones stack the legs into one column, so the action line has the full width — keep it
+     large there too; this is the number people screenshot and act on. */
+  .idle-gmt-legs{grid-template-columns:1fr;gap:.75rem}
+  .idle-gmt-leg-act{font-size:1.35rem}
   .idle-gmt-foot{font-size:.72rem}
 }
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
