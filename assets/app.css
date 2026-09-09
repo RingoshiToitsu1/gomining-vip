@@ -267,6 +267,10 @@ input[type=number]{-moz-appearance:textfield}
 
 /* landing-style section head (eyebrow + big title) */
 .sec-head{margin:0 0 1.2rem}
+/* The hero heading carries the badge on its own line, right-aligned on desktop and pulled up
+   beside the title. It sits with the numbers it vouches for without competing with them. */
+.sec-head-px{margin:-.4rem 0 0}
+@media(max-width:700px){.sec-head-px{margin:.35rem 0 0;justify-content:flex-start}}
 .sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-soft)}
 .sec-head .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
 .sec-head .sec-title{font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:600;color:var(--warm);line-height:1.06;letter-spacing:-.025em;margin-top:12px}

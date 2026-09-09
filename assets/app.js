@@ -5665,7 +5665,7 @@ function buildShareCanvas(d){
 
 // ---- REACTIVE ----
 // Stamp the price-freshness badge wherever a plan is priced.
-['pxBadgeAlloc','pxBadgeProj'].forEach(function(id){
+['pxBadgeAlloc','pxBadgeProj','pxBadgeHero'].forEach(function(id){
   const el=document.getElementById(id);if(el)el.innerHTML=thPriceBadge();
 });
 applyHeroSubState();   // restore whether each hero breakdown was left open
