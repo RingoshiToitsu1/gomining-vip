@@ -143,7 +143,7 @@ function openPriceInfo(){
       <table class="px-tbl"><tr><th>TH</th><th>New miner<span>12 W/TH</span></th><th>Add hashrate<span>15 W/TH</span></th></tr>
       ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS_12W,th))}</td><td>${fU(q(TH_TIERS,th))}</td></tr>`).join('')}
       </table>
-      <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'List prices per TH, before the 5% avatar discount'}. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div></div>`;
+      <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'Prices per TH'}. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div></div>`;
     el.removeAttribute('hidden');
   }else el.setAttribute('hidden','');
   document.querySelectorAll('.px-badge').forEach(b=>b.classList.toggle('open',open));
