@@ -36,6 +36,10 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .live{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.72rem;color:var(--t3);
   background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:.35rem .8rem;margin-bottom:1.2rem}
 .live b{color:var(--gold2);font-weight:400}
+.live-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.2rem}
+.live-row .live{margin-bottom:0}
+.px-cred{color:var(--t4)}
+.px-cred .dot{background:var(--green)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
 .dot.off{background:var(--t4);box-shadow:none}
 .panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem 1.2rem 1.3rem}
@@ -113,7 +117,10 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   <h1>Quote a setup</h1>
   <p class="lede">For quoting someone who is starting from zero. Enter what they want to invest, or what they want to earn each month, and this returns the split that holds the token discount at live prices. Nothing here touches your own fleet or saved setups.</p>
 
-  <div class="live"><span class="dot off" id="qDot"></span><span id="qLive">Loading live prices&hellip;</span></div>
+  <div class="live-row">
+    <div class="live"><span class="dot off" id="qDot"></span><span id="qLive">Loading live prices&hellip;</span></div>
+    <div class="live px-cred"><span class="dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated <b id="qPxDate">8 Sep 2026</b></div>
+  </div>
 
   <div class="panel">
     <div class="modes" id="qModes">
@@ -146,6 +153,6 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   </div>
 </div>
 
-<script src="/assets/quote.js?v=7"></script>
+<script src="/assets/quote.js?v=8"></script>
 </body>
 </html>

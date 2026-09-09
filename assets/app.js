@@ -121,6 +121,41 @@ const TH_TIERS_12W=[
 // $/TH to improve efficiency by 1 W/TH toward 12. Priced INDEPENDENTLY of the TH curves and
 // confirmed unchanged through the 2026-09-08 +11.77% hashrate rise — do not scale it with them.
 const EFF_UPGRADE_STEP=2.67;
+// When the TH price curves above were last observed against the live GoMining app. Surfaced on
+// the planner and projection so the numbers can be trusted without taking it on faith. Update
+// this in the same commit as the curves — a stale date is worse than none, because it claims
+// freshness the figures no longer have.
+const TH_PRICES_ASOF='8 Sep 2026';
+function openPriceInfo(){
+  const el=document.getElementById('pxInfo');
+  if(!el)return;
+  const open=el.hasAttribute('hidden');
+  if(open){
+    // Built from the live tables, not typed out — a hand-written sample would be one more
+    // thing that can go stale independently of the prices it claims to describe.
+    const q=(rows,th)=>cptTier(rows,th);
+    el.innerHTML=`<div class="px-info-t">Where these numbers come from</div>
+      <div class="px-info-b">Both TH price curves were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong> — all twenty tiers of each, no interpolation. Everything the planner, the projection and the quote page cost is priced from them.</div>
+      <table class="px-tbl"><tr><th>TH</th><th>New miner<span>12 W/TH</span></th><th>Add hashrate<span>15 W/TH</span></th></tr>
+      ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS_12W,th))}</td><td>${fU(q(TH_TIERS,th))}</td></tr>`).join('')}
+      </table>
+      <div class="px-info-n">List prices per TH, before the 5% NFT discount. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div>`;
+    el.removeAttribute('hidden');
+  }else el.setAttribute('hidden','');
+  document.querySelectorAll('.px-badge').forEach(b=>b.classList.toggle('open',open));
+}
+document.addEventListener('click',function(e){
+  const el=document.getElementById('pxInfo');
+  if(!el||el.hasAttribute('hidden'))return;
+  if(el.contains(e.target)||e.target.closest('.px-badge'))return;
+  el.setAttribute('hidden','');
+  document.querySelectorAll('.px-badge').forEach(b=>b.classList.remove('open'));
+});
+function thPriceBadge(extraClass){
+  return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
+    title="See what these prices are and when they were last checked">
+    <span class="px-dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated ${TH_PRICES_ASOF}</button>`;
+}
 const EFF_BEST=12;            // best efficiency available now
 const EFF_BASE_MAX=15;        // ≥15 W/TH is priced as 15 for upgrades; also the marketplace-machine baseline
 const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
@@ -5629,6 +5664,10 @@ function buildShareCanvas(d){
 }
 
 // ---- REACTIVE ----
+// Stamp the price-freshness badge wherever a plan is priced.
+['pxBadgeAlloc','pxBadgeProj'].forEach(function(id){
+  const el=document.getElementById(id);if(el)el.innerHTML=thPriceBadge();
+});
 applyHeroSubState();   // restore whether each hero breakdown was left open
 applySectionState();   // VIP + Daily Operation start collapsed unless the user opened them
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});

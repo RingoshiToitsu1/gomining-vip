@@ -232,6 +232,9 @@
     { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
   const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   const APR = 24.26;   // mirrors inLockAPR in console/index.html and STAKING_APR in scripts/constants.js
+  // When the tier tables above were last read off the live GoMining app. Mirrors
+  // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
+  const TH_PRICES_ASOF = '8 Sep 2026';
   let mode = 'cap';
 
   function render() {
@@ -324,6 +327,7 @@
     });
   }
   function init() {
+    const pd = $('qPxDate'); if (pd) pd.textContent = TH_PRICES_ASOF;
     presets($('qCapPresets'), [10000, 25000, 50000, 100000, 250000], 'qCap');
     presets($('qIncPresets'), [500, 1000, 2500, 5000, 10000], 'qInc');
     document.querySelectorAll('#qModes button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.m)));

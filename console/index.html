@@ -55,7 +55,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=65">
+<link rel="stylesheet" href="/assets/app.css?v=66">
 <link rel="stylesheet" href="/assets/design.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=16">
 </head>
@@ -724,6 +724,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
     </div>
     <div class="section-desc">Tests every TH/GMT split to find the allocation that maximizes your monthly net income.</div>
     <div class="section-body">
+      <div class="px-badge-row" id="pxBadgeAlloc"></div>
       <div id="allocDisplay"></div>
     </div>
   </div>
@@ -1029,6 +1030,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
   </div>
 </div>
 <div class="cshare-toast" id="chartShareToast"></div>
+<div class="px-info" id="pxInfo" hidden></div>
 
 <!-- GROWTH PROJECTION (existing setup) — full page -->
 <div class="sp-page" id="setupProjModal" style="display:none">
@@ -1108,6 +1110,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
         <button class="sp-back-btn" onclick="closeSetupProjection()">&larr; Return to Console</button>
       </div>
       <div class="sp-results-title">Your Growth Forecast</div>
+      <div class="px-badge-row" id="pxBadgeProj"></div>
       <div id="spResult"></div>
       <div style="text-align:center;margin-top:.9rem">
         <button class="share-plan-btn" onclick="shareProjectionImage(this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg> Share projection image</button>
@@ -1167,7 +1170,7 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 </footer>
 </div>
 
-<script src="/assets/app.js?v=130"></script>
+<script src="/assets/app.js?v=131"></script>
 <script src="/assets/fleet.js?v=15"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
