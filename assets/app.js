@@ -3509,9 +3509,9 @@ function recalc(){
 // figure, where a perfect ellipse reads as a border and gets ignored as chrome.
 function idleRingSVG(){
   return `<svg class="idle-ring" viewBox="0 0 220 74" preserveAspectRatio="none" fill="none" aria-hidden="true" focusable="false">
-    <path d="M31 12 C86 3, 176 5, 202 22 C214 33, 199 57, 141 65 C79 72, 16 66, 8 46 C3 33, 14 20, 44 12"
-      stroke="var(--gold-hi,#FFCF7A)" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M44 12 C24 17, 12 27, 15 40" stroke="var(--gold-soft,#F7B84E)" stroke-width="2" stroke-linecap="round" opacity=".55"/>
+    <path d="M34 9 C92 2, 180 4, 209 20 C219 30, 202 60, 140 68 C74 76, 10 68, 3 45 C-1 31, 12 17, 46 9"
+      stroke="var(--gold-hi,#FFCF7A)" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <path d="M46 9 C24 15, 10 26, 13 40" stroke="var(--gold-soft,#F7B84E)" stroke-width="2" stroke-linecap="round" opacity=".5" vector-effect="non-scaling-stroke"/>
   </svg>`;
 }
 // Draw the rings when the card is actually looked at, once. Doing it on render would spend the

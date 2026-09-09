@@ -192,14 +192,18 @@ input[type=number]{-moz-appearance:textfield}
 /* The instruction. Biggest thing in the leg because it is the only part you have to carry to
    the GoMining app — the % and $ underneath explain it, they are not the point. */
 .idle-gmt-leg-act{position:relative;display:inline-block;font-family:var(--mono);font-size:1.5rem;
-  font-weight:800;line-height:1.12;color:var(--gold-hi,#FFCF7A);margin-top:.12rem;letter-spacing:-.01em;
-  padding:.28rem .55rem;margin-left:-.55rem}
+  font-weight:800;line-height:1.12;color:var(--gold-hi,#FFCF7A);letter-spacing:-.01em;
+  margin:.3rem 0 .34rem}
 .idle-gmt-leg-act>span{position:relative;z-index:1}
 /* The ring is sized to the number it circles and sits behind it. preserveAspectRatio="none" on
    the SVG lets one path stretch to any label width — "935.7 TH" and "14,315 GMT" are very
    different lengths and each still gets a ring that fits. */
-.idle-ring{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
-  opacity:0;transform:rotate(-1.4deg)}
+/* Sits OUTSIDE the glyphs, not on them. Negative insets push the stroke clear of the text on
+   every side — drawn at inset:0 the ellipse cut straight through the first and last characters,
+   which is the opposite of highlighting them. The extra room is bought with margin on the label
+   above rather than padding, so the ring never nudges the number off its baseline. */
+.idle-ring{position:absolute;top:-.3rem;bottom:-.32rem;left:-.62rem;right:-.62rem;
+  overflow:visible;pointer-events:none;opacity:0;transform:rotate(-1.4deg)}
 .idle-ring path{stroke-dasharray:620;stroke-dashoffset:620}
 /* Drawn on only once the card is scrolled into view; the second arc trails the first so it reads
    as a pen going round twice rather than two shapes appearing together. */
@@ -227,7 +231,8 @@ input[type=number]{-moz-appearance:textfield}
   /* Phones stack the legs into one column, so the action line has the full width — keep it
      large there too; this is the number people screenshot and act on. */
   .idle-gmt-legs{grid-template-columns:1fr;gap:.75rem}
-  .idle-gmt-leg-act{font-size:1.35rem;padding:.24rem .45rem;margin-left:-.45rem}
+  .idle-gmt-leg-act{font-size:1.35rem}
+  .idle-ring{top:-.26rem;bottom:-.28rem;left:-.5rem;right:-.5rem}
   .idle-gmt-foot{font-size:.72rem}
 }
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
