@@ -17,13 +17,11 @@
   // GoMining miner collections (label only in Phase 1 — the console math never
   // reads it). Kept in the app's display order; "Other" catches new drops so a
   // user is never blocked by a stale list.
-  var COLLECTIONS = [
-    'The Mine Box', 'The Trust Box', 'The GoMining Whales', 'The South Collection',
-    'The North Collection', 'The East Collection', 'The West Collection',
-    'The Khabib Collection', 'The Greedy Machines', 'The Greedy Machines vol. 2',
-    'The Party Box', 'The Gift Box', 'The Golden Box', 'The Solana Collection',
-    'The Duck Collection', 'The Go Duck Collection', 'EPIC X', 'Other'
-  ];
+  // Only one distinction actually changes the maths: a Greedy Machine grows free hashrate every
+  // week and never counts toward the VIP tier. Every other collection behaves identically — they
+  // were eighteen names for "a miner", and picking the right one off a long list implied a
+  // precision that did not exist.
+  var COLLECTIONS = ['Normal Miner', 'Greedy Machine'];
 
   // ---- storage ----
   // Logged out (or accounts not configured): localStorage. Logged in: the
@@ -76,6 +74,17 @@
   // already estimates $/TH from the tier curves off the TH + W/TH we set below.
   var DEFAULT_WTH = 15;   // marketplace default; matches the console's default efficiency
   var isGreedy = function (c) { return /greedy/i.test(c || ''); };
+  // Fleets saved before the list was reduced hold the old collection names. Left alone, the
+  // <select> would find no matching option, fall back to its first entry, and a row saved as
+  // "The Greedy Machines" would silently become a normal miner on the next save — losing the one
+  // property that matters. Every stored name is mapped through the same greedy test the rest of
+  // the app uses, so the migration cannot disagree with it.
+  var normCollection = function (c) { return isGreedy(c) ? 'Greedy Machine' : 'Normal Miner'; };
+  function migrateRows(rs) {
+    return (rs || []).map(function (r) {
+      return Object.assign({}, r, { collection: normCollection(r && r.collection) });
+    });
+  }
   // Paused miners are aggregated SEPARATELY, never folded into the earning totals:
   // switched off, they mine nothing and are billed nothing. calc() keeps them out of
   // both the reward and the fee basis; they still count toward the VIP tier, because
@@ -139,8 +148,9 @@
 
   // ---- rendering ----
   function optionList(sel) {
+    var cur = normCollection(sel);
     return COLLECTIONS.map(function (c) {
-      return '<option' + (c === sel ? ' selected' : '') + '>' + esc(c) + '</option>';
+      return '<option' + (c === cur ? ' selected' : '') + '>' + esc(c) + '</option>';
     }).join('');
   }
 
@@ -243,7 +253,7 @@
 
   // Reload the fleet from whichever store is now active (called on profile switch).
   window.GMTFleetReload = function () {
-    loadFleet().then(function (r) { rows = r || []; render(); apply(); });
+    loadFleet().then(function (r) { rows = migrateRows(r); render(); apply(); });
   };
   // Empty the fleet in the active store — used by "Clear inputs" on a scratch
   // profile. Because scratch profiles are never cloud (isCloud is account-only),
@@ -282,7 +292,7 @@
     // account.js calls GMTFleetLoginLoad exactly once per real login (below), so
     // token refreshes and realtime auth churn can never reload/clobber the fleet.
     if (acc() && acc().ready && acc().isLoggedIn()) { window.GMTFleetLoginLoad(); }
-    else { loadFleet().then(function (r) { rows = r || []; render(); apply(); }); }
+    else { loadFleet().then(function (r) { rows = migrateRows(r); render(); apply(); }); }
   }
 
   // Called ONCE per real login by account.js. Idempotent via _authHandled.
@@ -298,7 +308,7 @@
         _migrated = true;
         return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
       }
-      return loadFleet().then(function (r) { rows = r || []; render(); apply(); });
+      return loadFleet().then(function (r) { rows = migrateRows(r); render(); apply(); });
     }).catch(function () { rows = loadLocal(); render(); apply(); });
   };
   // Called by account.js on a real SIGNED_OUT.
