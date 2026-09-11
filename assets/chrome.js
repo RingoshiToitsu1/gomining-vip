@@ -150,20 +150,69 @@
   var cvs=root.querySelector('#stars');
   if(!cvs)return;
   var ctx=cvs.getContext('2d');
-  var W,H,dpr=Math.min(devicePixelRatio||1,2),gal=[],bg=[],shots=[],shotTimer=0,rot=0,ARMS=2,TURNS=1.45,maxR,cx0,cy0;
+  var W,H,dpr=Math.min(devicePixelRatio||1,1.75),gal=[],bg=[],shots=[],shotTimer=0,rot=0,ARMS=2,TURNS=1.45,maxR,cx0,cy0;
+  var lite=false;   // quality tier; build() reads it, the probe below sets it
   function tint(t){return t<.28?'255,240,205':t<.62?'255,207,122':'245,166,35';}
   function build(){
     W=cvs.width=innerWidth*dpr;H=cvs.height=innerHeight*dpr;cvs.style.width=innerWidth+'px';cvs.style.height=innerHeight+'px';
     var narrow=innerWidth<900;cx0=W*(narrow?.5:.62);cy0=H*(narrow?.32:.42);maxR=Math.min(W,H)*(narrow?.72:.6);
-    var n=Math.min(440,Math.round(innerWidth*.28));gal=[];
+    var n=Math.min(lite?150:440,Math.round(innerWidth*(lite?.12:.28)));gal=[];
     for(var i=0;i<n;i++){var arm=i%ARMS,t=Math.pow(Math.random(),.62);
       gal.push({r:maxR*t+(Math.random()-.5)*maxR*.05,ang:arm*(6.2832/ARMS)+t*TURNS*6.2832+(Math.random()-.5)*(.42*(1-t*.5)),
         t:t,sz:(Math.random()*1.4+.5)*dpr,tw:Math.random()*6.28,tws:Math.random()*.05+.012,w:.85+.55*(1-t)});}
-    var m=Math.min(110,Math.round(innerWidth/13));bg=[];
+    var m=Math.min(lite?45:110,Math.round(innerWidth/(lite?26:13)));bg=[];
     for(var k=0;k<m;k++)bg.push({x:Math.random()*W,y:Math.random()*H,sz:(Math.random()*1.1+.3)*dpr,tw:Math.random()*6.28,tws:Math.random()*.03+.006});
   }
   build();addEventListener('resize',build);
-  function draw(){
+  /* ---- adaptive quality -------------------------------------------------
+     This backdrop is the most expensive thing on the page: a viewport-sized
+     canvas redrawing hundreds of arc fills and a fresh radial gradient every
+     frame under 'lighter' compositing, on top of three ~50vw layers carrying
+     filter:blur(66px) that animate forever. On a strong GPU that is fine. On
+     integrated graphics — which is most Windows laptops, and why this showed
+     up first in Edge — it is not, and the whole page drags.
+
+     Rather than cut the design for everyone, measure it: sample real frame
+     times for the first ~90 frames and, if the machine is not keeping up, set
+     `lite` on <html>. CSS then drops the blur and the perpetual animations,
+     and the canvas rebuilds cheaper. Machines that cope see no change.
+     ?lite=1 forces it on, ?lite=0 off, for checking either path. */
+  var probeN = 0, probeT = 0, probeLast = 0, probeSkip = 0;
+  var forced = /[?&]lite=([01])/.exec(location.search);
+
+  function goLite(){
+    if(lite) return;
+    lite = true;
+    document.documentElement.classList.add('lite');
+    dpr = 1;            // a decorative starfield does not need retina pixels
+    build();            // rebuilds the particle sets against the new dpr
+  }
+  if(forced && forced[1] === '1') goLite();
+
+  function probe(now){
+    if(forced || lite) return;
+    if(probeLast){
+      var dt = now - probeLast;
+      /* Skip the first 20 frames: script eval, font swap and the cinematic
+         intro's first paint all land there, and judging the machine on that
+         would drop capable hardware into lite on a cold load. Frames over
+         250ms are a tab switch or a breakpoint, not a slow GPU. */
+      if(dt < 250){ if(++probeSkip > 20){ probeT += dt; probeN++; } }
+    }
+    probeLast = now;
+    if(probeN === 90 && probeT / probeN > 22) goLite();   // under ~45fps sustained
+  }
+
+  /* Only draw while the tab is actually in front. */
+  var running = false;
+  function pump(){ if(running || document.hidden) return; running = true; requestAnimationFrame(draw); }
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ probeLast = 0; } else { probeLast = 0; pump(); }
+  });
+
+  function draw(now){
+    if(document.hidden){ running = false; return; }
+    probe(now || performance.now());
     /* Parked while the cinematic intro's veil is opaque — this canvas is fully
        covered then, so drawing it is invisible work. Keep the loop alive so it
        resumes the moment the veil starts lifting. */
@@ -188,5 +237,5 @@
     ctx.globalCompositeOperation='source-over';
     requestAnimationFrame(draw);
   }
-  requestAnimationFrame(draw);
+  pump();
 })();

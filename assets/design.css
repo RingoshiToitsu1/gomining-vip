@@ -479,3 +479,46 @@
   .rd .r-spin,.rd .r-spin-rev,.rd .radar,.rd .ticker,.rd .mq-track,
   .rd .cine-cue,.rd .lp-aurora,.rd .lp-rings{animation:none!important}
 }
+
+/* ---- lite tier -----------------------------------------------------------
+   Set on <html> by chrome.js when measured frame times say the machine is not
+   keeping up (or via ?lite=1). The expensive things here are, in order: three
+   ~50vw layers under filter:blur(66px) that animate forever, backdrop-filter
+   with saturate() on every glass panel, and nineteen perpetual keyframes.
+   This trades the atmosphere for frame rate — the layout is untouched, so the
+   page reads identically, it just stops moving and stops blurring. */
+html.lite .rd .orb{filter:blur(22px);opacity:.42;will-change:auto}
+html.lite .rd .beam{display:none}
+
+/* backdrop-filter is the costly one on Windows compositors; every panel that
+   used it gets an opaque-enough background so it still reads as a surface. */
+html.lite .rd .glass{backdrop-filter:none;-webkit-backdrop-filter:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 42%),
+             linear-gradient(180deg,rgba(22,24,32,.94),rgba(12,14,20,.94))}
+html.lite .rd nav,
+html.lite .rd .util,
+html.lite .rd .proto-banner{backdrop-filter:none;-webkit-backdrop-filter:none}
+html.lite .rd .btn-alt{backdrop-filter:none;-webkit-backdrop-filter:none;
+  background:linear-gradient(180deg,rgba(30,32,40,.92),rgba(16,18,24,.92))}
+
+/* every animation that loops on its own with the page sitting still — the same
+   set prefers-reduced-motion stops. Reader-driven motion is left alone. */
+html.lite .rd .orb-1,html.lite .rd .orb-2,html.lite .rd .orb-3,
+html.lite .rd .grid-floor,
+html.lite .rd .beam-1,html.lite .rd .beam-2,html.lite .rd .beam-3,
+html.lite .rd .tag .dot,
+html.lite .rd .grad,
+html.lite .rd .ticker,
+html.lite .rd .reticle .r-spin,
+html.lite .rd .reticle .r-spin-rev,
+html.lite .rd .radar,
+html.lite .rd .holo::after,
+html.lite .rd .holo svg,
+html.lite .rd .telem,
+html.lite .rd .telem .t-live i,
+html.lite .rd .mq-track,
+html.lite .rd .cine-cue{animation:none}
+/* .grad paints its text through a moving gradient; frozen mid-sweep it can land
+   on a transparent stop, so give it a solid fill once the sweep stops. */
+html.lite .rd .grad{background:none;-webkit-background-clip:border-box;
+  background-clip:border-box;color:var(--gold-hi,#F5A623)}
