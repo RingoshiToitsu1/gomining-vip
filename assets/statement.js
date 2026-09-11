@@ -663,7 +663,11 @@
     const first = days[0].d, last = days[days.length - 1].d;
     let from = first;
     if (kind !== 'all') {
-      if (kind === 'ytd') from = last.slice(0, 4) + '-01-01';
+      // "This month" and "Year to date" are calendar periods that run from the 1st
+      // to the last day with data — not rolling windows. On the 10th, "this month"
+      // means the 1st to the 10th, the way a statement period is normally read.
+      if (kind === 'mtd') from = last.slice(0, 7) + '-01';
+      else if (kind === 'ytd') from = last.slice(0, 4) + '-01-01';
       else {
         const d = subMonthsUTC(new Date(last + 'T00:00:00Z'), parseInt(kind, 10));
         d.setUTCDate(d.getUTCDate() + 1);
