@@ -3514,32 +3514,10 @@ function recalc(){
 // ---- My Setup: what to do with the GMT you are already holding ----
 // The Capital Planner pre-loads your wallet GMT as deployable capital, but you only see the
 // answer if you go there and press Calculate. This runs the identical solve automatically on
-// A hand-drawn ellipse around the number you act on. Two overlapping arcs rather than one clean
-// ring, and a couple of degrees off level — a drawn circle reads as someone pointing at the
-// figure, where a perfect ellipse reads as a border and gets ignored as chrome.
-function idleRingSVG(){
-  return `<svg class="idle-ring" viewBox="0 0 220 74" preserveAspectRatio="none" fill="none" aria-hidden="true" focusable="false">
-    <path d="M34 9 C92 2, 180 4, 209 20 C219 30, 202 60, 140 68 C74 76, 10 68, 3 45 C-1 31, 12 17, 46 9"
-      stroke="var(--gold-hi,#FFCF7A)" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <path d="M46 9 C24 15, 10 26, 13 40" stroke="var(--gold-soft,#F7B84E)" stroke-width="2" stroke-linecap="round" opacity=".5" vector-effect="non-scaling-stroke"/>
-  </svg>`;
-}
-// Draw the rings when the card is actually looked at, once. Doing it on render would spend the
-// animation while the card is still below the fold, so it would only ever be seen already drawn.
-function armIdleRings(){
-  const card=document.querySelector('#idleGmtCard .idle-gmt');
-  if(!card||card._ringArmed)return;
-  if(!('IntersectionObserver' in window)){card.classList.add('rings-in');return;}
-  card._ringArmed=true;
-  const io=new IntersectionObserver(function(es){
-    es.forEach(function(e){
-      if(!e.isIntersecting)return;
-      e.target.classList.add('rings-in');
-      io.disconnect();
-    });
-  },{threshold:.45});
-  io.observe(card);
-}
+// My Setup with NO new USD, so idle GMT always shows its optimal split. Wallet GMT is not free
+// to spend — it already counts toward your fee coverage — so the solver keeps whatever holds
+// the discount and only deploys the genuine surplus.
+
 // Commits a wallet-GMT edit made from the idle-GMT card straight into the real input, so the
 // card is a genuine editor rather than a second place the number lives. Fires on CHANGE, never
 // on every keystroke: recalc() re-renders this card, which would rip the focused field out from
@@ -3629,15 +3607,14 @@ function renderIdleGmt(i,m){
       <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
     </div>
     <div class="idle-gmt-bar">${legs.map((l,n)=>`<div class="idle-gmt-seg s${n}" style="width:${pc(l.v)}%"></div>`).join('')}</div>
-    <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg${l.act?'':' is-none'}${l.act?' has-ring':''}"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div>`
-      +(l.act?`<div class="idle-gmt-leg-act">${idleRingSVG()}<span>${l.act}</span></div>`:`<div class="idle-gmt-leg-act none">nothing</div>`)
+    <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg${l.act?'':' is-none'}${l.act?' has-pulse':''}"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div>`
+      +(l.act?`<div class="idle-gmt-leg-act"><span>${l.act}</span></div>`:`<div class="idle-gmt-leg-act none">nothing</div>`)
       +`<div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}${l.sub?' &middot; '+l.sub:''}</div>`
       +`${l.into?`<div class="idle-gmt-leg-into">into ${l.into}</div>`:''}</div></div>`).join('')}</div>
     <div class="idle-gmt-foot">Result: <strong>${fN(P.finTH,0)} TH</strong> @ ${fN(P.finWth,2)} W/TH
       <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
   </div>`;
   host.innerHTML=h;host.style.display='';
-  armIdleRings();
 }
 
 function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP,greedyMoUSD){

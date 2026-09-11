@@ -194,49 +194,26 @@ input[type=number]{-moz-appearance:textfield}
 .idle-gmt-leg-act{position:relative;display:inline-block;font-family:var(--mono);font-size:1.5rem;
   font-weight:800;line-height:1.12;color:var(--gold-hi,#FFCF7A);letter-spacing:-.01em;
   margin:.3rem 0 .34rem}
-.idle-gmt-leg-act>span{position:relative;z-index:1}
-/* The ring is sized to the number it circles and sits behind it. preserveAspectRatio="none" on
-   the SVG lets one path stretch to any label width — "935.7 TH" and "14,315 GMT" are very
-   different lengths and each still gets a ring that fits. */
-/* Sits OUTSIDE the glyphs, not on them. Negative insets push the stroke clear of the text on
-   every side — drawn at inset:0 the ellipse cut straight through the first and last characters,
-   which is the opposite of highlighting them. The extra room is bought with margin on the label
-   above rather than padding, so the ring never nudges the number off its baseline. */
-.idle-ring{position:absolute;top:-.3rem;bottom:-.32rem;left:-.62rem;right:-.62rem;
-  overflow:visible;pointer-events:none;opacity:0;transform:rotate(-1.4deg)}
-.idle-ring path{stroke-dasharray:620;stroke-dashoffset:620}
-/* Drawn on once the card scrolls into view, held, then rubbed out — the ring has done its job
-   the moment your eye lands on the number, and leaving it there permanently turns a pointer
-   into a border. Erasing runs the dash the other way, from the same end it was drawn, so it
-   reads as the pen retracing rather than the shape fading.
-   One animation per path handles draw + hold + erase: the keyframe percentages ARE the timing,
-   which keeps the two arcs and the two legs in step without four separate delays to reconcile. */
-.rings-in .idle-ring{opacity:1;transition:opacity .2s ease}
-.rings-in .idle-ring path{animation:idleRingCycle 5.4s cubic-bezier(.55,.1,.3,1) forwards}
-.rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path{animation-delay:.28s}
-/* Starts 0.85s later, so it runs 0.85s shorter — both arcs of a ring then finish erasing on the
-   same frame instead of the second one hanging alone after the first has gone. */
-.rings-in .idle-ring path:last-child{animation-name:idleRingCycleShort;animation-delay:.85s;animation-duration:4.55s}
-.rings-in .idle-gmt-leg:nth-of-type(2) .idle-ring path:last-child{animation-delay:1.13s}
-/* 0-19% draw, hold to 74%, then erase. dashoffset going NEGATIVE walks the gap out the far end,
-   so the line disappears from where the pen started rather than snapping off. */
-@keyframes idleRingCycle{
-  0%{stroke-dashoffset:620}
-  19%{stroke-dashoffset:0}
-  74%{stroke-dashoffset:0}
-  100%{stroke-dashoffset:-620}
-}
-@keyframes idleRingCycleShort{
-  0%{stroke-dashoffset:620}
-  11%{stroke-dashoffset:0}
-  69%{stroke-dashoffset:0}
-  100%{stroke-dashoffset:-620}
+/* The number you act on breathes. This card exists because two figures on it are instructions —
+   lock this much GMT, buy this much TH — and everything else is context, so those two get a slow
+   gold pulse that keeps pulling the eye back for as long as the card is open.
+
+   This replaces a hand-drawn ring that was drawn on and then rubbed out. The ring pointed at the
+   figure once and left, which meant anyone who looked a few seconds late saw nothing at all, and
+   a mark that erases itself is a worse signal than one that stays.
+
+   text-shadow only — no transform, no size change, nothing that touches layout — so this is a
+   repaint of two short text nodes and not a single pixel around them moves. */
+.idle-gmt-leg.has-pulse .idle-gmt-leg-act{animation:idleActPulse 2.8s ease-in-out infinite}
+@keyframes idleActPulse{
+  0%,100%{text-shadow:0 0 8px rgba(245,166,35,.26),0 0 20px rgba(245,166,35,.10)}
+  50%{text-shadow:0 0 16px rgba(255,207,122,.70),0 0 34px rgba(245,166,35,.34)}
 }
 @media(prefers-reduced-motion:reduce){
-  /* No drawing and no erasing — a ring that vanishes on its own is exactly the kind of motion
-     this setting asks us to stop. It simply stays. */
-  .rings-in .idle-ring{opacity:1}
-  .rings-in .idle-ring path{animation:none;stroke-dashoffset:0}
+  /* A glow that breathes on its own is exactly the motion this setting asks us to stop. Held at
+     the bright end, not the dim one — the figure still has to read as the important thing here. */
+  .idle-gmt-leg.has-pulse .idle-gmt-leg-act{animation:none;
+    text-shadow:0 0 14px rgba(255,207,122,.60),0 0 30px rgba(245,166,35,.28)}
 }
 .idle-gmt-leg-act.none{font-size:.9rem;font-weight:700;color:var(--text4)}
 .idle-gmt-leg.is-none{opacity:.5}
@@ -253,7 +230,6 @@ input[type=number]{-moz-appearance:textfield}
      large there too; this is the number people screenshot and act on. */
   .idle-gmt-legs{grid-template-columns:1fr;gap:.75rem}
   .idle-gmt-leg-act{font-size:1.35rem}
-  .idle-ring{top:-.26rem;bottom:-.28rem;left:-.5rem;right:-.5rem}
   .idle-gmt-foot{font-size:.72rem}
 }
 .hero-card{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.5rem 1.3rem;position:relative;overflow:hidden;transition:var(--transition);text-align:center}
