@@ -12,7 +12,7 @@
    What the export actually contains (verified against a 326-row, 252-day file):
      date                        one row PER MINER GROUP per day, so a date can
                                  repeat up to 3x — everything must be summed by day
-     income                      GROSS mining revenue for that group, in BTC
+     income                      NOT a fixed meaning — see maintenanceByGmt below
      c1 / c2                     electricity / platform service fee, in BTC
      c1 in USD / c2 in USD       the same two costs at that day's BTC rate
      btcCourseInUsd              BTC price on the day — this is what makes the USD
@@ -22,11 +22,37 @@
      dailyMaintenanceDiscount    the click streak (0.03 once held)
      levelDiscount               the VIP tier bonus
      rewardDistributionDiscount  the solo-mining bonus
-     toAddress                   payout wallet — one per account, MASKED by default
+     toAddress                   payout wallet. NOT an account identifier: a real
+                                 export carried two of these that never appear on
+                                 the same day, because the payout address changed
+                                 mid-period on one farm. Do not split figures on it.
 
-   Net = income - c1 - c2. That identity is the whole statement; everything else
-   is an aggregate of it. Costs are already net of the discount stack, which is why
-   impliedEfficiency() has to divide the stack back out to recover W/TH.
+   READ THIS BEFORE TOUCHING THE MATH. "income" means one of two different things
+   depending on how that group pays its maintenance, and getting it wrong invents
+   losses that never happened:
+
+     maintenanceByGmt = true   maintenance is paid separately in GMT, so the BTC
+                               "income" is the GROSS reward.   net = income - c1 - c2
+     maintenanceByGmt = false  maintenance is deducted from the BTC before it is
+                               paid out, so "income" is ALREADY NET. net = income,
+                               and gross = income + c1 + c2
+
+   The export proves this itself: on 2026-01-01 one group paid in GMT and the other
+   in BTC, and the two only agree on the day's yield — 42.51 sats/TH/day, to the
+   cent — when the BTC-paying group is grossed back up. Subtracting c1+c2 from a
+   row that was already net double-charges it.
+
+   rewardProtection = true is the second trap: those rows carry income = 0 because
+   GoMining PAUSED the miner rather than let it mine at a loss, and c1/c2 on them
+   are the would-be cost that triggered the pause, not a charge. Treat the day as
+   idle — zero reward, zero cost — or the protection feature shows up as a loss.
+
+   Together these two rules are what make the statement agree with the operator's
+   own experience: across this 252-day export there is not one negative day, which
+   is exactly what reward protection guarantees.
+
+   Costs are already net of the discount stack, which is why the efficiency figure
+   has to divide that stack back out to recover W/TH.
 
    Deliberately NOT here: any forward projection, any price forecast, any figure the
    operator can type in. A statement that a partner relies on must be reproducible
@@ -70,9 +96,6 @@
   const dLabel = (iso) => { const [y, m, d] = iso.split('-'); return +d + ' ' + MONTHS[+m - 1] + ' ' + y; };
   const mLabel = (ym) => { const [y, m] = ym.split('-'); return MONTHS[+m - 1] + ' ' + y; };
   const mShort = (ym) => { const [y, m] = ym.split('-'); return MONTHS[+m - 1] + (m === '01' ? " '" + y.slice(2) : ''); };
-
-  // A payout wallet is the one genuinely sensitive field in the export.
-  const maskAddr = (a) => (!a ? 'Account' : a.length <= 10 ? a : a.slice(0, 5) + '…' + a.slice(-4));
 
   // ---------------------------------------------------------------- CSV parse
   /* The GoMining export is unquoted, but a tolerant reader costs ten lines and
@@ -124,7 +147,8 @@
         gmt: fnum(r, 'gmtPrice'),
         th: fnum(r, 'power'),
         nfts: fnum(r, 'nfts'),
-        addr: r.toAddress || '',
+        byg: String(r.maintenanceByGmt).trim() === 'true',
+        prot: String(r.rewardProtection).trim() === 'true',
         dTok: fnum(r, 'discountByMaintenanceInGmt'),
         dClick: fnum(r, 'dailyMaintenanceDiscount'),
         dVip: fnum(r, 'levelDiscount'),
@@ -143,9 +167,15 @@
     const map = new Map();
     for (const r of recs) {
       let x = map.get(r.d);
-      if (!x) { x = { d: r.d, gross: 0, c1: 0, c2: 0, c1USD: 0, c2USD: 0, th: 0, nfts: 0, btc: 0, gmt: 0, wsum: 0, thWt: 0, tok: 0, click: 0, vip: 0, solo: 0 }; map.set(r.d, x); }
-      x.gross += r.gross; x.c1 += r.c1; x.c2 += r.c2; x.th += r.th; x.nfts += r.nfts;
-      x.c1USD += r.c1 * r.btc; x.c2USD += r.c2 * r.btc;
+      if (!x) { x = { d: r.d, gross: 0, c1: 0, c2: 0, c1USD: 0, c2USD: 0, th: 0, nfts: 0, btc: 0, gmt: 0, wsum: 0, thWt: 0, idle: 0, tok: 0, click: 0, vip: 0, solo: 0 }; map.set(r.d, x); }
+      // resolve what this row's "income" actually is before adding anything up
+      let rg, rc1, rc2;
+      if (r.prot) { rg = 0; rc1 = 0; rc2 = 0; }              // miner paused — idle day
+      else if (r.byg) { rg = r.gross; rc1 = r.c1; rc2 = r.c2; }        // income is gross
+      else { rg = r.gross + r.c1 + r.c2; rc1 = r.c1; rc2 = r.c2; }     // income was net
+      x.gross += rg; x.c1 += rc1; x.c2 += rc2; x.th += r.th; x.nfts += r.nfts;
+      x.c1USD += rc1 * r.btc; x.c2USD += rc2 * r.btc;
+      if (r.prot) x.idle += r.th;
       if (r.btc > 0) x.btc = r.btc;
       if (r.gmt > 0) x.gmt = r.gmt;
       // best (highest) stack seen on the day — what the account had available
@@ -184,7 +214,7 @@
     const out = Array.from(map.values()).sort((a, b) => (a.k < b.k ? -1 : 1));
     for (const m of out) {
       m.thAvg = m.days ? m.thSum / m.days : 0;
-      m.margin = m.gross > 0 ? (m.net / m.gross) * 100 : null;
+      m.margin = m.grossUSD > 0 ? (m.netUSD / m.grossUSD) * 100 : null;
     }
     return out;
   }
@@ -197,7 +227,7 @@
       t.grossUSD += x.grossUSD; t.costUSD += x.costUSD; t.netUSD += x.netUSD; t.thSum += x.th;
     }
     t.thAvg = t.days ? t.thSum / t.days : 0;
-    t.margin = t.gross > 0 ? (t.net / t.gross) * 100 : null;
+    t.margin = t.grossUSD > 0 ? (t.netUSD / t.grossUSD) * 100 : null;
     t.netPerDay = t.days ? t.netUSD / t.days : 0;
     const last = days[days.length - 1] || {};
     t.thEnd = last.th || 0; t.nftsEnd = last.nfts || 0; t.wth = last.wth || null;
@@ -407,30 +437,53 @@
   }
 
   // ---------------------------------------------------------------- state
-  const S = { recs: [], accounts: [], acct: 'all', from: null, to: null, fname: '' };
+  const S = { recs: [], from: null, to: null, fname: '', share: 100, capital: 0 };
+
+  /* A share statement is the same farm scaled down, never a different farm: one
+     owner's slice of a jointly-funded fleet, split out so it can stand on its own
+     for tax. Money and hashrate scale; ratios must NOT — a 36% owner earns 36% of
+     the income on 36% of the hashrate, so margin, sats/TH/day and W/TH are
+     identical to the whole farm's and are left alone. Miner COUNT is deliberately
+     not scaled either: "5.4 miners" is meaningless, so the farm's real count is
+     reported and labelled as a share. */
+  function applyShare(days, k) {
+    if (k === 1) return days;
+    return days.map((x) => {
+      const y = {};
+      for (const key in x) y[key] = x[key];
+      ['gross', 'c1', 'c2', 'c1USD', 'c2USD', 'th', 'idle', 'net', 'netUSD', 'grossUSD', 'costUSD']
+        .forEach((f) => { y[f] = (x[f] || 0) * k; });
+      return y;
+    });
+  }
+
+  /* Single path from raw rows to figures, so the statement, the CSV export and
+     anything added later cannot drift apart. */
+  function aggregate() {
+    const days = applyShare(byDay(filtered()), (S.share || 0) / 100);
+    return { days: days, months: byMonth(days), T: totals(days) };
+  }
 
   // ---------------------------------------------------------------- render
   function filtered() {
-    return S.recs.filter((r) =>
-      (S.acct === 'all' || r.addr === S.acct) &&
-      (!S.from || r.d >= S.from) && (!S.to || r.d <= S.to));
+    return S.recs.filter((r) => (!S.from || r.d >= S.from) && (!S.to || r.d <= S.to));
   }
 
   function render() {
     const out = $('stOut');
-    const recs = filtered();
-    const days = byDay(recs);
+    const agg = aggregate();
+    const days = agg.days;
     if (!days.length) {
-      out.innerHTML = '<div class="empty">No rows in this period for the selected account. Widen the dates or choose “All accounts”.</div>';
+      out.innerHTML = '<div class="empty">No rows fall in this date range. Widen the period.</div>';
       out.style.display = 'block';
       return;
     }
-    const months = byMonth(days), T = totals(days);
+    const months = agg.months, T = agg.T;
     const p0 = days[0].d, p1 = days[days.length - 1].d;
     const prepared = ($('stFor').value || '').trim();
-    const acctLabel = S.acct === 'all'
-      ? (S.accounts.length > 1 ? 'All accounts (' + S.accounts.length + ')' : maskAddr(S.accounts[0]))
-      : maskAddr(S.acct);
+    const share = S.share;
+    // trim a trailing ".0" so a whole percentage does not read as a false precision
+    const shareTxt = (Math.round(share * 10) / 10).toFixed(share % 1 === 0 ? 0 : 1) + '%';
 
     const issued = new Date();
     const issuedStr = issued.getDate() + ' ' + MONTHS[issued.getMonth()] + ' ' + issued.getFullYear();
@@ -450,9 +503,10 @@
           '<div class="dh-kind">Mining income statement</div>' +
         '</div>' +
         '<div class="dh-meta">' +
-          '<div><i>Account</i><b>' + esc(acctLabel) + '</b></div>' +
           '<div><i>Statement period</i><b>' + esc(dLabel(p0)) + ' – ' + esc(dLabel(p1)) + '</b></div>' +
           '<div><i>Days covered</i><b>' + T.days + ' of ' + esc(spanDays(p0, p1)) + '</b></div>' +
+          (share < 100 ? '<div><i>Ownership share</i><b>' + esc(shareTxt) + ' of the farm</b></div>' : '') +
+          (S.capital > 0 ? '<div><i>Capital contributed</i><b>' + esc(usd0(S.capital)) + '</b></div>' : '') +
           (prepared ? '<div><i>Prepared for</i><b>' + esc(prepared) + '</b></div>' : '') +
           '<div><i>Issued</i><b>' + esc(issuedStr) + '</b></div>' +
         '</div>' +
@@ -462,10 +516,11 @@
     const heroCls = T.netUSD >= 0 ? 'pos' : 'neg';
     doc.insertAdjacentHTML('beforeend',
       '<section class="hero ' + heroCls + '">' +
-        '<div class="h-lab">Net income for the period</div>' +
+        '<div class="h-lab">Net income for the period' + (share < 100 ? ' — ' + esc(shareTxt) + ' share' : '') + '</div>' +
         '<div class="h-big">' + esc(usd0(T.netUSD)) + '</div>' +
         '<div class="h-sub">' + esc(btc(T.net)) + ' BTC net · ' + esc(usd0(T.netPerDay)) + ' average per day</div>' +
-        '<div class="h-note">Valued at the BTC price on each day it was earned, after electricity and platform service fees.</div>' +
+        '<div class="h-note">Valued at the BTC price on each day it was earned, after electricity and platform service fees.' +
+          (share < 100 ? ' This is ' + esc(shareTxt) + ' of a farm that earned ' + esc(usd0(T.netUSD / (share / 100))) + ' net over the same period.' : '') + '</div>' +
       '</section>');
 
     // ---- KPI row ----
@@ -473,10 +528,18 @@
       ['Gross mining revenue', usd0(T.grossUSD), btc(T.gross) + ' BTC'],
       ['Operating costs', usd0(T.costUSD), 'Electricity ' + usd0(T.c1USD) + ' · service fees ' + usd0(T.c2USD)],
       ['Net margin', pct(T.margin), 'of gross revenue'],
-      ['Hashrate at period end', num(T.thEnd) + ' TH', (T.nftsEnd ? num(T.nftsEnd) + ' miners' : '—') + (T.wth ? ' · ' + T.wth.toFixed(1) + ' W/TH' : '')],
+      ['Hashrate at period end', num(T.thEnd) + ' TH',
+        (T.nftsEnd ? (share < 100 ? shareTxt + ' of ' + num(T.nftsEnd) + ' miners' : num(T.nftsEnd) + ' miners') : '—') +
+        (T.wth ? ' · ' + T.wth.toFixed(1) + ' W/TH' : '')],
       ['Average hashrate', num(T.thAvg) + ' TH', 'across ' + T.days + ' days'],
       ['Gross yield', T.satsTH.toFixed(1) + ' sats', 'per TH per day']
     ];
+    if (S.capital > 0) {
+      // Simple period return on the capital the preparer states — NOT annualised,
+      // because annualising a part-year mining result overstates it.
+      kpis.push(['Return on capital', pct((T.netUSD / S.capital) * 100),
+        'on ' + usd0(S.capital) + ' over ' + T.days + ' days']);
+    }
     doc.insertAdjacentHTML('beforeend', '<section class="kpis">' + kpis.map((k) =>
       '<div class="kpi"><div class="k">' + esc(k[0]) + '</div><div class="v">' + esc(k[1]) + '</div><div class="s">' + esc(k[2]) + '</div></div>').join('') + '</section>');
 
@@ -549,11 +612,14 @@
       '<footer class="basis">' +
         '<h2>Basis of preparation</h2>' +
         '<ul>' +
-          '<li>Every figure is taken directly from the GoMining income export <b>' + esc(S.fname) + '</b>. Nothing on this statement is estimated, projected or entered by hand.</li>' +
-          '<li><b>Net income = gross mining revenue − electricity − platform service fee.</b> Costs are shown after the account’s discounts.</li>' +
+          '<li>Every figure is derived from the GoMining income export <b>' + esc(S.fname) + '</b>.' +
+            (share < 100 || S.capital > 0 ? ' The ownership share' + (S.capital > 0 ? ' and capital figure' : '') + ' below ' + (S.capital > 0 ? 'are' : 'is') + ' stated by the preparer; everything else comes from the file.' : ' Nothing on this statement is estimated, projected or entered by hand.') + '</li>' +
+          '<li><b>Net income = gross mining revenue − electricity − platform service fee.</b> Costs are shown after the account’s discounts. Where maintenance was settled in GMT rather than deducted from the mined BTC, it is still charged here as a cost in the period it arose.</li>' +
+          '<li>Days on which GoMining’s reward protection paused a miner are recorded as idle — no reward and no maintenance — which is why no day in this statement runs at a loss.</li>' +
+          (share < 100 ? '<li><b>This statement covers ' + esc(shareTxt) + ' of the farm.</b> Income, costs and hashrate are stated pro rata at that share for the whole period. Ratios — margin, sats per TH per day and W/TH — are unchanged by the split and match the farm as a whole.</li>' : '') +
           '<li>US dollar amounts are accrual figures: each day is converted at the BTC reference price recorded for that day, not at today’s price. Totals therefore differ from the current market value of the BTC held.</li>' +
           '<li>Rewards from staking locked GMT are <b>not</b> included — the export covers mining income only.</li>' +
-          '<li>Unaudited. Prepared for information only; past results do not indicate future returns.</li>' +
+          '<li>Unaudited, and not a tax document in itself — a mined-coin disposal is taxed on rules this statement does not attempt to apply. Prepared for information only; past results do not indicate future returns.</li>' +
         '</ul>' +
       '</footer>');
   }
@@ -571,15 +637,6 @@
     $('stFrom').value = first; $('stFrom').min = first; $('stFrom').max = last;
     $('stTo').value = last; $('stTo').min = first; $('stTo').max = last;
 
-    const sel = $('stAcct');
-    sel.innerHTML = '';
-    if (S.accounts.length > 1) {
-      sel.appendChild(new Option('All accounts (' + S.accounts.length + ')', 'all'));
-    }
-    for (const a of S.accounts) sel.appendChild(new Option(maskAddr(a), a));
-    sel.value = S.accounts.length > 1 ? 'all' : S.accounts[0];
-    S.acct = sel.value;
-    $('stAcctWrap').hidden = S.accounts.length < 2;
     $('stCtl').hidden = false;
     $('stActions').hidden = false;
   }
@@ -615,13 +672,9 @@
 
     S.recs = recs;
     S.fname = name;
-    S.accounts = Array.from(new Set(recs.map((r) => r.addr).filter(Boolean)));
-    if (!S.accounts.length) S.accounts = [''];
-
     $('stErr').hidden = true;
     $('stFileName').textContent = name;
-    $('stFileMeta').textContent = recs.length + ' rows · ' + byDay(recs).length + ' days' +
-      (S.accounts.length > 1 ? ' · ' + S.accounts.length + ' accounts' : '');
+    $('stFileMeta').textContent = recs.length + ' rows · ' + byDay(recs).length + ' days';
     $('stLoaded').hidden = false;
     fillControls();
     setRange('all');
@@ -648,7 +701,7 @@
 
   // ---------------------------------------------------------------- exports
   function downloadSummary() {
-    const days = byDay(filtered()), months = byMonth(days), T = totals(days);
+    const agg = aggregate(), months = agg.months, T = agg.T;
     const rows = [['month', 'days', 'avg_th', 'gross_usd', 'costs_usd', 'net_usd', 'margin_pct', 'gross_btc', 'net_btc']];
     for (const m of months) {
       rows.push([m.k, m.days, m.thAvg.toFixed(2), m.grossUSD.toFixed(2), m.costUSD.toFixed(2),
@@ -675,7 +728,6 @@
     ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
     drop.addEventListener('drop', (e) => { readFile(e.dataTransfer.files[0]); });
 
-    $('stAcct').addEventListener('change', (e) => { S.acct = e.target.value; render(); });
     $('stFrom').addEventListener('change', (e) => {
       S.from = e.target.value;
       document.querySelectorAll('#stRanges button').forEach((b) => b.classList.remove('on'));
@@ -690,6 +742,29 @@
       b.addEventListener('click', () => setRange(b.dataset.r)));
     let t;
     $('stFor').addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 250); });
+
+    // A share of 0 or a blank box would silently zero the whole statement, so the
+    // value is clamped into 0.01–100 and written back before anything re-renders.
+    let t2;
+    $('stShare').addEventListener('input', (e) => {
+      clearTimeout(t2);
+      t2 = setTimeout(() => {
+        let v = parseFloat(e.target.value);
+        if (!isFinite(v) || v <= 0) v = 100;
+        v = Math.min(100, Math.max(0.01, v));
+        if (String(v) !== e.target.value) e.target.value = v;
+        S.share = v; render();
+      }, 300);
+    });
+    let t3;
+    $('stCap').addEventListener('input', (e) => {
+      clearTimeout(t3);
+      t3 = setTimeout(() => {
+        const v = parseFloat(e.target.value);
+        S.capital = isFinite(v) && v > 0 ? v : 0;
+        render();
+      }, 300);
+    });
     $('stPrint').addEventListener('click', () => window.print());
     $('stCSV').addEventListener('click', downloadSummary);
   }

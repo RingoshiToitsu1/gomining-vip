@@ -74,6 +74,8 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .ranges button{background:none;border:none;color:var(--t3);font-family:var(--sans);font-size:.8rem;font-weight:700;
   padding:.42rem .8rem;border-radius:8px;cursor:pointer;transition:.15s}
 .ranges button.on{background:var(--gold);color:#1a1206}
+.share-note{flex:1 1 20rem;color:var(--t4);font-size:.73rem;line-height:1.55;align-self:center;min-width:0}
+.fld input[type=number]{width:9.5rem}
 .actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
 .actions button{background:var(--gold);color:#1a1206;border:none;border-radius:11px;font-family:var(--sans);
   font-weight:800;font-size:.86rem;padding:.65rem 1.1rem;cursor:pointer}
@@ -244,8 +246,12 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
       <div class="ctl-row">
         <div class="fld"><label for="stFrom">From</label><input type="date" id="stFrom"></div>
         <div class="fld"><label for="stTo">To</label><input type="date" id="stTo"></div>
-        <div class="fld" id="stAcctWrap" hidden><label for="stAcct">Account</label><select id="stAcct"></select></div>
         <div class="fld grow"><label for="stFor">Prepared for (optional)</label><input type="text" id="stFor" placeholder="Partner or company name" maxlength="80" autocomplete="off"></div>
+      </div>
+      <div class="ctl-row">
+        <div class="fld"><label for="stShare">Ownership share</label><input type="number" id="stShare" min="0.01" max="100" step="0.01" value="100" inputmode="decimal"></div>
+        <div class="fld"><label for="stCap">Capital contributed (optional)</label><input type="number" id="stCap" min="0" step="1000" placeholder="36000" inputmode="decimal"></div>
+        <div class="share-note" id="stShareNote">Leave at 100% for the whole farm. Set a share to split one owner&rsquo;s slice out of a jointly-funded fleet &mdash; income, costs and hashrate are stated pro rata, and the share is printed on the statement.</div>
       </div>
     </div>
 
