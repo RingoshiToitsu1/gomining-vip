@@ -372,11 +372,17 @@
     const sc = niceScale(Math.min(0, Math.min.apply(null, vals)), Math.max(0, Math.max.apply(null, vals)), 5);
     const Y = (v) => PT + PH - ((v - sc.lo) / (sc.hi - sc.lo)) * PH;
     const yZero = Y(0);
-    const slot = PW / n, gap = Math.max(2, slot * 0.22), bw = Math.max(4, slot - gap);
+    const slot = PW / n, gap = Math.max(2, slot * 0.22);
+    const bw = Math.max(4, Math.min(slot - gap, 86));
+    // centre the row when few months leave the bars narrower than the plot
+    const off = (PW - (n * bw + (n - 1) * Math.max(gap, 10))) / 2;
+    const pitch = bw + Math.max(gap, 10);
+    const useCentred = n < 5;
 
     let bars = '', labs = '', xt = '';
     months.forEach((m, i) => {
-      const x = PL + i * slot + (slot - bw) / 2, y = Y(m.netUSD), up = m.netUSD >= 0;
+      const x = useCentred ? PL + off + i * pitch : PL + i * slot + (slot - bw) / 2;
+      const y = Y(m.netUSD), up = m.netUSD >= 0;
       bars += '<path class="ch-bar ' + (up ? 'pos' : 'neg') + '" data-i="' + i + '" d="' + barPath(x, bw, yZero, y, 4) + '"/>';
       labs += '<text class="ch-val ' + (up ? 'pos' : 'neg') + '" x="' + (x + bw / 2).toFixed(1) + '" y="' + (up ? y - 7 : y + 14).toFixed(1) + '" text-anchor="middle">' + esc(usdShort(m.netUSD)) + '</text>';
       xt += '<text class="ch-ax" x="' + (x + bw / 2).toFixed(1) + '" y="' + (PT + PH + 20) + '" text-anchor="middle">' + esc(mShort(m.k)) + '</text>';
@@ -553,13 +559,13 @@
     chartArea(charts, 'Cumulative net income', 'Running total of daily net income across the statement period.',
       cum, usdShort, (p) => '<i>Cumulative</i>' + esc(usd(p.v)) + '<i>That day</i>' + esc(usd(p.day)), 'gold');
 
-    chartMonthlyNet(charts, months);
+    if (months.length > 1) chartMonthlyNet(charts, months);
 
     chartArea(charts, 'Hashrate under management', 'Total contracted hashrate on each day of the period.',
       days.map((x) => ({ t: x.d, v: x.th, n: x.nfts })), thShort,
       (p) => '<i>Hashrate</i>' + esc(num(p.v, 2)) + ' TH' + (p.n ? '<i>Miners</i>' + esc(num(p.n)) : ''), 'gold');
 
-    chartMargin(charts, months);
+    if (months.length > 1) chartMargin(charts, months);
 
     // ---- monthly table ----
     let rowsHTML = '';
@@ -641,14 +647,28 @@
     $('stActions').hidden = false;
   }
 
+  /* setUTCMonth overflows rather than clamps: 31 March minus one month is 31
+     February, which rolls forward to 3 March and quietly returns a window days
+     shorter than the button promises. Clamp to the last valid day instead. */
+  function subMonthsUTC(d, n) {
+    const day = d.getUTCDate();
+    const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - n, 1));
+    const lastDay = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+    t.setUTCDate(Math.min(day, lastDay));
+    return t;
+  }
+
   function setRange(kind) {
     const days = byDay(S.recs);
     const first = days[0].d, last = days[days.length - 1].d;
     let from = first;
     if (kind !== 'all') {
-      const d = new Date(last + 'T00:00:00Z');
       if (kind === 'ytd') from = last.slice(0, 4) + '-01-01';
-      else { d.setUTCMonth(d.getUTCMonth() - parseInt(kind, 10)); d.setUTCDate(d.getUTCDate() + 1); from = d.toISOString().slice(0, 10); }
+      else {
+        const d = subMonthsUTC(new Date(last + 'T00:00:00Z'), parseInt(kind, 10));
+        d.setUTCDate(d.getUTCDate() + 1);
+        from = d.toISOString().slice(0, 10);
+      }
       if (from < first) from = first;
     }
     S.from = from; S.to = last;
