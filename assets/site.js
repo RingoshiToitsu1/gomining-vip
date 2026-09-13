@@ -81,7 +81,7 @@
       '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/claim">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
       '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
       '<div class="fd-addrs">'+
-        '<button type="button" class="fd-addr" data-copy="bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh"><span class="fd-tag">BTC</span><span class="fd-val">bc1qwcwt8t3tekgctt6fkw24yrss4l9e0085m8unlh</span></button>'+
+        '<button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>'+
         '<button type="button" class="fd-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1"><span class="fd-tag">GMT · ETH/BNB</span><span class="fd-val">0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>'+
       '</div></div>'+
     '<div class="fbase">&copy; 2026 GMT Optimizer &middot; Independent community tool, not affiliated with GoMining. Informational only, not financial advice.</div>';
