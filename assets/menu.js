@@ -64,7 +64,22 @@
 .gm-has-menu .nav-links,.gm-hide{display:none!important}
 .gm-has-menu{flex-wrap:nowrap!important;justify-content:flex-start!important}
 .gm-has-menu>.brand,.gm-has-menu>.c-brand{margin-right:auto}
-@media(max-width:520px){.gm-has-menu .nav-cta{display:none!important}.gm-has-menu .brand .v,.gm-has-menu .c-brand .v{display:none}}
+/* Phones: Launch Console stays beside the hamburger — both tighten so brand + CTA + menu fit one row. */
+@media(max-width:520px){
+  .gm-has-menu .brand .v,.gm-has-menu .c-brand .v{display:none}
+  .gm-has-menu .nav-cta{display:inline-flex!important;align-items:center;padding:8px 12px!important;font-size:.74rem!important;white-space:nowrap;flex:0 0 auto}
+  .gm-burger{width:38px;height:38px;margin-left:8px;border-radius:11px}
+  .gm-burger i{left:10px;right:10px}
+  .gm-burger i:nth-child(1){top:12px}.gm-burger i:nth-child(2){top:18px}.gm-burger i:nth-child(3){top:24px}
+  .gm-burger[aria-expanded="true"] i:nth-child(1),.gm-burger[aria-expanded="true"] i:nth-child(3){top:18px}
+  .gm-has-menu .brand,.gm-has-menu .c-brand{min-width:0;white-space:nowrap}
+}
+@media(max-width:380px){
+  .gm-has-menu .brand,.gm-has-menu .c-brand{font-size:.88rem;gap:7px}
+  .gm-has-menu .brand img,.gm-has-menu .c-brand img{width:22px;height:22px}
+  .gm-has-menu .nav-cta{padding:7px 10px!important;font-size:.7rem!important}
+  .gm-burger{margin-left:6px}
+}
 
 .gm-scrim{position:fixed;inset:0;z-index:10050;background:rgba(3,4,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}

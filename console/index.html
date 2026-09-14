@@ -1263,6 +1263,6 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 </script>
-<script src="/assets/menu.js?v=2"></script>
+<script src="/assets/menu.js?v=3"></script>
 </body>
 </html>
