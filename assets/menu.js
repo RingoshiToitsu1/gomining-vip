@@ -131,6 +131,14 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-offer b{font-family:'Share Tech Mono',ui-monospace,monospace;color:#FFF4E0;font-weight:400;letter-spacing:.04em}
 .gm-legal{display:flex;justify-content:center;gap:14px;font-size:.72rem}
 .gm-legal a{color:#6E7688;text-decoration:none}.gm-legal a:hover{color:#CAD1DE}
+.gm-back{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;height:38px;margin-left:10px;padding:0 14px 0 11px;border-radius:12px;cursor:pointer;
+  font-family:'Space Grotesk',system-ui,sans-serif;font-size:.82rem;font-weight:600;color:#FFCF7A;background:rgba(245,166,35,.08);
+  border:1px solid rgba(245,166,35,.4);white-space:nowrap;transition:background .2s,border-color .2s,color .2s,opacity .25s,transform .25s}
+.gm-back:hover{background:rgba(245,166,35,.16);border-color:#F5A623;color:#FFF4E0}
+.gm-back:focus-visible{outline:2px solid #F5A623;outline-offset:2px}
+.gm-back[hidden]{display:none}
+.gm-back svg{transition:transform .2s}.gm-back:hover svg{transform:translateX(-2px)}
+@media(max-width:520px){.gm-back{height:36px;padding:0 10px 0 8px;margin-left:6px;font-size:.76rem}}
 @media(prefers-reduced-motion:reduce){.gm-drawer,.gm-scrim,.gm-burger i,.gm-item,.gm-arr{transition:none!important}}
 `;
 
@@ -201,6 +209,29 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', 'gm-drawer');
     btn.innerHTML = '<i></i><i></i><i></i>';
+
+    // Console only: a one-click way back to the main console from the planner, a projection,
+    // a chart or Edit Setup — shown whenever you're anywhere but the main console view.
+    if (host && isConsole()) {
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'gm-back';
+      back.hidden = true;
+      back.title = 'Back to the main console';
+      back.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5 5.5 8 10 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Console';
+      back.addEventListener('click', () => { if (typeof window.consoleView === 'function') consoleView('tab-current'); });
+      host.appendChild(back);
+      const tabBtn = document.querySelector('[data-tab="tab-current"]');
+      const sync = () => {
+        const onMain = !!(tabBtn && tabBtn.classList.contains('active')) &&
+          !/\b(planning|projecting|charting|editing)\b/.test(document.body.className);
+        back.hidden = onMain;
+      };
+      sync();
+      const mo = new MutationObserver(sync);
+      mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      document.querySelectorAll('.tab-btn').forEach(b => mo.observe(b, { attributes: true, attributeFilter: ['class'] }));
+    }
 
     if (host) {
       host.classList.add('gm-has-menu');
