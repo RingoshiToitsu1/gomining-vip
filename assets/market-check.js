@@ -36,6 +36,8 @@
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
   const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
+  const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
+  const GREEDY_GROWTH_DEFAULT = 0.3718;                              // %/wk — console inGreedyGrowth default; observed, not a constant
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
   const TH_TIERS_12W = [
@@ -180,6 +182,13 @@
     const vd = $('mc-verdict');
     vd.className = 'mc-verdict ' + v.cls;
     $('mc-v-label').textContent = v.label;
+    // How far the ask sits from "Worth up to": the premium to swallow, or the margin in your favour.
+    const premUSD = e.cost - e.fairUSD, premGMT = premUSD / S.gmt;
+    const amt = $('mc-v-amt');
+    if (e.fairUSD > 0 && v.cls === 'bad') { amt.textContent = 'by ' + num(premGMT, 0) + ' GMT (≈' + money(premUSD) + ')'; amt.hidden = false; }
+    else if (e.fairUSD > 0 && (v.cls === 'good' || v.cls === 'great')) { amt.textContent = num(-premGMT, 0) + ' GMT under fair value (≈' + money(-premUSD) + ')'; amt.hidden = false; }
+    else if (e.fairUSD <= 0 && v.cls === 'bad') { amt.textContent = 'not worth buying at any price today'; amt.hidden = false; }
+    else amt.hidden = true;
     const at = 'At ' + num(p, 0) + ' GMT, ' + how;
     $('mc-v-line').textContent = e.routes.fresh.net <= 0
       ? 'Mining is under water at today\'s BTC price, so this compares cost only. ' +
@@ -218,9 +227,51 @@
         (w > 15 ? ' Steps above 15 W/TH are the cheap ones; the last three into 12 W/TH cost $2.67/TH each.' : '');
     }
 
+    renderGreedy(e, th, w, p, premUSD, v);
+
     $('mc-basis').textContent = 'BTC ' + money(S.btc, 0) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
       num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)') +
       ' · buying the GMT with dollars adds ' + (USD_GMT_FEE * 100) + '%';
+  }
+
+  // ---- Greedy Machine: free weekly growth ----
+  // A Greedy Machine's TH grows by a % every week for free, and every free TH inherits the machine's
+  // rating. So the growth has a dollar value: each new TH is worth what that TH would cost to get
+  // another way — a new 12 W TH if you upgrade the machine (its growth then arrives at 12 W), or the
+  // same yield-matched value the "Worth up to" figure uses if you keep it as it is. Growth compounds
+  // on the current TH, so the weeks to accumulate X dollars of it are ln(1 + X / (TH · value)) / ln(1 + g).
+  function renderGreedy(e, th, w, p, premUSD, v) {
+    const box = $('mc-greedy');
+    const on = $('mc-greedy-on').checked;
+    $('mc-growth-fld').hidden = !on;
+    if (!on) { box.hidden = true; return; }
+    const g = Math.max(0, parseFloat($('mc-growth').value) || 0) / 100;
+    const v12 = cpt12(th);
+    const valPerTH = e.best === 'upgraded' ? v12 : (e.net12 > 0 ? Math.max(0, v12 * e.netAsIs / e.net12) : 0);
+    box.hidden = false;
+    if (!(g > 0) || !(valPerTH > 0)) {
+      box.innerHTML = '<b>Greedy Machine.</b> ' + (g > 0 ? 'Its free TH has no value at today\'s rates, so growth can\'t offset the price.' : 'Set its weekly growth to value the free TH it adds.');
+      return;
+    }
+    const weeks = usd => Math.log(1 + usd / (th * valPerTH)) / Math.log(1 + g);
+    const wkTH = th * g, wkUSD = wkTH * valPerTH;
+    const yrTH = th * (Math.pow(1 + g, 52) - 1), yrUSD = yrTH * valPerTH;
+    const fmtW = n => n < 1 ? 'under a week' : num(Math.ceil(n), 0) + (Math.ceil(n) === 1 ? ' week' : ' weeks') + (n >= 104 ? ' (~' + num(n / 52, 1) + ' yrs)' : '');
+    const where = e.best === 'upgraded' ? 'at 12 W/TH once upgraded' : 'at ' + num(w, 2).replace(/\.?0+$/, '') + ' W/TH';
+    let lead;
+    if (premUSD > 0 && v.cls === 'bad') {
+      lead = 'Its free growth covers the <b>' + money(premUSD) + ' premium in ' + fmtW(weeks(premUSD)) + '</b>. After that, every week of growth is value you didn\'t pay for.';
+    } else {
+      lead = 'The price is already at or under fair value, so its growth is pure upside from week one.';
+    }
+    box.innerHTML = '<div class="mc-g-h"><span class="mc-pill ok">Greedy Machine</span> grows ' + num(g * 100, 4).replace(/\.?0+$/, '') + '% a week, free</div>' +
+      '<p>' + lead + '</p>' +
+      '<div class="mc-g-stats">' +
+        '<div><span>This week</span><b>+' + num(wkTH, wkTH < 10 ? 3 : 1) + ' TH</b><em>≈ ' + money(wkUSD) + '</em></div>' +
+        '<div><span>Over a year</span><b>+' + num(yrTH, yrTH < 10 ? 2 : 0) + ' TH</b><em>≈ ' + money(yrUSD) + '</em></div>' +
+        '<div><span>Growth repays the full price</span><b>' + fmtW(weeks(e.routes[e.best].cost)) + '</b><em>' + num(p, 0) + ' GMT' + (e.best === 'upgraded' ? ' + upgrade' : '') + '</em></div>' +
+      '</div>' +
+      '<p class="mc-g-n">Each free TH is valued ' + where + ' (' + money(valPerTH) + '/TH), compounding weekly at the rate you set. The rate is last week\'s observed growth, not a promise; mining income on the new TH comes on top.</p>';
   }
 
   // ---- your discount, from the console ----
@@ -296,6 +347,7 @@
     $('mc-th').value = d.power > 0 ? String(+d.power.toFixed(4)) : '';
     $('mc-wth').value = d.efficiency > 0 ? String(+d.efficiency.toFixed(2)) : '';
     $('mc-price').value = priceGMT > 0 ? String(Math.round(priceGMT * 100) / 100) : '';
+    $('mc-greedy-on').checked = /greedy/i.test(d.name || '');
 
     const card = $('mc-card');
     let status;
@@ -322,7 +374,17 @@
       if (!id) { showErr('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.'); return; }
       lookup(id);
     });
-    ['mc-th', 'mc-wth', 'mc-price'].forEach(id => $(id).addEventListener('input', render));
+    ['mc-th', 'mc-wth', 'mc-price', 'mc-growth'].forEach(id => $(id).addEventListener('input', render));
+    $('mc-greedy-on').addEventListener('change', render);
+    // Weekly growth: your console's figure when this browser has a saved setup, else the console default.
+    let gr = GREEDY_GROWTH_DEFAULT;
+    try {
+      const ps = JSON.parse(localStorage.getItem(PROFILES_KEY) || 'null');
+      const prof = ps && ps.profiles && (ps.profiles.find(x => x.id === ps.activeId) || ps.profiles[0]);
+      const v = prof && prof.data ? parseFloat(prof.data.inGreedyGrowth) : NaN;
+      if (Number.isFinite(v) && v >= 0) gr = v;
+    } catch (e) {}
+    $('mc-growth').value = String(gr);
     $('mc-disc').addEventListener('input', () => {
       $('mc-disc').dataset.touched = '1';
       $('mc-disc-src').textContent = 'Changed here only; your console setup is untouched.';

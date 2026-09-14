@@ -54,7 +54,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=11">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=3">
+<link rel="stylesheet" href="/assets/market-check.css?v=4">
 </head>
 <body>
 <main class="content-wrap">
@@ -92,10 +92,17 @@
       </div>
     </div>
     <div class="mc-disc-src" id="mc-disc-src"></div>
+    <div class="mc-greedy-row">
+      <label class="re-check"><input id="mc-greedy-on" type="checkbox"> Greedy Machine <span>(grows a % every week, free)</span></label>
+      <div class="re-field mc-growth-fld" id="mc-growth-fld" hidden>
+        <label for="mc-growth">Weekly growth %</label>
+        <input id="mc-growth" type="number" inputmode="decimal" min="0" step="0.0001" value="0.3718">
+      </div>
+    </div>
 
     <div id="mc-result" hidden>
       <div class="mc-verdict" id="mc-verdict">
-        <div class="l" id="mc-v-label">—</div>
+        <div class="l"><span id="mc-v-label">—</span> <span class="mc-v-amt" id="mc-v-amt" hidden></span></div>
         <div class="s" id="mc-v-line">—</div>
       </div>
 
@@ -129,6 +136,7 @@
         </table>
       </div>
 
+      <div class="mc-greedy" id="mc-greedy" hidden></div>
       <div class="re-hint" id="mc-upg">—</div>
     </div>
 
@@ -183,6 +191,6 @@
   <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
 </main>
 <script src="/assets/site.js?v=15"></script>
-<script src="/assets/market-check.js?v=3"></script>
+<script src="/assets/market-check.js?v=4"></script>
 </body>
 </html>
