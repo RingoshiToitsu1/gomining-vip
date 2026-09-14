@@ -1,0 +1,56 @@
+/* ===== Marketplace deal checker — /gomining-marketplace-checker (builds on roi-embed.css) ===== */
+#mc{margin:1.6rem 0 2.2rem;padding:1.4rem 1.3rem 1.2rem;border-radius:var(--r);
+  background:linear-gradient(180deg,var(--glass-1),var(--glass-2));border:1px solid var(--line-hi);
+  box-shadow:var(--sh);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+#mc h2{font-size:1.06rem;margin:0 0 .2rem;color:var(--warm);letter-spacing:.01em}
+
+.mc-url{display:flex;gap:.6rem;margin-bottom:.9rem;flex-wrap:wrap}
+.mc-url input{flex:1 1 18rem;min-width:0;padding:.75rem .85rem;border-radius:var(--r-sm);background:rgba(8,10,14,.66);
+  border:1px solid var(--line);color:var(--warm);font-family:var(--mono);font-size:.9rem;transition:border-color .2s,box-shadow .2s}
+.mc-url input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+.mc-url button{flex:0 0 auto;padding:.75rem 1.3rem;border:none;border-radius:var(--r-sm);cursor:pointer;
+  background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;font-family:var(--sans);font-weight:700;font-size:.9rem;
+  box-shadow:0 8px 24px rgba(245,166,35,.3);transition:transform .2s var(--ease),box-shadow .2s}
+.mc-url button:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(245,166,35,.42)}
+.mc-url button:disabled{opacity:.6;cursor:progress;transform:none}
+
+.mc-err{margin:-.3rem 0 .9rem;padding:.65rem .8rem;border-radius:var(--r-sm);font-size:.82rem;line-height:1.5;
+  color:#ffc2b0;background:rgba(255,106,61,.09);border:1px solid rgba(255,106,61,.32)}
+
+.mc-card{display:flex;align-items:center;gap:.85rem;margin-bottom:1rem;padding:.7rem .8rem;border-radius:var(--r-sm);
+  background:rgba(8,10,14,.44);border:1px solid var(--line-soft);flex-wrap:wrap}
+.mc-card img{width:72px;height:72px;border-radius:10px;object-fit:cover;flex:0 0 auto;background:rgba(255,255,255,.04)}
+.mc-card-b{flex:1 1 12rem;min-width:0}
+.mc-card-n{color:var(--warm);font-weight:600;line-height:1.3}
+.mc-card-m{font-family:var(--mono);font-size:.74rem;color:var(--ink2);margin:.15rem 0 .35rem}
+.mc-card-l{font-size:.8rem;white-space:nowrap}
+.mc-pill{display:inline-block;font-family:var(--mono);font-size:.64rem;letter-spacing:.06em;text-transform:uppercase;
+  padding:.18rem .5rem;border-radius:999px;border:1px solid}
+.mc-pill.ok{color:#57d9a3;border-color:rgba(87,217,163,.4);background:rgba(87,217,163,.07)}
+.mc-pill.warn{color:var(--gold-soft);border-color:rgba(245,166,35,.4);background:rgba(245,166,35,.07)}
+.mc-pill.off{color:var(--ink2);border-color:var(--line);background:rgba(255,255,255,.02)}
+
+.mc-verdict{padding:.9rem 1rem;border-radius:var(--r-sm);margin-bottom:.9rem;border:1px solid;border-left-width:3px}
+.mc-verdict .l{font-size:1.3rem;font-weight:700;line-height:1.2}
+.mc-verdict .s{font-size:.85rem;color:var(--ink);margin-top:.2rem;line-height:1.5}
+.mc-verdict.great,.mc-verdict.good{border-color:rgba(87,217,163,.38);background:rgba(87,217,163,.07)}
+.mc-verdict.great .l,.mc-verdict.good .l{color:#57d9a3}
+.mc-verdict.fair{border-color:rgba(245,166,35,.38);background:rgba(245,166,35,.07)}
+.mc-verdict.fair .l{color:var(--gold-soft)}
+.mc-verdict.bad{border-color:rgba(255,106,61,.4);background:rgba(255,106,61,.08)}
+.mc-verdict.bad .l{color:#ff8a66}
+
+.mc-tbl-wrap{overflow-x:auto;margin-bottom:.9rem}
+.mc-tbl{width:100%;border-collapse:collapse;font-size:.84rem;min-width:30rem}
+.mc-tbl th{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+  text-align:right;font-weight:400;padding:.4rem .55rem;border-bottom:1px solid var(--line)}
+.mc-tbl th:first-child,.mc-tbl td:first-child{text-align:left}
+.mc-tbl td{padding:.55rem;text-align:right;border-bottom:1px solid var(--line-soft);color:var(--ink);font-family:var(--mono)}
+.mc-tbl td:first-child{font-family:var(--sans);color:var(--warm)}
+.mc-tbl td span{display:block;font-family:var(--mono);font-size:.68rem;color:var(--ink3)}
+.mc-tbl tr.hl td{background:rgba(245,166,35,.06)}
+.mc-tbl tr.hl td:first-child{box-shadow:inset 2px 0 0 var(--gold)}
+.mc-tbl td.neg{color:#ff8a66}
+
+.mc-fld4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:720px){.mc-fld4{grid-template-columns:1fr 1fr}}

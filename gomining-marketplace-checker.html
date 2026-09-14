@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining Marketplace Deal Checker — Is That Miner Worth the Price?</title>
+<meta name="description" content="Paste a GoMining marketplace miner link and see if it's a good deal. Compares the asking price, efficiency and upgrade cost against minting the same TH new, on live BTC and GMT prices. Free, no signup.">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-marketplace-checker">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:title" content="GoMining Marketplace Deal Checker">
+<meta property="og:description" content="Paste a GoMining miner link. See if the listing beats minting new, and whether to upgrade its efficiency.">
+<meta property="og:url" content="https://gmt-optimizer.com/gomining-marketplace-checker">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How do I know if a GoMining marketplace miner is a good deal?","acceptedAnswer":{"@type":"Answer","text":"Compare it with the alternative every buyer has: minting the same hashrate new at 12 W/TH. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty."}},
+    {"@type":"Question","name":"Should I upgrade the efficiency of a miner I buy on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Upgrading to 12 W/TH is a one-time cost of about $2.67 per TH for each W/TH it improves, and miners above 15 W/TH are priced as if they were at 15. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste."}},
+    {"@type":"Question","name":"Why are older GoMining miners cheaper on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Many secondhand miners run at 20 W/TH or more, while new miners are 12 W/TH. Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted."}},
+    {"@type":"Question","name":"Does this checker see my GoMining account?","acceptedAnswer":{"@type":"Answer","text":"No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored."}}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "GoMining Marketplace Deal Checker",
+      "url": "https://gmt-optimizer.com/gomining-marketplace-checker",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "description": "Checks whether a GoMining marketplace miner is a good deal by comparing its asking price, efficiency and upgrade cost against minting the same hashrate new, on live market data.",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "publisher": {"@type": "Organization", "name": "Ringoshi", "url": "https://gmt-optimizer.com/"}
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"name":"GMT Optimizer","item":"https://gmt-optimizer.com/"},
+        {"@type":"ListItem","position":2,"name":"Tools","item":"https://gmt-optimizer.com/console"},
+        {"@type":"ListItem","position":3,"name":"GoMining Marketplace Deal Checker","item":"https://gmt-optimizer.com/gomining-marketplace-checker"}
+      ]
+    }
+  ]
+}
+</script>
+<link rel="icon" type="image/svg+xml" href="gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/content.css?v=11">
+<link rel="stylesheet" href="/assets/roi-embed.css?v=1">
+<link rel="stylesheet" href="/assets/market-check.css?v=1">
+</head>
+<body>
+<main class="content-wrap">
+  <h1>GoMining Marketplace Deal Checker</h1>
+  <p class="lead">A cheap miner on the GoMining marketplace isn't always a good deal. Paste the link to any listing and this checks the asking price against minting the same hashrate new, counting the efficiency upgrade it may need, on today's live BTC and GMT prices.</p>
+
+  <div id="mc" class="re-loading">
+    <h2>Check a listing</h2>
+    <div class="re-basis" id="mc-basis">loading live market data…</div>
+
+    <form id="mc-form" class="mc-url" autocomplete="off">
+      <input id="mc-link" type="text" inputmode="url" aria-label="GoMining miner link"
+        placeholder="https://app.gomining.com/nft/view/10854">
+      <button type="submit" id="mc-go">Check deal</button>
+    </form>
+    <div class="mc-err" id="mc-err" role="alert" hidden></div>
+    <div class="mc-card" id="mc-card" hidden></div>
+
+    <div class="re-inputs mc-fld4">
+      <div class="re-field">
+        <label for="mc-th">Hashrate (TH)</label>
+        <input id="mc-th" type="number" inputmode="decimal" min="0" step="any" placeholder="from link">
+      </div>
+      <div class="re-field">
+        <label for="mc-wth">Efficiency (W/TH)</label>
+        <input id="mc-wth" type="number" inputmode="decimal" min="12" step="any" placeholder="from link">
+      </div>
+      <div class="re-field">
+        <label for="mc-price">Asking price (GMT)</label>
+        <input id="mc-price" type="number" inputmode="decimal" min="0" step="any" placeholder="from link">
+      </div>
+      <div class="re-field">
+        <label for="mc-disc">Your fee discount %</label>
+        <input id="mc-disc" type="number" inputmode="decimal" min="0" max="30" step="0.1" value="20">
+      </div>
+    </div>
+
+    <div id="mc-result" hidden>
+      <div class="mc-verdict" id="mc-verdict">
+        <div class="l" id="mc-v-label">—</div>
+        <div class="s" id="mc-v-line">—</div>
+      </div>
+
+      <div class="re-out">
+        <div class="re-tile">
+          <div class="k">Asking price</div>
+          <div class="v" id="mc-t-cost">—</div>
+          <div class="s" id="mc-t-cost-s">—</div>
+        </div>
+        <div class="re-tile">
+          <div class="k">Same TH new</div>
+          <div class="v" id="mc-t-new">—</div>
+          <div class="s" id="mc-t-new-s">—</div>
+        </div>
+        <div class="re-tile">
+          <div class="k">Earns</div>
+          <div class="v" id="mc-t-net">—</div>
+          <div class="s" id="mc-t-net-s">a month</div>
+        </div>
+        <div class="re-tile hero">
+          <div class="k">Worth up to</div>
+          <div class="v" id="mc-t-fair">—</div>
+          <div class="s" id="mc-t-fair-s">—</div>
+        </div>
+      </div>
+
+      <div class="mc-tbl-wrap">
+        <table class="mc-tbl">
+          <thead><tr><th>Option</th><th>Cost</th><th>Net / month</th><th>A year on cost</th></tr></thead>
+          <tbody id="mc-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="re-hint" id="mc-upg">—</div>
+    </div>
+
+    <div class="re-foot">
+      <p class="note">Today's rates only, with no forecast. Net is after the electricity and service fee at your discount and the payout conversion fee. Upgrade prices and new-miner prices are the ones the rest of GMT Optimizer uses.</p>
+      <a href="/console" class="btn">Plan your whole farm →</a>
+    </div>
+  </div>
+
+  <h2>How a listing is judged</h2>
+  <p>Anyone can mint new hashrate from GoMining at 12 W/TH, so that's the price a secondhand miner has to beat. The checker works out three ways to end up with the same TH:</p>
+  <ul>
+    <li><strong>Buy the listing as it is</strong>: the asking price, and the higher electricity fee its efficiency carries every day.</li>
+    <li><strong>Buy it and upgrade it to 12 W/TH</strong>: the asking price plus the one-time upgrade, after which it earns exactly what a new miner does.</li>
+    <li><strong>Mint the same TH new</strong>: the benchmark.</li>
+  </ul>
+  <p>Each option becomes one number: what it earns in a year at today's rates, divided by what it costs. The better of the two ways to buy the listing is compared with minting new, which gives the verdict.</p>
+  <div class="formula">a year on cost = (daily reward − daily fee × (1 − discount)) × 365 ÷ cost</div>
+
+  <h2>Why efficiency decides most marketplace deals</h2>
+  <p>The electricity fee is charged per watt, so a 20 W/TH miner pays two thirds more electricity fee than a 12 W/TH one for the same hashrate. That gap is permanent unless you pay to upgrade it away. The "Worth up to" figure is the highest price at which the listing still matches minting new: offer below it and you come out ahead.</p>
+  <p>Upgrades are priced per W/TH down to 12, and anything above 15 W/TH is priced as 15, so on very inefficient miners the first few watts of the upgrade come off free. That's why an old 25&ndash;30 W/TH miner can still be a bargain if the price is low enough.</p>
+
+  <h2>What your fee discount changes</h2>
+  <p>Locking GMT cuts your electricity fee by up to 20%. The bigger your discount, the less an inefficient miner costs you to run, so the same listing looks better to a holder with the full discount than to a new user with none. Set the discount field to match yours.</p>
+
+  <div class="cta">
+    <h3>Buying hashrate? Start with a bonus</h3>
+    <p>New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH, and I'll fund your first TH to start you off.</p>
+    <a href="/claim" class="btn">Claim your first TH →</a>
+  </div>
+
+  <h2>Frequently asked questions</h2>
+  <div class="faq">
+    <details><summary>How do I know if a GoMining marketplace miner is a good deal?</summary><p>Compare it with the alternative every buyer has: minting the same hashrate new at 12 W/TH. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty.</p></details>
+    <details><summary>Should I upgrade the efficiency of a miner I buy on the marketplace?</summary><p>Upgrading to 12 W/TH is a one-time cost of about $2.67 per TH for each W/TH it improves, and miners above 15 W/TH are priced as if they were at 15. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste.</p></details>
+    <details><summary>Why are older GoMining miners cheaper on the marketplace?</summary><p>Many secondhand miners run at 20 W/TH or more, while new miners are 12 W/TH. Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted.</p></details>
+    <details><summary>Does this checker see my GoMining account?</summary><p>No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored.</p></details>
+  </div>
+
+  <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
+</main>
+<script src="/assets/site.js?v=12"></script>
+<script src="/assets/market-check.js?v=1"></script>
+</body>
+</html>

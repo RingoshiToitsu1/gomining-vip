@@ -73,7 +73,7 @@
   foot.innerHTML='<div class="fwrap"><div class="fbrand"><a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer</a>'+
     '<p>The free, ad-free GoMining profit optimizer. Live network data, honest projections, no ads &mdash; ever.</p></div>'+
     '<div class="fcols">'+
-      '<div><h4>Tool</h4><a href="/console">Console</a><a href="/planner">Capital Planner</a><a href="/projection">Growth Projection</a></div>'+
+      '<div><h4>Tool</h4><a href="/console">Console</a><a href="/planner">Capital Planner</a><a href="/projection">Growth Projection</a><a href="/gomining-marketplace-checker">Marketplace checker</a></div>'+
       '<div><h4>Learn</h4><a href="/how-gomining-works.html">How GoMining works</a><a href="/is-gomining-worth-it.html">Is it worth it?</a><a href="/gomining-roi-calculator.html">ROI calculator</a><a href="/gomining-discount-explained.html">Discount explained</a></div>'+
       '<div><h4>Legal</h4><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div>'+
     '</div></div>'+
