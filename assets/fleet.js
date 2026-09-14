@@ -38,11 +38,33 @@
     return (typeof window.gmtOnAccountProfile === 'function') ? window.gmtOnAccountProfile() : true;
   }
 
+  // Each Saved Setup keeps its OWN local fleet (gmt_fleet_v1:<profileId>), so a setup used to
+  // track someone you referred never shows or edits your miners. The account profile's fleet is
+  // the cloud one; with no setup selected (or the account profile while logged out) the original
+  // device-wide key is used.
+  var PROFILES_KEY = 'gm_profiles_v1', MIGRATED_KEY = 'gmt_fleet_per_profile_v1';
+  function profilesState() { try { return JSON.parse(localStorage.getItem(PROFILES_KEY)) || {}; } catch (e) { return {}; } }
+  function keyFor(id) { return (!id || /^acct_/.test(id)) ? KEY : KEY + ':' + id; }
+  function activeLocalKey() { return keyFor(profilesState().activeId); }
+  // One-time move off the single shared fleet: every existing setup starts with a copy of what it
+  // was showing before, so nothing disappears; from here on each one is edited on its own.
+  (function migrate() {
+    try {
+      if (localStorage.getItem(MIGRATED_KEY)) return;
+      var legacy = localStorage.getItem(KEY);
+      (profilesState().profiles || []).forEach(function (p) {
+        var k = keyFor(p.id);
+        if (legacy && k !== KEY && localStorage.getItem(k) === null) localStorage.setItem(k, legacy);
+      });
+      localStorage.setItem(MIGRATED_KEY, '1');
+    } catch (e) {}
+  })();
+
   function loadLocal() {
-    try { var a = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(a) ? a : []; }
+    try { var a = JSON.parse(localStorage.getItem(activeLocalKey())); return Array.isArray(a) ? a : []; }
     catch (e) { return []; }
   }
-  function saveLocal(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); } catch (e) {} }
+  function saveLocal(r) { try { localStorage.setItem(activeLocalKey(), JSON.stringify(r)); } catch (e) {} }
 
   // Async load from whichever store is active.
   function loadFleet() {
@@ -217,6 +239,13 @@
   function render() {
     renderRows();
     renderSummary();
+    renderTitle();
+  }
+  // Name the setup this fleet belongs to, so it's obvious whose miners you're editing.
+  function renderTitle() {
+    var t = document.getElementById('fleetTitleFor'); if (!t) return;
+    var s = profilesState(), p = (s.profiles || []).find(function (x) { return x.id === s.activeId; });
+    t.textContent = p ? (p.account ? '· your account' : '· ' + p.name) : '';
   }
 
   // ---- events ----
@@ -254,11 +283,18 @@
   // Reload the fleet from whichever store is now active (called on profile switch).
   window.GMTFleetReload = function () {
     loadFleet().then(function (r) { rows = migrateRows(r); render(); apply(); });
+    renderTitle();
   };
   // Empty the fleet in the active store — used by "Clear inputs" on a scratch
   // profile. Because scratch profiles are never cloud (isCloud is account-only),
   // this clears the local fleet and never deletes the real cloud one.
   window.GMTFleetClear = function () { rows = []; commit(); render(); };
+  // Write the fleet on screen into the now-active setup (Save as… snapshots it into the new setup).
+  window.GMTFleetPersistActive = function () { saveFleet(rows); renderTitle(); };
+  // Start the active setup with an empty fleet of its own (the "New" setup button).
+  window.GMTFleetStartEmpty = function () { rows = []; saveLocal(rows); render(); };
+  // A deleted setup takes its fleet with it.
+  window.GMTFleetDrop = function (id) { try { if (keyFor(id) !== KEY) localStorage.removeItem(keyFor(id)); } catch (e) {} };
 
   // ---- mount ---- (styles live in assets/accounts.css)
   function mount() {
@@ -266,7 +302,7 @@
     if (!host) return;
     host.className = 'ed-group';
     host.innerHTML =
-      '<div class="ed-group-title">My Fleet <span class="ed-toggle-note" style="font-weight:400">(optional — adds up your miners for you)</span></div>' +
+      '<div class="ed-group-title">Fleet <span class="fleet-for" id="fleetTitleFor"></span> <span class="ed-toggle-note" style="font-weight:400">(optional — adds up the miners for you; each saved setup keeps its own)</span></div>' +
       '<div class="fleet-panel">' +
         '<div class="fleet-head"><div class="fleet-summary" id="fleetSummary"></div></div>' +
         // Column headings, desktop only. Fifteen rows x four labelled boxes is sixty little

@@ -335,3 +335,6 @@
   padding:.55rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
 .gmt-chat-login:hover{background:var(--purple-soft)}
 .gmt-flash{font-size:.72rem;color:var(--amber,#FF8A3D);min-height:1em;margin-top:.25rem}
+
+/* whose fleet this is (each saved setup has its own) */
+.fleet-for{font-weight:600;color:var(--purple-soft);font-family:var(--sans)}

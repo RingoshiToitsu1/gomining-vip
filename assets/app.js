@@ -2898,8 +2898,10 @@ function saveActiveProfile(){
       state.activeId=pid;
     }else{
       p=state.profiles.find(x=>x.name==='My Setup'&&!x.account);
+      const created=!p;
       if(!p){p={id:'p_'+Date.now().toString(36),name:'My Setup',data:readInputs()};state.profiles.unshift(p);}
       state.activeId=p.id;
+      if(created){saveProfilesState(state);if(window.GMTFleetPersistActive)window.GMTFleetPersistActive();}
     }
   }
   p.data=readInputs();
@@ -2930,6 +2932,8 @@ function saveAsNewProfile(){
     state.activeId=id;
   }
   saveProfilesState(state);
+  // The new setup gets its own copy of the fleet on screen (fleets are per setup).
+  if(window.GMTFleetPersistActive&&!gmtOnAccountProfile())window.GMTFleetPersistActive();
   renderProfileSelect();
   flashStatus('Saved as "'+name+'"');
   editLoadClose('Saved to "'+name+'"');
@@ -2989,16 +2993,37 @@ function refreshGreedyVisibility(){
 // Back-compat shim: fleet.js and applyInputs call this after setting greedy fields.
 function toggleGreedyFields(){refreshGreedyVisibility();}
 
-function clearInputs(){
-  // Blanks the form. Stays on the CURRENT setup so Save updates it without renaming.
-  applyInputs({
+function blankInputs(){
+  return {
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,inMpCode:'',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:GREEDY_GROWTH_DEFAULT,
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',inRefPriorTH:'0',
     piVipBonus:false
-  });
+  };
+}
+// A brand-new, empty setup with an empty fleet of its own — for tracking someone you referred
+// without touching your own miners. Your account profile and other setups are left as they are.
+function newBlankProfile(){
+  const name=(prompt('Name the new setup (e.g. "Referral - John"):','')||'').trim();
+  if(!name)return;
+  const state=loadProfilesState();
+  if(state.profiles.some(p=>p.name===name)){alert('A setup named "'+name+'" already exists — pick another name.');return;}
+  const id='p_'+Date.now().toString(36);
+  state.profiles.push({id,name,data:Object.assign(blankInputs(),{discountOverride:null})});
+  state.activeId=id;
+  saveProfilesState(state);
+  applyInputs(blankInputs());
+  applyDiscountOverrideFor(null);
+  if(window.GMTFleetStartEmpty)window.GMTFleetStartEmpty();
+  renderProfileSelect();
+  if(S.loaded)recalc();
+  flashStatus('Created "'+name+'" — add their miners below');
+}
+function clearInputs(){
+  // Blanks the form. Stays on the CURRENT setup so Save updates it without renaming.
+  applyInputs(blankInputs());
   // Empty the fleet builder too — but ONLY on a scratch/no profile, never on the
   // account profile, so the real cloud fleet is never wiped by a clear.
   if(!gmtOnAccountProfile()&&window.GMTFleetClear)window.GMTFleetClear();
@@ -3044,6 +3069,7 @@ function deleteActiveProfile(){
   if(!p)return;
   if(isAccountProfile(p)){alert('This is your account profile — it can’t be deleted. Create a separate setup for tinkering or referral quotes.');return;}
   if(!confirm('Delete profile "'+p.name+'"? (Inputs stay on screen.)'))return;
+  if(window.GMTFleetDrop)window.GMTFleetDrop(p.id);   // its fleet goes with it
   state.profiles=state.profiles.filter(x=>x.id!==state.activeId);
   state.activeId=null;
   saveProfilesState(state);

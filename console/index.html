@@ -116,7 +116,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
 <link rel="stylesheet" href="/assets/app.css?v=73">
 <link rel="stylesheet" href="/assets/design.css?v=14">
-<link rel="stylesheet" href="/assets/accounts.css?v=18">
+<link rel="stylesheet" href="/assets/accounts.css?v=19">
 </head>
 <body>
 <!-- Boot screen: covers the console until prices, difficulty, account + fleet have loaded and
@@ -536,6 +536,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
             <div class="ed-saved-btns">
               <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
               <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+              <button class="ed-sbtn" onclick="newBlankProfile()" title="Start an empty setup with its own fleet, e.g. to track someone you referred">New</button>
               <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
             </div>
             <span id="saveStatus" class="ed-save-status"></span>
@@ -1248,8 +1249,8 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 </footer>
 </div>
 
-<script src="/assets/app.js?v=141"></script>
-<script src="/assets/fleet.js?v=17"></script>
+<script src="/assets/app.js?v=142"></script>
+<script src="/assets/fleet.js?v=18"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/supabase-config.js?v=2"></script>
