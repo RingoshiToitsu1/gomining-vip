@@ -1,0 +1,46 @@
+/* GMT Optimizer — shared top bar for the standalone tools (/statement, /quote).
+   =========================================================================
+   Those pages carry their own stylesheet, so they can't take content.css (its resets and body
+   styles would restyle the tool). This is only the chrome: the live ticker and the docked glass
+   nav with brand, Launch Console and the hamburger — the same sizes as the content pages and the
+   console. site.js injects the markup when loaded with data-chrome="bar".
+   Keep in step with the .util / nav / .brand / .nav-cta rules in content.css. */
+.util,nav#nav{
+  --gm-gold:#F5A623;--gm-gold-hi:#FFC65A;--gm-gold-soft:#FFCF7A;--gm-warm:#FFF4E0;
+  --gm-ink2:#8A93A6;--gm-ink3:#575E70;--gm-line:rgba(240,196,120,.14);--gm-line-soft:rgba(200,210,235,.08);
+  --gm-mono:'Share Tech Mono',ui-monospace,monospace;--gm-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --gm-ease:cubic-bezier(.22,.61,.36,1)}
+.util{position:fixed;top:0;left:0;right:0;z-index:49;height:30px;display:flex;align-items:center;overflow:hidden;
+  font-family:var(--gm-mono);font-size:.68rem;letter-spacing:.14em;color:var(--gm-ink2);
+  background:linear-gradient(180deg,rgba(6,7,9,.9),rgba(6,7,9,.6));border-bottom:1px solid var(--gm-line-soft);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.util .ticker{display:inline-flex;gap:34px;white-space:nowrap;padding-left:100%;animation:gmTicker 34s linear infinite}
+.util .ticker b{color:var(--gm-gold-soft);font-weight:400}.util .ticker .up{color:#57d9a3}.util .ticker .li{color:var(--gm-gold)}
+@keyframes gmTicker{to{transform:translateX(-100%)}}
+
+nav#nav{position:fixed;top:30px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:12px max(22px,calc((100% - 1160px) / 2));margin:0;border-radius:0;font-family:var(--gm-sans);line-height:1.4;
+  background:linear-gradient(180deg,rgba(10,12,18,.88),rgba(8,10,14,.74));
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:0;border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgba(0,0,0,.42);
+  transition:padding .35s var(--gm-ease),background .35s var(--gm-ease)}
+nav#nav.shrunk{padding-top:8px;padding-bottom:8px;background:linear-gradient(180deg,rgba(8,10,14,.95),rgba(6,8,12,.9))}
+nav#nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--gm-warm);letter-spacing:.01em;font-size:1.02rem;text-decoration:none}
+nav#nav .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
+nav#nav .brand .v{font-family:var(--gm-mono);font-size:.58rem;color:var(--gm-ink3);letter-spacing:.15em;border:1px solid var(--gm-line);padding:2px 6px;border-radius:6px;margin-left:2px}
+nav#nav .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82rem;font-weight:600;color:#100a02;text-decoration:none;position:relative;
+  background:linear-gradient(135deg,var(--gm-gold-hi),var(--gm-gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);
+  transition:transform .25s var(--gm-ease),box-shadow .25s;overflow:hidden;font-family:var(--gm-sans)}
+nav#nav .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
+
+/* clear the fixed ticker + bar */
+body.has-bar{padding-top:96px}
+@media(max-width:820px){
+  nav#nav{top:0;padding-left:16px;padding-right:16px}
+  .util{display:none}
+  body.has-bar{padding-top:66px}
+}
+@media print{
+  .util,nav#nav,.gm-menu{display:none!important}
+  body.has-bar{padding-top:0!important}
+}

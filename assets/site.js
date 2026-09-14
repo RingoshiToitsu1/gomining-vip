@@ -4,12 +4,18 @@
 (function(){
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   var LOGO='/gmt-optimizer-logo.svg?v=2';
+  /* data-chrome="bar" (the standalone tools, with assets/topbar.css): ticker + nav + menu only —
+     no backdrop, footer or page effects, which would fight the tool's own styling and its print view. */
+  var BAR=!!(document.currentScript&&document.currentScript.getAttribute('data-chrome')==='bar');
+  if(BAR)document.body.classList.add('has-bar');
 
   /* ---- backdrop ---- */
+  if(!BAR){
   var bg=document.createElement('div');
   bg.innerHTML='<div class="world" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>'+
     '<div class="grid-floor"></div><span class="beam beam-1"></span><span class="beam beam-2"></span><span class="beam beam-3"></span><canvas id="stars"></canvas></div><div class="vignette" aria-hidden="true"></div>';
   while(bg.firstChild) document.body.insertBefore(bg.firstChild, document.body.firstChild);
+  }
 
   /* ---- nav ---- */
   var nav=document.createElement('nav');
@@ -68,6 +74,11 @@
       }catch(e){}
     })();
   })();
+
+  if(BAR){
+    addEventListener('scroll',function(){nav.classList.toggle('shrunk',(scrollY||document.documentElement.scrollTop)>40);},{passive:true});
+    return;
+  }
 
   /* ---- footer ---- */
   var foot=document.createElement('footer');
