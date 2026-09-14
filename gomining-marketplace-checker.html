@@ -54,7 +54,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=11">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=5">
+<link rel="stylesheet" href="/assets/market-check.css?v=6">
 </head>
 <body>
 <main class="content-wrap">
@@ -146,10 +146,11 @@
 
       <div class="mc-tbl-wrap">
         <table class="mc-tbl">
-          <thead><tr><th>Option</th><th>Cost</th><th>Net / month</th><th>A year on cost</th></tr></thead>
+          <thead><tr><th>Option</th><th>Cost</th><th>GMT lock</th><th>Net / month</th><th>A year on capital</th><th>vs new</th></tr></thead>
           <tbody id="mc-rows"></tbody>
         </table>
       </div>
+      <p class="mc-tbl-note" id="mc-tbl-note"></p>
 
       <div class="mc-greedy" id="mc-greedy" hidden></div>
       <div class="re-hint" id="mc-upg">—</div>
@@ -168,8 +169,8 @@
     <li><strong>Buy it and upgrade it to 12 W/TH</strong>: the asking price plus the one-time upgrade, after which it earns exactly what a new miner does.</li>
     <li><strong>Mint the same TH new</strong>: the benchmark.</li>
   </ul>
-  <p>Each option becomes one number: what it earns in a year at today's rates, divided by what it costs. The better of the two ways to buy the listing is compared with minting new, which gives the verdict.</p>
-  <div class="formula">a year on cost = (daily reward − daily fee × (1 − discount)) × 365 ÷ cost</div>
+  <p>Each option becomes one number: what it earns in a year at today's rates, divided by the capital it ties up. That capital includes the GMT you'd lock to keep your fee discount on that hashrate: an inefficient miner pays more fee, so it needs more GMT locked, and that GMT earns staking. The better of the two ways to buy the listing is compared with minting new, which gives the verdict.</p>
+  <div class="formula">a year on capital = (mining net + staking on the lock) × 365 ÷ (cost + GMT lock)</div>
 
   <h2>Why efficiency decides most marketplace deals</h2>
   <p>The electricity fee is charged per watt, so a 20 W/TH miner pays two thirds more electricity fee than a 12 W/TH one for the same hashrate. That gap is permanent unless you pay to upgrade it away. The "Worth up to" figure is the highest price at which the listing still matches minting new: offer below it and you come out ahead.</p>
@@ -206,6 +207,6 @@
   <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
 </main>
 <script src="/assets/site.js?v=16"></script>
-<script src="/assets/market-check.js?v=5"></script>
+<script src="/assets/market-check.js?v=6"></script>
 </body>
 </html>

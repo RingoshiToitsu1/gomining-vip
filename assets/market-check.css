@@ -137,3 +137,7 @@
 .mc-counting{text-shadow:0 0 16px rgba(245,166,35,.55)}
 .mc-counted{animation:mcCounted .85s ease-out}
 @keyframes mcCounted{0%{text-shadow:0 0 20px rgba(255,207,122,.95);filter:brightness(1.35)}100%{text-shadow:none;filter:none}}
+
+.mc-tbl td b{font-weight:600}.mc-tbl td b.pos{color:#57d9a3}.mc-tbl td b.neg{color:#ff8a66}
+.mc-tbl{min-width:38rem}
+.mc-tbl-note{font-size:.72rem;color:var(--ink3);line-height:1.5;margin:-.4rem 0 .9rem}

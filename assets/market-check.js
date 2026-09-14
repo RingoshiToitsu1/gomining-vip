@@ -32,6 +32,8 @@
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
+  const STAKE_APR        = 24.26;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
+  const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
@@ -116,36 +118,52 @@
     const cost = priceGMT * S.gmt;                        // what the listing costs, at market
     const upg = th * upgPerTH(w);                         // one-time, to reach 12 W
     const newCost = th * cpt12(th);                       // mint the same TH new at 12 W
-    const netAsIs = netPerTH(w, disc) * th;
+    const netAsIs = netPerTH(w, disc) * th;               // mining only
     const net12 = netPerTH(EFF_BEST, disc) * th;
     const canUpgrade = w > EFF_BEST + 1e-9;
 
-    const yr = (net, c) => c > 0 ? (net * 365) / c : 0;
+    // Total capital, as everywhere else on the site. Your discount is only yours on THIS miner if
+    // its fees are covered too: the token part (up to 20%) needs 18 days of fees per 1% locked in
+    // GMT. An inefficient miner pays more fee, so it needs MORE GMT locked — real capital that the
+    // hardware price alone hides. That GMT isn't spent: it earns the staking APR, counted as income.
+    const tok = Math.min(20, disc), nonTok = Math.max(0, disc - tok);
+    const feeDay = wt => ((ELEC_RATE * 24 * wt) / 1000 + SERVICE_RATE) * th;
+    const lockFor = wt => COV_DAYS_PER_PCT * tok * feeDay(wt) * (1 - nonTok / 100);
+    const stake = lock => lock * (STAKE_APR / 100) / 365.25;
+    const route = (hw, lock, mining) => {
+      const net = mining + stake(lock), capital = hw + lock;
+      return { cost: hw, lock, mining, net, capital, y: capital > 0 ? (net * 365) / capital : 0 };
+    };
+    const lockAsIs = lockFor(w), lock12 = lockFor(EFF_BEST);
     const routes = {
-      asIs:     { cost, net: netAsIs, y: yr(netAsIs, cost) },
-      upgraded: canUpgrade ? { cost: cost + upg, net: net12, y: yr(net12, cost + upg) } : null,
-      fresh:    { cost: newCost, net: net12, y: yr(net12, newCost) }
+      asIs:     route(cost, lockAsIs, netAsIs),
+      upgraded: canUpgrade ? route(cost + upg, lock12, net12) : null,
+      fresh:    route(newCost, lock12, net12)
     };
     const best = routes.upgraded && routes.upgraded.y > routes.asIs.y ? 'upgraded' : 'asIs';
+    const yF = routes.fresh.y;
+    const vsNew = r => (r && yF > 0 ? r.y / yF - 1 : null);
 
     // Highest asking price at which this listing still matches minting new, per route.
-    // Upgraded: whatever is left of the new-miner cost after paying for the upgrade.
-    // As-is:    the price at which its (lower) income earns the same yield as new.
+    // Upgraded: what's left of the new-miner cost after the upgrade (same income and lock as new).
+    // As-is:    the price at which its income + staking earns the new miner's yield on its capital.
     const fairUpg = canUpgrade ? Math.max(0, newCost - upg) : 0;
-    const fairAsIs = net12 > 0 ? Math.max(0, newCost * netAsIs / net12) : 0;
+    const fairAsIs = yF > 0 ? Math.max(0, routes.asIs.net * 365 / yF - lockAsIs) : 0;
     const fairUSD = Math.max(fairUpg, fairAsIs);
 
-    // Edge vs minting new. Yield when the new miner earns anything; when rewards are
-    // under water (a BTC crash), yield is meaningless, so fall back to cost.
+    // Edge vs minting new, by yield on total capital; if nothing earns at today's price, by cost.
     let edge;
-    if (routes.fresh.net > 0 && routes[best].cost > 0) edge = routes[best].y / routes.fresh.y - 1;
+    if (yF > 0 && routes.fresh.mining > 0) edge = vsNew(routes[best]);
     else edge = fairUSD > 0 ? fairUSD / Math.max(cost, 1e-9) - 1 : -1;
 
-    // What the upgrade itself returns: fee saved per year over what it costs.
+    // What the upgrade itself returns: the yearly fee it saves over what it costs, net of the GMT
+    // lock it frees (a lower fee needs less coverage).
     const upgSaveDay = net12 - netAsIs;
-    const upgYield = upg > 0 ? (upgSaveDay * 365) / upg : 0;
+    const lockFreed = Math.max(0, lockAsIs - lock12);
+    const upgNetCost = Math.max(upg * 0.05, upg - lockFreed);
+    const upgYield = upg > 0 ? (upgSaveDay * 365) / upgNetCost : 0;
 
-    return { cost, upg, newCost, netAsIs, net12, routes, best, fairUSD, edge, upgSaveDay, upgYield, canUpgrade };
+    return { cost, upg, newCost, netAsIs, net12, routes, best, fairUSD, edge, upgSaveDay, upgYield, canUpgrade, lockFreed, tok, vsNew };
   }
 
   // ---- render ----
@@ -163,6 +181,7 @@
     { min: -Infinity, cls: 'bad', label: 'Overpriced' }
   ];
   const MO = 30.44;
+  const stakeMo = r => r.lock * (STAKE_APR / 100) / 365.25 * MO;
 
   function render() {
     const th = Math.max(0, parseFloat($('mc-th').value) || 0);
@@ -194,25 +213,35 @@
     $('mc-v-line').textContent = e.routes.fresh.net <= 0
       ? 'Mining is under water at today\'s BTC price, so this compares cost only. ' +
         (e.edge >= 0 ? 'The listing is cheaper than minting the same TH new.' : 'Minting the same TH new is cheaper.')
-      : v.cls === 'fair' ? at + ' earns about the same per dollar as minting the same TH new.'
-      : at + ' earns ' + gap + (e.edge > 0 ? ' more' : ' less') + ' per dollar than minting the same TH new.';
+      : (v.cls === 'fair' ? at + ' earns about the same per dollar as minting the same TH new.'
+        : at + ' earns ' + gap + (e.edge > 0 ? ' more' : ' less') + ' per dollar than minting the same TH new.') +
+        // The verdict follows the better way to own it. When that's keeping it as it is, say plainly
+        // if upgrading would be the worse move — the upgrade row alone can read like the whole story.
+        (e.best === 'asIs' && e.routes.upgraded && e.vsNew(e.routes.upgraded) != null && e.vsNew(e.routes.upgraded) < -0.005
+          ? ' Don\'t upgrade it, though: bought and upgraded it would cost ' + money(e.routes.upgraded.cost) + ' against ' + money(e.newCost) + ' new, and earn ' + num(Math.abs(e.vsNew(e.routes.upgraded)) * 100, 0) + '% less per dollar than minting new.'
+          : '');
 
     $('mc-t-cost').textContent = money(e.cost);
     $('mc-t-cost-s').textContent = num(p, 0) + ' GMT · ' + money(e.cost / th) + '/TH';
     $('mc-t-new').textContent = money(e.newCost);
     $('mc-t-new-s').textContent = num(th, 2).replace(/\.?0+$/, '') + ' TH new @ ' + money(cpt12(th)) + '/TH';
     $('mc-t-net').textContent = money(bestR.net * MO);
-    $('mc-t-net-s').textContent = e.best === 'upgraded' ? 'a month, after upgrading' : 'a month, as it is';
+    $('mc-t-net-s').textContent = (e.best === 'upgraded' ? 'a month, after upgrading' : 'a month, as it is') + (bestR.lock > 0 ? ' · incl. ' + money(stakeMo(bestR)) + ' staking' : '');
     const fairGMT = e.fairUSD / S.gmt;
     $('mc-t-fair').textContent = fairGMT > 0 ? num(fairGMT, 0) + ' GMT' : '—';
     $('mc-t-fair-s').textContent = fairGMT > 0 ? '≈ ' + money(e.fairUSD) + ' — matches minting new' : 'not worth buying at any price today';
 
-    const row = (label, r, note, hl) => r ? '<tr' + (hl ? ' class="hl"' : '') + '><td>' + label + (note ? '<span>' + note + '</span>' : '') + '</td>' +
-      '<td>' + money(r.cost) + '</td><td>' + money(r.net * MO) + '</td><td class="' + (r.y < 0 ? 'neg' : '') + '">' + num(r.y * 100, 1) + '%</td></tr>' : '';
+    const vs = r => { const x = e.vsNew(r); return x == null ? '—' : '<b class="' + (x >= 0.005 ? 'pos' : x <= -0.005 ? 'neg' : '') + '">' + (x > 0 ? '+' : x < 0 ? '−' : '') + num(Math.abs(x) * 100, 0) + '%</b>'; };
+    const row = (label, r, note, hl, isNew) => r ? '<tr' + (hl ? ' class="hl"' : '') + '><td>' + label + (note ? '<span>' + note + '</span>' : '') + '</td>' +
+      '<td>' + money(r.cost) + '</td><td>' + (r.lock > 0 ? money(r.lock) : '—') + '</td><td>' + money(r.net * MO) + '</td><td class="' + (r.y < 0 ? 'neg' : '') + '">' + num(r.y * 100, 1) + '%</td>' +
+      '<td>' + (isNew ? 'benchmark' : vs(r)) + '</td></tr>' : '';
     $('mc-rows').innerHTML =
       row('Buy this listing as it is', e.routes.asIs, num(w, 2).replace(/\.?0+$/, '') + ' W/TH', e.best === 'asIs') +
       row('Buy it and upgrade to 12 W', e.routes.upgraded, '+' + money(e.upg) + ' upgrade', e.best === 'upgraded') +
-      row('Mint the same TH new', e.routes.fresh, '12 W/TH', false);
+      row('Mint the same TH new', e.routes.fresh, '12 W/TH', false, true);
+    $('mc-tbl-note').textContent = e.tok > 0
+      ? 'GMT lock = the GMT that keeps your ' + num(e.tok, 0) + '% token discount on this hashrate (18 days of fees per 1%). It isn\'t spent: it earns ' + STAKE_APR + '% staking, included in net. A year on capital = net ÷ (cost + GMT lock).'
+      : 'No token discount set, so no GMT lock is needed. A year on capital = net ÷ cost.';
 
     const hint = $('mc-upg');
     if (!e.canUpgrade) {
@@ -222,9 +251,10 @@
     } else {
       const worth = e.best === 'upgraded';
       hint.innerHTML = '<b>Efficiency upgrade:</b> taking it from ' + esc(num(w, 2).replace(/\.?0+$/, '')) + ' to 12 W/TH costs ' + money(e.upg) +
-        ' once (' + money(upgPerTH(w)) + '/TH) and cuts fees by ' + money(e.upgSaveDay * MO) + ' a month, which returns ' +
+        ' once (' + money(upgPerTH(w)) + '/TH) and cuts fees by ' + money(e.upgSaveDay * MO) + ' a month' +
+        (e.lockFreed > 0 ? ', freeing ' + money(e.lockFreed) + ' of GMT lock' : '') + ', which returns ' +
         num(e.upgYield * 100, 0) + '% a year on the upgrade. ' +
-        (worth ? 'That beats what the miner earns on its price, so upgrade it.' : 'The miner earns more on its price than the upgrade does, so upgrading is optional.') +
+        (worth ? 'That beats what the miner earns on its price, so upgrade it.' : 'The miner already earns more on its capital than the upgrade would, so skip the upgrade.') +
         (w > 15 ? ' Steps above 15 W/TH are the cheap ones; the last three into 12 W/TH cost $2.67/TH each.' : '');
     }
 
