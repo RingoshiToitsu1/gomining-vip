@@ -34,6 +34,35 @@
 .gmt-acc-name:hover{text-decoration:underline}
 .gmt-acc-av{width:24px;height:24px;border-radius:50%;object-fit:cover;
   border:1px solid var(--card-border);vertical-align:middle}
+/* online count sits right beside the brand; it takes the free space so the account + menu stay right */
+.header-inner.gm-has-menu>.c-brand{margin-right:0}
+.header-inner>#gmtOnline{margin:0 auto 0 .9rem;padding:.22rem .55rem;border-radius:999px;
+  border:1px solid rgba(61,220,132,.22);background:rgba(61,220,132,.06);white-space:nowrap}
+.header-inner>#gmtOnline:empty{visibility:hidden;padding:0;border:0}
+/* account menu (name + avatar → dropdown with Edit profile / My Fleet / Log out) */
+.gmt-acc-wrap{position:relative}
+.gmt-acc-trigger{display:inline-flex;align-items:center;gap:.45rem;background:transparent;border:1px solid transparent;
+  border-radius:999px;padding:.2rem .55rem .2rem .25rem;cursor:pointer;color:var(--text);font-family:var(--sans);font-size:.82rem;
+  transition:var(--transition)}
+.gmt-acc-trigger:hover,.gmt-acc-trigger[aria-expanded="true"]{border-color:var(--border);background:var(--bg-input)}
+.gmt-acc-trigger:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.gmt-acc-trigger .gmt-acc-name:hover{text-decoration:none}
+.gmt-acc-caret{color:var(--text3);transition:transform .2s}
+.gmt-acc-trigger[aria-expanded="true"] .gmt-acc-caret{transform:rotate(180deg)}
+.gmt-acc-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:10040;min-width:210px;padding:.35rem;
+  background:var(--bg-card,#121316);border:1px solid var(--card-border);border-radius:14px;
+  box-shadow:0 18px 50px -10px rgba(0,0,0,.7)}
+.gmt-acc-menu[hidden]{display:none}
+.gmt-acc-head{display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem .65rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
+.gmt-acc-head img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--card-border)}
+.gmt-acc-head .n{color:var(--text);font-weight:600;font-size:.88rem;line-height:1.2}
+.gmt-acc-head .u{color:var(--text3);font-family:var(--mono);font-size:.72rem}
+.gmt-acc-menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:9px;padding:.55rem .65rem;
+  color:var(--text2,var(--text));font-family:var(--sans);font-size:.84rem;cursor:pointer}
+.gmt-acc-menu button:hover,.gmt-acc-menu button:focus-visible{background:var(--bg-input);color:var(--text);outline:none}
+.gmt-acc-menu button.danger{color:#ff8a66}
+.gmt-acc-menu button.danger:hover{background:rgba(255,106,61,.1)}
+.gmt-acc-sep{height:1px;background:var(--border);margin:.3rem .2rem}
 #gmtOnline{display:inline-flex;align-items:center;gap:.35rem;
   font-family:var(--mono);font-size:.72rem;color:var(--text3)}
 #gmtOnline .dot{width:7px;height:7px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84}
@@ -263,7 +292,9 @@
   .gmt-chat-ctl .ci{font-size:1.4rem;padding:.2rem .45rem}
   .gmt-chat-list{padding:.7rem 1rem;gap:.6rem}
   .gmt-chat-foot{padding:.7rem 1rem env(safe-area-inset-bottom,1rem)}
-  #gmtOnline{display:none}                          /* redundant on mobile — the chat pill shows it */
+  #gmtOnline{display:none!important}               /* redundant on mobile — the chat pill shows it */
+  .header-inner.gm-has-menu>.c-brand{margin-right:auto}
+  .gmt-acc-trigger .gmt-acc-name{max-width:7.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
 /* user card: a Twitch-style popover anchored near the clicked username */

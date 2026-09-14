@@ -283,6 +283,7 @@
   }
 
   // ---- header slot ----
+  var accMenuWired = false;
   function renderHeader() {
     // When logged in, the "Edit Setup" nav link reads "My Fleet" — it's where you
     // build your fleet and edit your setup/profile.
@@ -295,11 +296,45 @@
       var p = Account.profile || {};
       var name = p.display_name || p.username || 'account';
       var av = p.avatar_url ? '<img class="gmt-acc-av" src="' + escapeHtml(p.avatar_url) + '" alt="">' : '';
+      // Name + avatar open a small account menu; Log out lives inside it rather than
+      // sitting in the header as a second button.
       slot.innerHTML =
-        av + '<span class="gmt-acc-name" id="gmtProfBtn" title="Edit profile">' + escapeHtml(name) + '</span>' +
-        '<button class="gmt-acc-btn" id="gmtLogout">Log out</button>';
-      slot.querySelector('#gmtProfBtn').addEventListener('click', openProfile);
-      slot.querySelector('#gmtLogout').addEventListener('click', function () { Account.signOut(); });
+        '<div class="gmt-acc-wrap">' +
+          '<button type="button" class="gmt-acc-trigger" id="gmtProfBtn" aria-haspopup="menu" aria-expanded="false" title="Account">' +
+            av + '<span class="gmt-acc-name">' + escapeHtml(name) + '</span>' +
+            '<svg class="gmt-acc-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '</button>' +
+          '<div class="gmt-acc-menu" id="gmtAccMenu" role="menu" hidden>' +
+            '<div class="gmt-acc-head">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" alt="">' : '') +
+              '<div><div class="n">' + escapeHtml(name) + '</div>' + (p.username ? '<div class="u">@' + escapeHtml(p.username) + '</div>' : '') + '</div></div>' +
+            '<button type="button" role="menuitem" data-acc="profile">Edit profile</button>' +
+            (typeof window.openEditSetup === 'function' ? '<button type="button" role="menuitem" data-acc="fleet">My Fleet</button>' : '') +
+            '<div class="gmt-acc-sep"></div>' +
+            '<button type="button" role="menuitem" data-acc="logout" class="danger">Log out</button>' +
+          '</div>' +
+        '</div>';
+      var trig = slot.querySelector('#gmtProfBtn'), menu = slot.querySelector('#gmtAccMenu');
+      var setOpen = function (on) { menu.hidden = !on; trig.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+      trig.addEventListener('click', function (e) { e.stopPropagation(); setOpen(menu.hidden); });
+      menu.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-acc]'); if (!b) return;
+        setOpen(false);
+        var a = b.getAttribute('data-acc');
+        if (a === 'profile') openProfile();
+        else if (a === 'fleet') window.openEditSetup();
+        else if (a === 'logout') Account.signOut();
+      });
+      if (!accMenuWired) {
+        accMenuWired = true;
+        document.addEventListener('click', function (e) {
+          var m = document.getElementById('gmtAccMenu');
+          if (m && !m.hidden && !e.target.closest('.gmt-acc-wrap')) { m.hidden = true; var t = document.getElementById('gmtProfBtn'); t && t.setAttribute('aria-expanded', 'false'); }
+        });
+        document.addEventListener('keydown', function (e) {
+          var m = document.getElementById('gmtAccMenu');
+          if (e.key === 'Escape' && m && !m.hidden) { m.hidden = true; var t = document.getElementById('gmtProfBtn'); if (t) { t.setAttribute('aria-expanded', 'false'); t.focus(); } }
+        });
+      }
     } else {
       slot.innerHTML = '<button class="gmt-acc-btn" id="gmtLoginBtn">Log in</button>';
       slot.querySelector('#gmtLoginBtn').addEventListener('click', function () { open('login'); });
