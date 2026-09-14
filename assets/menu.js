@@ -24,7 +24,7 @@
       { t: 'Edit Setup', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'] },
       { t: 'Marketplace Checker', d: 'Is that miner a good deal?', href: '/gomining-marketplace-checker', badge: 'New' },
       { t: 'Quote a Setup', d: 'Price a farm from zero', href: '/quote' },
-      { t: 'Income Statement', d: 'Turn a GoMining CSV into a statement', href: '/statement' },
+      { t: 'Income Statement', d: 'Turn a GoMining CSV into a statement', href: '/statement', badge: 'New' },
       { t: 'ROI Calculator', d: 'What a setup earns today', href: '/gomining-roi-calculator' }
     ]},
     { h: 'Charts', items: [
