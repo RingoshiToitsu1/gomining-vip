@@ -54,7 +54,7 @@
     { ready: () => accountResolved() && (!loggedIn() || fleetLoaded || performance.now() - t0 > 4500),
       detail: () => {
         const f = window.GMTFleet;
-        if (f && f.th > 0) return nf(f.count) + (f.count === 1 ? ' miner · ' : ' miners · ') + nf(f.th, f.th < 100 ? 2 : 0).replace(/\.?0+$/, '') + ' TH';
+        if (f && f.th > 0) return nf(f.count) + (f.count === 1 ? ' miner · ' : ' miners · ') + (f.th < 100 ? nf(f.th, 2).replace(/\.?0+$/, '') : nf(f.th)) + ' TH';
         return loggedIn() ? 'account synced' : 'guest session';
       } },
     { ready: () => { const s = st(); return s && s.loaded && performance.now() - lastMut > SETTLE_MS; },
