@@ -309,7 +309,8 @@
         return a.saveMiners(local).then(function () { rows = local.slice(); render(); apply(); });
       }
       return loadFleet().then(function (r) { rows = migrateRows(r); render(); apply(); });
-    }).catch(function () { rows = loadLocal(); render(); apply(); });
+    }).catch(function () { rows = loadLocal(); render(); apply(); })
+      .then(function () { document.dispatchEvent(new CustomEvent('gmt-fleet-loaded')); });   // console boot screen
   };
   // Called by account.js on a real SIGNED_OUT.
   window.GMTFleetLogout = function () { _authHandled = false; rows = loadLocal(); render(); apply(); };

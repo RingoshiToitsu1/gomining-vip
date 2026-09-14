@@ -184,6 +184,7 @@
         try { if (typeof window.gmtSyncAccountProfile === 'function') window.gmtSyncAccountProfile(); } catch (e) {}
         try { if (typeof window.GMTFleetLoginLoad === 'function') window.GMTFleetLoginLoad(); } catch (e) {}
       }
+      Account.resolved = true;   // session known (logged in or not) — the console boot screen waits on this
       emit(); renderHeader();
     });
   }
