@@ -40,6 +40,11 @@
   border:1px solid rgba(61,220,132,.22);background:rgba(61,220,132,.06);white-space:nowrap}
 .header-inner>#gmtOnline:empty{visibility:hidden;padding:0;border:0}
 /* account menu (name + avatar → dropdown with Edit profile / My Fleet / Log out) */
+/* The header and the live strip under it are both blurred glass, so each is its own stacking
+   layer and the strip (later in the page) was painting over anything that drops out of the
+   header. Lift the header above the strip so the account menu opens on top of it. */
+.topbar>.header{position:relative;z-index:3}
+.topbar>.subbar{position:relative;z-index:1}
 .gmt-acc-wrap{position:relative}
 .gmt-acc-trigger{display:inline-flex;align-items:center;gap:.45rem;background:transparent;border:1px solid transparent;
   border-radius:999px;padding:.2rem .55rem .2rem .25rem;cursor:pointer;color:var(--text);font-family:var(--sans);font-size:.82rem;
@@ -50,7 +55,7 @@
 .gmt-acc-caret{color:var(--text3);transition:transform .2s}
 .gmt-acc-trigger[aria-expanded="true"] .gmt-acc-caret{transform:rotate(180deg)}
 .gmt-acc-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:10040;min-width:210px;padding:.35rem;
-  background:var(--bg-card,#121316);border:1px solid var(--card-border);border-radius:14px;
+  background:#121316;border:1px solid var(--card-border);border-radius:14px;
   box-shadow:0 18px 50px -10px rgba(0,0,0,.7)}
 .gmt-acc-menu[hidden]{display:none}
 .gmt-acc-head{display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem .65rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
