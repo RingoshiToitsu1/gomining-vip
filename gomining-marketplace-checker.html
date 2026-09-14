@@ -54,7 +54,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=11">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=4">
+<link rel="stylesheet" href="/assets/market-check.css?v=5">
 </head>
 <body>
 <main class="content-wrap">
@@ -71,6 +71,21 @@
       <button type="submit" id="mc-go">Check deal</button>
     </form>
     <div class="mc-err" id="mc-err" role="alert" hidden></div>
+    <div class="mc-scan" id="mc-scan" role="status" aria-live="polite" hidden>
+      <div class="mc-scan-thumb"><span class="mc-scan-ring"></span><img alt="" hidden><i class="mc-scan-line"></i></div>
+      <div class="mc-scan-b">
+        <div class="mc-scan-h"><span id="mc-scan-title">Scanning miner</span><span class="mc-scan-pct"><span id="mc-scan-pct">0</span>%</span></div>
+        <div class="mc-scan-bar"><i id="mc-scan-bar"></i></div>
+        <ul class="mc-scan-steps">
+          <li class="mc-sstep"><b></b><span>Locating miner on GoMining</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Reading hashrate &amp; efficiency</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Checking the listing</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Pricing upgrades &amp; new hashrate</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Weighing the deal</span><em class="mc-sv"></em></li>
+        </ul>
+        <div class="mc-scan-hash" id="mc-scan-hash">0x</div>
+      </div>
+    </div>
     <div class="mc-card" id="mc-card" hidden></div>
 
     <div class="re-inputs mc-fld4">
@@ -191,6 +206,6 @@
   <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
 </main>
 <script src="/assets/site.js?v=16"></script>
-<script src="/assets/market-check.js?v=4"></script>
+<script src="/assets/market-check.js?v=5"></script>
 </body>
 </html>

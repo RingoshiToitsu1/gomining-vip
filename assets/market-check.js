@@ -170,6 +170,7 @@
     const p = Math.max(0, parseFloat($('mc-price').value) || 0);
     const disc = Math.min(30, Math.max(0, parseFloat($('mc-disc').value) || 0));
     const out = $('mc-result');
+    if (scanning) { out.hidden = true; return; }   // the scan panel owns the stage until it lands
     if (!S.ready || th <= 0 || p <= 0 || !(parseFloat($('mc-wth').value) > 0)) { out.hidden = true; return; }
     out.hidden = false;
 
@@ -320,23 +321,183 @@
   }
   function showErr(msg) { const el = $('mc-err'); el.textContent = msg; el.hidden = !msg; }
 
+  // ---- scan: the lookup plays out step by step, each step ticking off only when its data is in ----
+  let scanning = false, scans = 0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const trimN = (n, d) => num(n, d).replace(/\.?0+$/, '');
+
+  function runScan(id, req) {
+    const box = $('mc-scan'), rows = Array.from(box.querySelectorAll('.mc-sstep'));
+    const img = box.querySelector('.mc-scan-thumb img'), thumb = box.querySelector('.mc-scan-thumb');
+    const first = scans++ === 0;
+    const MIN_MS = reduce ? 300 : first ? 1900 : 1200, STEP_MS = reduce ? 40 : first ? 300 : 190;
+    $('mc-scan-title').textContent = 'Scanning miner #' + id;
+    rows.forEach(r => { r.className = 'mc-sstep'; r.querySelector('.mc-sv').textContent = ''; });
+    rows[0].querySelector('span').textContent = 'Locating miner #' + id + ' on GoMining';
+    img.hidden = true; img.removeAttribute('src'); thumb.classList.remove('has-img', 'bad');
+    box.className = 'mc-scan'; box.hidden = false;
+    ['mc-card', 'mc-result'].forEach(k => { $(k).hidden = true; });
+
+    const d = () => req.data;
+    const listed = () => d() && d().marketplace === 'gmt-secondary' && d().status === 'available';
+    const steps = [
+      { ok: () => !!d(), v: () => d().name || 'miner #' + id },
+      { ok: () => !!d(), v: () => trimN(d().power, 2) + ' TH · ' + trimN(d().efficiency, 2) + ' W/TH' },
+      { ok: () => !!d(), v: () => listed() ? num(d().price || 0, 0) + ' GMT · ' + (d().saleType === 'auction' ? 'auction' : 'fixed price') : 'not for sale right now' },
+      { ok: () => !!d() && S.ready, v: () => { const u = upgPerTH(d().efficiency); return u > 0 ? money(u) + '/TH to reach 12 W' : 'already at 12 W/TH'; } },
+      { ok: () => !!d() && S.ready, v: () => {
+          if (!listed() || !(d().price > 0)) return 'enter a price to judge';
+          const e = evaluate(d().power, Math.max(EFF_BEST, d().efficiency), d().price, Math.min(30, Math.max(0, parseFloat($('mc-disc').value) || 0)));
+          return VERDICTS.find(x => e.edge >= x.min).label.toLowerCase();
+        } }
+    ];
+
+    return new Promise((resolve, reject) => {
+      const t0 = performance.now();
+      let done = 0, lastAt = t0, shown = 0;
+      rows[0].classList.add('on');
+      const HEX = '0123456789abcdef';
+      const hashT = reduce ? 0 : setInterval(() => {
+        let h = '0x'; for (let i = 0; i < 36; i++) h += HEX[(Math.random() * 16) | 0];
+        $('mc-scan-hash').textContent = h;
+      }, 70);
+      const stop = () => clearInterval(hashT);
+      function tick(now) {
+        if (req.error) {
+          stop(); box.classList.add('failed');
+          if (rows[done]) { rows[done].classList.remove('on'); rows[done].classList.add('bad'); }
+          $('mc-scan-hash').textContent = 'scan stopped';
+          return setTimeout(() => reject(req.error), reduce ? 0 : 650);
+        }
+        if (d() && d().image && img.hidden) {
+          img.onload = () => thumb.classList.add('has-img');
+          img.src = d().image; img.hidden = false;
+        }
+        if (done < steps.length && now - lastAt >= STEP_MS && steps[done].ok()) {
+          const r = rows[done];
+          try { r.querySelector('.mc-sv').textContent = steps[done].v(); } catch (e) {}
+          r.classList.remove('on'); r.classList.add('ok');
+          done++; lastAt = now;
+          if (rows[done]) rows[done].classList.add('on');
+        }
+        const creep = done < steps.length ? Math.min(0.85, (now - lastAt) / 1400) : 0;
+        const target = Math.min(done === steps.length ? 100 : 99, ((done + creep) / steps.length) * 100);
+        shown += (target - shown) * (reduce ? 1 : 0.14);
+        $('mc-scan-pct').textContent = Math.floor(shown);
+        $('mc-scan-bar').style.transform = 'scaleX(' + (shown / 100) + ')';
+        if (done === steps.length && now - t0 >= MIN_MS && shown > 99.3) {
+          stop();
+          $('mc-scan-pct').textContent = '100'; $('mc-scan-bar').style.transform = 'scaleX(1)';
+          $('mc-scan-hash').textContent = 'scan complete';
+          box.classList.add('done');
+          return setTimeout(resolve, reduce ? 0 : 320);
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
   async function lookup(id) {
+    if (scanning) return;
     showErr('');
     const btn = $('mc-go');
-    btn.disabled = true; btn.textContent = 'Checking…';
+    btn.disabled = true; btn.textContent = 'Scanning…';
+    scanning = true;
+    const req = { data: null, error: null };
+    fetch(LOOKUP + '?id=' + encodeURIComponent(id))
+      .then(async r => {
+        const d = await r.json().catch(() => ({}));
+        if (r.status === 404 || d.error === 'not_found') throw new Error('No GoMining miner has the number ' + id + '. Check the link and try again.');
+        if (!r.ok || d.error) throw new Error('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.');
+        if (d.type && d.type !== 'miner') throw new Error('That NFT isn\'t a miner, so there is no hashrate to price.');
+        req.data = d;
+      })
+      .catch(e => { req.error = e instanceof Error ? e : new Error('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.'); });
     try {
-      const r = await fetch(LOOKUP + '?id=' + encodeURIComponent(id));
-      const d = await r.json().catch(() => ({}));
-      if (r.status === 404 || d.error === 'not_found') throw new Error('No GoMining miner has the number ' + id + '. Check the link and try again.');
-      if (!r.ok || d.error) throw new Error('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.');
-      if (d.type && d.type !== 'miner') throw new Error('That NFT isn\'t a miner, so there is no hashrate to price.');
-      fill(d);
-      try { history.replaceState(null, '', location.pathname + '?id=' + d.id); } catch (e) {}
+      await runScan(id, req);
+      const box = $('mc-scan');
+      box.classList.add('out');
+      await new Promise(r => setTimeout(r, reduce ? 0 : 260));
+      box.hidden = true;
+      scanning = false;
+      fill(req.data);
+      try { history.replaceState(null, '', location.pathname + '?id=' + req.data.id); } catch (e) {}
+      revealResult();
     } catch (e) {
+      $('mc-scan').hidden = true;
+      scanning = false;
+      render();
       showErr(e.message || 'Something went wrong.');
     } finally {
       btn.disabled = false; btn.textContent = 'Check deal';
     }
+  }
+
+  // ---- reveal: the result rises in piece by piece and every figure counts up into place ----
+  function revealResult() {
+    if (reduce) return;
+    const parts = ['#mc-card', '#mc-verdict', '#mc-result .re-tile', '#mc-result .mc-tbl-wrap', '#mc-greedy', '#mc-upg']
+      .flatMap(s => Array.from(document.querySelectorAll(s))).filter(el => !el.hidden && !el.closest('[hidden]'));
+    parts.forEach((el, i) => {
+      el.classList.remove('mc-rise'); void el.offsetWidth;
+      el.style.animationDelay = (i * 0.06) + 's';
+      el.classList.add('mc-rise');
+    });
+    countUp(['#mc-card .mc-card-m', '#mc-v-amt', '#mc-v-line', '#mc-result .re-tile .v', '#mc-result .re-tile .s', '#mc-rows td', '#mc-greedy b', '#mc-greedy em']);
+  }
+
+  function countUp(selectors) {
+    const NUM = /-?\d{1,3}(?:,\d{3})+(?:\.\d+)?|-?\d+(?:\.\d+)?/g;
+    const jobs = [];
+    selectors.forEach((sel, si) => document.querySelectorAll(sel).forEach((el, i) => {
+      if (el.hidden || el.closest('[hidden]')) return;
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = walker.nextNode())) {
+        const text = n.nodeValue;
+        if (!/\d/.test(text)) continue;
+        const parts = [], nums = [];
+        let last = 0, m;
+        NUM.lastIndex = 0;
+        while ((m = NUM.exec(text))) {
+          const raw = m[0], plain = raw.replace(/,/g, ''), v = parseFloat(plain);
+          if (!isFinite(v) || /^(19|20)\d\d$/.test(raw)) continue;
+          parts.push(text.slice(last, m.index));
+          nums.push({ v, dec: (plain.split('.')[1] || '').length, comma: raw.indexOf(',') >= 0 });
+          last = m.index + raw.length;
+        }
+        if (!nums.length) continue;
+        parts.push(text.slice(last));
+        jobs.push({ node: n, el, parts, nums, final: text, written: text, delay: 120 + Math.min(si * 3 + i, 18) * 40 });
+      }
+    }));
+    if (!jobs.length) return;
+    const fmt = (x, d, comma) => (x < 0 && Math.abs(x) >= Math.pow(10, -d) / 2 ? '-' : '') +
+      Math.abs(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: comma });
+    const build = (j, p) => j.parts[0] + j.nums.map((q, k) => {
+      let x = q.v * p;
+      if (p > 0.05 && p < 0.92) x += (Math.random() - 0.5) * Math.abs(q.v) * 0.04 * (1 - p);
+      return fmt(x, q.dec, q.comma) + j.parts[k + 1];
+    }).join('');
+    const DUR = 1200, start = performance.now(), ease = t => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+    jobs.forEach(j => { j.node.nodeValue = build(j, 0); j.written = j.node.nodeValue; j.el.classList.add('mc-counting'); });
+    (function frame(now) {
+      let live = false;
+      for (const j of jobs) {
+        if (j.dead) continue;
+        if (!j.node.isConnected || j.node.nodeValue !== j.written) { j.dead = true; j.el.classList.remove('mc-counting'); continue; }
+        const t = Math.max(0, now - start - j.delay) / DUR;
+        if (t >= 1) {
+          j.node.nodeValue = j.final; j.dead = true;
+          j.el.classList.remove('mc-counting'); j.el.classList.add('mc-counted');
+          setTimeout(() => j.el.classList.remove('mc-counted'), 850);
+          continue;
+        }
+        j.node.nodeValue = build(j, ease(t)); j.written = j.node.nodeValue; live = true;
+      }
+      if (live) requestAnimationFrame(frame);
+    })(start);
   }
 
   function fill(d) {
