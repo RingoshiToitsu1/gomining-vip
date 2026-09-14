@@ -118,9 +118,19 @@ const TH_TIERS_12W=[
   {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
   {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
 ];
-// $/TH to improve efficiency by 1 W/TH toward 12. Priced INDEPENDENTLY of the TH curves and
-// confirmed unchanged through the 2026-09-08 +11.77% hashrate rise — do not scale it with them.
-const EFF_UPGRADE_STEP=2.67;
+// Efficiency upgrades are bought one W/TH step at a time, and the step price depends on the rating
+// you step DOWN FROM: cheap at the inefficient end, $2.67 on the last three steps into 12 W/TH.
+// Each band covers the steps whose starting rating is in (previous upTo, upTo] — so 16→15 through
+// 20→19 are $1.10, 21→20 through 28→27 are $1.00, 29→28 through 35→34 are $0.50, and 36→35
+// through 50→49 are $0.10. Every step from 50 down to 12 was read off the GoMining app on
+// 2026-09-13; it replaces the old model that priced anything above 15 W/TH as if it were 15.
+// Priced INDEPENDENTLY of the TH curves — do not scale it with them.
+const EFF_UPGRADE_BANDS=[
+  {upTo:15,step:2.67},{upTo:20,step:1.10},{upTo:28,step:1.00},{upTo:35,step:0.50},{upTo:50,step:0.10}
+];
+const EFF_UPGRADE_STEP=EFF_UPGRADE_BANDS[0].step;   // the 15 → 12 W/TH step price
+// localStorage key the console writes its live total discount to; read by /gomining-marketplace-checker.
+const TOTAL_DISCOUNT_KEY='gmt_total_discount';
 // When the TH price curves above were last observed against the live GoMining app. Surfaced on
 // the planner and projection so the numbers can be trusted without taking it on faith. Update
 // this in the same commit as the curves — a stale date is worse than none, because it claims
@@ -143,7 +153,7 @@ function openPriceInfo(){
       <table class="px-tbl"><tr><th>TH</th><th>New miner<span>12 W/TH</span></th><th>Add hashrate<span>15 W/TH</span></th></tr>
       ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS_12W,th))}</td><td>${fU(q(TH_TIERS,th))}</td></tr>`).join('')}
       </table>
-      <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'Prices per TH'}. Efficiency upgrades are priced separately at ${fU(EFF_UPGRADE_STEP)}/TH per W/TH step and did not change on this date. BTC, GMT and network difficulty are live, not dated.</div></div>`;
+      <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'Prices per TH'}. Efficiency upgrades are priced separately, per TH for each W/TH step: ${EFF_UPGRADE_BANDS.map((b,k)=>`${fU(b.step)} from ${k?EFF_UPGRADE_BANDS[k-1].upTo:EFF_BEST}–${b.upTo} W`).join(', ')}. BTC, GMT and network difficulty are live, not dated.</div></div>`;
     el.removeAttribute('hidden');
   }else el.setAttribute('hidden','');
   document.querySelectorAll('.px-badge').forEach(b=>b.classList.toggle('open',open));
@@ -175,7 +185,7 @@ function thPriceBadge(extraClass){
     <span class="px-dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated ${TH_PRICES_ASOF}</button>`;
 }
 const EFF_BEST=12;            // best efficiency available now
-const EFF_BASE_MAX=15;        // ≥15 W/TH is priced as 15 for upgrades; also the marketplace-machine baseline
+const EFF_BASE_MAX=15;        // the 15 W/TH hashrate curve; also the marketplace-machine baseline
 const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
 
 // Interpolate any tiered $/TH price table.
@@ -345,9 +355,32 @@ function thForBudgetTiers(budget,tiers){
   for(let k=0;k<50;k++){const mid=(lo+hi)/2;if(mid*cptTier(tiers,mid)<budget)lo=mid;else hi=mid;}
   return(lo+hi)/2;
 }
-// One-time $/TH to upgrade existing hashrate's efficiency down to 12 W/TH.
-// A farm at/above 15 W/TH is priced as 15 → 3 steps × $2.67 = $8.01/TH.
-function effUpgradeCostPerTH(curW){return EFF_UPGRADE_STEP*Math.max(0,Math.min(curW,EFF_BASE_MAX)-EFF_BEST);}
+// $/TH per W/TH for the step that starts at rating w, and the lowest rating that price holds down to.
+// Ratings past the last band (above 50 W/TH) are charged the last band's price.
+function effUpgradeBandAt(w){
+  let floor=EFF_BEST;
+  for(const b of EFF_UPGRADE_BANDS){ if(w<=b.upTo+1e-9)return {step:b.step,floor}; floor=b.upTo; }
+  return {step:EFF_UPGRADE_BANDS[EFF_UPGRADE_BANDS.length-1].step,floor};
+}
+// One-time $/TH to take hashrate from fromW down to toW, summed band by band. Fractional ratings are
+// charged pro rata within their band (28.57 → 28 is 0.57 of a $0.50 step).
+function effUpgradeCostBetween(fromW,toW){
+  let w=+fromW||0, c=0; const lo=Math.max(EFF_BEST,+toW||EFF_BEST);
+  while(w>lo+1e-9){ const b=effUpgradeBandAt(w), stop=Math.max(lo,b.floor); c+=(w-stop)*b.step; w=stop; }
+  return c;
+}
+// One-time $/TH to upgrade existing hashrate's efficiency all the way to 12 W/TH.
+// e.g. 20 W/TH → 5 × $1.10 + 3 × $2.67 = $13.51/TH.
+function effUpgradeCostPerTH(curW){return effUpgradeCostBetween(curW,EFF_BEST);}
+// The inverse: the rating reached by spending usdPerTH on each TH of a machine at curW.
+function effWthAfterSpend(curW,usdPerTH){
+  let w=+curW||EFF_BEST, left=Math.max(0,+usdPerTH||0);
+  while(w>EFF_BEST+1e-9&&left>1e-12){
+    const b=effUpgradeBandAt(w), stop=Math.max(EFF_BEST,b.floor), full=(w-stop)*b.step;
+    if(full<=left){left-=full;w=stop;}else{w-=left/b.step;left=0;}
+  }
+  return Math.max(EFF_BEST,w);
+}
 
 // Net monthly USD for a setup, optionally at a hypothetical BTC price (always restores S.btcPrice).
 function netMonthlyAt(i,bpOverride){
@@ -2872,7 +2905,12 @@ function saveActiveProfile(){
   p.data=readInputs();
   saveProfilesState(state);
   // The primary "[username]" profile mirrors to the cloud so it follows the account.
-  if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn())GMTAccount.saveSetup(p.data);
+  // totalDiscount rides along (ignored by applyInputs) so the marketplace checker can use it on
+  // a device where the console hasn't run yet.
+  if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn()){
+    const td=window._farmShot&&isFinite(window._farmShot.disc)?+(+window._farmShot.disc).toFixed(2):null;
+    GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+  }
   renderProfileSelect();   // reflect the now-active profile (esp. if we just adopted the account one)
   flashStatus(isAccountProfile(p)?'Saved to your profile':'Saved to "'+p.name+'"');
   editLoadClose('Saved to "'+p.name+'"');
@@ -3372,6 +3410,9 @@ function recalc(){
   if(_bp>0)animateMetric($('heroYearlyBtcVal'),moUSD*12/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
   else if($('heroYearlyBtcVal'))$('heroYearlyBtcVal').textContent='';
   animateMetric($('heroDiscount'),m.totD,fP);
+  // Shared with the marketplace checker (same origin) so it prices listings at THIS farm's total
+  // discount instead of a guess. Only once a farm exists — an empty console has no discount to share.
+  if((m.totTH||0)>0){try{localStorage.setItem(TOTAL_DISCOUNT_KEY,JSON.stringify({pct:+(+m.totD).toFixed(2),at:Date.now()}));}catch(e){}}
   $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
   // Effective compounded ROI: a simulated year of weekly reinvestment at today's prices,
   // reported as the growth in what the farm is worth. The old figure here divided income by
@@ -3753,12 +3794,10 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   // 15 W baseline compounds that handicap for as long as you own it — every free TH it ever
   // grows arrives at the bad rating. So the upgrade to 15 W is paid FIRST, off the top, before
   // a dollar reaches hashrate or lock.
-  // Note effUpgradeCostPerTH() prices anything at or above 15 AS 15 (that is the GoMining
-  // upgrade path this app models), so it cannot price the leg above 15 at all. This leg is
-  // charged at the same per-W-step rate the rest of the model uses.
+  // The leg above 15 W/TH is charged at GoMining's stepped prices for those ratings.
   const mpWthBought=mpWth;
   const mpUpgSteps=(mpIsGreedy&&mpWth>EFF_BASE_MAX)?(mpWth-EFF_BASE_MAX):0;
-  const mpUpgUSD=mpUpgSteps>0?mpUpgSteps*EFF_UPGRADE_STEP*mpTHraw:0;
+  const mpUpgUSD=mpUpgSteps>0?effUpgradeCostBetween(mpWth,EFF_BASE_MAX)*mpTHraw:0;
   if(mpUpgSteps>0)mpWth=EFF_BASE_MAX;   // the fleet below is built from the UPGRADED machine
   const mpWthPlanned=mpWth;             // captured now: mpWth is zeroed once the miner is re-homed
   // The greedy fleet as SEPARATE NFTs. Each machine owns its efficiency and its own 5,000 TH
@@ -5234,7 +5273,7 @@ function computeSetupProjection(){
               const vAdd=thForBudgetFromSizes(incr,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
-            // --- option EFF: drive efficiency toward 12 W/TH ($2.67/TH per W-step). ---
+            // --- option EFF: drive efficiency toward 12 W/TH (stepped $/TH per W/TH, EFF_UPGRADE_BANDS). ---
             // GREEDY IS ALWAYS UPGRADED FIRST, even when the VIP farm sits at a worse W/TH. The two
             // fleets are not symmetric: every TH bought now mints at 12 W/TH, so the VIP farm blends
             // its own efficiency down for free as it reinvests — but the Greedy Machine's weekly free
@@ -5246,13 +5285,12 @@ function computeSetupProjection(){
             // — rather than nudging a fleet average that no real miner has.
             const gUp=GRD.map((m,ix)=>({ix,m})).filter(o=>o.m.wth>EFF_BEST+1e-6&&o.m.th>0).sort((a,b)=>b.m.wth-a.m.wth)[0];
             if(gUp){
-              const dW=Math.min(gUp.m.wth-EFF_BEST,incr/(EFF_UPGRADE_STEP*gUp.m.th));
-              const gw2=gUp.m.wth-dW;
+              const gw2=effWthAfterSpend(gUp.m.wth,incr/gUp.m.th);
               const fleetW2=greedyTH>0?(gWattsTot()-gUp.m.th*gUp.m.wth+gUp.m.th*gw2)/greedyTH:greedyWTH;
               effNet=dailyNet(th,gmtLocked,{greedyWTH:fleetW2}).net;
               effApply=()=>{GRD[gUp.ix].wth=gw2;syncGreedy();};
             }else if(vipRoom){
-              const dW=Math.min(curWTH-EFF_BEST,incr/(EFF_UPGRADE_STEP*th));const cw2=curWTH-dW;
+              const cw2=effWthAfterSpend(curWTH,incr/th);
               effNet=dailyNet(th,gmtLocked,{wth:cw2}).net;effApply=()=>{curWTH=cw2;};
             }
             // --- option LOCK: stake extra GMT ---

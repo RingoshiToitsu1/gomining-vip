@@ -14,7 +14,7 @@
    compare fairly against new. No payback dates and no forecasts (site rule for content pages).
 
    IMPORTANT — the calibration constants below mirror assets/app.js and assets/roi-embed.js.
-   Recalibrate all three together (fees, tier prices, EFF_UPGRADE_STEP, BLOCK_SUBSIDY).
+   Recalibrate all three together (fees, tier prices, EFF_UPGRADE_BANDS, BLOCK_SUBSIDY).
 */
 (function () {
   'use strict';
@@ -26,10 +26,16 @@
   const ELEC_RATE        = 0.05;    // $/kWh on (W/TH × TH × 24h)
   const SERVICE_RATE     = 0.0089;  // $/TH/day platform service fee
   const EFF_BEST         = 12;      // best efficiency available now (W/TH)
-  const EFF_BASE_MAX     = 15;      // ≥15 W/TH is priced as 15 for upgrades
-  const EFF_UPGRADE_STEP = 2.67;    // $/TH per W/TH of efficiency upgrade, toward 12
+  // Efficiency upgrade $/TH per W/TH step, by the rating stepped down FROM (prev upTo, upTo].
+  // Mirror of EFF_UPGRADE_BANDS in assets/app.js (GoMining app, 2026-09-13).
+  const EFF_UPGRADE_BANDS = [
+    { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
+  ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const LOOKUP = 'https://cbatlxqlmeyuhwqpczpv.supabase.co/functions/v1/nft-lookup';
+  const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
+  const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
+  const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
+  const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
   const TH_TIERS_12W = [
@@ -49,8 +55,18 @@
     }
     return T[0].cpt;
   }
-  // One-time $/TH to bring a miner down to 12 W/TH. At/above 15 W it is priced as 15.
-  const upgPerTH = w => EFF_UPGRADE_STEP * Math.max(0, Math.min(w, EFF_BASE_MAX) - EFF_BEST);
+  // One-time $/TH to bring a miner down to 12 W/TH, summed band by band (20 W → $13.51).
+  function upgPerTH(w) {
+    let c = 0, cur = w;
+    while (cur > EFF_BEST + 1e-9) {
+      let floor = EFF_BEST, step = EFF_UPGRADE_BANDS[EFF_UPGRADE_BANDS.length - 1].step, found = false;
+      for (const b of EFF_UPGRADE_BANDS) { if (cur <= b.upTo + 1e-9) { step = b.step; found = true; break; } floor = b.upTo; }
+      if (!found) floor = EFF_UPGRADE_BANDS[EFF_UPGRADE_BANDS.length - 1].upTo;
+      const stop = Math.max(EFF_BEST, floor);
+      c += (cur - stop) * step; cur = stop;
+    }
+    return c;
+  }
 
   // ---- market data (same sources and fallbacks as roi-embed.js) ----
   const S = { btc: 0, gmt: 0, diff: 0, satsPerTHDay: 0, live: false, ready: false };
@@ -199,12 +215,50 @@
         ' once (' + money(upgPerTH(w)) + '/TH) and cuts fees by ' + money(e.upgSaveDay * MO) + ' a month, which returns ' +
         num(e.upgYield * 100, 0) + '% a year on the upgrade. ' +
         (worth ? 'That beats what the miner earns on its price, so upgrade it.' : 'The miner earns more on its price than the upgrade does, so upgrading is optional.') +
-        (w > EFF_BASE_MAX ? ' Miners above 15 W/TH are priced as 15 for upgrades, so the extra watts come off free.' : '');
+        (w > 15 ? ' Steps above 15 W/TH are the cheap ones; the last three into 12 W/TH cost $2.67/TH each.' : '');
     }
 
     $('mc-basis').textContent = 'BTC ' + money(S.btc, 0) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
       num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)') +
       ' · buying the GMT with dollars adds ' + (USD_GMT_FEE * 100) + '%';
+  }
+
+  // ---- your discount, from the console ----
+  // The console writes its live total discount to localStorage on every recalculation. When this
+  // device has never run the console, a logged-in user's saved account setup carries it instead.
+  const ago = t => {
+    const d = Math.floor((Date.now() - t) / 86400000);
+    return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago';
+  };
+  function setDisc(pct, note) {
+    const el = $('mc-disc');
+    if (el.dataset.touched) return;
+    el.value = String(Math.round(Math.min(30, Math.max(0, pct)) * 100) / 100);
+    $('mc-disc-src').innerHTML = note;
+    render();
+  }
+  async function loadDiscount() {
+    try {
+      const d = JSON.parse(localStorage.getItem(TOTAL_DISCOUNT_KEY) || 'null');
+      if (d && isFinite(d.pct)) {
+        setDisc(+d.pct, 'Your total discount from the <a href="/console">console</a>, updated ' + ago(d.at) + '.');
+        return;
+      }
+    } catch (e) {}
+    try {
+      const k = Object.keys(localStorage).find(x => /^sb-.*-auth-token$/.test(x));
+      const s = k && JSON.parse(localStorage.getItem(k));
+      const tok = s && (s.access_token || (s.currentSession && s.currentSession.access_token));
+      const uid = s && ((s.user && s.user.id) || (s.currentSession && s.currentSession.user && s.currentSession.user.id));
+      if (tok && uid && !(s.expires_at && s.expires_at * 1000 < Date.now())) {
+        const r = await fetch(SB_URL + '/rest/v1/profiles?select=setup&id=eq.' + encodeURIComponent(uid),
+          { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + tok } });
+        const rows = r.ok ? await r.json() : [];
+        const td = rows[0] && rows[0].setup && +rows[0].setup.totalDiscount;
+        if (isFinite(td) && td >= 0) { setDisc(td, 'Your total discount from your saved <a href="/console">console</a> setup.'); return; }
+      }
+    } catch (e) {}
+    $('mc-disc-src').innerHTML = 'Starting at the full 20%. Set up your farm in the <a href="/console">console</a> and this fills in your own discount.';
   }
 
   // ---- lookup ----
@@ -268,9 +322,15 @@
       if (!id) { showErr('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.'); return; }
       lookup(id);
     });
-    ['mc-th', 'mc-wth', 'mc-price', 'mc-disc'].forEach(id => $(id).addEventListener('input', render));
+    ['mc-th', 'mc-wth', 'mc-price'].forEach(id => $(id).addEventListener('input', render));
+    $('mc-disc').addEventListener('input', () => {
+      $('mc-disc').dataset.touched = '1';
+      $('mc-disc-src').textContent = 'Changed here only; your console setup is untouched.';
+      render();
+    });
     loadMarket().then(() => {
       root.classList.remove('re-loading');
+      loadDiscount();
       render();
       const q = new URLSearchParams(location.search).get('id');
       const id = parseId(q);

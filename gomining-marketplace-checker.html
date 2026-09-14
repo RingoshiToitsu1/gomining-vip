@@ -17,7 +17,7 @@
   "@type": "FAQPage",
   "mainEntity": [
     {"@type":"Question","name":"How do I know if a GoMining marketplace miner is a good deal?","acceptedAnswer":{"@type":"Answer","text":"Compare it with the alternative every buyer has: minting the same hashrate new at 12 W/TH. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty."}},
-    {"@type":"Question","name":"Should I upgrade the efficiency of a miner I buy on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Upgrading to 12 W/TH is a one-time cost of about $2.67 per TH for each W/TH it improves, and miners above 15 W/TH are priced as if they were at 15. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste."}},
+    {"@type":"Question","name":"Should I upgrade the efficiency of a miner I buy on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Upgrades are bought one W/TH step at a time, and the price per TH depends on where the miner starts: $0.10 a step from 50 down to 35 W/TH, $0.50 down to 28, $1.00 down to 20, $1.10 down to 15, and $2.67 for each of the last three steps to 12. Taking a 20 W/TH miner to 12 costs $13.51 per TH. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste."}},
     {"@type":"Question","name":"Why are older GoMining miners cheaper on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Many secondhand miners run at 20 W/TH or more, while new miners are 12 W/TH. Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted."}},
     {"@type":"Question","name":"Does this checker see my GoMining account?","acceptedAnswer":{"@type":"Answer","text":"No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored."}}
   ]
@@ -54,7 +54,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=11">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=1">
+<link rel="stylesheet" href="/assets/market-check.css?v=3">
 </head>
 <body>
 <main class="content-wrap">
@@ -91,6 +91,7 @@
         <input id="mc-disc" type="number" inputmode="decimal" min="0" max="30" step="0.1" value="20">
       </div>
     </div>
+    <div class="mc-disc-src" id="mc-disc-src"></div>
 
     <div id="mc-result" hidden>
       <div class="mc-verdict" id="mc-verdict">
@@ -149,10 +150,21 @@
 
   <h2>Why efficiency decides most marketplace deals</h2>
   <p>The electricity fee is charged per watt, so a 20 W/TH miner pays two thirds more electricity fee than a 12 W/TH one for the same hashrate. That gap is permanent unless you pay to upgrade it away. The "Worth up to" figure is the highest price at which the listing still matches minting new: offer below it and you come out ahead.</p>
-  <p>Upgrades are priced per W/TH down to 12, and anything above 15 W/TH is priced as 15, so on very inefficient miners the first few watts of the upgrade come off free. That's why an old 25&ndash;30 W/TH miner can still be a bargain if the price is low enough.</p>
+  <p>Upgrades are bought one W/TH step at a time, and the steps get more expensive the closer you get to 12:</p>
+  <div class="mc-tbl-wrap"><table class="mc-tbl mc-steps">
+    <thead><tr><th>Stepping down</th><th>$/TH per W/TH step</th></tr></thead>
+    <tbody>
+      <tr><td>50 → 35 W/TH</td><td>$0.10</td></tr>
+      <tr><td>35 → 28 W/TH</td><td>$0.50</td></tr>
+      <tr><td>28 → 20 W/TH</td><td>$1.00</td></tr>
+      <tr><td>20 → 15 W/TH</td><td>$1.10</td></tr>
+      <tr><td>15 → 12 W/TH</td><td>$2.67</td></tr>
+    </tbody>
+  </table></div>
+  <p>So the first watts off a very inefficient miner are cheap: a 35 W/TH miner gets to 28 for $3.50 per TH, which cuts its electricity fee by a fifth. That's why an old 25&ndash;35 W/TH miner can still be a bargain at the right price, even though the full trip to 12 W/TH costs about $25 per TH.</p>
 
   <h2>What your fee discount changes</h2>
-  <p>Locking GMT cuts your electricity fee by up to 20%. The bigger your discount, the less an inefficient miner costs you to run, so the same listing looks better to a holder with the full discount than to a new user with none. Set the discount field to match yours.</p>
+  <p>Locking GMT cuts your electricity fee by up to 20%. The bigger your discount, the less an inefficient miner costs you to run, so the same listing looks better to a holder with the full discount than to a new user with none. If you've set up your farm in the <a href="/console">console</a>, the checker fills in your total discount automatically (GMT coverage, VIP tier, click streak and mining mode together). Otherwise it starts at the full 20%, and you can change it.</p>
 
   <div class="cta">
     <h3>Buying hashrate? Start with a bonus</h3>
@@ -163,14 +175,14 @@
   <h2>Frequently asked questions</h2>
   <div class="faq">
     <details><summary>How do I know if a GoMining marketplace miner is a good deal?</summary><p>Compare it with the alternative every buyer has: minting the same hashrate new at 12 W/TH. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty.</p></details>
-    <details><summary>Should I upgrade the efficiency of a miner I buy on the marketplace?</summary><p>Upgrading to 12 W/TH is a one-time cost of about $2.67 per TH for each W/TH it improves, and miners above 15 W/TH are priced as if they were at 15. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste.</p></details>
+    <details><summary>Should I upgrade the efficiency of a miner I buy on the marketplace?</summary><p>Upgrades are bought one W/TH step at a time, and the price per TH depends on where the miner starts: $0.10 a step from 50 down to 35 W/TH, $0.50 down to 28, $1.00 down to 20, $1.10 down to 15, and $2.67 for each of the last three steps to 12. Taking a 20 W/TH miner to 12 costs $13.51 per TH. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste.</p></details>
     <details><summary>Why are older GoMining miners cheaper on the marketplace?</summary><p>Many secondhand miners run at 20 W/TH or more, while new miners are 12 W/TH. Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted.</p></details>
     <details><summary>Does this checker see my GoMining account?</summary><p>No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored.</p></details>
   </div>
 
   <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
 </main>
-<script src="/assets/site.js?v=12"></script>
-<script src="/assets/market-check.js?v=1"></script>
+<script src="/assets/site.js?v=13"></script>
+<script src="/assets/market-check.js?v=3"></script>
 </body>
 </html>

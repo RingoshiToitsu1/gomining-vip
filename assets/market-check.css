@@ -54,3 +54,7 @@
 
 .mc-fld4{grid-template-columns:repeat(4,1fr)}
 @media(max-width:720px){.mc-fld4{grid-template-columns:1fr 1fr}}
+.mc-steps{min-width:0;max-width:26rem}
+.mc-disc-src{margin:-.55rem 0 1rem;font-size:.74rem;color:var(--ink3);line-height:1.5;text-align:right}
+.mc-disc-src:empty{display:none}
+@media(max-width:720px){.mc-disc-src{text-align:left}}

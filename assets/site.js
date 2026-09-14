@@ -18,6 +18,8 @@
     '<div class="nav-links"><a href="/">Home</a><a href="/console">Console</a><a href="/planner">Planner</a><a href="/bitcoin">Charts</a></div>'+
     '<a href="/console" class="nav-cta">Launch Console</a>';
   document.body.insertBefore(nav, document.body.firstChild);
+  /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
+  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=1';document.body.appendChild(menuJs);
 
   /* ---- utility ticker / quotron (matches the landing) ---- */
   var util=document.createElement('div');
