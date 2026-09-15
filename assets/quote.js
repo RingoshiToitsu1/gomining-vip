@@ -34,7 +34,7 @@
   // % — GMT locked-staking APR (observed 2026-08-26). Kept in step with STAKING_APR in
   // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
   const STAKE_APR0     = 24.26;
-  const MINING_MODE    = 1.36;    // % — solo mining discount (console inMiningMode, observed 2026-09-08)
+  const MINING_MODE    = 1.28;    // % — solo mining discount (console inMiningMode, observed 2026-09-15)
   const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 

@@ -2667,7 +2667,7 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.36;
+const MINING_MODE_DEFAULT=1.28;   // observed 2026-09-15
 // Greedy Machine free weekly growth. A platform rate, not a preference, so a saved setup still
 // carrying a previous default has to pick up the new one — but the field also invites the user
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
@@ -2678,7 +2678,7 @@ const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
-const MINING_MODE_PAST_DEFAULTS=[0.7,0.83,0.88,1.06,1.2];
+const MINING_MODE_PAST_DEFAULTS=[0.7,0.82,0.83,0.88,0.9,1.06,1.2,1.36];
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
