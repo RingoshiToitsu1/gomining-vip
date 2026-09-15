@@ -39,7 +39,8 @@
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
   const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
-  const GREEDY_GROWTH_DEFAULT = 0.3718;                              // %/wk — console inGreedyGrowth default; observed, not a constant
+  const GREEDY_GROWTH_DEFAULT = 0.3462;                              // %/wk — console inGreedyGrowth default; observed, not a constant
+  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718']; // mirror of app.js: a saved old default is not the user's own number
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
   const TH_TIERS_12W = [
@@ -572,8 +573,9 @@
     try {
       const ps = JSON.parse(localStorage.getItem(PROFILES_KEY) || 'null');
       const prof = ps && ps.profiles && (ps.profiles.find(x => x.id === ps.activeId) || ps.profiles[0]);
-      const v = prof && prof.data ? parseFloat(prof.data.inGreedyGrowth) : NaN;
-      if (Number.isFinite(v) && v >= 0) gr = v;
+      const raw = prof && prof.data && prof.data.inGreedyGrowth != null ? String(prof.data.inGreedyGrowth).trim() : '';
+      const v = parseFloat(raw);
+      if (Number.isFinite(v) && v >= 0 && !GREEDY_GROWTH_PAST_DEFAULTS.includes(raw)) gr = v;
     } catch (e) {}
     $('mc-growth').value = String(gr);
     $('mc-disc').addEventListener('input', () => {

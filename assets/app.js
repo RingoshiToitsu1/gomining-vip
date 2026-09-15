@@ -2673,8 +2673,8 @@ const MINING_MODE_DEFAULT=1.36;
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
 // mining mode above: a value matching any rate this input has ever shipped with is a stale
 // default; anything else is the user's number and is left alone.
-const GREEDY_GROWTH_DEFAULT='0.3718';
-const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35'];
+const GREEDY_GROWTH_DEFAULT='0.3462';   // observed 2026-09-15: 4,771.38 → 4,787.90 TH in a week
+const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
