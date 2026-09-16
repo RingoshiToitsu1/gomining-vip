@@ -7,7 +7,7 @@
   --card-border:rgba(245,166,35,.30);
   --purple:#F5A623;--purple-glow:rgba(245,166,35,.15);--purple-soft:#F7B84E;
   --cyan:#FFCF7A;--cyan-glow:rgba(255,207,122,.10);--cyan-soft:#FFE0A8;
-  --text:#E0E0E0;--text2:#C2C2C2;--text3:#888888;--text4:#6a6a6a;
+  --text:#EBE2D2;--text2:#C3B8A6;--text3:#8C8170;--text4:#6F6759;
   --green:#F5A623;--green-glow:rgba(245,166,35,.12);
   --orange:#F5A623;--orange-glow:rgba(245,166,35,.1);
   --red:#FF4D4D;
@@ -827,10 +827,10 @@ html.show-onboarding #onboarding{display:flex}
 .gm-mk-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .gm-mk-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
 .gm-mk-tile{background:#1e2035;border-radius:10px;padding:10px 11px;min-width:0}
-.gm-mk-tile-lbl{display:flex;align-items:center;gap:5px;font-size:.6rem;color:#9a9cc0;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;white-space:nowrap}
+.gm-mk-tile-lbl{display:flex;align-items:center;gap:5px;font-size:.6rem;color:#A79B89;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;white-space:nowrap}
 .gm-mk-ico{width:15px;height:15px;border-radius:5px;background:rgba(124,108,247,.18);display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;flex:0 0 auto}
 .gm-mk-tile-val{font-size:1.02rem;font-weight:700;color:#fff;line-height:1.15;letter-spacing:-.01em}
-.gm-mk-tile-val small{font-size:.6rem;color:#9a9cc0;font-weight:600}
+.gm-mk-tile-val small{font-size:.6rem;color:#A79B89;font-weight:600}
 .gm-mk-tile-sub{font-size:.66rem;color:#6fd08a;font-weight:600;margin-top:3px}
 .gm-mk-hl{box-shadow:0 0 0 3px #FF3B3B;border-radius:8px;position:relative;z-index:1}
 .gm-mk-bal{background:#1e2035;border-radius:10px;padding:14px 13px}
@@ -838,10 +838,10 @@ html.show-onboarding #onboarding{display:flex}
 .gm-mk-token{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:700;color:#fff}
 .gm-mk-token img{width:22px;height:22px;border-radius:50%}
 .gm-mk-chev{color:#6a6c8f;font-size:1.1rem;line-height:1}
-.gm-mk-bal-lbl{font-size:.62rem;color:#9a9cc0;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.gm-mk-bal-lbl{font-size:.62rem;color:#A79B89;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
 .gm-mk-bal-val{font-size:1.32rem;font-weight:800;color:#fff;letter-spacing:-.01em}
-.gm-mk-bal-val small{font-size:.66rem;color:#9a9cc0;font-weight:600}
-.gm-mk-bal-sub{font-size:.84rem;color:#9a9cc0;font-weight:600;margin-top:2px}
+.gm-mk-bal-val small{font-size:.66rem;color:#A79B89;font-weight:600}
+.gm-mk-bal-sub{font-size:.84rem;color:#A79B89;font-weight:600;margin-top:2px}
 .gm-mk-actions{display:flex;gap:6px;justify-content:space-between}
 .gm-mk-act{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:.62rem;color:#c9cae6;font-weight:600;flex:1}
 .gm-mk-act-btn{width:38px;height:38px;border-radius:50%;background:#1e2035;border:1px solid #2f3252;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#7c6cf7}
@@ -1366,7 +1366,7 @@ body{background:transparent}
   --line-hi:rgba(245,200,130,.34);
   /* landing-nav tokens that live only under .rd in design.css — mirrored here
      verbatim so the console (not .rd-scoped) resolves them identically */
-  --line:rgba(240,196,120,.14);--ink2:#8A93A6;--ink3:#575E70;
+  --line:rgba(240,196,120,.14);--ink2:#A79B89;--ink3:#8C8170;
   --ease:cubic-bezier(.22,.61,.36,1);--ease2:cubic-bezier(.16,1,.3,1);
 }
 /* header + live strip = ONE sticky unit (.topbar) so they stay attached on scroll.
@@ -1549,3 +1549,26 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 @media(max-width:600px){
   #btcChartPage.sp-view .btc-chart-wrap,#rainbowPage.sp-view .btc-chart-wrap,#cmbPage.sp-view .btc-chart-wrap{height:min(78vh,620px);min-height:340px}
 }
+
+/* ===== dropdowns read as pickers, not as text =====
+   Every <select> in the console now carries a gold chevron in a shaded well on its right edge, a
+   gold-tinted border and a lift on hover — the fleet's collection picker included, which used to
+   be bare text inside its field box and gave no sign it could be opened at all. */
+#secInputs .ed-dd,.sp-page select,.tabs-saved select,.ob-select,.fleet-col,.disc-override-row select{
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;
+  background-repeat:no-repeat,no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%23F5A623' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+    linear-gradient(90deg,rgba(245,166,35,0) 0,rgba(245,166,35,.13) 100%);
+  background-position:right .62rem center,right center;
+  background-size:11px 7px,2.1rem 100%;
+  padding-right:2rem!important;transition:border-color .18s,box-shadow .18s,background-color .18s}
+#secInputs .ed-dd,.sp-page select,.tabs-saved select,.ob-select{border:1px solid rgba(245,166,35,.34)!important}
+#secInputs .ed-dd:hover,.sp-page select:hover,.tabs-saved select:hover,.ob-select:hover,.disc-override-row select:hover{
+  border-color:var(--purple)!important;box-shadow:0 0 0 3px rgba(245,166,35,.1)}
+#secInputs .ed-dd:focus-visible,.sp-page select:focus-visible,.tabs-saved select:focus-visible,.ob-select:focus-visible,.fleet-col:focus-visible{
+  outline:2px solid var(--purple);outline-offset:1px}
+/* The fleet's Miner column is a select inside a plain field box: give the box itself the picker
+   look so the whole cell reads as clickable. */
+.fleet-f.f-col{cursor:pointer}
+.fleet-f.f-col:hover{border-color:rgba(245,166,35,.45)!important;background:rgba(245,166,35,.05)!important}
+.fleet-col{background-position:right .1rem center,right center!important;background-size:11px 7px,1.6rem 100%!important;padding-right:1.5rem!important}

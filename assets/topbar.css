@@ -7,7 +7,7 @@
    Keep in step with the .util / nav / .brand / .nav-cta rules in content.css. */
 .util,nav#nav{
   --gm-gold:#F5A623;--gm-gold-hi:#FFC65A;--gm-gold-soft:#FFCF7A;--gm-warm:#FFF4E0;
-  --gm-ink2:#8A93A6;--gm-ink3:#575E70;--gm-line:rgba(240,196,120,.14);--gm-line-soft:rgba(200,210,235,.08);
+  --gm-ink2:#A79B89;--gm-ink3:#8C8170;--gm-line:rgba(240,196,120,.14);--gm-line-soft:rgba(200,210,235,.08);
   --gm-mono:'Share Tech Mono',ui-monospace,monospace;--gm-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
   --gm-ease:cubic-bezier(.22,.61,.36,1)}
 .util{position:fixed;top:0;left:0;right:0;z-index:49;height:30px;display:flex;align-items:center;overflow:hidden;

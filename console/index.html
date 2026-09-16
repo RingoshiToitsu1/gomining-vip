@@ -59,7 +59,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 .show-onboarding #gmBoot{display:none}
 #gmBoot{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:24px;
   background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(245,166,35,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(255,138,61,.08),transparent 60%),#060709;
-  color:#CAD1DE;font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  color:#EBE2D2;font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;
   transition:opacity .6s cubic-bezier(.16,1,.3,1),filter .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);
   animation:gbFailsafe 0s linear 12s forwards}
 #gmBoot::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
@@ -87,17 +87,17 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 14px rgba(245,166,35,.8)}
 .gb-pct{font-family:'Share Tech Mono',ui-monospace,monospace;color:#FFF4E0;font-size:.95rem;min-width:3.2em;text-align:right}
 .gb-steps{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:7px}
-.gb-step{display:flex;align-items:center;gap:10px;font-size:.84rem;color:#4B5163;transition:color .3s}
+.gb-step{display:flex;align-items:center;gap:10px;font-size:.84rem;color:#6F6759;transition:color .3s}
 .gb-step b{flex:0 0 16px;height:16px;border-radius:50%;border:1.5px solid currentColor;position:relative;transition:all .3s}
 .gb-step.on{color:#FFF4E0}
 .gb-step.on b{border-color:rgba(245,166,35,.3);border-top-color:#F5A623;animation:gbSpin .7s linear infinite}
-.gb-step.ok{color:#AEB5C4}
+.gb-step.ok{color:#C3B8A6}
 .gb-step.ok b{border-color:#57d9a3;background:#57d9a3;box-shadow:0 0 10px rgba(87,217,163,.6)}
 .gb-step.ok b::after{content:'';position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;border:solid #06140d;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .gb-step span{flex:1 1 auto;min-width:0}
 .gb-v{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:.74rem;color:#FFCF7A;white-space:nowrap;opacity:0;transform:translateX(-6px);transition:opacity .35s,transform .35s}
 .gb-step.ok .gb-v{opacity:1;transform:none}
-.gb-hash{margin-top:1rem;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:.66rem;letter-spacing:.06em;color:#3A4052;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.gb-hash{margin-top:1rem;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:.66rem;letter-spacing:.06em;color:#5A5346;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .gb-done .gb-hash{color:#57d9a3}
 .gb-done .gb-orb::before{animation-duration:.5s}
 @media(max-width:420px){.gb-v{font-size:.66rem}.gb-step{font-size:.78rem}}
@@ -114,9 +114,9 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=73">
-<link rel="stylesheet" href="/assets/design.css?v=14">
-<link rel="stylesheet" href="/assets/accounts.css?v=19">
+<link rel="stylesheet" href="/assets/app.css?v=74">
+<link rel="stylesheet" href="/assets/design.css?v=15">
+<link rel="stylesheet" href="/assets/accounts.css?v=20">
 </head>
 <body>
 <!-- Boot screen: covers the console until prices, difficulty, account + fleet have loaded and
