@@ -131,7 +131,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <li class="gb-step"><b></b><span>Connecting to the Bitcoin network</span><em class="gb-v"></em></li>
       <li class="gb-step"><b></b><span>Fetching live BTC &amp; GMT prices</span><em class="gb-v"></em></li>
       <li class="gb-step"><b></b><span>Reading network difficulty</span><em class="gb-v"></em></li>
-      <li class="gb-step"><b></b><span>Loading your fleet</span><em class="gb-v"></em></li>
+      <li class="gb-step"><b></b><span>Loading your farm</span><em class="gb-v"></em></li>
       <li class="gb-step"><b></b><span>Calculating discount &amp; earnings</span><em class="gb-v"></em></li>
     </ul>
     <div class="gb-hash" id="gbHash">0x</div>
@@ -217,7 +217,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <h1 class="lp-headline ob-step-reveal">Plan your work.<br>Work your plan.</h1>
       <p class="lp-sub ob-step-reveal">The free, ad-free GoMining profit optimizer that finds your perfect capital split &mdash; then tracks it live, sat by sat.</p>
       <div class="lp-ctas ob-step-reveal">
-        <button class="lp-cta lp-cta-primary" onclick="obNext()">I'm already mining<small>Enter my GoMining setup</small></button>
+        <button class="lp-cta lp-cta-primary" onclick="obNext()">I'm already mining<small>Enter my GoMining farm</small></button>
         <button class="lp-cta lp-cta-alt" onclick="obNewUser()">New to GoMining<small>No computing power yet</small></button>
       </div>
       <div class="lp-chips ob-step-reveal"><span>Capital Planner</span><span>Live P&amp;L</span><span>Growth Projection</span><span>VIP &amp; Discount</span></div>
@@ -420,7 +420,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     <a href="/" class="c-brand" title="GMT Optimizer home"><img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer<span class="v">v2</span></a>
     <div id="gmtOnline"></div>
     <div class="nav-links">
-      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit Setup</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a><a href="#" id="navProjection" onclick="openSetupProjection();return false">Projection</a><a href="/quote" title="Quote a setup for someone starting from zero — no fleet, no saved setup">Quote</a><a href="/statement" title="Turn a GoMining income CSV into a partner-ready income statement">Statement</a>
+      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit my Farm</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a><a href="#" id="navProjection" onclick="openSetupProjection();return false">Projection</a><a href="/quote" title="Quote a setup for someone starting from zero — no fleet, no saved setup">Quote</a><a href="/statement" title="Turn a GoMining income CSV into a partner-ready income statement">Statement</a>
     </div>
     <div id="gmtAccountSlot"></div>
   </div>
@@ -445,7 +445,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <img src="/gmt36.png" alt="GMT"><span class="lbl">Locked</span><span class="val" id="qkLocked">--</span><span class="qk-pen">&#9998;</span></div>
       <div class="live-chip live-chip-btn" role="button" tabindex="0" onclick="openEditSetup()"
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEditSetup()}"
-        title="Open the full setup editor"><span class="lbl">Edit my Farm</span><span class="val">&#8594;</span></div>
+        title="Open the full farm editor"><span class="lbl">Edit my Farm</span><span class="val">&#8594;</span></div>
     </div>
 
 </div>
@@ -522,14 +522,14 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <button class="sp-back-btn" onclick="clearInputs()" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
       <div class="sp-form ed-form">
-        <div class="pi-title">Edit Your Setup</div>
+        <div class="pi-title">Edit Your Farm</div>
 
         <div class="ed-groups">
 
           <div class="ed-group">
-            <div class="ed-group-title">Saved Setups</div>
+            <div class="ed-group-title">Saved Farms</div>
             <div class="ed-sel-row">
-              <select id="profileSelect" class="ed-dd ed-dd-setup" onchange="onProfileChange()" title="Saved setup"><option value="">Setup</option></select>
+              <select id="profileSelect" class="ed-dd ed-dd-setup" onchange="onProfileChange()" title="Saved farm"><option value="">Farm</option></select>
               <span class="ed-sel-div"></span>
               <select id="inCurrency" class="ed-dd ed-dd-cur" onchange="setCurrency(this.value)" title="Currency">
                 <option value="USD">USD</option>
@@ -538,10 +538,10 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
               </select>
             </div>
             <div class="ed-saved-btns">
-              <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
-              <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
-              <button class="ed-sbtn" onclick="newBlankProfile()" title="Start an empty setup with its own fleet, e.g. to track someone you referred">New</button>
-              <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected setup">Delete</button>
+              <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current farm">Save</button>
+              <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new farm">Save as&hellip;</button>
+              <button class="ed-sbtn" onclick="newBlankProfile()" title="Start an empty farm with its own miners, e.g. to track someone you referred">New</button>
+              <button class="ed-sbtn" id="btnDeleteProfile" onclick="deleteActiveProfile()" title="Delete the selected farm">Delete</button>
             </div>
             <span id="saveStatus" class="ed-save-status"></span>
           </div>
@@ -577,7 +577,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
           </div>
 
           <div class="ed-group" id="greedyGroup">
-            <div class="ed-group-title">Greedy Machine <span class="ed-toggle-note" style="font-weight:400">(auto-detected from your fleet)</span></div>
+            <div class="ed-group-title">Greedy Machine <span class="ed-toggle-note" style="font-weight:400">(auto-detected from your miners)</span></div>
             <div class="ed-fields ed-greedy-grid">
               <label class="ed-fld greedy-field" for="inGreedyTH">
                 <span class="ed-fld-lbl">Greedy TH <span class="tip" data-tip="How much of your Total Hashrate above is Greedy Machine TH — a SUBSET, not added on top. Counts toward your VIP tier EXCEPT the initial marketplace amount.">?</span></span>
@@ -631,8 +631,8 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
              sits below My Fleet, so the only Save button being up in "Saved Setups" meant
              scrolling back to the top to commit a one-field change. -->
         <div class="ed-saved-btns ed-foot-save">
-          <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current setup">Save</button>
-          <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new setup">Save as&hellip;</button>
+          <button class="ed-sbtn ed-sbtn-primary" onclick="saveActiveProfile()" title="Save to the current farm">Save</button>
+          <button class="ed-sbtn" onclick="saveAsNewProfile()" title="Save as a new farm">Save as&hellip;</button>
         </div>
         <span class="ed-save-status"></span>
 
@@ -652,7 +652,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     </div>
     <div class="sp-page-loading" id="edLoading" style="display:none">
       <div class="sp-spinner"></div>
-      <div class="sp-loading-txt" id="edLoadingTxt">Updating your setup…</div>
+      <div class="sp-loading-txt" id="edLoadingTxt">Updating your farm…</div>
     </div>
   </div>
 
@@ -749,11 +749,11 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
           <div class="field-input"><input type="number" id="inRefBonusPct" value="5" step="0.5" min="0" max="100"><span class="unit">%</span></div>
         </div>
         <div class="field">
-          <label>Their Existing TH <span class="tip" data-tip="Hashrate this referral already bought with your code, before the capital above. It joins the same fleet so it compounds — reinvesting and paying you your bonus on every TH it buys — instead of sitting static. It does NOT add ambassador rewards: your Ambassador 'referred TH' figure already includes these miners, so counting them here would pay you twice. Only the growth on top earns extra ambassador income.">?</span></label>
+          <label>Their Existing TH <span class="tip" data-tip="Hashrate this referral already bought with your code, before the capital above. It joins the same farm so it compounds — reinvesting and paying you your bonus on every TH it buys — instead of sitting static. It does NOT add ambassador rewards: your Ambassador 'referred TH' figure already includes these miners, so counting them here would pay you twice. Only the growth on top earns extra ambassador income.">?</span></label>
           <div class="field-input"><input type="number" id="inRefPriorTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
         <div class="field">
-          <label>Referral Reinvests <span class="tip" data-tip="Optional. What share of their own mining rewards your referral ploughs back into hashrate. Growth projections then grow their fleet — lifting your ambassador rewards — and pay you your bonus % on every TH purchase they make. Leave at 0 to keep their fleet static: this forecasts someone else's behaviour, not yours.">?</span></label>
+          <label>Referral Reinvests <span class="tip" data-tip="Optional. What share of their own mining rewards your referral ploughs back into hashrate. Growth projections then grow their farm — lifting your ambassador rewards — and pay you your bonus % on every TH purchase they make. Leave at 0 to keep their fleet static: this forecasts someone else's behaviour, not yours.">?</span></label>
           <div class="field-input"><input type="number" id="inRefReinvest" value="0" step="5" min="0" max="100"><span class="unit">%</span></div>
         </div>
       </div>
@@ -942,19 +942,19 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
             <input type="number" id="piRefPriorTH" value="0" step="1" min="0">
             <span class="pi-unit">TH</span>
           </label>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Hashrate this referral bought <strong style="color:var(--text3)">before</strong> this purchase. It joins the same fleet so it compounds alongside the new TH and pays your bonus on what it buys. It does <strong style="color:var(--text3)">not</strong> add ambassador rewards &mdash; your Ambassador &ldquo;referred TH&rdquo; already counts it.</div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Hashrate this referral bought <strong style="color:var(--text3)">before</strong> this purchase. It joins the same farm so it compounds alongside the new TH and pays your bonus on what it buys. It does <strong style="color:var(--text3)">not</strong> add ambassador rewards &mdash; your Ambassador &ldquo;referred TH&rdquo; already counts it.</div>
           <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">Your Referral Bonus <span style="color:var(--text4)">(ambassador tier — 5% up to 14%+)</span></label>
           <label class="pi-field-box" for="piRefBonus">
             <input type="number" id="piRefBonus" value="5" step="0.5" min="0" max="100">
             <span class="pi-unit">%</span>
           </label>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">You receive <strong style="color:var(--green)">this % of their TH spend as GMT</strong>, automatically added to your allocation pool. Their TH also boosts your Ambassador rewards.</div>
-          <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">Referral Reinvests <span style="color:var(--text4)">(share of their rewards — 0 = static fleet)</span></label>
+          <label style="font-size:.75rem;color:var(--text3);display:block;margin:.7rem 0 .4rem">Referral Reinvests <span style="color:var(--text4)">(share of their rewards — 0 = static farm)</span></label>
           <label class="pi-field-box" for="piRefReinvest">
             <input type="number" id="piRefReinvest" value="0" step="5" min="0" max="100">
             <span class="pi-unit">%</span>
           </label>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Above 0, growth projections grow their fleet and pay you your bonus on <strong style="color:var(--green)">every TH they buy</strong>. Off by default — it forecasts their behaviour, not yours.</div>
+          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Above 0, growth projections grow their farm and pay you your bonus on <strong style="color:var(--green)">every TH they buy</strong>. Off by default — it forecasts their behaviour, not yours.</div>
           </div>
         </div>
         <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
@@ -994,7 +994,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
   <div class="sp-page-loading" id="btcChartLoading" style="display:none">
     <div class="sp-spinner"></div>
-    <div class="sp-loading-txt">Loading your setup…</div>
+    <div class="sp-loading-txt">Loading your farm…</div>
   </div>
 </div>
 
@@ -1253,15 +1253,15 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 </footer>
 </div>
 
-<script src="/assets/app.js?v=147"></script>
-<script src="/assets/fleet.js?v=18"></script>
+<script src="/assets/app.js?v=148"></script>
+<script src="/assets/fleet.js?v=19"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/supabase-config.js?v=2"></script>
-<script src="/assets/account.js?v=17"></script>
+<script src="/assets/account.js?v=18"></script>
 <script src="/assets/chat.js?v=11"></script>
 <script src="/assets/chrome.js?v=7"></script>
-<script src="/assets/boot.js?v=2"></script>
+<script src="/assets/boot.js?v=3"></script>
 <script src="/assets/loaders.js?v=1"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
@@ -1347,6 +1347,6 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 </script>
-<script src="/assets/menu.js?v=4"></script>
+<script src="/assets/menu.js?v=5"></script>
 </body>
 </html>

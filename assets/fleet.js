@@ -302,7 +302,7 @@
     if (!host) return;
     host.className = 'ed-group';
     host.innerHTML =
-      '<div class="ed-group-title">Fleet <span class="fleet-for" id="fleetTitleFor"></span> <span class="ed-toggle-note" style="font-weight:400">(optional — adds up the miners for you; each saved setup keeps its own)</span></div>' +
+      '<div class="ed-group-title">Farm <span class="fleet-for" id="fleetTitleFor"></span></div>' +
       '<div class="fleet-panel">' +
         '<div class="fleet-head"><div class="fleet-summary" id="fleetSummary"></div></div>' +
         // Column headings, desktop only. Fifteen rows x four labelled boxes is sixty little

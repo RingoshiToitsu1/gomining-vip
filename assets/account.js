@@ -302,10 +302,11 @@
   // ---- header slot ----
   var accMenuWired = false;
   function renderHeader() {
-    // When logged in, the "Edit Setup" nav link reads "My Fleet" — it's where you
-    // build your fleet and edit your setup/profile.
+    // The nav link is always "Edit my Farm" — one name for the place you build your farm and
+    // edit your profile. It used to flip to "My Fleet" once logged in, which meant the same link
+    // had two names depending on who was looking at it.
     var navLink = document.getElementById('navEditSetup');
-    if (navLink) navLink.textContent = Account.isLoggedIn() ? 'My Fleet' : 'Edit Setup';
+    if (navLink) navLink.textContent = 'Edit my Farm';
     renderGate();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
@@ -325,7 +326,7 @@
             '<div class="gmt-acc-head">' + (p.avatar_url ? '<img src="' + escapeHtml(p.avatar_url) + '" alt="">' : '') +
               '<div><div class="n">' + escapeHtml(name) + '</div>' + (p.username ? '<div class="u">@' + escapeHtml(p.username) + '</div>' : '') + '</div></div>' +
             '<button type="button" role="menuitem" data-acc="profile">Edit profile</button>' +
-            (typeof window.openEditSetup === 'function' ? '<button type="button" role="menuitem" data-acc="fleet">My Fleet</button>' : '') +
+            (typeof window.openEditSetup === 'function' ? '<button type="button" role="menuitem" data-acc="fleet">My Farm</button>' : '') +
             '<div class="gmt-acc-sep"></div>' +
             '<button type="button" role="menuitem" data-acc="logout" class="danger">Log out</button>' +
           '</div>' +
@@ -456,16 +457,16 @@
     var f = fleetState();
     if (f.count > 0) {
       return '<div class="card">' +
-        '<h3>Your fleet is ready</h3>' +
+        '<h3>Your farm is ready</h3>' +
         '<div class="fleetstat">' + f.count + ' miner' + (f.count === 1 ? '' : 's') +
           ' &middot; ' + Math.round(f.th).toLocaleString('en-US') + ' TH</div>' +
-        '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your fleet across devices.</p>' +
+        '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your farm across devices.</p>' +
         '<div class="btns"><button class="gmt-btn-primary" data-g="signup">Create account</button>' +
         '<button class="gmt-btn-ghost" data-g="login">Log in</button></div>' +
         '<div class="lyd"><a data-g="fleet">Edit my fleet</a></div></div>';
     }
     return '<div class="card">' +
-      '<h3>See what your fleet earns</h3>' +
+      '<h3>See what your farm earns</h3>' +
       '<p>Add your miners and we\'ll calculate your live P&amp;L, fee discount, and multi-year projections — free.</p>' +
       '<div class="btns"><button class="gmt-btn-primary" data-g="fleet">Add my miners</button></div>' +
       '<div class="lyd">Already have an account? <a data-g="login">Log in</a></div></div>';

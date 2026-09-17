@@ -779,7 +779,7 @@ function submitPlannerTarget(){
 function returnToSetupFromPlanner(){
   const load=document.getElementById('plannerCalcLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
-  if(txt)txt.textContent='Loading your setup…';
+  if(txt)txt.textContent='Loading your farm…';
   if(load)load.style.display='flex';
   setTimeout(function(){
     hidePanelView('plannerIntro');
@@ -2221,7 +2221,7 @@ async function createFarmShot(){
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
     _shotReady();
   }catch(e){
-    document.getElementById('chartShotLoadTxt').textContent='Enter your setup first — there are no numbers to snapshot yet.';
+    document.getElementById('chartShotLoadTxt').textContent='Enter your farm first — there are no numbers to snapshot yet.';
   }
 }
 function buildFarmShotCanvas(d,imgs){
@@ -2843,7 +2843,7 @@ function migrateLegacySetup(){
       saveMiningMode();
     }
     const id='p_'+Date.now().toString(36);
-    state.profiles.push({id,name:'My Setup',data:d});
+    state.profiles.push({id,name:'My Farm',data:d});
     state.activeId=id;
     saveProfilesState(state);
   }catch(e){}
@@ -2855,7 +2855,7 @@ function renderProfileSelect(){
   const sel=$('profileSelect');if(!sel)return;
   const state=loadProfilesState();
   const cur=state.activeId||'';
-  sel.innerHTML='<option value="">Setup</option>'+
+  sel.innerHTML='<option value="">Farm</option>'+
     state.profiles.map(p=>{
       // The primary account profile is starred + labelled so it's obviously the main one.
       const label=p.account?('★ '+p.name+' (your profile)'):p.name;
@@ -2902,13 +2902,13 @@ function saveActiveProfile(){
     const pid=accountProfileId();
     if(pid&&window.GMTAccount&&GMTAccount.isLoggedIn()){
       p=state.profiles.find(x=>x.id===pid);
-      const uname=(GMTAccount.profile&&GMTAccount.profile.username)||'my setup';
+      const uname=(GMTAccount.profile&&GMTAccount.profile.username)||'my farm';
       if(!p){p={id:pid,name:uname,account:true,data:readInputs()};state.profiles.unshift(p);}
       state.activeId=pid;
     }else{
-      p=state.profiles.find(x=>x.name==='My Setup'&&!x.account);
+      p=state.profiles.find(x=>x.name==='My Farm'||x.name==='My Setup'&&!x.account);
       const created=!p;
-      if(!p){p={id:'p_'+Date.now().toString(36),name:'My Setup',data:readInputs()};state.profiles.unshift(p);}
+      if(!p){p={id:'p_'+Date.now().toString(36),name:'My Farm',data:readInputs()};state.profiles.unshift(p);}
       state.activeId=p.id;
       if(created){saveProfilesState(state);if(window.GMTFleetPersistActive)window.GMTFleetPersistActive();}
     }
@@ -2927,7 +2927,7 @@ function saveActiveProfile(){
   editLoadClose('Saved to "'+p.name+'"');
 }
 function saveAsNewProfile(){
-  const name=(prompt('Name this setup (e.g. "Mine", "Client - John"):','')||'').trim();
+  const name=(prompt('Name this farm (e.g. "Mine", "Client - John"):','')||'').trim();
   if(!name)return;
   const state=loadProfilesState();
   if(state.profiles.some(p=>p.name===name)){
@@ -2979,12 +2979,12 @@ function closeEditSetup(){
 // Setup with the count-up. Shared by the save buttons and the legacy Enter btn.
 function editLoadClose(msg){
   const btn=$('edEnterBtn'),load=$('edLoading'),txt=$('edLoadingTxt');
-  if(txt)txt.textContent=msg||'Updating your setup…';
+  if(txt)txt.textContent=msg||'Updating your farm…';
   if(btn)btn.disabled=true;
   if(load)load.style.display='flex';
   setTimeout(function(){
     if(load)load.style.display='none';
-    if(txt)txt.textContent='Updating your setup…';
+    if(txt)txt.textContent='Updating your farm…';
     if(btn)btn.disabled=false;
     closeEditSetup();
   },750);
@@ -3015,10 +3015,10 @@ function blankInputs(){
 // A brand-new, empty setup with an empty fleet of its own — for tracking someone you referred
 // without touching your own miners. Your account profile and other setups are left as they are.
 function newBlankProfile(){
-  const name=(prompt('Name the new setup (e.g. "Referral - John"):','')||'').trim();
+  const name=(prompt('Name the new farm (e.g. "Referral - John"):','')||'').trim();
   if(!name)return;
   const state=loadProfilesState();
-  if(state.profiles.some(p=>p.name===name)){alert('A setup named "'+name+'" already exists — pick another name.');return;}
+  if(state.profiles.some(p=>p.name===name)){alert('A farm named "'+name+'" already exists — pick another name.');return;}
   const id='p_'+Date.now().toString(36);
   state.profiles.push({id,name,data:Object.assign(blankInputs(),{discountOverride:null})});
   state.activeId=id;
@@ -3050,7 +3050,7 @@ function isAccountProfile(p){return !!(p&&p.account)}
 window.gmtOnAccountProfile=function(){const pid=accountProfileId();if(!pid)return false;const s=loadProfilesState();return s.activeId===pid};
 window.gmtSyncAccountProfile=function(){
   const A=window.GMTAccount; if(!A||!A.isLoggedIn())return;
-  const uname=(A.profile&&A.profile.username)||'my setup';
+  const uname=(A.profile&&A.profile.username)||'my farm';
   const cloudSetup=A.profile&&A.profile.setup;
   const pid=accountProfileId();
   const state=loadProfilesState();
@@ -3076,7 +3076,7 @@ function deleteActiveProfile(){
   if(!state.activeId)return;
   const p=state.profiles.find(x=>x.id===state.activeId);
   if(!p)return;
-  if(isAccountProfile(p)){alert('This is your account profile — it can’t be deleted. Create a separate setup for tinkering or referral quotes.');return;}
+  if(isAccountProfile(p)){alert('This is your account farm — it can’t be deleted. Create a separate farm for tinkering or referral quotes.');return;}
   if(!confirm('Delete profile "'+p.name+'"? (Inputs stay on screen.)'))return;
   if(window.GMTFleetDrop)window.GMTFleetDrop(p.id);   // its fleet goes with it
   state.profiles=state.profiles.filter(x=>x.id!==state.activeId);
@@ -3410,7 +3410,7 @@ function openQuickPop(chip){
   pop.className='qk-pop'; pop.id='qkPop';
   pop.innerHTML='<div class="h">'+escapeHtml(label)+'</div>'
     +'<div class="row"><input type="number" min="0" step="0.01" inputmode="decimal" id="qkIn"><button type="button" id="qkSave">Save</button></div>'
-    +'<div class="n">Updates your setup straight away — the same field as the setup editor.</div>';
+    +'<div class="n">Updates your farm straight away — the same field as the farm editor.</div>';
   document.body.appendChild(pop);
   const r=chip.getBoundingClientRect(), w=pop.offsetWidth;
   pop.style.top=(r.bottom+8)+'px';
@@ -4376,7 +4376,7 @@ function upgradeOrderHTML(budgetTH){
   const anyGreedy=rows.some(isG);
   const note=`<div class="eff-upg-greedynote">${anyGreedy?`Upgrade your Greedy Machine's efficiency while it's still small — its free weekly TH inherits its W/TH, so future growth stays efficient. `:''}Upgrading also cuts the GMT you must lock for max discount (a lower fee needs less coverage), so it frees capital too — that's already credited in this plan.</div>`;
   const title=fullMode?'Upgrade these miners':'Upgrade these miners first';
-  const sub=fullMode?'(recommended for an existing fleet — greedy first)':'(greedy machines first, then worst efficiency)';
+  const sub=fullMode?'(recommended for an existing farm — greedy first)':'(greedy machines first, then worst efficiency)';
   return `<div class="eff-upg"><div class="eff-upg-title">${title} <span>${sub}</span></div>${note}${out}</div>`;
 }
 
@@ -4875,7 +4875,7 @@ function openSetupProjection(mode){
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
     ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
-    : 'Already invested? Project your current setup forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
+    : 'Already invested? Project your current farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   renderSpModeSwitch();
   syncPayoutUnit();
@@ -4921,7 +4921,7 @@ function renderSpModeSwitch(){
   const planner=window._spMode==='planner';
   const havePlan=plannerHasPlan();
   el.innerHTML=
-     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Setup</button>`
+     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Farm</button>`
     +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My Plan</button>`;
   el.style.display='';
 }
@@ -5002,7 +5002,7 @@ function closeSetupProjection(){
   const m=document.getElementById('setupProjModal');
   const load=document.getElementById('spPageLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
-  if(txt)txt.textContent='Loading your setup…';
+  if(txt)txt.textContent='Loading your farm…';
   if(load)load.style.display='flex';
   setTimeout(function(){
     hidePanelView('setupProjModal');

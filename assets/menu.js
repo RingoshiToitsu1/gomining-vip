@@ -21,9 +21,9 @@
       { t: 'Console', d: 'Your farm\'s live profit and loss', href: '/console', run: ['consoleView', 'tab-current'] },
       { t: 'Capital Planner', d: 'The best split for new capital', href: '/console?view=planner', run: ['consoleView', 'tab-planner'] },
       { t: 'Growth Projection', d: 'Your farm, years ahead', href: '/console?view=projection', run: ['openSetupProjection'] },
-      { t: 'Edit Setup', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'] },
+      { t: 'Edit my Farm', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'] },
       { t: 'Marketplace Checker', d: 'Is that miner a good deal?', href: '/gomining-marketplace-checker', badge: 'New' },
-      { t: 'Quote a Setup', d: 'Price a farm from zero', href: '/quote' },
+      { t: 'Quote a Farm', d: 'Price a farm from zero', href: '/quote' },
       { t: 'Income Statement', d: 'Turn a GoMining CSV into a statement', href: '/statement', badge: 'New' },
       { t: 'ROI Calculator', d: 'What a setup earns today', href: '/gomining-roi-calculator' }
     ]},
