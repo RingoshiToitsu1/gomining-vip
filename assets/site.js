@@ -25,7 +25,7 @@
     '<a href="/console" class="nav-cta">Launch Console</a>';
   document.body.insertBefore(nav, document.body.firstChild);
   /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
-  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=6';document.body.appendChild(menuJs);
+  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=7';document.body.appendChild(menuJs);
 
   /* ---- utility ticker / quotron (matches the landing) ---- */
   var util=document.createElement('div');
