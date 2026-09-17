@@ -340,14 +340,14 @@ input[type=number]{-moz-appearance:textfield}
    "Breakdown ▾" — the console's own disclosure language — so the page keeps one button style
    rather than gaining a second. The ▾ in the markup is the no-CSS fallback; hidden here. */
 .section-collapsible .section-toggle{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto;flex:0 0 auto;
-  font-size:0;line-height:1;padding:.2rem .5rem .2rem .55rem;border-radius:999px;
-  background:none;border:1px solid var(--border);color:var(--text3);
+  font-size:0;line-height:1;padding:.2rem .55rem .2rem .6rem;border-radius:999px;
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.45);color:var(--purple-soft);
   transition:var(--transition)}
 .section-collapsible .section-toggle::before{content:'Hide';font-family:var(--sans);font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .section-collapsible.collapsed .section-toggle::before{content:'Show'}
 .section-collapsible .section-toggle::after{content:'▾';font-size:.7rem;line-height:1;transform:rotate(180deg);transition:transform .18s ease}
 .section-collapsible.collapsed .section-toggle::after{transform:none}
-.section-collapsible .section-header:hover .section-toggle{color:var(--text2);border-color:var(--text4)}
+.section-collapsible .section-header:hover .section-toggle{color:#1a1206;background:var(--purple-soft);border-color:var(--purple-soft)}
 .section.collapsed .section-toggle{transform:none}
 @media(max-width:600px){.section-collapsible .section-toggle{padding:.34rem .55rem}.section-collapsible .section-toggle::before{display:none}}
 .section-collapsible.collapsed .section-body{display:none}
