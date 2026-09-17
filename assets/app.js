@@ -3406,9 +3406,61 @@ function updateCapInVisibility(){
   if(mpBlock&&!mpBlock.contains(document.activeElement))mpBlock.style.display=mpOn?'':'none';
   if(gBlock&&!gBlock.contains(document.activeElement))gBlock.style.display=gOn?'':'none';
 }
+// ---- quick-edit chips (the live strip's second row) ----
+// The two balances that move week to week sit next to the live data, and each opens a one-field
+// editor instead of the whole setup panel. Saving writes to the real input and fires its `input`
+// event, so recalc + autosave + the cloud profile all behave exactly as if it had been typed there.
+function refreshQuickChips(){
+  const set=(id,src)=>{const el=$(id),f=$(src);if(el&&f)el.textContent=fN(Math.max(0,parseFloat(f.value)||0),2);};
+  set('qkWallet','inGMTWallet');
+  set('qkLocked','inGMTLocked');
+}
+function closeQuickPop(){const p=document.getElementById('qkPop');if(p)p.remove();}
+function openQuickPop(chip){
+  closeQuickPop();
+  const src=chip.getAttribute('data-qk'), label=chip.getAttribute('data-qk-label')||'Value';
+  const field=$(src); if(!field)return;
+  const pop=document.createElement('div');
+  pop.className='qk-pop'; pop.id='qkPop';
+  pop.innerHTML='<div class="h">'+escapeHtml(label)+'</div>'
+    +'<div class="row"><input type="number" min="0" step="0.01" inputmode="decimal" id="qkIn"><button type="button" id="qkSave">Save</button></div>'
+    +'<div class="n">Updates your setup straight away — the same field as the setup editor.</div>';
+  document.body.appendChild(pop);
+  const r=chip.getBoundingClientRect(), w=pop.offsetWidth;
+  pop.style.top=(r.bottom+8)+'px';
+  pop.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left))+'px';
+  const inp2=pop.querySelector('#qkIn');
+  inp2.value=field.value;
+  inp2.focus(); inp2.select();
+  const save=()=>{
+    const v=parseFloat(inp2.value);
+    field.value=(isFinite(v)&&v>=0)?v:0;
+    field.dispatchEvent(new Event('input',{bubbles:true}));   // -> recalc + autoSave + cloud profile
+    refreshQuickChips();
+    closeQuickPop();
+    chip.classList.add('saved');setTimeout(()=>chip.classList.remove('saved'),1200);
+  };
+  pop.querySelector('#qkSave').addEventListener('click',save);
+  inp2.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}else if(e.key==='Escape'){e.preventDefault();closeQuickPop();chip.focus();}});
+}
+document.addEventListener('click',e=>{
+  const chip=e.target.closest&&e.target.closest('.live-chip.qk');
+  if(chip){openQuickPop(chip);return;}
+  if(!(e.target.closest&&e.target.closest('#qkPop')))closeQuickPop();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const chip=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.live-chip.qk');
+  if(!chip)return;
+  e.preventDefault();openQuickPop(chip);
+});
+addEventListener('resize',closeQuickPop,{passive:true});
+addEventListener('scroll',closeQuickPop,{passive:true});
+
 function recalc(){
   if(!S.loaded)return;
   updateCapInVisibility();
+  refreshQuickChips();
   const i=inp(),m=calc(i);
 
   // Update auto-calculated token discount display

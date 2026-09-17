@@ -1586,3 +1586,24 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .fleet-f.f-col{cursor:pointer}
 .fleet-f.f-col:hover{border-color:rgba(245,166,35,.45)!important;background:rgba(245,166,35,.05)!important}
 .fleet-col{background-position:right .1rem center,right center!important;background-size:11px 7px,1.6rem 100%!important;padding-right:1.5rem!important}
+
+/* ===== quick-edit chips (second row of the live strip) ===== */
+.quick-bar{margin-top:4px}
+.subbar .quick-bar{border-top:1px solid var(--border);padding-top:5px}
+.live-chip.qk .qk-pen{color:var(--text4);font-size:.8em;margin-left:1px;transition:color .15s}
+.live-chip.qk:hover .qk-pen{color:var(--purple)}
+.live-chip.qk.saved{border-color:#3ddc84!important}
+.live-chip.qk.saved .val{color:#3ddc84}
+/* the little editor a quick chip opens */
+.qk-pop{position:fixed;z-index:10030;min-width:15rem;padding:.75rem .8rem;border-radius:14px;
+  background:var(--bg-card);border:1px solid var(--card-border);box-shadow:0 18px 50px -10px rgba(0,0,0,.72);font-size:16px}
+.qk-pop .h{font-size:.74rem;color:var(--text3);font-family:var(--sans);margin-bottom:.4rem}
+.qk-pop .row{display:flex;gap:.5rem;align-items:center}
+.qk-pop input{flex:1 1 auto;min-width:0;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:var(--mono);font-size:.95rem;padding:.5rem .6rem;outline:none}
+.qk-pop input:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.qk-pop button{flex:0 0 auto;background:var(--purple);color:#1a1206;border:none;border-radius:10px;
+  font-family:var(--sans);font-weight:700;font-size:.82rem;padding:.5rem .9rem;cursor:pointer}
+.qk-pop button:hover{background:var(--purple-soft)}
+.qk-pop .n{font-size:.7rem;color:var(--text4);margin-top:.45rem;line-height:1.45}
+@media(max-width:600px){.live-chip.qk .lbl{font-size:.6rem}}
