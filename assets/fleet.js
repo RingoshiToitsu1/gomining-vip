@@ -241,11 +241,12 @@
     renderSummary();
     renderTitle();
   }
-  // Name the setup this fleet belongs to, so it's obvious whose miners you're editing.
+  // Name the farm these miners belong to, but only when it is one of the other saved farms —
+  // on your own account the heading needs no qualifier.
   function renderTitle() {
     var t = document.getElementById('fleetTitleFor'); if (!t) return;
     var s = profilesState(), p = (s.profiles || []).find(function (x) { return x.id === s.activeId; });
-    t.textContent = p ? (p.account ? '· your account' : '· ' + p.name) : '';
+    t.textContent = (p && !p.account) ? ' — ' + p.name : '';
   }
 
   // ---- events ----
@@ -302,7 +303,7 @@
     if (!host) return;
     host.className = 'ed-group';
     host.innerHTML =
-      '<div class="ed-group-title">Farm <span class="fleet-for" id="fleetTitleFor"></span></div>' +
+      '<div class="ed-group-title"><span class="ed-opt">(optional)</span> Add your miners individually to your farm<span class="fleet-for" id="fleetTitleFor"></span></div>' +
       '<div class="fleet-panel">' +
         '<div class="fleet-head"><div class="fleet-summary" id="fleetSummary"></div></div>' +
         // Column headings, desktop only. Fifteen rows x four labelled boxes is sixty little
