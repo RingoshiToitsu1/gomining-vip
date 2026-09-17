@@ -114,7 +114,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=81">
+<link rel="stylesheet" href="/assets/app.css?v=82">
 <link rel="stylesheet" href="/assets/design.css?v=15">
 <link rel="stylesheet" href="/assets/accounts.css?v=22">
 </head>
@@ -741,6 +741,14 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
           <div class="field-input"><input type="number" id="inCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
         <div class="field">
+          <label>Adding Every Week / Month <span class="tip" data-tip="Optional. Money you keep adding after the lump sum. A growth projection deploys it on the same schedule, alongside your reinvested rewards, for the whole period it covers.">?</span></label>
+          <div class="field-input"><input type="number" id="inContribAmt" value="0" step="50" min="0"><span class="unit">USD</span></div>
+        </div>
+        <div class="field">
+          <label>How Often</label>
+          <div class="field-input"><select id="inContribFreq" class="ed-dd" style="width:100%"><option value="monthly">Every month</option><option value="weekly">Every week</option></select></div>
+        </div>
+        <div class="field">
           <label>Referral's Planned Capital <span class="tip" data-tip="Optional. Capital your referral plans to invest, following the same TH/GMT strategy as you. Their TH adds to your Ambassador rewards, and they reinvest along with you in projections.">?</span></label>
           <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
@@ -891,6 +899,15 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
               <input type="number" id="piCapitalInput" value="0" step="100" min="0">
               <span class="pi-unit">USD</span>
             </label>
+            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.9rem 0 .4rem">Adding Regularly <span style="color:var(--text4)">(optional)</span></label>
+            <div class="pi-contrib">
+              <label class="pi-field-box" for="piContribAmt">
+                <input type="number" id="piContribAmt" value="0" step="50" min="0">
+                <span class="pi-unit">USD</span>
+              </label>
+              <select id="piContribFreq" class="ed-dd pi-contrib-freq"><option value="monthly">a month</option><option value="weekly">a week</option></select>
+            </div>
+            <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Deployed on that schedule for the whole period a growth projection covers.</div>
           </div>
           <div id="piGoalBlock" hidden>
             <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Extra Monthly Income Wanted</label>
@@ -1253,7 +1270,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 </footer>
 </div>
 
-<script src="/assets/app.js?v=149"></script>
+<script src="/assets/app.js?v=150"></script>
 <script src="/assets/fleet.js?v=20"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

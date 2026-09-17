@@ -537,6 +537,8 @@ function closeAllPanels(){
 // Open the full-page Capital Planner form, seeded from the current inputs.
 function openPlannerForm(){
   document.getElementById('piCapitalInput').value=$('inCapital').value;
+  if($('piContribAmt')&&$('inContribAmt'))$('piContribAmt').value=$('inContribAmt').value;
+  if($('piContribFreq')&&$('inContribFreq'))$('piContribFreq').value=$('inContribFreq').value;
   document.getElementById('piGMTInput').value=$('inGMTWallet').value;
   document.getElementById('piRefCapInput').value=$('inRefCapital').value;
   if($('piRefBonus')&&$('inRefBonusPct'))$('piRefBonus').value=$('inRefBonusPct').value;
@@ -587,6 +589,8 @@ function submitPlannerCapital(){
     const gmtVal=parseFloat(document.getElementById('piGMTInput').value)||0;
     const refCapVal=parseFloat(document.getElementById('piRefCapInput').value)||0;
     $('inCapital').value=val;
+    if($('piContribAmt')&&$('inContribAmt'))$('inContribAmt').value=Math.max(0,parseFloat($('piContribAmt').value)||0);
+    if($('piContribFreq')&&$('inContribFreq'))$('inContribFreq').value=$('piContribFreq').value;
     if(gmtVal>0)$('inGMTWallet').value=gmtVal;
     $('inRefCapital').value=refCapVal;
     if($('piRefBonus')&&$('inRefBonusPct'))$('inRefBonusPct').value=parseFloat($('piRefBonus').value)||5;
@@ -759,6 +763,8 @@ function submitPlannerTarget(){
     let cap=0;
     if(res&&res.cap!=null)cap=Math.ceil(res.cap/10)*10;   // round up to a tidy $10
     $('inCapital').value=cap;
+    if($('piContribAmt')&&$('inContribAmt'))$('inContribAmt').value=Math.max(0,parseFloat($('piContribAmt').value)||0);
+    if($('piContribFreq')&&$('inContribFreq'))$('inContribFreq').value=$('piContribFreq').value;
     window._plannerCalcDone=true;
     window._incomeGoal={targetUSD,targetDisp,cap,res};
     recalc();
@@ -2638,6 +2644,9 @@ function inp(){
   offTH:+($('inInactiveTH')?$('inInactiveTH').value:0)||0,
   offWth:+($('inInactiveWth')?$('inInactiveWth').value:0)||0,
   cap:+$('inCapital').value||0,
+  // Money added on a schedule after the lump sum; the projection deploys it week by week.
+  contribAmt:Math.max(0,+($('inContribAmt')?$('inContribAmt').value:0)||0),
+  contribFreq:(($('inContribFreq')&&$('inContribFreq').value)==='weekly')?'weekly':'monthly',
   mpTH:+($('inMpTH')?$('inMpTH').value:0)||0,
   mpGMT:+($('inMpGMT')?$('inMpGMT').value:0)||0,
   mpWth:+($('inMpWth')?$('inMpWth').value:0)||0,
@@ -2766,6 +2775,8 @@ function readInputs(){
     inTH:$('inTH').value, inWTH:$('inWTH').value,
     inGMTLocked:$('inGMTLocked').value, inGMTWallet:$('inGMTWallet').value,
     inCapital:$('inCapital').value,
+    inContribAmt:($('inContribAmt')?$('inContribAmt').value:'0'),
+    inContribFreq:($('inContribFreq')?$('inContribFreq').value:'monthly'),
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inMpGreedy:($('inMpGreedy')?$('inMpGreedy').checked:false),
     inMpCode:($('inMpCode')?$('inMpCode').value:''),
@@ -2800,6 +2811,9 @@ function applyInputs(d){
   if(d.inGMTLocked!=null)$('inGMTLocked').value=d.inGMTLocked;
   if(d.inGMTWallet!=null)$('inGMTWallet').value=d.inGMTWallet;
   $('inCapital').value='0';   // capital-to-deploy is transient — always start at $0, never restored from a saved setup
+  // A standing contribution IS part of the plan, so unlike the lump sum it travels with the farm.
+  if($('inContribAmt'))$('inContribAmt').value=(d.inContribAmt!=null?d.inContribAmt:'0');
+  if($('inContribFreq'))$('inContribFreq').value=(d.inContribFreq==='weekly'?'weekly':'monthly');
   if(d.inMpTH!=null)$('inMpTH').value=d.inMpTH;
   if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
@@ -3007,6 +3021,7 @@ function blankInputs(){
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
     inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,inMpCode:'',
+    inContribAmt:'0',inContribFreq:'monthly',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:GREEDY_GROWTH_DEFAULT,
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',inRefPriorTH:'0',
     piVipBonus:false
@@ -5291,6 +5306,25 @@ function computeSetupProjection(){
 
   const daily=[];
   let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
+  // ---- standing contributions ----
+  // Money the operator keeps adding after the lump sum. It joins the weekly allocation as fresh
+  // cash, so it is split across TH / efficiency / lock by the same allocator that spends rewards.
+  // Fresh USD carries the platform's USD→GMT fee (every deployed dollar becomes GMT first),
+  // exactly as the Capital Planner charges it — so what lands is the amount net of that.
+  // A monthly contribution is paid at the first weekly allocation on or after each month mark,
+  // not smeared across the weeks, because that is how the money actually arrives.
+  const CONTRIB=Math.max(0,+i.contribAmt||0);
+  const CONTRIB_WEEKLY=(i.contribFreq!=='monthly');
+  let contribGrossUSD=0, contribMonthsPaid=0;
+  function contributionDue(d){
+    if(!(CONTRIB>0))return 0;
+    if(CONTRIB_WEEKLY)return CONTRIB;
+    const monthsDue=Math.floor(d/30.4375);
+    if(monthsDue<=contribMonthsPaid)return 0;
+    const owed=(monthsDue-contribMonthsPaid)*CONTRIB;
+    contribMonthsPaid=monthsDue;
+    return owed;
+  }
   // Real per-miner state for the VIP (non-greedy) farm, so each week's TH purchase prices against
   // the evolving fleet (topping up existing miners is cheaper than minting new). The greedy
   // machines are tracked one-by-one in GRD, each priced on its own efficiency curve.
@@ -5316,7 +5350,11 @@ function computeSetupProjection(){
       const dollarPortion=Math.min(distWeeklyUSD,Math.max(0,weeklyGrossUSD-pctPortion));
       const distributionUSD=pctPortion+dollarPortion;
       if(distributionUSD>0)totalDistributionUSD+=distributionUSD;
-      const netUSD=weeklyGrossUSD-distributionUSD;
+      // Contributions are added AFTER the payout split: you don't pay yourself a share of money
+      // you just put in.
+      const contribGross=contributionDue(d);
+      contribGrossUSD+=contribGross;
+      const netUSD=weeklyGrossUSD-distributionUSD+contribGross*(1-USD_GMT_FEE);
       weeklyGrossUSD=0;
       if(netUSD>0){
         // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
@@ -5446,7 +5484,7 @@ function computeSetupProjection(){
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
-    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${(function(){
+    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${CONTRIB>0?`, adding <strong>${fU(CONTRIB)}${CONTRIB_WEEKLY?' a week':' a month'}</strong>`:''}${(function(){
       // State the seed's OWN day-one income and discount. Every "the projection lost money"
       // report so far has been the two screens starting from different farms — a plan with a
       // marketplace miner in it against one without, or the current setup against the plan —
@@ -5487,6 +5525,17 @@ function computeSetupProjection(){
       <div class="ri-label">Projected ROI</div>
       <div class="ri-headline green">${roiYr>=0?'+':''}${fN(roiYr,1)}%<span style="font-size:.95rem;color:var(--text3);font-weight:600"> / yr</span></div>
       <div class="ri-breakdown">${ssPct>=0?'+':''}${fN(ssPct,1)}% reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
+      ${contribGrossUSD>0?`<div class="ri-gain">part of it bought, not earned: ${fU(contribGrossUSD)} of it is money you added</div>`:''}
+    </div>`;
+  }
+  if(contribGrossUSD>0){
+    const payments=CONTRIB_WEEKLY?Math.floor(days/7):contribMonthsPaid;
+    h+=`<div class="ri-single-card">
+      <div class="ri-label">Money You Added (over period)</div>
+      <div class="ri-headline cyan">${fU(contribGrossUSD)}</div>
+      <div class="ri-mo-yr">${fU(CONTRIB)}${CONTRIB_WEEKLY?'/wk':'/mo'}<span class="ri-sep">&bull;</span>${fN(payments,0)} payment${payments===1?'':'s'}</div>
+      <div class="ri-breakdown">deployed on schedule and split like any other cash: hashrate, efficiency or locked GMT, whichever earns most at the time &mdash; ${fU(contribGrossUSD*USD_GMT_FEE)} of it went on the ${fN(USD_GMT_FEE*100,0)}% USD&rarr;GMT fee</div>
+      <div class="ri-gain">on top of the ${fromPlanner?'planned investment':'farm'} this run started from</div>
     </div>`;
   }
   if(refFleetStartTH>0){

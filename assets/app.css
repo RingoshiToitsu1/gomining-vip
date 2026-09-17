@@ -1591,3 +1591,8 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .subbar .px-subbar .px-badge:hover,.subbar .px-subbar .px-badge.open{border-color:var(--gold-soft);color:var(--text2)}
 /* second row: the quick edits, set apart by a hairline that spans the whole strip */
 .subbar .quick-bar{margin:0;padding-top:5px;border-top:1px solid var(--border);width:100%;justify-content:center}
+/* planner form: amount + how often, on one line */
+.pi-contrib{display:flex;gap:.5rem;align-items:stretch}
+.pi-contrib .pi-field-box{flex:1 1 auto;min-width:0}
+.pi-contrib-freq{flex:0 0 8.5rem;border-radius:12px;padding:.5rem .7rem}
+@media(max-width:480px){.pi-contrib{flex-direction:column}.pi-contrib-freq{flex:1 1 auto;width:100%}}
