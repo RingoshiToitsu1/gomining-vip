@@ -302,11 +302,11 @@
   // ---- header slot ----
   var accMenuWired = false;
   function renderHeader() {
-    // The nav link is always "Edit my Farm" — one name for the place you build your farm and
+    // The nav link is always "Edit Farm" — one name for the place you build your farm and
     // edit your profile. It used to flip to "My Fleet" once logged in, which meant the same link
     // had two names depending on who was looking at it.
     var navLink = document.getElementById('navEditSetup');
-    if (navLink) navLink.textContent = 'Edit my Farm';
+    if (navLink) navLink.textContent = 'Edit Farm';
     renderGate();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;

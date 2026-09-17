@@ -18,19 +18,19 @@
 
   const MENU = [
     { h: 'Tools', items: [
-      { t: 'Console', d: 'Your farm\'s live profit and loss', href: '/console', run: ['consoleView', 'tab-current'] },
-      { t: 'Capital Planner', d: 'The best split for new capital', href: '/console?view=planner', run: ['consoleView', 'tab-planner'] },
-      { t: 'Growth Projection', d: 'Your farm, years ahead', href: '/console?view=projection', run: ['openSetupProjection'] },
-      { t: 'Edit my Farm', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'] },
+      { t: 'Console', d: 'Your farm\'s live profit and loss', href: '/console', run: ['consoleView', 'tab-current'], m: ['/console'] },
+      { t: 'Capital Planner', d: 'The best split for new capital', href: '/console?view=planner', run: ['consoleView', 'tab-planner'], m: ['/planner'] },
+      { t: 'Growth Projection', d: 'Your farm, years ahead', href: '/console?view=projection', run: ['openSetupProjection'], m: ['/projection', '/planner/projection'] },
+      { t: 'Edit Farm', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'], m: ['/edit'] },
       { t: 'Marketplace Checker', d: 'Is that miner a good deal?', href: '/gomining-marketplace-checker', badge: 'New' },
       { t: 'Quote a Farm', d: 'Price a farm from zero', href: '/quote' },
       { t: 'Income Statement', d: 'Turn a GoMining CSV into a statement', href: '/statement', badge: 'New' },
       { t: 'ROI Calculator', d: 'What a setup earns today', href: '/gomining-roi-calculator' }
     ]},
     { h: 'Charts', items: [
-      { t: 'Bitcoin', href: '/console?chart=bitcoin', run: ['openBtcChart'] },
-      { t: 'GoMining Token', href: '/console?chart=gmt', run: ['openGmtChart'] },
-      { t: 'Rainbow Chart', href: '/console?view=rainbow', run: ['openRainbow'] }
+      { t: 'Bitcoin', href: '/console?chart=bitcoin', run: ['openBtcChart'], m: ['/bitcoin'] },
+      { t: 'GoMining Token', href: '/console?chart=gmt', run: ['openGmtChart'], m: ['/gmt'] },
+      { t: 'Rainbow Chart', href: '/console?view=rainbow', run: ['openRainbow'], m: ['/rainbow'] }
     ], compact: true },
     { h: 'Guides', items: [
       { t: 'How GoMining works', href: '/how-gomining-works' },
@@ -144,16 +144,16 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
   const ARROW = '<svg class="gm-arr" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-  function isOn(href) {
-    const u = new URL(href, location.origin);
-    if (norm(u.pathname) !== here) return false;
-    // Console views share one path — only the bare /console entry is "you are here" by path.
-    return !u.search || u.search === location.search;
-  }
+  // Which URLs count as "you are here" for an entry. The console rewrites its own address as you
+  // move around it (/edit, /planner, /projection, /bitcoin …), so an entry whose href is
+  // /console?view=edit has to be matched against /edit — and it has to be re-checked every time
+  // the drawer opens, because none of that navigation reloads the page.
+  const pathsFor = it => (it.m && it.m.length) ? it.m : [norm(new URL(it.href, location.origin).pathname)];
+  function isOnNow(paths) { return paths.indexOf(norm(location.pathname)) >= 0; }
 
   function itemHTML(it, i, j) {
-    const on = isOn(it.href) ? ' gm-on' : '';
-    return '<li><a class="gm-item' + on + '" href="' + esc(it.href) + '" data-gm="' + i + ':' + j + '"' + (on ? ' aria-current="page"' : '') + '>' +
+    const paths = pathsFor(it), on = isOnNow(paths) ? ' gm-on' : '';
+    return '<li><a class="gm-item' + on + '" href="' + esc(it.href) + '" data-gm="' + i + ':' + j + '" data-paths="' + esc(paths.join(' ')) + '"' + (on ? ' aria-current="page"' : '') + '>' +
       '<span class="gm-tx"><span class="gm-t">' + esc(it.t) + (it.badge ? '<span class="gm-badge">' + esc(it.badge) + '</span>' : '') + '</span>' +
       (it.d ? '<span class="gm-d">' + esc(it.d) + '</span>' : '') + '</span>' + ARROW + '</a></li>';
   }
@@ -170,7 +170,10 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     MENU.forEach((sec, i) => {
       secs += '<div class="gm-sec' + (sec.compact ? ' gm-compact' : '') + '"><div class="gm-h">' + esc(sec.h) + '</div>';
       if (sec.items) secs += '<ul class="gm-list">' + sec.items.map((it, j) => itemHTML(it, i, j)).join('') + '</ul>';
-      if (sec.chips) secs += '<div class="gm-chips">' + sec.chips.map(c => '<a class="gm-chip' + (isOn(c.href) ? ' gm-on' : '') + '" href="' + esc(c.href) + '">' + esc(c.t) + '</a>').join('') + '</div>';
+      if (sec.chips) secs += '<div class="gm-chips">' + sec.chips.map(c => {
+        const paths = pathsFor(c);
+        return '<a class="gm-chip' + (isOnNow(paths) ? ' gm-on' : '') + '" href="' + esc(c.href) + '" data-paths="' + esc(paths.join(' ')) + '">' + esc(c.t) + '</a>';
+      }).join('') + '</div>';
       secs += '</div>';
     });
 
@@ -245,8 +248,16 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 
     const drawer = menu.querySelector('.gm-drawer');
     let lastFocus = null;
+    function syncActive() {
+      menu.querySelectorAll('[data-paths]').forEach(a => {
+        const on = isOnNow(a.getAttribute('data-paths').split(' '));
+        a.classList.toggle('gm-on', on);
+        if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+    }
     function open() {
       lastFocus = document.activeElement;
+      syncActive();
       menu.classList.add('gm-open');
       document.documentElement.classList.add('gm-lock');
       btn.setAttribute('aria-expanded', 'true');
