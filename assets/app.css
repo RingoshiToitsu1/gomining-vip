@@ -1591,8 +1591,22 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .subbar .px-subbar .px-badge:hover,.subbar .px-subbar .px-badge.open{border-color:var(--gold-soft);color:var(--text2)}
 /* second row: the quick edits, set apart by a hairline that spans the whole strip */
 .subbar .quick-bar{margin:0;padding-top:5px;border-top:1px solid var(--border);width:100%;justify-content:center}
-/* planner form: amount + how often, on one line */
+/* ---- planner form: one label style, one field height ---- */
+.pi-lbl{display:block;font-size:.75rem;color:var(--text3);margin:0 0 .4rem;font-weight:600;cursor:pointer}
+.pi-lbl-gap{margin-top:.9rem}
+.pi-lbl .pi-opt{color:var(--text4);font-weight:400}
+.pi-note{font-size:.68rem;color:var(--text4);margin-top:.35rem;text-align:center;line-height:1.5}
+/* amount + how often share one row, both on the field box's own metrics */
 .pi-contrib{display:flex;gap:.5rem;align-items:stretch}
 .pi-contrib .pi-field-box{flex:1 1 auto;min-width:0}
-.pi-contrib-freq{flex:0 0 8.5rem;border-radius:12px;padding:.5rem .7rem}
+.pi-contrib .pi-field-box input[type="number"]{padding:0 44px 0 6px;text-align:left}
+.pi-contrib .pi-unit{right:14px}
+.pi-contrib-freq{flex:0 0 9.5rem;appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;
+  background-color:var(--bg-input);border:1px solid var(--border);border-radius:12px;padding:12px 34px 12px 16px;
+  color:var(--text);font-family:var(--sans);font-size:.95rem;outline:none;transition:var(--transition);
+  background-repeat:no-repeat;background-position:right .7rem center;background-size:11px 7px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%23F5A623' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.pi-contrib-freq:hover{border-color:var(--purple)}
+.pi-contrib-freq:focus{border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.pi-contrib-freq option{background:var(--bg-card);color:var(--text)}
 @media(max-width:480px){.pi-contrib{flex-direction:column}.pi-contrib-freq{flex:1 1 auto;width:100%}}

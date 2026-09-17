@@ -114,7 +114,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=82">
+<link rel="stylesheet" href="/assets/app.css?v=83">
 <link rel="stylesheet" href="/assets/design.css?v=15">
 <link rel="stylesheet" href="/assets/accounts.css?v=22">
 </head>
@@ -880,12 +880,11 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     <div class="sp-form">
       <div style="margin:0 auto;max-width:340px;display:flex;flex-direction:column;gap:1rem">
         <div>
-          <label style="font-size:.75rem;color:var(--text3);display:block;margin-bottom:.4rem">Total unlocked GMT you have on hand</label>
+          <label class="pi-lbl" for="piGMTInput">Total unlocked GMT you have on hand</label>
           <label class="pi-field-box" for="piGMTInput">
             <input type="number" id="piGMTInput" value="0" step="1" min="0">
             <span class="pi-unit"><img src="/gmt36.png" class="gmt-logo" alt="GMT"></span>
           </label>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Total unlocked GMT you have on hand</div>
         </div>
         <div>
           <div class="pi-mode-seg" role="tablist">
@@ -893,28 +892,28 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
             <button type="button" class="pi-mode-btn" id="piModeGoal" onclick="setPlannerMode('goal')">Target an income</button>
           </div>
           <div id="piAmountBlock">
-            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Additional USD Capital <span style="color:var(--text4)">(optional)</span></label>
+            <label class="pi-lbl" for="piCapitalInput">Additional USD Capital <span class="pi-opt">(optional)</span></label>
             <label class="pi-field-box" for="piCapitalInput">
               <input type="number" id="piCapitalInput" value="0" step="100" min="0">
               <span class="pi-unit">USD</span>
             </label>
-            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.9rem 0 .4rem">Adding Regularly <span style="color:var(--text4)">(optional)</span></label>
+            <label class="pi-lbl pi-lbl-gap" for="piContribAmt">Adding Regularly <span class="pi-opt">(optional)</span></label>
             <div class="pi-contrib">
               <label class="pi-field-box" for="piContribAmt">
                 <input type="number" id="piContribAmt" value="0" step="50" min="0">
                 <span class="pi-unit">USD</span>
               </label>
-              <select id="piContribFreq" class="ed-dd pi-contrib-freq"><option value="monthly">a month</option><option value="weekly">a week</option></select>
+              <select id="piContribFreq" class="pi-contrib-freq"><option value="monthly">a month</option><option value="weekly">a week</option></select>
             </div>
-            <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Deployed on that schedule for the whole period a growth projection covers.</div>
+            <div class="pi-note">Deployed on that schedule for the whole period a growth projection covers.</div>
           </div>
           <div id="piGoalBlock" hidden>
-            <label style="font-size:.75rem;color:var(--text3);display:block;margin:.5rem 0 .4rem">Extra Monthly Income Wanted</label>
+            <label class="pi-lbl" for="piTargetInput">Extra Monthly Income Wanted</label>
             <label class="pi-field-box" for="piTargetInput">
               <input type="number" id="piTargetInput" value="200" step="10" min="0">
               <span class="pi-unit" id="piTargetUnit">$/mo</span>
             </label>
-            <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">We&rsquo;ll find the smallest capital that adds this much to what your farm already earns.</div>
+            <div class="pi-note">We&rsquo;ll find the smallest capital that adds this much to what your farm already earns.</div>
           </div>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem">
