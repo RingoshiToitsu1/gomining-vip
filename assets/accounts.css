@@ -338,3 +338,10 @@
 
 /* whose fleet this is (each saved setup has its own) */
 .fleet-for{font-weight:600;color:var(--purple-soft);font-family:var(--sans)}
+
+/* ---- change password (inside the profile modal) ---- */
+.gmt-pw{margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--border)}
+.gmt-pw-h{font-size:.8rem;font-weight:700;color:var(--text);letter-spacing:.01em;margin-bottom:.2rem}
+.gmt-pw .pw-hint{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.45rem}
+.gmt-pw .go{margin-top:.9rem}
+.gmt-modal .note a,.gmt-pw a{color:var(--purple-soft);text-decoration:underline}

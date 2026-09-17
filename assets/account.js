@@ -82,6 +82,20 @@
   };
 
   Account.signOut = function () { return sb.auth.signOut(); };
+  // Change the password from inside the account. There is no email on file, so the CURRENT
+  // password is the proof of identity: re-authenticate with it first, then set the new one.
+  // Supabase would happily update the password on the strength of the session alone, which would
+  // let anyone on an unlocked device take the account over silently.
+  Account.changePassword = function (current, next) {
+    var u = Account.profile && Account.profile.username;
+    if (!Account.user || !u) return Promise.reject(new Error('You are not logged in.'));
+    if (!current) return Promise.reject(new Error('Enter your current password.'));
+    if (!next || next.length < 8) return Promise.reject(new Error('The new password must be at least 8 characters.'));
+    if (next === current) return Promise.reject(new Error('That is your current password — pick a different one.'));
+    return sb.auth.signInWithPassword({ email: emailFor(u), password: current })
+      .then(function (r) { if (r.error) throw new Error('Your current password is not right.'); return sb.auth.updateUser({ password: next }); })
+      .then(function (r) { if (r.error) throw r.error; return true; });
+  };
 
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
@@ -239,12 +253,14 @@
     if (m === 'login') {
       els.title.textContent = 'Log in'; els.sub.textContent = 'Welcome back.';
       els.go.textContent = 'Log in'; els.p.setAttribute('autocomplete', 'current-password');
-      els.note.textContent = '';
+      els.note.innerHTML = 'Forgotten your password? Accounts have no email, so it cannot be reset automatically — ' +
+        '<a href="https://t.me/ringoshitoitsu" target="_blank" rel="noopener">message me on Telegram</a> with your username and I will reset it by hand.';
       els.swap.innerHTML = 'New here? <a data-to="signup">Create an account</a>';
     } else {
       els.title.textContent = 'Create an account'; els.sub.textContent = 'Just a username and password — no email.';
       els.go.textContent = 'Create account'; els.p.setAttribute('autocomplete', 'new-password');
-      els.note.textContent = 'There is no email recovery — if you forget your password you lose the account, so save it somewhere safe. Minimum 8 characters.';
+      els.note.innerHTML = 'There is no email on the account, so a forgotten password cannot be reset automatically — save it somewhere safe. ' +
+        'If you do lose it, <a href="https://t.me/ringoshitoitsu" target="_blank" rel="noopener">message me on Telegram</a> and I will reset it by hand. Minimum 8 characters.';
       els.swap.innerHTML = 'Already have one? <a data-to="login">Log in</a>';
     }
     els.swap.querySelector('a').addEventListener('click', function () { setMode(this.getAttribute('data-to')); });
@@ -361,6 +377,15 @@
         '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
         '<div class="err" id="gmtProfErr"></div><div class="ok" id="gmtProfOk"></div>' +
         '<button class="go" id="gmtProfSave">Save</button>' +
+        '<div class="gmt-pw">' +
+          '<div class="gmt-pw-h">Change password</div>' +
+          '<label>Current password</label><input id="gmtPwCur" type="password" autocomplete="current-password">' +
+          '<label>New password</label><input id="gmtPwNew" type="password" autocomplete="new-password" minlength="8">' +
+          '<label>Repeat new password</label><input id="gmtPwNew2" type="password" autocomplete="new-password" minlength="8">' +
+          '<div class="pw-hint">At least 8 characters. There is no email on the account, so keep it somewhere safe — a forgotten password has to be reset by hand.</div>' +
+          '<div class="err" id="gmtPwErr"></div><div class="ok" id="gmtPwOk"></div>' +
+          '<button class="go gmt-pw-go" id="gmtPwGo">Update password</button>' +
+        '</div>' +
       '</div>';
     document.body.appendChild(pModal);
     pEls.user = pModal.querySelector('#gmtProfUser');
@@ -371,6 +396,27 @@
     pEls.err = pModal.querySelector('#gmtProfErr');
     pEls.ok = pModal.querySelector('#gmtProfOk');
     pEls.save = pModal.querySelector('#gmtProfSave');
+    pEls.pwCur = pModal.querySelector('#gmtPwCur');
+    pEls.pwNew = pModal.querySelector('#gmtPwNew');
+    pEls.pwNew2 = pModal.querySelector('#gmtPwNew2');
+    pEls.pwErr = pModal.querySelector('#gmtPwErr');
+    pEls.pwOk = pModal.querySelector('#gmtPwOk');
+    pEls.pwGo = pModal.querySelector('#gmtPwGo');
+    pEls.pwGo.addEventListener('click', function () {
+      pEls.pwErr.textContent = ''; pEls.pwOk.textContent = '';
+      if (pEls.pwNew.value !== pEls.pwNew2.value) { pEls.pwErr.textContent = 'The two new passwords do not match.'; return; }
+      pEls.pwGo.disabled = true; pEls.pwOk.textContent = 'Updating…';
+      Account.changePassword(pEls.pwCur.value, pEls.pwNew.value)
+        .then(function () {
+          pEls.pwGo.disabled = false;
+          pEls.pwCur.value = pEls.pwNew.value = pEls.pwNew2.value = '';
+          pEls.pwOk.textContent = 'Password updated. Use it the next time you log in.';
+        })
+        .catch(function (e) { pEls.pwGo.disabled = false; pEls.pwOk.textContent = ''; pEls.pwErr.textContent = e.message || 'Could not update the password.'; });
+    });
+    pModal.querySelectorAll('.gmt-pw input').forEach(function (i) {
+      i.addEventListener('keydown', function (e) { if (e.key === 'Enter') pEls.pwGo.click(); });
+    });
     pModal.addEventListener('click', function (e) { if (e.target === pModal || e.target.hasAttribute('data-close')) pModal.classList.remove('show'); });
     pModal.querySelector('#gmtProfAvBtn').addEventListener('click', function () { pEls.file.click(); });
     pEls.file.addEventListener('change', function () {
@@ -389,6 +435,7 @@
   }
   function openProfile() {
     if (!pModal) buildProfileModal();
+    if (pEls.pwCur) { pEls.pwCur.value = pEls.pwNew.value = pEls.pwNew2.value = ''; pEls.pwErr.textContent = ''; pEls.pwOk.textContent = ''; }
     var p = Account.profile || {};
     pEls.user.textContent = '@' + (p.username || '');
     pEls.name.value = p.display_name || '';
