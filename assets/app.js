@@ -427,9 +427,32 @@ function sectionState(){try{return JSON.parse(localStorage.getItem(SECTION_KEY))
 function toggleSection(id){
   const el=document.getElementById(id);if(!el)return;
   el.classList.toggle('collapsed');
+  syncCollapsibleAria(id);
   if(!el.classList.contains('section-collapsible'))return;   // the rest never actually collapse
   const st=sectionState();st[id]=el.classList.contains('collapsed');
   try{localStorage.setItem(SECTION_KEY,JSON.stringify(st));}catch(e){}
+}
+// The collapsible headers are plain divs with an onclick. Give them the button semantics the
+// look now promises: focusable, Enter/Space, and an aria-expanded a screen reader can read.
+function wireCollapsibleHeaders(){
+  document.querySelectorAll('.section-collapsible > .section-header').forEach(h=>{
+    if(h.dataset.wired)return;
+    h.dataset.wired='1';
+    h.setAttribute('role','button');
+    h.setAttribute('tabindex','0');
+    const sec=h.closest('.section');
+    h.setAttribute('aria-expanded',sec&&sec.classList.contains('collapsed')?'false':'true');
+    const t=h.querySelector('.section-toggle');if(t)t.setAttribute('aria-hidden','true');
+    h.addEventListener('keydown',e=>{
+      if(e.key!=='Enter'&&e.key!==' ')return;
+      e.preventDefault();h.click();
+    });
+  });
+}
+function syncCollapsibleAria(id){
+  const el=document.getElementById(id);if(!el)return;
+  const h=el.querySelector('.section-header');
+  if(h)h.setAttribute('aria-expanded',el.classList.contains('collapsed')?'false':'true');
 }
 function applySectionState(){
   const st=sectionState();
@@ -5767,6 +5790,7 @@ function buildShareCanvas(d){
 });
 applyHeroSubState();   // restore whether each hero breakdown was left open
 applySectionState();   // VIP + Daily Operation start collapsed unless the user opened them
+wireCollapsibleHeaders();   // the Show/Hide pills are real buttons for keyboard + screen readers
 document.querySelectorAll('input').forEach(el=>{el.addEventListener('input',recalc);el.addEventListener('change',recalc)});
 
 // ---- TIMER ----

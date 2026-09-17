@@ -353,10 +353,24 @@ input[type=number]{-moz-appearance:textfield}
 /* Opt-in collapsing. The pair above is reference detail — a wall of figures the dashboard does
    not need to open with — so those sections keep their title and one-line description and put
    the numbers behind the chevron. Every other .section still ignores .collapsed entirely. */
-.section-collapsible .section-header{cursor:pointer}
-.section-collapsible .section-toggle{display:block;margin-left:auto;color:var(--text3);font-size:.9rem;
-  transition:transform .18s ease,color var(--transition)}
-.section-collapsible .section-header:hover .section-toggle{color:var(--text2)}
+.section-collapsible .section-header{cursor:pointer;border-radius:14px;gap:.7rem;transition:background .18s ease}
+.section-collapsible .section-header:hover{background:rgba(245,166,35,.06)}
+.section-collapsible .section-header:focus-visible{outline:2px solid var(--purple);outline-offset:-2px}
+/* A bare ▾ character read as decoration, not as a control. This is the disclosure button every
+   site uses: a labelled pill that says what the click does, with a chevron that turns over. The
+   character itself is kept in the markup for non-CSS fallback but hidden here. */
+.section-collapsible .section-toggle{display:inline-flex;align-items:center;gap:.4rem;margin-left:auto;flex:0 0 auto;
+  font-size:0;line-height:1;padding:.36rem .7rem .36rem .8rem;border-radius:999px;
+  border:1px solid rgba(245,166,35,.38);background:rgba(245,166,35,.09);color:var(--purple-soft);
+  transition:background .18s ease,border-color .18s ease,color .18s ease}
+.section-collapsible .section-toggle::before{content:'Hide';font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.01em}
+.section-collapsible.collapsed .section-toggle::before{content:'Show'}
+.section-collapsible .section-toggle::after{content:'';width:10px;height:7px;flex:0 0 auto;transform:rotate(180deg);transition:transform .2s ease;
+  background:no-repeat center/10px 7px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23F7B84E' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.section-collapsible.collapsed .section-toggle::after{transform:none}
+.section-collapsible .section-header:hover .section-toggle{background:rgba(245,166,35,.18);border-color:var(--purple);color:var(--cyan)}
+.section.collapsed .section-toggle{transform:none}
+@media(max-width:600px){.section-collapsible .section-toggle{padding:.34rem .55rem}.section-collapsible .section-toggle::before{display:none}}
 .section-collapsible.collapsed .section-body{display:none}
 .section-collapsible.collapsed .section-desc{padding-bottom:1.15rem}
 

@@ -443,7 +443,81 @@
   }
 
   // ---------------------------------------------------------------- state
-  const S = { recs: [], from: null, to: null, fname: '', share: 100, capital: 0 };
+  const S = { recs: [], from: null, to: null, fname: '', share: 100, capital: 0,
+    // veGoMining staking, keyed by payment date: GoMining does not put these in the export, so
+    // the operator types them in. Kept apart from every CSV-derived figure and labelled as
+    // entered on the statement itself. Saved in this browser only (never uploaded).
+    stake: {}, stakeShare: true };
+  const STAKE_KEY = 'gmt_statement_stake_v1';
+  function loadStake() {
+    try {
+      const o = JSON.parse(localStorage.getItem(STAKE_KEY) || 'null');
+      if (o && typeof o === 'object') {
+        S.stake = (o.entries && typeof o.entries === 'object') ? o.entries : {};
+        S.stakeShare = o.share !== false;
+        if (o.perWeek != null && $('stStakeWk')) $('stStakeWk').value = o.perWeek;
+      }
+    } catch (e) {}
+  }
+  function saveStake() {
+    try {
+      localStorage.setItem(STAKE_KEY, JSON.stringify({
+        entries: S.stake, share: S.stakeShare, perWeek: ($('stStakeWk') || {}).value || ''
+      }));
+    } catch (e) {}
+  }
+
+  // ---- veGoMining staking helpers ----
+  // Rewards land every Tuesday, so the panel offers exactly those dates in the chosen period.
+  function tuesdays(from, to) {
+    const out = [];
+    if (!from || !to) return out;
+    const d = new Date(from + 'T00:00:00Z'), end = Date.parse(to + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + ((2 - d.getUTCDay()) + 7) % 7);   // first Tuesday on/after `from`
+    for (; d.getTime() <= end; d.setUTCDate(d.getUTCDate() + 7)) out.push(d.toISOString().slice(0, 10));
+    return out;
+  }
+  // GMT price for a date, taken from the export itself (the same accrual basis the BTC figures
+  // use). Falls back to the nearest day in the file that carried a price.
+  let _gmtPx = null;
+  function gmtPriceOn(iso) {
+    if (!_gmtPx) {
+      _gmtPx = new Map();
+      for (const r of S.recs) if (r.gmt > 0 && !_gmtPx.has(r.d)) _gmtPx.set(r.d, r.gmt);
+    }
+    if (_gmtPx.has(iso)) return _gmtPx.get(iso);
+    let best = 0, bestGap = Infinity;
+    const t = Date.parse(iso);
+    for (const [d, p] of _gmtPx) {
+      const gap = Math.abs(Date.parse(d) - t);
+      if (gap < bestGap) { bestGap = gap; best = p; }
+    }
+    return best;
+  }
+  // Every entered payment inside the current period, valued and (optionally) split pro rata.
+  function stakeRows() {
+    const k = S.stakeShare ? (S.share || 0) / 100 : 1;
+    const out = [];
+    for (const d of Object.keys(S.stake).sort()) {
+      const g = +S.stake[d] || 0;
+      if (!(g > 0)) continue;
+      if ((S.from && d < S.from) || (S.to && d > S.to)) continue;
+      const px = gmtPriceOn(d);
+      out.push({ d: d, gmt: g * k, gmtRaw: g, px: px, usd: g * k * px });
+    }
+    return out;
+  }
+  function stakeTotals() {
+    const rows = stakeRows();
+    let gmt = 0, usd = 0;
+    const byMonthMap = new Map();
+    for (const r of rows) {
+      gmt += r.gmt; usd += r.usd;
+      const k = r.d.slice(0, 7);
+      byMonthMap.set(k, (byMonthMap.get(k) || 0) + r.usd);
+    }
+    return { rows: rows, gmt: gmt, usd: usd, month: byMonthMap };
+  }
 
   /* A share statement is the same farm scaled down, never a different farm: one
      owner's slice of a jointly-funded fleet, split out so it can stand on its own
