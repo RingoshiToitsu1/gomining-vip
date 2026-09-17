@@ -249,7 +249,7 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card-action:hover .hero-cta-arrow{transform:translateX(4px)}
 /* Vertically center the CTA card's content on non-mobile so it doesn't leave a gap at the bottom (mobile uses the compact row layout). */
 @media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center;align-items:center}}
-.hero-label{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
+.hero-label{font-size:.66rem;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
 .hero-val{font-family:var(--mono);font-size:1.9rem;font-weight:700;line-height:1.12;letter-spacing:.01em}
 /* The dollar figure and its BTC equivalent sit on one baseline; the BTC tucks in smaller so the
    dollars still lead. It wraps rather than shrinking the headline on a narrow card. */
@@ -279,7 +279,7 @@ input[type=number]{-moz-appearance:textfield}
 .hero-more.open .hero-more-ic{transform:rotate(180deg)}
 .hero-more.open{color:var(--text2)}
 .hero-sub[hidden]{display:none}
-.hero-sub{font-size:.72rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono)}
+.hero-sub{font-size:.7rem;color:var(--text3);margin-top:.2rem;font-family:var(--mono);line-height:1.5}
 .disc-override{margin-top:.55rem}
 .disc-override-toggle{background:transparent;border:1px dashed var(--border);color:var(--text3);border-radius:7px;padding:5px 10px;font-size:.68rem;font-family:var(--sans);font-weight:500;cursor:pointer;transition:var(--transition);width:100%;text-align:center}
 .disc-override-toggle:hover{border-color:var(--purple);color:var(--purple-soft);background:var(--purple-glow)}
@@ -319,11 +319,11 @@ input[type=number]{-moz-appearance:textfield}
   /* Nothing to point across once the badge sits under the heading. */
   .px-arrow{display:none}
 }
-.sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-soft)}
+.sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft)}
 .sec-head .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
-.sec-head .sec-title{font-size:clamp(1.7rem,3.4vw,2.6rem);font-weight:600;color:var(--warm);line-height:1.06;letter-spacing:-.025em;margin-top:12px}
+.sec-head .sec-title{font-size:clamp(1.55rem,3vw,2.15rem);font-weight:600;color:var(--warm);line-height:1.1;letter-spacing:-.02em;margin-top:12px}
 .sec-head .sec-title .grad{background:linear-gradient(96deg,var(--gold-hi),var(--gold-soft));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.sec-head .sec-lead{color:var(--ink2);font-size:1.02rem;max-width:600px;margin-top:10px}
+.sec-head .sec-lead{color:var(--text3);font-size:.88rem;line-height:1.6;max-width:640px;margin-top:10px}
 
 /* ---- SECTION ---- */
 .section{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:1.6rem;overflow:hidden;transition:var(--transition)}
@@ -340,11 +340,8 @@ input[type=number]{-moz-appearance:textfield}
 }
 .section-header{display:flex;align-items:center;justify-content:flex-start;padding:1.5rem 1.6rem .3rem;cursor:default;user-select:none;transition:var(--transition)}
 .section-header:hover{background:transparent}
-.section-title{font-size:clamp(1.12rem,2vw,1.42rem);font-weight:600;color:var(--warm);letter-spacing:-.015em;display:flex;align-items:center;gap:.6rem}
+.section-title{font-size:1.15rem;font-weight:600;color:var(--warm);letter-spacing:-.01em;display:flex;align-items:center;gap:.5rem}
 .section-title .icon{width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;flex-shrink:0}
-.section-title .thumb{width:26px;height:26px;flex-shrink:0;display:inline-block;vertical-align:middle;filter:drop-shadow(0 2px 6px rgba(245,166,35,.25))}
-.section-title .thumb rect.bg{fill:url(#thumbGrad)}
-.section-title .thumb .g{stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;fill:none}
 .icon-purple{background:var(--purple)}.icon-cyan{background:var(--cyan)}.icon-green{background:var(--green)}.icon-orange{background:var(--orange)}
 .section-toggle{display:none}
 .section.collapsed .section-toggle{transform:rotate(-90deg)}
@@ -356,19 +353,18 @@ input[type=number]{-moz-appearance:textfield}
 .section-collapsible .section-header{cursor:pointer;border-radius:14px;gap:.7rem;transition:background .18s ease}
 .section-collapsible .section-header:hover{background:rgba(245,166,35,.06)}
 .section-collapsible .section-header:focus-visible{outline:2px solid var(--purple);outline-offset:-2px}
-/* A bare ▾ character read as decoration, not as a control. This is the disclosure button every
-   site uses: a labelled pill that says what the click does, with a chevron that turns over. The
-   character itself is kept in the markup for non-CSS fallback but hidden here. */
-.section-collapsible .section-toggle{display:inline-flex;align-items:center;gap:.4rem;margin-left:auto;flex:0 0 auto;
-  font-size:0;line-height:1;padding:.36rem .7rem .36rem .8rem;border-radius:999px;
-  border:1px solid rgba(245,166,35,.38);background:rgba(245,166,35,.09);color:var(--purple-soft);
-  transition:background .18s ease,border-color .18s ease,color .18s ease}
-.section-collapsible .section-toggle::before{content:'Hide';font-family:var(--sans);font-size:.72rem;font-weight:700;letter-spacing:.01em}
+/* A bare ▾ read as decoration. This is the same control the hero cards already use for
+   "Breakdown ▾" — the console's own disclosure language — so the page keeps one button style
+   rather than gaining a second. The ▾ in the markup is the no-CSS fallback; hidden here. */
+.section-collapsible .section-toggle{display:inline-flex;align-items:center;gap:.3rem;margin-left:auto;flex:0 0 auto;
+  font-size:0;line-height:1;padding:.2rem .5rem .2rem .55rem;border-radius:999px;
+  background:none;border:1px solid var(--border);color:var(--text3);
+  transition:var(--transition)}
+.section-collapsible .section-toggle::before{content:'Hide';font-family:var(--sans);font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
 .section-collapsible.collapsed .section-toggle::before{content:'Show'}
-.section-collapsible .section-toggle::after{content:'';width:10px;height:7px;flex:0 0 auto;transform:rotate(180deg);transition:transform .2s ease;
-  background:no-repeat center/10px 7px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23F7B84E' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.section-collapsible .section-toggle::after{content:'▾';font-size:.7rem;line-height:1;transform:rotate(180deg);transition:transform .18s ease}
 .section-collapsible.collapsed .section-toggle::after{transform:none}
-.section-collapsible .section-header:hover .section-toggle{background:rgba(245,166,35,.18);border-color:var(--purple);color:var(--cyan)}
+.section-collapsible .section-header:hover .section-toggle{color:var(--text2);border-color:var(--text4)}
 .section.collapsed .section-toggle{transform:none}
 @media(max-width:600px){.section-collapsible .section-toggle{padding:.34rem .55rem}.section-collapsible .section-toggle::before{display:none}}
 .section-collapsible.collapsed .section-body{display:none}
@@ -414,9 +410,9 @@ input[type=number]{-moz-appearance:textfield}
 .out-group{margin-top:.6rem}
 .out-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid rgba(26,32,56,.6)}
 .out-row:last-child{border-bottom:none}
-.out-label{color:var(--text2);font-size:.82rem;display:flex;align-items:center;gap:.3rem;text-align:left}
-.out-val{font-family:var(--mono);font-size:.88rem;text-align:right;max-width:55%}
-.out-val .sub{font-size:.72rem;color:var(--text3);display:block}
+.out-label{color:var(--text2);font-size:.8rem;display:flex;align-items:center;gap:.3rem;text-align:left}
+.out-val{font-family:var(--mono);font-size:.86rem;text-align:right;max-width:55%}
+.out-val .sub{font-size:.7rem;color:var(--text3);display:block;font-family:var(--mono)}
 .out-val.green{color:var(--green)}.out-val.orange{color:var(--orange)}.out-val.red{color:var(--red)}.out-val.cyan{color:var(--cyan)}.out-val.purple{color:var(--purple-soft)}
 
 /* ---- DIVIDER ---- */
@@ -1255,7 +1251,7 @@ html.show-onboarding #onboarding{display:flex}
 .ob-reset-btn:hover{border-color:var(--purple);color:var(--text2)}
 
 /* ---- SECTION DESCRIPTIONS ---- */
-.section-desc{font-size:.92rem;color:var(--ink2);padding:.1rem 1.6rem 0;line-height:1.55;border-bottom:none;text-align:left;max-width:640px}
+.section-desc{font-size:.82rem;color:var(--text3);padding:.15rem 1.6rem 0;line-height:1.6;border-bottom:none;text-align:left;max-width:640px}
 
 /* ---- REINVEST PROJECTION ---- */
 .ri-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-bottom:1rem;justify-items:center}
