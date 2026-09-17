@@ -168,7 +168,7 @@ document.addEventListener('click',function(e){
 function thPriceBadge(extraClass){
   return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
     title="See what these prices are and when they were last checked">
-    <span class="px-dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated ${TH_PRICES_ASOF}</button>`;
+    <span class="px-dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
 }
 const EFF_BEST=12;            // best efficiency available now
 const EFF_BASE_MAX=15;        // the 15 W/TH hashrate curve; also the marketplace-machine baseline

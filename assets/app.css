@@ -1583,6 +1583,8 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .qk-pop button:hover{background:var(--purple-soft)}
 .qk-pop .n{font-size:.7rem;color:var(--text4);margin-top:.45rem;line-height:1.45}
 @media(max-width:600px){.live-chip.qk .lbl{font-size:.6rem}}
+/* the date reads as a live value, like 49 sats/TH/day and the clock next to it */
+.px-badge .px-when{font-family:var(--mono);color:var(--purple);font-weight:700}
 /* price freshness rides in the live row, just past the clock */
 .subbar .px-subbar{margin:0;justify-content:center}
 .subbar .px-subbar .px-badge{background:none;border-color:transparent;font-size:.74em;padding:.2rem .45rem;color:var(--text4)}
