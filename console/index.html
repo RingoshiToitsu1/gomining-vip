@@ -465,7 +465,6 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 
   <!-- HERO SUMMARY -->
   <div class="sec-head reveal">
-    <span class="tag"><span class="dot"></span>At a glance</span>
     <h2 class="sec-title">Your farm, <span class="grad">live.</span></h2>
   </div>
   <div class="hero-grid" id="heroGrid">
@@ -1364,6 +1363,6 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 </script>
-<script src="/assets/menu.js?v=7"></script>
+<script src="/assets/menu.js?v=8"></script>
 </body>
 </html>

@@ -28,8 +28,8 @@
       { t: 'ROI Calculator', d: 'What a setup earns today', href: '/gomining-roi-calculator' }
     ]},
     { h: 'Charts', items: [
-      { t: 'Bitcoin', href: '/console?chart=bitcoin', run: ['openBtcChart'], m: ['/bitcoin'] },
-      { t: 'GoMining Token', href: '/console?chart=gmt', run: ['openGmtChart'], m: ['/gmt'] },
+      { t: 'Bitcoin', ht: 'Bitcoin Chart', href: '/console?chart=bitcoin', run: ['openBtcChart'], m: ['/bitcoin'] },
+      { t: 'GoMining Token', ht: 'GMT Chart', href: '/console?chart=gmt', run: ['openGmtChart'], m: ['/gmt'] },
       { t: 'Rainbow Chart', href: '/console?view=rainbow', run: ['openRainbow'], m: ['/rainbow'] }
     ], compact: true },
     { h: 'Guides', items: [
@@ -62,6 +62,13 @@
 .gm-burger[aria-expanded="true"] i:nth-child(2){opacity:0}
 .gm-burger[aria-expanded="true"] i:nth-child(3){top:20px;transform:rotate(-45deg)}
 .gm-has-menu .nav-links,.gm-hide{display:none!important}
+/* the page you are on, named in the header — same source as the menu, so they can't disagree */
+.gm-title{display:inline-flex;align-items:center;gap:9px;margin-left:11px;flex:0 1 auto;min-width:0;
+  font-family:'Space Grotesk',system-ui,sans-serif;font-size:14px;font-weight:600;color:#EBE2D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-title::before{content:'';flex:0 0 auto;width:1px;height:16px;background:rgba(240,196,120,.28)}
+.gm-title[hidden]{display:none}
+@media(max-width:560px){.gm-title{font-size:12.5px;margin-left:8px;gap:7px}}
+@media(max-width:400px){.gm-title{display:none}}
 .gm-has-menu{flex-wrap:nowrap!important;justify-content:flex-start!important}
 .gm-has-menu>.brand,.gm-has-menu>.c-brand{margin-right:auto}
 /* Phones: Launch Console stays beside the hamburger — both tighten so brand + CTA + menu fit one row. */
@@ -246,9 +253,45 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       document.body.appendChild(btn);
     }
 
+    // Name the current page in the header. Console views rewrite the URL without reloading, so
+    // this is recomputed whenever the view changes, not just at load.
+    const title = document.createElement('span');
+    title.className = 'gm-title';
+    title.hidden = true;
+    if (host) host.insertBefore(title, host.children[1] || null);
+    const BASE_TITLE = document.title;
+    function currentLabel() {
+      // Only the named tools and guides get a header title; the per-size and per-price data
+      // pages carry their own headline, and "10 TH" alone says nothing up here.
+      for (const sec of MENU) {
+        for (const it of (sec.items || [])) if (isOnNow(pathsFor(it))) return it.ht || it.t;
+      }
+      return null;
+    }
+    function syncTitle() {
+      const l = currentLabel();
+      title.textContent = l || '';
+      title.hidden = !l;
+      // The console never changes its tab title as you move between views; every other page
+      // states its own, so leave those alone.
+      if (isConsole() && l) document.title = l + ' · GMT Optimizer';
+      else if (isConsole()) document.title = BASE_TITLE;
+    }
+    syncTitle();
+    addEventListener('popstate', syncTitle);
+    if (isConsole()) {
+      const mo2 = new MutationObserver(syncTitle);
+      mo2.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      document.querySelectorAll('.tab-btn').forEach(b => mo2.observe(b, { attributes: true, attributeFilter: ['class'] }));
+      // Panel opens (Edit Farm, a chart, the projection) only rewrite the URL, so poll briefly
+      // after any click to catch the change the observers cannot see.
+      document.addEventListener('click', () => setTimeout(syncTitle, 60), true);
+    }
+
     const drawer = menu.querySelector('.gm-drawer');
     let lastFocus = null;
     function syncActive() {
+      syncTitle();
       menu.querySelectorAll('[data-paths]').forEach(a => {
         const on = isOnNow(a.getAttribute('data-paths').split(' '));
         a.classList.toggle('gm-on', on);
