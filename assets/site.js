@@ -17,34 +17,31 @@
   while(bg.firstChild) document.body.insertBefore(bg.firstChild, document.body.firstChild);
   }
 
-  /* ---- nav ---- */
-  var nav=document.createElement('nav');
-  nav.id='nav';
-  nav.innerHTML='<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
-    '<div class="nav-links"><a href="/">Home</a><a href="/console">Console</a><a href="/planner">Planner</a><a href="/bitcoin">Charts</a></div>'+
-    '<a href="/console" class="nav-cta">Launch Console</a>';
+  /* ---- top bar: the console's own chrome, so every tool and guide wears the same head ----
+     A header row (brand, the page's name via menu.js, Launch Console, the menu button) over a
+     live strip of the same chips the console shows: BTC, GMT, sats/TH/day and when they last
+     refreshed. .header-inner is what menu.js hooks, and the chip values are filled by the same
+     fetch that used to drive the ticker. */
+  var nav=document.createElement('div');
+  nav.className='gmbar';
+  nav.innerHTML=
+    '<div class="gmbar-head"><div class="header-inner gmbar-inner">'+
+      '<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
+      '<div class="nav-links"></div>'+
+      '<a href="/console" class="nav-cta">Launch Console</a>'+
+    '</div></div>'+
+    '<div class="gmbar-sub"><div class="live-bar">'+
+      '<a class="live-chip live-chip-btn" href="/bitcoin" title="Open the live Bitcoin chart"><img src="/btc36.png" alt="BTC"><span class="val" data-tk="btc">--</span></a>'+
+      '<a class="live-chip live-chip-btn" href="/gmt" title="Open the live GoMining Token chart"><img src="/gmt36.png" alt="GMT"><span class="val" data-tk="gmt">--</span></a>'+
+      '<span class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" data-tk="sats">--</span></span>'+
+      '<span class="live-chip"><span class="live-dot"></span><span class="lbl">Updated</span><span class="val" id="gmbUpdated">--</span></span>'+
+    '</div></div>';
   document.body.insertBefore(nav, document.body.firstChild);
+  document.body.classList.add('has-bar');
   /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
   var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=8';document.body.appendChild(menuJs);
 
-  /* ---- utility ticker / quotron (matches the landing) ---- */
-  var util=document.createElement('div');
-  util.className='util';util.setAttribute('aria-hidden','true');
-  util.innerHTML='<div class="ticker">'+
-    '<span><span class="li">◉ NETWORK LIVE</span></span>'+
-    '<span>BTC <b data-tk="btc">$64,180</b></span>'+
-    '<span>DIFFICULTY <b data-tk="diff">121.51 T</b></span>'+
-    '<span>HASHPRICE <b data-tk="hp">$46.2 / PH/day</b></span>'+
-    '<span>GMT <b data-tk="gmt">$0.285</b></span>'+
-    '<span>NEXT HALVING <b>2028</b></span>'+
-    '<span class="up">▲ SATS/TH/DAY <b data-tk="sats" style="color:inherit;font-weight:400">412</b></span>'+
-    '<span><span class="li">◉ NETWORK LIVE</span></span>'+
-    '<span>BTC <b data-tk="btc">$64,180</b></span>'+
-    '<span>DIFFICULTY <b data-tk="diff">121.51 T</b></span>'+
-    '<span>HASHPRICE <b data-tk="hp">$46.2 / PH/day</b></span>'+
-    '<span>GMT <b data-tk="gmt">$0.285</b></span>'+
-    '</div>';
-  document.body.insertBefore(util, document.body.firstChild);
+  /* ---- live values for the strip above (same sources the ticker used) ---- */
   (function(){
     var BS=3.125;
     function set(k,v){document.querySelectorAll('[data-tk="'+k+'"]').forEach(function(el){el.textContent=v;});}
@@ -71,6 +68,15 @@
           var sats=((1e12*86400*BS)/(diff*Math.pow(2,32)))*1e8;set('sats',Math.round(sats));
           if(btc>0)set('hp','$'+((sats/1e8)*1000*btc).toFixed(1)+' / PH/day');
         }
+        // "Updated 12s ago", ticking like the console's clock
+        var at=Date.now(), el=document.getElementById('gmbUpdated');
+        if(el){
+          (function tick(){
+            var s=Math.round((Date.now()-at)/1000);
+            el.textContent=s<60?s+'s ago':(s<3600?Math.round(s/60)+'m ago':Math.round(s/3600)+'h ago');
+            setTimeout(tick,s<60?5000:30000);
+          })();
+        }
       }catch(e){}
     })();
   })();
@@ -79,6 +85,7 @@
     addEventListener('scroll',function(){nav.classList.toggle('shrunk',(scrollY||document.documentElement.scrollTop)>40);},{passive:true});
     return;
   }
+  addEventListener('scroll',function(){nav.classList.toggle('shrunk',(scrollY||document.documentElement.scrollTop)>40);},{passive:true});
 
   /* ---- footer ---- */
   var foot=document.createElement('footer');

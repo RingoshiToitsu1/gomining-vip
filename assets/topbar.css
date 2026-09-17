@@ -1,46 +1,76 @@
-/* GMT Optimizer — shared top bar for the standalone tools (/statement, /quote).
+/* GMT Optimizer — the shared top bar: the console's chrome, worn by every other page.
    =========================================================================
-   Those pages carry their own stylesheet, so they can't take content.css (its resets and body
-   styles would restyle the tool). This is only the chrome: the live ticker and the docked glass
-   nav with brand, Launch Console and the hamburger — the same sizes as the content pages and the
-   console. site.js injects the markup when loaded with data-chrome="bar".
-   Keep in step with the .util / nav / .brand / .nav-cta rules in content.css. */
-.util,nav#nav{
+   The console builds its own bar out of assets/app.css (.topbar > .header + .subbar). The tools
+   and guides can't take app.css — it is the console's whole design system and would restyle each
+   page underneath it — so this is the same bar, rebuilt to stand alone: a header row (brand, the
+   page's name from menu.js, Launch Console, the menu button) over a live strip of the same chips
+   (BTC, GMT, sats/TH/day, Updated). site.js injects the markup on every page that loads it.
+
+   Sizes are FIXED, not rem: these pages run a 16px root and the console runs 19.8px, and the bar
+   has to look identical on both. Keep it in step with the .header / .live-chip rules in app.css. */
+.gmbar{
   --gm-gold:#F5A623;--gm-gold-hi:#FFC65A;--gm-gold-soft:#FFCF7A;--gm-warm:#FFF4E0;
-  --gm-ink2:#A79B89;--gm-ink3:#8C8170;--gm-line:rgba(240,196,120,.14);--gm-line-soft:rgba(200,210,235,.08);
+  --gm-ink:#EBE2D2;--gm-ink2:#C3B8A6;--gm-ink3:#A79B89;--gm-ink4:#8C8170;
+  --gm-line:rgba(240,196,120,.16);--gm-card:#111111;--gm-card-hi:#1a1a1a;
   --gm-mono:'Share Tech Mono',ui-monospace,monospace;--gm-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
-  --gm-ease:cubic-bezier(.22,.61,.36,1)}
-.util{position:fixed;top:0;left:0;right:0;z-index:49;height:30px;display:flex;align-items:center;overflow:hidden;
-  font-family:var(--gm-mono);font-size:.68rem;letter-spacing:.14em;color:var(--gm-ink2);
-  background:linear-gradient(180deg,rgba(6,7,9,.9),rgba(6,7,9,.6));border-bottom:1px solid var(--gm-line-soft);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.util .ticker{display:inline-flex;gap:34px;white-space:nowrap;padding-left:100%;animation:gmTicker 34s linear infinite}
-.util .ticker b{color:var(--gm-gold-soft);font-weight:400}.util .ticker .up{color:#57d9a3}.util .ticker .li{color:var(--gm-gold)}
-@keyframes gmTicker{to{transform:translateX(-100%)}}
+  --gm-ease:cubic-bezier(.22,.61,.36,1);
+  position:fixed;top:0;left:0;right:0;z-index:50;font-family:var(--gm-sans);line-height:1.4}
 
-nav#nav{position:fixed;top:30px;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
-  padding:12px max(22px,calc((100% - 1160px) / 2));margin:0;border-radius:0;font-family:var(--gm-sans);line-height:1.4;
-  background:linear-gradient(180deg,rgba(10,12,18,.88),rgba(8,10,14,.74));
+/* ---- header row ---- */
+.gmbar-head{
+  background:linear-gradient(180deg,rgba(10,12,18,.9),rgba(8,10,14,.78));
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
-  border:0;border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgba(0,0,0,.42);
-  transition:padding .35s var(--gm-ease),background .35s var(--gm-ease)}
-nav#nav.shrunk{padding-top:8px;padding-bottom:8px;background:linear-gradient(180deg,rgba(8,10,14,.95),rgba(6,8,12,.9))}
-nav#nav .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--gm-warm);letter-spacing:.01em;font-size:1.02rem;text-decoration:none}
-nav#nav .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
-nav#nav .brand .v{font-family:var(--gm-mono);font-size:.58rem;color:var(--gm-ink3);letter-spacing:.15em;border:1px solid var(--gm-line);padding:2px 6px;border-radius:6px;margin-left:2px}
-nav#nav .nav-cta{padding:10px 18px;border-radius:12px;font-size:.82rem;font-weight:600;color:#100a02;text-decoration:none;position:relative;
-  background:linear-gradient(135deg,var(--gm-gold-hi),var(--gm-gold-soft));box-shadow:0 6px 22px rgba(245,166,35,.34);
-  transition:transform .25s var(--gm-ease),box-shadow .25s;overflow:hidden;font-family:var(--gm-sans)}
-nav#nav .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
+  border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgba(0,0,0,.42);
+  transition:padding .3s var(--gm-ease)}
+.gmbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:10px;
+  padding:11px max(22px,calc((100% - 1160px) / 2));min-height:40px;flex-wrap:nowrap}
+.gmbar.shrunk .gmbar-inner{padding-top:7px;padding-bottom:7px}
+.gmbar .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--gm-warm);
+  font-size:16px;letter-spacing:.01em;text-decoration:none;white-space:nowrap}
+.gmbar .brand:hover{color:var(--gm-gold-soft)}
+.gmbar .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
+.gmbar .brand .v{font-family:var(--gm-mono);font-size:9px;color:var(--gm-ink4);letter-spacing:.15em;
+  border:1px solid var(--gm-line);padding:2px 6px;border-radius:6px;margin-left:2px}
+.gmbar .nav-cta{flex:0 0 auto;padding:9px 16px;border-radius:12px;font-size:13px;font-weight:600;color:#100a02;
+  text-decoration:none;white-space:nowrap;background:linear-gradient(135deg,var(--gm-gold-hi),var(--gm-gold-soft));
+  box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--gm-ease),box-shadow .25s}
+.gmbar .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
 
-/* clear the fixed ticker + bar */
-body.has-bar{padding-top:96px}
+/* ---- live strip: the console's chips, same shapes and colours ---- */
+.gmbar-sub{display:flex;justify-content:center;padding:0 14px}
+.gmbar .live-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;
+  width:fit-content;max-width:100%;margin:8px auto 0;padding:6px 12px;border-radius:16px;
+  border:1px solid var(--gm-line);background:linear-gradient(180deg,rgba(20,22,30,.78),rgba(10,12,18,.72));
+  backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 10px 34px rgba(0,0,0,.44)}
+.gmbar .live-chip{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:16px;
+  border:1px solid transparent;font-size:13px;color:var(--gm-ink2);text-decoration:none;transition:.15s}
+.gmbar .live-chip img{width:17px;height:17px;border-radius:50%;object-fit:contain;flex:0 0 auto}
+.gmbar .live-chip .lbl{color:var(--gm-ink2);font-weight:600}
+.gmbar .live-chip .val{font-family:var(--gm-mono);color:var(--gm-gold);font-weight:700}
+.gmbar .live-chip-btn{cursor:pointer}
+.gmbar .live-chip-btn:hover{background:rgba(255,255,255,.05)}
+.gmbar .live-dot{width:7px;height:7px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84;flex:0 0 auto}
+
+/* ---- the page under it ---- */
+body.has-bar{padding-top:108px}
+body.has-bar .content-wrap{padding-top:22px}
+body.has-bar .wrap{padding-top:1.2rem}
 @media(max-width:820px){
-  nav#nav{top:0;padding-left:16px;padding-right:16px}
-  .util{display:none}
-  body.has-bar{padding-top:66px}
+  .gmbar .brand .v{display:none}
+  body.has-bar{padding-top:104px}
+}
+@media(max-width:560px){
+  .gmbar-inner{padding-left:16px;padding-right:16px;gap:8px}
+  .gmbar .brand{font-size:14.5px}
+  .gmbar .brand img{width:23px;height:23px}
+  .gmbar .nav-cta{padding:8px 12px;font-size:12px}
+  .gmbar .live-chip{font-size:12px;padding:4px 8px;gap:4px}
+  .gmbar .live-chip .lbl{font-size:11px}
+  .gmbar .live-bar{gap:3px;padding:5px 8px}
+  body.has-bar{padding-top:100px}
 }
 @media print{
-  .util,nav#nav,.gm-menu{display:none!important}
+  .gmbar,.gm-menu{display:none!important}
   body.has-bar{padding-top:0!important}
 }
