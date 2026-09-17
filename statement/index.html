@@ -175,13 +175,39 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
    The screen theme is dark by design; on paper that is unreadable and burns ink,
    so print re-themes to a light document and swaps in the light-surface validated
    chart pair. Only the tokens change — no chart code is print-aware. */
+/* ---- veGoMining staking input ---- */
+.stake{margin-top:1rem;padding:1rem 1.1rem;border-radius:14px;background:var(--card);border:1px solid var(--bd)}
+.stake[hidden]{display:none}
+.stake-head b{display:block;color:var(--txt);font-size:.95rem}
+.stake-head span{display:block;color:var(--t3);font-size:.78rem;line-height:1.55;margin:.25rem 0 .9rem;max-width:62rem}
+.stake-ctl{display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:.9rem}
+.stake-ctl button{background:var(--gold);color:#1a1206;border:none;border-radius:10px;font-family:var(--sans);font-weight:700;
+  font-size:.82rem;padding:.55rem 1rem;cursor:pointer}
+.stake-ctl button.ghost{background:none;border:1px solid var(--bd);color:var(--t2)}
+.stake-ctl button.ghost:hover{border-color:var(--t4);color:var(--txt)}
+.stake-chk{display:inline-flex;align-items:center;gap:.45rem;color:var(--t2);font-size:.8rem;cursor:pointer;padding-bottom:.55rem}
+.stake-chk input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer}
+.stake-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));gap:.5rem;max-height:17rem;overflow-y:auto;padding-right:.2rem}
+.stake-item{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:.42rem .6rem;transition:.15s}
+.stake-item:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+.stake-item .sd{flex:0 0 5.6rem;font-size:.76rem;color:var(--t2);font-family:var(--mono)}
+.stake-item input{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;color:var(--txt);
+  font-family:var(--mono);font-size:.86rem;text-align:right;padding:0}
+.stake-item .su{flex:0 0 auto;color:var(--t4);font-size:.7rem;font-family:var(--mono)}
+.stake-item .sv{flex:0 0 5rem;text-align:right;color:var(--green);font-family:var(--mono);font-size:.76rem}
+.stake-empty{color:var(--t3);font-size:.8rem}
+.stake-tot{margin-top:.75rem;font-size:.82rem;color:var(--t2);line-height:1.5}
+.stake-tot b{color:var(--gold2);font-weight:400;font-family:var(--mono)}
+.stake-priv{margin-top:.5rem;font-size:.72rem;color:var(--t4);line-height:1.5}
+.stake-note{color:var(--t3);font-size:.8rem;line-height:1.6;margin:-.2rem 0 .7rem;max-width:64rem}
+.stake-note b{color:var(--t2)}
 @media print{
   @page{margin:14mm 12mm}
   :root{--bg:#fff;--card:#fff;--card2:#fafafa;--bd:#d8d8d8;--txt:#111;--t2:#333;--t3:#555;--t4:#777;
     --gold:#8a5a00;--gold2:#8a5a00;
     --c-pos:#00795a;--c-neg:#b3400f;--c-gold:#a06400;--c-grid:#e2e2e2;--c-axis:#555;--c-zero:#999}
   body{background:#fff!important;background-image:none!important;color:#111}
-  .top,.lede,.panel,.foot,.actions,.ch-tip{display:none!important}
+  .top,.lede,.panel,.foot,.actions,.ch-tip,.stake{display:none!important}
   h1{display:none}
   .wrap{max-width:none;padding:0}
   .out{margin:0;display:block!important}
@@ -250,6 +276,22 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
       </div>
     </div>
 
+    <div class="stake" id="stStake" hidden>
+      <div class="stake-head">
+        <b>veGoMining staking rewards</b>
+        <span>GoMining doesn&rsquo;t put staking in the CSV yet, so enter what you were paid. Rewards land every Tuesday; each one is valued at the GMT price recorded in your export for that day, and appears as its own line &mdash; never mixed into the mining figures.</span>
+      </div>
+      <div class="stake-ctl">
+        <div class="fld"><label for="stStakeWk">GMT per week</label><input type="number" id="stStakeWk" min="0" step="0.0001" placeholder="e.g. 42.5" inputmode="decimal"></div>
+        <button type="button" id="stStakeFill">Apply to every Tuesday</button>
+        <button type="button" class="ghost" id="stStakeClear">Clear period</button>
+        <label class="stake-chk"><input type="checkbox" id="stStakeShare" checked> Apply the ownership share to staking too</label>
+      </div>
+      <div class="stake-list" id="stStakeList"></div>
+      <div class="stake-tot" id="stStakeTot"></div>
+      <div class="stake-priv">Amounts you type are saved in this browser only, so they are still here next week. Your CSV is never stored or uploaded.</div>
+    </div>
+
     <div class="actions" id="stActions" hidden>
       <button type="button" id="stPrint">Print / save as PDF</button>
       <button type="button" class="ghost" id="stCSV">Download monthly summary (CSV)</button>
@@ -266,7 +308,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 <!-- Deliberately the ONLY script on this page. /statement handles someone's real
      earnings history: no account.js, no chat.js, no Supabase, no analytics, no
      localStorage. Adding any of those breaks the promise made in the panel above. -->
-<script src="/assets/statement.js?v=1"></script>
+<script src="/assets/statement.js?v=2"></script>
 <script src="/assets/site.js?v=17" data-chrome="bar"></script>
 </body>
 </html>

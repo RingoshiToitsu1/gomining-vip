@@ -565,6 +565,7 @@
     // trim a trailing ".0" so a whole percentage does not read as a false precision
     const shareTxt = (Math.round(share * 10) / 10).toFixed(share % 1 === 0 ? 0 : 1) + '%';
 
+    const ST = stakeTotals();
     const issued = new Date();
     const issuedStr = issued.getDate() + ' ' + MONTHS[issued.getMonth()] + ' ' + issued.getFullYear();
 
@@ -614,11 +615,16 @@
       ['Average hashrate', num(T.thAvg) + ' TH', 'across ' + T.days + ' days'],
       ['Gross yield', T.satsTH.toFixed(1) + ' sats', 'per TH per day']
     ];
+    if (ST.usd > 0) {
+      kpis.splice(3, 0,
+        ['Staking rewards (veGoMining)', usd0(ST.usd), num(ST.gmt, 2) + ' GMT · entered by the preparer'],
+        ['Total income', usd0(T.netUSD + ST.usd), 'mining net + staking']);
+    }
     if (S.capital > 0) {
       // Simple period return on the capital the preparer states — NOT annualised,
       // because annualising a part-year mining result overstates it.
-      kpis.push(['Return on capital', pct((T.netUSD / S.capital) * 100),
-        'on ' + usd0(S.capital) + ' over ' + T.days + ' days']);
+      kpis.push(['Return on capital', pct(((T.netUSD + ST.usd) / S.capital) * 100),
+        'on ' + usd0(S.capital) + ' over ' + T.days + ' days' + (ST.usd > 0 ? ', incl. staking' : '')]);
     }
     doc.insertAdjacentHTML('beforeend', '<section class="kpis">' + kpis.map((k) =>
       '<div class="kpi"><div class="k">' + esc(k[0]) + '</div><div class="v">' + esc(k[1]) + '</div><div class="s">' + esc(k[2]) + '</div></div>').join('') + '</section>');
@@ -642,8 +648,10 @@
     if (months.length > 1) chartMargin(charts, months);
 
     // ---- monthly table ----
+    const hasStake = ST.usd > 0;
     let rowsHTML = '';
     for (const m of months) {
+      const ms = ST.month.get(m.k) || 0;
       rowsHTML += '<tr>' +
         '<td class="lft">' + esc(mLabel(m.k)) + '</td>' +
         '<td>' + m.days + '</td>' +
@@ -651,6 +659,8 @@
         '<td>' + esc(usd(m.grossUSD)) + '</td>' +
         '<td>' + esc(usd(m.costUSD)) + '</td>' +
         '<td class="' + (m.netUSD >= 0 ? 'pos' : 'neg') + '">' + esc(usd(m.netUSD)) + '</td>' +
+        (hasStake ? '<td>' + (ms > 0 ? esc(usd(ms)) : '—') + '</td>' +
+          '<td class="' + (m.netUSD + ms >= 0 ? 'pos' : 'neg') + '">' + esc(usd(m.netUSD + ms)) + '</td>' : '') +
         '<td class="' + (m.netUSD >= 0 ? 'pos' : 'neg') + '">' + esc(pct(m.margin)) + '</td>' +
         '<td class="mono-dim">' + esc(btc(m.net)) + '</td>' +
       '</tr>';
@@ -659,15 +669,35 @@
       '<section class="tbl-sec">' +
         '<h2>Monthly summary</h2>' +
         '<div class="tbl-scroll"><table class="tbl">' +
-          '<thead><tr><th class="lft">Month</th><th>Days</th><th>Avg TH</th><th>Gross</th><th>Costs</th><th>Net</th><th>Margin</th><th>Net BTC</th></tr></thead>' +
+          '<thead><tr><th class="lft">Month</th><th>Days</th><th>Avg TH</th><th>Gross</th><th>Costs</th><th>Net</th>' +
+            (hasStake ? '<th>Staking</th><th>Total</th>' : '') + '<th>Margin</th><th>Net BTC</th></tr></thead>' +
           '<tbody>' + rowsHTML + '</tbody>' +
           '<tfoot><tr><td class="lft">Total</td><td>' + T.days + '</td><td>' + esc(num(T.thAvg)) + '</td>' +
             '<td>' + esc(usd(T.grossUSD)) + '</td><td>' + esc(usd(T.costUSD)) + '</td>' +
             '<td class="' + (T.netUSD >= 0 ? 'pos' : 'neg') + '">' + esc(usd(T.netUSD)) + '</td>' +
+            (hasStake ? '<td>' + esc(usd(ST.usd)) + '</td><td class="' + (T.netUSD + ST.usd >= 0 ? 'pos' : 'neg') + '">' + esc(usd(T.netUSD + ST.usd)) + '</td>' : '') +
             '<td class="' + (T.netUSD >= 0 ? 'pos' : 'neg') + '">' + esc(pct(T.margin)) + '</td>' +
             '<td class="mono-dim">' + esc(btc(T.net)) + '</td></tr></tfoot>' +
         '</table></div>' +
       '</section>');
+
+    // ---- staking payments (operator-entered, kept apart from the export) ----
+    if (hasStake) {
+      doc.insertAdjacentHTML('beforeend',
+        '<section class="tbl-sec">' +
+          '<h2>Staking rewards (veGoMining)</h2>' +
+          '<p class="stake-note">These are <b>not</b> in the GoMining export — GoMining does not provide staking in the CSV — so the dates and GMT amounts below were entered by the preparer. ' +
+            'Each is valued at the GMT reference price recorded in the export for that day' + (share < 100 && S.stakeShare ? ', then stated at the ' + esc(shareTxt) + ' ownership share' : '') + '.</p>' +
+          '<div class="tbl-scroll"><table class="tbl">' +
+            '<thead><tr><th class="lft">Paid</th><th>GMT</th><th>GMT price</th><th>Value</th></tr></thead>' +
+            '<tbody>' + ST.rows.map((r) =>
+              '<tr><td class="lft">' + esc(dLabel(r.d)) + '</td><td>' + esc(num(r.gmt, 4)) + '</td>' +
+              '<td class="mono-dim">' + esc(usd(r.px, 4)) + '</td><td class="pos">' + esc(usd(r.usd)) + '</td></tr>').join('') +
+            '</tbody>' +
+            '<tfoot><tr><td class="lft">Total</td><td>' + esc(num(ST.gmt, 4)) + '</td><td class="mono-dim">—</td><td class="pos">' + esc(usd(ST.usd)) + '</td></tr></tfoot>' +
+          '</table></div>' +
+        '</section>');
+    }
 
     // ---- operating profile ----
     const stack = [
@@ -698,7 +728,9 @@
           '<li>Days on which GoMining’s reward protection paused a miner are recorded as idle — no reward and no maintenance — which is why no day in this statement runs at a loss.</li>' +
           (share < 100 ? '<li><b>This statement covers ' + esc(shareTxt) + ' of the farm.</b> Income, costs and hashrate are stated pro rata at that share for the whole period. Ratios — margin, sats per TH per day and W/TH — are unchanged by the split and match the farm as a whole.</li>' : '') +
           '<li>US dollar amounts are accrual figures: each day is converted at the BTC reference price recorded for that day, not at today’s price. Totals therefore differ from the current market value of the BTC held.</li>' +
-          '<li>Rewards from staking locked GMT are <b>not</b> included — the export covers mining income only.</li>' +
+          (hasStake
+            ? '<li><b>Staking rewards are stated separately and are not from the export.</b> GoMining does not include veGoMining staking in the CSV, so the ' + ST.rows.length + ' payment' + (ST.rows.length === 1 ? '' : 's') + ' listed above were entered by the preparer and valued at the GMT reference price recorded for each payment date. Mining figures, margins and yields exclude them.</li>'
+            : '<li>Rewards from staking locked GMT are <b>not</b> included — the export covers mining income only.</li>') +
           '<li>Unaudited, and not a tax document in itself — a mined-coin disposal is taxed on rules this statement does not attempt to apply. Prepared for information only; past results do not indicate future returns.</li>' +
         '</ul>' +
       '</footer>');
@@ -707,6 +739,27 @@
   function spanDays(a, b) {
     const d = Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
     return d + ' day' + (d === 1 ? '' : 's');
+  }
+
+  // ---- staking panel: one row per Tuesday in the period ----
+  function renderStakePanel() {
+    const host = $('stStakeList'); if (!host) return;
+    const list = tuesdays(S.from, S.to);
+    if (!list.length) { host.innerHTML = '<div class="stake-empty">No Tuesdays fall in this period.</div>'; $('stStakeTot').textContent = ''; return; }
+    const k = S.stakeShare ? (S.share || 0) / 100 : 1;
+    host.innerHTML = list.map((d) => {
+      const g = S.stake[d] != null ? S.stake[d] : '';
+      const px = gmtPriceOn(d);
+      const val = (+g || 0) * k * px;
+      return '<label class="stake-item"><span class="sd">' + esc(dLabel(d)) + '</span>' +
+        '<input type="number" min="0" step="0.0001" inputmode="decimal" placeholder="0" data-d="' + esc(d) + '" value="' + esc(g) + '">' +
+        '<span class="su">GMT</span><span class="sv">' + (val > 0 ? esc(usd(val)) : '') + '</span></label>';
+    }).join('');
+    const T = stakeTotals();
+    $('stStakeTot').innerHTML = T.gmt > 0
+      ? '<b>' + esc(num(T.gmt, 2)) + ' GMT</b> entered for this period &middot; <b>' + esc(usd(T.usd)) + '</b> at the GMT price recorded on each payment date' +
+        (k !== 1 ? ' (your ' + esc(num(S.share, 2)) + '% share)' : '')
+      : 'Nothing entered yet — these are added to the statement as a separate line, never mixed into the mining figures.';
   }
 
   // ---------------------------------------------------------------- controls
@@ -718,7 +771,10 @@
     $('stTo').value = last; $('stTo').min = first; $('stTo').max = last;
 
     $('stCtl').hidden = false;
+    $('stStake').hidden = false;
     $('stActions').hidden = false;
+    _gmtPx = null;
+    renderStakePanel();
   }
 
   /* setUTCMonth overflows rather than clamps: 31 March minus one month is 31
@@ -800,13 +856,17 @@
   // ---------------------------------------------------------------- exports
   function downloadSummary() {
     const agg = aggregate(), months = agg.months, T = agg.T;
-    const rows = [['month', 'days', 'avg_th', 'gross_usd', 'costs_usd', 'net_usd', 'margin_pct', 'gross_btc', 'net_btc']];
+    const ST = stakeTotals();
+    const rows = [['month', 'days', 'avg_th', 'gross_usd', 'costs_usd', 'net_usd', 'staking_usd', 'total_income_usd', 'margin_pct', 'gross_btc', 'net_btc']];
     for (const m of months) {
+      const ms = ST.month.get(m.k) || 0;
       rows.push([m.k, m.days, m.thAvg.toFixed(2), m.grossUSD.toFixed(2), m.costUSD.toFixed(2),
-        m.netUSD.toFixed(2), m.margin == null ? '' : m.margin.toFixed(2), m.gross.toFixed(8), m.net.toFixed(8)]);
+        m.netUSD.toFixed(2), ms.toFixed(2), (m.netUSD + ms).toFixed(2),
+        m.margin == null ? '' : m.margin.toFixed(2), m.gross.toFixed(8), m.net.toFixed(8)]);
     }
     rows.push(['TOTAL', T.days, T.thAvg.toFixed(2), T.grossUSD.toFixed(2), T.costUSD.toFixed(2),
-      T.netUSD.toFixed(2), T.margin == null ? '' : T.margin.toFixed(2), T.gross.toFixed(8), T.net.toFixed(8)]);
+      T.netUSD.toFixed(2), ST.usd.toFixed(2), (T.netUSD + ST.usd).toFixed(2),
+      T.margin == null ? '' : T.margin.toFixed(2), T.gross.toFixed(8), T.net.toFixed(8)]);
     const csv = rows.map((r) => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
@@ -818,6 +878,8 @@
 
   // ---------------------------------------------------------------- wiring
   function init() {
+    loadStake();
+    if ($('stStakeShare')) $('stStakeShare').checked = S.stakeShare;
     const drop = $('stDrop'), input = $('stFile');
     drop.addEventListener('click', () => input.click());
     drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
@@ -829,12 +891,12 @@
     $('stFrom').addEventListener('change', (e) => {
       S.from = e.target.value;
       document.querySelectorAll('#stRanges button').forEach((b) => b.classList.remove('on'));
-      render();
+      renderStakePanel(); render();
     });
     $('stTo').addEventListener('change', (e) => {
       S.to = e.target.value;
       document.querySelectorAll('#stRanges button').forEach((b) => b.classList.remove('on'));
-      render();
+      renderStakePanel(); render();
     });
     document.querySelectorAll('#stRanges button').forEach((b) =>
       b.addEventListener('click', () => setRange(b.dataset.r)));
@@ -851,9 +913,35 @@
         if (!isFinite(v) || v <= 0) v = 100;
         v = Math.min(100, Math.max(0.01, v));
         if (String(v) !== e.target.value) e.target.value = v;
-        S.share = v; render();
+        S.share = v; renderStakePanel(); render();
       }, 300);
     });
+    // ---- veGoMining staking ----
+    let t4;
+    $('stStakeList').addEventListener('input', (e) => {
+      const el = e.target; const d = el.getAttribute && el.getAttribute('data-d');
+      if (!d) return;
+      const v = parseFloat(el.value);
+      if (isFinite(v) && v > 0) S.stake[d] = v; else delete S.stake[d];
+      saveStake();
+      clearTimeout(t4);
+      t4 = setTimeout(() => { renderStakePanel(); render(); }, 350);
+    });
+    $('stStakeFill').addEventListener('click', () => {
+      const v = parseFloat($('stStakeWk').value);
+      if (!isFinite(v) || v <= 0) { $('stStakeWk').focus(); return; }
+      tuesdays(S.from, S.to).forEach((d) => { S.stake[d] = v; });
+      saveStake(); renderStakePanel(); render();
+    });
+    $('stStakeClear').addEventListener('click', () => {
+      tuesdays(S.from, S.to).forEach((d) => { delete S.stake[d]; });
+      saveStake(); renderStakePanel(); render();
+    });
+    $('stStakeShare').addEventListener('change', (e) => {
+      S.stakeShare = !!e.target.checked;
+      saveStake(); renderStakePanel(); render();
+    });
+
     let t3;
     $('stCap').addEventListener('input', (e) => {
       clearTimeout(t3);
