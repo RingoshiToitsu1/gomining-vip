@@ -31,7 +31,7 @@ input[type=number]{-moz-appearance:textfield}
 .live-chip{display:flex;align-items:center;gap:.35rem;padding:.3rem .65rem;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;font-size:.78rem;transition:var(--transition);overflow:visible}
 .live-chip:hover{border-color:var(--purple);background:var(--bg-card-hover)}
 .live-chip img{height:18px;width:18px;object-fit:contain;flex-shrink:0;border-radius:50%}
-.live-chip .lbl{color:var(--text3);font-weight:500}
+.live-chip .lbl{color:var(--text2);font-weight:600}
 .live-chip .val{font-family:var(--mono);color:var(--purple);font-weight:700}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,.4)}50%{box-shadow:0 0 0 5px rgba(52,211,153,0)}}
@@ -302,23 +302,6 @@ input[type=number]{-moz-appearance:textfield}
 .sec-head{margin:0 0 1.2rem}
 /* The hero heading carries the badge on its own line, right-aligned on desktop and pulled up
    beside the title. It sits with the numbers it vouches for without competing with them. */
-.sec-head-px{margin:-.4rem 0 0;align-items:center;gap:.1rem}
-/* Drawn on once, on a delay, so it arrives after the page has settled rather than competing
-   with the hero numbers loading. stroke-dasharray animates the line on like a pen stroke. */
-.px-arrow{width:132px;height:34px;flex:0 0 auto;margin-right:-.35rem;overflow:visible;
-  opacity:0;animation:pxArrowIn .5s ease .9s forwards}
-.px-arrow path{stroke-dasharray:150;stroke-dashoffset:150;animation:pxArrowDraw 1s var(--ease2,ease) 1s forwards}
-.px-arrow path:last-child{animation-duration:.4s;animation-delay:1.7s}
-@keyframes pxArrowIn{to{opacity:1}}
-@keyframes pxArrowDraw{to{stroke-dashoffset:0}}
-@media(prefers-reduced-motion:reduce){
-  .px-arrow,.px-arrow path{animation:none;opacity:1;stroke-dashoffset:0}
-}
-@media(max-width:700px){
-  .sec-head-px{margin:.35rem 0 0;justify-content:flex-start}
-  /* Nothing to point across once the badge sits under the heading. */
-  .px-arrow{display:none}
-}
 .sec-head .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft)}
 .sec-head .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold)}
 .sec-head .sec-title{font-size:clamp(1.55rem,3vw,2.15rem);font-weight:600;color:var(--warm);line-height:1.1;letter-spacing:-.02em;margin-top:12px}
@@ -603,8 +586,8 @@ input[type=number]{-moz-appearance:textfield}
   .header-inner{gap:.4rem}
   .logo{font-size:1.1rem}
   .live-bar{gap:.3rem;width:100%;justify-content:center}
-  .live-chip{padding:.3rem .55rem;font-size:.72rem;border-radius:16px;gap:.25rem;flex:0 0 auto;min-width:0;white-space:nowrap}
-  .live-chip .lbl{font-size:.6rem}
+  .live-chip{padding:.32rem .6rem;font-size:.78rem;border-radius:16px;gap:.3rem;flex:0 0 auto;min-width:0;white-space:nowrap}
+  .live-chip .lbl{font-size:.68rem}
   .live-chip .val{white-space:nowrap}
   #updatedChip .lbl{display:none}
   #updatedChip .val{white-space:nowrap}
@@ -1427,8 +1410,8 @@ body{background:transparent}
 .subbar .live-bar{width:auto;gap:6px;flex-wrap:wrap;justify-content:center}
 .subbar-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 /* live chips + tools normalized to the same 16px scale as the header (em off .topbar) */
-.topbar .live-chip{font-size:.78em;padding:5px 10px;gap:5px;border-radius:16px}
-.topbar .live-chip img{width:16px;height:16px}
+.topbar .live-chip{font-size:.86em;padding:6px 12px;gap:6px;border-radius:16px}
+.topbar .live-chip img{width:17px;height:17px}
 .topbar .subbar-tools .ob-reset-btn{font-size:.72em;padding:4px 10px;margin-left:0}
 /* chips read as items ON the glass panel, not nested pills */
 .subbar .live-chip{background:transparent;border-color:transparent;box-shadow:none}
@@ -1477,7 +1460,6 @@ body{background:transparent}
    PHASE 3d — dashboard hero cards mirror the landing stat-cards
    ============================================================ */
 .hero-card{text-align:left;padding:1.1rem 1.15rem 1.05rem}
-.hero-card .s-id{font-family:var(--mono);font-size:.56rem;letter-spacing:.16em;color:var(--text3);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;margin-bottom:.7rem}
 .hero-card .corners{position:absolute;inset:9px;pointer-events:none;z-index:2}
 .hero-card .corners::before,.hero-card .corners::after{content:'';position:absolute;width:11px;height:11px;border:1px solid var(--line-hi)}
 .hero-card .corners::before{top:0;left:0;border-right:0;border-bottom:0}
@@ -1603,3 +1585,7 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .qk-pop button:hover{background:var(--purple-soft)}
 .qk-pop .n{font-size:.7rem;color:var(--text4);margin-top:.45rem;line-height:1.45}
 @media(max-width:600px){.live-chip.qk .lbl{font-size:.6rem}}
+/* price-freshness badge, docked under the live strip */
+.subbar .px-subbar{justify-content:center;margin:5px 0 0;padding-top:5px;border-top:1px solid var(--border)}
+.subbar .px-subbar .px-badge{background:none;border-color:transparent;font-size:.72em;padding:.2rem .5rem}
+.subbar .px-subbar .px-badge:hover,.subbar .px-subbar .px-badge.open{border-color:var(--gold-soft)}
