@@ -110,7 +110,7 @@ ${JSON.stringify(faqLd,null,2)}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=12">
-<link rel="stylesheet" href="/assets/topbar.css?v=3">
+<link rel="stylesheet" href="/assets/topbar.css?v=4">
 </head>
 <body>
 <main class="content-wrap">
@@ -121,7 +121,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=18"></script>
+<script src="/assets/site.js?v=19"></script>
 </body>
 </html>
 `;

@@ -22,8 +22,12 @@
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
   border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgba(0,0,0,.42);
   transition:padding .3s var(--gm-ease)}
-.gmbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;gap:10px;
-  padding:11px max(22px,calc((100% - 1160px) / 2));min-height:40px;flex-wrap:nowrap}
+/* brand + page name hard left, Launch Console + menu hard right — the console's composition,
+   stated here rather than left to the menu script's own layout rules. */
+.gmbar-inner{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:flex-start;gap:10px;
+  padding:11px 22px;min-height:40px;flex-wrap:nowrap;width:100%}
+.gmbar-inner>.brand{margin-right:0}
+.gmbar-gap{flex:1 1 auto;min-width:0}
 .gmbar.shrunk .gmbar-inner{padding-top:7px;padding-bottom:7px}
 .gmbar .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--gm-warm);
   font-size:16px;letter-spacing:.01em;text-decoration:none;white-space:nowrap}

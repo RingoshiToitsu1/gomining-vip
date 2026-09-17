@@ -27,7 +27,7 @@
   nav.innerHTML=
     '<div class="gmbar-head"><div class="header-inner gmbar-inner">'+
       '<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
-      '<div class="nav-links"></div>'+
+      '<span class="gmbar-gap"></span>'+
       '<a href="/console" class="nav-cta">Launch Console</a>'+
     '</div></div>'+
     '<div class="gmbar-sub"><div class="live-bar">'+
