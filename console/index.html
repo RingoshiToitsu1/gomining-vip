@@ -114,7 +114,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=general-sans@700&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=78">
+<link rel="stylesheet" href="/assets/app.css?v=79">
 <link rel="stylesheet" href="/assets/design.css?v=15">
 <link rel="stylesheet" href="/assets/accounts.css?v=21">
 </head>
@@ -432,6 +432,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <div class="live-chip live-chip-btn" title="Open live GoMining Token chart" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><img src="/gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
+      <div class="px-badge-row px-subbar" id="pxBadgeHero"></div>
     </div>
     <!-- Quick edits: the two figures that change week to week, in the same chips as the live data,
          so updating a balance never means opening the whole setup editor. -->
@@ -446,8 +447,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEditSetup()}"
         title="Open the full setup editor"><span class="lbl">Edit my Farm</span><span class="val">&#8594;</span></div>
     </div>
-    <!-- Price freshness sits with the live data it belongs to, under the clock. -->
-    <div class="px-badge-row px-subbar" id="pxBadgeHero"></div>
+
 </div>
 </div><!-- topbar -->
 

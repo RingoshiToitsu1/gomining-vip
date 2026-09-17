@@ -1402,7 +1402,7 @@ body{background:transparent}
 /* live strip -> its own glass panel matching the header pill, hugged to the chips
    and centered on the page just below the header (one attached unit in .topbar) */
 .subbar{width:fit-content;max-width:calc(100% - 28px);margin:8px auto 0;
-  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
   padding:7px 12px;border-radius:16px;border:1px solid var(--line);
   background:linear-gradient(180deg,rgba(20,22,30,.7),rgba(10,12,18,.66));
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
@@ -1566,8 +1566,6 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .fleet-col{background-position:right .1rem center,right center!important;background-size:11px 7px,1.6rem 100%!important;padding-right:1.5rem!important}
 
 /* ===== quick-edit chips (second row of the live strip) ===== */
-.quick-bar{margin-top:4px}
-.subbar .quick-bar{border-top:1px solid var(--border);padding-top:5px}
 .live-chip.qk .qk-pen{color:var(--text4);font-size:.8em;margin-left:1px;transition:color .15s}
 .live-chip.qk:hover .qk-pen{color:var(--purple)}
 .live-chip.qk.saved{border-color:#3ddc84!important}
@@ -1585,7 +1583,9 @@ body.planning .container,body.projecting .container,body.charting .container{dis
 .qk-pop button:hover{background:var(--purple-soft)}
 .qk-pop .n{font-size:.7rem;color:var(--text4);margin-top:.45rem;line-height:1.45}
 @media(max-width:600px){.live-chip.qk .lbl{font-size:.6rem}}
-/* price-freshness badge, docked under the live strip */
-.subbar .px-subbar{justify-content:center;margin:5px 0 0;padding-top:5px;border-top:1px solid var(--border)}
-.subbar .px-subbar .px-badge{background:none;border-color:transparent;font-size:.72em;padding:.2rem .5rem}
-.subbar .px-subbar .px-badge:hover,.subbar .px-subbar .px-badge.open{border-color:var(--gold-soft)}
+/* price freshness rides in the live row, just past the clock */
+.subbar .px-subbar{margin:0;justify-content:center}
+.subbar .px-subbar .px-badge{background:none;border-color:transparent;font-size:.74em;padding:.2rem .45rem;color:var(--text4)}
+.subbar .px-subbar .px-badge:hover,.subbar .px-subbar .px-badge.open{border-color:var(--gold-soft);color:var(--text2)}
+/* second row: the quick edits, set apart by a hairline that spans the whole strip */
+.subbar .quick-bar{margin:0;padding-top:5px;border-top:1px solid var(--border);width:100%;justify-content:center}
