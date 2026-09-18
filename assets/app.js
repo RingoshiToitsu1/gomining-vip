@@ -3427,9 +3427,18 @@ function openQuickPop(chip){
     +'<div class="row"><input type="number" min="0" step="0.01" inputmode="decimal" id="qkIn"><button type="button" id="qkSave">Save</button></div>'
     +'<div class="n">Updates your farm straight away — the same field as the farm editor.</div>';
   document.body.appendChild(pop);
-  const r=chip.getBoundingClientRect(), w=pop.offsetWidth;
-  pop.style.top=(r.bottom+8)+'px';
-  pop.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left))+'px';
+  // Follow the chip rather than close on movement. On a phone, focusing the field opens the
+  // keyboard, which fires scroll AND resize — closing on those shut the editor before a single
+  // digit could be typed.
+  const place=()=>{
+    const r=chip.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+    let top=r.bottom+8;
+    if(top+h>innerHeight-8)top=Math.max(8,r.top-h-8);      // no room below (keyboard up): sit above
+    pop.style.top=top+'px';
+    pop.style.left=Math.max(10,Math.min(innerWidth-w-10,r.left))+'px';
+  };
+  place();
+  pop._place=place;
   const inp2=pop.querySelector('#qkIn');
   inp2.value=field.value;
   inp2.focus(); inp2.select();
@@ -3446,17 +3455,19 @@ function openQuickPop(chip){
 }
 document.addEventListener('click',e=>{
   const chip=e.target.closest&&e.target.closest('.live-chip.qk');
-  if(chip){openQuickPop(chip);return;}
+  if(chip){e.preventDefault();e.stopPropagation();openQuickPop(chip);return;}
   if(!(e.target.closest&&e.target.closest('#qkPop')))closeQuickPop();
-});
+},true);
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter'&&e.key!==' ')return;
   const chip=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.live-chip.qk');
   if(!chip)return;
   e.preventDefault();openQuickPop(chip);
 });
-addEventListener('resize',closeQuickPop,{passive:true});
-addEventListener('scroll',closeQuickPop,{passive:true});
+function placeQuickPop(){const p=document.getElementById('qkPop');if(p&&p._place)p._place();}
+addEventListener('resize',placeQuickPop,{passive:true});
+addEventListener('scroll',placeQuickPop,{passive:true});
+if(window.visualViewport)visualViewport.addEventListener('resize',placeQuickPop,{passive:true});
 
 function recalc(){
   if(!S.loaded)return;
