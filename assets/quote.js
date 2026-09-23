@@ -94,6 +94,9 @@
     return cpt12(th) * (1 - f) + cpt15(th) * f;
   }
 
+  // Daily fee per TH at a given efficiency: electricity on (W/TH x 24h) plus the flat service fee.
+  const feePerTHDay = wth => (ELEC_RATE * 24 * wth) / 1000 + SERVICE_RATE;
+
   // ---- market data ----
   const S = { btc: 0, gmt: 0, diff: 0, satsPerTHDay: 0, live: false };
   function fetchTO(url, ms = 8000) {
@@ -133,8 +136,7 @@
   function model(th, wth, gmtLocked, apr0, streak) {
     const bp = S.btc, gp = S.gmt;
     const dbt0 = Math.round(S.satsPerTHDay) / 1e8;            // BTC/TH/day, rounded like the app
-    const feeUSDperTH = (ELEC_RATE * 24 * wth) / 1000 + SERVICE_RATE;
-    const feesUSD = feeUSDperTH * th;                          // daily, pre-discount
+    const feesUSD = feePerTHDay(wth) * th;                      // daily, pre-discount
 
     // Discount: VIP tier bonus, then the GMT coverage discount in 1% steps.
     // Non-token discounts stack before coverage, matching calc() in app.js:
@@ -194,6 +196,15 @@
   // token-discount cap): past that point extra GMT buys no more discount, and hashrate pays
   // better than staking. Below it, coverage is what the discount is made of.
   const COV_DAYS = 360;
+  // GMT still missing from a 360-day coverage buffer for this farm — what the discount is made
+  // of, and the one number both the opening allocation and every reinvestment are solved against.
+  function covDeficitGMT(th, locked, streak, gp) {
+    const feeUSD = feePerTHDay(EFF_BEST) * Math.max(th, 0.0001);
+    const vip = vipOf(th, locked);
+    const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+    const burn = gp > 0 ? (feeUSD * (1 - nonTok / 100)) / gp : 0;   // GMT/day
+    return Math.max(0, burn * COV_DAYS - locked);
+  }
   function allocate(capUSD, streak, apr0) {
     if (!(capUSD > 0)) return null;
     const bp = S.btc, gp = S.gmt;
@@ -202,11 +213,7 @@
       const ag = gmtUSD * (1 - USD_GMT_FEE) / gp;       // GMT locked
       const thUSD = Math.max(0, capUSD - gmtUSD);
       const th = thUSD > 0 ? at(thUSD) : 0;
-      const feeUSD = ((ELEC_RATE * 24 * EFF_BEST) / 1000 + SERVICE_RATE) * Math.max(th, 0.0001);
-      const vip = vipOf(th, ag);
-      const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
-      const burn = gp > 0 ? (feeUSD * (1 - nonTok / 100)) / gp : 0;   // GMT/day
-      return { deficit: Math.max(0, burn * COV_DAYS - ag), th, ag, thUSD, gmtUSD };
+      return { deficit: covDeficitGMT(th, ag, streak, gp), th, ag, thUSD, gmtUSD };
     }
     let best = trial(0);
     if (best.deficit > 0) {
@@ -231,6 +238,94 @@
     return allocate(hi, streak, apr0);
   }
 
+  // ---- compounding ----
+  // What the quote turns into when the income is put back to work. This is the only part of
+  // /quote that looks forward, so it forecasts as little as it can get away with: BTC and GMT
+  // are HELD AT TODAY'S PRICE for the whole run. Every dollar of growth below comes from
+  // reinvested income, never from a price call — which is also what makes it safe to show a
+  // prospect. What it does model is the erosion the console models, mirrored from
+  // assets/app.js: the 2028/2032 halvings, the network difficulty grind floored at the
+  // no-arbitrage break-even, and a staking APR that relaxes toward what fee revenue can fund.
+  const HALVING_DATES = [Date.UTC(2028, 3, 15), Date.UTC(2032, 3, 15), Date.UTC(2036, 3, 15), Date.UTC(2040, 3, 15)];
+  const subsidyMultAt = t => HALVING_DATES.reduce((m, h) => t >= h ? m * 0.5 : m, 1);
+  // g(Y) = floor + (g0-floor)*e^(-Y/tau); cumulative reward factor = 1/exp(integral). Calibrated
+  // on the DECAYING trailing difficulty CAGR and paired with a price path no rosier than flat.
+  const DIFF_G0 = 0.37, DIFF_FLOOR = 0.05, DIFF_TAU = 4;
+  function difficultyMultAt(yrs) {
+    if (!(yrs > 0)) return 1;
+    const integral = DIFF_FLOOR * yrs + (DIFF_G0 - DIFF_FLOOR) * DIFF_TAU * (1 - Math.exp(-yrs / DIFF_TAU));
+    return 1 / Math.exp(integral);
+  }
+  // Difficulty is an EQUILIBRIUM, not a one-way grind: the reward cannot fall past the point
+  // where an undiscounted 12 W/TH miner stops covering its costs, because hashrate would leave
+  // until it didn't. An economic constraint, NOT a price -> difficulty forecast.
+  const rewardFloorBTC = price => price > 0 ? feePerTHDay(EFF_BEST) / price : 0;   // BTC/TH/day
+  // Staking rewards are paid from a finite pool, so a decade at 24% is not fundable. Start at the
+  // observed APR and relax toward a floor fee revenue can actually cover. Projections only —
+  // today's headline stays at the observed rate.
+  const STAKE_APR_FLOOR = 5, STAKE_APR_TAU = 5;
+  const stakeAprAt = (apr0, yrs) => apr0 > STAKE_APR_FLOOR
+    ? STAKE_APR_FLOOR + (apr0 - STAKE_APR_FLOOR) * Math.exp(-Math.max(0, yrs) / STAKE_APR_TAU) : apr0;
+
+  // Roll the quoted setup forward month by month. `rein` is the share of MINING income put back
+  // to work; the rest is taken as cash and sits idle — no interest is assumed on money taken out.
+  // Staking rewards always restake, because that is what a GMT lock does, so the lock compounds
+  // even at 0% reinvestment. Reinvestment is discount-first: top the coverage back to 360 days,
+  // then mint 12 W/TH hashrate with the remainder, which is the console's allocator in miniature.
+  function compound(a, years, rein, streak, apr0) {
+    if (!a || !(a.capUSD > 0) || !(years > 0)) return null;
+    const bp = S.btc, gp = S.gmt, now = Date.now();
+    const dbt0 = Math.round(S.satsPerTHDay) / 1e8;
+    const DPM = 365.25 / 12;
+    let th = a.th, locked = a.ag, cash = 0, income = 0;
+    const rows = [];
+    for (let k = 1; k <= Math.round(years * 12); k++) {
+      const yrs = (k - 0.5) / 12;
+      const dbt = Math.max(dbt0 * subsidyMultAt(now + yrs * 365.25 * 86400000) * difficultyMultAt(yrs), rewardFloorBTC(bp));
+      const feesUSD = feePerTHDay(EFF_BEST) * th;
+      const vip = vipOf(th, locked);
+      const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+      const burn = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
+      const cov = burn > 0 ? locked / burn : (locked > 0 ? Infinity : 0);
+      const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
+      const totD = Math.min(30, tok + nonTok);
+      // Floored at zero: an operator switches a loss-making miner off, they don't pay to run it.
+      const miningMo = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE) * DPM;
+      const apr = stakeAprAt(apr0, yrs);
+      const stakingMo = locked * gp * (apr / 100) * DPM / 365.25;
+      income = miningMo + stakingMo;
+      locked += stakingMo / gp;                       // staking paid in GMT, straight back into the lock
+      const spend = miningMo * rein;
+      cash += miningMo - spend;
+      if (spend > 0) {
+        // Fresh TH prices at the tier the whole farm has reached, not at a first-purchase tier:
+        // topping up an existing farm is cheaper than minting the same TH from zero.
+        const addTH = usd => Math.max(0, usd) * (1 - USD_GMT_FEE) / cptAtEff(th, EFF_BEST);
+        let gmtSpend = 0;
+        if (covDeficitGMT(th + addTH(spend), locked, streak, gp) > 0) {
+          let lo = 0, hi = spend;
+          for (let j = 0; j < 40; j++) {
+            const mid = (lo + hi) / 2, ag = mid * (1 - USD_GMT_FEE) / gp;
+            if (covDeficitGMT(th + addTH(spend - mid), locked + ag, streak, gp) <= 0) hi = mid; else lo = mid;
+          }
+          gmtSpend = hi;
+        }
+        locked += gmtSpend * (1 - USD_GMT_FEE) / gp;
+        th += addTH(spend - gmtSpend);
+      }
+      if (k % 12 === 0) {
+        // Position = what the farm would cost to rebuild today plus the GMT sitting in the lock.
+        const position = th * cptAtEff(th, EFF_BEST) + locked * gp;
+        rows.push({ yr: k / 12, th, locked, income, cash, position, total: position + cash, disc: totD });
+      }
+    }
+    const last = rows[rows.length - 1];
+    if (!last) return null;
+    return { rows, last, years, rein,
+             mult: last.total / a.capUSD,
+             cagr: (Math.pow(last.total / a.capUSD, 1 / years) - 1) * 100 };
+  }
+
   // ---- page ----
   const $ = id => document.getElementById(id);
   const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US',
@@ -241,6 +336,86 @@
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
   const TH_PRICES_ASOF = '8 Sep 2026';
   let mode = 'cap';
+  const YEAR_CHIPS = [1, 3, 5, 10];
+  const REIN_CHIPS = [{ v: 0, l: 'take it all' }, { v: .5, l: 'reinvest half' }, { v: 1, l: 'reinvest it all' }];
+  let horizon = 5, reinvest = 1;
+
+  // Stacked columns, one per year: what the position is worth, plus any income taken as cash.
+  // Sized to the container at render time so the labels stay at their intended pixel size on a
+  // phone instead of being scaled down with the viewBox.
+  function compChart(c, cap, wpx) {
+    const rows = c.rows, n = rows.length;
+    const W = Math.max(300, Math.min(780, wpx || 760)), H = 168, padT = 18, padB = 20;
+    const base = H - padB, top = padT;
+    const max = Math.max(cap, ...rows.map(r => r.total)) * 1.16 || 1;
+    const Y = v => base - (base - top) * (v / max);
+    const slot = W / n, bw = Math.min(72, slot * 0.62);
+    const capY = Y(cap);
+    let g = '';
+    rows.forEach((r, i) => {
+      const x = slot * i + (slot - bw) / 2;
+      const yPos = Y(r.position), hPos = Math.max(2, base - yPos);
+      const hCash = r.cash > 0 ? Math.max(2, yPos - Y(r.total) - 2) : 0;   // 2px gap between segments
+      g += '<g><title>Year ' + r.yr + ' — ' + money(r.position, 0) + ' position value'
+        + (r.cash > 0 ? ' + ' + money(r.cash, 0) + ' cash taken = ' + money(r.total, 0) : '')
+        + '</title><rect x="' + x.toFixed(1) + '" y="' + yPos.toFixed(1) + '" width="' + bw.toFixed(1)
+        + '" height="' + hPos.toFixed(1) + '" rx="3" fill="url(#qcGold)"></rect>'
+        + (hCash > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + (yPos - 2 - hCash).toFixed(1) + '" width="' + bw.toFixed(1)
+          + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#A78BFA"></rect>' : '')
+        + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">Y' + r.yr + '</text>';
+    });
+    // Only the final column is labelled — a number on every column is noise, not information.
+    const lx = slot * (n - 1) + slot / 2, ly = Math.max(11, Y(c.last.total) - 6);
+    g += '<text class="qc-lab" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + money(c.last.total, 0) + '</text>';
+    return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each year mark">'
+      + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0" stop-color="#F7B84E"/><stop offset="1" stop-color="#F5A623"/></linearGradient></defs>'
+      + '<line class="qc-cap" x1="0" x2="' + W + '" y1="' + capY.toFixed(1) + '" y2="' + capY.toFixed(1) + '"></line>'
+      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end">' + money(cap, 0) + ' in</text>'
+      + g + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
+  }
+
+  // The compounding block: controls, the headline rate, the chart and the year-by-year table.
+  function compHTML(a, c, wpx) {
+    if (!c) return '';
+    const cap = a.capUSD, L = c.last, tookCash = L.cash > 0;
+    const yrChips = YEAR_CHIPS.map(y => '<button type="button" data-yrs="' + y + '"' + (y === horizon ? ' class="on"' : '') + '>' + y + ' yr</button>').join('');
+    const reChips = REIN_CHIPS.map(o => '<button type="button" data-rein="' + o.v + '"' + (o.v === reinvest ? ' class="on"' : '') + '>' + o.l + '</button>').join('');
+    const rowsHTML = c.rows.map(r =>
+      '<tr><td>Year ' + r.yr + '</td><td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
+      + money(r.income, 0) + '</td><td>' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td><td>'
+      + money(r.total, 0) + '</td></tr>').join('');
+    return '<div class="comp">'
+      + '<div class="comp-top"><h3>Then compound it</h3>'
+      + '<div class="chips" data-k="yrs">' + yrChips + '</div>'
+      + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
+      + '<div class="comp-hero">'
+      + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + num(c.cagr, 1) + '%<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
+      + '<div class="s">effective annual over ' + horizon + ' years, on the ' + money(cap, 0) + '</div></div>'
+      + '<div class="cell"><div class="k">Worth after ' + horizon + ' yr</div><div class="v">' + money(L.total, 0) + '</div>'
+      + '<div class="s">' + num(c.mult, 2) + '&times; &middot; ' + num(L.th, 0) + ' TH and ' + num(L.locked, 0) + ' GMT'
+      + (tookCash ? ', plus ' + money(L.cash, 0) + ' already taken' : '') + '</div></div>'
+      // Later income can land BELOW day one even on a farm that has tripled — the halvings and
+      // the difficulty grind take more than the extra hashrate adds. Say so rather than dressing
+      // it in the green that means "up".
+      + '<div class="cell' + (L.income >= a.m.netToday * 30 ? ' green' : '') + '"><div class="k">Income in year ' + horizon + '</div>'
+      + '<div class="v">' + money(L.income, 0) + '<span style="font-size:.8rem;color:var(--t3)">/mo</span></div>'
+      + '<div class="s">against ' + money(a.m.netToday * 30, 0) + '/mo on day one'
+      + (L.income >= a.m.netToday * 30 ? '' : ' &mdash; the halving and the difficulty grind land in between') + '</div></div>'
+      + '</div>'
+      + (c.rows.length > 1
+        ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
+          + (tookCash ? '<span><i style="background:#A78BFA"></i>Income taken as cash</span>' : '') + '</div>'
+          + compChart(c, cap, wpx)
+        : '')
+      + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th><th>Hashrate</th><th>Locked GMT</th>'
+      + '<th>Net income</th><th>Cash taken</th><th>Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
+      + '<div class="comp-note">BTC and GMT are held at today&rsquo;s price for the whole run &mdash; there is no price forecast in here, so every gain above is reinvested income rather than a bet on the market. '
+      + 'The mining reward still erodes: the 2028 and 2032 halvings plus the network difficulty grind, floored where an undiscounted 12&nbsp;W/TH miner stops covering its costs. '
+      + 'Staking relaxes from ' + num(APR, 2) + '% APR toward 5% over the run, since rewards come from fees rather than emissions. '
+      + 'Reinvestment tops the fee coverage back to 360 days first, then mints 12&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.</div>'
+      + '</div>';
+  }
 
   function render() {
     try { render_(); }
@@ -260,6 +435,7 @@
     // re-hides the panel. This built the whole quote and then hid it.
     out.style.display = 'block';
     const m = a.m, mo = m.netToday * 30, yr = m.netToday * 365.25;
+    const c = compound(a, horizon, reinvest, streak, APR);
     const lockUSD = a.gmtUSD, thUSD = a.thUSD;
     const pct = v => Math.max(0, Math.min(100, a.capUSD > 0 ? v / a.capUSD * 100 : 0));
     // A quote is only honest if the reader can see the discount is bought, not assumed — so the
@@ -296,11 +472,13 @@
         <div class="cell"><div class="k">Staking income</div><div class="v">${money(m.stakingToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">${num(APR, 2)}% APR on the locked GMT</div></div>
         <div class="cell"><div class="k">Payback</div><div class="v">${mo > 0 ? num(a.capUSD / mo, 1) + ' mo' : '&mdash;'}</div><div class="s">at today&rsquo;s rates, income only &mdash; the hashrate and GMT are still owned</div></div>
       </div>
+      ${compHTML(a, c, out.clientWidth - 34)}
       <div class="cta">
         <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener">Start with code RINGO5 &rarr;</a>
         <button class="ghost" type="button" onclick="quoteCopy(this)">Copy this quote</button>
       </div>`;
-    window._quote = { mode, cap: a.capUSD, mo, th: a.th, gmt: a.ag, disc: m.totD, streak };
+    window._quote = { mode, cap: a.capUSD, mo, th: a.th, gmt: a.ag, disc: m.totD, streak,
+      yrs: horizon, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0 };
   }
 
   // Plain text, because this gets pasted into a chat with the person being quoted.
@@ -310,6 +488,9 @@
       + `• ${num(q.th, 1)} TH at 12 W/TH + ${num(q.gmt, 0)} GMT locked\n`
       + `• ${num(q.disc, 2)}% fee discount\n`
       + `• ${money(q.mo, 0)}/month net at today's prices\n`
+      + (q.cagr > 0
+        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo by year ${q.yrs} — ${num(q.cagr, 1)}%/yr compounded, with BTC held flat\n`
+        : '')
       + `Modelled at gmt-optimizer.com/quote — sign up with code RINGO5 for +5% bonus TH.`;
     const done = () => { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800); };
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done).catch(() => {});
@@ -351,6 +532,15 @@
     if (go) go.addEventListener('click', () => {
       render();
       const o = $('qOut'); if (o && o.style.display !== 'none') o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    // The compounding controls live inside #qOut, which is rebuilt on every render, so the
+    // listener sits on the container rather than on buttons that keep being replaced.
+    const out = $('qOut');
+    if (out) out.addEventListener('click', e => {
+      const b = e.target.closest('.chips button'); if (!b) return;
+      if (b.dataset.yrs) horizon = +b.dataset.yrs;
+      if (b.dataset.rein) reinvest = +b.dataset.rein;
+      render();
     });
     const st = $('qStreak');
     if (st) st.addEventListener('change', () => { $('qStreakL').classList.toggle('on', st.checked); render(); });

@@ -101,7 +101,33 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   font-weight:800;font-size:.88rem;padding:.7rem 1.15rem;cursor:pointer;text-decoration:none;display:inline-block}
 .cta .ghost{background:none;border:1px solid var(--bd);color:var(--t2)}
 .cta .ghost:hover{border-color:var(--t4);color:var(--txt)}
-@media(max-width:600px){.legs{grid-template-columns:1fr}.wrap{padding:1rem .8rem 3rem}.panel{padding:1rem .9rem 1.1rem}}
+.comp{margin-top:1rem;background:var(--card2);border:1px solid var(--bd);border-radius:13px;padding:1rem}
+.comp-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+.comp-top h3{margin:0 auto 0 0;font-size:.86rem;font-weight:700;color:var(--t2)}
+.chips{display:inline-flex;background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:2px;gap:2px}
+.chips button{background:none;border:none;color:var(--t3);font-family:var(--mono);font-size:.72rem;
+  padding:.32rem .55rem;border-radius:7px;cursor:pointer;transition:.15s;white-space:nowrap}
+.chips button:hover{color:var(--txt)}
+.chips button.on{background:var(--gold);color:#1a1206}
+.comp-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}
+.comp .cell{background:var(--bg)}
+.comp-leg{display:flex;gap:1rem;flex-wrap:wrap;font-size:.72rem;color:var(--t3);margin-bottom:.3rem}
+.comp-leg i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:.4rem}
+.comp-chart{display:block;width:100%;height:auto;margin:0 0 .9rem}
+.comp-chart .qc-x{font-family:var(--mono);font-size:9px;fill:var(--t4)}
+.comp-chart .qc-lab{font-family:var(--mono);font-size:11px;font-weight:700;fill:var(--gold2)}
+.comp-chart .qc-caplab{font-family:var(--mono);font-size:9px;fill:var(--t3)}
+.comp-chart .qc-cap{stroke:var(--t4);stroke-width:1;stroke-dasharray:3 4}
+.comp-chart .qc-base{stroke:var(--bd);stroke-width:1}
+.comp-tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:var(--mono);font-size:.76rem}
+.comp-tbl th{text-align:right;font-weight:400;font-size:.64rem;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--t3);padding:.35rem .5rem;border-bottom:1px solid var(--bd)}
+.comp-tbl td{text-align:right;padding:.4rem .5rem;color:var(--t2);border-bottom:1px solid rgba(38,39,44,.6)}
+.comp-tbl th:first-child,.comp-tbl td:first-child{text-align:left;color:var(--t3)}
+.comp-tbl tr:last-child td{border-bottom:none;color:var(--txt)}
+.comp-note{color:var(--t4);font-size:.72rem;line-height:1.6;margin-top:.8rem}
+@media(max-width:600px){.legs{grid-template-columns:1fr}.comp{padding:.85rem .7rem}.comp-top h3{width:100%;margin-bottom:.2rem}.wrap{padding:1rem .8rem 3rem}.panel{padding:1rem .9rem 1.1rem}}
 </style>
 <link rel="stylesheet" href="/assets/topbar.css?v=4">
 </head>
@@ -143,14 +169,14 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
   <div class="out" id="qOut"></div>
 
   <div class="foot">
-    Live BTC, GMT and network difficulty. Assumes new 12&nbsp;W/TH hashrate and enough locked GMT to hold the token discount, with the daily solo-mining bonus applied. Today&rsquo;s rates only &mdash; no forward projection, no price forecast. Not financial advice.
+    Live BTC, GMT and network difficulty. Assumes new 12&nbsp;W/TH hashrate and enough locked GMT to hold the token discount, with the daily solo-mining bonus applied. The headline is today&rsquo;s rates only; the compounding view rolls that setup forward with BTC and GMT held flat, so it is a reinvestment model and never a price forecast. Not financial advice.
   </div>
 </div>
 
 <!-- Deliberately the ONLY script on this page. /quote must work for a logged-out stranger on a
      shared link: no account.js (which renders the results gate), no chat.js, no Supabase, no
      localStorage. If you ever need one of those here, gate the feature — never the page. -->
-<script src="/assets/quote.js?v=10"></script>
+<script src="/assets/quote.js?v=11"></script>
 <script src="/assets/site.js?v=19" data-chrome="bar"></script>
 </body>
 </html>
