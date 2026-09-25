@@ -32,15 +32,15 @@
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const STAKE_APR        = 24.26;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
+  const STAKE_APR        = 22.68;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
   const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
   const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
-  const GREEDY_GROWTH_DEFAULT = 0.3462;                              // %/wk — console inGreedyGrowth default; observed, not a constant
-  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718']; // mirror of app.js: a saved old default is not the user's own number
+  const GREEDY_GROWTH_DEFAULT = 0.36;                                // %/wk — console inGreedyGrowth default; observed, not a constant
+  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462']; // mirror of app.js: a saved old default is not the user's own number
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
   const TH_TIERS_12W = [
@@ -50,8 +50,17 @@
     {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
     {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
   ];
-  function cpt12(th) {
-    const T = TH_TIERS_12W;
+  // $/TH for hashrate added at 15 W/TH, pre-avatar-discount. Mirror of TH_TIERS.
+  const TH_TIERS = [
+    {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
+    {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
+    {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
+    {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
+    {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+  ];
+  const EFF_BASE_MAX = 15;          // the 15 W/TH hashrate curve
+  const GREEDY_CAP   = 5000;        // max TH per miner via manual upgrades; passive growth compounds past it
+  function cptTier(T, th) {
     if (th <= 0) return T[0].cpt;
     if (th >= T[T.length - 1].th) return T[T.length - 1].cpt;
     for (let i = 0; i < T.length - 1; i++) {
@@ -60,6 +69,14 @@
     }
     return T[0].cpt;
   }
+  const cpt12 = th => cptTier(TH_TIERS_12W, th);
+  // $/TH at a miner's own rating, linear in W between the 12 W and 15 W curves. Mirror of cptAtEff.
+  function cptAtEff(th, w) {
+    const f = (Math.min(Math.max(w, EFF_BEST), EFF_BASE_MAX) - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
+    return cptTier(TH_TIERS_12W, th) * (1 - f) + cptTier(TH_TIERS, th) * f;
+  }
+  // Adding TH to one miner: priced on its size after the top-up. Mirror of costToGrowTiers.
+  const costToGrow = (cur, add, w) => add > 0 ? Math.max(0, (cur + add) * cptAtEff(cur + add, w) - cur * cptAtEff(cur, w)) : 0;
   // One-time $/TH to bring a miner down to 12 W/TH, summed band by band (20 W → $13.51).
   function upgPerTH(w) {
     let c = 0, cur = w;
@@ -164,7 +181,8 @@
     const upgNetCost = Math.max(upg * 0.05, upg - lockFreed);
     const upgYield = upg > 0 ? (upgSaveDay * 365) / upgNetCost : 0;
 
-    return { cost, upg, newCost, netAsIs, net12, routes, best, fairUSD, edge, upgSaveDay, upgYield, canUpgrade, lockFreed, tok, vsNew };
+    return { cost, upg, newCost, netAsIs, net12, routes, best, fairUSD, edge, upgSaveDay, upgYield, canUpgrade, lockFreed, tok, vsNew,
+             lockPerTH: wt => th > 0 ? lockFor(wt) / th : 0 };
   }
 
   // ---- render ----
@@ -272,10 +290,37 @@
   // another way — a new 12 W TH if you upgrade the machine (its growth then arrives at 12 W), or the
   // same yield-matched value the "Worth up to" figure uses if you keep it as it is. Growth compounds
   // on the current TH, so the weeks to accumulate X dollars of it are ln(1 + X / (TH · value)) / ln(1 + g).
+  // ---- Greedy optimizer: how much TH to add so growth repays the premium in N months ----
+  // Growth is a % of the machine's TH, so a bigger machine grows more dollars a week. Topping it up
+  // with hashrate bought at the going rate doesn't add premium (you pay about what that TH is worth);
+  // it just makes the free growth big enough to swallow the listing premium sooner. Solve
+  //   T · ((1+g)^weeks − 1) · value(T) = premium
+  // for the total TH T (value/TH falls a little with size, so iterate), capped at the 5,000 TH
+  // manual-upgrade limit. Added TH carries the machine's rating: 12 W if you upgrade it, else its own.
+  function sizeGreedy(e, th, w, g, premUSD, months) {
+    const rating = e.best === 'upgraded' ? EFF_BEST : w;
+    const ratio = e.best === 'upgraded' ? 1 : (e.net12 > 0 ? Math.max(0, e.netAsIs / e.net12) : 0);
+    const val = t => cpt12(t) * ratio;
+    const f = Math.pow(1 + g, months * MO / 7) - 1;
+    if (!(premUSD > 0) || !(f > 0) || !(val(th) > 0)) return null;
+    let need = th;
+    for (let i = 0; i < 12; i++) need = Math.max(th, premUSD / (val(need) * f));
+    const capped = need > Math.max(th, GREEDY_CAP) + 1e-9;
+    const T = Math.min(need, Math.max(th, GREEDY_CAP));
+    const add = Math.max(0, T - th);
+    return {
+      months, T, add, capped, rating,
+      cost: costToGrow(th, add, rating),
+      lock: add * e.lockPerTH(rating),
+      weeks: Math.log(1 + premUSD / (T * val(T))) / Math.log(1 + g)
+    };
+  }
+
   function renderGreedy(e, th, w, p, premUSD, v) {
     const box = $('mc-greedy');
     const on = $('mc-greedy-on').checked;
     $('mc-growth-fld').hidden = !on;
+    $('mc-payback-fld').hidden = !on;
     if (!on) { box.hidden = true; return; }
     const g = Math.max(0, parseFloat($('mc-growth').value) || 0) / 100;
     const v12 = cpt12(th);
@@ -291,7 +336,7 @@
     const fmtW = n => n < 1 ? 'under a week' : num(Math.ceil(n), 0) + (Math.ceil(n) === 1 ? ' week' : ' weeks') + (n >= 104 ? ' (~' + num(n / 52, 1) + ' yrs)' : '');
     const where = e.best === 'upgraded' ? 'at 12 W/TH once upgraded' : 'at ' + num(w, 2).replace(/\.?0+$/, '') + ' W/TH';
     let lead;
-    if (premUSD > 0 && v.cls === 'bad') {
+    if (premUSD > 0) {
       lead = 'Its free growth covers the <b>' + money(premUSD) + ' premium in ' + fmtW(weeks(premUSD)) + '</b>. After that, every week of growth is value you didn\'t pay for.';
     } else {
       lead = 'The price is already at or under fair value, so its growth is pure upside from week one.';
@@ -303,7 +348,42 @@
         '<div><span>Over a year</span><b>+' + num(yrTH, yrTH < 10 ? 2 : 0) + ' TH</b><em>≈ ' + money(yrUSD) + '</em></div>' +
         '<div><span>Growth repays the full price</span><b>' + fmtW(weeks(e.routes[e.best].cost)) + '</b><em>' + num(p, 0) + ' GMT' + (e.best === 'upgraded' ? ' + upgrade' : '') + '</em></div>' +
       '</div>' +
+      optimizerHTML(e, th, w, g, premUSD) +
       '<p class="mc-g-n">Each free TH is valued ' + where + ' (' + money(valPerTH) + '/TH), compounding weekly at the rate you set. The rate is last week\'s observed growth, not a promise; mining income on the new TH comes on top.</p>';
+  }
+
+  function optimizerHTML(e, th, w, g, premUSD) {
+    const months = Math.min(60, Math.max(0.5, parseFloat($('mc-payback').value) || 3));
+    const trim = (n, d) => d > 0 ? num(n, d).replace(/\.?0+$/, '') : num(n, 0);
+    const head = '<div class="mc-g-opt"><div class="mc-g-h">Greedy optimizer · premium back in ' + trim(months, 1) + (months === 1 ? ' month' : ' months') + '</div>';
+    if (!(premUSD > 0)) return head + '<p>No premium to pay back: the asking price is at or under what it\'s worth, so there\'s no need to top it up.</p></div>';
+    const r = sizeGreedy(e, th, w, g, premUSD, months);
+    if (!r) return '';
+    const fmtTH = n => trim(n, n < 10 ? 3 : n < 100 ? 2 : 0);
+    const rate = trim(r.rating, 2) + ' W/TH';
+    const wk = n => num(Math.ceil(n), 0) + (Math.ceil(n) === 1 ? ' week' : ' weeks');
+    let lead;
+    if (r.add <= 0.0005) {
+      lead = 'At its current <b>' + fmtTH(th) + ' TH</b> it\'s already big enough: growth covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>. No top-up needed.';
+    } else if (r.capped) {
+      lead = 'Even topped up to the <b>' + num(GREEDY_CAP, 0) + ' TH</b> manual-upgrade cap (<b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b>), growth takes <b>' + wk(r.weeks) + '</b> to cover the ' + money(premUSD) + ' premium. The premium is too big for ' + trim(months, 1) + ' months at ' + trim(g * 100, 4) + '% a week.';
+    } else {
+      lead = 'Buy it, then add <b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b> to take it to <b>' + fmtTH(r.T) + ' TH</b>. Its free growth then covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>.';
+    }
+    // The two ends of the usual 3–4 month target, whichever the input isn't already showing.
+    const alts = [3, 4].filter(m => Math.abs(m - months) > 1e-9).map(m => {
+      const a = sizeGreedy(e, th, w, g, premUSD, m);
+      if (!a) return '';
+      return m + ' months: ' + (a.add <= 0.0005 ? 'no top-up' : (a.capped ? 'not reachable under the cap' : '+' + fmtTH(a.add) + ' TH for ' + money(a.cost)));
+    }).filter(Boolean);
+    return head + '<p>' + lead + '</p>' +
+      (r.add > 0.0005 ? '<div class="mc-g-stats">' +
+        '<div><span>Upgrade it to</span><b>' + fmtTH(r.T) + ' TH</b><em>+' + fmtTH(r.add) + ' TH at ' + rate + '</em></div>' +
+        '<div><span>Hashrate cost</span><b>' + money(r.cost) + '</b><em>' + money(r.cost / r.add) + '/TH</em></div>' +
+        '<div><span>Extra GMT lock</span><b>' + (r.lock > 0 ? money(r.lock) : '—') + '</b><em>' + (r.lock > 0 ? 'keeps your discount, earns staking' : 'no token discount set') + '</em></div>' +
+      '</div>' : '') +
+      (alts.length ? '<p class="mc-g-n">' + alts.join(' · ') + '</p>' : '') +
+      '</div>';
   }
 
   // ---- your discount, from the console ----
@@ -566,7 +646,7 @@
       if (!id) { showErr('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.'); return; }
       lookup(id);
     });
-    ['mc-th', 'mc-wth', 'mc-price', 'mc-growth'].forEach(id => $(id).addEventListener('input', render));
+    ['mc-th', 'mc-wth', 'mc-price', 'mc-growth', 'mc-payback'].forEach(id => $(id).addEventListener('input', render));
     $('mc-greedy-on').addEventListener('change', render);
     // Weekly growth: your console's figure when this browser has a saved setup, else the console default.
     let gr = GREEDY_GROWTH_DEFAULT;

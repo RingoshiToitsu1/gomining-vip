@@ -80,6 +80,7 @@
 .mc-g-stats b{display:block;font-size:1.02rem;color:var(--gold-soft);margin-top:.15rem}
 .mc-g-stats em{font-style:normal;font-size:.72rem;color:var(--ink3)}
 .mc-g-n{font-size:.72rem;color:var(--ink3);margin:0!important}
+.mc-g-opt{margin:.2rem 0 .7rem;padding-top:.7rem;border-top:1px dashed rgba(87,217,163,.28)}
 @media(max-width:620px){.mc-g-stats{grid-template-columns:1fr}}
 
 /* ---- scan panel (runs while a miner link is looked up) ---- */
