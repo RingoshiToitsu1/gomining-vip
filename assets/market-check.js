@@ -290,18 +290,18 @@
   // another way — a new 12 W TH if you upgrade the machine (its growth then arrives at 12 W), or the
   // same yield-matched value the "Worth up to" figure uses if you keep it as it is. Growth compounds
   // on the current TH, so the weeks to accumulate X dollars of it are ln(1 + X / (TH · value)) / ln(1 + g).
-  // ---- Greedy optimizer: how much TH to add so growth repays the premium in N months ----
+  // ---- Greedy optimizer: how much TH to add so growth repays the premium in N weeks ----
   // Growth is a % of the machine's TH, so a bigger machine grows more dollars a week. Topping it up
   // with hashrate bought at the going rate doesn't add premium (you pay about what that TH is worth);
   // it just makes the free growth big enough to swallow the listing premium sooner. Solve
   //   T · ((1+g)^weeks − 1) · value(T) = premium
   // for the total TH T (value/TH falls a little with size, so iterate), capped at the 5,000 TH
   // manual-upgrade limit. Added TH carries the machine's rating: 12 W if you upgrade it, else its own.
-  function sizeGreedy(e, th, w, g, premUSD, months) {
+  function sizeGreedy(e, th, w, g, premUSD, wks) {
     const rating = e.best === 'upgraded' ? EFF_BEST : w;
     const ratio = e.best === 'upgraded' ? 1 : (e.net12 > 0 ? Math.max(0, e.netAsIs / e.net12) : 0);
     const val = t => cpt12(t) * ratio;
-    const f = Math.pow(1 + g, months * MO / 7) - 1;
+    const f = Math.pow(1 + g, wks) - 1;
     if (!(premUSD > 0) || !(f > 0) || !(val(th) > 0)) return null;
     let need = th;
     for (let i = 0; i < 12; i++) need = Math.max(th, premUSD / (val(need) * f));
@@ -309,7 +309,7 @@
     const T = Math.min(need, Math.max(th, GREEDY_CAP));
     const add = Math.max(0, T - th);
     return {
-      months, T, add, capped, rating,
+      wks, T, add, capped, rating,
       cost: costToGrow(th, add, rating),
       lock: add * e.lockPerTH(rating),
       weeks: Math.log(1 + premUSD / (T * val(T))) / Math.log(1 + g)
@@ -353,28 +353,28 @@
   }
 
   function optimizerHTML(e, th, w, g, premUSD) {
-    const months = Math.min(60, Math.max(0.5, parseFloat($('mc-payback').value) || 3));
+    const wks = Math.min(520, Math.max(1, parseFloat($('mc-payback').value) || 13));
     const trim = (n, d) => d > 0 ? num(n, d).replace(/\.?0+$/, '') : num(n, 0);
-    const head = '<div class="mc-g-opt"><div class="mc-g-h">Greedy optimizer · premium back in ' + trim(months, 1) + (months === 1 ? ' month' : ' months') + '</div>';
+    const head = '<div class="mc-g-opt"><div class="mc-g-h">Greedy optimizer · premium back in ' + trim(wks, 1) + (wks === 1 ? ' week' : ' weeks') + '</div>';
     if (!(premUSD > 0)) return head + '<p>No premium to pay back: the asking price is at or under what it\'s worth, so there\'s no need to top it up.</p></div>';
-    const r = sizeGreedy(e, th, w, g, premUSD, months);
+    const r = sizeGreedy(e, th, w, g, premUSD, wks);
     if (!r) return '';
     const fmtTH = n => trim(n, n < 10 ? 3 : n < 100 ? 2 : 0);
     const rate = trim(r.rating, 2) + ' W/TH';
-    const wk = n => num(Math.ceil(n), 0) + (Math.ceil(n) === 1 ? ' week' : ' weeks');
+    const wk = n => { const c = Math.ceil(n - 1e-6); return num(c, 0) + (c === 1 ? ' week' : ' weeks'); };
     let lead;
     if (r.add <= 0.0005) {
       lead = 'At its current <b>' + fmtTH(th) + ' TH</b> it\'s already big enough: growth covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>. No top-up needed.';
     } else if (r.capped) {
-      lead = 'Even topped up to the <b>' + num(GREEDY_CAP, 0) + ' TH</b> manual-upgrade cap (<b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b>), growth takes <b>' + wk(r.weeks) + '</b> to cover the ' + money(premUSD) + ' premium. The premium is too big for ' + trim(months, 1) + ' months at ' + trim(g * 100, 4) + '% a week.';
+      lead = 'Even topped up to the <b>' + num(GREEDY_CAP, 0) + ' TH</b> manual-upgrade cap (<b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b>), growth takes <b>' + wk(r.weeks) + '</b> to cover the ' + money(premUSD) + ' premium. The premium is too big for ' + trim(wks, 1) + ' weeks at ' + trim(g * 100, 4) + '% a week.';
     } else {
       lead = 'Buy it, then add <b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b> to take it to <b>' + fmtTH(r.T) + ' TH</b>. Its free growth then covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>.';
     }
-    // The two ends of the usual 3–4 month target, whichever the input isn't already showing.
-    const alts = [3, 4].filter(m => Math.abs(m - months) > 1e-9).map(m => {
+    // Quarter, half-year and year targets, whichever the input isn't already showing.
+    const alts = [13, 26, 52].filter(m => Math.abs(m - wks) > 1e-9).map(m => {
       const a = sizeGreedy(e, th, w, g, premUSD, m);
       if (!a) return '';
-      return m + ' months: ' + (a.add <= 0.0005 ? 'no top-up' : (a.capped ? 'not reachable under the cap' : '+' + fmtTH(a.add) + ' TH for ' + money(a.cost)));
+      return m + ' weeks: ' + (a.add <= 0.0005 ? 'no top-up' : (a.capped ? 'not reachable under the cap' : '+' + fmtTH(a.add) + ' TH for ' + money(a.cost)));
     }).filter(Boolean);
     return head + '<p>' + lead + '</p>' +
       (r.add > 0.0005 ? '<div class="mc-g-stats">' +
