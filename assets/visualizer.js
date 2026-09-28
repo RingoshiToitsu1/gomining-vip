@@ -13,10 +13,14 @@
    public IRC websocket (a justinfan guest login, read-only, no account) and drawn as a transparent
    column over the art, so it reads as part of the scene instead of a pasted-in embed box.
 
-   Keys: 1-3 scene · H hide overlay · C chat · F fullscreen · M session/today counter · Esc exit. */
+   QR: the corner QR defaults to the RINGO5 signup code (assets/stream-qr.png); "Change QR" swaps in
+   any image the viewer picks, kept in this browser only, and "Reset QR" goes back to the default.
+
+   Keys: 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
 (function () {
   'use strict';
-  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1';
+  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', QR_KEY = 'gmtopt_viz_qr_v1';
+  var QR_DEFAULT = '/assets/stream-qr.png?v=1', QR_MAX = 1.5e6;
   var SCENES = [
     { id: 'nebula', name: 'Nebula' },
     { id: 'flow', name: 'Silk' },
@@ -54,6 +58,11 @@
     '.vz-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}',
     '.vz-legend{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.6rem,1vw,.78rem);color:rgba(255,244,224,.55);letter-spacing:.1em}',
     '.vz-legend em{font-style:normal;color:#FFC65A}',
+    '.vz-brandrow{display:flex;align-items:flex-end;gap:clamp(10px,1.4vw,18px)}',
+    '.vz-qr{width:clamp(84px,10vw,148px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(245,166,35,.45);box-shadow:0 0 28px rgba(245,166,35,.18);flex:none}',
+    '.vz-qr img{width:100%;height:100%;object-fit:contain;display:block}',
+    '#vizRoot.qr-off .vz-qr{display:none}',
+    '.vz-qrcap{display:block;margin-top:.35rem;color:#FFC65A}',
     '.vz-brand{text-align:right;font-family:"Share Tech Mono",ui-monospace,monospace;letter-spacing:.14em;font-size:clamp(.66rem,1.1vw,.86rem);color:rgba(255,244,224,.7)}',
     '.vz-brand strong{display:block;font-family:"Space Grotesk",system-ui,sans-serif;font-size:clamp(.95rem,1.7vw,1.35rem);letter-spacing:.02em;color:#FFF4E0}',
     '.vz-brand strong span{color:#F5A623}',
@@ -64,7 +73,7 @@
     '.vz-bar button:hover{background:rgba(255,244,224,.08);color:#FFF4E0}',
     '.vz-bar button.act{background:rgba(245,166,35,.18);color:#FFC65A}',
     '.vz-bar .sep{width:1px;background:rgba(255,244,224,.12);margin:4px 2px}',
-    '.vz-chat{position:absolute;right:clamp(16px,3.2vw,44px);top:30%;bottom:20%;width:min(380px,32vw);display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%);z-index:1}',
+    '.vz-chat{position:absolute;right:clamp(16px,3.2vw,44px);top:30%;bottom:max(20%,calc(clamp(84px,10vw,148px) + 70px));width:min(380px,32vw);display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%);z-index:1}',
     '#vizRoot.chat-off .vz-chat{display:none}',
     '.vz-msg{font-size:clamp(.82rem,1.15vw,1rem);line-height:1.4;padding:.45rem .7rem;border-radius:10px;background:rgba(6,7,11,.58);border:1px solid rgba(255,244,224,.07);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#FFF4E0;word-wrap:break-word;overflow-wrap:anywhere;animation:vzIn .35s ease-out;transition:opacity 1.2s}',
     '.vz-msg.old{opacity:0}',
@@ -76,7 +85,7 @@
     '.vz-chan input{width:120px;background:rgba(255,244,224,.06);border:1px solid rgba(255,244,224,.14);border-radius:8px;color:#FFF4E0;font:500 .76rem/1 "Space Grotesk",system-ui,sans-serif;padding:.5rem .55rem;outline:none}',
     '.vz-chan input:focus{border-color:#9146FF}',
     '.vz-chan .tw{color:#BF94FF;font-weight:700;font-size:.72rem}',
-    '@media (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:130px;height:28vh}.vz-chan input{width:90px}..vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
+    '@media (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:230px;height:24vh}.vz-chan input{width:90px}.vz-brandrow{flex-direction:row-reverse}.vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
   ].join('');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -147,14 +156,17 @@
         '</div>' +
         '<div class="vz-bottom">' +
           '<div class="vz-legend" id="vzLegend"></div>' +
-          '<div class="vz-brand"><strong>gmt-optimizer<span>.com</span></strong>code RINGO5 · we fund your first TH</div>' +
+          '<div class="vz-brandrow">' +
+            '<div class="vz-brand"><strong>gmt-optimizer<span>.com</span></strong>code RINGO5 · we fund your first TH<span class="vz-qrcap">scan to sign up →</span></div>' +
+            '<div class="vz-qr"><img id="vzQrImg" alt="QR code"></div>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="vz-chat" id="vzChat"></div>' +
       '<div class="vz-bar" id="vzBar"></div>';
     document.body.appendChild(root);
     cvs = root.querySelector('canvas'); ctx = cvs.getContext('2d');
-    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar', 'vzChat'].forEach(function (id) { el[id] = document.getElementById(id); });
+    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar', 'vzChat', 'vzQrImg'].forEach(function (id) { el[id] = document.getElementById(id); });
     buildBar();
     document.documentElement.style.overflow = 'hidden';
     resize(); setScene(sceneIdx);
@@ -164,6 +176,8 @@
     window.addEventListener('gm:viz', onFeed);
     sessionUSD = 0; unitAcc = 0; lastT = performance.now(); running = true;
     if (!chatOn) root.classList.add('chat-off');
+    if (!qrOn) root.classList.add('qr-off');
+    qrApply();
     if (chan) chatConnect(chan);
     onFeed(); wake(); updateHud(true);
     requestAnimationFrame(function () { root.classList.add('on'); });
@@ -191,6 +205,11 @@
       '<button data-act="chat" id="vzChatBtn"></button>' +
       '<span class="sep"></span>' +
       '<button data-act="mode" id="vzModeBtn"></button>' +
+      '<button data-act="qr" id="vzQrBtn"></button>' +
+      '<button data-act="qrset">Change QR</button>' +
+      '<button data-act="qrreset" id="vzQrReset">Reset QR</button>' +
+      '<input type="file" accept="image/*" id="vzQrFile" hidden>' +
+      '<span class="sep"></span>' +
       '<button data-act="hud">Hide overlay</button>' +
       '<button data-act="fs">Fullscreen</button>' +
       '<button data-act="exit">Exit ✕</button>';
@@ -200,10 +219,14 @@
       if (b.dataset.scene != null) setScene(+b.dataset.scene);
       else if (b.dataset.act === 'mode') toggleMode();
       else if (b.dataset.act === 'chat') toggleChat();
+      else if (b.dataset.act === 'qr') toggleQr();
+      else if (b.dataset.act === 'qrset') document.getElementById('vzQrFile').click();
+      else if (b.dataset.act === 'qrreset') qrReset();
       else if (b.dataset.act === 'hud') toggleHud(b);
       else if (b.dataset.act === 'fs') toggleFs();
       else if (b.dataset.act === 'exit') close();
     };
+    document.getElementById('vzQrFile').addEventListener('change', function () { qrPick(this.files && this.files[0]); this.value = ''; });
     var ci = document.getElementById('vzChanIn');
     ci.value = chan;
     // Keys typed into the channel box belong to the box, not to the scene shortcuts.
@@ -218,6 +241,8 @@
     syncBar();
   }
   function syncBar() {
+    var qb = document.getElementById('vzQrBtn'); if (qb) qb.textContent = qrOn ? 'QR: on' : 'QR: off';
+    var qr = document.getElementById('vzQrReset'); if (qr) qr.hidden = !qrCustom();
     var cb = document.getElementById('vzChatBtn'); if (cb) cb.textContent = chatOn ? 'Chat: on' : 'Chat: off';
     if (!el.vzBar) return;
     el.vzBar.querySelectorAll('[data-scene]').forEach(function (b) { b.classList.toggle('act', +b.dataset.scene === sceneIdx); });
@@ -237,6 +262,7 @@
     else if (k === 'f') toggleFs();
     else if (k === 'm') toggleMode();
     else if (k === 'c') toggleChat();
+    else if (k === 'q') toggleQr();
     else return;
     wake();
   }
@@ -314,6 +340,30 @@
     updateHud(false);
     raf = requestAnimationFrame(frame);
   }
+
+  /* ---------- QR code ---------- */
+  var qrOn = load(QR_KEY + '_on', '1') === '1';
+  function qrCustom() { return load(QR_KEY, ''); }
+  function qrApply() { if (el.vzQrImg) el.vzQrImg.src = qrCustom() || QR_DEFAULT; }
+  function toggleQr() {
+    qrOn = !qrOn; save(QR_KEY + '_on', qrOn ? '1' : '0');
+    if (root) root.classList.toggle('qr-off', !qrOn);
+    syncBar();
+  }
+  // Stored exactly as picked (no re-encode), so a QR never loses the sharpness it needs to scan.
+  function qrPick(file) {
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { sysMsg('That file isn\u2019t an image.'); return; }
+    if (file.size > QR_MAX) { sysMsg('QR image is too big \u2014 keep it under 1.5 MB.'); return; }
+    var r = new FileReader();
+    r.onload = function () {
+      try { localStorage.setItem(QR_KEY, r.result); } catch (e) { sysMsg('Couldn\u2019t save that QR in this browser.'); return; }
+      if (!qrOn) toggleQr();
+      qrApply(); syncBar();
+    };
+    r.readAsDataURL(file);
+  }
+  function qrReset() { try { localStorage.removeItem(QR_KEY); } catch (e) {} qrApply(); syncBar(); }
 
   /* ---------- twitch chat ---------- */
   var chan = load(CHAN_KEY, ''), chatOn = load(CHAN_KEY + '_on', '1') === '1';
