@@ -24,10 +24,13 @@
    Layout: "TikTok 9:16" squeezes the whole scene into a centered portrait frame (sized off the
    stage via container units) for capturing into a vertical TikTok LIVE; a portrait phone starts in it.
 
-   Keys: V wide/9:16 · 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
+   Joins: TikTok reports each viewer entering; Twitch sends JOINs in delayed batches (and dumps the
+   whole chatter list on connect, which is skipped). Joins are pooled briefly so a rush reads as one line.
+
+   Keys: J joins · V wide/9:16 · 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
 (function () {
   'use strict';
-  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', TT_KEY = 'gmtopt_viz_tiktok_v1', TT_BRIDGE = 'ws://127.0.0.1:8787', QR_KEY = 'gmtopt_viz_qr_v1', LAYOUT_KEY = 'gmtopt_viz_layout_v1';
+  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', TT_KEY = 'gmtopt_viz_tiktok_v1', JOIN_KEY = 'gmtopt_viz_joins_v1', TT_BRIDGE = 'ws://127.0.0.1:8787', QR_KEY = 'gmtopt_viz_qr_v1', LAYOUT_KEY = 'gmtopt_viz_layout_v1';
   var QR_DEFAULT = '/assets/stream-qr.png?v=1', QR_MAX = 1.5e6;
   var SCENES = [
     { id: 'nebula', name: 'Nebula' },
@@ -98,6 +101,8 @@
     '.vz-src{display:inline-block;width:1.25em;height:1.25em;border-radius:4px;margin-right:.4em;vertical-align:-.2em;font:800 .72em/1.25em "Space Grotesk",system-ui,sans-serif;text-align:center;color:#fff}',
     '.vz-src.tw{background:#9146FF}',
     '.vz-src.tt{background:linear-gradient(135deg,#25F4EE,#FE2C55);color:#000}',
+    '.vz-msg.join{font-size:.78em;padding:.28rem .6rem;background:rgba(6,7,11,.35);border-color:transparent;color:rgba(255,244,224,.62)}',
+    '.vz-msg.join b{font-weight:600}',
     '.vz-msg.gift{border-color:rgba(245,166,35,.5);background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(6,7,11,.6))}',
     '.vz-msg.gift em{font-style:normal;color:#FFC65A;font-weight:600}',
     '.vz-stage{position:absolute;inset:0;overflow:hidden;background:#040508;container:vzstage/size}',
@@ -247,6 +252,7 @@
       '<label class="vz-chan"><span class="tw">Twitch</span><input id="vzChanIn" placeholder="channel" spellcheck="false" autocomplete="off" maxlength="25"></label>' +
       '<label class="vz-chan"><span class="tt">TikTok</span><input id="vzTtIn" class="tti" placeholder="@username" spellcheck="false" autocomplete="off" maxlength="30"></label>' +
       '<button data-act="chat" id="vzChatBtn"></button>' +
+      '<button data-act="joins" id="vzJoinBtn"></button>' +
       '<span class="sep"></span>' +
       '<button data-act="mode" id="vzModeBtn"></button>' +
       '<button data-act="qr" id="vzQrBtn"></button>' +
@@ -264,6 +270,7 @@
       if (b.dataset.scene != null) setScene(+b.dataset.scene);
       else if (b.dataset.act === 'mode') toggleMode();
       else if (b.dataset.act === 'chat') toggleChat();
+      else if (b.dataset.act === 'joins') toggleJoins();
       else if (b.dataset.act === 'qr') toggleQr();
       else if (b.dataset.act === 'qrset') document.getElementById('vzQrFile').click();
       else if (b.dataset.act === 'qrreset') qrReset();
@@ -294,6 +301,7 @@
     var vb = document.getElementById('vzVertBtn'); if (vb) { vb.textContent = 'TikTok 9:16'; vb.classList.toggle('act', vert); }
     var qb = document.getElementById('vzQrBtn'); if (qb) qb.textContent = qrOn ? 'QR: on' : 'QR: off';
     var qr = document.getElementById('vzQrReset'); if (qr) qr.hidden = !qrCustom();
+    var jb = document.getElementById('vzJoinBtn'); if (jb) jb.textContent = joinsOn ? 'Joins: on' : 'Joins: off';
     var cb = document.getElementById('vzChatBtn'); if (cb) cb.textContent = chatOn ? 'Chat: on' : 'Chat: off';
     if (!el.vzBar) return;
     el.vzBar.querySelectorAll('[data-scene]').forEach(function (b) { b.classList.toggle('act', +b.dataset.scene === sceneIdx); });
@@ -321,6 +329,7 @@
     else if (k === 'f') toggleFs();
     else if (k === 'm') toggleMode();
     else if (k === 'c') toggleChat();
+    else if (k === 'j') toggleJoins();
     else if (k === 'q') toggleQr();
     else return;
     wake();
@@ -426,7 +435,7 @@
 
   /* ---------- twitch chat ---------- */
   var chan = load(CHAN_KEY, ''), chatOn = load(CHAN_KEY + '_on', '1') === '1';
-  var ws = null, wsChan = '', retry = 0, retryT = 0;
+  var ws = null, wsChan = '', retry = 0, retryT = 0, twJoinedAt = 0;
   var MAX_MSGS = 14, MSG_TTL = 45000;
 
   function toggleChat() {
@@ -456,7 +465,8 @@
     var sock = ws;
     sock.onopen = function () {
       retry = 0;
-      sock.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+      sock.send('CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership');
+      twJoinedAt = Date.now();
       sock.send('PASS SCHMOOPIIE');
       sock.send('NICK justinfan' + (10000 + ((Math.random() * 80000) | 0)));
       sock.send('JOIN #' + c);
@@ -484,6 +494,7 @@
     if (!m) return;
     var cmd = m[2];
     if (cmd === 'JOIN' && /^justinfan/.test(m[1])) sysMsg('Connected to #' + m[3].slice(1));
+    else if (cmd === 'JOIN') { if (Date.now() - twJoinedAt > 15000) queueJoin(m[1].split('!')[0], 'tw'); }
     else if (cmd === 'NOTICE' && m[4]) sysMsg(m[4]);
     else if (cmd === 'PRIVMSG' && m[4] != null) {
       var user = tags['display-name'] || m[1].split('!')[0];
@@ -523,11 +534,30 @@
     var k = 110 / Math.max(l, 1), mix = function (c) { return Math.min(255, Math.round(c * k + 40)); };
     return 'rgb(' + mix(r) + ',' + mix(g) + ',' + mix(b) + ')';
   }
-  function pushMsg(node) {
+  function pushMsg(node, ttl) {
     var box = el.vzChat; if (!box) return;
     box.appendChild(node);
     while (box.children.length > MAX_MSGS) box.removeChild(box.firstChild);
-    setTimeout(function () { node.classList.add('old'); setTimeout(function () { node.remove(); }, 1300); }, MSG_TTL);
+    setTimeout(function () { node.classList.add('old'); setTimeout(function () { node.remove(); }, 1300); }, ttl || MSG_TTL);
+  }
+  var joinsOn = load(JOIN_KEY, '1') === '1', joinQ = { tw: [], tt: [] }, joinT = 0;
+  function toggleJoins() { joinsOn = !joinsOn; save(JOIN_KEY, joinsOn ? '1' : '0'); syncBar(); }
+  function queueJoin(user, src) {
+    if (!joinsOn || !user) return;
+    if (joinQ[src].indexOf(user) < 0) joinQ[src].push(user);
+    if (!joinT) joinT = setTimeout(flushJoins, 1500);
+  }
+  function flushJoins() {
+    joinT = 0;
+    ['tt', 'tw'].forEach(function (src) {
+      var q = joinQ[src]; joinQ[src] = [];
+      if (!q.length) return;
+      var d = document.createElement('div'); d.className = 'vz-msg join';
+      var who = q.length <= 2 ? q.map(function (u) { return '<b style="color:' + readable(nameColor(u)) + '">' + esc(u) + '</b>'; }).join(' & ')
+        : '<b style="color:' + readable(nameColor(q[0])) + '">' + esc(q[0]) + '</b> & ' + (q.length - 1) + ' others';
+      d.innerHTML = srcTag(src) + '\ud83d\udc4b ' + who + ' joined';
+      pushMsg(d, 15000);
+    });
   }
   // The platform badge only earns its space when two chats are mixed together.
   function srcTag(src) { return src && chan && tt ? '<span class="vz-src ' + src + '">' + (src === 'tw' ? 'T' : '\u266a') + '</span>' : ''; }
@@ -563,6 +593,7 @@
       var m; try { m = JSON.parse(e.data); } catch (x) { return; }
       if (m.type === 'chat') addMsg(m.user, nameColor(m.user), esc(m.text || ''), false, 'tt');
       else if (m.type === 'gift') addMsg(m.user, nameColor(m.user), 'sent <em>' + esc(m.gift) + (m.count > 1 ? ' ×' + (+m.count) : '') + '</em> 🎁', false, 'tt', 'gift');
+      else if (m.type === 'join') queueJoin(m.user, 'tt');
       else if (m.type === 'follow') addMsg(m.user, nameColor(m.user), '<em>followed</em> ❤️', false, 'tt');
       else if (m.type === 'sys') sysMsg(m.text);
     };
