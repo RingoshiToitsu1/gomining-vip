@@ -3519,6 +3519,11 @@ function recalc(){
   if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
   if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
   $('heroMonthlyBTC').textContent=heroMoSub;
+  // Stream-mode visualizer (visualizer.js) reads the same composed income the hero shows, so the
+  // per-second ticker can never disagree with the Daily Net Profit card behind it.
+  window._vizFeed={daily:totalDailyUSD,mining:netUSD,staking:dailyStakeUSD,amb:heroAmbDaily,greedy:greedyDailyUSD,
+    btcDay:m.net,bp:_bp,gp:m.gp,th:m.earnTH,disc:m.totD,cur:S.currency,fx:S.fxRate||1};
+  try{window.dispatchEvent(new Event('gm:viz'));}catch(e){}
   animateMetric($('heroYearly'),moUSD*12,v=>fU(v,0)+' / yr');$('heroYearly').className='hero-yearly '+(moUSD>=0?'cyan':'red');
   if(_bp>0)animateMetric($('heroYearlyBtcVal'),moUSD*12/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
   else if($('heroYearlyBtcVal'))$('heroYearlyBtcVal').textContent='';
