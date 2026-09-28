@@ -21,10 +21,13 @@
    tells it which username to join and it forwards chat, gifts and follows. With both platforms
    set, each line carries a small platform badge.
 
-   Keys: 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
+   Layout: "TikTok 9:16" squeezes the whole scene into a centered portrait frame (sized off the
+   stage via container units) for capturing into a vertical TikTok LIVE; a portrait phone starts in it.
+
+   Keys: V wide/9:16 · 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
 (function () {
   'use strict';
-  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', TT_KEY = 'gmtopt_viz_tiktok_v1', TT_BRIDGE = 'ws://127.0.0.1:8787', QR_KEY = 'gmtopt_viz_qr_v1';
+  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', TT_KEY = 'gmtopt_viz_tiktok_v1', TT_BRIDGE = 'ws://127.0.0.1:8787', QR_KEY = 'gmtopt_viz_qr_v1', LAYOUT_KEY = 'gmtopt_viz_layout_v1';
   var QR_DEFAULT = '/assets/stream-qr.png?v=1', QR_MAX = 1.5e6;
   var SCENES = [
     { id: 'nebula', name: 'Nebula' },
@@ -46,30 +49,30 @@
     '#vizRoot{position:fixed;inset:0;z-index:2147483000;background:#040508;color:#FFF4E0;font-family:"Space Grotesk",system-ui,sans-serif;overflow:hidden;opacity:0;transition:opacity .45s ease}',
     '#vizRoot.on{opacity:1}',
     '#vizRoot canvas{position:absolute;inset:0;width:100%;height:100%;display:block}',
-    '#vizRoot .vz-hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(16px,3.2vw,44px);transition:opacity .5s}',
+    '#vizRoot .vz-hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(16px,3.2cqw,44px);transition:opacity .5s}',
     '#vizRoot.hud-off .vz-hud{opacity:0}',
     '.vz-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}',
-    '.vz-label{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.62rem,1.1vw,.8rem);letter-spacing:.28em;text-transform:uppercase;color:rgba(255,207,122,.72)}',
-    '.vz-big{font-weight:700;font-size:clamp(2.3rem,7.4vw,6.4rem);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#FFF4E0 10%,#FFC65A 60%,#F5A623);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 28px rgba(245,166,35,.35));margin-top:.35rem;white-space:nowrap}',
+    '.vz-label{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.62rem,1.1cqw,.8rem);letter-spacing:.28em;text-transform:uppercase;color:rgba(255,207,122,.72)}',
+    '.vz-big{font-weight:700;font-size:clamp(2.3rem,7.4cqw,6.4rem);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#FFF4E0 10%,#FFC65A 60%,#F5A623);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 28px rgba(245,166,35,.35));margin-top:.35rem;white-space:nowrap}',
     '.vz-big small{font-size:.42em;opacity:.8}',
-    '.vz-rates{display:flex;flex-wrap:wrap;gap:clamp(10px,2vw,28px);margin-top:1rem}',
+    '.vz-rates{display:flex;flex-wrap:wrap;gap:clamp(10px,2cqw,28px);margin-top:1rem}',
     '.vz-rate{min-width:0}',
-    '.vz-rate b{display:block;font-weight:600;font-size:clamp(1rem,2.1vw,1.7rem);font-variant-numeric:tabular-nums;color:#FFF4E0}',
-    '.vz-rate span{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.58rem,.95vw,.72rem);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,244,224,.5)}',
+    '.vz-rate b{display:block;font-weight:600;font-size:clamp(1rem,2.1cqw,1.7rem);font-variant-numeric:tabular-nums;color:#FFF4E0}',
+    '.vz-rate span{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.58rem,.95cqw,.72rem);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,244,224,.5)}',
     '.vz-rate.hot b{color:#FFC65A;text-shadow:0 0 18px rgba(245,166,35,.55)}',
     '.vz-chips{display:flex;flex-direction:column;align-items:flex-end;gap:8px;text-align:right}',
-    '.vz-chip{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.66rem,1.05vw,.82rem);letter-spacing:.08em;padding:.38rem .7rem;border-radius:8px;background:rgba(10,12,18,.55);border:1px solid rgba(245,166,35,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}',
+    '.vz-chip{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.66rem,1.05cqw,.82rem);letter-spacing:.08em;padding:.38rem .7rem;border-radius:8px;background:rgba(10,12,18,.55);border:1px solid rgba(245,166,35,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}',
     '.vz-chip i{font-style:normal;color:rgba(255,244,224,.5);margin-right:.45em}',
     '.vz-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:16px}',
-    '.vz-legend{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.6rem,1vw,.78rem);color:rgba(255,244,224,.55);letter-spacing:.1em}',
+    '.vz-legend{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:clamp(.6rem,1cqw,.78rem);color:rgba(255,244,224,.55);letter-spacing:.1em}',
     '.vz-legend em{font-style:normal;color:#FFC65A}',
-    '.vz-brandrow{display:flex;align-items:flex-end;gap:clamp(10px,1.4vw,18px)}',
-    '.vz-qr{width:clamp(84px,10vw,148px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(245,166,35,.45);box-shadow:0 0 28px rgba(245,166,35,.18);flex:none}',
+    '.vz-brandrow{display:flex;align-items:flex-end;gap:clamp(10px,1.4cqw,18px)}',
+    '.vz-qr{width:clamp(84px,10cqw,148px);aspect-ratio:1;border-radius:12px;overflow:hidden;background:#000;border:1px solid rgba(245,166,35,.45);box-shadow:0 0 28px rgba(245,166,35,.18);flex:none}',
     '.vz-qr img{width:100%;height:100%;object-fit:contain;display:block}',
     '#vizRoot.qr-off .vz-qr{display:none}',
     '.vz-qrcap{display:block;margin-top:.35rem;color:#FFC65A}',
-    '.vz-brand{text-align:right;font-family:"Share Tech Mono",ui-monospace,monospace;letter-spacing:.14em;font-size:clamp(.66rem,1.1vw,.86rem);color:rgba(255,244,224,.7)}',
-    '.vz-brand strong{display:block;font-family:"Space Grotesk",system-ui,sans-serif;font-size:clamp(.95rem,1.7vw,1.35rem);letter-spacing:.02em;color:#FFF4E0}',
+    '.vz-brand{text-align:right;font-family:"Share Tech Mono",ui-monospace,monospace;letter-spacing:.14em;font-size:clamp(.66rem,1.1cqw,.86rem);color:rgba(255,244,224,.7)}',
+    '.vz-brand strong{display:block;font-family:"Space Grotesk",system-ui,sans-serif;font-size:clamp(.95rem,1.7cqw,1.35rem);letter-spacing:.02em;color:#FFF4E0}',
     '.vz-brand strong span{color:#F5A623}',
     '.vz-bar{position:absolute;left:50%;bottom:clamp(16px,3vw,36px);transform:translateX(-50%);display:flex;gap:6px;padding:6px;border-radius:14px;background:rgba(10,12,18,.72);border:1px solid rgba(255,244,224,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .4s,transform .4s;z-index:2}',
     '#vizRoot.idle .vz-bar{opacity:0;transform:translate(-50%,12px);pointer-events:none}',
@@ -78,9 +81,9 @@
     '.vz-bar button:hover{background:rgba(255,244,224,.08);color:#FFF4E0}',
     '.vz-bar button.act{background:rgba(245,166,35,.18);color:#FFC65A}',
     '.vz-bar .sep{width:1px;background:rgba(255,244,224,.12);margin:4px 2px}',
-    '.vz-chat{position:absolute;right:clamp(16px,3.2vw,44px);top:30%;bottom:max(20%,calc(clamp(84px,10vw,148px) + 70px));width:min(380px,32vw);display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%);z-index:1}',
+    '.vz-chat{position:absolute;right:clamp(16px,3.2cqw,44px);top:30%;bottom:max(20%,calc(clamp(84px,10cqw,148px) + 70px));width:min(380px,32cqw);display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%);z-index:1}',
     '#vizRoot.chat-off .vz-chat{display:none}',
-    '.vz-msg{font-size:clamp(.82rem,1.15vw,1rem);line-height:1.4;padding:.45rem .7rem;border-radius:10px;background:rgba(6,7,11,.58);border:1px solid rgba(255,244,224,.07);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#FFF4E0;word-wrap:break-word;overflow-wrap:anywhere;animation:vzIn .35s ease-out;transition:opacity 1.2s}',
+    '.vz-msg{font-size:clamp(.82rem,1.15cqw,1rem);line-height:1.4;padding:.45rem .7rem;border-radius:10px;background:rgba(6,7,11,.58);border:1px solid rgba(255,244,224,.07);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#FFF4E0;word-wrap:break-word;overflow-wrap:anywhere;animation:vzIn .35s ease-out;transition:opacity 1.2s}',
     '.vz-msg.old{opacity:0}',
     '.vz-msg b{font-weight:700;margin-right:.35em}',
     '.vz-msg img{height:1.5em;vertical-align:middle;margin:-.2em .05em}',
@@ -97,7 +100,30 @@
     '.vz-src.tt{background:linear-gradient(135deg,#25F4EE,#FE2C55);color:#000}',
     '.vz-msg.gift{border-color:rgba(245,166,35,.5);background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(6,7,11,.6))}',
     '.vz-msg.gift em{font-style:normal;color:#FFC65A;font-weight:600}',
-    '@media (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:230px;height:24vh}.vz-chan input{width:90px}.vz-brandrow{flex-direction:row-reverse}.vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
+    '.vz-stage{position:absolute;inset:0;overflow:hidden;background:#040508;container:vzstage/size}',
+    '#vizRoot.vert{background:#000}',
+    '#vizRoot.vert .vz-stage{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);height:min(100vh,177.78vw);aspect-ratio:9/16}',
+    '@container vzstage (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:230px;height:24cqh}.vz-brandrow{flex-direction:row-reverse}.vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}}',
+    '@media (max-width:640px){.vz-chan input{width:90px}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}',
+    /* 9:16. TikTok draws its own header over the top ~11% and its comments/gift strip over the
+       bottom ~25% of a LIVE, so the numbers and the QR sit in the band between. */
+    '#vizRoot.vert .vz-hud{justify-content:flex-start;gap:3.2cqh;padding:11cqh 6cqw 0}',
+    '#vizRoot.vert .vz-top{flex-direction:column;align-items:center;text-align:center;gap:2.4cqh}',
+    '#vizRoot.vert .vz-label{font-size:2.6cqw}',
+    '#vizRoot.vert .vz-big{font-size:12.5cqw;margin-top:1cqh}',
+    '#vizRoot.vert .vz-rates{display:grid;grid-template-columns:1fr 1fr;gap:1.6cqh 8cqw;justify-items:center;margin-top:2.4cqh}',
+    '#vizRoot.vert .vz-rate b{font-size:5.6cqw}',
+    '#vizRoot.vert .vz-rate span{font-size:2.3cqw}',
+    '#vizRoot.vert .vz-chips{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;text-align:center;gap:1.6cqw}',
+    '#vizRoot.vert .vz-chip{font-size:2.5cqw;padding:.8cqh 2.2cqw}',
+    '#vizRoot.vert .vz-bottom{flex-direction:column-reverse;align-items:center;gap:1.4cqh;padding-bottom:0}',
+    '#vizRoot.vert .vz-brandrow{flex-direction:row-reverse;align-items:center;gap:4cqw}',
+    '#vizRoot.vert .vz-brand{text-align:left;font-size:2.7cqw}',
+    '#vizRoot.vert .vz-brand strong{font-size:5cqw}',
+    '#vizRoot.vert .vz-qr{width:22cqw}',
+    '#vizRoot.vert .vz-legend{text-align:center;font-size:2.3cqw}',
+    '#vizRoot.vert .vz-chat{left:6cqw;right:6cqw;width:auto;top:auto;bottom:4cqh;height:22cqh}',
+    '#vizRoot.vert .vz-msg{font-size:3.3cqw}'
   ].join('');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -145,7 +171,9 @@
   function open() {
     if (running) return;
     root = document.createElement('div'); root.id = 'vizRoot';
+    if (vert) root.className = 'vert';   // before the first resize, so the canvas starts at the frame's size
     root.innerHTML =
+      '<div class="vz-stage" id="vzStage">' +
       '<canvas></canvas>' +
       '<div class="vz-hud">' +
         '<div class="vz-top">' +
@@ -175,10 +203,11 @@
         '</div>' +
       '</div>' +
       '<div class="vz-chat" id="vzChat"></div>' +
+      '</div>' +
       '<div class="vz-bar" id="vzBar"></div>';
     document.body.appendChild(root);
     cvs = root.querySelector('canvas'); ctx = cvs.getContext('2d');
-    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar', 'vzChat', 'vzQrImg'].forEach(function (id) { el[id] = document.getElementById(id); });
+    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar', 'vzChat', 'vzStage', 'vzQrImg'].forEach(function (id) { el[id] = document.getElementById(id); });
     buildBar();
     document.documentElement.style.overflow = 'hidden';
     resize(); setScene(sceneIdx);
@@ -225,6 +254,7 @@
       '<button data-act="qrreset" id="vzQrReset">Reset QR</button>' +
       '<input type="file" accept="image/*" id="vzQrFile" hidden>' +
       '<span class="sep"></span>' +
+      '<button data-act="vert" id="vzVertBtn"></button>' +
       '<button data-act="hud">Hide overlay</button>' +
       '<button data-act="fs">Fullscreen</button>' +
       '<button data-act="exit">Exit ✕</button>';
@@ -238,6 +268,7 @@
       else if (b.dataset.act === 'qrset') document.getElementById('vzQrFile').click();
       else if (b.dataset.act === 'qrreset') qrReset();
       else if (b.dataset.act === 'hud') toggleHud(b);
+      else if (b.dataset.act === 'vert') toggleVert();
       else if (b.dataset.act === 'fs') toggleFs();
       else if (b.dataset.act === 'exit') close();
     };
@@ -260,6 +291,7 @@
     ci.addEventListener('blur', wake);
   }
   function syncBar() {
+    var vb = document.getElementById('vzVertBtn'); if (vb) { vb.textContent = 'TikTok 9:16'; vb.classList.toggle('act', vert); }
     var qb = document.getElementById('vzQrBtn'); if (qb) qb.textContent = qrOn ? 'QR: on' : 'QR: off';
     var qr = document.getElementById('vzQrReset'); if (qr) qr.hidden = !qrCustom();
     var cb = document.getElementById('vzChatBtn'); if (cb) cb.textContent = chatOn ? 'Chat: on' : 'Chat: off';
@@ -269,6 +301,13 @@
     var hb = el.vzBar.querySelector('[data-act="hud"]'); if (hb) hb.textContent = root && root.classList.contains('hud-off') ? 'Show overlay' : 'Hide overlay';
   }
   function toggleMode() { mode = mode === 'today' ? 'session' : 'today'; save(MODE_KEY, mode); syncBar(); updateHud(true); }
+  // With no saved choice, a phone held upright starts in 9:16 and everything else starts wide.
+  var vert = (function () { var v = load(LAYOUT_KEY, ''); return v ? v === 'vert' : window.innerHeight > window.innerWidth; })();
+  function toggleVert() {
+    vert = !vert; save(LAYOUT_KEY, vert ? 'vert' : 'wide');
+    root.classList.toggle('vert', vert);
+    resize(); setScene(sceneIdx);
+  }
   function toggleHud() { root.classList.toggle('hud-off'); syncBar(); }
   function toggleFs() {
     try { if (document.fullscreenElement) document.exitFullscreen(); else root.requestFullscreen(); } catch (e) {}
@@ -278,6 +317,7 @@
     var k = e.key.toLowerCase();
     if (k >= '1' && k <= String(SCENES.length)) setScene(+k - 1);
     else if (k === 'h') toggleHud();
+    else if (k === 'v') toggleVert();
     else if (k === 'f') toggleFs();
     else if (k === 'm') toggleMode();
     else if (k === 'c') toggleChat();
@@ -303,7 +343,7 @@
   function resize() {
     if (!cvs) return;
     DPR = Math.min(2, window.devicePixelRatio || 1);
-    W = window.innerWidth; H = window.innerHeight;
+    W = el.vzStage.clientWidth || window.innerWidth; H = el.vzStage.clientHeight || window.innerHeight;
     cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (scene && scene.resize) scene.resize();
