@@ -16,10 +16,15 @@
    QR: the corner QR defaults to the RINGO5 signup code (assets/stream-qr.png); "Change QR" swaps in
    any image the viewer picks, kept in this browser only, and "Reset QR" goes back to the default.
 
+   TikTok chat: TikTok has no public chat feed a page can read, so the TikTok box talks to a small
+   helper running on the streaming PC (~/tiktok-chat-bridge, ws://127.0.0.1:8787). Stream mode
+   tells it which username to join and it forwards chat, gifts and follows. With both platforms
+   set, each line carries a small platform badge.
+
    Keys: 1-3 scene · H hide overlay · C chat · Q QR · F fullscreen · M session/today counter · Esc exit. */
 (function () {
   'use strict';
-  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', QR_KEY = 'gmtopt_viz_qr_v1';
+  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1', TT_KEY = 'gmtopt_viz_tiktok_v1', TT_BRIDGE = 'ws://127.0.0.1:8787', QR_KEY = 'gmtopt_viz_qr_v1';
   var QR_DEFAULT = '/assets/stream-qr.png?v=1', QR_MAX = 1.5e6;
   var SCENES = [
     { id: 'nebula', name: 'Nebula' },
@@ -85,6 +90,13 @@
     '.vz-chan input{width:120px;background:rgba(255,244,224,.06);border:1px solid rgba(255,244,224,.14);border-radius:8px;color:#FFF4E0;font:500 .76rem/1 "Space Grotesk",system-ui,sans-serif;padding:.5rem .55rem;outline:none}',
     '.vz-chan input:focus{border-color:#9146FF}',
     '.vz-chan .tw{color:#BF94FF;font-weight:700;font-size:.72rem}',
+    '.vz-chan .tt{color:#25F4EE;font-weight:700;font-size:.72rem}',
+    '.vz-chan input.tti:focus{border-color:#FE2C55}',
+    '.vz-src{display:inline-block;width:1.25em;height:1.25em;border-radius:4px;margin-right:.4em;vertical-align:-.2em;font:800 .72em/1.25em "Space Grotesk",system-ui,sans-serif;text-align:center;color:#fff}',
+    '.vz-src.tw{background:#9146FF}',
+    '.vz-src.tt{background:linear-gradient(135deg,#25F4EE,#FE2C55);color:#000}',
+    '.vz-msg.gift{border-color:rgba(245,166,35,.5);background:linear-gradient(135deg,rgba(245,166,35,.2),rgba(6,7,11,.6))}',
+    '.vz-msg.gift em{font-style:normal;color:#FFC65A;font-weight:600}',
     '@media (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:230px;height:24vh}.vz-chan input{width:90px}.vz-brandrow{flex-direction:row-reverse}.vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
   ].join('');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -179,6 +191,7 @@
     if (!qrOn) root.classList.add('qr-off');
     qrApply();
     if (chan) chatConnect(chan);
+    if (tt) ttConnect();
     onFeed(); wake(); updateHud(true);
     requestAnimationFrame(function () { root.classList.add('on'); });
     raf = requestAnimationFrame(frame);
@@ -191,6 +204,7 @@
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('gm:viz', onFeed);
     chatDisconnect();
+    ttDisconnect();
     if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
     document.documentElement.style.overflow = '';
     var r = root; r.classList.remove('on'); setTimeout(function () { r.remove(); }, 450);
@@ -202,6 +216,7 @@
     SCENES.forEach(function (s, i) { h += '<button data-scene="' + i + '">' + s.name + '</button>'; });
     h += '<span class="sep"></span>' +
       '<label class="vz-chan"><span class="tw">Twitch</span><input id="vzChanIn" placeholder="channel" spellcheck="false" autocomplete="off" maxlength="25"></label>' +
+      '<label class="vz-chan"><span class="tt">TikTok</span><input id="vzTtIn" class="tti" placeholder="@username" spellcheck="false" autocomplete="off" maxlength="30"></label>' +
       '<button data-act="chat" id="vzChatBtn"></button>' +
       '<span class="sep"></span>' +
       '<button data-act="mode" id="vzModeBtn"></button>' +
@@ -227,18 +242,22 @@
       else if (b.dataset.act === 'exit') close();
     };
     document.getElementById('vzQrFile').addEventListener('change', function () { qrPick(this.files && this.files[0]); this.value = ''; });
-    var ci = document.getElementById('vzChanIn');
-    ci.value = chan;
-    // Keys typed into the channel box belong to the box, not to the scene shortcuts.
+    wireInput('vzChanIn', function () { return chan; }, setChannel);
+    wireInput('vzTtIn', function () { return tt; }, setTikTok);
+    syncBar();
+  }
+  // Keys typed into a channel box belong to the box, not to the scene shortcuts.
+  function wireInput(id, get, set) {
+    var ci = document.getElementById(id);
+    ci.value = get();
     ci.addEventListener('keydown', function (e) {
       e.stopPropagation();
-      if (e.key === 'Enter') { setChannel(ci.value); ci.blur(); }
-      if (e.key === 'Escape') { ci.value = chan; ci.blur(); }
+      if (e.key === 'Enter') { set(ci.value); ci.blur(); }
+      if (e.key === 'Escape') { ci.value = get(); ci.blur(); }
     });
-    ci.addEventListener('change', function () { setChannel(ci.value); });
+    ci.addEventListener('change', function () { set(ci.value); });
     ci.addEventListener('focus', function () { clearTimeout(idleTimer); });
     ci.addEventListener('blur', wake);
-    syncBar();
   }
   function syncBar() {
     var qb = document.getElementById('vzQrBtn'); if (qb) qb.textContent = qrOn ? 'QR: on' : 'QR: off';
@@ -270,7 +289,7 @@
     if (!root) return;
     root.classList.remove('idle'); clearTimeout(idleTimer);
     idleTimer = setTimeout(function () {
-      if (root && document.activeElement !== document.getElementById('vzChanIn')) root.classList.add('idle');
+      if (root && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('.vz-chan'))) root.classList.add('idle');
     }, 2600);
   }
 
@@ -430,7 +449,7 @@
       var user = tags['display-name'] || m[1].split('!')[0];
       var text = m[4], action = false;
       var am = /^\x01ACTION (.*)\x01$/.exec(text); if (am) { text = am[1]; action = true; }
-      addMsg(user, tags.color || nameColor(user), renderEmotes(text, tags.emotes), action);
+      addMsg(user, tags.color || nameColor(user), renderEmotes(text, tags.emotes), action, 'tw');
     } else if (cmd === 'USERNOTICE' && tags['system-msg']) sysMsg(tags['system-msg']);
   }
   function esc(s) { return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -470,13 +489,51 @@
     while (box.children.length > MAX_MSGS) box.removeChild(box.firstChild);
     setTimeout(function () { node.classList.add('old'); setTimeout(function () { node.remove(); }, 1300); }, MSG_TTL);
   }
-  function addMsg(user, color, html, action) {
-    var d = document.createElement('div'); d.className = 'vz-msg';
+  // The platform badge only earns its space when two chats are mixed together.
+  function srcTag(src) { return src && chan && tt ? '<span class="vz-src ' + src + '">' + (src === 'tw' ? 'T' : '\u266a') + '</span>' : ''; }
+  function addMsg(user, color, html, action, src, cls) {
+    var d = document.createElement('div'); d.className = 'vz-msg' + (cls ? ' ' + cls : '');
     var c = readable(color);
-    d.innerHTML = '<b style="color:' + c + '">' + esc(user) + '</b>' + (action ? '<i style="color:' + c + '">' + html + '</i>' : html);
+    d.innerHTML = srcTag(src) + '<b style="color:' + c + '">' + esc(user) + '</b>' + (action ? '<i style="color:' + c + '">' + html + '</i>' : html);
     pushMsg(d);
   }
   function sysMsg(t) { var d = document.createElement('div'); d.className = 'vz-msg sys'; d.textContent = t; pushMsg(d); }
+
+  /* ---------- tiktok chat (via the local bridge) ---------- */
+  var tt = load(TT_KEY, ''), tws = null, ttRetry = 0, ttRetryT = 0, ttWarned = false;
+  function setTikTok(v) {
+    v = String(v || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/, '').replace(/\/.*$/, '').replace(/^@/, '').replace(/[^a-z0-9._]/g, '');
+    if (v === tt && tws) return;
+    tt = v; save(TT_KEY, tt);
+    var ci = document.getElementById('vzTtIn'); if (ci) ci.value = tt ? '@' + tt : '';
+    ttDisconnect(); ttWarned = false;
+    if (tt) { if (!chatOn) toggleChat(); ttConnect(); }
+  }
+  function ttDisconnect() {
+    clearTimeout(ttRetryT);
+    if (tws) { tws.onclose = null; try { tws.close(); } catch (e) {} tws = null; }
+  }
+  function ttConnect() {
+    ttDisconnect();
+    var sock;
+    try { sock = new WebSocket(TT_BRIDGE); } catch (e) { return; }
+    tws = sock;
+    sock.onopen = function () { ttRetry = 0; ttWarned = false; sock.send(JSON.stringify({ join: tt })); };
+    sock.onmessage = function (e) {
+      var m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.type === 'chat') addMsg(m.user, nameColor(m.user), esc(m.text || ''), false, 'tt');
+      else if (m.type === 'gift') addMsg(m.user, nameColor(m.user), 'sent <em>' + esc(m.gift) + (m.count > 1 ? ' ×' + (+m.count) : '') + '</em> 🎁', false, 'tt', 'gift');
+      else if (m.type === 'follow') addMsg(m.user, nameColor(m.user), '<em>followed</em> ❤️', false, 'tt');
+      else if (m.type === 'sys') sysMsg(m.text);
+    };
+    sock.onclose = function () {
+      if (tws !== sock || !running || !tt) return;
+      // Say it once, not on every retry: the helper usually just hasn't been started yet.
+      if (!ttWarned) { ttWarned = true; sysMsg('TikTok helper not running — start it on this PC (npm start in tiktok-chat-bridge)'); }
+      ttRetry = Math.min(ttRetry + 1, 5);
+      ttRetryT = setTimeout(function () { if (running && tt) ttConnect(); }, 1000 * Math.pow(2, ttRetry));
+    };
+  }
 
   /* ---------- scenes ---------- */
   function rnd(a, b) { return a + Math.random() * (b - a); }
