@@ -9,10 +9,14 @@
    lands roughly every half-second to two seconds: a small farm sparks per tenth of a cent, a big
    one per dime. The legend in the HUD says what a spark is worth.
 
-   Keys: 1-3 scene · H hide overlay · F fullscreen · M session/today counter · Esc exit. */
+   Twitch chat: type a channel into the Chat field and its chat is read anonymously over Twitch's
+   public IRC websocket (a justinfan guest login, read-only, no account) and drawn as a transparent
+   column over the art, so it reads as part of the scene instead of a pasted-in embed box.
+
+   Keys: 1-3 scene · H hide overlay · C chat · F fullscreen · M session/today counter · Esc exit. */
 (function () {
   'use strict';
-  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1';
+  var SCENE_KEY = 'gmtopt_viz_scene_v1', MODE_KEY = 'gmtopt_viz_mode_v1', CHAN_KEY = 'gmtopt_viz_twitch_v1';
   var SCENES = [
     { id: 'nebula', name: 'Nebula' },
     { id: 'flow', name: 'Silk' },
@@ -60,7 +64,19 @@
     '.vz-bar button:hover{background:rgba(255,244,224,.08);color:#FFF4E0}',
     '.vz-bar button.act{background:rgba(245,166,35,.18);color:#FFC65A}',
     '.vz-bar .sep{width:1px;background:rgba(255,244,224,.12);margin:4px 2px}',
-    '@media (max-width:640px){.vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
+    '.vz-chat{position:absolute;right:clamp(16px,3.2vw,44px);top:30%;bottom:20%;width:min(380px,32vw);display:flex;flex-direction:column;justify-content:flex-end;gap:6px;overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);mask-image:linear-gradient(180deg,transparent,#000 22%);z-index:1}',
+    '#vizRoot.chat-off .vz-chat{display:none}',
+    '.vz-msg{font-size:clamp(.82rem,1.15vw,1rem);line-height:1.4;padding:.45rem .7rem;border-radius:10px;background:rgba(6,7,11,.58);border:1px solid rgba(255,244,224,.07);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#FFF4E0;word-wrap:break-word;overflow-wrap:anywhere;animation:vzIn .35s ease-out;transition:opacity 1.2s}',
+    '.vz-msg.old{opacity:0}',
+    '.vz-msg b{font-weight:700;margin-right:.35em}',
+    '.vz-msg img{height:1.5em;vertical-align:middle;margin:-.2em .05em}',
+    '.vz-msg.sys{font-family:"Share Tech Mono",ui-monospace,monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,207,122,.75);background:rgba(6,7,11,.4)}',
+    '@keyframes vzIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}',
+    '.vz-chan{display:flex;align-items:center;gap:4px;padding-left:6px}',
+    '.vz-chan input{width:120px;background:rgba(255,244,224,.06);border:1px solid rgba(255,244,224,.14);border-radius:8px;color:#FFF4E0;font:500 .76rem/1 "Space Grotesk",system-ui,sans-serif;padding:.5rem .55rem;outline:none}',
+    '.vz-chan input:focus{border-color:#9146FF}',
+    '.vz-chan .tw{color:#BF94FF;font-weight:700;font-size:.72rem}',
+    '@media (max-width:640px){.vz-chat{left:16px;right:16px;width:auto;top:auto;bottom:130px;height:28vh}.vz-chan input{width:90px}..vz-top{flex-direction:column}.vz-chips{flex-direction:row;flex-wrap:wrap;align-items:flex-start;text-align:left}.vz-bottom{flex-direction:column;align-items:flex-start;padding-bottom:64px}.vz-brand{text-align:left}.vz-bar{max-width:calc(100% - 32px);overflow-x:auto}.vz-bar button{padding:.5rem .6rem}}'
   ].join('');
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -134,10 +150,11 @@
           '<div class="vz-brand"><strong>gmt-optimizer<span>.com</span></strong>code RINGO5 · we fund your first TH</div>' +
         '</div>' +
       '</div>' +
+      '<div class="vz-chat" id="vzChat"></div>' +
       '<div class="vz-bar" id="vzBar"></div>';
     document.body.appendChild(root);
     cvs = root.querySelector('canvas'); ctx = cvs.getContext('2d');
-    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar'].forEach(function (id) { el[id] = document.getElementById(id); });
+    ['vzLabel', 'vzBig', 'vzSec', 'vzMin', 'vzHr', 'vzDay', 'vzBtc', 'vzTh', 'vzSats', 'vzDisc', 'vzLegend', 'vzBar', 'vzChat'].forEach(function (id) { el[id] = document.getElementById(id); });
     buildBar();
     document.documentElement.style.overflow = 'hidden';
     resize(); setScene(sceneIdx);
@@ -146,6 +163,8 @@
     root.addEventListener('mousemove', wake); root.addEventListener('touchstart', wake, { passive: true });
     window.addEventListener('gm:viz', onFeed);
     sessionUSD = 0; unitAcc = 0; lastT = performance.now(); running = true;
+    if (!chatOn) root.classList.add('chat-off');
+    if (chan) chatConnect(chan);
     onFeed(); wake(); updateHud(true);
     requestAnimationFrame(function () { root.classList.add('on'); });
     raf = requestAnimationFrame(frame);
@@ -157,6 +176,7 @@
     window.removeEventListener('resize', resize);
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('gm:viz', onFeed);
+    chatDisconnect();
     if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} }
     document.documentElement.style.overflow = '';
     var r = root; r.classList.remove('on'); setTimeout(function () { r.remove(); }, 450);
@@ -167,6 +187,9 @@
     var h = '';
     SCENES.forEach(function (s, i) { h += '<button data-scene="' + i + '">' + s.name + '</button>'; });
     h += '<span class="sep"></span>' +
+      '<label class="vz-chan"><span class="tw">Twitch</span><input id="vzChanIn" placeholder="channel" spellcheck="false" autocomplete="off" maxlength="25"></label>' +
+      '<button data-act="chat" id="vzChatBtn"></button>' +
+      '<span class="sep"></span>' +
       '<button data-act="mode" id="vzModeBtn"></button>' +
       '<button data-act="hud">Hide overlay</button>' +
       '<button data-act="fs">Fullscreen</button>' +
@@ -176,13 +199,26 @@
       var b = e.target.closest('button'); if (!b) return;
       if (b.dataset.scene != null) setScene(+b.dataset.scene);
       else if (b.dataset.act === 'mode') toggleMode();
+      else if (b.dataset.act === 'chat') toggleChat();
       else if (b.dataset.act === 'hud') toggleHud(b);
       else if (b.dataset.act === 'fs') toggleFs();
       else if (b.dataset.act === 'exit') close();
     };
+    var ci = document.getElementById('vzChanIn');
+    ci.value = chan;
+    // Keys typed into the channel box belong to the box, not to the scene shortcuts.
+    ci.addEventListener('keydown', function (e) {
+      e.stopPropagation();
+      if (e.key === 'Enter') { setChannel(ci.value); ci.blur(); }
+      if (e.key === 'Escape') { ci.value = chan; ci.blur(); }
+    });
+    ci.addEventListener('change', function () { setChannel(ci.value); });
+    ci.addEventListener('focus', function () { clearTimeout(idleTimer); });
+    ci.addEventListener('blur', wake);
     syncBar();
   }
   function syncBar() {
+    var cb = document.getElementById('vzChatBtn'); if (cb) cb.textContent = chatOn ? 'Chat: on' : 'Chat: off';
     if (!el.vzBar) return;
     el.vzBar.querySelectorAll('[data-scene]').forEach(function (b) { b.classList.toggle('act', +b.dataset.scene === sceneIdx); });
     var mb = document.getElementById('vzModeBtn'); if (mb) mb.textContent = mode === 'today' ? 'Counter: today' : 'Counter: session';
@@ -200,13 +236,16 @@
     else if (k === 'h') toggleHud();
     else if (k === 'f') toggleFs();
     else if (k === 'm') toggleMode();
+    else if (k === 'c') toggleChat();
     else return;
     wake();
   }
   function wake() {
     if (!root) return;
     root.classList.remove('idle'); clearTimeout(idleTimer);
-    idleTimer = setTimeout(function () { if (root) root.classList.add('idle'); }, 2600);
+    idleTimer = setTimeout(function () {
+      if (root && document.activeElement !== document.getElementById('vzChanIn')) root.classList.add('idle');
+    }, 2600);
   }
 
   function onFeed() {
@@ -275,6 +314,119 @@
     updateHud(false);
     raf = requestAnimationFrame(frame);
   }
+
+  /* ---------- twitch chat ---------- */
+  var chan = load(CHAN_KEY, ''), chatOn = load(CHAN_KEY + '_on', '1') === '1';
+  var ws = null, wsChan = '', retry = 0, retryT = 0;
+  var MAX_MSGS = 14, MSG_TTL = 45000;
+
+  function toggleChat() {
+    chatOn = !chatOn; save(CHAN_KEY + '_on', chatOn ? '1' : '0');
+    if (root) root.classList.toggle('chat-off', !chatOn);
+    syncBar();
+  }
+  function setChannel(v) {
+    v = String(v || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?twitch\.tv\//, '').replace(/^[#@]/, '').replace(/[^a-z0-9_]/g, '');
+    if (v === chan && ws) return;
+    chan = v; save(CHAN_KEY, chan);
+    var ci = document.getElementById('vzChanIn'); if (ci) ci.value = chan;
+    chatDisconnect();
+    if (el.vzChat) el.vzChat.innerHTML = '';
+    if (chan) {
+      if (!chatOn) toggleChat();
+      chatConnect(chan);
+    }
+  }
+  function chatDisconnect() {
+    clearTimeout(retryT); wsChan = '';
+    if (ws) { ws.onclose = null; try { ws.close(); } catch (e) {} ws = null; }
+  }
+  function chatConnect(c) {
+    chatDisconnect(); wsChan = c;
+    try { ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443'); } catch (e) { return; }
+    var sock = ws;
+    sock.onopen = function () {
+      retry = 0;
+      sock.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+      sock.send('PASS SCHMOOPIIE');
+      sock.send('NICK justinfan' + (10000 + ((Math.random() * 80000) | 0)));
+      sock.send('JOIN #' + c);
+    };
+    sock.onmessage = function (e) {
+      String(e.data).split('\r\n').forEach(function (line) { if (line) handleIrc(line, sock); });
+    };
+    sock.onclose = function () {
+      if (ws !== sock || !running || wsChan !== c) return;
+      // Twitch drops idle guest sockets now and then; back off and rejoin quietly.
+      retry = Math.min(retry + 1, 6);
+      retryT = setTimeout(function () { if (running && chan === c) chatConnect(c); }, 1000 * Math.pow(2, retry));
+    };
+  }
+  function parseTags(raw) {
+    var o = {};
+    raw.split(';').forEach(function (kv) { var i = kv.indexOf('='); o[kv.slice(0, i)] = kv.slice(i + 1).replace(/\\s/g, ' ').replace(/\\:/g, ';').replace(/\\\\/g, '\\'); });
+    return o;
+  }
+  function handleIrc(line, sock) {
+    if (line.indexOf('PING') === 0) { sock.send('PONG' + line.slice(4)); return; }
+    var tags = {};
+    if (line[0] === '@') { var sp = line.indexOf(' '); tags = parseTags(line.slice(1, sp)); line = line.slice(sp + 1); }
+    var m = /^:(\S+) (\S+) (\S+)(?: :(.*))?$/.exec(line);
+    if (!m) return;
+    var cmd = m[2];
+    if (cmd === 'JOIN' && /^justinfan/.test(m[1])) sysMsg('Connected to #' + m[3].slice(1));
+    else if (cmd === 'NOTICE' && m[4]) sysMsg(m[4]);
+    else if (cmd === 'PRIVMSG' && m[4] != null) {
+      var user = tags['display-name'] || m[1].split('!')[0];
+      var text = m[4], action = false;
+      var am = /^\x01ACTION (.*)\x01$/.exec(text); if (am) { text = am[1]; action = true; }
+      addMsg(user, tags.color || nameColor(user), renderEmotes(text, tags.emotes), action);
+    } else if (cmd === 'USERNOTICE' && tags['system-msg']) sysMsg(tags['system-msg']);
+  }
+  function esc(s) { return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // Emote ranges count code points, not UTF-16 units, so an emoji earlier in the line would shift a string-index slice.
+  function renderEmotes(text, spec) {
+    var cps = Array.from(text);
+    if (!spec) return esc(text);
+    var ranges = [];
+    spec.split('/').forEach(function (e) {
+      var p = e.split(':'); if (p.length < 2) return;
+      p[1].split(',').forEach(function (r) { var ab = r.split('-'); ranges.push({ id: p[0], a: +ab[0], b: +ab[1] }); });
+    });
+    ranges.sort(function (x, y) { return x.a - y.a; });
+    var out = '', i = 0;
+    ranges.forEach(function (r) {
+      if (r.a < i) return;
+      out += esc(cps.slice(i, r.a).join(''));
+      out += '<img alt="' + esc(cps.slice(r.a, r.b + 1).join('')) + '" src="https://static-cdn.jtvnw.net/emoticons/v2/' + encodeURIComponent(r.id) + '/default/dark/2.0">';
+      i = r.b + 1;
+    });
+    return out + esc(cps.slice(i).join(''));
+  }
+  var PALETTE = ['#FF7A59', '#FFC65A', '#7FD1FF', '#B98CFF', '#6BE39A', '#FF8FC8', '#5EE0D2', '#F5A623'];
+  function nameColor(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
+  // Twitch's default dark blues vanish on a black canvas; lift anything too dark.
+  function readable(hex) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '#FFC65A';
+    var n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    var l = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    if (l >= 110) return '#' + m[1];
+    var k = 110 / Math.max(l, 1), mix = function (c) { return Math.min(255, Math.round(c * k + 40)); };
+    return 'rgb(' + mix(r) + ',' + mix(g) + ',' + mix(b) + ')';
+  }
+  function pushMsg(node) {
+    var box = el.vzChat; if (!box) return;
+    box.appendChild(node);
+    while (box.children.length > MAX_MSGS) box.removeChild(box.firstChild);
+    setTimeout(function () { node.classList.add('old'); setTimeout(function () { node.remove(); }, 1300); }, MSG_TTL);
+  }
+  function addMsg(user, color, html, action) {
+    var d = document.createElement('div'); d.className = 'vz-msg';
+    var c = readable(color);
+    d.innerHTML = '<b style="color:' + c + '">' + esc(user) + '</b>' + (action ? '<i style="color:' + c + '">' + html + '</i>' : html);
+    pushMsg(d);
+  }
+  function sysMsg(t) { var d = document.createElement('div'); d.className = 'vz-msg sys'; d.textContent = t; pushMsg(d); }
 
   /* ---------- scenes ---------- */
   function rnd(a, b) { return a + Math.random() * (b - a); }
