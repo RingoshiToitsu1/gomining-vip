@@ -1810,9 +1810,9 @@ function bindCmbPointer(){
 window.addEventListener('resize',()=>{const w=document.getElementById('cmbWrap');if(w&&w.classList.contains('show'))drawCombined();});
 
 // ============================================================
-// CHART SCREENSHOT — branded, shareable candlestick snapshot
+// CHART SCREENSHOT — branded, shareable price-panel snapshot
 // The live chart is a cross-origin TradingView iframe and can't be captured, so we
-// rebuild our own 1-hour candlestick image from public OHLC data and stamp it with
+// rebuild our own image from public 1-hour OHLC data and stamp it with
 // GMT-Optimizer + GoMining branding (deliberately NO promo code).
 // ============================================================
 let _chartShotCanvas=null, _chartShotBlob=null;
@@ -2071,109 +2071,7 @@ async function downloadChartShot(btn){
     if(btn){const orig=btn.innerHTML;btn.innerHTML='⬇ Saved';setTimeout(()=>{btn.innerHTML=orig;},2000);}
   }catch(e){}
 }
-function buildChartShotCanvas(asset,data,imgs){
-  const rows=data.rows,n=rows.length;
-  const SC=2,W=1200,H=675;
-  const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
-  const x=c.getContext('2d');x.scale(SC,SC);
-  const GOLD='#F5A623',GSOFT='#F7B84E',UP='#16c784',DN='#ea3943';
-  const price=p=>p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
-    :p>=1?'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
-    :'$'+p.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
-  // background
-  const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
-  x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
-  orb(150,50,360,0.16);orb(1080,110,300,0.10);orb(600,760,440,0.06);
-  // ---- top-left: GMT Optimizer brand, url beneath it ----
-  let bx=44;
-  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='800 26px "Space Grotesk",system-ui,sans-serif';
-  x.fillText('GMT Optimizer',bx,48);
-  x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px "Share Tech Mono",monospace';
-  x.fillText('gmt-optimizer.com',44,74);
-  // ---- top-right: asset name (+ coin), pair/interval, price + change ----
-  const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
-  x.textAlign='right';x.fillStyle='#fff';x.font='800 26px "Space Grotesk",system-ui,sans-serif';
-  x.fillText(asset.name,W-44,46);
-  const nameW=x.measureText(asset.name).width;
-  if(imgs.coin){const cxb=W-44-nameW-22,cyb=37;x.save();x.beginPath();x.arc(cxb,cyb,15,0,7);x.closePath();x.clip();x.drawImage(imgs.coin,cxb-15,cyb-15,30,30);x.restore();}
-  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px "Share Tech Mono",monospace';
-  x.fillText(asset.pair+'   ·   '+data.interval+' candles   ·   last '+daysSpan+' days',W-44,70);
-  const first=rows[0].o||rows[0].c,last=rows[n-1].c,chg=first?(last-first)/first*100:0,pos=chg>=0;
-  x.fillStyle='#fff';x.font='800 24px "Share Tech Mono",monospace';
-  const pStr=price(last);x.fillText(pStr,W-44,100);
-  const pW=x.measureText(pStr).width;
-  x.fillStyle=pos?UP:DN;x.font='700 16px "Share Tech Mono",monospace';
-  x.fillText((pos?'▲ +':'▼ ')+chg.toFixed(2)+'% ('+daysSpan+'d)',W-44-pW-16,100);
-  // divider
-  const lg=x.createLinearGradient(44,0,W-44,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(44,120);x.lineTo(W-44,120);x.stroke();
-  // ---- plot area ----
-  const PL=60,PR=W-96,PT=150,PB=596;
-  let lo=Infinity,hi=-Infinity;rows.forEach(r=>{if(r.l<lo)lo=r.l;if(r.h>hi)hi=r.h;});
-  const padv=(hi-lo)*0.08||hi*0.02;lo-=padv;hi+=padv;
-  const py=p=>PB-(p-lo)/((hi-lo)||1)*(PB-PT);
-  // horizontal price grid + right-axis labels
-  x.font='13px "Share Tech Mono",monospace';x.textAlign='left';
-  for(let k=0;k<=4;k++){
-    const p=lo+(hi-lo)*k/4,gy=py(p);
-    x.strokeStyle='rgba(245,166,35,0.08)';x.lineWidth=1;x.beginPath();x.moveTo(PL,gy);x.lineTo(PR,gy);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.42)';x.fillText(price(p),PR+8,gy+4);
-  }
-  // vertical day gridlines + date labels
-  const slot=(PR-PL)/n;
-  let lastDay=null;
-  x.textAlign='center';
-  rows.forEach((r,i)=>{
-    const d=new Date(r.t),day=d.getUTCFullYear()+'-'+d.getUTCMonth()+'-'+d.getUTCDate();
-    if(day!==lastDay){lastDay=day;const gx=PL+i*slot;
-      x.strokeStyle='rgba(255,255,255,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(gx,PT);x.lineTo(gx,PB);x.stroke();
-      x.fillStyle='rgba(255,255,255,0.42)';x.font='13px "Share Tech Mono",monospace';
-      x.fillText(d.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'}),gx+slot*2.2,PB+22);
-    }
-  });
-  // candles
-  const bw=Math.max(1.5,Math.min(15,slot*0.62));
-  rows.forEach((r,i)=>{
-    const cx=PL+(i+0.5)*slot,up=r.c>=r.o,col=up?UP:DN;
-    x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(1,slot*0.12);
-    x.beginPath();x.moveTo(cx,py(r.h));x.lineTo(cx,py(r.l));x.stroke();
-    const yo=py(r.o),yc=py(r.c),top=Math.min(yo,yc),bh=Math.max(1.5,Math.abs(yc-yo));
-    x.fillRect(cx-bw/2,top,bw,bh);
-  });
-  // 50 EMA — same study that's pinned on the live chart, so the screenshot matches it.
-  // Seeded with the SMA of the first 50 closes and only drawn once that window is full.
-  const EMA_N=50;
-  if(n>EMA_N){
-    const k=2/(EMA_N+1);
-    let e=0;for(let i=0;i<EMA_N;i++)e+=rows[i].c;e/=EMA_N;
-    x.strokeStyle=GSOFT;x.lineWidth=2.4;x.lineJoin='round';x.beginPath();
-    x.moveTo(PL+(EMA_N-0.5)*slot,py(e));
-    for(let i=EMA_N;i<n;i++){e=rows[i].c*k+e*(1-k);x.lineTo(PL+(i+0.5)*slot,py(e));}
-    x.stroke();
-    x.fillStyle=GSOFT;x.font='bold 14px "Share Tech Mono",monospace';x.textAlign='left';
-    x.fillText('EMA 50',PL+8,PT+20);
-  }
-  // plot border
-  x.strokeStyle='rgba(245,166,35,0.14)';x.lineWidth=1;x.strokeRect(PL,PT,PR-PL,PB-PT);
-  // ---- footer / marketing ----
-  const footY=H-26;
-  const fg=x.createLinearGradient(44,0,W-44,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
-  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(44,footY-30);x.lineTo(W-44,footY-30);x.stroke();
-  let fx=44;
-  if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-7,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-18,22,22);x.restore();fx+=30;}
-  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.75)';x.font='700 17px "Space Grotesk",system-ui,sans-serif';
-  x.fillText('Free GoMining ROI & discount optimizer',fx,footY-2);
-  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px "Share Tech Mono",monospace';
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now+'   ·   not financial advice',W-44,footY-2);
-  x.textAlign='left';
-  return c;
-}
+// buildChartShotCanvas() lives in assets/chart-shot.js (shared with the OG image script).
 
 // ============================================================
 // FARM SCREENSHOT — branded, shareable card of the live hero stats
