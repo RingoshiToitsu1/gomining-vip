@@ -62,6 +62,10 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .chk:hover{border-color:var(--t4)}
 .chk.on{border-color:var(--gold);color:var(--txt);background:rgba(245,166,35,.08)}
 .chk input{accent-color:var(--gold);margin:0}
+.addrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
+.addrow .field{flex:1;min-width:220px;padding:.5rem .8rem}
+.addrow .field input{font-size:1.15rem}
+.addrow .chips button{font-size:.8rem;padding:.45rem .8rem}
 .presets{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
 .presets button{background:var(--bg);border:1px solid var(--bd);color:var(--t3);border-radius:9px;
   font-family:var(--mono);font-size:.78rem;padding:.4rem .7rem;cursor:pointer;transition:.15s}
@@ -169,6 +173,12 @@ table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:v
       <div class="hint">Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.</div>
     </div>
 
+    <div class="addrow">
+      <label class="field" for="qAdd"><span class="cur">+ $</span><input type="number" id="qAdd" min="0" step="50" placeholder="0" inputmode="decimal"><span class="suf">added every</span></label>
+      <div class="chips" id="qAddPer"><button type="button" data-per="wk">week</button><button type="button" data-per="mo" class="on">month</button></div>
+    </div>
+    <div class="hint">Optional. Keep saving into the farm: each top-up is deployed like reinvested income and shows up in the compounding view below. The day-one numbers stay what the starting amount earns.</div>
+
     <div class="opts">
       <label class="chk on" id="qStreakL"><input type="checkbox" id="qStreak" checked> Daily click bonus <span style="color:var(--t4)">(+3%)</span></label>
       <button type="button" id="qGo" class="go">Get quote &rarr;</button>
@@ -197,7 +207,7 @@ table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:v
 <!-- Deliberately the ONLY script on this page. /quote must work for a logged-out stranger on a
      shared link: no account.js (which renders the results gate), no chat.js, no Supabase, no
      localStorage. If you ever need one of those here, gate the feature — never the page. -->
-<script src="/assets/quote.js?v=13"></script>
+<script src="/assets/quote.js?v=14"></script>
 <script src="/assets/site.js?v=19" data-chrome="bar"></script>
 </body>
 </html>
