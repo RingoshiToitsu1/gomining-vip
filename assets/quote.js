@@ -239,33 +239,11 @@
   }
 
   // ---- compounding ----
-  // What the quote turns into when the income is put back to work. This is the only part of
-  // /quote that looks forward, so it forecasts as little as it can get away with: BTC and GMT
-  // are HELD AT TODAY'S PRICE for the whole run. Every dollar of growth below comes from
-  // reinvested income, never from a price call — which is also what makes it safe to show a
-  // prospect. What it does model is the erosion the console models, mirrored from
-  // assets/app.js: the 2028/2032 halvings, the network difficulty grind floored at the
-  // no-arbitrage break-even, and a staking APR that relaxes toward what fee revenue can fund.
-  const HALVING_DATES = [Date.UTC(2028, 3, 15), Date.UTC(2032, 3, 15), Date.UTC(2036, 3, 15), Date.UTC(2040, 3, 15)];
-  const subsidyMultAt = t => HALVING_DATES.reduce((m, h) => t >= h ? m * 0.5 : m, 1);
-  // g(Y) = floor + (g0-floor)*e^(-Y/tau); cumulative reward factor = 1/exp(integral). Calibrated
-  // on the DECAYING trailing difficulty CAGR and paired with a price path no rosier than flat.
-  const DIFF_G0 = 0.37, DIFF_FLOOR = 0.05, DIFF_TAU = 4;
-  function difficultyMultAt(yrs) {
-    if (!(yrs > 0)) return 1;
-    const integral = DIFF_FLOOR * yrs + (DIFF_G0 - DIFF_FLOOR) * DIFF_TAU * (1 - Math.exp(-yrs / DIFF_TAU));
-    return 1 / Math.exp(integral);
-  }
-  // Difficulty is an EQUILIBRIUM, not a one-way grind: the reward cannot fall past the point
-  // where an undiscounted 12 W/TH miner stops covering its costs, because hashrate would leave
-  // until it didn't. An economic constraint, NOT a price -> difficulty forecast.
-  const rewardFloorBTC = price => price > 0 ? feePerTHDay(EFF_BEST) / price : 0;   // BTC/TH/day
-  // Staking rewards are paid from a finite pool, so a decade at 24% is not fundable. Start at the
-  // observed APR and relax toward a floor fee revenue can actually cover. Projections only —
-  // today's headline stays at the observed rate.
-  const STAKE_APR_FLOOR = 5, STAKE_APR_TAU = 5;
-  const stakeAprAt = (apr0, yrs) => apr0 > STAKE_APR_FLOOR
-    ? STAKE_APR_FLOOR + (apr0 - STAKE_APR_FLOOR) * Math.exp(-Math.max(0, yrs) / STAKE_APR_TAU) : apr0;
+  // What the quote turns into over ONE year when the income is put back to work. Everything is
+  // held at today's values for the whole year: BTC price, GMT price, network reward (sats/TH/day)
+  // and the staking APR. No difficulty, halving or price forecast, so every dollar of growth
+  // below is reinvested income at today's rates.
+  const HORIZON_YRS = 1;
 
   // Roll the quoted setup forward month by month. `rein` is the share of MINING income put back
   // to work; the rest is taken as cash and sits idle — no interest is assumed on money taken out.
@@ -277,15 +255,13 @@
   function compound(a, years, rein, streak, apr0, addMo) {
     addMo = Math.max(0, addMo || 0);
     if (!a || !(a.capUSD > 0) || !(years > 0)) return null;
-    const bp = S.btc, gp = S.gmt, now = Date.now();
-    const dbt0 = Math.round(S.satsPerTHDay) / 1e8;
+    const bp = S.btc, gp = S.gmt;
+    const dbt = Math.round(S.satsPerTHDay) / 1e8;   // today's BTC per TH per day, held
     const DPM = 365.25 / 12;
     let th = a.th, locked = a.ag, cash = 0, income = 0, paidIn = a.capUSD;
     // series / paid: total value and money paid in at every month end, for the screenshot
     const rows = [], series = [a.capUSD], paid = [a.capUSD];
     for (let k = 1; k <= Math.round(years * 12); k++) {
-      const yrs = (k - 0.5) / 12;
-      const dbt = Math.max(dbt0 * subsidyMultAt(now + yrs * 365.25 * 86400000) * difficultyMultAt(yrs), rewardFloorBTC(bp));
       const feesUSD = feePerTHDay(EFF_BEST) * th;
       const vip = vipOf(th, locked);
       const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
@@ -295,8 +271,7 @@
       const totD = Math.min(30, tok + nonTok);
       // Floored at zero: an operator switches a loss-making miner off, they don't pay to run it.
       const miningMo = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE) * DPM;
-      const apr = stakeAprAt(apr0, yrs);
-      const stakingMo = locked * gp * (apr / 100) * DPM / 365.25;
+      const stakingMo = locked * gp * (apr0 / 100) * DPM / 365.25;
       income = miningMo + stakingMo;
       locked += stakingMo / gp;                       // staking paid in GMT, straight back into the lock
       const spend = miningMo * rein + addMo;
@@ -320,11 +295,9 @@
       }
       series.push(th * cptAtEff(th, EFF_BEST) + locked * gp + cash);
       paid.push(paidIn);
-      if (k % 12 === 0) {
-        // Position = what the farm would cost to rebuild today plus the GMT sitting in the lock.
-        const position = th * cptAtEff(th, EFF_BEST) + locked * gp;
-        rows.push({ yr: k / 12, th, locked, income, cash, position, total: position + cash, disc: totD, paidIn });
-      }
+      // Position = what the farm would cost to rebuild today plus the GMT sitting in the lock.
+      const position = th * cptAtEff(th, EFF_BEST) + locked * gp;
+      rows.push({ mo: k, th, locked, income, cash, position, total: position + cash, disc: totD, paidIn });
     }
     const last = rows[rows.length - 1];
     if (!last) return null;
@@ -350,9 +323,8 @@
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
   const TH_PRICES_ASOF = '8 Sep 2026';
   let mode = 'cap';
-  const YEAR_CHIPS = [1, 3, 5, 10];
   const REIN_CHIPS = [{ v: 0, l: 'take it all' }, { v: .5, l: 'reinvest half' }, { v: 1, l: 'reinvest it all' }];
-  let horizon = 5, reinvest = 1;
+  let reinvest = 1;
   // Optional top-up: an amount paid in every week or month on top of the starting capital.
   let addPer = 'mo';
   const addMonthly = () => { const v = Math.max(0, +(($('qAdd') || {}).value) || 0); return addPer === 'wk' ? v * 52 / 12 : v; };
@@ -376,18 +348,18 @@
       const x = slot * i + (slot - bw) / 2;
       const yPos = Y(r.position), hPos = Math.max(2, base - yPos);
       const hCash = r.cash > 0 ? Math.max(2, yPos - Y(r.total) - 2) : 0;   // 2px gap between segments
-      g += '<g><title>Year ' + r.yr + ' — ' + money(r.position, 0) + ' position value'
+      g += '<g><title>Month ' + r.mo + ' — ' + money(r.position, 0) + ' position value'
         + (r.cash > 0 ? ' + ' + money(r.cash, 0) + ' cash taken = ' + money(r.total, 0) : '')
         + '</title><rect x="' + x.toFixed(1) + '" y="' + yPos.toFixed(1) + '" width="' + bw.toFixed(1)
         + '" height="' + hPos.toFixed(1) + '" rx="3" fill="url(#qcGold)"></rect>'
         + (hCash > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + (yPos - 2 - hCash).toFixed(1) + '" width="' + bw.toFixed(1)
           + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#A78BFA"></rect>' : '')
-        + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">Y' + r.yr + '</text>';
+        + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">M' + r.mo + '</text>';
     });
     // Only the final column is labelled — a number on every column is noise, not information.
     const lx = slot * (n - 1) + slot / 2, ly = Math.max(11, Y(c.last.total) - 6);
     g += '<text class="qc-lab" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + money(c.last.total, 0) + '</text>';
-    return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each year mark">'
+    return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each month end">'
       + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
       + '<stop offset="0" stop-color="#F7B84E"/><stop offset="1" stop-color="#F5A623"/></linearGradient></defs>'
       + '<polyline class="qc-cap" fill="none" points="' + paidPts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"></polyline>'
@@ -400,30 +372,28 @@
   function compHTML(a, c, wpx) {
     if (!c) return '';
     const cap = a.capUSD, L = c.last, tookCash = L.cash > 0, adds = c.addMo > 0;
-    const yrChips = YEAR_CHIPS.map(y => '<button type="button" data-yrs="' + y + '"' + (y === horizon ? ' class="on"' : '') + '>' + y + ' yr</button>').join('');
     const reChips = REIN_CHIPS.map(o => '<button type="button" data-rein="' + o.v + '"' + (o.v === reinvest ? ' class="on"' : '') + '>' + o.l + '</button>').join('');
-    const rowsHTML = c.rows.map(r =>
-      '<tr><td>Year ' + r.yr + '</td>' + (adds ? '<td>' + money(r.paidIn, 0) + '</td>' : '') + '<td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
+    // Quarter ends in the table; the chart carries every month.
+    const rowsHTML = c.rows.filter(r => r.mo % 3 === 0).map(r =>
+      '<tr><td>Month ' + r.mo + '</td>' + (adds ? '<td>' + money(r.paidIn, 0) + '</td>' : '') + '<td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
       + money(r.income, 0) + '</td><td>' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td><td>'
       + money(r.total, 0) + '</td></tr>').join('');
     return '<div class="comp">'
-      + '<div class="comp-top"><h3>Then compound it</h3>'
-      + '<div class="chips" data-k="yrs">' + yrChips + '</div>'
+      + '<div class="comp-top"><h3>Then compound it for a year</h3>'
       + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
       + '<div class="comp-hero">'
       + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + num(c.cagr, 1) + '%<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
-      + '<div class="s">effective annual over ' + horizon + ' years, on the ' + money(cap, 0)
+      + '<div class="s">over the year, on the ' + money(cap, 0)
       + (adds ? ' plus ' + addLabel() + ', each counted from the month it goes in' : '') + '</div></div>'
-      + '<div class="cell"><div class="k">Worth after ' + horizon + ' yr</div><div class="v">' + money(L.total, 0) + '</div>'
+      + '<div class="cell"><div class="k">Worth after 1 yr</div><div class="v">' + money(L.total, 0) + '</div>'
       + '<div class="s">' + num(c.mult, 2) + '&times; ' + (adds ? 'the ' + money(L.paidIn, 0) + ' paid in ' : '') + '&middot; ' + num(L.th, 0) + ' TH and ' + num(L.locked, 0) + ' GMT'
       + (tookCash ? ', plus ' + money(L.cash, 0) + ' already taken' : '') + '</div></div>'
-      // Later income can land BELOW day one even on a farm that has tripled — the halvings and
-      // the difficulty grind take more than the extra hashrate adds. Say so rather than dressing
-      // it in the green that means "up".
-      + '<div class="cell' + (L.income >= a.m.netToday * 30 ? ' green' : '') + '"><div class="k">Income in year ' + horizon + '</div>'
+      // Green only when month-12 income is above day one (it can sit at or below it when the
+      // income is taken as cash rather than reinvested).
+      + '<div class="cell' + (L.income >= a.m.netToday * 30 ? ' green' : '') + '"><div class="k">Income in month 12</div>'
       + '<div class="v">' + money(L.income, 0) + '<span style="font-size:.8rem;color:var(--t3)">/mo</span></div>'
       + '<div class="s">against ' + money(a.m.netToday * 30, 0) + '/mo on day one'
-      + (L.income >= a.m.netToday * 30 ? '' : ' &mdash; the halving and the difficulty grind land in between') + '</div></div>'
+      + '</div></div>'
       + '</div>'
       + (c.rows.length > 1
         ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
@@ -433,9 +403,8 @@
         : '')
       + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th>' + (adds ? '<th>Paid in</th>' : '') + '<th>Hashrate</th><th>Locked GMT</th>'
       + '<th>Net income</th><th>Cash taken</th><th>Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
-      + '<div class="comp-note">BTC and GMT are held at today&rsquo;s price for the whole run &mdash; there is no price forecast in here, so every gain above is reinvested income rather than a bet on the market. '
-      + 'The mining reward still erodes: the 2028 and 2032 halvings plus the network difficulty grind, floored where an undiscounted 12&nbsp;W/TH miner stops covering its costs. '
-      + 'Staking relaxes from ' + num(APR, 2) + '% APR toward 5% over the run, since rewards come from fees rather than emissions. '
+      + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT $' + S.gmt.toFixed(4)
+      + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + num(APR, 2) + '% staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
       + 'Reinvestment tops the fee coverage back to 360 days first, then mints 12&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
       + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the ' + num(USD_GMT_FEE * 100, 0) + '% fee on USD into GMT; weekly amounts are averaged into the month.' : '')
       + '</div>'
@@ -460,7 +429,7 @@
     // re-hides the panel. This built the whole quote and then hid it.
     out.style.display = 'block';
     const m = a.m, mo = m.netToday * 30, yr = m.netToday * 365.25;
-    const c = compound(a, horizon, reinvest, streak, APR, addMonthly());
+    const c = compound(a, HORIZON_YRS, reinvest, streak, APR, addMonthly());
     const lockUSD = a.gmtUSD, thUSD = a.thUSD;
     const pct = v => Math.max(0, Math.min(100, a.capUSD > 0 ? v / a.capUSD * 100 : 0));
     // A quote is only honest if the reader can see the discount is bought, not assumed — so the
@@ -504,7 +473,7 @@
         <button class="ghost" type="button" onclick="quoteShot()">Screenshot quote</button>
       </div>`;
     window._quote = { mode, cap: a.capUSD, mo, th: a.th, gmt: a.ag, disc: m.totD, streak,
-      yrs: horizon, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0,
+      yrs: HORIZON_YRS, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0,
       mult: c ? c.mult : 0, series: c ? c.series : null, thUSD, lockUSD, day: m.netToday, yieldPct: m.yieldPct,
       vip: m.vip.n, btc: S.btc, gmtPx: S.gmt, add: c && c.addMo > 0 ? addLabel() : '', paidIn: c ? c.paidIn : a.capUSD,
       paid: c ? c.paid : null };
@@ -519,7 +488,7 @@
       + `• ${money(q.mo, 0)}/month net at today's prices\n`
       + (q.add ? `• Adding ${q.add}: ${money(q.paidIn, 0)} paid in over ${q.yrs} year${q.yrs === 1 ? '' : 's'}\n` : '')
       + (q.cagr > 0
-        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo by year ${q.yrs} — ${num(q.cagr, 1)}%/yr compounded, with BTC held flat\n`
+        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo after 1 year — ${num(q.cagr, 1)}% compounded, at today's BTC price and sats/TH/day\n`
         : '')
       + `Modelled at gmt-optimizer.com/quote — sign up with code RINGO5 for +5% bonus TH.`;
     const done = () => { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800); };
@@ -616,7 +585,7 @@
       x.fillStyle = UP; x.font = '700 18px ' + SANS; x.fillText(num(q.mult, 2) + '× in ' + q.yrs + ' yr', CR + 22, T + 62);
       x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO;
       x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
-      x.fillText(num(q.cagr, 1) + '%/yr compounded', CR + 22, T + 110);
+      x.fillText(num(q.cagr, 1) + '% compounded', CR + 22, T + 110);
       if (q.add) x.fillText(money(q.paidIn, 0) + ' paid in', CR + 22, T + 132);
     }
     // rim
@@ -632,7 +601,7 @@
     x.textAlign = 'left'; x.fillStyle = GHI; x.font = '700 18px ' + SANS; x.fillText('Start with code RINGO5 — +5% bonus TH', PX + 4, fy);
     x.textAlign = 'right'; x.fillStyle = 'rgba(255,240,215,0.42)'; x.font = '14px ' + MONO;
     const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    x.fillText(d + '  ·  BTC ' + money(q.btc, 0) + ' held flat  ·  not financial advice', W - PX - 4, fy);
+    x.fillText(d + '  ·  today\u2019s BTC & sats/TH held  ·  not financial advice', W - PX - 4, fy);
     return c;
   }
   let _shotBlob = null;
@@ -823,7 +792,6 @@
     const out = $('qOut');
     if (out) out.addEventListener('click', e => {
       const b = e.target.closest('.chips button'); if (!b) return;
-      if (b.dataset.yrs) horizon = +b.dataset.yrs;
       if (b.dataset.rein) reinvest = +b.dataset.rein;
       render();
     });
