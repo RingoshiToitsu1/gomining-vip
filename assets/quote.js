@@ -664,6 +664,128 @@
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000);
   };
 
+  // ---- "Get quote" loader ----
+  // The same step loader the console runs over the Capital Planner (assets/loaders.js), rebuilt
+  // here because /quote is a one-script page. The quote itself is computed instantly and live on
+  // every keystroke; this only plays when someone asks for the answer (the button or Enter),
+  // with each step showing a number from the quote that was just built, then reveals it.
+  const LOAD_CSS = `
+.ql{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(245,166,35,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(255,138,61,.08),transparent 60%),rgba(6,7,9,.97);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  transition:opacity .45s cubic-bezier(.16,1,.3,1),filter .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1)}
+.ql::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);
+  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);
+  animation:qlGrid 4s linear infinite}
+.ql.out{opacity:0;filter:blur(8px);transform:scale(1.03);pointer-events:none}
+@keyframes qlGrid{to{background-position:0 36px,36px 0}}
+.ql-core{position:relative;width:min(420px,100%);text-align:center;color:#EBE2D2;font-family:var(--sans)}
+.ql-orb{position:relative;width:92px;height:92px;margin:0 auto 14px}
+.ql-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(245,166,35,.9) 80%,#FFCF7A 100%);
+  -webkit-mask:radial-gradient(circle,transparent 60%,#000 61%);mask:radial-gradient(circle,transparent 60%,#000 61%);animation:qlSpin 1.05s linear infinite}
+.ql-orb img{position:absolute;inset:25px;width:42px;height:42px;animation:qlBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(245,166,35,.6))}
+@keyframes qlSpin{to{transform:rotate(360deg)}}
+@keyframes qlBreathe{50%{transform:scale(1.08)}}
+.ql-kicker{font-family:var(--mono);letter-spacing:.3em;font-size:.66rem;color:#FFCF7A;text-transform:uppercase;margin-bottom:.3rem}
+.ql-title{font-size:1.15rem;font-weight:700;color:#FFF4E0;margin-bottom:.8rem}
+.ql-meter{display:flex;align-items:center;gap:10px;margin-bottom:.85rem}
+.ql-bar{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.ql-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 12px rgba(245,166,35,.8)}
+.ql-pct{font-family:var(--mono);color:#FFF4E0;font-size:.86rem;min-width:3em;text-align:right}
+.ql-steps{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:6px}
+.ql-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6F6759;transition:color .25s;min-width:0}
+.ql-step b{flex:0 0 14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;transition:all .25s}
+.ql-step.on{color:#FFF4E0}
+.ql-step.on b{border-color:rgba(245,166,35,.3);border-top-color:#F5A623;animation:qlSpin .7s linear infinite}
+.ql-step.ok{color:#C3B8A6}
+.ql-step.ok b{border-color:#57d9a3;background:#57d9a3;box-shadow:0 0 9px rgba(87,217,163,.6)}
+.ql-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #06140d;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ql-step span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ql-v{font-style:normal;font-family:var(--mono);font-size:.7rem;color:#FFCF7A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
+.ql-step.ok .ql-v{opacity:1;transform:none}
+.ql-hash{margin-top:.8rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;color:#5A5346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ql.done .ql-hash{color:#57d9a3}
+.q-reveal>*{animation:qReveal .6s cubic-bezier(.16,1,.3,1) both}
+.q-reveal>*:nth-child(2){animation-delay:.06s}.q-reveal>*:nth-child(3){animation-delay:.12s}
+.q-reveal>*:nth-child(4){animation-delay:.18s}.q-reveal>*:nth-child(n+5){animation-delay:.24s}
+@keyframes qReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media(max-width:420px){.ql-v{font-size:.62rem}.ql-step{font-size:.74rem}}
+@media(prefers-reduced-motion:reduce){.ql *,.ql::before,.q-reveal>*{animation:none!important}}`;
+  let _qlActive = null;
+  function quoteRun() {
+    render();
+    const out = $('qOut'), q = window._quote;
+    if (!out || out.style.display === 'none' || !q) return;   // nothing to quote
+    if (!document.getElementById('qlCss')) { const st = document.createElement('style'); st.id = 'qlCss'; st.textContent = LOAD_CSS; document.head.appendChild(st); }
+    if (_qlActive) _qlActive();
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t12 = TH_TIERS_12W, splits = 1800 + Math.round(Math.random() * 900);
+    const steps = [
+      [q.mode === 'cap' ? 'Reading the capital' : 'Reading the income goal',
+        q.mode === 'cap' ? money(q.cap, 0) + ' to invest' : money(q.mo, 0) + '/mo goal'],
+      [S.live ? 'Pulling live BTC, GMT & difficulty' : 'Reading BTC, GMT & difficulty', 'BTC ' + money(q.btc, 0) + (S.live ? '' : ' · cached')],
+      ['Pricing new hashrate tiers', '$' + t12[0].cpt.toFixed(2) + ' → $' + t12[t12.length - 1].cpt.toFixed(2) + '/TH'],
+      [q.mode === 'cap' ? 'Testing every TH / GMT split' : 'Goal-seeking the capital',
+        q.mode === 'cap' ? num(splits) + ' combinations' : money(q.cap, 0) + ' needed'],
+      ['Holding the token discount', num(q.disc, 2) + '% total'],
+      ['Compounding ' + q.yrs + ' year' + (q.yrs === 1 ? '' : 's') + ' forward', q.add ? '+ ' + q.add + ' top-ups' : num(q.yrs * 12) + ' months'],
+    ];
+    const el = document.createElement('div');
+    el.className = 'ql'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    el.innerHTML = '<div class="ql-core"><div class="ql-orb"><img src="/gmt-optimizer-logo.svg?v=2" alt=""></div>'
+      + '<div class="ql-kicker">Quote a setup</div>'
+      + '<div class="ql-title">' + (q.mode === 'cap' ? 'Finding the optimal split' : 'Finding the capital needed') + '</div>'
+      + '<div class="ql-meter"><div class="ql-bar"><i></i></div><div class="ql-pct"><span>0</span>%</div></div>'
+      + '<ul class="ql-steps">' + steps.map(st => '<li class="ql-step"><b></b><span>' + st[0] + '</span><em class="ql-v">' + st[1] + '</em></li>').join('') + '</ul>'
+      + '<div class="ql-hash">0x</div></div>';
+    document.body.appendChild(el);
+    document.body.style.overflow = 'hidden';
+    const rows = Array.from(el.querySelectorAll('.ql-step'));
+    const pct = el.querySelector('.ql-pct span'), bar = el.querySelector('.ql-bar i'), hash = el.querySelector('.ql-hash');
+    const STEP_MS = reduce ? 30 : 300, t0 = performance.now();
+    const HEX = '0123456789abcdef';
+    const ht = reduce ? 0 : setInterval(() => { let h = '0x'; for (let i = 0; i < 36; i++) h += HEX[(Math.random() * 16) | 0]; hash.textContent = h; }, 70);
+    let done = 0, lastAt = t0, shown = 0, dead = false;
+    const kill = () => { if (dead) return; dead = true; clearInterval(ht); el.remove(); document.body.style.overflow = ''; if (_qlActive === kill) _qlActive = null; };
+    _qlActive = kill;
+    rows[0].classList.add('on');
+    function tick(now) {
+      if (dead) return;
+      if (done < rows.length && now - lastAt >= STEP_MS) {
+        rows[done].classList.remove('on'); rows[done].classList.add('ok');
+        done++; lastAt = now;
+        if (rows[done]) rows[done].classList.add('on');
+      }
+      const creep = done < rows.length ? Math.min(0.85, (now - lastAt) / STEP_MS) : 0;
+      const target = Math.min(done === rows.length ? 100 : 99, ((done + creep) / rows.length) * 100);
+      shown += (target - shown) * (reduce ? 1 : 0.14);
+      pct.textContent = Math.floor(shown);
+      bar.style.transform = 'scaleX(' + (shown / 100) + ')';
+      if (done === rows.length && shown > 99.3) {
+        clearInterval(ht);
+        pct.textContent = '100'; bar.style.transform = 'scaleX(1)';
+        hash.textContent = 'quote ready · ' + money(q.mo, 0) + '/mo';
+        el.classList.add('done');
+        setTimeout(() => {
+          if (dead) return;
+          el.classList.add('out');
+          document.body.style.overflow = '';
+          const o = $('qOut');
+          if (o) {
+            o.classList.remove('q-reveal'); void o.offsetWidth; o.classList.add('q-reveal');
+            setTimeout(() => o.classList.remove('q-reveal'), 1000);
+            o.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+          }
+          setTimeout(kill, 480);
+        }, reduce ? 0 : 320);
+        return;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   function setMode(m) {
     mode = m;
     document.querySelectorAll('#qModes button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
@@ -691,15 +813,11 @@
       // input, so this mostly blurs the keyboard on mobile — but it must never do nothing.
       e.addEventListener('keydown', ev => {
         if (ev.key !== 'Enter') return;
-        ev.preventDefault(); render(); e.blur();
-        const o = $('qOut'); if (o && o.style.display !== 'none') o.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        ev.preventDefault(); e.blur(); quoteRun();
       });
     });
     const go = $('qGo');
-    if (go) go.addEventListener('click', () => {
-      render();
-      const o = $('qOut'); if (o && o.style.display !== 'none') o.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    if (go) go.addEventListener('click', quoteRun);
     // The compounding controls live inside #qOut, which is rebuilt on every render, so the
     // listener sits on the container rather than on buttons that keep being replaced.
     const out = $('qOut');
