@@ -272,13 +272,17 @@
   // Staking rewards always restake, because that is what a GMT lock does, so the lock compounds
   // even at 0% reinvestment. Reinvestment is discount-first: top the coverage back to 360 days,
   // then mint 12 W/TH hashrate with the remainder, which is the console's allocator in miniature.
-  function compound(a, years, rein, streak, apr0) {
+  // `addMo` is fresh money paid in every month on top of the starting capital; it is deployed
+  // by the same discount-first allocator as reinvested income.
+  function compound(a, years, rein, streak, apr0, addMo) {
+    addMo = Math.max(0, addMo || 0);
     if (!a || !(a.capUSD > 0) || !(years > 0)) return null;
     const bp = S.btc, gp = S.gmt, now = Date.now();
     const dbt0 = Math.round(S.satsPerTHDay) / 1e8;
     const DPM = 365.25 / 12;
-    let th = a.th, locked = a.ag, cash = 0, income = 0;
-    const rows = [], series = [a.capUSD];   // series: total value at every month end, for the screenshot
+    let th = a.th, locked = a.ag, cash = 0, income = 0, paidIn = a.capUSD;
+    // series / paid: total value and money paid in at every month end, for the screenshot
+    const rows = [], series = [a.capUSD], paid = [a.capUSD];
     for (let k = 1; k <= Math.round(years * 12); k++) {
       const yrs = (k - 0.5) / 12;
       const dbt = Math.max(dbt0 * subsidyMultAt(now + yrs * 365.25 * 86400000) * difficultyMultAt(yrs), rewardFloorBTC(bp));
@@ -295,8 +299,9 @@
       const stakingMo = locked * gp * (apr / 100) * DPM / 365.25;
       income = miningMo + stakingMo;
       locked += stakingMo / gp;                       // staking paid in GMT, straight back into the lock
-      const spend = miningMo * rein;
-      cash += miningMo - spend;
+      const spend = miningMo * rein + addMo;
+      cash += miningMo * (1 - rein);
+      paidIn += addMo;
       if (spend > 0) {
         // Fresh TH prices at the tier the whole farm has reached, not at a first-purchase tier:
         // topping up an existing farm is cheaper than minting the same TH from zero.
@@ -314,17 +319,25 @@
         th += addTH(spend - gmtSpend);
       }
       series.push(th * cptAtEff(th, EFF_BEST) + locked * gp + cash);
+      paid.push(paidIn);
       if (k % 12 === 0) {
         // Position = what the farm would cost to rebuild today plus the GMT sitting in the lock.
         const position = th * cptAtEff(th, EFF_BEST) + locked * gp;
-        rows.push({ yr: k / 12, th, locked, income, cash, position, total: position + cash, disc: totD });
+        rows.push({ yr: k / 12, th, locked, income, cash, position, total: position + cash, disc: totD, paidIn });
       }
     }
     const last = rows[rows.length - 1];
     if (!last) return null;
-    return { rows, series, last, years, rein,
-             mult: last.total / a.capUSD,
-             cagr: (Math.pow(last.total / a.capUSD, 1 / years) - 1) * 100 };
+    // The rate is money-weighted: the monthly return r at which the capital plus every top-up,
+    // each compounding from the month it went in, grows to the final total. With no top-ups it
+    // is exactly (total / capital)^(1/years) - 1.
+    const N = series.length - 1;
+    const fv = r => a.capUSD * Math.pow(1 + r, N) + (addMo > 0 ? addMo * (Math.abs(r) < 1e-12 ? N : (Math.pow(1 + r, N) - 1) / r) : 0);
+    let lo = -0.99, hi = 1;
+    for (let j = 0; j < 100; j++) { const mid = (lo + hi) / 2; if (fv(mid) < last.total) lo = mid; else hi = mid; }
+    return { rows, series, paid, last, years, rein, addMo, paidIn,
+             mult: last.total / paidIn,
+             cagr: (Math.pow(1 + lo, 12) - 1) * 100 };
   }
 
   // ---- page ----
@@ -340,6 +353,10 @@
   const YEAR_CHIPS = [1, 3, 5, 10];
   const REIN_CHIPS = [{ v: 0, l: 'take it all' }, { v: .5, l: 'reinvest half' }, { v: 1, l: 'reinvest it all' }];
   let horizon = 5, reinvest = 1;
+  // Optional top-up: an amount paid in every week or month on top of the starting capital.
+  let addPer = 'mo';
+  const addMonthly = () => { const v = Math.max(0, +(($('qAdd') || {}).value) || 0); return addPer === 'wk' ? v * 52 / 12 : v; };
+  const addLabel = () => { const v = Math.max(0, +(($('qAdd') || {}).value) || 0); return v > 0 ? money(v, 0) + (addPer === 'wk' ? '/wk' : '/mo') : ''; };
 
   // Stacked columns, one per year: what the position is worth, plus any income taken as cash.
   // Sized to the container at render time so the labels stay at their intended pixel size on a
@@ -348,10 +365,12 @@
     const rows = c.rows, n = rows.length;
     const W = Math.max(300, Math.min(780, wpx || 760)), H = 168, padT = 18, padB = 20;
     const base = H - padB, top = padT;
-    const max = Math.max(cap, ...rows.map(r => r.total)) * 1.16 || 1;
+    const max = Math.max(cap, ...rows.map(r => Math.max(r.total, r.paidIn))) * 1.16 || 1;
     const Y = v => base - (base - top) * (v / max);
     const slot = W / n, bw = Math.min(72, slot * 0.62);
-    const capY = Y(cap);
+    // Money paid in, as a dashed line: flat at the capital, or stepping up with each year of top-ups.
+    const paidPts = [[0, Y(cap)]].concat(rows.map((r, i) => [slot * i + slot / 2, Y(r.paidIn)]), [[W, Y(c.last.paidIn)]]);
+    const capY = Y(c.last.paidIn);
     let g = '';
     rows.forEach((r, i) => {
       const x = slot * i + (slot - bw) / 2;
@@ -371,19 +390,20 @@
     return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each year mark">'
       + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
       + '<stop offset="0" stop-color="#F7B84E"/><stop offset="1" stop-color="#F5A623"/></linearGradient></defs>'
-      + '<line class="qc-cap" x1="0" x2="' + W + '" y1="' + capY.toFixed(1) + '" y2="' + capY.toFixed(1) + '"></line>'
-      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end">' + money(cap, 0) + ' in</text>'
-      + g + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
+      + '<polyline class="qc-cap" fill="none" points="' + paidPts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"></polyline>'
+      + g
+      // drawn over the bars, outlined in the card colour so it reads even where a bar sits behind it
+      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end" stroke="#17181c" stroke-width="3" paint-order="stroke">' + money(c.last.paidIn, 0) + ' in</text>' + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
   }
 
   // The compounding block: controls, the headline rate, the chart and the year-by-year table.
   function compHTML(a, c, wpx) {
     if (!c) return '';
-    const cap = a.capUSD, L = c.last, tookCash = L.cash > 0;
+    const cap = a.capUSD, L = c.last, tookCash = L.cash > 0, adds = c.addMo > 0;
     const yrChips = YEAR_CHIPS.map(y => '<button type="button" data-yrs="' + y + '"' + (y === horizon ? ' class="on"' : '') + '>' + y + ' yr</button>').join('');
     const reChips = REIN_CHIPS.map(o => '<button type="button" data-rein="' + o.v + '"' + (o.v === reinvest ? ' class="on"' : '') + '>' + o.l + '</button>').join('');
     const rowsHTML = c.rows.map(r =>
-      '<tr><td>Year ' + r.yr + '</td><td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
+      '<tr><td>Year ' + r.yr + '</td>' + (adds ? '<td>' + money(r.paidIn, 0) + '</td>' : '') + '<td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
       + money(r.income, 0) + '</td><td>' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td><td>'
       + money(r.total, 0) + '</td></tr>').join('');
     return '<div class="comp">'
@@ -392,9 +412,10 @@
       + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
       + '<div class="comp-hero">'
       + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + num(c.cagr, 1) + '%<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
-      + '<div class="s">effective annual over ' + horizon + ' years, on the ' + money(cap, 0) + '</div></div>'
+      + '<div class="s">effective annual over ' + horizon + ' years, on the ' + money(cap, 0)
+      + (adds ? ' plus ' + addLabel() + ', each counted from the month it goes in' : '') + '</div></div>'
       + '<div class="cell"><div class="k">Worth after ' + horizon + ' yr</div><div class="v">' + money(L.total, 0) + '</div>'
-      + '<div class="s">' + num(c.mult, 2) + '&times; &middot; ' + num(L.th, 0) + ' TH and ' + num(L.locked, 0) + ' GMT'
+      + '<div class="s">' + num(c.mult, 2) + '&times; ' + (adds ? 'the ' + money(L.paidIn, 0) + ' paid in ' : '') + '&middot; ' + num(L.th, 0) + ' TH and ' + num(L.locked, 0) + ' GMT'
       + (tookCash ? ', plus ' + money(L.cash, 0) + ' already taken' : '') + '</div></div>'
       // Later income can land BELOW day one even on a farm that has tripled — the halvings and
       // the difficulty grind take more than the extra hashrate adds. Say so rather than dressing
@@ -406,15 +427,18 @@
       + '</div>'
       + (c.rows.length > 1
         ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
+          + '<span><i style="background:none;border-top:1px dashed var(--t3);border-radius:0;height:0;vertical-align:middle"></i>' + (adds ? 'Paid in so far' : 'Capital in') + '</span>'
           + (tookCash ? '<span><i style="background:#A78BFA"></i>Income taken as cash</span>' : '') + '</div>'
           + compChart(c, cap, wpx)
         : '')
-      + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th><th>Hashrate</th><th>Locked GMT</th>'
+      + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th>' + (adds ? '<th>Paid in</th>' : '') + '<th>Hashrate</th><th>Locked GMT</th>'
       + '<th>Net income</th><th>Cash taken</th><th>Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
       + '<div class="comp-note">BTC and GMT are held at today&rsquo;s price for the whole run &mdash; there is no price forecast in here, so every gain above is reinvested income rather than a bet on the market. '
       + 'The mining reward still erodes: the 2028 and 2032 halvings plus the network difficulty grind, floored where an undiscounted 12&nbsp;W/TH miner stops covering its costs. '
       + 'Staking relaxes from ' + num(APR, 2) + '% APR toward 5% over the run, since rewards come from fees rather than emissions. '
-      + 'Reinvestment tops the fee coverage back to 360 days first, then mints 12&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.</div>'
+      + 'Reinvestment tops the fee coverage back to 360 days first, then mints 12&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
+      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the ' + num(USD_GMT_FEE * 100, 0) + '% fee on USD into GMT; weekly amounts are averaged into the month.' : '')
+      + '</div>'
       + '</div>';
   }
 
@@ -436,7 +460,7 @@
     // re-hides the panel. This built the whole quote and then hid it.
     out.style.display = 'block';
     const m = a.m, mo = m.netToday * 30, yr = m.netToday * 365.25;
-    const c = compound(a, horizon, reinvest, streak, APR);
+    const c = compound(a, horizon, reinvest, streak, APR, addMonthly());
     const lockUSD = a.gmtUSD, thUSD = a.thUSD;
     const pct = v => Math.max(0, Math.min(100, a.capUSD > 0 ? v / a.capUSD * 100 : 0));
     // A quote is only honest if the reader can see the discount is bought, not assumed — so the
@@ -482,7 +506,8 @@
     window._quote = { mode, cap: a.capUSD, mo, th: a.th, gmt: a.ag, disc: m.totD, streak,
       yrs: horizon, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0,
       mult: c ? c.mult : 0, series: c ? c.series : null, thUSD, lockUSD, day: m.netToday, yieldPct: m.yieldPct,
-      vip: m.vip.n, btc: S.btc, gmtPx: S.gmt };
+      vip: m.vip.n, btc: S.btc, gmtPx: S.gmt, add: c && c.addMo > 0 ? addLabel() : '', paidIn: c ? c.paidIn : a.capUSD,
+      paid: c ? c.paid : null };
   }
 
   // Plain text, because this gets pasted into a chat with the person being quoted.
@@ -492,6 +517,7 @@
       + `• ${num(q.th, 1)} TH at 12 W/TH + ${num(q.gmt, 0)} GMT locked\n`
       + `• ${num(q.disc, 2)}% fee discount\n`
       + `• ${money(q.mo, 0)}/month net at today's prices\n`
+      + (q.add ? `• Adding ${q.add}: ${money(q.paidIn, 0)} paid in over ${q.yrs} year${q.yrs === 1 ? '' : 's'}\n` : '')
       + (q.cagr > 0
         ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo by year ${q.yrs} — ${num(q.cagr, 1)}%/yr compounded, with BTC held flat\n`
         : '')
@@ -542,7 +568,7 @@
     // left: what is being quoted
     x.textAlign = 'left'; x.fillStyle = GSOFT; x.font = '18px ' + MONO;
     x.fillText('GOMINING QUOTE', L, PY + 52);
-    x.fillStyle = '#fff'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + ' invested', L, PY + 100);
+    x.fillStyle = '#fff'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + (q.add ? ' + ' + q.add : ' invested'), L, PY + 100);
     x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '18px ' + MONO;
     x.fillText(num(q.th, 1) + ' TH @ 12 W/TH  +  ' + num(q.gmt, 0) + ' GMT locked', L, PY + 136);
     // right: the monthly income, big
@@ -567,18 +593,20 @@
       x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
       x.fillStyle = col; x.font = '700 26px ' + SANS; x.fillText(v, cx + 16, cy + 59);
     });
-    // growth line: total value month by month, from the capital in
-    const s = q.series, T = cy + 104, B = PY + PH - 30, CL = L, CR = R - 190;
+    // growth line: total value month by month, filled down to a dashed line of the money paid
+    // in so far (flat at the capital, rising with any top-ups)
+    const s = q.series, pd = q.paid || [], T = cy + 104, B = PY + PH - 30, CL = L, CR = R - 190;
     if (s && s.length > 1) {
-      const lo = Math.min(...s) * .97, hi = Math.max(...s) * 1.03;
+      const lo = Math.min(...s, ...pd) * .97, hi = Math.max(...s, ...pd) * 1.03;
       const py = v => B - (v - lo) / ((hi - lo) || 1) * (B - T), pxs = i => CL + (CR - CL) * i / (s.length - 1), base = py(q.cap);
       const path = () => { x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), py(v)) : x.moveTo(pxs(i), py(v))); };
-      path(); x.lineTo(CR, base); x.lineTo(CL, base); x.closePath();
+      const paidAt = i => py(pd[i] != null ? pd[i] : q.cap);
+      path(); for (let i = s.length - 1; i >= 0; i--) x.lineTo(pxs(i), paidAt(i)); x.closePath();
       const ag = x.createLinearGradient(0, T, 0, base); ag.addColorStop(0, 'rgba(46,229,157,0.40)'); ag.addColorStop(1, 'rgba(46,229,157,0.04)');
       x.fillStyle = ag; x.fill();
       x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 16; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
       path(); x.shadowBlur = 4; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
-      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,240,215,0.55)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(CL, base); x.lineTo(CR, base); x.stroke(); x.restore();
+      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,240,215,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
       x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
       const ex = pxs(s.length - 1), ey = py(s[s.length - 1]);
       x.save(); x.shadowColor = UP; x.shadowBlur = 16; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
@@ -589,6 +617,7 @@
       x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO;
       x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
       x.fillText(num(q.cagr, 1) + '%/yr compounded', CR + 22, T + 110);
+      if (q.add) x.fillText(money(q.paidIn, 0) + ' paid in', CR + 22, T + 132);
     }
     // rim
     const rim = x.createLinearGradient(PX, PY, PX + PW, PY + PH);
@@ -678,6 +707,15 @@
       const b = e.target.closest('.chips button'); if (!b) return;
       if (b.dataset.yrs) horizon = +b.dataset.yrs;
       if (b.dataset.rein) reinvest = +b.dataset.rein;
+      render();
+    });
+    const ad = $('qAdd');
+    if (ad) ad.addEventListener('input', render);
+    const ap = $('qAddPer');
+    if (ap) ap.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      addPer = b.dataset.per;
+      ap.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
       render();
     });
     const st = $('qStreak');
