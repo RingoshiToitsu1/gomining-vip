@@ -278,7 +278,7 @@
     const dbt0 = Math.round(S.satsPerTHDay) / 1e8;
     const DPM = 365.25 / 12;
     let th = a.th, locked = a.ag, cash = 0, income = 0;
-    const rows = [];
+    const rows = [], series = [a.capUSD];   // series: total value at every month end, for the screenshot
     for (let k = 1; k <= Math.round(years * 12); k++) {
       const yrs = (k - 0.5) / 12;
       const dbt = Math.max(dbt0 * subsidyMultAt(now + yrs * 365.25 * 86400000) * difficultyMultAt(yrs), rewardFloorBTC(bp));
@@ -313,6 +313,7 @@
         locked += gmtSpend * (1 - USD_GMT_FEE) / gp;
         th += addTH(spend - gmtSpend);
       }
+      series.push(th * cptAtEff(th, EFF_BEST) + locked * gp + cash);
       if (k % 12 === 0) {
         // Position = what the farm would cost to rebuild today plus the GMT sitting in the lock.
         const position = th * cptAtEff(th, EFF_BEST) + locked * gp;
@@ -321,7 +322,7 @@
     }
     const last = rows[rows.length - 1];
     if (!last) return null;
-    return { rows, last, years, rein,
+    return { rows, series, last, years, rein,
              mult: last.total / a.capUSD,
              cagr: (Math.pow(last.total / a.capUSD, 1 / years) - 1) * 100 };
   }
@@ -476,9 +477,12 @@
       <div class="cta">
         <a href="https://gomining.com/?ref=RINGO5" target="_blank" rel="noopener">Start with code RINGO5 &rarr;</a>
         <button class="ghost" type="button" onclick="quoteCopy(this)">Copy this quote</button>
+        <button class="ghost" type="button" onclick="quoteShot()">Screenshot quote</button>
       </div>`;
     window._quote = { mode, cap: a.capUSD, mo, th: a.th, gmt: a.ag, disc: m.totD, streak,
-      yrs: horizon, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0 };
+      yrs: horizon, rein: reinvest, cagr: c ? c.cagr : 0, end: c ? c.last.total : 0, endMo: c ? c.last.income : 0,
+      mult: c ? c.mult : 0, series: c ? c.series : null, thUSD, lockUSD, day: m.netToday, yieldPct: m.yieldPct,
+      vip: m.vip.n, btc: S.btc, gmtPx: S.gmt };
   }
 
   // Plain text, because this gets pasted into a chat with the person being quoted.
@@ -495,6 +499,140 @@
     const done = () => { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800); };
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done).catch(() => {});
     else { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} ta.remove(); }
+  };
+
+  // ---- screenshot: a branded image of the quote, in the same glass-panel style as the
+  // console's chart snapshots (assets/chart-shot.js). Drawn here rather than loading that
+  // file: /quote stays a one-script page, and this card is numbers, not a price chart. ----
+  const _img = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+  function quoteCanvas(q, logo) {
+    const SC = 2, W = 1200, H = 675;
+    const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
+    const x = c.getContext('2d'); x.scale(SC, SC);
+    const GOLD = '#F5A623', GSOFT = '#F7B84E', GHI = '#FFCF7A', UP = '#2EE59D', PURP = '#A78BFA';
+    const SANS = '"Space Grotesk",system-ui,sans-serif', MONO = '"Share Tech Mono",monospace';
+    const gold = a => 'rgba(245,166,35,' + a + ')';
+    const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
+    // backdrop: dark room, amber light columns, floor
+    const bg = x.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0b0805'); bg.addColorStop(0.55, '#120c05'); bg.addColorStop(0.8, '#070504'); bg.addColorStop(1, '#050403');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    [[520, 120, .10], [700, 70, .07], [1080, 180, .13], [60, 140, .06]].forEach(([cx, w, a]) => {
+      const g = x.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+      g.addColorStop(0, gold(0)); g.addColorStop(.5, gold(a)); g.addColorStop(1, gold(0));
+      x.fillStyle = g; x.fillRect(cx - w / 2, 0, w, H * .8);
+    });
+    const orb = (cx, cy, r, a) => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, gold(a)); g.addColorStop(1, gold(0)); x.fillStyle = g; x.fillRect(cx - r, cy - r, r * 2, r * 2); };
+    orb(0, 330, 320, .16); orb(W, 170, 300, .14);
+    const fl = x.createLinearGradient(0, 575, 0, H);
+    fl.addColorStop(0, gold(.10)); fl.addColorStop(.15, 'rgba(20,13,6,0.95)'); fl.addColorStop(1, '#040302');
+    x.fillStyle = fl; x.fillRect(0, 575, W, H - 575);
+    // glass panel
+    const PX = 56, PY = 112, PW = W - 112, PH = 452;
+    x.save(); x.shadowColor = gold(.55); x.shadowBlur = 34; rr(PX, PY, PW, PH, 26); x.fillStyle = 'rgba(18,12,6,0.94)'; x.fill(); x.restore();
+    const body = x.createLinearGradient(PX, PY, PX + PW * .35, PY + PH);
+    body.addColorStop(0, 'rgba(255,200,110,0.10)'); body.addColorStop(.45, 'rgba(40,26,10,0.25)'); body.addColorStop(1, 'rgba(0,0,0,0.35)');
+    rr(PX, PY, PW, PH, 26); x.fillStyle = body; x.fill();
+    x.save(); rr(PX, PY, PW, PH, 26); x.clip();
+    x.strokeStyle = gold(.07); x.lineWidth = 1;
+    for (let i = 1; i < 14; i++) { const gx = PX + PW * i / 14; x.beginPath(); x.moveTo(gx, PY); x.lineTo(gx, PY + PH); x.stroke(); }
+    for (let i = 1; i < 8; i++) { const gy = PY + PH * i / 8; x.beginPath(); x.moveTo(PX, gy); x.lineTo(PX + PW, gy); x.stroke(); }
+    x.restore();
+    const L = PX + 34, R = PX + PW - 34;
+    // left: what is being quoted
+    x.textAlign = 'left'; x.fillStyle = GSOFT; x.font = '18px ' + MONO;
+    x.fillText('GOMINING QUOTE', L, PY + 52);
+    x.fillStyle = '#fff'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + ' invested', L, PY + 100);
+    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '18px ' + MONO;
+    x.fillText(num(q.th, 1) + ' TH @ 12 W/TH  +  ' + num(q.gmt, 0) + ' GMT locked', L, PY + 136);
+    // right: the monthly income, big
+    x.textAlign = 'right';
+    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 22; x.fillStyle = '#fff'; x.font = '700 84px ' + SANS;
+    const big = money(q.mo, 0); x.fillText(big, R - 70, PY + 104);
+    const bw = x.measureText(big).width; x.restore();
+    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
+    x.save(); x.shadowColor = UP; x.shadowBlur = 12; x.fillStyle = UP; x.font = '700 30px ' + SANS;
+    x.fillText('▲ ' + num(q.yieldPct, 1) + '%/yr on capital', R, PY + 148); x.restore();
+    // stat chips
+    const stats = [
+      ['FEE DISCOUNT', num(q.disc, 2) + '%', UP],
+      ['PER DAY', '$' + q.day.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), '#fff'],
+      ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#fff'],
+      ['VIP TIER', q.vip, GHI],
+    ];
+    const cw = (R - L - 3 * 14) / 4, cy = PY + 176;
+    stats.forEach(([k, v, col], i) => {
+      const cx = L + i * (cw + 14);
+      rr(cx, cy, cw, 74, 14); x.fillStyle = 'rgba(255,200,110,0.05)'; x.fill(); x.strokeStyle = gold(.22); x.lineWidth = 1; x.stroke();
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
+      x.fillStyle = col; x.font = '700 26px ' + SANS; x.fillText(v, cx + 16, cy + 59);
+    });
+    // growth line: total value month by month, from the capital in
+    const s = q.series, T = cy + 104, B = PY + PH - 30, CL = L, CR = R - 190;
+    if (s && s.length > 1) {
+      const lo = Math.min(...s) * .97, hi = Math.max(...s) * 1.03;
+      const py = v => B - (v - lo) / ((hi - lo) || 1) * (B - T), pxs = i => CL + (CR - CL) * i / (s.length - 1), base = py(q.cap);
+      const path = () => { x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), py(v)) : x.moveTo(pxs(i), py(v))); };
+      path(); x.lineTo(CR, base); x.lineTo(CL, base); x.closePath();
+      const ag = x.createLinearGradient(0, T, 0, base); ag.addColorStop(0, 'rgba(46,229,157,0.40)'); ag.addColorStop(1, 'rgba(46,229,157,0.04)');
+      x.fillStyle = ag; x.fill();
+      x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 16; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
+      path(); x.shadowBlur = 4; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
+      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,240,215,0.55)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(CL, base); x.lineTo(CR, base); x.stroke(); x.restore();
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
+      const ex = pxs(s.length - 1), ey = py(s[s.length - 1]);
+      x.save(); x.shadowColor = UP; x.shadowBlur = 16; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
+      x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.arc(ex, ey, 3, 0, 7); x.fill();
+      // end label to the right of the line
+      x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
+      x.fillStyle = UP; x.font = '700 18px ' + SANS; x.fillText(num(q.mult, 2) + '× in ' + q.yrs + ' yr', CR + 22, T + 62);
+      x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO;
+      x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
+      x.fillText(num(q.cagr, 1) + '%/yr compounded', CR + 22, T + 110);
+    }
+    // rim
+    const rim = x.createLinearGradient(PX, PY, PX + PW, PY + PH);
+    rim.addColorStop(0, GHI); rim.addColorStop(.35, GOLD); rim.addColorStop(.7, gold(.55)); rim.addColorStop(1, GSOFT);
+    x.save(); x.shadowColor = gold(.9); x.shadowBlur = 14; rr(PX, PY, PW, PH, 26); x.strokeStyle = rim; x.lineWidth = 2.4; x.stroke(); x.restore();
+    // brand + footer
+    let bx = PX + 4;
+    if (logo) { x.drawImage(logo, bx, 34, 46, 46); bx += 60; }
+    x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 34px ' + SANS; x.fillText('GMT Optimizer', bx, 69);
+    x.textAlign = 'right'; x.fillStyle = GSOFT; x.font = '20px ' + MONO; x.fillText('gmt-optimizer.com/quote', W - PX - 4, 66);
+    const fy = H - 30;
+    x.textAlign = 'left'; x.fillStyle = GHI; x.font = '700 18px ' + SANS; x.fillText('Start with code RINGO5 — +5% bonus TH', PX + 4, fy);
+    x.textAlign = 'right'; x.fillStyle = 'rgba(255,240,215,0.42)'; x.font = '14px ' + MONO;
+    const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    x.fillText(d + '  ·  BTC ' + money(q.btc, 0) + ' held flat  ·  not financial advice', W - PX - 4, fy);
+    return c;
+  }
+  let _shotBlob = null;
+  window.quoteShot = async function () {
+    const q = window._quote; if (!q) return;
+    const m = $('qShot'), img = $('qShotImg'), act = $('qShotAct');
+    _shotBlob = null; img.removeAttribute('src'); act.hidden = true; m.hidden = false;
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+    const cv = quoteCanvas(q, await _img('/gmt-optimizer-logo.svg?v=2'));
+    img.src = cv.toDataURL('image/png');
+    _shotBlob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const f = _shotFile();
+    $('qShotShare').hidden = !(f && navigator.canShare && navigator.canShare({ files: [f] }));
+    $('qShotCopy').hidden = !(navigator.clipboard && window.ClipboardItem && window.isSecureContext);
+    act.hidden = false;
+  };
+  const _shotFile = () => _shotBlob && new File([_shotBlob], 'gomining-quote-' + Math.round(window._quote.cap) + '.png', { type: 'image/png' });
+  window.quoteShotClose = () => { $('qShot').hidden = true; };
+  window.quoteShotShare = () => { const f = _shotFile(); if (f) navigator.share({ files: [f], title: 'GoMining quote' }).catch(() => {}); };
+  window.quoteShotCopy = btn => {
+    if (!_shotBlob) return;
+    navigator.clipboard.write([new ClipboardItem({ 'image/png': _shotBlob })]).then(() => {
+      const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800);
+    }).catch(() => {});
+  };
+  window.quoteShotSave = () => {
+    const f = _shotFile(); if (!f) return;
+    const u = URL.createObjectURL(f), a = document.createElement('a'); a.href = u; a.download = f.name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000);
   };
 
   function setMode(m) {
