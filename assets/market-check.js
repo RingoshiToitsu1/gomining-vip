@@ -32,15 +32,15 @@
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const STAKE_APR        = 22.68;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
+  const STAKE_APR        = 21.7;    // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
   const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
   const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
-  const GREEDY_GROWTH_DEFAULT = 0.36;                                // %/wk — console inGreedyGrowth default; observed, not a constant
-  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462']; // mirror of app.js: a saved old default is not the user's own number
+  const GREEDY_GROWTH_DEFAULT = 0.3347;                              // %/wk — console inGreedyGrowth default; observed, not a constant
+  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36']; // mirror of app.js: a saved old default is not the user's own number
 
   // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
   const TH_TIERS_12W = [
