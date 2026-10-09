@@ -42,7 +42,8 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
 .re-foot a.btn.ghost{background:none;color:var(--gold-soft);border:1px solid var(--line-hi);box-shadow:none}
 .re-promo{margin-top:.9rem;padding-top:.85rem;border-top:1px solid var(--line-soft);display:flex;flex-wrap:wrap;
   align-items:center;justify-content:space-between;gap:.5rem;font-size:.8rem;color:var(--ink2)}
-.re-inputs{grid-template-columns:repeat(3,1fr)}
+.re-inputs{grid-template-columns:2fr 1fr}
+.re-hint b{color:var(--gold-soft);font-weight:600}
 .re-offer{margin-top:1rem;padding:.95rem 1rem;border-radius:var(--r-sm);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.24)}
 .re-offer-head{font-size:.88rem;color:var(--warm);margin-bottom:.65rem}
 .re-offer ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.5rem .9rem}
@@ -94,8 +95,7 @@ html.theme-ember{
 
 @media(max-width:520px){
   .theme-ember .re-tile .v{font-size:1.6rem}
-  .re-inputs{grid-template-columns:1fr 1fr}
-  .re-inputs .re-field:first-child{grid-column:1/-1}
+  .re-inputs{grid-template-columns:3fr 2fr}
   .re-offer ul{grid-template-columns:1fr}
   #roi-embed{padding:1.1rem .95rem 1rem}
   .re-btns,.re-foot a.btn{width:100%;text-align:center}
@@ -108,34 +108,33 @@ html.theme-ember{
   <div class="re-basis" id="re-basis">loading live market data…</div>
 
   <div class="re-inputs">
-    <div class="re-field">
-      <label for="re-th">Hashrate (TH)</label>
-      <input id="re-th" type="number" inputmode="decimal" min="0" step="1" value="0">
+    <div class="re-field re-usd">
+      <label for="re-usd">Amount to invest ($)</label>
+      <input id="re-usd" type="number" inputmode="decimal" min="0" step="50" value="0">
     </div>
     <div class="re-field">
       <label for="re-wth">Efficiency (W/TH)</label>
       <input id="re-wth" type="number" inputmode="decimal" min="12" step="0.5" value="12">
     </div>
-    <div class="re-field">
-      <label for="re-gmt">GMT locked</label>
-      <input id="re-gmt" type="number" inputmode="decimal" min="0" step="100" value="0" data-preset>
-    </div>
   </div>
   <!-- Backend math, not visitor inputs: the staking APR is seeded from STAKE_APR0 by
        roi-embed.js, and the 3% daily click streak is always counted. -->
   <input id="re-apr" type="hidden" value="21.7">
+  <!-- Dollar mode: the budget is priced into TH + GMT by roi-embed.js; these stay for its init. -->
+  <input id="re-th" type="hidden" value="0">
+  <input id="re-gmt" type="hidden" value="0" data-preset>
   <input id="re-streak" type="checkbox" checked hidden>
 
   <div class="re-out">
     <div class="re-tile hero">
-      <div class="k">Net / day</div>
+      <div class="k">Net / month</div>
       <div class="v" id="re-be">—</div>
       <div class="s" id="re-be-sub">mining + staking</div>
     </div>
     <div class="re-tile">
-      <div class="k">Net / month</div>
+      <div class="k">12 months</div>
       <div class="v" id="re-net">—</div>
-      <div class="s" id="re-net-sub">after fees &amp; discount</div>
+      <div class="s" id="re-net-sub">at today's rates</div>
     </div>
     <div class="re-tile">
       <div class="k">Your discount</div>
@@ -143,16 +142,16 @@ html.theme-ember{
       <div class="s" id="re-disc-sub">on electricity</div>
     </div>
     <div class="re-tile">
-      <div class="k">Est. cost</div>
+      <div class="k">Cash back</div>
       <div class="v" id="re-cost">—</div>
-      <div class="s" id="re-cost-sub">to build this</div>
+      <div class="s" id="re-cost-sub">with RINGO5</div>
     </div>
   </div>
 
   <div class="re-hint" id="re-hint">—</div>
 
   <div class="re-foot">
-    <p class="note">Today's numbers on live BTC price and difficulty. VIP tiers, reinvestment and multi-year projections are in the full tool.</p>
+    <p class="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
     <div class="re-btns">
       <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener">Claim your first TH →</a>
       <a class="btn ghost" data-cta="console" data-href="/console" href="https://gmt-optimizer.com/console" target="_blank" rel="noopener">Full calculator</a>
@@ -178,7 +177,7 @@ html.theme-ember{
 
 <script>
 /* Host settings come in on the URL (the loader in /assets/embed.js builds it from data-*):
-     th, wth, gmt        prefill the inputs (TH and GMT start at 0, efficiency at 12 W/TH)
+     amount, wth         prefill the budget ($, default 0) and efficiency (default 12 W/TH)
      bg=transparent      drop the page background so the card sits on the host's
      theme=ember         the RinGoMining look (automatic when framed by ringomining.com)
      offer=off           hide the RINGO5 offer block (for a host page that already sells it)
@@ -190,7 +189,7 @@ html.theme-ember{
     var v = parseFloat(q.get(k));
     return isFinite(v) && v >= min && v <= max ? String(v) : null;
   }
-  var set = { 're-th': num('th', 0, 1e6), 're-wth': num('wth', 12, 40), 're-gmt': num('gmt', 0, 1e9) };
+  var set = { 're-usd': num('amount', 0, 1e7), 're-wth': num('wth', 12, 40) };
   Object.keys(set).forEach(function (id) {
     if (set[id] == null) return;
     var el = document.getElementById(id);
@@ -243,6 +242,6 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/roi-embed.js?v=21"></script>
+<script src="/assets/roi-embed.js?v=22"></script>
 </body>
 </html>

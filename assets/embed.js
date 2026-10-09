@@ -2,12 +2,12 @@
    ===========================================================================
    Drop this on any page:
 
-     <div data-gmt-optimizer data-th="100"></div>
+     <div data-gmt-optimizer data-amount="1000"></div>
      <script src="https://gmt-optimizer.com/assets/embed.js" async></script>
 
    Every [data-gmt-optimizer] element gets an iframe of /embed, sized to its content (the
    frame posts its height; this script applies it). Options, all optional, as data-*:
-     data-th, data-wth, data-gmt             prefill the calculator (default 0 TH, 12 W/TH, 0 GMT)
+     data-amount, data-wth                   prefill the budget in $ (default 0) and W/TH (default 12)
      data-bg="transparent"                   no page background around the card
      data-theme="ember"                      RinGoMining look (automatic on ringomining.com)
      data-offer="off"                        hide the RINGO5 offer block inside the frame
@@ -20,7 +20,7 @@
 (function () {
   'use strict';
   var ORIGIN = 'https://gmt-optimizer.com';
-  var OPTS = ['th', 'wth', 'gmt', 'bg', 'theme', 'offer', 'src'];
+  var OPTS = ['amount', 'wth', 'bg', 'theme', 'offer', 'src'];
   var frames = [];
 
   function mount(el) {
