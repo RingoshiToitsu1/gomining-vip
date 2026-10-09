@@ -245,6 +245,13 @@
     if (st) st.addEventListener('change', () => { autoFillGMT(); render(); });
     const g = $('re-gmt');
     if (g) g.addEventListener('input', () => { gmtTouched = true; render(); });
+    // The APR field's HTML value is only a placeholder: seed it from STAKE_APR0 so a rate
+    // update is one constant, not a hunt through every page that hosts the widget. A field
+    // carrying data-preset (the /embed page, from its URL) keeps the host's number, and a
+    // preset GMT amount counts as the visitor's own so autoFillGMT leaves it alone.
+    const a = $('re-apr');
+    if (a && !a.hasAttribute('data-preset')) a.value = String(STAKE_APR0);
+    if (g && g.hasAttribute('data-preset')) gmtTouched = true;
     loadMarket().then(() => {
       root.classList.remove('re-loading');
       autoFillGMT();

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoMining ROI Calculator — GMT Optimizer</title>
+<!-- The iframe-able calculator for other sites. Not a search landing page: the indexed copy is
+     /gomining-roi-calculator, so this one is noindex and canonicalises there. -->
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="https://gmt-optimizer.com/gomining-roi-calculator">
+<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/roi-embed.css?v=1">
+<style>
+/* Self-contained: no content.css, no site.js chrome (galaxy backdrop, menu, top bar). Tokens
+   mirror the :root block in assets/content.css. Nothing here may use vh units or min-height
+   on html/body — the frame is sized to the content, so a viewport-relative height would feed
+   back into the height it reports and grow forever. */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060709;--gold:#F5A623;--gold-hi:#FFC65A;--gold-soft:#FFCF7A;--warm:#FFF4E0;
+  --ink:#EBE2D2;--ink2:#A79B89;--ink3:#8C8170;
+  --line:rgba(240,196,120,.14);--line-hi:rgba(245,200,130,.34);--line-soft:rgba(200,210,235,.08);
+  --glass-1:#14161d;--glass-2:#0b0d12;
+  --r:22px;--r-sm:13px;
+  --sans:'Space Grotesk',system-ui,sans-serif;--mono:'Share Tech Mono',ui-monospace,monospace;
+  --sh:none;
+}
+html{background:var(--bg);color-scheme:dark}
+html.transparent{background:transparent}
+body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;padding:1px}
+/* Solid card (glass-1/2 are opaque here) so it reads the same on a white host page. */
+#roi-embed{margin:0;backdrop-filter:none;-webkit-backdrop-filter:none}
+.re-foot{margin-top:.2rem}
+.re-foot .note{max-width:24rem}
+.re-btns{display:flex;gap:.55rem;flex-wrap:wrap}
+.re-foot a.btn{display:inline-block;padding:.68rem 1.25rem;border-radius:12px;font-weight:600;font-size:.88rem;
+  text-decoration:none;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;
+  box-shadow:0 8px 24px rgba(245,166,35,.32);transition:transform .2s,box-shadow .2s}
+.re-foot a.btn:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(245,166,35,.45)}
+.re-foot a.btn.ghost{background:none;color:var(--gold-soft);border:1px solid var(--line-hi);box-shadow:none}
+.re-promo{margin-top:.9rem;padding-top:.85rem;border-top:1px solid var(--line-soft);display:flex;flex-wrap:wrap;
+  align-items:center;justify-content:space-between;gap:.5rem;font-size:.8rem;color:var(--ink2)}
+.re-promo b{font-family:var(--mono);font-weight:400;color:var(--gold-hi);letter-spacing:.06em;cursor:pointer;
+  padding:.1rem .4rem;border:1px dashed var(--line-hi);border-radius:6px}
+.re-brand{display:inline-flex;align-items:center;gap:.4rem;color:var(--ink3);text-decoration:none;font-family:var(--mono);
+  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+.re-brand:hover{color:var(--gold-soft)}
+.re-brand img{width:16px;height:16px}
+@media(max-width:520px){
+  #roi-embed{padding:1.1rem .95rem 1rem}
+  .re-btns,.re-foot a.btn{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+<div id="roi-embed" class="re-loading">
+  <h2>What does your GoMining setup earn?</h2>
+  <div class="re-basis" id="re-basis">loading live market data…</div>
+
+  <div class="re-inputs">
+    <div class="re-field">
+      <label for="re-th">Hashrate (TH)</label>
+      <input id="re-th" type="number" inputmode="decimal" min="1" step="1" value="50">
+    </div>
+    <div class="re-field">
+      <label for="re-wth">Efficiency (W/TH)</label>
+      <input id="re-wth" type="number" inputmode="decimal" min="12" step="0.5" value="12">
+    </div>
+    <div class="re-field">
+      <label for="re-gmt">GMT locked</label>
+      <input id="re-gmt" type="number" inputmode="decimal" min="0" step="100" value="0">
+    </div>
+    <div class="re-field">
+      <label for="re-apr">Staking APR %</label>
+      <input id="re-apr" type="number" inputmode="decimal" min="0" step="0.1" value="21.7">
+    </div>
+  </div>
+
+  <label class="re-check"><input id="re-streak" type="checkbox" checked>
+    Daily click streak <span>(10+ day streak = 3% off fees)</span></label>
+
+  <div class="re-out">
+    <div class="re-tile hero">
+      <div class="k">Net / day</div>
+      <div class="v" id="re-be">—</div>
+      <div class="s" id="re-be-sub">mining + staking</div>
+    </div>
+    <div class="re-tile">
+      <div class="k">Net / month</div>
+      <div class="v" id="re-net">—</div>
+      <div class="s" id="re-net-sub">after fees &amp; discount</div>
+    </div>
+    <div class="re-tile">
+      <div class="k">Your discount</div>
+      <div class="v" id="re-disc">—</div>
+      <div class="s" id="re-disc-sub">on electricity</div>
+    </div>
+    <div class="re-tile">
+      <div class="k">Est. cost</div>
+      <div class="v" id="re-cost">—</div>
+      <div class="s" id="re-cost-sub">to build this</div>
+    </div>
+  </div>
+
+  <div class="re-hint" id="re-hint">—</div>
+
+  <div class="re-foot">
+    <p class="note">Today's numbers on live BTC price and difficulty. VIP tiers, reinvestment and multi-year projections are in the full tool.</p>
+    <div class="re-btns">
+      <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener">Claim your first TH →</a>
+      <a class="btn ghost" data-cta="console" data-href="/console" href="https://gmt-optimizer.com/console" target="_blank" rel="noopener">Full calculator</a>
+    </div>
+  </div>
+
+  <div class="re-promo">
+    <span>New to GoMining? Code <b id="re-code" title="Click to copy">RINGO5</b> = +5% bonus TH</span>
+    <a class="re-brand" data-cta="brand" data-href="/" href="https://gmt-optimizer.com/" target="_blank" rel="noopener">
+      <img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+  </div>
+</div>
+
+<script>
+/* Host settings come in on the URL (the loader in /assets/embed.js builds it from data-*):
+     th, wth, gmt, apr   prefill the inputs (gmt/apr are then kept, not auto-filled)
+     streak=0            untick the click streak
+     bg=transparent      drop the page background so the card sits on the host's
+     src=<name>          campaign tag on outbound links (defaults to the host's domain)
+   Applied before roi-embed.js initialises, so its first render already uses them. */
+(function () {
+  var q = new URLSearchParams(location.search);
+  function num(k, min, max) {
+    var v = parseFloat(q.get(k));
+    return isFinite(v) && v >= min && v <= max ? String(v) : null;
+  }
+  var set = { 're-th': num('th', 1, 1e6), 're-wth': num('wth', 12, 40), 're-gmt': num('gmt', 0, 1e9), 're-apr': num('apr', 0, 200) };
+  Object.keys(set).forEach(function (id) {
+    if (set[id] == null) return;
+    var el = document.getElementById(id);
+    el.value = set[id];
+    el.setAttribute('data-preset', '');
+  });
+  if (q.get('streak') === '0') document.getElementById('re-streak').checked = false;
+  if (q.get('bg') === 'transparent') document.documentElement.classList.add('transparent');
+
+  // Outbound links are tagged so funnel traffic shows up in analytics by source.
+  var host = '';
+  try { host = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) {}
+  var src = (q.get('src') || host || 'unknown').replace(/[^\w.-]/g, '').slice(0, 60);
+  document.querySelectorAll('a[data-cta]').forEach(function (a) {
+    a.href = 'https://gmt-optimizer.com' + a.getAttribute('data-href') +
+      '?utm_source=' + encodeURIComponent(src) + '&utm_medium=embed&utm_campaign=roi-calculator&utm_content=' + a.getAttribute('data-cta');
+    // Tell the host page too, so a funnel can count CTA clicks without reading our analytics.
+    a.addEventListener('click', function () {
+      try { parent.postMessage({ type: 'gmt-optimizer:cta', cta: a.getAttribute('data-cta') }, '*'); } catch (e) {}
+    });
+  });
+
+  var code = document.getElementById('re-code');
+  code.addEventListener('click', function () {
+    try { navigator.clipboard.writeText('RINGO5').then(function () { code.textContent = 'COPIED'; setTimeout(function () { code.textContent = 'RINGO5'; }, 1400); }); } catch (e) {}
+  });
+
+  // Report our height to the host so the iframe fits the content with no inner scrollbar.
+  if (parent !== window) {
+    var last = 0;
+    var report = function () {
+      var h = Math.ceil(document.body.getBoundingClientRect().height) + 2;
+      if (h === last) return;
+      last = h;
+      parent.postMessage({ type: 'gmt-optimizer:height', height: h }, '*');
+    };
+    if (window.ResizeObserver) new ResizeObserver(report).observe(document.body);
+    window.addEventListener('load', report);
+    report();
+  }
+})();
+</script>
+<script src="/assets/roi-embed.js?v=20"></script>
+</body>
+</html>
