@@ -110,7 +110,7 @@ html.theme-ember{
   <div class="re-inputs">
     <div class="re-field re-usd">
       <label for="re-usd">Amount to invest ($)</label>
-      <input id="re-usd" type="number" inputmode="decimal" min="0" step="50" value="0">
+      <input id="re-usd" type="number" inputmode="decimal" min="0" step="50" value="" placeholder="0">
     </div>
     <div class="re-field">
       <label for="re-wth">Efficiency (W/TH)</label>
@@ -220,6 +220,11 @@ html.theme-ember{
     a.addEventListener('click', function () {
       try { parent.postMessage({ type: 'gmt-optimizer:cta', cta: a.getAttribute('data-cta') }, '*'); } catch (e) {}
     });
+  });
+
+  // Clicking into a field selects what's there, so typing replaces it instead of appending.
+  document.querySelectorAll('.re-field input').forEach(function (el) {
+    el.addEventListener('focus', function () { setTimeout(function () { try { el.select(); } catch (e) {} }, 0); });
   });
 
   var code = document.getElementById('re-code');
