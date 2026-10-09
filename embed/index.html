@@ -57,7 +57,43 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
   font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
 .re-brand:hover{color:var(--gold-soft)}
 .re-brand img{width:16px;height:16px}
+/* ===== theme=ember — matches RinGoMining (ringomining.com): ember + gold on warm black, Anton
+   display, JetBrains Mono labels. The page background IS the host's .optimizer-box panel colour,
+   so the card blends into the box it sits in instead of being a card inside a card. ===== */
+html.theme-ember{
+  --bg:#1a1510;--gold:#ff6a1a;--gold-hi:#ff8f3f;--gold-soft:#f6b53a;--warm:#f4ede4;
+  --ink:#f4ede4;--ink2:#a99d90;--ink3:#8f8377;
+  --line:#2e261d;--line-hi:#5a3f17;--line-soft:#2e261d;--glass-1:#1a1510;--glass-2:#1a1510;
+  --r:14px;--r-sm:12px;--mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --display:'Anton','Impact','Arial Narrow',sans-serif;
+}
+.theme-ember body{font-size:16px}
+.theme-ember #roi-embed{border:0;padding:.3rem .2rem .4rem}
+.theme-ember #roi-embed h2{font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:1.75rem;
+  line-height:1.05;letter-spacing:.02em;color:var(--warm);margin-bottom:.45rem}
+.theme-ember .re-basis{letter-spacing:.06em;font-size:.72rem}
+.theme-ember .re-basis::before{content:'● ';color:#4fd18b}
+.theme-ember .re-field label{letter-spacing:.12em;font-size:.68rem}
+.theme-ember .re-field input{background:#0c0906;border-color:var(--line);color:var(--warm);font-size:1rem;padding:.7rem .8rem}
+.theme-ember .re-field input:focus{border-color:#ff6a1a;box-shadow:0 0 0 3px rgba(255,106,26,.18)}
+.theme-ember .re-tile{background:#0c0906;border:1px solid var(--line);position:relative;overflow:hidden}
+.theme-ember .re-tile .v{font-family:var(--display);font-weight:400;font-size:2rem;line-height:1.05;letter-spacing:.02em;color:var(--gold-soft)}
+.theme-ember .re-tile.hero{border-color:#5a3f17;background:radial-gradient(circle at 50% 0,rgba(255,106,26,.22),transparent 70%),#0c0906}
+.theme-ember .re-tile.hero .v{color:#ff8f3f}
+.theme-ember .re-hint{background:#120e0a;border:0;border-left:3px solid #ff6a1a;border-radius:0 12px 12px 0;color:#e6dbcf}
+.theme-ember .re-foot a.btn{font-weight:700;font-size:1rem;padding:.85rem 1.4rem;color:#160a02;
+  background:linear-gradient(180deg,#ff8f3f,#ff6a1a);box-shadow:0 10px 30px -8px rgba(255,106,26,.6),inset 0 1px 0 rgba(255,255,255,.35)}
+.theme-ember .re-foot a.btn:hover{box-shadow:0 16px 40px -8px rgba(255,106,26,.75),inset 0 1px 0 rgba(255,255,255,.35)}
+.theme-ember .re-foot a.btn.ghost{background:transparent;color:var(--warm);border:1px solid var(--line);box-shadow:none}
+.theme-ember .re-foot a.btn.ghost:hover{border-color:var(--ink2)}
+.theme-ember .re-offer{background:#120e0a;border:1px solid var(--line)}
+.theme-ember .re-offer li::before{content:'▲';background:none;box-shadow:none;width:auto;height:auto;top:.05rem;
+  color:#ff6a1a;font-size:.7rem}
+.theme-ember .re-offer b,.theme-ember .re-promo b{color:#f6b53a;border-color:#5a3f17;background:#1f170b;border-style:solid;border-radius:999px;padding:.1rem .55rem}
+.theme-ember .re-brand:hover{color:#ff8f3f}
+
 @media(max-width:520px){
+  .theme-ember .re-tile .v{font-size:1.6rem}
   .re-inputs{grid-template-columns:1fr 1fr}
   .re-inputs .re-field:first-child{grid-column:1/-1}
   .re-offer ul{grid-template-columns:1fr}
@@ -144,6 +180,8 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
 /* Host settings come in on the URL (the loader in /assets/embed.js builds it from data-*):
      th, wth, gmt        prefill the inputs (TH and GMT start at 0, efficiency at 12 W/TH)
      bg=transparent      drop the page background so the card sits on the host's
+     theme=ember         the RinGoMining look (automatic when framed by ringomining.com)
+     offer=off           hide the RINGO5 offer block (for a host page that already sells it)
      src=<name>          campaign tag on outbound links (defaults to the host's domain)
    Applied before roi-embed.js initialises, so its first render already uses them. */
 (function () {
@@ -160,10 +198,21 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
     el.setAttribute('data-preset', '');
   });
   if (q.get('bg') === 'transparent') document.documentElement.classList.add('transparent');
+  if (q.get('offer') === 'off') document.querySelector('.re-offer').remove();
 
   // Outbound links are tagged so funnel traffic shows up in analytics by source.
   var host = '';
   try { host = document.referrer ? new URL(document.referrer).hostname : ''; } catch (e) {}
+
+  // Themes. An explicit ?theme= wins; otherwise the RinGoMining funnel gets its own look.
+  var THEMES = { ember: 'https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;700&display=swap' };
+  var theme = q.get('theme') || (/(^|\.)ringomining\.com$|^ringoshitoitsu1\.github\.io$/.test(host) ? 'ember' : '');
+  if (THEMES[theme]) {
+    document.documentElement.classList.add('theme-' + theme);
+    var fl = document.createElement('link');
+    fl.rel = 'stylesheet'; fl.href = THEMES[theme];
+    document.head.appendChild(fl);
+  }
   var src = (q.get('src') || host || 'unknown').replace(/[^\w.-]/g, '').slice(0, 60);
   document.querySelectorAll('a[data-cta]').forEach(function (a) {
     a.href = 'https://gmt-optimizer.com' + a.getAttribute('data-href') +
