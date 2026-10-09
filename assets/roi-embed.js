@@ -179,7 +179,14 @@
     const gl = Math.max(0, parseFloat($('re-gmt').value) || 0);
     const apr = Math.max(0, parseFloat($('re-apr').value) || 0);
     const streak = !!$('re-streak').checked;
-    if (th <= 0) return;
+    if (th <= 0) {
+      // Empty state (the /embed page starts at 0 TH): live basis line, blank tiles, a prompt.
+      ['re-net', 're-disc', 're-be', 're-cost'].forEach(id => { $(id).textContent = '—'; });
+      $('re-hint').textContent = 'Enter your hashrate (TH) to see what it earns today.';
+      $('re-basis').textContent = 'BTC ' + money(S.btc) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
+        num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)');
+      return;
+    }
 
     const m = model(th, wth, gl, apr, streak);
     $('re-net').textContent = money(m.netToday * 30.44);

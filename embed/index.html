@@ -42,13 +42,25 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
 .re-foot a.btn.ghost{background:none;color:var(--gold-soft);border:1px solid var(--line-hi);box-shadow:none}
 .re-promo{margin-top:.9rem;padding-top:.85rem;border-top:1px solid var(--line-soft);display:flex;flex-wrap:wrap;
   align-items:center;justify-content:space-between;gap:.5rem;font-size:.8rem;color:var(--ink2)}
-.re-promo b{font-family:var(--mono);font-weight:400;color:var(--gold-hi);letter-spacing:.06em;cursor:pointer;
+.re-inputs{grid-template-columns:repeat(3,1fr)}
+.re-offer{margin-top:1rem;padding:.95rem 1rem;border-radius:var(--r-sm);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.24)}
+.re-offer-head{font-size:.88rem;color:var(--warm);margin-bottom:.65rem}
+.re-offer ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.5rem .9rem}
+.re-offer li{position:relative;padding-left:1.25rem;line-height:1.35}
+.re-offer li::before{content:'';position:absolute;left:0;top:.32rem;width:.62rem;height:.62rem;border-radius:50%;
+  background:var(--gold);box-shadow:0 0 10px rgba(245,166,35,.6)}
+.re-offer strong{display:block;font-size:.86rem;font-weight:600;color:var(--gold-soft)}
+.re-offer li span{display:block;font-size:.74rem;color:var(--ink3)}
+.re-offer b,.re-promo b{font-family:var(--mono);font-weight:400;color:var(--gold-hi);letter-spacing:.06em;cursor:pointer;
   padding:.1rem .4rem;border:1px dashed var(--line-hi);border-radius:6px}
 .re-brand{display:inline-flex;align-items:center;gap:.4rem;color:var(--ink3);text-decoration:none;font-family:var(--mono);
   font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
 .re-brand:hover{color:var(--gold-soft)}
 .re-brand img{width:16px;height:16px}
 @media(max-width:520px){
+  .re-inputs{grid-template-columns:1fr 1fr}
+  .re-inputs .re-field:first-child{grid-column:1/-1}
+  .re-offer ul{grid-template-columns:1fr}
   #roi-embed{padding:1.1rem .95rem 1rem}
   .re-btns,.re-foot a.btn{width:100%;text-align:center}
 }
@@ -62,7 +74,7 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
   <div class="re-inputs">
     <div class="re-field">
       <label for="re-th">Hashrate (TH)</label>
-      <input id="re-th" type="number" inputmode="decimal" min="1" step="1" value="50">
+      <input id="re-th" type="number" inputmode="decimal" min="0" step="1" value="0">
     </div>
     <div class="re-field">
       <label for="re-wth">Efficiency (W/TH)</label>
@@ -70,16 +82,13 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
     </div>
     <div class="re-field">
       <label for="re-gmt">GMT locked</label>
-      <input id="re-gmt" type="number" inputmode="decimal" min="0" step="100" value="0">
-    </div>
-    <div class="re-field">
-      <label for="re-apr">Staking APR %</label>
-      <input id="re-apr" type="number" inputmode="decimal" min="0" step="0.1" value="21.7">
+      <input id="re-gmt" type="number" inputmode="decimal" min="0" step="100" value="0" data-preset>
     </div>
   </div>
-
-  <label class="re-check"><input id="re-streak" type="checkbox" checked>
-    Daily click streak <span>(10+ day streak = 3% off fees)</span></label>
+  <!-- Backend math, not visitor inputs: the staking APR is seeded from STAKE_APR0 by
+       roi-embed.js, and the 3% daily click streak is always counted. -->
+  <input id="re-apr" type="hidden" value="21.7">
+  <input id="re-streak" type="checkbox" checked hidden>
 
   <div class="re-out">
     <div class="re-tile hero">
@@ -114,8 +123,18 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
     </div>
   </div>
 
+  <div class="re-offer">
+    <div class="re-offer-head">Sign up with code <b id="re-code" title="Click to copy">RINGO5</b> and you get</div>
+    <ul>
+      <li><strong>Your first TH, paid for</strong><span>an $18.99 value, on us</span></li>
+      <li><strong>+5% bonus TH</strong><span>on your purchase, from the code</span></li>
+      <li><strong>10% cashback</strong><span>on any purchase of $10,000 or less</span></li>
+      <li><strong>5% cashback for life</strong><span>on every TH you reinvest in</span></li>
+    </ul>
+  </div>
+
   <div class="re-promo">
-    <span>New to GoMining? Code <b id="re-code" title="Click to copy">RINGO5</b> = +5% bonus TH</span>
+    <span>Live BTC price &amp; difficulty &middot; no signup to use</span>
     <a class="re-brand" data-cta="brand" data-href="/" href="https://gmt-optimizer.com/" target="_blank" rel="noopener">
       <img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
   </div>
@@ -123,8 +142,7 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
 
 <script>
 /* Host settings come in on the URL (the loader in /assets/embed.js builds it from data-*):
-     th, wth, gmt, apr   prefill the inputs (gmt/apr are then kept, not auto-filled)
-     streak=0            untick the click streak
+     th, wth, gmt        prefill the inputs (TH and GMT start at 0, efficiency at 12 W/TH)
      bg=transparent      drop the page background so the card sits on the host's
      src=<name>          campaign tag on outbound links (defaults to the host's domain)
    Applied before roi-embed.js initialises, so its first render already uses them. */
@@ -134,14 +152,13 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
     var v = parseFloat(q.get(k));
     return isFinite(v) && v >= min && v <= max ? String(v) : null;
   }
-  var set = { 're-th': num('th', 1, 1e6), 're-wth': num('wth', 12, 40), 're-gmt': num('gmt', 0, 1e9), 're-apr': num('apr', 0, 200) };
+  var set = { 're-th': num('th', 0, 1e6), 're-wth': num('wth', 12, 40), 're-gmt': num('gmt', 0, 1e9) };
   Object.keys(set).forEach(function (id) {
     if (set[id] == null) return;
     var el = document.getElementById(id);
     el.value = set[id];
     el.setAttribute('data-preset', '');
   });
-  if (q.get('streak') === '0') document.getElementById('re-streak').checked = false;
   if (q.get('bg') === 'transparent') document.documentElement.classList.add('transparent');
 
   // Outbound links are tagged so funnel traffic shows up in analytics by source.
@@ -177,6 +194,6 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
   }
 })();
 </script>
-<script src="/assets/roi-embed.js?v=20"></script>
+<script src="/assets/roi-embed.js?v=21"></script>
 </body>
 </html>

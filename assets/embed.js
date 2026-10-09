@@ -7,8 +7,7 @@
 
    Every [data-gmt-optimizer] element gets an iframe of /embed, sized to its content (the
    frame posts its height; this script applies it). Options, all optional, as data-*:
-     data-th, data-wth, data-gmt, data-apr   prefill the calculator
-     data-streak="0"                         untick the daily click streak
+     data-th, data-wth, data-gmt             prefill the calculator (default 0 TH, 12 W/TH, 0 GMT)
      data-bg="transparent"                   no page background around the card
      data-src="my-funnel"                    utm_source on outbound links (default: host domain)
      data-credit="off"                       hide the "by GMT Optimizer" line under the frame
@@ -19,7 +18,7 @@
 (function () {
   'use strict';
   var ORIGIN = 'https://gmt-optimizer.com';
-  var OPTS = ['th', 'wth', 'gmt', 'apr', 'streak', 'bg', 'src'];
+  var OPTS = ['th', 'wth', 'gmt', 'bg', 'src'];
   var frames = [];
 
   function mount(el) {
