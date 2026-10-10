@@ -104,16 +104,16 @@ html.theme-ember{
 </head>
 <body>
 <div id="roi-embed" class="re-loading">
-  <h2>Enter how much you'd put in to see what it would earn at today's prices.</h2>
-  <div class="re-basis" id="re-basis">loading live market data…</div>
+  <h2 data-i18n="title">Enter how much you'd put in to see what it would earn at today's prices.</h2>
+  <div class="re-basis" id="re-basis" data-i18n="loading">loading live market data…</div>
 
   <div class="re-inputs">
     <div class="re-field re-usd">
-      <label for="re-usd">Amount to invest ($)</label>
+      <label for="re-usd" data-i18n="amount">Amount to invest ($)</label>
       <input id="re-usd" type="number" inputmode="decimal" min="0" step="50" value="" placeholder="0">
     </div>
     <div class="re-field">
-      <label for="re-wth">Efficiency (W/TH)</label>
+      <label for="re-wth" data-i18n="eff">Efficiency (W/TH)</label>
       <input id="re-wth" type="number" inputmode="decimal" min="12" step="0.5" value="12">
     </div>
   </div>
@@ -127,49 +127,49 @@ html.theme-ember{
 
   <div class="re-out">
     <div class="re-tile hero">
-      <div class="k">Net / month</div>
+      <div class="k" data-i18n="kMonth">Net / month</div>
       <div class="v" id="re-be">—</div>
-      <div class="s" id="re-be-sub">mining + staking</div>
+      <div class="s" id="re-be-sub" data-i18n="sMonth">mining + staking</div>
     </div>
     <div class="re-tile">
-      <div class="k">12 months</div>
+      <div class="k" data-i18n="kYear">12 months</div>
       <div class="v" id="re-net">—</div>
-      <div class="s" id="re-net-sub">at today's rates</div>
+      <div class="s" id="re-net-sub" data-i18n="sYear">at today's rates</div>
     </div>
     <div class="re-tile">
-      <div class="k">Your discount</div>
+      <div class="k" data-i18n="kDisc">Your discount</div>
       <div class="v" id="re-disc">—</div>
-      <div class="s" id="re-disc-sub">on electricity</div>
+      <div class="s" id="re-disc-sub" data-i18n="sDisc">on electricity</div>
     </div>
     <div class="re-tile">
-      <div class="k">Cash back</div>
+      <div class="k" data-i18n="kCash">Cash back</div>
       <div class="v" id="re-cost">—</div>
-      <div class="s" id="re-cost-sub">with RINGO5</div>
+      <div class="s" id="re-cost-sub" data-i18n="sCash">with RINGO5</div>
     </div>
   </div>
 
-  <div class="re-hint" id="re-hint">—</div>
+  <div class="re-hint" id="re-hint" style="display:none"></div>
 
   <div class="re-foot">
-    <p class="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
+    <p class="note" data-i18n="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
     <div class="re-btns">
-      <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener">Claim your first TH →</a>
-      <a class="btn ghost" data-cta="console" data-href="/console" href="https://gmt-optimizer.com/console" target="_blank" rel="noopener">Full calculator</a>
+      <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener" data-i18n="claim">Claim your first TH →</a>
+      <a class="btn ghost" data-cta="console" data-href="/console" href="https://gmt-optimizer.com/console" target="_blank" rel="noopener" data-i18n="full">Full calculator</a>
     </div>
   </div>
 
   <div class="re-offer">
-    <div class="re-offer-head">Sign up with code <b id="re-code" title="Click to copy">RINGO5</b> and you get</div>
+    <div class="re-offer-head"><span data-i18n="offerA">Sign up with code</span> <b id="re-code" title="Click to copy" data-i18n-title="copyTip">RINGO5</b> <span data-i18n="offerB">and you get</span></div>
     <ul>
-      <li><strong>Your first TH, paid for</strong><span>an $18.99 value, on us</span></li>
-      <li><strong>+5% bonus TH</strong><span>on your purchase, from the code</span></li>
-      <li><strong>10% cashback</strong><span>on any purchase of $10,000 or less</span></li>
-      <li><strong>5% cashback for life</strong><span>on every TH you reinvest in</span></li>
+      <li><strong data-i18n="o1">Your first TH, on me</strong><span data-i18n="o1s">an $18.99 value</span></li>
+      <li><strong data-i18n="o2">+5% bonus TH</strong><span data-i18n="o2s">on your first miner, up to 25 TH, from GoMining</span></li>
+      <li><strong data-i18n="o3">10% cash back</strong><span data-i18n="o3s">on purchases up to $10,000</span></li>
+      <li><strong data-i18n="o4">Permanent 5% cash back</strong><span data-i18n="o4s">on every terahash upgrade</span></li>
     </ul>
   </div>
 
   <div class="re-promo">
-    <span>Live BTC price &amp; difficulty &middot; no signup to use</span>
+    <span data-i18n="promo">Live BTC price &amp; difficulty &middot; no signup to use</span>
     <a class="re-brand" data-cta="brand" data-href="/" href="https://gmt-optimizer.com/" target="_blank" rel="noopener">
       <img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
   </div>
@@ -182,6 +182,7 @@ html.theme-ember{
      theme=ember         the RinGoMining look (automatic when framed by ringomining.com)
      offer=off           hide the RINGO5 offer block (for a host page that already sells it)
      src=<name>          campaign tag on outbound links (defaults to the host's domain)
+     lang=fr|es|de       translate the card (English otherwise); the loader sends the host page's language
    Applied before roi-embed.js initialises, so its first render already uses them. */
 (function () {
   var q = new URLSearchParams(location.search);
@@ -198,6 +199,93 @@ html.theme-ember{
   });
   if (q.get('bg') === 'transparent') document.documentElement.classList.add('transparent');
   if (q.get('offer') === 'off') document.querySelector('.re-offer').remove();
+
+  // Language. Static text is swapped here; roi-embed.js picks up RE_LANG / RE_I18N for the
+  // numbers and sentences it writes. Unknown languages stay English.
+  var I18N = {
+    fr: {
+      title: "Indiquez combien vous mettriez pour voir ce que ça rapporterait aux prix d'aujourd'hui.",
+      loading: 'chargement des données de marché en direct…', amount: 'Montant à investir ($)', eff: 'Efficacité (W/TH)',
+      kMonth: 'Net / mois', sMonth: 'minage + staking', kYear: '12 mois', sYear: 'aux taux du jour',
+      kDisc: 'Votre remise', sDisc: "sur l'électricité", kCash: 'Cashback', sCash: 'avec RINGO5',
+      note: "Taux du jour, sur le prix du BTC et la difficulté en direct, pas une prévision : les récompenses varient avec le prix du Bitcoin et la difficulté du réseau. Pas un conseil financier.",
+      claim: 'Obtenir mon premier TH →', full: 'Calculateur complet',
+      offerA: 'Inscrivez-vous avec le code', offerB: 'et vous obtenez', copyTip: 'Cliquer pour copier', copied: 'COPIÉ',
+      o1: 'Votre premier TH, pour moi', o1s: 'valeur 18,99 $', o2: '+5 % de TH en bonus', o2s: "sur votre premier mineur, jusqu'à 25 TH, de la part de GoMining",
+      o3: '10 % remboursés', o3s: "sur vos achats jusqu'à 10 000 $", o4: '5 % remboursés en permanence', o4s: 'sur chaque amélioration de térahash',
+      promo: 'Prix du BTC et difficulté en direct · sans inscription',
+      cached: ' (en cache)',
+      minBuy: function (p, w) { return "Le plus petit achat est 1 TH, environ " + p + " à " + w + " W/TH, et avec RINGO5 ce premier TH vous est remboursé."; },
+      split: function (a, b) { return a + ' minage + ' + b + ' staking'; },
+      afterFees: 'minage, après frais', ofA: function (p, a) { return p + ' de ' + a + ' · aux taux du jour'; },
+      lock: ' blocage GMT', streak: ' série de clics', solo: ' solo', costSub: '1er TH + 10 % remboursés avec RINGO5',
+      hint: function (o) { return o.A + ' achète <b>' + o.th + ' TH</b> à ' + o.wth + ' W/TH' +
+        (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> bloqués pour la remise de 20 % sur les frais' : '') +
+        ', et le code RINGO5 ajoute <b>' + o.bonus + ' TH en bonus</b>. ' +
+        (o.lock ? 'Cette répartition rapporte plus que tout mettre en puissance de calcul aux prix du jour.'
+                : 'Aux prix du jour, tout mettre en puissance de calcul rapporte plus que bloquer du GMT pour la remise.') +
+        ' Après ' + o.cash + ' de cashback, ça vous coûte ' + o.net + '.'; }
+    },
+    es: {
+      title: 'Escribe cuánto pondrías para ver lo que ganaría a los precios de hoy.',
+      loading: 'cargando datos de mercado en vivo…', amount: 'Cantidad a invertir ($)', eff: 'Eficiencia (W/TH)',
+      kMonth: 'Neto / mes', sMonth: 'minería + staking', kYear: '12 meses', sYear: 'a las tasas de hoy',
+      kDisc: 'Tu descuento', sDisc: 'en electricidad', kCash: 'Reembolso', sCash: 'con RINGO5',
+      note: 'Tasas de hoy, con el precio de BTC y la dificultad en vivo, no una previsión: las recompensas cambian con el precio de Bitcoin y la dificultad de la red. No es asesoramiento financiero.',
+      claim: 'Obtén tu primer TH →', full: 'Calculadora completa',
+      offerA: 'Regístrate con el código', offerB: 'y recibes', copyTip: 'Clic para copiar', copied: 'COPIADO',
+      o1: 'Tu primer TH, por mi cuenta', o1s: 'valor de 18,99 $', o2: '+5 % de TH extra', o2s: 'en tu primer minero, hasta 25 TH, de parte de GoMining',
+      o3: '10 % de vuelta', o3s: 'en compras de hasta 10.000 $', o4: '5 % de vuelta permanente', o4s: 'en cada mejora de terahash',
+      promo: 'Precio de BTC y dificultad en vivo · sin registrarte',
+      cached: ' (en caché)',
+      minBuy: function (p, w) { return 'La compra mínima es 1 TH, unos ' + p + ' a ' + w + ' W/TH, y con RINGO5 ese primer TH se te devuelve.'; },
+      split: function (a, b) { return a + ' minería + ' + b + ' staking'; },
+      afterFees: 'minería, después de tarifas', ofA: function (p, a) { return p + ' de ' + a + ' · a las tasas de hoy'; },
+      lock: ' bloqueo de GMT', streak: ' racha de clics', solo: ' solo', costSub: '1er TH + 10 % de vuelta con RINGO5',
+      hint: function (o) { return o.A + ' compra <b>' + o.th + ' TH</b> a ' + o.wth + ' W/TH' +
+        (o.lock ? ' más <b>' + o.gmt + ' GMT</b> bloqueados para el descuento del 20 % en tarifas' : '') +
+        ', y el código RINGO5 suma <b>' + o.bonus + ' TH extra</b>. ' +
+        (o.lock ? 'Ese reparto gana más que ponerlo todo en hashrate a los precios de hoy.'
+                : 'A los precios de hoy, todo en hashrate gana más que bloquear GMT para el descuento.') +
+        ' Tras ' + o.cash + ' de reembolso, te cuesta ' + o.net + '.'; }
+    },
+    de: {
+      title: 'Gib ein, wie viel du investieren würdest, und sieh, was es zu heutigen Preisen bringen würde.',
+      loading: 'Live-Marktdaten werden geladen…', amount: 'Betrag zum Investieren ($)', eff: 'Effizienz (W/TH)',
+      kMonth: 'Netto / Monat', sMonth: 'Mining + Staking', kYear: '12 Monate', sYear: 'zu heutigen Kursen',
+      kDisc: 'Dein Rabatt', sDisc: 'auf Strom', kCash: 'Cashback', sCash: 'mit RINGO5',
+      note: 'Heutige Kurse auf Basis von Live-BTC-Preis und Difficulty, keine Prognose: Erträge schwanken mit dem Bitcoin-Preis und der Netzwerk-Difficulty. Keine Finanzberatung.',
+      claim: 'Ersten TH sichern →', full: 'Vollständiger Rechner',
+      offerA: 'Registriere dich mit dem Code', offerB: 'und du bekommst', copyTip: 'Klicken zum Kopieren', copied: 'KOPIERT',
+      o1: 'Dein erster TH geht auf mich', o1s: 'Wert 18,99 $', o2: '+5 % Bonus-TH', o2s: 'auf deinen ersten Miner, bis 25 TH, von GoMining',
+      o3: '10 % Cashback', o3s: 'auf Käufe bis 10.000 $', o4: 'Dauerhaft 5 % Cashback', o4s: 'auf jedes Terahash-Upgrade',
+      promo: 'Live-BTC-Preis & Difficulty · ohne Anmeldung',
+      cached: ' (zwischengespeichert)',
+      minBuy: function (p, w) { return 'Der kleinste Kauf ist 1 TH, etwa ' + p + ' bei ' + w + ' W/TH, und mit RINGO5 bekommst du diesen ersten TH zurück.'; },
+      split: function (a, b) { return a + ' Mining + ' + b + ' Staking'; },
+      afterFees: 'Mining, nach Gebühren', ofA: function (p, a) { return p + ' von ' + a + ' · zu heutigen Kursen'; },
+      lock: ' GMT-Lock', streak: ' Klick-Serie', solo: ' Solo', costSub: 'erster TH + 10 % zurück mit RINGO5',
+      hint: function (o) { return o.A + ' kauft <b>' + o.th + ' TH</b> bei ' + o.wth + ' W/TH' +
+        (o.lock ? ' plus <b>' + o.gmt + ' GMT</b>, gesperrt für 20 % Gebührenrabatt' : '') +
+        ', und der Code RINGO5 legt <b>' + o.bonus + ' Bonus-TH</b> obendrauf. ' +
+        (o.lock ? 'Diese Aufteilung bringt zu heutigen Preisen mehr, als alles in Hashrate zu stecken.'
+                : 'Zu heutigen Preisen bringt alles in Hashrate mehr, als GMT für den Rabatt zu sperren.') +
+        ' Nach ' + o.cash + ' Cashback kostet es dich ' + o.net + '.'; }
+    }
+  };
+  var lang = (q.get('lang') || 'en').slice(0, 2).toLowerCase();
+  var L = I18N[lang];
+  if (L) {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var v = L[el.getAttribute('data-i18n')]; if (typeof v === 'string') el.textContent = v;
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      var v = L[el.getAttribute('data-i18n-title')]; if (typeof v === 'string') el.title = v;
+    });
+    window.RE_LANG = lang;
+    window.RE_I18N = L;
+  }
 
   // Outbound links are tagged so funnel traffic shows up in analytics by source.
   var host = '';
@@ -229,7 +317,7 @@ html.theme-ember{
 
   var code = document.getElementById('re-code');
   code.addEventListener('click', function () {
-    try { navigator.clipboard.writeText('RINGO5').then(function () { code.textContent = 'COPIED'; setTimeout(function () { code.textContent = 'RINGO5'; }, 1400); }); } catch (e) {}
+    try { navigator.clipboard.writeText('RINGO5').then(function () { code.textContent = (L && L.copied) || 'COPIED'; setTimeout(function () { code.textContent = 'RINGO5'; }, 1400); }); } catch (e) {}
   });
 
   // Report our height to the host so the iframe fits the content with no inner scrollbar.
@@ -247,6 +335,6 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/roi-embed.js?v=22"></script>
+<script src="/assets/roi-embed.js?v=23"></script>
 </body>
 </html>

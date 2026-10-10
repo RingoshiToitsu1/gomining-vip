@@ -13,6 +13,7 @@
      data-offer="off"                        hide the RINGO5 offer block inside the frame
      data-src="my-funnel"                    utm_source on outbound links (default: host domain)
      data-credit="off"                       hide the "by GMT Optimizer" line under the frame
+     data-lang="fr"                          en | fr | es | de (default: the host page's <html lang>)
 
    CTA clicks inside the frame are re-dispatched on the host element as a
    `gmt-optimizer:cta` CustomEvent (detail.cta = "claim" | "console" | "brand").
@@ -21,6 +22,13 @@
   'use strict';
   var ORIGIN = 'https://gmt-optimizer.com';
   var OPTS = ['amount', 'wth', 'bg', 'theme', 'offer', 'src'];
+  var LANGS = ['en', 'fr', 'es', 'de'];
+  var CREDIT = {
+    en: ['GoMining ROI calculator', ' by GMT Optimizer'],
+    fr: ['Calculateur de rendement GoMining', ' par GMT Optimizer'],
+    es: ['Calculadora de rentabilidad GoMining', ' de GMT Optimizer'],
+    de: ['GoMining-Rendite-Rechner', ' von GMT Optimizer']
+  };
   var frames = [];
 
   function mount(el) {
@@ -31,6 +39,11 @@
       var v = el.getAttribute('data-' + k);
       if (v != null && v !== '') q.push(k + '=' + encodeURIComponent(v));
     });
+    // Language: data-lang wins, otherwise follow the host page so a translated page gets a
+    // translated calculator. Anything we don't have stays English.
+    var lang = (el.getAttribute('data-lang') || document.documentElement.lang || 'en').slice(0, 2).toLowerCase();
+    if (LANGS.indexOf(lang) < 0) lang = 'en';
+    if (lang !== 'en') q.push('lang=' + lang);
     var f = document.createElement('iframe');
     f.src = ORIGIN + '/embed/' + (q.length ? '?' + q.join('&') : '');
     f.title = 'GoMining ROI calculator by GMT Optimizer';
@@ -47,10 +60,10 @@
       p.style.cssText = 'margin:.5rem 0 0;font:12px/1.4 system-ui,sans-serif;opacity:.7;text-align:right';
       var a = document.createElement('a');
       a.href = ORIGIN + '/gomining-roi-calculator';
-      a.textContent = 'GoMining ROI calculator';
+      a.textContent = CREDIT[lang][0];
       a.style.color = 'inherit';
       p.appendChild(a);
-      p.appendChild(document.createTextNode(' by GMT Optimizer'));
+      p.appendChild(document.createTextNode(CREDIT[lang][1]));
       el.appendChild(p);
     }
   }

@@ -169,9 +169,32 @@
 
   // ---- render ----
   const $ = id => document.getElementById(id);
-  const money = n => { const d = Math.abs(n) < 100 ? 2 : 0;
-    return (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); };
-  const num = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  // Language: the /embed page sets window.RE_LANG and window.RE_I18N from ?lang=. Every
+  // other page that loads this file stays English, exactly as before.
+  const LANG = window.RE_LANG || 'en';
+  const LOCALE = { en: 'en-US', fr: 'fr-FR', es: 'es-ES', de: 'de-DE' }[LANG] || 'en-US';
+  const NB = '\u00a0';
+  const num = (n, d = 0) => n.toLocaleString(LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const money = n => { const d = Math.abs(n) < 100 ? 2 : 0; const s = num(Math.abs(n), d);
+    return (n < 0 ? '-' : '') + (LANG === 'en' ? '$' + s : s + NB + '$'); };
+  const pct = (n, d = 0) => num(n, d) + (LANG === 'en' ? '%' : NB + '%');
+  // Dollar-mode copy. English lives here; other languages come from the /embed page.
+  const EN = {
+    cached: ' (cached)',
+    minBuy: (p, w) => 'The smallest buy is 1 TH, about ' + p + ' at ' + w + ' W/TH, and with RINGO5 that first TH is paid back to you.',
+    split: (a, b) => a + ' mining + ' + b + ' staking',
+    afterFees: 'mining, after fees',
+    ofA: (p, a) => p + ' of ' + a + ' · at today\'s rates',
+    lock: ' GMT lock', streak: ' click streak', solo: ' solo',
+    costSub: 'first TH + 10% back with RINGO5',
+    hint: o => o.A + ' buys <b>' + o.th + ' TH</b> at ' + o.wth + ' W/TH' +
+      (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> locked for the 20% fee discount' : '') +
+      ', and RINGO5 adds <b>' + o.bonus + ' bonus TH</b> on top. ' +
+      (o.lock ? 'That split earns more than putting it all into hashrate at today\'s prices.'
+              : 'At today\'s prices, all hashrate earns more than locking GMT for the discount.') +
+      ' After ' + o.cash + ' cash back, it costs you ' + o.net + '.'
+  };
+  const tx = (k, ...a) => { const v = (window.RE_I18N && window.RE_I18N[k]) || EN[k]; return typeof v === 'function' ? v(...a) : v; };
 
 
   // ---- dollar mode (/embed only, switched on by a #re-usd input) ----
@@ -179,7 +202,9 @@
   // priced two ways — all hashrate, or hashrate plus the GMT that holds the 20% discount —
   // and the better one at today's prices is shown (the optimum is always one of those two
   // corners, never a split in between). The RINGO5 terms are counted in.
-  const REF_BONUS_TH     = 0.05;    // +5% bonus TH from the referral code
+  const REF_BONUS_TH     = 0.05;    // +5% bonus TH on the first miner, from GoMining via the referral code…
+  const REF_BONUS_CAP    = 25;      // …capped at 25 TH (docs.gomining.com referral program)
+  const bonusOf = th => Math.min(th * REF_BONUS_TH, REF_BONUS_CAP);
   const REF_FIRST_TH     = 18.99;   // first TH reimbursed by Ringo
   const REF_CASHBACK     = 0.10;    // 10% back on hashrate purchases…
   const REF_CASHBACK_CAP = 10000;   // …up to $10,000 spent ($1,000 back)
@@ -187,14 +212,14 @@
   // TH the budget buys. Cost is monotonic in TH, so bisect.
   function thForBudget(budget, wth, withLock) {
     const cost = th => th * cptAtEff(th, wth) + (withLock
-      ? model(th * (1 + REF_BONUS_TH), wth, 0, 0, true).gmtFor20 * S.gmt * (1 + USD_GMT_FEE) : 0);
+      ? model(th + bonusOf(th), wth, 0, 0, true).gmtFor20 * S.gmt * (1 + USD_GMT_FEE) : 0);
     let lo = 0, hi = budget / 10;
     for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (cost(mid) > budget) hi = mid; else lo = mid; }
     return lo;
   }
   function planFor(budget, wth, withLock, apr) {
     const th = thForBudget(budget, wth, withLock);
-    const thTot = th * (1 + REF_BONUS_TH);
+    const thTot = th + bonusOf(th);
     const gmt = withLock ? Math.ceil(model(thTot, wth, 0, 0, true).gmtFor20) : 0;
     return { th, thTot, gmt, withLock, m: model(thTot, wth, gmt, apr, true) };
   }
@@ -204,16 +229,18 @@
     const wth = Math.max(EFF_BEST, parseFloat($('re-wth').value) || EFF_BEST);
     const apr = Math.max(0, parseFloat($('re-apr').value) || 0);
     const basis = 'BTC ' + money(S.btc) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
-      num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)');
+      num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : tx('cached'));
     $('re-basis').textContent = basis;
     const minBuy = cptAtEff(1, wth);
+    const hintEl = $('re-hint');
     if (A < minBuy) {
       ['re-net', 're-disc', 're-be', 're-cost'].forEach(id => { $(id).textContent = '—'; });
-      $('re-hint').textContent = A > 0
-        ? 'The smallest buy is 1 TH, about ' + money(minBuy) + ' at ' + num(wth, 1) + ' W/TH — and with RINGO5 that first TH is paid back to you.'
-        : 'Enter how much you\'d put in to see what it would earn at today\'s prices.';
+      // Nothing entered yet: the heading already says what to do, so no prompt box.
+      hintEl.style.display = A > 0 ? '' : 'none';
+      hintEl.textContent = A > 0 ? tx('minBuy', money(minBuy), num(wth, 1)) : '';
       return;
     }
+    hintEl.style.display = '';
     const a = planFor(A, wth, false, apr), b = planFor(A, wth, true, apr);
     const p = (b.th >= 1 && b.m.netToday > a.m.netToday) ? b : a;
     const m = p.m, net = m.netToday;
@@ -222,27 +249,22 @@
 
     $('re-be').textContent = money(net * 30.44);
     $('re-be-sub').textContent = m.stakingToday > 0
-      ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'
-      : 'mining, after fees';
+      ? tx('split', money(m.miningToday * 30.44), money(m.stakingToday * 30.44))
+      : tx('afterFees');
     $('re-net').textContent = money(net * 365.25);
-    $('re-net-sub').textContent = num(net * 365.25 / A * 100, 1) + '% of ' + money(A) + ' · at today\'s rates';
-    $('re-disc').textContent = num(m.totD, 1) + '%';
+    $('re-net-sub').textContent = tx('ofA', pct(net * 365.25 / A * 100, 1), money(A));
+    $('re-disc').textContent = pct(m.totD, 1);
     const parts = [];
-    if (m.tok > 0) parts.push(m.tok + '% GMT lock');
-    if (m.vip.d > 0) parts.push(num(m.vip.d, 1) + '% ' + m.vip.n);
-    parts.push(CLICK_STREAK + '% click streak');
-    if (MINING_MODE > 0) parts.push(num(MINING_MODE, 2) + '% solo');
+    if (m.tok > 0) parts.push(pct(m.tok) + tx('lock'));
+    if (m.vip.d > 0) parts.push(pct(m.vip.d, 1) + ' ' + m.vip.n);
+    parts.push(pct(CLICK_STREAK) + tx('streak'));
+    if (MINING_MODE > 0) parts.push(pct(MINING_MODE, 2) + tx('solo'));
     $('re-disc-sub').textContent = parts.join(' + ');
     $('re-cost').textContent = money(cash);
-    $('re-cost-sub').textContent = 'first TH + 10% back with RINGO5';
+    $('re-cost-sub').textContent = tx('costSub');
 
-    $('re-hint').innerHTML = money(A) + ' buys <b>' + num(p.th, 1) + ' TH</b> at ' + num(wth, 1) + ' W/TH' +
-      (p.withLock ? ' plus <b>' + num(p.gmt, 0) + ' GMT</b> locked for the 20% fee discount' : '') +
-      ', and RINGO5 adds <b>' + num(p.thTot - p.th, 1) + ' bonus TH</b> on top. ' +
-      (p.withLock
-        ? 'That split earns more than putting it all into hashrate at today\'s prices.'
-        : 'At today\'s prices, all hashrate earns more than locking GMT for the discount.') +
-      ' After ' + money(cash) + ' cash back, it costs you ' + money(A - cash) + '.';
+    hintEl.innerHTML = tx('hint', { A: money(A), th: num(p.th, 1), wth: num(wth, 1), lock: p.withLock,
+      gmt: num(p.gmt, 0), bonus: num(p.thTot - p.th, 1), cash: money(cash), net: money(A - cash) });
   }
 
   function render() {
