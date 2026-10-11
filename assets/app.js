@@ -552,6 +552,7 @@ function openPlannerForm(){
     const n=$('piMpGreedyNote');if(n)n.style.display=$('piMpGreedy').checked?'':'none';
   }
   if($('piMpCode')&&$('inMpCode'))$('piMpCode').value=$('inMpCode').value;
+  if($('piThOnly')&&$('inThOnly'))$('piThOnly').checked=$('inThOnly').checked;
   if(window._incomeGoal&&isFinite(window._incomeGoal.targetDisp))document.getElementById('piTargetInput').value=Math.round(window._incomeGoal.targetDisp);
   setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
   showPanelView('plannerIntro');
@@ -602,6 +603,7 @@ function submitPlannerCapital(){
     $('inMpWth').value=(mpWthVal>0?mpWthVal:15);
     if($('piMpGreedy')&&$('inMpGreedy'))$('inMpGreedy').checked=$('piMpGreedy').checked;
     if($('piMpCode')&&$('inMpCode'))$('inMpCode').value=$('piMpCode').value.trim();
+    if($('piThOnly')&&$('inThOnly'))$('inThOnly').checked=$('piThOnly').checked;
     window._plannerCalcDone=true;
     window._incomeGoal=null;   // amount mode: drop any prior income-goal banner
     recalc();
@@ -756,6 +758,7 @@ function submitPlannerTarget(){
     const mpWthVal=parseFloat($('piMpWth').value);$('inMpWth').value=(mpWthVal>0?mpWthVal:15);
     if($('piMpGreedy')&&$('inMpGreedy'))$('inMpGreedy').checked=$('piMpGreedy').checked;
     if($('piMpCode')&&$('inMpCode'))$('inMpCode').value=$('piMpCode').value.trim();
+    if($('piThOnly')&&$('inThOnly'))$('inThOnly').checked=$('piThOnly').checked;
     // Target income is entered in the display currency; solve in USD.
     const targetDisp=parseFloat($('piTargetInput').value)||0;
     const targetUSD=targetDisp/(S.fxRate||1);
@@ -2255,7 +2258,7 @@ const SHARE_FIELDS=[
 const SHARE_CUR={USD:'',GBP:'G',EUR:'E'};
 function encodeShareV2(d){
   const v=x=>(x==null||x==='')?'':String(x);
-  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0)|(d.inMpGreedy?32:0);
+  const flags=(d.inClickStreak?1:0)|(d.inPayGMT?2:0)|(d.inAmbassador?4:0)|(d.piVipBonus?8:0)|(d.inAvatarDisc?16:0)|(d.inMpGreedy?32:0)|(d.inThOnly?64:0);
   const parts=[
     v(d.inTH),v(d.inWTH),v(d.inGMTLocked),v(d.inGMTWallet),v(d.inCapital),
     flags?flags.toString(36):'', SHARE_CUR[d.inCurrency]||'',
@@ -2274,7 +2277,7 @@ function decodeShareV2(s){
   const set=(k,i)=>{const x=g(i);if(x!==undefined)d[k]=x;};
   set('inTH',0);set('inWTH',1);set('inGMTLocked',2);set('inGMTWallet',3);set('inCapital',4);
   const flags=g(5)?(parseInt(g(5),36)||0):0;
-  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);d.inMpGreedy=!!(flags&32);
+  d.inClickStreak=!!(flags&1);d.inPayGMT=!!(flags&2);d.inAmbassador=!!(flags&4);d.piVipBonus=!!(flags&8);d.inAvatarDisc=!!(flags&16);d.inMpGreedy=!!(flags&32);d.inThOnly=!!(flags&64);
   const cur=g(6);d.inCurrency=cur==='G'?'GBP':cur==='E'?'EUR':'USD';
   set('inMpTH',7);set('inMpGMT',8);set('inMpWth',9);
   set('inGreedyTH',10);set('inGreedyInitial',11);set('inGreedyGrowth',12);
@@ -2551,6 +2554,9 @@ function inp(){
   // "This is a Greedy Machine" on the marketplace-miner block. Only the planner acts on it —
   // the miner isn't owned yet, so it must never reach calc()'s current-farm numbers.
   mpGreedy:!!($('inMpGreedy')&&$('inMpGreedy').checked),
+  // Planner "Put it all into TH": capital buys hashrate only — no new GMT is locked and no
+  // efficiency upgrade is bought. GMT already locked keeps earning its discount.
+  thOnly:!!($('inThOnly')&&$('inThOnly').checked),
   mpCode:(($('inMpCode')&&$('inMpCode').value)||'').trim(),
   gth:gth,
   gInit:+($('inGreedyInitial')?$('inGreedyInitial').value:0)||0,
@@ -2677,6 +2683,7 @@ function readInputs(){
     inContribFreq:($('inContribFreq')?$('inContribFreq').value:'monthly'),
     inMpTH:$('inMpTH').value, inMpGMT:$('inMpGMT').value, inMpWth:$('inMpWth').value,
     inMpGreedy:($('inMpGreedy')?$('inMpGreedy').checked:false),
+    inThOnly:($('inThOnly')?$('inThOnly').checked:false),
     inMpCode:($('inMpCode')?$('inMpCode').value:''),
     inGreedyTH:$('inGreedyTH').value, inGreedyInitial:$('inGreedyInitial').value, inGreedyGrowth:$('inGreedyGrowth').value,
     inGreedyWth:($('inGreedyWth')?$('inGreedyWth').value:''),
@@ -2716,6 +2723,7 @@ function applyInputs(d){
   if(d.inMpGMT!=null)$('inMpGMT').value=d.inMpGMT;
   if(d.inMpWth!=null)$('inMpWth').value=d.inMpWth;
   if(d.inMpGreedy!==undefined&&$('inMpGreedy'))$('inMpGreedy').checked=!!d.inMpGreedy;
+  if($('inThOnly'))$('inThOnly').checked=!!d.inThOnly;   // absent in older setups ⇒ off
   if(d.inMpCode!=null&&$('inMpCode'))$('inMpCode').value=d.inMpCode;
   if(d.inGreedyTH!=null)$('inGreedyTH').value=d.inGreedyTH;
   if(d.inGreedyInitial!=null)$('inGreedyInitial').value=d.inGreedyInitial;
@@ -2918,7 +2926,7 @@ function blankInputs(){
   return {
     inTH:'0',inWTH:'15',inGMTLocked:'0',inGMTWallet:'0',
     inCapital:'0',inClickStreak:false,inPayGMT:true,inAvatarDisc:false,
-    inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,inMpCode:'',
+    inMpTH:'0',inMpGMT:'0',inMpWth:'15',inMpGreedy:false,inMpCode:'',inThOnly:false,
     inContribAmt:'0',inContribFreq:'monthly',
     inGreedyTH:'0',inGreedyInitial:'0',inGreedyWth:'',inGreedyGrowth:GREEDY_GROWTH_DEFAULT,
     inAmbassador:false,inReferredTH:'0',inRefCapital:'0',inRefBonusPct:'5',inRefReinvest:'0',inRefPriorTH:'0',
@@ -3981,7 +3989,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
         fromPool,fromUSD,usdSpentOnGMT,gmtSell,thBudgetUSD,baseTH,bonusActive,bonusTH};
     }
     let lock=0;
-    if(i.payG){
+    if(i.payG&&!i.thOnly){
       const check0=solveAlloc(0);
       if(check0.deficit>0){
         let lo=0,hi=maxLockGMT;
@@ -4098,7 +4106,7 @@ function computeEffPlan(st){
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
   // dollar than buying new TH, divert that slice of the TH budget into the upgrade (whole farm).
   let effUSD=0, effTHupg=0, upgradeROI=0, newThROI=0;
-  const effRoom=hasEffRoom(i);   // false ⇒ everything is already at 12 W/TH; never offer the upgrade
+  const effRoom=hasEffRoom(i)&&!i.thOnly;   // false ⇒ all at 12 W/TH, or the user asked for TH only
   if(effRoom && i.th>0 && i.wth>EFF_BEST && thUSD>0){
     const cptU=effUpgradeCostPerTH(i.wth);
     const cptUnet=Math.max(0.01,cptU-lockFreedPerTH);   // net of the freed GMT-lock capital
@@ -4123,7 +4131,7 @@ function computeEffPlan(st){
   // the hashrate budget into the upgrade however poor the return. It now has to win the
   // same test the whole-farm overlay does, with its expected growth credited to it: the
   // saving accrues on the grown machine, while the upgrade is only paid for once.
-  if(effUSD<=0 && thUSD>0){
+  if(effUSD<=0 && thUSD>0 && !i.thOnly){
     const gr=(window.GMTFleetRows||[]).filter(r=>/greedy/i.test(r.collection||'')&&(+r.th||0)>0&&(+r.th||0)<MINER_CAP&&(+r.wth||15)>EFF_BEST).sort((a,b)=>b.th-a.th)[0];
     if(gr){
       const gwth=+gr.wth||EFF_BASE_MAX, gth=+gr.th||0;
@@ -4449,6 +4457,8 @@ function renderPlanner(i,m){
   }
   if(!i.payG){
     exp+=`<strong style="color:var(--cyan)">All to TH.</strong> GMT fee payment is off — all resources go to hashrate.`;
+  }else if(i.thOnly){
+    exp+=`<strong style="color:var(--cyan)">All to TH.</strong> You chose to put it all into hashrate, so no new GMT is locked. Your token discount is ${fP(ntd)} on what's already locked${canCover20?'':` — holding 20% at ${fN(nt,1)} TH would take ${fN(gmtShortfall,0)} more GMT (${fU(gmtShortfall*gp)})`}.`;
   }else if(!canCover20){
     exp+=`<strong style="color:var(--orange)">Not enough resources.</strong> You need ${fN(gmtNeededNew,0)} GMT total for 20% at ${fN(nt,1)} TH — you're ${fN(gmtShortfall,0)} GMT short.`;
   }else if(gmtLock<=0){
