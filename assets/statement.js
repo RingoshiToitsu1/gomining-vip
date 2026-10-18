@@ -594,14 +594,21 @@
       '</header>');
 
     // ---- hero ----
-    const heroCls = T.netUSD >= 0 ? 'pos' : 'neg';
+    // The headline includes any staking the preparer entered, so it matches the
+    // "Total income" KPI; the sub-line keeps mining and staking apart.
+    const netAll = T.netUSD + ST.usd;
+    const heroCls = netAll >= 0 ? 'pos' : 'neg';
+    const kStake = S.stakeShare ? share / 100 : 1;
+    const farmAll = T.netUSD / (share / 100) + ST.usd / kStake;
     doc.insertAdjacentHTML('beforeend',
       '<section class="hero ' + heroCls + '">' +
         '<div class="h-lab">Net income for the period' + (share < 100 ? ' — ' + esc(shareTxt) + ' share' : '') + '</div>' +
-        '<div class="h-big">' + esc(usd0(T.netUSD)) + '</div>' +
-        '<div class="h-sub">' + esc(btc(T.net)) + ' BTC net · ' + esc(usd0(T.netPerDay)) + ' average per day</div>' +
+        '<div class="h-big">' + esc(usd0(netAll)) + '</div>' +
+        '<div class="h-sub">' + (ST.usd > 0 ? esc(usd0(T.netUSD)) + ' mining + ' + esc(usd0(ST.usd)) + ' staking · ' : '') +
+          esc(btc(T.net)) + ' BTC net · ' + esc(usd0(netAll / T.days)) + ' average per day</div>' +
         '<div class="h-note">Valued at the BTC price on each day it was earned, after electricity and platform service fees.' +
-          (share < 100 ? ' This is ' + esc(shareTxt) + ' of a farm that earned ' + esc(usd0(T.netUSD / (share / 100))) + ' net over the same period.' : '') + '</div>' +
+          (ST.usd > 0 ? ' Includes veGoMining staking rewards entered by the preparer.' : '') +
+          (share < 100 ? ' This is ' + esc(shareTxt) + ' of a farm that earned ' + esc(usd0(farmAll)) + ' net over the same period.' : '') + '</div>' +
       '</section>');
 
     // ---- KPI row ----
