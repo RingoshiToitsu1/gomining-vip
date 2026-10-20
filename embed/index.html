@@ -153,7 +153,7 @@ html.theme-ember{
   <div class="re-foot">
     <p class="note" data-i18n="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
     <div class="re-btns">
-      <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener" data-i18n="claim">Claim your first TH →</a>
+      <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener" data-i18n="claim">Claim your RINGO5 bonus →</a>
       <a class="btn ghost" data-cta="console" data-href="/console" href="https://gmt-optimizer.com/console" target="_blank" rel="noopener" data-i18n="full">Full calculator</a>
     </div>
   </div>
@@ -161,7 +161,6 @@ html.theme-ember{
   <div class="re-offer">
     <div class="re-offer-head"><span data-i18n="offerA">Sign up with code</span> <b id="re-code" title="Click to copy" data-i18n-title="copyTip">RINGO5</b> <span data-i18n="offerB">and you get</span></div>
     <ul>
-      <li><strong data-i18n="o1">Your first TH, on me</strong><span data-i18n="o1s">an $18.99 value</span></li>
       <li><strong data-i18n="o2">+5% bonus TH</strong><span data-i18n="o2s">on your first miner, up to 25 TH, from GoMining</span></li>
       <li><strong data-i18n="o3">10% cash back</strong><span data-i18n="o3s">on purchases up to $10,000</span></li>
       <li><strong data-i18n="o4">Permanent 5% cash back</strong><span data-i18n="o4s">on every terahash upgrade</span></li>
@@ -209,16 +208,16 @@ html.theme-ember{
       kMonth: 'Net / mois', sMonth: 'minage + staking', kYear: '12 mois', sYear: 'aux taux du jour',
       kDisc: 'Votre remise', sDisc: "sur l'électricité", kCash: 'Cashback', sCash: 'avec RINGO5',
       note: "Taux du jour, sur le prix du BTC et la difficulté en direct, pas une prévision : les récompenses varient avec le prix du Bitcoin et la difficulté du réseau. Pas un conseil financier.",
-      claim: 'Obtenir mon premier TH →', full: 'Calculateur complet',
+      claim: 'Obtenir mon bonus RINGO5 →', full: 'Calculateur complet',
       offerA: 'Inscrivez-vous avec le code', offerB: 'et vous obtenez', copyTip: 'Cliquer pour copier', copied: 'COPIÉ',
-      o1: 'Votre premier TH, pour moi', o1s: 'valeur 18,99 $', o2: '+5 % de TH en bonus', o2s: "sur votre premier mineur, jusqu'à 25 TH, de la part de GoMining",
+      o2: '+5 % de TH en bonus', o2s: "sur votre premier mineur, jusqu'à 25 TH, de la part de GoMining",
       o3: '10 % remboursés', o3s: "sur vos achats jusqu'à 10 000 $", o4: '5 % remboursés en permanence', o4s: 'sur chaque amélioration de térahash',
       promo: 'Prix du BTC et difficulté en direct · sans inscription',
       cached: ' (en cache)',
-      minBuy: function (p, w) { return "Le plus petit achat est 1 TH, environ " + p + " à " + w + " W/TH, et avec RINGO5 ce premier TH vous est remboursé."; },
+      minBuy: function (p, w) { return "Le plus petit achat est 1 TH, environ " + p + " à " + w + " W/TH, et RINGO5 ajoute 5 % de TH en bonus sur votre premier mineur."; },
       split: function (a, b) { return a + ' minage + ' + b + ' staking'; },
       afterFees: 'minage, après frais', ofA: function (p, a) { return p + ' de ' + a + ' · aux taux du jour'; },
-      lock: ' blocage GMT', streak: ' série de clics', solo: ' solo', costSub: '1er TH + 10 % remboursés avec RINGO5',
+      lock: ' blocage GMT', streak: ' série de clics', solo: ' solo', costSub: '10 % remboursés avec RINGO5',
       hint: function (o) { return o.A + ' achète <b>' + o.th + ' TH</b> à ' + o.wth + ' W/TH' +
         (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> bloqués pour la remise de 20 % sur les frais' : '') +
         ', et le code RINGO5 ajoute <b>' + o.bonus + ' TH en bonus</b>. ' +
@@ -232,16 +231,16 @@ html.theme-ember{
       kMonth: 'Neto / mes', sMonth: 'minería + staking', kYear: '12 meses', sYear: 'a las tasas de hoy',
       kDisc: 'Tu descuento', sDisc: 'en electricidad', kCash: 'Reembolso', sCash: 'con RINGO5',
       note: 'Tasas de hoy, con el precio de BTC y la dificultad en vivo, no una previsión: las recompensas cambian con el precio de Bitcoin y la dificultad de la red. No es asesoramiento financiero.',
-      claim: 'Obtén tu primer TH →', full: 'Calculadora completa',
+      claim: 'Reclama tu bono RINGO5 →', full: 'Calculadora completa',
       offerA: 'Regístrate con el código', offerB: 'y recibes', copyTip: 'Clic para copiar', copied: 'COPIADO',
-      o1: 'Tu primer TH, por mi cuenta', o1s: 'valor de 18,99 $', o2: '+5 % de TH extra', o2s: 'en tu primer minero, hasta 25 TH, de parte de GoMining',
+      o2: '+5 % de TH extra', o2s: 'en tu primer minero, hasta 25 TH, de parte de GoMining',
       o3: '10 % de vuelta', o3s: 'en compras de hasta 10.000 $', o4: '5 % de vuelta permanente', o4s: 'en cada mejora de terahash',
       promo: 'Precio de BTC y dificultad en vivo · sin registrarte',
       cached: ' (en caché)',
-      minBuy: function (p, w) { return 'La compra mínima es 1 TH, unos ' + p + ' a ' + w + ' W/TH, y con RINGO5 ese primer TH se te devuelve.'; },
+      minBuy: function (p, w) { return 'La compra mínima es 1 TH, unos ' + p + ' a ' + w + ' W/TH, y RINGO5 suma un 5 % de TH extra en tu primer minero.'; },
       split: function (a, b) { return a + ' minería + ' + b + ' staking'; },
       afterFees: 'minería, después de tarifas', ofA: function (p, a) { return p + ' de ' + a + ' · a las tasas de hoy'; },
-      lock: ' bloqueo de GMT', streak: ' racha de clics', solo: ' solo', costSub: '1er TH + 10 % de vuelta con RINGO5',
+      lock: ' bloqueo de GMT', streak: ' racha de clics', solo: ' solo', costSub: '10 % de vuelta con RINGO5',
       hint: function (o) { return o.A + ' compra <b>' + o.th + ' TH</b> a ' + o.wth + ' W/TH' +
         (o.lock ? ' más <b>' + o.gmt + ' GMT</b> bloqueados para el descuento del 20 % en tarifas' : '') +
         ', y el código RINGO5 suma <b>' + o.bonus + ' TH extra</b>. ' +
@@ -255,16 +254,16 @@ html.theme-ember{
       kMonth: 'Netto / Monat', sMonth: 'Mining + Staking', kYear: '12 Monate', sYear: 'zu heutigen Kursen',
       kDisc: 'Dein Rabatt', sDisc: 'auf Strom', kCash: 'Cashback', sCash: 'mit RINGO5',
       note: 'Heutige Kurse auf Basis von Live-BTC-Preis und Difficulty, keine Prognose: Erträge schwanken mit dem Bitcoin-Preis und der Netzwerk-Difficulty. Keine Finanzberatung.',
-      claim: 'Ersten TH sichern →', full: 'Vollständiger Rechner',
+      claim: 'RINGO5-Bonus sichern →', full: 'Vollständiger Rechner',
       offerA: 'Registriere dich mit dem Code', offerB: 'und du bekommst', copyTip: 'Klicken zum Kopieren', copied: 'KOPIERT',
-      o1: 'Dein erster TH geht auf mich', o1s: 'Wert 18,99 $', o2: '+5 % Bonus-TH', o2s: 'auf deinen ersten Miner, bis 25 TH, von GoMining',
+      o2: '+5 % Bonus-TH', o2s: 'auf deinen ersten Miner, bis 25 TH, von GoMining',
       o3: '10 % Cashback', o3s: 'auf Käufe bis 10.000 $', o4: 'Dauerhaft 5 % Cashback', o4s: 'auf jedes Terahash-Upgrade',
       promo: 'Live-BTC-Preis & Difficulty · ohne Anmeldung',
       cached: ' (zwischengespeichert)',
-      minBuy: function (p, w) { return 'Der kleinste Kauf ist 1 TH, etwa ' + p + ' bei ' + w + ' W/TH, und mit RINGO5 bekommst du diesen ersten TH zurück.'; },
+      minBuy: function (p, w) { return 'Der kleinste Kauf ist 1 TH, etwa ' + p + ' bei ' + w + ' W/TH, und RINGO5 legt 5 % Bonus-TH auf deinen ersten Miner drauf.'; },
       split: function (a, b) { return a + ' Mining + ' + b + ' Staking'; },
       afterFees: 'Mining, nach Gebühren', ofA: function (p, a) { return p + ' von ' + a + ' · zu heutigen Kursen'; },
-      lock: ' GMT-Lock', streak: ' Klick-Serie', solo: ' Solo', costSub: 'erster TH + 10 % zurück mit RINGO5',
+      lock: ' GMT-Lock', streak: ' Klick-Serie', solo: ' Solo', costSub: '10 % zurück mit RINGO5',
       hint: function (o) { return o.A + ' kauft <b>' + o.th + ' TH</b> bei ' + o.wth + ' W/TH' +
         (o.lock ? ' plus <b>' + o.gmt + ' GMT</b>, gesperrt für 20 % Gebührenrabatt' : '') +
         ', und der Code RINGO5 legt <b>' + o.bonus + ' Bonus-TH</b> obendrauf. ' +
@@ -335,6 +334,6 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/roi-embed.js?v=23"></script>
+<script src="/assets/roi-embed.js?v=24"></script>
 </body>
 </html>

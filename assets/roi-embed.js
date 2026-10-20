@@ -181,12 +181,12 @@
   // Dollar-mode copy. English lives here; other languages come from the /embed page.
   const EN = {
     cached: ' (cached)',
-    minBuy: (p, w) => 'The smallest buy is 1 TH, about ' + p + ' at ' + w + ' W/TH, and with RINGO5 that first TH is paid back to you.',
+    minBuy: (p, w) => 'The smallest buy is 1 TH, about ' + p + ' at ' + w + ' W/TH, and RINGO5 adds 5% bonus TH on your first miner.',
     split: (a, b) => a + ' mining + ' + b + ' staking',
     afterFees: 'mining, after fees',
     ofA: (p, a) => p + ' of ' + a + ' · at today\'s rates',
     lock: ' GMT lock', streak: ' click streak', solo: ' solo',
-    costSub: 'first TH + 10% back with RINGO5',
+    costSub: '10% back with RINGO5',
     hint: o => o.A + ' buys <b>' + o.th + ' TH</b> at ' + o.wth + ' W/TH' +
       (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> locked for the 20% fee discount' : '') +
       ', and RINGO5 adds <b>' + o.bonus + ' bonus TH</b> on top. ' +
@@ -205,7 +205,6 @@
   const REF_BONUS_TH     = 0.05;    // +5% bonus TH on the first miner, from GoMining via the referral code…
   const REF_BONUS_CAP    = 25;      // …capped at 25 TH (docs.gomining.com referral program)
   const bonusOf = th => Math.min(th * REF_BONUS_TH, REF_BONUS_CAP);
-  const REF_FIRST_TH     = 18.99;   // first TH reimbursed by Ringo
   const REF_CASHBACK     = 0.10;    // 10% back on hashrate purchases…
   const REF_CASHBACK_CAP = 10000;   // …up to $10,000 spent ($1,000 back)
 
@@ -245,7 +244,7 @@
     const p = (b.th >= 1 && b.m.netToday > a.m.netToday) ? b : a;
     const m = p.m, net = m.netToday;
     const thSpend = p.th * cptAtEff(p.th, wth);
-    const cash = REF_FIRST_TH + REF_CASHBACK * Math.min(thSpend, REF_CASHBACK_CAP);
+    const cash = REF_CASHBACK * Math.min(thSpend, REF_CASHBACK_CAP);
 
     $('re-be').textContent = money(net * 30.44);
     $('re-be-sub').textContent = m.stakingToday > 0
