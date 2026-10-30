@@ -29,7 +29,7 @@ const {
 // Per-scenario economics at TODAY's price and difficulty — no forward projection.
 // Total-capital model: the GMT you must LOCK to hold the discount is
 // counted as invested capital, and the staking APR that GMT earns is counted as income.
-function model({th, bp, diff, disc, wth=EFF_BEST}){
+function model({th, bp, diff, disc, wth=EFF_BASE_MAX}){   // default: a new miner, 15 W only since 2026-10-30
   const now=Date.now();
   const dbt=dailyBTCperTH(diff);
   const gross=dbt*th;
@@ -173,7 +173,7 @@ function hashratePage(th, live, dateStr){
   <p>Every figure above is today's: live Bitcoin price (${usd(live.bp)}), live network difficulty, current fee rates and the ${STAKING_APR}% staking APR. None of it is projected forward, because a multi-year total printed into a static page is a number you did not choose and cannot inspect — and it will be read as a promise no matter how it is labelled. What happens next depends on the Bitcoin price, difficulty growth, the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving and whether you keep the discount funded. Those are your assumptions to set, so set them in the calculator and watch what moves.</p>
 ${CTA}`;
   const faq=[
-    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 12 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
+    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 15 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
     {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the ${CONVERSION_FEE*100}% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
     {q:`What will ${th} TH be earning in a few years?`,a:`Nobody can tell you that, and any page quoting a single number is guessing. It depends on the Bitcoin price, how fast network difficulty grows, whether you keep the fee discount funded, and the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving cutting the block subsidy in half. What this page gives you is today's figures, computed from live data. If you want a projection, run one in the calculator where you set the assumptions yourself and can see exactly what they are.`}
   ];
@@ -303,7 +303,7 @@ function injectLiveBlocks(live,dateStr){
   const yGood=good.yearlyUSD/good.totalCapital*100, yBad=bad.yearlyUSD/bad.totalCapital*100;
   const html=
 `  <div class="formula">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; updated ${dateStr.full}</div>
-  <p>Take a 50 TH setup at the best available efficiency (${EFF_BEST} W/TH). Buying the hashrate costs about
+  <p>Take a 50 TH setup on a new miner (${EFF_BASE_MAX} W/TH, the only efficiency GoMining sells new). Buying the hashrate costs about
   <strong>${usd(good.hashCost)}</strong>, and holding the maximum 20% fee discount means locking roughly
   <strong>${usd(good.gmtLockUSD)}</strong> of GMT — <strong>${usd(good.totalCapital)}</strong> of capital in total.
   That pays about <strong>${usd(good.monthlyUSD)}/month</strong>, or <strong>${yGood.toFixed(1)}% a year</strong>

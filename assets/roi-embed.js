@@ -21,22 +21,22 @@
   const BLOCK_SUBSIDY  = 3.125;   // BTC/block — halve at the 2028 halving
   const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
   const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
-  const EFF_BEST       = 12;      // best efficiency purchasable now (W/TH)
+  const EFF_BEST       = 12;      // best efficiency reachable, by upgrading a 15 W miner (W/TH)
   const EFF_BASE_MAX   = 15;      // cheaper marketplace hashrate (W/TH)
-  // % — GMT locked-staking APR (observed 2026-10-07). Kept in step with STAKING_APR in
+  // % — GMT locked-staking APR (observed 2026-10-30). Kept in step with STAKING_APR in
   // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 21.7;
-  const MINING_MODE    = 1.32;    // % — solo mining discount (console inMiningMode, observed 2026-10-07)
+  const STAKE_APR0     = 19.52;
+  const MINING_MODE    = 1.06;    // % — solo mining discount (console inMiningMode, observed 2026-10-30)
   const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
-  // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount.
+  // $/TH for 12 W/TH hashrate, pre-avatar-discount. No longer sold new (2026-10-30): 15 W price + $8.01 upgrade.
   const TH_TIERS_12W = [
-  {th:1,cpt:19.00},{th:2,cpt:18.91},{th:4,cpt:18.80},{th:8,cpt:18.75},
-  {th:16,cpt:18.62},{th:32,cpt:18.53},{th:48,cpt:18.44},{th:64,cpt:18.33},
-  {th:96,cpt:18.24},{th:128,cpt:18.15},{th:192,cpt:18.05},{th:256,cpt:17.96},
-  {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
-  {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
+  {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
+  {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
+  {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
+  {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
+  {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
 ];
 
   // VIP tiers — qualify on hashrate OR locked GMT, whichever lifts you higher.
@@ -58,11 +58,11 @@
   // NFT discount. Needed here because this widget lets the user enter their own W/TH:
   // pricing a 15 W farm off the 12 W curve overstated its capital by ~60%.
   const TH_TIERS_15W = [
-  {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
-  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
-  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
-  {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
-  {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+  {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
+  {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
+  {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
+  {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
+  {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
 ];
 
   function cptOf(th, T) {

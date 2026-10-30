@@ -27,9 +27,9 @@ const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passiv
 // ---- AMBASSADOR (referral) COMMISSION ----
 // GoMining pays an ambassador $0.005 per kWh their referrals' miners consume, so the stream is
 // driven by the referral's ENERGY draw — hashrate x W/TH — not by hashrate alone. A referral who
-// mints today runs at 12 W/TH and therefore pays 20% less than the 15 W/TH machines this used to
-// assume for everyone. Hand-entered "Referred TH" keeps the 15 W default (their vintage is unknown);
-// TH the Capital Planner mints for a referral is priced at EFF_BEST, because that is what it buys.
+// mints today gets a 15 W/TH machine (12 W stopped being sold 2026-10-30). Hand-entered "Referred TH"
+// keeps the 15 W default too; TH the Capital Planner mints for a referral is priced at EFF_NEW,
+// because that is what it buys.
 const AMB_RATE_PER_KWH = 0.005;
 const AMB_DEFAULT_WTH  = 15;
 function ambDailyUSD(th,wth){return Math.max(0,+th||0)*((wth>0?wth:AMB_DEFAULT_WTH)*24/1000)*AMB_RATE_PER_KWH;}
@@ -56,9 +56,11 @@ const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;ret
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
 
 // ---- TH COST TIERS ----
-// 15 W/TH hashrate — the cheaper, less efficient curve. Applies whether you are minting
-// or adding TH: at a given efficiency the price per TH is the same either way. The split
-// against TH_TIERS_12W is by EFFICIENCY, not mint-versus-upgrade.
+// 15 W/TH hashrate — since 2026-10-30 the ONLY machine GoMining mints (12 W/TH was pulled from
+// sale; you can still upgrade a 15 W machine down to 12 W). Applies whether you are minting or
+// adding TH. Repriced 2026-10-30 from all twenty tiers — this time a RISE (1 TH $11.49 → $13.00
+// list), grossed up /0.95 from quotes net of the 5% NFT discount; every tier round-trips exactly.
+// Older history below.
 // Repriced 2026-07-30 (cut ~9.5%), then +11.77% GoMining-wide on 2026-09-08. All twenty tiers
 // re-observed 2026-09-08 against a 1 TH 15 W miner and written here exactly, so nothing on this
 // curve is extrapolated. The flat +11.77% estimate it replaced was already within a cent on
@@ -69,11 +71,11 @@ const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver'
 // 5% NFT discount and are grossed up by /0.95 to the list price a reader actually pays;
 // every tier round-trips to the quote exactly.
 const TH_TIERS=[
-  {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
-  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
-  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
-  {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
-  {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+  {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
+  {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
+  {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
+  {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
+  {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
 ];
 function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
 function estimateCPT(th){
@@ -102,7 +104,11 @@ function thForBudget(budget){
 /* ============================================================
    12 W/TH economics — new-miner pricing & efficiency upgrades
    ============================================================ */
-// New miners can ONLY be created at 12 W/TH now, at this tiered $/TH (tiers down with block size).
+// 12 W/TH hashrate is NO LONGER SOLD NEW (2026-10-30). The only way to get it is to mint at 15 W
+// and pay the 15 → 12 efficiency upgrade, so this curve is DERIVED: TH_TIERS + 3 × EFF_UPGRADE_STEP
+// ($8.01/TH) at every tier. Keep it that way on a reprice — it is what 12 W hashrate costs, and
+// every path that prices a 12 W machine (cptAtEff, 12 W top-ups) stays right without special cases.
+// History of the old minted curve, for reference:
 // Repriced 2026-07-25: GoMining cut 12 W/TH pricing, and the volume taper compressed with it —
 // 20.0% end-to-end down to 13.8%. Four CONFIRMED observations anchor the curve:
 //   1 TH $19.99 (was 21.99) · 64 TH $18.33 · 512 TH $17.78 · 5000 TH $17.24 (was 17.60)
@@ -112,11 +118,11 @@ function thForBudget(budget){
 // Stored PRE-avatar-discount: quotes come net of the 5% NFT discount and are grossed up by
 // /0.95, because avatarDiscMult() applies that discount separately.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.00},{th:2,cpt:18.91},{th:4,cpt:18.80},{th:8,cpt:18.75},
-  {th:16,cpt:18.62},{th:32,cpt:18.53},{th:48,cpt:18.44},{th:64,cpt:18.33},
-  {th:96,cpt:18.24},{th:128,cpt:18.15},{th:192,cpt:18.05},{th:256,cpt:17.96},
-  {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
-  {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
+  {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
+  {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
+  {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
+  {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
+  {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
 ];
 // Efficiency upgrades are bought one W/TH step at a time, and the step price depends on the rating
 // you step DOWN FROM: cheap at the inefficient end, $2.67 on the last three steps into 12 W/TH.
@@ -135,7 +141,7 @@ const TOTAL_DISCOUNT_KEY='gmt_total_discount';
 // the planner and projection so the numbers can be trusted without taking it on faith. Update
 // this in the same commit as the curves — a stale date is worse than none, because it claims
 // freshness the figures no longer have.
-const TH_PRICES_ASOF='8 Sep 2026';
+const TH_PRICES_ASOF='30 Oct 2026';
 function openPriceInfo(){
   const el=document.getElementById('pxInfo');
   if(!el)return;
@@ -149,9 +155,9 @@ function openPriceInfo(){
     const av=(typeof avatarDiscMult==='function')&&avatarDiscMult()<1;
     el.innerHTML=`<div class="px-info-card"><button type="button" class="px-info-x" onclick="openPriceInfo()" aria-label="Close">&times;</button>
       <div class="px-info-t">Where these numbers come from</div>
-      <div class="px-info-b">Both TH price curves were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong> — all twenty tiers of each, no interpolation. Everything the planner, the projection and the quote page cost is priced from them.</div>
-      <table class="px-tbl"><tr><th>TH</th><th>New miner<span>12 W/TH</span></th><th>Add hashrate<span>15 W/TH</span></th></tr>
-      ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS_12W,th))}</td><td>${fU(q(TH_TIERS,th))}</td></tr>`).join('')}
+      <div class="px-info-b">New miners are 15 W/TH only — GoMining no longer sells 12 W machines. All twenty tiers of the 15 W curve were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong>, no interpolation; 12 W hashrate is that price plus the 15&rarr;12 upgrade. Everything the planner, the projection and the quote page cost is priced from them.</div>
+      <table class="px-tbl"><tr><th>TH</th><th>New miner<span>15 W/TH</span></th><th>Upgraded<span>12 W/TH</span></th></tr>
+      ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS,th))}</td><td>${fU(q(TH_TIERS_12W,th))}</td></tr>`).join('')}
       </table>
       <div class="px-info-n">${av?'Your prices, with the 5% avatar discount applied':'Prices per TH'}. Efficiency upgrades are priced separately, per TH for each W/TH step: ${EFF_UPGRADE_BANDS.map((b,k)=>`${fU(b.step)} from ${k?EFF_UPGRADE_BANDS[k-1].upTo:EFF_BEST}–${b.upTo} W`).join(', ')}. BTC, GMT and network difficulty are live, not dated.</div></div>`;
     el.removeAttribute('hidden');
@@ -168,11 +174,15 @@ document.addEventListener('click',function(e){
 function thPriceBadge(extraClass){
   return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
     title="See what these prices are and when they were last checked">
-    <span class="px-dot"></span>12&nbsp;W &amp; 15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
+    <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
 }
 const EFF_BEST=12;            // best efficiency available now
 const EFF_BASE_MAX=15;        // the 15 W/TH hashrate curve; also the marketplace-machine baseline
-const MINER_CAP=5000;         // TH per machine via upgrades before a new 12 W machine is required
+const MINER_CAP=5000;         // TH per machine via upgrades before a new machine is required
+// What a freshly minted machine gets. GoMining mints 15 W/TH only since 2026-10-30, so every "buy new
+// hashrate" path prices off TH_TIERS at this rating; reaching 12 W is a separate upgrade decision.
+const EFF_NEW=EFF_BASE_MAX;
+const TH_TIERS_NEW=TH_TIERS;
 
 // Interpolate any tiered $/TH price table.
 function cptTier(tiers,th){
@@ -213,7 +223,7 @@ function effectiveCompoundedROI(i,m){
     let wth=i.wth>0?i.wth:EFF_BASE_MAX;
     let gTH=gth0;                                 // greedy hashrate, its own rating
     let locked=Math.max(0,i.gl||0);
-    const value=()=>{const tot=th+gTH;return tot*estimateCPT12(tot||1)+locked*gp;};
+    const value=()=>{const tot=th+gTH;return tot*cptTier(TH_TIERS_NEW,tot||1)+locked*gp;};
     const start=value();
     if(!(start>0))return null;
     for(let w=0;w<52;w++){
@@ -241,8 +251,8 @@ function effectiveCompoundedROI(i,m){
         if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
       }
       if(budget>0){
-        const add=thForBudget12(budget*(1-USD_GMT_FEE));
-        if(add>0){wth=(th*wth+add*EFF_BEST)/(th+add);th+=add;}
+        const add=thForBudgetTiers(budget*(1-USD_GMT_FEE),TH_TIERS_NEW);
+        if(add>0){wth=(th*wth+add*EFF_NEW)/(th+add);th+=add;}
       }
     }
     return {roi:(value()/start-1)*100,start,end:value(),thEnd:th+gTH,lockedEnd:locked};
@@ -309,19 +319,22 @@ function applyAddSizes(sizes,x){
 // through unconditionally ("the plan upgrades it"), which priced 15 W top-ups off the 12 W curve
 // and reported them as 12 W even when the plan spent $0 on upgrades.
 // inclGreedy=false excludes the greedy outright (the projection tracks it as its own miner).
-function existingMinerSizes(inclGreedy){
+// Since 12 W stopped being minted, new hashrate is 15 W, so the toppable miners are the ones AT 15 W
+// (pass w to ask for another rating). Topping up a 12 W miner is 12 W hashrate — the derived curve.
+function existingMinerSizes(inclGreedy,w){
+  var at=w||EFF_NEW;
   return (window.GMTFleetRows||[])
     .filter(function(r){
       var g=/greedy/i.test(r.collection||'');
       if(!((+r.th||0)>0&&(+r.th||0)<MINER_CAP))return false;
       if(g&&inclGreedy===false)return false;
-      return (+r.wth||15)<=EFF_BEST+1e-6;
+      return Math.abs((+r.wth||15)-at)<0.05;
     })
     .map(function(r){return +r.th||0;})
     .sort(function(a,b){return b-a;});
 }
-function costToAdd12(x,sizes){ return costToAddTiers(x,sizes||existingMinerSizes(),TH_TIERS_12W); }
-function thForBudget12Ex(budget){ return thForBudgetFromSizes(budget,existingMinerSizes(),TH_TIERS_12W); }
+function costToAdd12(x,sizes){ return costToAddTiers(x,sizes||existingMinerSizes(undefined,EFF_BEST),TH_TIERS_12W); }
+function thForBudget12Ex(budget){ return thForBudgetFromSizes(budget,existingMinerSizes(undefined,EFF_BEST),TH_TIERS_12W); }
 // $/TH at a FRACTIONAL efficiency, interpolated linearly in W between the 12 W and 15 W
 // curves and clamped to [12,15]. A 12.9 W miner is priced ~30% of the way from the 12 W
 // curve toward 15 W — not snapped to either cliff. Mirrors cptAtEff in scripts/constants.js.
@@ -660,7 +673,7 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
   const othW=othTH>0?Math.max(EFF_BEST,(finTH*finW-gTH*gW)/othTH):finW;
   const gGrow=Math.max(0,+(i.ggrow||0))/100;
   const WK=52/12;
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_BEST))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_NEW))*30;
   const gmtW=Math.max(0,a.gmtReserve||0);
   const out=[];
   for(let mo=1;mo<=months;mo++){
@@ -703,7 +716,7 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
   // NOT refPriorTH: that hashrate is already inside the Ambassador "referred TH" figure, so
   // counting it here would pay the user twice for the same miners.
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW))*30;
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -2589,7 +2602,7 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.32;   // observed 2026-10-07
+const MINING_MODE_DEFAULT=1.06;   // observed 2026-10-30
 // Greedy Machine free weekly growth. A platform rate, not a preference, so a saved setup still
 // carrying a previous default has to pick up the new one — but the field also invites the user
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
@@ -2600,7 +2613,7 @@ const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36']
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
-const MINING_MODE_PAST_DEFAULTS=[0.7,0.82,0.83,0.88,0.9,1.06,1.2,1.28,1.35,1.36];
+const MINING_MODE_PAST_DEFAULTS=[0.7,0.82,0.83,0.88,0.9,1.2,1.28,1.32,1.35,1.36];
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
@@ -3871,8 +3884,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     const COV=360;
     function refSolve(gmtUSD){
       const ag=gmtUSD*(1-USD_GMT_FEE)/gp, thUSD=refCap-gmtUSD;
-      const at=thUSD>0?thForBudget12(thUSD*(1-USD_GMT_FEE)):0;
-      const fT=fees(at||1,EFF_BEST,bp);   // a referral's capital mints a new machine ⇒ 12 W/TH
+      const at=thUSD>0?thForBudgetTiers(thUSD*(1-USD_GMT_FEE),TH_TIERS_NEW):0;
+      const fT=fees(at||1,EFF_NEW,bp);   // a referral's capital mints a new machine ⇒ 15 W/TH
       const vT=vipOf(at,ag);
       const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
       const burn=(fT.t*(1-ntd/100)*bp)/gp;
@@ -3915,16 +3928,16 @@ function solvePlannerAllocation(i, bp, gp, dbt){
 
   const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
 
-  // VIP-only blended efficiency (existing farm + freshly minted TH, which is 12 W/TH only).
-  function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_BEST)/(i.th+addTH):i.wth}
+  // VIP-only blended efficiency (existing farm + freshly minted TH, which is 15 W/TH only).
+  function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_NEW)/(i.th+addTH):i.wth}
   // Total blended efficiency including the marketplace miner — drives fees.
-  // addTH = freshly minted hashrate (12 W by definition). addG = hashrate added to the greedy,
+  // addTH = freshly minted hashrate (15 W by definition). addG = hashrate added to the greedy,
   // which inherits THAT machine's rating — a 15 W greedy grows by 15 W TH, it does not self-heal.
   function blendWTH(addTH,addG,addGWatts){
     const aG=Math.max(0,addG||0);
     const tot=i.th+addTH+mpTH+gth0+aG;
     const gWatts=(gth0*gwth0)+(addGWatts!=null?addGWatts:aG*gwth0);
-    return tot>0?(i.th*i.wth+addTH*EFF_BEST+mpTH*mpWth+gWatts)/tot:i.wth;
+    return tot>0?(i.th*i.wth+addTH*EFF_NEW+mpTH*mpWth+gWatts)/tot:i.wth;
   }
 
   let reserveNeeded=0;
@@ -3962,8 +3975,8 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const gFill=fillGreedy(thBudgetUSD);
       const addGreedy=gFill.tot, addGreedyWatts=gFill.watts, gAdds=gFill.add;
       let thLeftUSD=addGreedy>0?gFill.left:thBudgetUSD;
-      // Whatever is left mints fresh 12 W hashrate, topping up other 12 W miners first.
-      const baseVipTH=thLeftUSD>0?thForBudgetFromSizes(thLeftUSD,existingMinerSizes(false),TH_TIERS_12W):0;
+      // Whatever is left mints fresh 15 W hashrate, topping up other 15 W miners first.
+      const baseVipTH=thLeftUSD>0?thForBudgetFromSizes(thLeftUSD,existingMinerSizes(false),TH_TIERS_NEW):0;
       const bonusActive=vipBonus&&thBudgetUSD>=VIP_BONUS_MIN;
       const addVip=bonusActive?baseVipTH*VIP_BONUS_MULT:baseVipTH;
       const baseTH=addGreedy+baseVipTH;
@@ -4026,7 +4039,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const vipTH=i.th+addVip+Math.max(0,greedyTot-gInit); // VIP tier basis (excl. initial mkt greedy + mpTH)
   const nt=i.th+addVip+greedyTot+mpTH; // total hashrate for rewards + fees
   const newLocked=i.gl+sol.lock;
-  const bwth=blendWTH(addVip,addGreedy,sol.addGreedyWatts);   // minted TH at 12 W, greedy top-up at its own machine's rating
+  const bwth=blendWTH(addVip,addGreedy,sol.addGreedyWatts);   // minted TH at 15 W, greedy top-up at its own machine's rating
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
@@ -4114,8 +4127,8 @@ function computeEffPlan(st){
     if(cptU>0 && cap>0){
       const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
       upgradeROI=savedMo*12/(cap*cptUnet);   // ROI on the NET cost (saves fees AND frees GMT-lock capital)
-      const cptTH=estimateCPT12((i.th+addTH)||1);   // alternative is MINTING new 12 W TH
-      const thNetMo=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
+      const cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);   // alternative is MINTING new 15 W TH
+      const thNetMo=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
         const upgradeCost=cap*cptU;
@@ -4144,8 +4157,8 @@ function computeEffPlan(st){
         const gCptUnet=Math.max(0.01,gCptU-gLockFreed);
         const gSavedYrPerTH=0.0012*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
         const gROI=(gSavedYrPerTH*grownAvg)/(gth*gCptUnet);
-        const cptTHg=estimateCPT12((i.th+addTH)||1);
-        const thNetMoG=(dbt*bp-(0.0012*EFF_BEST+0.0089)*(1-d))*(1-cf)*30;
+        const cptTHg=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
+        const thNetMoG=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
         const thROIg=cptTHg>0?thNetMoG*12/cptTHg:0;
         if(gROI>thROIg){
           const gEff=Math.min(thUSD,gth*gCptU);
@@ -4165,10 +4178,10 @@ function computeEffPlan(st){
   const gthv=Math.max(0,i.gth||0), gwthv=gthv>0?(i.gwth>0?i.gwth:15):0;
   const gCode=_greedy?(_greedy.code?`#${escapeHtml(String(_greedy.code))}`:'your greedy machine'):(gthv>0?'your greedy machine':'');
   const addG=gthv>0?Math.min(Math.max(0,MINER_CAP-gthv),addTH):0;   // TH that grows the greedy
-  const addNew=Math.max(0,addTH-addG);                              // TH needing a fresh 12 W machine
+  const addNew=Math.max(0,addTH-addG);                              // TH needing a fresh 15 W machine
   const effIsGreedy=gthv>0&&gwthv>EFF_BEST&&effTHupg>0.5&&effTHupg<=gthv+1;
   const gUpg=effIsGreedy?Math.min(gthv,effTHupg):0, ngUpg=effIsGreedy?0:Math.min(i.th,effTHupg);
-  const ngWatts=(i.th-ngUpg)*i.wth+ngUpg*EFF_BEST+addNew*EFF_BEST, ngTHf=i.th+addNew, ngWthf=ngTHf>0?ngWatts/ngTHf:i.wth;
+  const ngWatts=(i.th-ngUpg)*i.wth+ngUpg*EFF_BEST+addNew*EFF_NEW, ngTHf=i.th+addNew, ngWthf=ngTHf>0?ngWatts/ngTHf:i.wth;
   // One efficiency per NFT: hashrate added to the greedy inherits the rating that machine has
   // AFTER whatever upgrade this plan pays for — 15 W if the upgrade was gated out. Counting it
   // as 12 W was what made the farm average read better than the farm actually is.
@@ -4186,7 +4199,7 @@ function computeEffPlan(st){
   if(i.th>0 && i.wth>EFF_BEST){
     const cptU=Math.max(0.01,effUpgradeCostPerTH(i.wth)-lockFreedPerTH);
     if(cptU>0){
-      const M=0.0012*EFF_BEST+0.0089, cptTH=estimateCPT12((i.th+addTH)||1);
+      const M=0.0012*EFF_NEW+0.0089, cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
       const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
       if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
     }
@@ -4212,7 +4225,7 @@ function renderEfficiencyComparison(st){
   h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
   h+=`<div class="eff-verdict-sub">${effRoom
     ?'Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.'
-    :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.'}</div>`;
+    :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. '+(i.th>0||i.gth>0?'Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.':'New machines mint at 15 W/TH — GoMining no longer sells 12 W. Once you own the hashrate, the planner weighs upgrading it.')}</div>`;
   h+=`</div>`;
 
   const lockPct=lockUSD/tot*100, thPct=thUSD/tot*100, effPct=effUSD/tot*100;
@@ -4330,12 +4343,12 @@ function buyFillPlan(addTH){
   const isG=r=>/greedy/i.test(r.collection||'');
   const all=(window.GMTFleetRows||[])
     .filter(r=>(+r.th||0)>0&&(+r.th||0)<MINER_CAP)
-    .map(r=>({code:r.code,th:+r.th||0,wth:Math.min(EFF_BASE_MAX,Math.max(EFF_BEST,+r.wth||EFF_BASE_MAX)),greedy:isG(r)}));
-  // Greedy first (it also compounds weekly), then miners already at 12 W, largest first for the
-  // cheapest marginal tier. A non-greedy machine above 12 W is NOT a target: it would need an
-  // efficiency upgrade before it could take the hashrate, which is a different line of the plan.
+    .map(r=>({code:r.code,th:+r.th||0,raw:+r.wth||EFF_BASE_MAX,wth:Math.min(EFF_BASE_MAX,Math.max(EFF_BEST,+r.wth||EFF_BASE_MAX)),greedy:isG(r)}));
+  // Greedy first (it also compounds weekly), then miners at the rating new TH is minted at (15 W),
+  // largest first for the cheapest marginal tier. Any other non-greedy machine is NOT a target: its
+  // added TH would carry its own rating, not the one the plan bought.
   const order=all.filter(r=>r.greedy).sort((a,b)=>b.th-a.th)
-    .concat(all.filter(r=>!r.greedy&&r.wth<=EFF_BEST+1e-6).sort((a,b)=>b.th-a.th));
+    .concat(all.filter(r=>!r.greedy&&Math.abs(r.raw-EFF_NEW)<0.05).sort((a,b)=>b.th-a.th));
   let left=addTH; const steps=[];
   for(const r of order){
     if(left<=0.5)break;
@@ -4347,7 +4360,7 @@ function buyFillPlan(addTH){
   }
   while(left>0.5){
     const add=Math.min(MINER_CAP,left); left-=add;
-    steps.push({label:'New machine',greedy:false,from:0,add,wth:EFF_BEST,cost:costToGrow12(0,add),existing:false});
+    steps.push({label:'New machine',greedy:false,from:0,add,wth:EFF_NEW,cost:costToGrowTiers(0,add,TH_TIERS_NEW),existing:false});
   }
   return steps;
 }
@@ -4357,11 +4370,11 @@ function buyFillPlan(addTH){
 function buyFillSummary(steps){
   if(!steps||!steps.length)return null;
   const th=steps.reduce((a,s)=>a+s.add,0);
-  const wth=th>0?steps.reduce((a,s)=>a+s.add*s.wth,0)/th:EFF_BEST;
+  const wth=th>0?steps.reduce((a,s)=>a+s.add*s.wth,0)/th:EFF_NEW;
   const f=steps[0];
   return {th,wth,
     mixed:steps.some(s=>Math.abs(s.wth-wth)>0.05),
-    name:f.existing?f.label+(f.greedy?' (greedy)':''):`a new ${fN(EFF_BEST,0)} W machine`,
+    name:f.existing?f.label+(f.greedy?' (greedy)':''):`a new ${fN(EFF_NEW,0)} W machine`,
     onExisting:f.existing, more:steps.length-1, first:f};
 }
 function buyCapHTML(addTH){
@@ -4451,7 +4464,7 @@ function renderPlanner(i,m){
   // the reader to find it below the split and wonder why it isn't in the pot.
   if(ref&&i.refCap>0){
     exp+=`<strong style="color:var(--green)">Referral:</strong> their ${fU(i.refCap)} buys <strong>${fN(ref.at,1)} TH</strong> and locks <strong>${fN(ref.ag,0)} GMT</strong>`;
-    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_BEST)*30)}/mo</strong> in ambassador rewards`;
+    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_NEW)*30)}/mo</strong> in ambassador rewards`;
     if(refBonusGMT>0)exp+=` plus a one-off <strong style="color:var(--text2)">${fN(refBonusGMT,0)} GMT</strong> bonus (${fU(refBonusUSD)}), which IS in the pot below`;
     exp+=`. <span style="color:var(--text3)">Their ${fU(i.refCap)} is their capital, not yours — it never enters the split.</span><br>`;
   }
@@ -4565,7 +4578,7 @@ function renderPlanner(i,m){
   // Their existing TH is already counted in the Ambassador figure above — it only joins the
   // fleet so it COMPOUNDS. Adding it to the ambassador basis here would bill it twice.
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
-  const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_BEST);
+  const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW);
   const projAmbMo=projAmbDaily*30;
   // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
   // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
@@ -4644,11 +4657,11 @@ function renderPlanner(i,m){
     ph+=`<div class="divider"></div>`;
     ph+=`<div class="sub-title">Referral's planned allocation (${fU(i.refCap)})</div>`;
     // Show the actual USD ALLOCATED to each (TH budget + GMT budget = refCap exactly). Pricing
-    // the TH at the user's own i.cpt was wrong — a referral mints NEW 12 W machines (~$15/TH), so
+    // the TH at the user's own i.cpt was wrong — a referral mints NEW 15 W machines (~$11-13/TH), so
     // the old line under-counted and the split didn't sum to the capital they invested.
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(ref.thUSD)} invested${refPriorTH>0?` &middot; on top of ${fN(refPriorTH,0)} TH they already own`:''}</span>`,'cyan');
     ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(Math.max(0,i.refCap-ref.thUSD))} invested</span>`,'cyan');
-    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_BEST)*30)}/mo`,'green');
+    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_NEW)*30)}/mo`,'green');
     if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
@@ -5108,7 +5121,7 @@ function computeSetupProjection(){
   const _bwStart=(th+MP_TH+greedyTH)>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/(th+MP_TH+greedyTH):curWTH;
 
   // Ambassador USDT = hand-entered referred TH (efficiency unknown -> 15 W) plus the referral the
-  // Capital Planner just funded (minted at 12 W). `ambDaily` is a LET: with a referral reinvest
+  // Capital Planner just funded (minted at 15 W). `ambDaily` is a LET: with a referral reinvest
   // rate set it is re-derived every week as their fleet grows.
   const manualRefTH=i.amb?Math.max(0,i.refTH||0):0;
   // Opt-in: what share of their own rewards the referral ploughs back in. 0 = a static fleet,
@@ -5116,7 +5129,7 @@ function computeSetupProjection(){
   const refReinvest=Math.max(0,Math.min(100,+i.refReinvest||0))/100;
   const refBonusRate=(i.refBonusPct>0?i.refBonusPct:5)/100;
   const refAmbBasis=()=>Math.max(0,refFleetTH-REF_AMB_EXCL);
-  let ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_BEST);
+  let ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_NEW);
   let totalAmbUSD=0, totalRefBonusUSD=0, refFleetStartTH=refFleetTH;
 
   let bpToday=bpStart;
@@ -5192,14 +5205,14 @@ function computeSetupProjection(){
       mining:miningUSD,staking:stakingUSD,amb:ambDaily,greedy:greedyUSD,disc:fd,tokD:td,vip:v.n};
   }
   // The referral's farm, run on the same rules as yours: each week their rewards top their own
-  // coverage back to 360 days first, then mint fresh 12 W hashrate. You are paid `refBonusRate`
+  // coverage back to 360 days first, then mint fresh 15 W hashrate. You are paid `refBonusRate`
   // of that TH spend, returned here as reinvestable income so the allocator splits it like any
   // other dollar. Their growing fleet also lifts `ambDaily`. Runs only when the user has opted
   // in with a reinvest rate — at 0 their fleet stays exactly as the planner bought it.
   function refFleetWeek(){
     if(!(refFleetTH>0&&refReinvest>0))return 0;
     refFleetLocked+=refFleetLocked*(apr/100)/52;              // their locked GMT stakes too
-    const f=fees(refFleetTH,EFF_BEST,bpToday);
+    const f=fees(refFleetTH,EFF_NEW,bpToday);
     const v=vipOf(refFleetTH,refFleetLocked);
     const ntd=Math.min(30,v.d);                                // VIP only — their streak/mode is unknown
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;                   // their daily GMT fee burn
@@ -5212,8 +5225,8 @@ function computeSetupProjection(){
     const gmtSpend=i.payG?Math.min(spend,Math.max(0,burn*360-refFleetLocked)*gp):0;
     refFleetLocked+=gmtSpend/gp;
     const thSpend=spend-gmtSpend;
-    if(thSpend>0)refFleetTH+=thForBudget12(thSpend);
-    ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_BEST);
+    if(thSpend>0)refFleetTH+=thForBudgetTiers(thSpend,TH_TIERS_NEW);
+    ambDaily=ambDailyUSD(manualRefTH,AMB_DEFAULT_WTH)+ambDailyUSD(refAmbBasis(),EFF_NEW);
     const bonus=thSpend*refBonusRate;                          // your commission on their TH spend
     totalRefBonusUSD+=bonus;
     return bonus;
@@ -5284,28 +5297,28 @@ function computeSetupProjection(){
         // Discount-first allocation: minimum GMT lock so 20% holds, remainder to TH.
         let gmtSpend=0;
         if(i.payG){
-          // Size the lock off the SAME price table the reinvest step actually buys at (12W),
-          // otherwise the cheaper 15W curve overestimates the TH bought and over-locks GMT.
-          const allTH=th+thForBudgetFromSizes(netUSD,vipSizes,TH_TIERS_12W);
+          // Size the lock off the SAME price table the reinvest step actually buys at (new 15 W),
+          // otherwise the TH bought — and so the GMT lock it needs — is misestimated.
+          const allTH=th+thForBudgetFromSizes(netUSD,vipSizes,TH_TIERS_NEW);
           if(gmtDeficit(allTH,gmtLocked)>0){
             let lo=0,hi=netUSD;
-            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudgetFromSizes(thRem,vipSizes,TH_TIERS_12W):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
+            for(let k=0;k<40;k++){const mid=(lo+hi)/2;const agT=mid/gp;const thRem=netUSD-mid;const atT=thRem>0?thForBudgetFromSizes(thRem,vipSizes,TH_TIERS_NEW):0;if(gmtDeficit(th+atT,gmtLocked+agT)<=0)hi=mid;else lo=mid;}
             gmtSpend=hi;
           }
         }
         gmtLocked+=gmtSpend/gp;                 // discount-first lock
         let budget=netUSD-gmtSpend;
-        // Marginal allocator: each step spend `incr` on buy TH @12W /
+        // Marginal allocator: each step spend `incr` on buy TH @15W /
         // upgrade efficiency toward 12 / lock GMT for staking. Efficiency is PREFERRED over staking
         // while mining is alive or rescuable — a lower W/TH lowers break-even and keeps the miner
         // earning longer, which the myopic daily-ROI of staking ignores. Staking only wins once the
         // farm is fully efficient (12 W) or mining is truly dead (even a 12 W farm nets $0) — we never
         // bank GMT while a cheaper miner could still be saved, nor fund hashrate that can't earn.
-        // New VIP TH is priced as a 12 W/TH machine; greedy fills first, each machine on its own curve.
+        // New VIP TH is priced as a 15 W/TH machine (the only one sold); greedy fills first, each machine on its own curve.
         if(budget>0){
           const STEPS=12, incr=budget/STEPS;
           for(let s=0;s<STEPS;s++){
-            // --- option BUY: fill a greedy machine first, remainder a new 12 W VIP machine ---
+            // --- option BUY: fill a greedy machine first, remainder a new 15 W VIP machine ---
             let gTH2=greedyTH,gW2=greedyWTH,vTH2=th,vW2=curWTH,gFillIx=-1,gFillAdd=0;
             // Biggest machine with room first (cheapest marginal tier). The cap belongs to the
             // machine, not the fleet: a full one is skipped while its sibling keeps filling, and
@@ -5317,15 +5330,15 @@ function computeSetupProjection(){
               gTH2=greedyTH+gFillAdd;
               gW2=gTH2>0?(gWattsTot()+gFillAdd*gCand.m.wth)/gTH2:greedyWTH;
               const rem=incr*(1-gFillAdd/gT);
-              if(rem>0){const vAdd=thForBudgetFromSizes(rem,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;}
+              if(rem>0){const vAdd=thForBudgetFromSizes(rem,vipSizes,TH_TIERS_NEW);vW2=(th*curWTH+vAdd*EFF_NEW)/(th+vAdd);vTH2=th+vAdd;}
             }else{
-              const vAdd=thForBudgetFromSizes(incr,vipSizes,TH_TIERS_12W);vW2=(th*curWTH+vAdd*EFF_BEST)/(th+vAdd);vTH2=th+vAdd;
+              const vAdd=thForBudgetFromSizes(incr,vipSizes,TH_TIERS_NEW);vW2=(th*curWTH+vAdd*EFF_NEW)/(th+vAdd);vTH2=th+vAdd;
             }
             const buyNet=dailyNet(vTH2,gmtLocked,{wth:vW2,greedyTH:gTH2,greedyWTH:gW2}).net;
             // --- option EFF: drive efficiency toward 12 W/TH (stepped $/TH per W/TH, EFF_UPGRADE_BANDS). ---
             // GREEDY IS ALWAYS UPGRADED FIRST, even when the VIP farm sits at a worse W/TH. The two
-            // fleets are not symmetric: every TH bought now mints at 12 W/TH, so the VIP farm blends
-            // its own efficiency down for free as it reinvests — but the Greedy Machine's weekly free
+            // fleets are not symmetric: the VIP farm's rating is set by the allocator (new TH mints at
+            // 15 W/TH, and it can buy the upgrade like any other option) — but the Greedy Machine's weekly free
             // TH inherits whatever rating the machine already has, so it never self-heals, and the
             // upgrade bill grows with the machine (delaying 5 yr at 1%/wk costs 13x more).
             let effNet=-Infinity, effApply=null;
@@ -5467,8 +5480,8 @@ function computeSetupProjection(){
     h+=`<div class="ri-single-card">
       <div class="ri-label">Your Referral's Fleet (End of Period)</div>
       <div class="ri-headline cyan">${fN(refFleetTH,1)} TH</div>
-      <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 12 W/TH${refReinvest>0?` &middot; reinvesting ${fN(refReinvest*100,0)}% of their rewards`:' &middot; static (no reinvest rate set)'}</div>
-      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_BEST)*30)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
+      <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 15 W/TH${refReinvest>0?` &middot; reinvesting ${fN(refReinvest*100,0)}% of their rewards`:' &middot; static (no reinvest rate set)'}</div>
+      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_NEW)*30)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
     </div>`;
     if(totalRefBonusUSD>0){
       h+=`<div class="ri-single-card">
@@ -5951,10 +5964,10 @@ function copyFooterAddr(addr){
 function obNewUser(){
   // Zero out all onboarding fields
   ['obTH','obGMTLocked','obGMTWallet'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0'});
-  // A brand-new miner can only mint a 12 W/TH machine, so seed the 12W rating and its $/TH —
-  // never the 15W marketplace figures, which describe hardware they cannot buy.
-  const wth=document.getElementById('obWTH');if(wth)wth.value=String(EFF_BEST);
-  const cpt=document.getElementById('obCPT');if(cpt)cpt.value=estimateCPT12(0).toFixed(2);
+  // A brand-new miner can only mint a 15 W/TH machine (12 W left sale 2026-10-30), so seed that
+  // rating and its $/TH.
+  const wth=document.getElementById('obWTH');if(wth)wth.value=String(EFF_NEW);
+  const cpt=document.getElementById('obCPT');if(cpt)cpt.value=cptTier(TH_TIERS_NEW,0).toFixed(2);
   const apr=document.getElementById('obLockAPR');if(apr)apr.value='23.1';
   const cs=document.getElementById('obClickStreak');if(cs)cs.checked=false;
   const pg=document.getElementById('obPayGMT');if(pg)pg.checked=true;
