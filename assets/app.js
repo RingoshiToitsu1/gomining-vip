@@ -486,7 +486,7 @@ function _activateTab(b,push){
   // Reflect the view in the URL so the tabs are real pages (/planner, /console) — unless we're
   // syncing FROM the URL via back/forward (push===false).
   if(push!==false){
-    const t=b.dataset.tab, u=t==='tab-planner'?'/planner':t==='tab-current'?'/console':null;
+    const t=b.dataset.tab, u=t==='tab-planner'?'/planner':t==='tab-odds'?'/odds':t==='tab-current'?'/console':null;
     if(u&&location.pathname.replace(/\/+$/,'')!==u){try{history.pushState({tab:t},'',u);}catch(e){}}
   }
   // First visit to the planner auto-opens the full-page form; navigating in from another tab
@@ -495,6 +495,8 @@ function _activateTab(b,push){
   if(b.dataset.tab==='tab-planner'&&(!window._plannerCalcDone||(prev&&prev.id==='tab-planner'))){openPlannerForm();}
   // Switching to My Setup from another tab replays the count-up animation.
   if(b.dataset.tab==='tab-current'&&(!prev||prev.id!=='tab-current')){refreshMySetupAnimation();}
+  // Odds (assets/odds.js) builds + runs itself whenever its tab is shown, however it was reached.
+  if(b.dataset.tab==='tab-odds'&&typeof window.openOdds==='function'){window.openOdds();}
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>_activateTab(b,true)));
 // Back/forward between /console and /planner switches the tab without pushing a new history entry.
@@ -502,7 +504,7 @@ addEventListener('popstate',function(){
   closeAllPanels();   // any history navigation closes an open panel (Edit/Planner/Projection/Chart)
   const seg=location.pathname.replace(/\/+$/,'').split('/').pop();
   if(seg==='edit'){ openEditSetup(); return; }
-  const id=seg==='planner'?'tab-planner':'tab-current';
+  const id=seg==='planner'?'tab-planner':seg==='odds'?'tab-odds':'tab-current';
   const b=document.querySelector('[data-tab="'+id+'"]');
   if(b&&!b.classList.contains('active'))_activateTab(b,false);
 });
@@ -6070,5 +6072,5 @@ function _activateTabById(id){
   }
   // Plain tab views own no panel, so set the URL here.
   _activateTabById(view==='planner'?'tab-planner':view==='odds'?'tab-odds':'tab-current');
-  try{history.replaceState({},'',(view==='planner'?'/planner':view==='odds'?'/console?view=odds':'/console')+location.hash);}catch(e){}
+  try{history.replaceState({},'',(view==='planner'?'/planner':view==='odds'?'/odds':'/console')+location.hash);}catch(e){}
 })();

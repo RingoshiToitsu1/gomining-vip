@@ -273,8 +273,6 @@
     run();
   }
   window.openOdds=onShow;
-  const btn=document.querySelector('[data-tab="tab-odds"]');
-  if(btn)btn.addEventListener('click',onShow);
   // Deep link (/console?view=odds) activates the tab before this file loads — catch up.
   const tab=$o('tab-odds');if(tab&&tab.classList.contains('active'))onShow();
 })();

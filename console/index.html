@@ -1273,8 +1273,8 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 </div>
 
 <script src="/assets/chart-shot.js?v=1"></script>
-<script src="/assets/app.js?v=158"></script>
-<script src="/assets/odds.js?v=5"></script>
+<script src="/assets/app.js?v=159"></script>
+<script src="/assets/odds.js?v=6"></script>
 <script src="/assets/fleet.js?v=20"></script>
 <!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1370,7 +1370,7 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 </script>
-<script src="/assets/menu.js?v=9"></script>
+<script src="/assets/menu.js?v=10"></script>
 <style>
 .ytp{position:relative;margin:0 0 1.1rem;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:linear-gradient(180deg,rgba(245,166,35,.07),transparent),var(--bg-card)}
 .ytp[hidden]{display:none}
