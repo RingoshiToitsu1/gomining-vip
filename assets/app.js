@@ -6069,6 +6069,6 @@ function _activateTabById(id){
     case 'planner-projection': _activateTabById('tab-planner'); openSetupProjection('planner'); return;
   }
   // Plain tab views own no panel, so set the URL here.
-  _activateTabById(view==='planner'?'tab-planner':'tab-current');
-  try{history.replaceState({},'',(view==='planner'?'/planner':'/console')+location.hash);}catch(e){}
+  _activateTabById(view==='planner'?'tab-planner':view==='odds'?'tab-odds':'tab-current');
+  try{history.replaceState({},'',(view==='planner'?'/planner':view==='odds'?'/console?view=odds':'/console')+location.hash);}catch(e){}
 })();

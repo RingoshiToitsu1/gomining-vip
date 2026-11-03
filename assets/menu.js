@@ -20,6 +20,7 @@
     { h: 'Tools', items: [
       { t: 'Console', d: 'Your farm\'s live profit and loss', href: '/console', run: ['consoleView', 'tab-current'], m: ['/console'] },
       { t: 'Capital Planner', d: 'The best split for new capital', href: '/console?view=planner', run: ['consoleView', 'tab-planner'], m: ['/planner'] },
+      { t: 'Odds', d: 'Chances a TH buy pays back', href: '/console?view=odds', run: ['consoleView', 'tab-odds'], badge: 'New' },
       { t: 'Growth Projection', d: 'Your farm, years ahead', href: '/console?view=projection', run: ['openSetupProjection'], m: ['/projection', '/planner/projection'] },
       { t: 'Edit Farm', d: 'Miners, GMT and discounts', href: '/console?view=edit', run: ['openEditSetup'], m: ['/edit'] },
       { t: 'Marketplace Checker', d: 'Is that miner a good deal?', href: '/gomining-marketplace-checker', badge: 'New' },

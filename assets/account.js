@@ -451,7 +451,7 @@
   // data and prompt them to make an account to reveal it and save the fleet.
   // The card adapts to whether they've entered any miners yet (window.GMTFleet,
   // broadcast by fleet.js via the 'gmt-fleet' event).
-  var GATE_IDS = ['tab-current', 'tab-planner'];
+  var GATE_IDS = ['tab-current', 'tab-planner', 'tab-odds'];
   function fleetState() { return window.GMTFleet || { count: 0, th: 0 }; }
   function gateCardHTML() {
     var f = fleetState();
