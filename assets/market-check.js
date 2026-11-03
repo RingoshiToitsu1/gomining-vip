@@ -3,7 +3,8 @@
    Paste a miner link from app.gomining.com/nft/view/<id>; the page reads that miner's
    hashrate, efficiency and asking price through the nft-lookup Supabase function (GoMining's
    API sends no CORS header, so the browser can't read it directly), then prices the listing
-   against the only alternative every buyer has: minting the same TH new at 12 W/TH.
+   against the only alternative every buyer has: minting the same TH new. GoMining stopped selling
+   12 W/TH machines; every new miner is 15 W/TH now, and 12 W is only reachable by upgrading one.
 
    Two ways to own a secondhand miner are compared, because efficiency is the whole story on
    the secondary market:
@@ -32,7 +33,7 @@
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const STAKE_APR        = 21.7;    // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
+  const STAKE_APR        = 19.52;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
   const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
@@ -42,21 +43,22 @@
   const GREEDY_GROWTH_DEFAULT = 0.3347;                              // %/wk — console inGreedyGrowth default; observed, not a constant
   const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36']; // mirror of app.js: a saved old default is not the user's own number
 
-  // $/TH for newly minted 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W.
+  // $/TH for 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W: no longer sold new,
+  // so it is the 15 W price plus the 15 → 12 upgrade (3 × $2.67 = $8.01/TH).
   const TH_TIERS_12W = [
-    {th:1,cpt:19.00},{th:2,cpt:18.91},{th:4,cpt:18.80},{th:8,cpt:18.75},
-    {th:16,cpt:18.62},{th:32,cpt:18.53},{th:48,cpt:18.44},{th:64,cpt:18.33},
-    {th:96,cpt:18.24},{th:128,cpt:18.15},{th:192,cpt:18.05},{th:256,cpt:17.96},
-    {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
-    {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
+    {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
+    {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
+    {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
+    {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
+    {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
   ];
-  // $/TH for hashrate added at 15 W/TH, pre-avatar-discount. Mirror of TH_TIERS.
+  // $/TH for new 15 W/TH hashrate, pre-avatar-discount — the only machine GoMining mints. Mirror of TH_TIERS.
   const TH_TIERS = [
-    {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
-    {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
-    {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
-    {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
-    {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+    {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
+    {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
+    {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
+    {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
+    {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
   ];
   const EFF_BASE_MAX = 15;          // the 15 W/TH hashrate curve
   const GREEDY_CAP   = 5000;        // max TH per miner via manual upgrades; passive growth compounds past it
@@ -70,6 +72,7 @@
     return T[0].cpt;
   }
   const cpt12 = th => cptTier(TH_TIERS_12W, th);
+  const cptNew = th => cptTier(TH_TIERS, th);         // a newly minted miner, 15 W/TH
   // $/TH at a miner's own rating, linear in W between the 12 W and 15 W curves. Mirror of cptAtEff.
   function cptAtEff(th, w) {
     const f = (Math.min(Math.max(w, EFF_BEST), EFF_BASE_MAX) - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
@@ -135,9 +138,10 @@
   function evaluate(th, w, priceGMT, disc) {
     const cost = priceGMT * S.gmt;                        // what the listing costs, at market
     const upg = th * upgPerTH(w);                         // one-time, to reach 12 W
-    const newCost = th * cpt12(th);                       // mint the same TH new at 12 W
+    const newCost = th * cptNew(th);                      // mint the same TH new, at 15 W
     const netAsIs = netPerTH(w, disc) * th;               // mining only
     const net12 = netPerTH(EFF_BEST, disc) * th;
+    const netNew = netPerTH(EFF_BASE_MAX, disc) * th;
     const canUpgrade = w > EFF_BEST + 1e-9;
 
     // Total capital, as everywhere else on the site. Your discount is only yours on THIS miner if
@@ -152,20 +156,20 @@
       const net = mining + stake(lock), capital = hw + lock;
       return { cost: hw, lock, mining, net, capital, y: capital > 0 ? (net * 365) / capital : 0 };
     };
-    const lockAsIs = lockFor(w), lock12 = lockFor(EFF_BEST);
+    const lockAsIs = lockFor(w), lock12 = lockFor(EFF_BEST), lockNew = lockFor(EFF_BASE_MAX);
     const routes = {
       asIs:     route(cost, lockAsIs, netAsIs),
       upgraded: canUpgrade ? route(cost + upg, lock12, net12) : null,
-      fresh:    route(newCost, lock12, net12)
+      fresh:    route(newCost, lockNew, netNew)
     };
     const best = routes.upgraded && routes.upgraded.y > routes.asIs.y ? 'upgraded' : 'asIs';
     const yF = routes.fresh.y;
     const vsNew = r => (r && yF > 0 ? r.y / yF - 1 : null);
 
     // Highest asking price at which this listing still matches minting new, per route.
-    // Upgraded: what's left of the new-miner cost after the upgrade (same income and lock as new).
-    // As-is:    the price at which its income + staking earns the new miner's yield on its capital.
-    const fairUpg = canUpgrade ? Math.max(0, newCost - upg) : 0;
+    // Both are yield-matched: the price at which that route's income + staking earns the new miner's
+    // yield on its capital. Upgraded also pays the upgrade, and runs at 12 W where new runs at 15 W.
+    const fairUpg = canUpgrade && yF > 0 ? Math.max(0, (net12 + stake(lock12)) * 365 / yF - lock12 - upg) : 0;
     const fairAsIs = yF > 0 ? Math.max(0, routes.asIs.net * 365 / yF - lockAsIs) : 0;
     const fairUSD = Math.max(fairUpg, fairAsIs);
 
@@ -243,7 +247,7 @@
     $('mc-t-cost').textContent = money(e.cost);
     $('mc-t-cost-s').textContent = num(p, 0) + ' GMT · ' + money(e.cost / th) + '/TH';
     $('mc-t-new').textContent = money(e.newCost);
-    $('mc-t-new-s').textContent = num(th, 2).replace(/\.?0+$/, '') + ' TH new @ ' + money(cpt12(th)) + '/TH';
+    $('mc-t-new-s').textContent = num(th, 2).replace(/\.?0+$/, '') + ' TH new @ ' + money(cptNew(th)) + '/TH';
     $('mc-t-net').textContent = money(bestR.net * MO);
     $('mc-t-net-s').textContent = (e.best === 'upgraded' ? 'a month, after upgrading' : 'a month, as it is') + (bestR.lock > 0 ? ' · incl. ' + money(stakeMo(bestR)) + ' staking' : '');
     const fairGMT = e.fairUSD / S.gmt;
@@ -257,14 +261,14 @@
     $('mc-rows').innerHTML =
       row('Buy this listing as it is', e.routes.asIs, num(w, 2).replace(/\.?0+$/, '') + ' W/TH', e.best === 'asIs') +
       row('Buy it and upgrade to 12 W', e.routes.upgraded, '+' + money(e.upg) + ' upgrade', e.best === 'upgraded') +
-      row('Mint the same TH new', e.routes.fresh, '12 W/TH', false, true);
+      row('Mint the same TH new', e.routes.fresh, '15 W/TH', false, true);
     $('mc-tbl-note').textContent = e.tok > 0
       ? 'GMT lock = the GMT that keeps your ' + num(e.tok, 0) + '% token discount on this hashrate (18 days of fees per 1%). It isn\'t spent: it earns ' + STAKE_APR + '% staking, included in net. A year on capital = net ÷ (cost + GMT lock).'
       : 'No token discount set, so no GMT lock is needed. A year on capital = net ÷ cost.';
 
     const hint = $('mc-upg');
     if (!e.canUpgrade) {
-      hint.textContent = 'This miner is already at 12 W/TH, the best efficiency GoMining sells, so there is no upgrade to price in.';
+      hint.textContent = 'This miner is already at 12 W/TH, the best efficiency there is, so there is no upgrade to price in.';
     } else if (e.upgSaveDay <= 0) {
       hint.textContent = 'The upgrade to 12 W/TH costs ' + money(e.upg) + ' but saves nothing at your discount today, so keep it as it is.';
     } else {

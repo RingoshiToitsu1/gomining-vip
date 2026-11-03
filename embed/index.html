@@ -114,12 +114,12 @@ html.theme-ember{
     </div>
     <div class="re-field">
       <label for="re-wth" data-i18n="eff">Efficiency (W/TH)</label>
-      <input id="re-wth" type="number" inputmode="decimal" min="12" step="0.5" value="12">
+      <input id="re-wth" type="number" inputmode="decimal" min="12" step="0.5" value="15">
     </div>
   </div>
   <!-- Backend math, not visitor inputs: the staking APR is seeded from STAKE_APR0 by
        roi-embed.js, and the 3% daily click streak is always counted. -->
-  <input id="re-apr" type="hidden" value="21.7">
+  <input id="re-apr" type="hidden" value="19.52">
   <!-- Dollar mode: the budget is priced into TH + GMT by roi-embed.js; these stay for its init. -->
   <input id="re-th" type="hidden" value="0">
   <input id="re-gmt" type="hidden" value="0" data-preset>
@@ -176,7 +176,7 @@ html.theme-ember{
 
 <script>
 /* Host settings come in on the URL (the loader in /assets/embed.js builds it from data-*):
-     amount, wth         prefill the budget ($, default 0) and efficiency (default 12 W/TH)
+     amount, wth         prefill the budget ($, default 0) and efficiency (default 15 W/TH, a new miner)
      bg=transparent      drop the page background so the card sits on the host's
      theme=ember         the RinGoMining look (automatic when framed by ringomining.com)
      offer=off           hide the RINGO5 offer block (for a host page that already sells it)
@@ -334,6 +334,6 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/roi-embed.js?v=24"></script>
+<script src="/assets/roi-embed.js?v=25"></script>
 </body>
 </html>

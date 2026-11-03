@@ -256,7 +256,7 @@
         else if (started) finished = true;
       }, 40);
       const capIn = () => parseFloat((document.getElementById(target ? 'piTargetInput' : 'piCapitalInput') || {}).value) || 0;
-      const t12 = typeof TH_TIERS_12W !== 'undefined' ? TH_TIERS_12W : null;
+      const t12 = typeof TH_TIERS !== 'undefined' ? TH_TIERS : null;   // new miners: 15 W only
       let splits = 0, splitT = 0;
       const ctl = run(null, {
         fixed: true, icon: '/gmt-optimizer-logo.svg?v=2', minMs: 2100, maxMs: 15000,

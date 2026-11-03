@@ -1,11 +1,11 @@
 {
-  "stakingApr": 21.7,
-  "stakingAprPrevious": 22.68,
-  "soloDiscount": 1.32,
+  "stakingApr": 19.52,
+  "stakingAprPrevious": 21.7,
+  "soloDiscount": 1.06,
   "greedyGrowthWeekly": 0.3347,
   "clickStreak": 3,
   "unit": "percent",
-  "updated": "2026-10-07",
+  "updated": "2026-10-30",
   "source": "https://gmt-optimizer.com",
   "notes": {
     "stakingApr": "GoMining veGMT locked-staking APR, %, read off the app",
@@ -14,6 +14,12 @@
     "clickStreak": "fee discount for a 10+ day click streak, %"
   },
   "history": [
+    {
+      "date": "2026-10-30",
+      "stakingApr": 19.52,
+      "soloDiscount": 1.06,
+      "greedyGrowthWeekly": 0.3347
+    },
     {
       "date": "2026-10-07",
       "stakingApr": 21.7,

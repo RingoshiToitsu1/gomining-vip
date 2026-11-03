@@ -17,8 +17,8 @@ const BLOCK_SUBSIDY   = 3.125;   // BTC/block (→ 1.5625 at 2028 halving)
 const ELECTRICITY_RATE= 0.05;    // $/kWh on (W/TH × TH × 24h)
 const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
 const CONVERSION_FEE  = 0.0225;  // BTC→GMT payout skim (calibrated 2026-07-07)
-const STAKING_APR     = 21.7;    // % — GMT locked-staking APR (observed 2026-10-07)
-const MINING_MODE     = 1.32;    // % — solo mining discount (observed 2026-10-07)
+const STAKING_APR     = 19.52;   // % — GMT locked-staking APR (observed 2026-10-30)
+const MINING_MODE     = 1.06;    // % — solo mining discount (observed 2026-10-30)
 const CLICK_STREAK    = 3;       // % — daily click streak, binary once held 10 days
 const EFF_BEST        = 12;      // W/TH — freshly-minted new miners
 const EFF_BASE_MAX    = 15;      // W/TH — cheaper marketplace hashrate
@@ -53,31 +53,32 @@ const rbDayOf = t => Math.max(1,(t-RB_GEN)/86400000);
 const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
   Math.pow(10, RB_FIT.m*Math.log(rbDayOf(t)) + RB_FIT.b + off);
 
-// New-miner tiered $/TH (12 W/TH), LIST price. Keep in sync with TH_TIERS_12W in
-// assets/app.js and assets/roi-embed.js.
+// 12 W/TH tiered $/TH, LIST price. Keep in sync with TH_TIERS_12W in assets/app.js and
+// assets/roi-embed.js. GoMining stopped minting 12 W on 2026-10-30, so this is now DERIVED:
+// the 15 W tier + the 15 → 12 upgrade (3 × $2.67 = $8.01/TH). History of the minted curve:
 // Repriced 2026-07-29: GoMining cut 12 W/TH pricing ~10-15%. Observed prices were net
 // of a 5% NFT holder discount, so every tier is grossed up by /0.95 to the list price a
 // new user actually pays — 1 TH reconstructs to exactly $17.00, which confirms the
 // discount is 5% off list rather than 5% added on. Do NOT paste discounted quotes in
 // here: the site must quote what its readers pay, not what one account pays.
 const TH_TIERS_12W=[
-  {th:1,cpt:19.00},{th:2,cpt:18.91},{th:4,cpt:18.80},{th:8,cpt:18.75},
-  {th:16,cpt:18.62},{th:32,cpt:18.53},{th:48,cpt:18.44},{th:64,cpt:18.33},
-  {th:96,cpt:18.24},{th:128,cpt:18.15},{th:192,cpt:18.05},{th:256,cpt:17.96},
-  {th:384,cpt:17.87},{th:512,cpt:17.78},{th:768,cpt:17.68},{th:1024,cpt:17.60},
-  {th:1536,cpt:17.51},{th:2560,cpt:17.42},{th:3584,cpt:17.34},{th:5000,cpt:17.24}
+  {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
+  {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
+  {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
+  {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
+  {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
 ];
 
 // 15 W/TH hashrate — the cheaper, less efficient curve. Mirrors TH_TIERS in assets/app.js
-// and TH_TIERS_15W in assets/roi-embed.js. Repriced 2026-07-30, grossed up /0.95 from
-// quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
+// and TH_TIERS_15W in assets/roi-embed.js. The ONLY machine minted since 2026-10-30. Repriced
+// 2026-10-30 (all twenty tiers), grossed up /0.95 from quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
 // mint-versus-upgrade: at a given W/TH the price per TH is the same either way.
 const TH_TIERS_15W=[
-  {th:1,cpt:11.49},{th:2,cpt:11.47},{th:4,cpt:11.46},{th:8,cpt:11.44},
-  {th:16,cpt:11.41},{th:32,cpt:11.39},{th:48,cpt:11.37},{th:64,cpt:11.36},
-  {th:96,cpt:11.33},{th:128,cpt:11.31},{th:192,cpt:11.27},{th:256,cpt:11.25},
-  {th:384,cpt:11.22},{th:512,cpt:11.20},{th:768,cpt:11.17},{th:1024,cpt:11.14},
-  {th:1536,cpt:11.11},{th:2560,cpt:11.07},{th:3584,cpt:11.04},{th:5000,cpt:11.02}
+  {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
+  {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
+  {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
+  {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
+  {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
 ];
 
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.
