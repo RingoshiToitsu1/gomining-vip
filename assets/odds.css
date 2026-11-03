@@ -43,3 +43,17 @@
 .odds-fan-leg .lg-m{border-color:#FFC65A;border-top-width:3px}
 .odds-fan-leg .lg-b{border-color:#ff8080;border-top-style:dotted}
 .odds-fan-leg .lg-c{border-color:rgba(235,226,210,.55);border-top-style:dashed}
+.odds-call{border-color:rgba(245,166,35,.35);background:radial-gradient(120% 120% at 100% 0%,rgba(245,166,35,.10),transparent 55%),var(--bg-card)}
+.call-kicker{font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft)}
+.call-verdict{font-size:2rem;font-weight:800;line-height:1.1;margin:.3rem 0 .25rem;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));-webkit-background-clip:text;background-clip:text;color:transparent}
+.call-what{font-size:.92rem;color:var(--text);line-height:1.5}
+.call-meta{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.8rem;color:var(--text3);margin-top:.55rem}
+.call-meta b{color:var(--text);font-family:var(--mono)}
+.call-row.win span{color:var(--text);font-weight:700}
+.call-stress{margin-top:.75rem;font-size:.78rem;line-height:1.5;border-radius:10px;padding:.55rem .7rem;color:var(--text2)}
+.call-stress.ok{background:rgba(95,184,90,.08);border:1px solid rgba(95,184,90,.25)}
+.call-stress.flip{background:rgba(255,77,77,.07);border:1px solid rgba(255,77,77,.25)}
+.call-stress b{color:var(--text)}
+.odds-kv .call-vs{flex-wrap:wrap;align-items:baseline}
+.odds-kv .call-vs em{display:block;font-style:normal;font-size:.66rem;color:var(--text4)}
+.odds-kv .call-vs b{white-space:nowrap}
