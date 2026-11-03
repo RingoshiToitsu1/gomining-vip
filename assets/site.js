@@ -194,3 +194,6 @@
   }
   requestAnimationFrame(draw);
 })();
+
+// Ask-Ringo co-pilot (assets/copilot.js): loaded here so every page that uses this script gets it.
+;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=1";s.defer=true;(document.head||document.documentElement).appendChild(s);})();

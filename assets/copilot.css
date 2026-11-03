@@ -1,0 +1,84 @@
+/* GMT Optimizer co-pilot chat (assets/copilot.js). Self-contained colours: content pages and the
+   console use different token sets, so nothing here depends on either. Gold to match the site. */
+.gc-fab{position:fixed;right:18px;bottom:18px;z-index:450;width:60px;height:60px;padding:0;border-radius:50%;
+  border:2px solid #F5A623;background:#111;cursor:pointer;box-shadow:0 10px 30px -6px rgba(245,166,35,.5);
+  transition:transform .15s ease,box-shadow .15s ease}
+.gc-fab img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.gc-fab:hover{transform:translateY(-2px);box-shadow:0 14px 36px -6px rgba(245,166,35,.7)}
+.gc-fab:focus-visible{outline:3px solid #FFC65A;outline-offset:3px}
+.gc-dot{position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:#4fd18b;border:2px solid #0A0A0A}
+.gc-fab.on .gc-dot{display:none}
+/* keep the back-to-top button clear of the bubble */
+html.gc-on #toTop{bottom:90px !important}
+
+.gc-tip{position:fixed;right:18px;bottom:90px;z-index:450;max-width:250px;background:#151515;color:#EBE2D2;
+  border:1px solid rgba(245,166,35,.3);border-radius:14px 14px 4px 14px;padding:12px 34px 12px 14px;font:15px/1.4 Inter,system-ui,sans-serif;
+  box-shadow:0 12px 30px -10px rgba(0,0,0,.7);opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s ease}
+.gc-tip.show{opacity:1;transform:none;pointer-events:auto}
+.gc-tip span{cursor:pointer}
+.gc-tip-x{position:absolute;top:4px;right:6px;background:none;border:0;color:#8C8170;font-size:20px;line-height:1;cursor:pointer;padding:4px}
+
+.gc-panel{position:fixed;right:18px;bottom:90px;z-index:451;margin:0;padding:0;width:380px;max-width:calc(100vw - 32px);
+  height:min(600px,calc(100vh - 120px));display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:#EBE2D2;
+  border:1px solid rgba(245,166,35,.22);border-radius:18px;box-shadow:0 30px 80px -20px rgba(0,0,0,.85),0 0 0 1px rgba(245,166,35,.06);
+  font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
+.gc-panel[hidden]{display:none}
+.gc-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;background:linear-gradient(180deg,#181410,#121010);border-bottom:1px solid rgba(245,166,35,.16)}
+.gc-head img{border-radius:50%;flex:none}
+.gc-head div{flex:1;min-width:0;line-height:1.2}
+.gc-head strong{display:block;font-size:16px;color:#fff}
+.gc-head small{color:#8C8170;font-family:ui-monospace,"Share Tech Mono",monospace;font-size:11.5px}
+.gc-head button{background:none;border:0;color:#8C8170;font-size:22px;line-height:1;width:36px;height:36px;border-radius:8px;cursor:pointer}
+.gc-head button:hover{color:#EBE2D2;background:rgba(255,255,255,.05)}
+.gc-head .gc-restart{font-size:19px}
+
+.gc-log{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.gc-msg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
+.gc-msg b{color:#FFC65A;font-weight:700}
+.gc-bot{align-self:flex-start;background:#161616;border:1px solid #262321;border-bottom-left-radius:4px}
+.gc-me{align-self:flex-end;background:linear-gradient(135deg,#FFC65A,#F5A623);color:#100a02;font-weight:600;border-bottom-right-radius:4px}
+.gc-typing{display:inline-flex;gap:4px;padding:13px 14px}
+.gc-typing i{width:6px;height:6px;border-radius:50%;background:#8C8170;animation:gc-blink 1s infinite}
+.gc-typing i:nth-child(2){animation-delay:.15s}.gc-typing i:nth-child(3){animation-delay:.3s}
+@keyframes gc-blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
+.gc-links{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:92%}
+.gc-link{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border-radius:10px;font:700 14.5px Inter,system-ui,sans-serif;
+  text-decoration:none;cursor:pointer;color:#EBE2D2;background:transparent;border:1px solid #6F6759}
+.gc-link:hover{color:#FFC65A;border-color:#F5A623}
+.gc-link.gc-fire{color:#100a02;border:0;background:linear-gradient(135deg,#FFC65A,#F5A623)}
+.gc-link.gc-fire:hover{color:#100a02;filter:brightness(1.06)}
+
+.gc-card{display:grid;gap:7px;min-width:75%}
+.gc-card div{display:grid;gap:1px}
+.gc-card span{font-family:ui-monospace,monospace;font-size:11px;color:#8C8170;text-transform:uppercase;letter-spacing:1px}
+.gc-card b{color:#EBE2D2;font-family:ui-monospace,monospace;font-size:13.5px;font-weight:400;word-break:break-all}
+.gc-fine{font-size:12px;color:#8C8170;line-height:1.4;max-width:92%}
+.gc-fine a{color:#FFC65A}
+
+.gc-foot{border-top:1px solid rgba(245,166,35,.14);padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#0a0a0a}
+.gc-foot:empty{display:none}
+.gc-opts{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
+.gc-opt{min-height:40px;padding:8px 13px;border-radius:999px;cursor:pointer;font:600 14.5px Inter,system-ui,sans-serif;color:#FFC65A;
+  background:#1c160b;border:1px solid #5a4217;text-align:left}
+.gc-opt:hover{border-color:#F5A623}
+.gc-opt.gc-primary{color:#100a02;border:0;background:linear-gradient(135deg,#FFC65A,#F5A623);font-weight:700}
+.gc-opt:disabled{opacity:.6;cursor:default}
+.gc-opt:focus-visible,.gc-link:focus-visible,.gc-send:focus-visible{outline:2px solid #FFC65A;outline-offset:2px}
+.gc-ask{display:flex;gap:7px}
+.gc-ask input{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:10px;background:#060606;color:#EBE2D2;border:1px solid #2a2622;
+  font:16px Inter,system-ui,sans-serif}   /* 16px stops iPhone zoom */
+.gc-ask input:focus{outline:none;border-color:#F5A623}
+.gc-send{height:44px;padding:0 14px;border-radius:10px;cursor:pointer;border:0;font:700 15px Inter,system-ui,sans-serif;color:#100a02;background:linear-gradient(135deg,#FFC65A,#F5A623)}
+
+/* phones: full-screen sheet */
+@media (max-width:600px){
+  .gc-fab{right:14px;bottom:14px;width:54px;height:54px}
+  .gc-tip{right:14px;bottom:80px}
+  html.gc-on #toTop{bottom:80px !important}
+  .gc-panel{right:0;left:0;bottom:0;top:0;width:100%;max-width:none;height:100%;height:100dvh;border-radius:0;border:0}
+  html.gc-open,html.gc-open body{overflow:hidden}
+  html.gc-open .gc-fab{display:none}
+}
+@media (prefers-reduced-motion:reduce){.gc-tip,.gc-fab{transition:none}.gc-typing i{animation:none;opacity:.6}}
+@media print{.gc-fab,.gc-tip,.gc-panel{display:none !important}}
