@@ -1,0 +1,23 @@
+/* 4,000 Bitcoin futures — Growth Projection (assets/futures.js) */
+.fx-wrap{margin:2rem auto 0;max-width:980px;background:radial-gradient(120% 90% at 0% 40%,rgba(245,166,35,.08),transparent 60%),var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.1rem 1.1rem 1rem}
+.fx-head{display:flex;justify-content:space-between;align-items:flex-end;gap:.8rem;flex-wrap:wrap;margin-bottom:.7rem}
+.fx-title{font-weight:800;font-size:1.15rem;color:var(--text)}
+.fx-sub{font-size:.76rem;color:var(--text3);margin-top:.15rem}
+.fx-chips{display:flex;gap:.35rem;flex-wrap:wrap}
+.fx-chip{font-family:var(--mono);font-size:.78rem;font-weight:700;padding:6px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:var(--transition)}
+.fx-chip:hover{color:var(--text2);border-color:var(--text4)}
+.fx-chip.on{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#100a02;border-color:transparent}
+#fxCanvas{display:block;width:100%;height:300px}
+.fx-leg{display:flex;flex-wrap:wrap;gap:.35rem 1rem;margin-top:.55rem;font-size:.7rem;color:var(--text3)}
+.fx-leg i{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.fx-leg .lg-p{border-color:rgba(255,198,90,.35);border-top-width:1px}
+.fx-leg .lg-m{border-color:#FFC65A;border-top-width:3px}
+.fx-leg .lg-b{border-color:#ff8080;border-top-style:dotted}
+.fx-leg .lg-c{border-color:rgba(235,226,210,.55);border-top-style:dashed}
+.fx-when{margin:1rem 0 .8rem;font-size:.86rem;line-height:1.55;color:var(--text2);text-align:center}
+.fx-when b{color:var(--text)}.fx-when b.g{color:var(--gold-hi);font-family:var(--mono)}
+.fx-when span{color:var(--text4);font-size:.78rem}
+.fx-grid{grid-template-columns:repeat(3,1fr)!important;margin-bottom:.4rem}
+.fx-grid .hero-card{text-align:left}
+@media(max-width:640px){.fx-grid{grid-template-columns:1fr!important;gap:.5rem}.fx-wrap{padding:.9rem .8rem}}
+.fx-foot{font-size:.7rem;line-height:1.55;color:var(--text4);margin-top:.6rem;text-align:center}
