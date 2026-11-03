@@ -122,7 +122,6 @@
       </div>
       <div class="odds-ctrl">
         <label>Capital ($)<input id="oddsCap" type="number" min="0" step="50" inputmode="decimal"></label>
-        <label>TH resale at end<select id="oddsResale"><option value="0">0%</option><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option></select></label>
         <label>Horizon<select id="oddsYrs"><option value="1">1 year</option><option value="2" selected>2 years</option><option value="3">3 years</option><option value="4">4 years</option></select></label>
         <button type="button" class="odds-run" id="oddsRun">Run the odds</button>
       </div>
@@ -179,7 +178,7 @@
   //   Buy TH   : capital (after the 2% USD→GMT fee) + surplus GMT → 15 W TH. GMT here mints at par.
   //   Hold GMT : capital → GMT, locked (earns staking, adds cover). Surplus stays.
   //   Sell GMT : surplus → cash. Capital stays cash.
-  // Each path scores end wealth = cash + GMT held × GMT price + new TH × resale + everything the
+  // Each path scores end wealth = cash + GMT held × GMT price + everything the
   // whole farm earned on the way (mining at that path's discount + staking). The discount is
   // recomputed weekly from cover, so a GMT slump that drops a thin cover below 360 days costs fees.
   // GMT: log(GMT/BTC) mean-reverts to GMT_BTC_RATIO (the app's own p25 anchor). Stationary spread
@@ -187,14 +186,14 @@
   // can't show a tokenomics shock. Half-life ~13 weeks.
   const GMT_SD=0.20, GMT_PHI=Math.pow(0.5,1/13), GMT_E=GMT_SD*Math.sqrt(1-GMT_PHI*GMT_PHI);
   function gauss(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-  function decide(capUSD,years,resale,gmtFade){
+  function decide(capUSD,years,gmtFade){
     gmtFade=gmtFade||0;   // 0.5 = GMT's BTC ratio target slides to half by the horizon (stress test)
     const i=inp(),m=calc(i),bp=S.btcPrice,gp=S.gmtPrice,dbt=dailyBTCperTH();
     if(!(bp>0&&gp>0))return null;
     const tg=i.gl+i.gw, need=i.payG?m.feesGMT*360:0, surplus=Math.max(0,tg-need);
     const fromWallet=Math.min(surplus,i.gw), fromLocked=surplus-fromWallet;
     const thBudget=capUSD/(1+USD_GMT_FEE)+surplus*gp;
-    const addTH=thBudget>0?thForBudgetTiers(thBudget,TH_TIERS_NEW):0, cpt=addTH>0?thBudget/addTH:0;
+    const addTH=thBudget>0?thForBudgetTiers(thBudget,TH_TIERS_NEW):0;
     const lockAdd=capUSD>0?capUSD/(1+USD_GMT_FEE)/gp:0;
     const th0=m.earnTH, w0=m.bwth, nonTok=m.nonTokD;
     const S_=[
@@ -206,18 +205,17 @@
     const W=Math.round(years*52), now=Date.now(), d0=Math.log10(bp)-center(now);
     const mu=Math.log(GMT_BTC_RATIO), r0=Math.log(gp/bp);
     const cen=[],sub=[],dm=[],aprW=[];for(let w=0;w<W;w++){const t=now+(w+0.5)*WEEK;cen.push(center(t));sub.push(subsidyMultAt(t));dm.push(diffMult(t,DIFF_G0));aprW.push(stakeAprAt(i.apr||0,(w+0.5)/52)/100/52);}
-    const r=rng(4321),res=cal.res,nr=res.length, N=PATHS, fadeStep=gmtFade>0?Math.log(1-gmtFade)/W:0, hp0=dbt*bp;
+    const r=rng(4321),res=cal.res,nr=res.length, N=PATHS, fadeStep=gmtFade>0?Math.log(1-gmtFade)/W:0;
     const end=S_.map(()=>new Float64Array(N)), wins=S_.map(()=>0);
     for(let p=0;p<N;p++){
       let d=d0, lr=r0; const inc=S_.map(()=>0);
-      let price=bp,g=gp,hpEnd=hp0;
+      let price=bp,g=gp;
       for(let w=0;w<W;w++){
         d=cal.a+cal.phi*d+res[(r()*nr)|0];
         const muW=mu+fadeStep*(w+1);
         lr=muW+GMT_PHI*(lr-muW)+GMT_E*gauss(r);
         price=Math.pow(10,cen[w]+d); g=Math.exp(lr)*price;
         const rew=Math.max(dbt*sub[w]*dm[w],rewardFloorBTC(price));
-        hpEnd=rew*price;
         for(let k=0;k<S_.length;k++){
           const s=S_[k], fe=fees(s.th,s.w,price), feeUSDday=fe.t*price*(1-nonTok/100);
           const cov=feeUSDday>0?(s.gl+s.gw)*g/feeUSDday:Infinity;
@@ -226,13 +224,13 @@
         }
       }
       let best=-Infinity,bk=0;
-      for(let k=0;k<S_.length;k++){const s=S_[k];const v=s.cash+(s.gl+s.gw)*g+s.addTH*cpt*resale*(hp0>0?hpEnd/hp0:1)+inc[k];end[k][p]=v;if(v>best){best=v;bk=k;}}
+      for(let k=0;k<S_.length;k++){const s=S_[k];const v=s.cash+(s.gl+s.gw)*g+inc[k];end[k][p]=v;if(v>best){best=v;bk=k;}}
       wins[bk]++;
     }
     const base=end[2];   // "Sell GMT / Keep cash" = the do-least move; others are shown vs it
     const out=S_.map((s,k)=>{const diff=new Float64Array(N);for(let p=0;p<N;p++)diff[p]=end[k][p]-base[p];diff.sort();
       return {k:s.k,t:s.t,win:wins[k]/N,med:diff[(N*0.5)|0],p10:diff[(N*0.1)|0],p90:diff[(N*0.9)|0]};});
-    return {out,capUSD,surplus,need,tg,addTH,lockAdd,gp,years,resale,i,m};
+    return {out,capUSD,surplus,need,tg,addTH,lockAdd,gp,years,i,m};
   }
 
   function renderCall(D){
@@ -256,7 +254,7 @@
       ${rows}
       <div class="odds-kv">${vs}</div>
       ${D.stress?(()=>{const z=D.stress.out.slice().sort((a,b)=>b.win-a.win)[0];const same=z.k===top.k;return `<div class="call-stress ${same?'ok':'flip'}"><b>Stress test:</b> if GMT loses half its value against BTC over the horizon, <b>${z.t}</b> wins ${pct(z.win)} of futures — ${same?'the call holds.':'the call flips. Size this one carefully.'}</div>`;})():''}
-      <div class="odds-note">GMT is assumed to keep tracking BTC at its long-run ratio, the same as the Growth Projection. Counts everything you'd own at the end: cash, GMT at that future's price, new TH at ${pct(D.resale)} resale (scaled by what a TH earns by then), plus all mining and staking on the way. Your discount is rechecked weekly, so a GMT drop that thins your cover costs you here. Model difficulty pace. GMT that's still locked can only be sold once its lock ends.</div>`;
+      <div class="odds-note">GMT is assumed to keep tracking BTC at its long-run ratio, the same as the Growth Projection. Counts everything you'd own at the end: cash, GMT at that future's price, new TH for what it earns (no resale value), plus all mining and staking on the way. Your discount is rechecked weekly, so a GMT drop that thins your cover costs you here. Model difficulty pace. GMT that's still locked can only be sold once its lock ends.</div>`;
   }
 
   // ---------- fan chart ----------
@@ -336,7 +334,7 @@
     shell();
     if(running)return;
     if(!S.loaded||!(S.btcPrice>0)){$o('oddsBuy').innerHTML='<div class="odds-sub">Loading live data…</div>';setTimeout(run,800);return;}
-    const capUSD=Math.max(0,+$o('oddsCap').value||0), yrs=+$o('oddsYrs').value||2, resale=+$o('oddsResale').value;
+    const capUSD=Math.max(0,+$o('oddsCap').value||0), yrs=+$o('oddsYrs').value||2;
     $o('oddsBuy').innerHTML='<div class="odds-sub">Running '+PATHS.toLocaleString()+' futures…</div>';
     running=true;
     ensureRainbowFit(()=>{
@@ -344,7 +342,7 @@
         $o('oddsBuy').innerHTML='<div class="odds-sub">Couldn\'t load Bitcoin\'s price history, which the odds are built on. Check your connection and try again.</div><button type="button" class="odds-link" id="oddsRetry">Try again →</button>';
         $o('oddsRetry').onclick=run;return;}
       setTimeout(()=>{   // let "Running…" paint first
-        try{calibrate();const rs=isFinite(resale)?resale:0.5,Dc=decide(capUSD,yrs,rs);if(Dc&&!Dc.none)Dc.stress=decide(capUSD,yrs,rs,0.5);renderCall(Dc);const P=capUSD>0?plan(capUSD):null;
+        try{calibrate();const Dc=decide(capUSD,yrs);if(Dc&&!Dc.none)Dc.stress=decide(capUSD,yrs,0.5);renderCall(Dc);const P=capUSD>0?plan(capUSD):null;
           if(!P){$o('oddsBuy').innerHTML='<div class="odds-sub">Enter a capital amount to see the Capital Planner\'s split and its payback odds.</div>';const r0=simulate({K:0,th0:0,w0:EFF_NEW,d0:0,th1:0,w1:EFF_NEW,d1:0,glAdd:0,apr:0,gp:S.gmtPrice,bp:S.btcPrice},yrs);renderCtx(r0);drawFan(r0.fan);return;}
           const r=simulate(P,yrs);renderCtx(r);drawFan(r.fan);renderBuy(P,r);}
         catch(e){console.error('[odds]',e);$o('oddsBuy').innerHTML='<div class="odds-sub">Something went wrong running the odds.</div>';}
