@@ -38,8 +38,16 @@
     '</div></div>';
   document.body.insertBefore(nav, document.body.firstChild);
   document.body.classList.add('has-bar');
+  // The bar is fixed, so the page needs exactly its height free at the top. A fixed padding
+  // (100px on phones) let the two-line live strip cover page titles. Measured at full size only —
+  // the scrolled "shrunk" bar is shorter, and re-measuring then would make the page jump.
+  (function(){
+    function pad(){ if(!nav.classList.contains('shrunk')&&nav.offsetHeight>0) document.body.style.paddingTop=nav.offsetHeight+'px'; }
+    pad(); addEventListener('load',pad); addEventListener('resize',pad);
+    if(window.ResizeObserver) new ResizeObserver(pad).observe(nav);
+  })();
   /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
-  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=8';document.body.appendChild(menuJs);
+  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=13';document.body.appendChild(menuJs);
 
   /* ---- live values for the strip above (same sources the ticker used) ---- */
   (function(){

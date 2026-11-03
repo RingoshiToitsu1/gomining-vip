@@ -297,6 +297,12 @@
   #gmtOnline .gmt-chat-lbl,#gmtOnline .gmt-chat-on{display:none}   /* compact on phones: 💬 ● 12 */
   .header-inner.gm-has-menu>.c-brand{margin-right:auto}
   .gmt-acc-trigger .gmt-acc-name{max-width:7.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* phones: the header carries logo + chat + account + back + menu, so the account shows as just
+     its avatar (the name stays when there's no avatar to show), and the page name steps aside */
+  .gmt-acc-trigger:has(.gmt-acc-av) .gmt-acc-name,.gmt-acc-trigger:has(.gmt-acc-av) .gmt-acc-caret{display:none}
+  .gmt-acc-trigger{padding:.15rem .25rem}
+  .header .gm-title{display:none}
+  #gmtOnline.gmt-chat-btn{margin-left:.6rem;padding:.3rem .6rem}
 }
 
 /* user card: a Twitch-style popover anchored near the clicked username */

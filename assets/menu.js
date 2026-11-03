@@ -63,12 +63,12 @@
 .gm-burger[aria-expanded="true"] i:nth-child(3){top:20px;transform:rotate(-45deg)}
 .gm-has-menu .nav-links,.gm-hide{display:none!important}
 /* the page you are on, named in the header — same source as the menu, so they can't disagree */
-.gm-title{display:inline-flex;align-items:center;gap:9px;margin-left:11px;flex:0 1 auto;min-width:0;
+.gm-title{display:inline-block;vertical-align:middle;margin-left:11px;flex:0 1 auto;min-width:0;
   font-family:'Space Grotesk',system-ui,sans-serif;font-size:14px;font-weight:600;color:#EBE2D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gm-title::before{content:'';flex:0 0 auto;width:1px;height:16px;background:rgba(240,196,120,.28)}
+.gm-title::before{content:'';display:inline-block;vertical-align:middle;width:1px;height:16px;margin:-2px 9px 0 0;background:rgba(240,196,120,.28)}
 .gm-title[hidden]{display:none}
 @media(max-width:560px){.gm-title{font-size:12.5px;margin-left:8px;gap:7px}}
-@media(max-width:400px){.gm-title{display:none}}
+@media(max-width:400px){.gm-title{font-size:12px;margin-left:6px}}
 .gm-has-menu{flex-wrap:nowrap!important;justify-content:flex-start!important}
 .gm-has-menu>.brand,.gm-has-menu>.c-brand{margin-right:auto}
 /* Phones: Launch Console stays beside the hamburger — both tighten so brand + CTA + menu fit one row. */
@@ -82,8 +82,8 @@
   .gm-has-menu .brand,.gm-has-menu .c-brand{min-width:0;white-space:nowrap}
 }
 @media(max-width:380px){
-  .gm-has-menu .brand,.gm-has-menu .c-brand{font-size:14px;gap:7px}
-  .gm-has-menu .brand img,.gm-has-menu .c-brand img{width:22px;height:22px}
+  .gm-has-menu .brand,.gm-has-menu .c-brand{font-size:0;gap:0}   /* logo only on phones (wordmark hidden from 600/560px down) */
+  .gm-has-menu .brand img,.gm-has-menu .c-brand img{width:28px;height:28px}
   .gm-has-menu .nav-cta{padding:7px 10px!important;font-size:11px!important}
   .gm-burger{margin-left:6px}
 }

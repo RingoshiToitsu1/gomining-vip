@@ -1404,7 +1404,8 @@ body{background:transparent}
   html .topbar>.header{position:sticky;top:0;z-index:100;background:#08090c}
 }
 /* The ticker is hidden under 820px, so the bar docks to the very top here. */
-@media(max-width:600px){.header{padding-left:16px;padding-right:16px}.header .nav-links{gap:16px}.header .nav-links a{font-size:.8em}}
+@media(max-width:600px){.header .c-brand{font-size:0;gap:0}.header .c-brand .v{display:none}.header .c-brand img{width:30px;height:30px}
+.header{padding-left:16px;padding-right:16px}.header .nav-links{gap:16px}.header .nav-links a{font-size:.8em}}
 /* live chips -> glass pill */
 .live-chip{background:linear-gradient(180deg,rgba(255,255,255,.045),transparent),var(--bg-card)}
 .live-chip:hover{border-color:var(--line-hi)}

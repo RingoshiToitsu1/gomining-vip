@@ -66,8 +66,9 @@ body.has-bar .wrap{padding-top:1.2rem}
 }
 @media(max-width:560px){
   .gmbar-inner{padding-left:16px;padding-right:16px;gap:8px}
-  .gmbar .brand{font-size:14.5px}
-  .gmbar .brand img{width:23px;height:23px}
+  .gmbar .brand{font-size:0;gap:0}            /* logo only on phones: the wordmark collided with the page name */
+  .gmbar .brand img{width:30px;height:30px}
+  .gmbar .live-chip:last-child .lbl{display:none}   /* "● 0s ago" — keeps the strip to one line more often */
   .gmbar .nav-cta{padding:8px 12px;font-size:12px}
   .gmbar .live-chip{font-size:12px;padding:4px 8px;gap:4px}
   .gmbar .live-chip .lbl{font-size:11px}
