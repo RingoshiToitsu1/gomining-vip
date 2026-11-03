@@ -238,6 +238,17 @@
   });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) close(); });
 
+  // Phones: fit the sheet to the visible area above the keyboard. iOS keeps the layout viewport
+  // full height and scrolls it when an input is focused, which hides the header.
+  var vv = window.visualViewport;
+  function fit() {
+    if (panel.hidden || !vv || !(window.matchMedia && matchMedia("(max-width: 600px)").matches)) { panel.style.height = ""; panel.style.top = ""; return; }
+    panel.style.height = Math.round(vv.height) + "px";
+    panel.style.top = Math.round(vv.offsetTop) + "px";
+    scroll();
+  }
+  if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); }
+
   var started = false;
   function open() {
     hideTip();
@@ -245,6 +256,7 @@
     fab.classList.add("on");
     fab.setAttribute("aria-expanded", "true");
     document.documentElement.classList.add("gc-open");
+    fit();
     if (!started) {
       started = true;
       if (state.node && NODES[state.node] && state.node !== "start" && state.node !== "sent" && state.node !== "bye") {
@@ -260,6 +272,7 @@
     fab.classList.remove("on");
     fab.setAttribute("aria-expanded", "false");
     document.documentElement.classList.remove("gc-open");
+    fit();
     fab.focus();
   }
   window.gmCopilot = { open: open, close: close };

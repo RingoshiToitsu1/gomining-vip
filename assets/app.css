@@ -1395,6 +1395,14 @@ body{background:transparent}
   .header-inner{flex-wrap:wrap;justify-content:center;row-gap:.5rem}
   .header .nav-links{display:flex;order:2;width:100%;justify-content:center;gap:22px}
 }
+/* Phones/tablets: the full top unit (header + live-data box) is ~280-420px tall here, and pinned
+   it covered a third of the screen with text scrolling underneath. Only the slim header stays
+   pinned; the live box scrolls away with the page. display:contents lets the header stick to the
+   page itself rather than to the (short) .topbar box. Opaque so nothing ghosts through it. */
+@media(max-width:820px){
+  .topbar{display:contents}
+  html .topbar>.header{position:sticky;top:0;z-index:100;background:#08090c}
+}
 /* The ticker is hidden under 820px, so the bar docks to the very top here. */
 @media(max-width:600px){.header{padding-left:16px;padding-right:16px}.header .nav-links{gap:16px}.header .nav-links a{font-size:.8em}}
 /* live chips -> glass pill */

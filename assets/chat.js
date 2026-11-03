@@ -220,7 +220,7 @@
       // pill (which collided with the Ask-Ringo bubble on phones). The detached /chat window
       // fills its viewport instead.
       var head =
-        '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
+        '<div class="gmt-chat-head"><span class="gmt-chat-av" aria-hidden="true">&#128172;</span><div class="gmt-chat-ttl"><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
         '<div class="gmt-chat-ctl">' +
           (POPOUT ? '' :
             '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
@@ -284,6 +284,20 @@
       el.box.style.display = (!collapsed && !popoutIsOpen()) ? 'flex' : 'none';
     }
 
+    var vv = window.visualViewport, vvOn = false;
+    function fitViewport() {
+      if (!el.box) return;
+      var phone = window.matchMedia && matchMedia('(max-width:700px)').matches;
+      if (collapsed || !phone || !vv) { el.box.style.height = ''; el.box.style.top = ''; return; }
+      el.box.style.height = Math.round(vv.height) + 'px';
+      el.box.style.top = Math.round(vv.offsetTop) + 'px';
+      if (el.list) el.list.scrollTop = el.list.scrollHeight;
+    }
+    function watchViewport(on) {
+      if (!vv || on === vvOn) return; vvOn = on;
+      var m = on ? 'addEventListener' : 'removeEventListener';
+      vv[m]('resize', fitViewport); vv[m]('scroll', fitViewport);
+    }
     function setCollapsed(v) {
       if (POPOUT) return;
       collapsed = v;
@@ -292,14 +306,16 @@
       var chip = document.getElementById('gmtOnline');
       if (chip) chip.setAttribute('aria-expanded', v ? 'false' : 'true');
       updateVisibility();
+      watchViewport(!v); fitViewport();
       if (!v) { unread = 0; mentioned = false; renderOnline(); el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 
     function renderFoot() {
       if (!el.foot) return;
       if (A.isLoggedIn()) {
-        el.foot.innerHTML = '<div class="gmt-mention-ac" id="gmtMentionAc" style="display:none"></div><textarea id="gmtChatIn" maxlength="500" placeholder="Message…  (@ to mention)"></textarea><div class="gmt-flash" id="gmtFlash"></div>';
+        el.foot.innerHTML = '<div class="gmt-mention-ac" id="gmtMentionAc" style="display:none"></div><div class="gmt-chat-row"><textarea id="gmtChatIn" maxlength="500" rows="1" placeholder="Message…  (@ to mention)" enterkeyhint="send"></textarea><button type="button" class="gmt-chat-send" id="gmtChatSend">Send</button></div><div class="gmt-flash" id="gmtFlash"></div>';
         el.input = el.foot.querySelector('#gmtChatIn');
+        el.foot.querySelector('#gmtChatSend').addEventListener('click', function () { send(el.input.value); el.input.focus(); });
         el.flash = el.foot.querySelector('#gmtFlash');
         el.ac = el.foot.querySelector('#gmtMentionAc');
         el.ac.addEventListener('mousedown', function (e) {

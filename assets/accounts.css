@@ -245,7 +245,7 @@
   animation:gmtChatIn .22s cubic-bezier(.22,.61,.36,1)}
 @keyframes gmtChatIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
 .gmt-chat-body{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
-.gmt-chat-head{display:flex;align-items:center;justify-content:space-between;padding:.7rem .95rem;
+.gmt-chat-head{display:flex;align-items:center;gap:.2rem;padding:.7rem .95rem;
   border-bottom:1px solid var(--border)}
 .gmt-chat-head .t{font-weight:700;color:var(--text);font-size:.9rem;font-family:var(--sans)}
 .gmt-chat-head .o{font-family:var(--mono);font-size:.7rem;color:var(--text3)}
@@ -277,14 +277,23 @@
 
 /* ---- mobile: the chat opens full screen from the header button ---- */
 @media(max-width:700px){
-  .gmt-chat.gmt-dock{inset:0;width:100vw;height:100dvh;border-left:none;border-radius:0}
+  /* Full-screen sheet like the Ask-Ringo co-pilot. JS (fitViewport) sets top/height to the visible
+     area above the keyboard, so the header stays put and the box sits on the keyboard. */
+  .gmt-chat.gmt-dock{top:0;left:0;right:0;bottom:auto;width:100%;max-width:none;height:100%;height:100dvh;
+    border-left:none;border-radius:0;box-shadow:none;animation:gmtChatUp .22s cubic-bezier(.22,.61,.36,1)}
+  @keyframes gmtChatUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+  .gmt-chat-head{background:linear-gradient(180deg,#181410,#121010);border-bottom:1px solid rgba(245,166,35,.16)}
+  .gmt-chat-head .t{font-size:1rem}
+  .gmt-chat.gmt-dock .gmt-chat-foot textarea{font-size:16px;height:44px;padding:.6rem .7rem}   /* 16px: stops iPhone zooming in */
+  .gmt-chat.gmt-dock .gmt-chat-send{min-height:44px;font-size:.95rem;padding:0 1rem}
+  .gmt-chat.gmt-dock .gmt-chat-login{min-height:44px;font-size:16px}
   html.gmt-chat-open,html.gmt-chat-open body{overflow:hidden}
   html.gmt-chat-open .gc-fab{display:none}         /* full-screen chat: hide the Ask-Ringo bubble */
   .gmt-chat-ctl [data-pop]{display:none}            /* popout window is pointless on mobile */
   .gmt-chat-head{padding:.85rem 1rem}               /* bigger tap targets */
-  .gmt-chat-ctl .ci{font-size:1.4rem;padding:.2rem .45rem}
+  .gmt-chat-ctl .ci{font-size:1.5rem;width:40px;height:40px;padding:0;border-radius:8px}
   .gmt-chat-list{padding:.7rem 1rem;gap:.6rem}
-  .gmt-chat-foot{padding:.7rem 1rem env(safe-area-inset-bottom,1rem)}
+  .gmt-chat.gmt-dock .gmt-chat-foot{padding:.65rem .8rem calc(.65rem + env(safe-area-inset-bottom));background:#0a0a0a}
   #gmtOnline .gmt-chat-lbl,#gmtOnline .gmt-chat-on{display:none}   /* compact on phones: 💬 ● 12 */
   .header-inner.gm-has-menu>.c-brand{margin-right:auto}
   .gmt-acc-trigger .gmt-acc-name{max-width:7.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -316,8 +325,15 @@
 .gmt-msg:hover .mod{opacity:.85}
 .gmt-msg .mod:hover{opacity:1}
 .gmt-chat-foot{padding:.6rem .85rem;border-top:1px solid var(--border)}
-.gmt-chat-foot textarea{width:100%;resize:none;background:var(--bg-input);border:1px solid var(--border);
+.gmt-chat-row{display:flex;gap:.45rem;align-items:stretch}
+.gmt-chat-foot textarea{flex:1;min-width:0;width:100%;box-sizing:border-box;resize:none;background:var(--bg-input);border:1px solid var(--border);
   color:var(--text);border-radius:10px;padding:.5rem .6rem;font-size:.85rem;font-family:var(--sans);height:38px}
+.gmt-chat-send{flex:none;box-sizing:border-box;padding:0 .85rem;border:0;border-radius:10px;cursor:pointer;font:700 .82rem var(--sans);
+  color:#100a02;background:linear-gradient(135deg,#FFC65A,#F5A623)}
+.gmt-chat-send:hover{filter:brightness(1.06)}
+.gmt-chat-av{flex:none;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:1rem;background:rgba(61,220,132,.12);border:1px solid rgba(61,220,132,.35);margin-right:.6rem}
+.gmt-chat-ttl{flex:1;min-width:0}
 .gmt-chat-foot textarea:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
 .gmt-chat-login{width:100%;background:var(--purple);color:#0A0A0A;border:none;border-radius:10px;
   padding:.55rem;font-weight:700;cursor:pointer;font-family:var(--sans)}
