@@ -25,7 +25,7 @@
     var A = window.GMTAccount, sb = A.sb;
     var LIMIT = 50, MIN_GAP = 1000, lastSent = 0;
     var MAX_AGE_MS = 24 * 60 * 60 * 1000;   // keep chat clean: only the last day is shown/kept
-    var messages = [], online = 0, mounted = false, collapsed = false;
+    var messages = [], online = 0, mounted = false, collapsed = true, unread = 0, mentioned = false;
     var el = {};
 
     // Deterministic Twitch-ish username color from the id.
@@ -82,7 +82,7 @@
       if (!A.isLoggedIn() || !m || m.user_id === A.user.id) return;   // never notify me for my own message
       if (!mentionsMe(m.body)) return;
       beep();
-      if (collapsed && el.box) el.box.classList.add('mention-alert');   // pulse the rail when docked away
+      if (collapsed) { mentioned = true; renderOnline(); }   // flag the header chat button while the chat is closed
       var away = document.hidden || collapsed;                           // not actively watching the chat
       if (away && 'Notification' in window && Notification.permission === 'granted') {
         try {
@@ -174,6 +174,7 @@
     sb.channel('chat-room')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function (p) {
         messages.push(p.new); if (messages.length > 200) messages.shift(); renderList();
+        if (collapsed && !POPOUT && !(A.isLoggedIn() && p.new && p.new.user_id === A.user.id)) { unread++; renderOnline(); }
         notifyIfMentioned(p.new);
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, function (p) {
@@ -214,22 +215,20 @@
     function mount() {
       if (mounted) return; mounted = true;
 
-      // A right-side dock (Twitch-style): collapses to a thin rail at the edge and
-      // expands back out. The detached /chat window fills its viewport instead.
+      // A panel that slides in from the right, opened from the chat button in the header (the
+      // "online" chip). Closed, nothing is on screen but that button — no edge rail, no floating
+      // pill (which collided with the Ask-Ringo bubble on phones). The detached /chat window
+      // fills its viewport instead.
       var head =
         '<div class="gmt-chat-head"><div><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
         '<div class="gmt-chat-ctl">' +
           (POPOUT ? '' :
             '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
-            '<button class="ci" data-collapse title="Collapse to the side">&#8250;</button>') +
+            '<button class="ci" data-collapse title="Close chat" aria-label="Close chat">&times;</button>') +
         '</div></div>';
-      var rail = POPOUT ? '' :
-        '<div class="gmt-chat-rail" data-expand title="Open chat">' +
-          '<button class="rail-btn">&#8249;</button><span class="rail-label">CHAT</span>' +
-          '<span class="rail-n" id="gmtRailN">0</span>' +
-        '</div>';
       var box = document.createElement('div'); box.className = 'gmt-chat' + (POPOUT ? ' popout' : ' gmt-dock');
-      box.innerHTML = rail +
+      box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Global chat');
+      box.innerHTML =
         '<div class="gmt-chat-body">' + head +
           '<div class="gmt-chat-list" id="gmtChatList"></div>' +
           '<div class="gmt-chat-foot" id="gmtChatFoot"></div>' +
@@ -238,26 +237,37 @@
       el.list = box.querySelector('#gmtChatList');
       el.online2 = box.querySelector('#gmtChatOnline');
       el.foot = box.querySelector('#gmtChatFoot');
-      el.railN = box.querySelector('#gmtRailN');
 
       if (!POPOUT) {
-        box.querySelector('[data-expand]').addEventListener('click', function () { setCollapsed(false); });
         box.querySelector('[data-collapse]').addEventListener('click', function () { setCollapsed(true); });
         box.querySelector('[data-pop]').addEventListener('click', function () {
           var w = window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
           if (w) {
-            try { localStorage.setItem(POPOUT_KEY, '1'); } catch (e) {}   // hide the dock immediately
-            updateVisibility();
-            var t = setInterval(function () {   // restore the dock when the window closes
+            try { localStorage.setItem(POPOUT_KEY, '1'); } catch (e) {}   // hide the panel immediately
+            setCollapsed(true); updateVisibility();
+            var t = setInterval(function () {   // forget the popout when its window closes
               if (w.closed) { clearInterval(t); try { localStorage.removeItem(POPOUT_KEY); } catch (e) {} updateVisibility(); }
             }, 600);
           }
         });
         // React to the flag changing in the other window (open/close of the popout).
         window.addEventListener('storage', function (e) { if (e.key === POPOUT_KEY) updateVisibility(); });
-        // Resting state: remember the user's choice; default collapsed on narrow screens.
-        var saved; try { saved = localStorage.getItem('gmt_chat_collapsed'); } catch (e) {}
-        setCollapsed(saved != null ? saved === '1' : window.innerWidth < 1000);
+        // The header chip is the chat button.
+        var chip = document.getElementById('gmtOnline');
+        if (chip) {
+          chip.setAttribute('role', 'button'); chip.setAttribute('tabindex', '0');
+          chip.setAttribute('aria-label', 'Open global chat'); chip.title = 'Open the global chat';
+          chip.classList.add('gmt-chat-btn');
+          var openFromChip = function () {
+            if (popoutIsOpen()) { var w2 = window.open('', 'gmtchat'); if (w2) { try { w2.focus(); } catch (e) {} } return; }
+            setCollapsed(!collapsed);
+          };
+          chip.addEventListener('click', openFromChip);
+          chip.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFromChip(); } });
+        }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !collapsed) setCollapsed(true); });
+        // Starts closed every visit; the button shows what's waiting.
+        setCollapsed(true);
       }
 
       renderFoot(); renderOnline(); renderList(); updateVisibility();
@@ -267,19 +277,22 @@
       A.onChange(function () { renderFoot(); updateVisibility(); renderList(); });
     }
 
-    // The console is gated behind login, so the chat dock only shows when logged in.
+    // Anyone can open and read the chat from the header button (posting asks them to log in).
+    // The panel itself is only ever on screen while open, and never while a popout window has it.
     function updateVisibility() {
       if (!el.box || POPOUT) return;
-      // Hidden when logged out, or while a detached popout window is open.
-      el.box.style.display = (A.isLoggedIn() && !popoutIsOpen()) ? 'flex' : 'none';
+      el.box.style.display = (!collapsed && !popoutIsOpen()) ? 'flex' : 'none';
     }
 
     function setCollapsed(v) {
       if (POPOUT) return;
       collapsed = v;
       el.box.classList.toggle('collapsed', v);
-      try { localStorage.setItem('gmt_chat_collapsed', v ? '1' : '0'); } catch (e) {}
-      if (!v) { el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); if (el.box) el.box.classList.remove('mention-alert'); }
+      document.documentElement.classList.toggle('gmt-chat-open', !v);
+      var chip = document.getElementById('gmtOnline');
+      if (chip) chip.setAttribute('aria-expanded', v ? 'false' : 'true');
+      updateVisibility();
+      if (!v) { unread = 0; mentioned = false; renderOnline(); el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 
     function renderFoot() {
@@ -408,8 +421,11 @@
 
     function renderOnline() {
       var hdr = document.getElementById('gmtOnline');
-      if (hdr) hdr.innerHTML = '<span class="dot"></span>' + online + ' online';
-      if (el.railN) el.railN.textContent = online;
+      if (hdr) {
+        var badge = unread > 0 ? '<span class="gmt-chat-new' + (mentioned ? ' at' : '') + '">' + (mentioned ? '@ ' : '') + (unread > 99 ? '99+' : unread) + ' new</span>' : '';
+        hdr.innerHTML = '<span class="gmt-chat-ic" aria-hidden="true">&#128172;</span><span class="gmt-chat-lbl">Chat</span><span class="dot"></span><span class="gmt-chat-n">' + online + '<span class="gmt-chat-on"> online</span></span>' + badge;
+        hdr.classList.toggle('mention-alert', mentioned && collapsed);
+      }
       if (el.online2) el.online2.textContent = online + ' online';
     }
 
