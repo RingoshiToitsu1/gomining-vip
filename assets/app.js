@@ -1038,17 +1038,23 @@ const RB_PROJ_BAND=RB_LABELS.indexOf('Still cheap');
 function rbProjPrice(t){return rbBandPrice(t,RB_PROJ_BAND);}
 // Ensure the Power-Law fit exists (load history once if needed), then run cb. Lets the
 // Growth Projection reference HODL fair values even before the rainbow chart is opened.
+// Callers that arrive while the history is still downloading are queued and ALL called back.
+// (It used to return early for them, so on a slow connection the second caller — the Growth
+// Projection's futures chart, opened alongside the projection page — waited forever.)
+let _rbWaiters=[];
 function ensureRainbowFit(cb){
   if(_rbFit){cb&&cb();return;}
   if(_rainbowData){_rbFit=rbComputeFit(_rainbowData);cb&&cb();return;}
+  if(cb)_rbWaiters.push(cb);
   if(_rainbowLoading){return;}
   _rainbowLoading=true;
+  const done=()=>{_rainbowLoading=false;const w=_rbWaiters;_rbWaiters=[];w.forEach(f=>{try{f();}catch(e){console.error(e);}});};
   fetchRainbowHistory().then(data=>{
     const trimmed=data.filter(p=>p.t>=Date.UTC(2012,0,1));
     _rainbowData=(trimmed.length>50?trimmed:data).sort((a,b)=>a.t-b.t);
     _rbFit=rbComputeFit(_rainbowData);
-    _rainbowLoading=false;cb&&cb();
-  }).catch(()=>{_rainbowLoading=false;cb&&cb();});
+    done();
+  }).catch(done);
 }
 function rbPriceAt(series,t){
   if(t<=series[0].t)return null;

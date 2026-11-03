@@ -98,7 +98,8 @@
     if(!E){   // the run stopped early (no farm, no plan) — the reason is shown in the results below
       ['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);e._cur=0;e.textContent='--';e.className='hero-val';});
       ['fxDayBtc','fxMoBtc','fxYrBtc','fxNote'].forEach(id=>{$f(id).textContent='';});
-      ['fxDaySub','fxMoSub','fxYrSub'].forEach(id=>{$f(id).textContent='Add your farm to see this';});
+      const why=window._spMode==='planner'?'Enter an amount in the Capital Planner to see this':'Add your farm to see this';
+      ['fxDaySub','fxMoSub','fxYrSub'].forEach(id=>{$f(id).textContent=why;});
       return;}
     const d=E.daily, mo=d*30, yr=d*365, P=E.bpEnd>0?E.bpEnd:S.btcPrice, btc=v=>'(\u20BF'+fmtBTCAmt(v/P)+')';
     const set=(id,v,fmt,cls)=>{const e=$f(id);animateMetric(e,v,fmt);e.className='hero-val '+(v>=0?cls:'red');};
