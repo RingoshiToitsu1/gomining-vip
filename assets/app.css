@@ -78,22 +78,6 @@ input[type=number]{-moz-appearance:textfield}
 .hero-shot-row{display:flex;justify-content:center;margin:0 0 2rem}
 .hero-shot-row .share-plan-btn{padding:.6rem 1.25rem}
 
-/* Growth Projection — custom horizon + BTC price (shown only for the "Custom" target) */
-.sp-custom-row{display:grid;grid-template-columns:1fr;gap:.9rem;max-width:430px;margin:.9rem auto 0}
-.sp-custom-horizon{display:flex;gap:.5rem;align-items:stretch}
-.sp-custom-horizon input{flex:1 1 0;min-width:0;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:.95rem;font-weight:700;padding:.6rem .7rem}
-.sp-custom-horizon .sp-selwrap{flex:0 0 46%}
-.sp-custom-price{display:flex;align-items:center;gap:.45rem;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:.15rem .5rem .15rem .7rem}
-.sp-custom-price .unit{color:var(--text3);font-family:var(--mono);font-weight:700}
-.sp-custom-price input{flex:1 1 0;min-width:0;background:none;border:none;color:var(--text);font-family:var(--mono);font-size:.95rem;font-weight:700;padding:.55rem 0}
-.sp-custom-price input:focus{outline:none}
-.sp-custom-reset{flex:0 0 auto;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.28);border-radius:7px;color:var(--gold-soft);font-family:var(--sans);font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:.3rem .5rem;cursor:pointer}
-.sp-custom-reset:hover{background:rgba(245,166,35,.2);color:var(--text)}
-.sp-prev-note{flex:1 1 100%;margin-top:.5rem;font-size:.72rem;line-height:1.5;color:var(--text3);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:10px;padding:.55rem .7rem}
-@media(max-width:600px){
-  .sp-custom-row{gap:.7rem}
-  .sp-custom-reset{font-size:.6rem;padding:.28rem .42rem}
-}
 
 /* My Setup — idle-GMT optimal split (auto-solved from your wallet balance) */
 .idle-gmt{background:var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.1rem 1.2rem;margin-bottom:1.6rem}
@@ -1130,17 +1114,6 @@ html.show-onboarding #onboarding{display:flex}
 .sp-mode-switch{display:flex;width:max-content;margin:0 auto .6rem;justify-content:center}
 .sp-mode-switch button[disabled]{opacity:.4;cursor:not-allowed}
 .sp-mode-switch button[disabled]:hover{background:none;color:var(--text3)}
-.sp-model-banner{display:flex;gap:.7rem;align-items:flex-start;max-width:520px;margin:0 auto 1.1rem;padding:.75rem .9rem;background:linear-gradient(135deg,rgba(126,232,250,.09),rgba(167,139,250,.06));border:1px solid rgba(126,232,250,.25);border-radius:12px;text-align:left}
-.sp-model-banner svg{flex:0 0 auto;color:var(--cyan);margin-top:2px}
-.sp-model-title{font-size:.82rem;font-weight:800;color:var(--text)}
-.sp-model-title .nu-badge{font-size:.58rem;font-weight:800;color:#06222b;background:var(--cyan);border-radius:5px;padding:.08rem .38rem;margin-right:.45rem;vertical-align:middle;letter-spacing:.04em}
-.sp-model-desc{font-size:.72rem;color:var(--text3);line-height:1.5;margin-top:.25rem}
-.sp-target-preview{display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center;max-width:430px;margin:.9rem auto 0}
-.sp-target-preview:empty{display:none}
-.sp-prev-chip{flex:1 1 0;min-width:92px;text-align:center;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:.55rem .45rem}
-.sp-prev-val{font-size:.92rem;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1.15;word-break:break-word}
-.sp-prev-lbl{font-size:.58rem;color:var(--text4);margin-top:.2rem;line-height:1.25}
-@media(max-width:600px){.sp-model-banner{padding:.65rem .7rem;gap:.55rem}.sp-model-desc{font-size:.68rem}.sp-prev-val{font-size:.82rem}}
 .sp-results-title{font-size:1.25rem;font-weight:800;text-align:center;margin:.1rem 0 1.1rem;background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sp-page-loading{position:fixed;inset:0;z-index:210;background:rgba(10,10,10,.86);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;animation:fadeIn .2s ease}
 /* Capital Planner: adjust-investment chip + growth-projection CTA */

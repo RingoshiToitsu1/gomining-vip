@@ -4,8 +4,10 @@
    are measured from history, reverting toward RB_PROJ_BAND ("Still cheap") — the same band the
    Growth Projection converges on and DIFF_G0 is paired with. Simulated once for 10 years; every
    shorter horizon is a prefix of the same paths, so switching 1/2/3/4/5/10 years is instant.
-   The "typical" line (median path) then prices the user's farm AS IT IS TODAY (no reinvesting)
-   at the end of the chosen horizon, using the app's own reward/fee/discount/staking functions.
+   This file drives the whole Growth Projection page: the chips ARE the projection horizon and the
+   typical (median) path IS the BTC price path computeSetupProjection() walks (via GMFutures). Any
+   change — horizon, payout, My Farm / My Plan — re-runs the reinvesting projection in place, and
+   the Daily / Monthly / Yearly cards show its end-of-period figures (window._spEnd, 'gm:proj').
    Depends on app.js globals; loads after it. Shares its method with assets/odds.js (hidden). */
 (function(){
   'use strict';
@@ -36,16 +38,16 @@
     return{W,now,all,p10,p50,p90,lane,bp:S.btcPrice};
   }
 
-  // The farm as it stands today, priced at BTC price P on date t. Mirrors calc(): reward floored at the
-  // network break-even (rewardFloorBTC), halvings, difficulty grind, today's discount, 2.25% conversion,
-  // plus staking on locked GMT at the decayed APR with GMT on the app's BTC ratio (GMT_BTC_RATIO).
-  function farmAt(P,t){
-    const i=inp(),m=calc(i), yrsOut=(t-Date.now())/(365.25*DAY);
-    const rew=Math.max(dailyBTCperTH()*subsidyMultAt(t)*difficultyMultAt(t),rewardFloorBTC(P));
-    const mineBTC=(rew*m.earnTH-fees(m.earnTH,m.bwth,P).t*(1-m.totD/100))*(1-CONVERSION_FEE);
-    const gpT=GMT_BTC_RATIO*P, stakeUSD=i.gl*stakeAprAt(i.apr||0,yrsOut)/100/365*gpT;
-    return{mineUSD:mineBTC*P,stakeUSD,dayUSD:mineBTC*P+stakeUSD,P,th:m.earnTH,rewSats:rew*1e8};
+  // Typical (median) price at time t: today's price at t<=now, then the weekly medians, linear in log.
+  function typicalAt(t){
+    if(!sim)return 0;
+    const x=(t-sim.now)/WEEK-1;   // index into weekly medians (week w sits at now+(w+1) weeks)
+    if(x<=-1)return sim.bp;
+    if(x<0)return Math.exp(Math.log(sim.bp)*(-x)+Math.log(sim.p50[0])*(1+x));
+    const i0=Math.min(sim.W-1,Math.floor(x)),i1=Math.min(sim.W-1,i0+1),f=Math.min(1,x-i0);
+    return Math.exp(Math.log(sim.p50[i0])*(1-f)+Math.log(sim.p50[i1])*f);
   }
+  window.GMFutures={ready:()=>!!sim,years:()=>yrs,typicalAt};
 
   function shell(){
     const host=$f('spFuturesHost');if(!host||host.dataset.built)return;
@@ -54,7 +56,7 @@
       <div class="fx-wrap">
         <div class="fx-head">
           <div><div class="fx-title">${PATHS.toLocaleString()} Bitcoin futures</div>
-          <div class="fx-sub">Your farm as it is today, priced on the typical path</div></div>
+          <div class="fx-sub" id="fxSub">Pick how far ahead to project</div></div>
           <div class="fx-chips" role="tablist" aria-label="Horizon">${YEARS.map(y=>`<button type="button" class="fx-chip${y===yrs?' on':''}" data-y="${y}" role="tab" aria-selected="${y===yrs}">${y}Y</button>`).join('')}</div>
         </div>
         <canvas id="fxCanvas" aria-label="Fan chart of simulated Bitcoin price paths"></canvas>
@@ -74,26 +76,51 @@
             <div class="hero-val-row fx-row"><div class="hero-val purple" id="fxYr">--</div><span class="hero-btc" id="fxYrBtc"></span></div>
             <div class="hero-sub" id="fxYrSub">--</div></div>
         </div>
-        <div class="fx-foot">A model, not a forecast: price swings are sampled from Bitcoin's own history and drift toward the same Power-Law band as the projection below. Assumes no reinvesting and today's discount. Not financial advice.</div>
+        <div class="fx-note" id="fxNote"></div>
+        <div class="fx-foot">A model, not a forecast: price swings are sampled from Bitcoin's own history and drift toward the rainbow chart's Still-cheap band. The projection below walks the typical line, reinvesting each week. Not financial advice.</div>
       </div>`;
     host.querySelectorAll('.fx-chip').forEach(b=>b.addEventListener('click',()=>{yrs=+b.dataset.y;
-      host.querySelectorAll('.fx-chip').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on);});render();}));
+      host.querySelectorAll('.fx-chip').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on);});project();}));
   }
 
   function render(){
     if(!sim)return;
     const Wn=yrs*52, wEnd=Wn-1, t=sim.now+Wn*WEEK, P=sim.p50[wEnd];
     draw(Wn);
-    const f=farmAt(P,t), d=f.dayUSD, mo=d*30, yr=d*365, btc=v=>'(₿'+fmtBTCAmt(v/P)+')';
+    const date=new Date(t).toLocaleDateString('en-US',{month:'short',year:'numeric'});
+    $f('fxWhen').innerHTML=`In <b>${yrs} year${yrs>1?'s':''}</b> (${date}) the typical future has BTC at <b class="g">${fU(P,0)}</b> <span>· bad ${fU(sim.p10[wEnd],0)} · good ${fU(sim.p90[wEnd],0)}</span>`;
+    const sub=$f('fxSub');if(sub)sub.textContent=(window._spMode==='planner'?'Your plan':'Your farm')+', reinvesting along the typical path';
+  }
+  // Cards = the reinvesting projection's end-of-period figures, so they always match the results below.
+  function cards(){
+    if(!$f('fxDay'))return;
+    const E=window._spEnd;
+    if(!E){   // the run stopped early (no farm, no plan) — the reason is shown in the results below
+      ['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);e._cur=0;e.textContent='--';e.className='hero-val';});
+      ['fxDayBtc','fxMoBtc','fxYrBtc','fxNote'].forEach(id=>{$f(id).textContent='';});
+      ['fxDaySub','fxMoSub','fxYrSub'].forEach(id=>{$f(id).textContent='Add your farm to see this';});
+      return;}
+    const d=E.daily, mo=d*30, yr=d*365, P=E.bpEnd>0?E.bpEnd:S.btcPrice, btc=v=>'(\u20BF'+fmtBTCAmt(v/P)+')';
     const set=(id,v,fmt,cls)=>{const e=$f(id);animateMetric(e,v,fmt);e.className='hero-val '+(v>=0?cls:'red');};
     set('fxDay',d,fU,'green');set('fxMo',mo,v=>fU(v,0),'cyan');set('fxYr',yr,v=>fU(v,0),'purple');
     $f('fxDayBtc').textContent=btc(d);$f('fxMoBtc').textContent=btc(mo);$f('fxYrBtc').textContent=btc(yr);
-    $f('fxDaySub').textContent=fU(f.mineUSD)+' mining + '+fU(f.stakeUSD)+' staking';
-    $f('fxMoSub').textContent=fU(f.mineUSD*30,0)+' mining + '+fU(f.stakeUSD*30,0)+' staking';
-    $f('fxYrSub').textContent=fN(f.th,f.th<100?1:0)+' TH · '+fN(f.rewSats,0)+' sats/TH/day';
-    const date=new Date(t).toLocaleDateString('en-US',{month:'short',year:'numeric'});
-    $f('fxWhen').innerHTML=`In <b>${yrs} year${yrs>1?'s':''}</b> (${date}) the typical future has BTC at <b class="g">${fU(P,0)}</b> <span>· bad ${fU(sim.p10[wEnd],0)} · good ${fU(sim.p90[wEnd],0)}</span>`;
+    const parts=(k)=>[fU(E.mining*k,k>1?0:2)+' mining',fU(E.staking*k,k>1?0:2)+' staking'].concat(E.amb>0?[fU(E.amb*k,k>1?0:2)+' ambassador']:[]).concat(E.greedy>0?[fU(E.greedy*k,k>1?0:2)+' greedy']:[]).join(' + ');
+    $f('fxDaySub').textContent=parts(1);
+    $f('fxMoSub').textContent=parts(30);
+    $f('fxYrSub').textContent=fN(E.th,E.th<100?1:0)+' TH · '+(E.ssPct>=0?'+':'')+fN(E.ssPct,0)+'% vs today';
+    $f('fxNote').innerHTML=E.gmtRange||'';
   }
+  addEventListener('gm:proj',cards);
+  // Re-run the reinvesting projection for the current horizon / payout / mode.
+  // The run is synchronous and a 10-year one takes several seconds, so: show a busy state, let it
+  // paint, run, and only then animate the chart and the cards together.
+  function project(){
+    if(!sim||typeof runSetupProjection!=='function')return;
+    ['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.add('fx-busy');});
+    const w=$f('fxWhen');if(w)w.innerHTML=`<span class="fx-spin"></span>Projecting ${yrs} year${yrs>1?'s':''} of weekly reinvesting…`;
+    setTimeout(runSetupProjection,40);
+  }
+  addEventListener('gm:proj',()=>{['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.remove('fx-busy');});render();});
 
   function draw(Wn,still){
     const cv=$f('fxCanvas');if(!cv||!sim)return;
@@ -154,20 +181,29 @@
   function show(){
     const host=$f('spFuturesHost');if(!host||!host.offsetParent)return;
     shell();
-    if(sim){render();return;}
+    if(sim){project();return;}
     if(building)return;
     if(!S.loaded||!(S.btcPrice>0)){setTimeout(show,700);return;}
     building=true;$f('fxWhen').textContent='Simulating '+PATHS.toLocaleString()+' futures…';
     ensureRainbowFit(()=>{
       if(!_rbFit||!_rainbowData||_rainbowData.length<100){building=false;$f('fxWhen').textContent='Couldn\'t load Bitcoin\'s price history, which the futures are built on.';return;}
-      setTimeout(()=>{try{sim=simulate();render();}catch(e){console.error('[futures]',e);$f('fxWhen').textContent='Something went wrong simulating the futures.';}finally{building=false;}},30);
+      setTimeout(()=>{try{sim=simulate();project();}catch(e){console.error('[futures]',e);$f('fxWhen').textContent='Something went wrong simulating the futures.';}finally{building=false;}},30);
     });
   }
   // Re-render when the Projection opens (however it's reached) and when the farm changes.
   const orig=window.openSetupProjection;
   if(typeof orig==='function')window.openSetupProjection=function(){const r=orig.apply(this,arguments);setTimeout(show,60);return r;};
-  const origNew=window.newSetupProjection;
-  if(typeof origNew==='function')window.newSetupProjection=function(){const r=origNew.apply(this,arguments);setTimeout(show,60);return r;};
+  // Payout changes re-run the projection (debounced while typing).
+  let pt=null;const payoutChanged=()=>{clearTimeout(pt);pt=setTimeout(project,350);};
+  ['spPayoutVal','spPayoutType'].forEach(id=>{const e=$f(id);if(e){e.addEventListener('input',payoutChanged);e.addEventListener('change',payoutChanged);}});
+  // Capital Planner round-trip: "Change the amount" / "Plan it in the Capital Planner" on this page
+  // opens the planner form; once it calculates, come straight back here as My Plan.
+  const origGoto=window.gotoPlannerTab;
+  if(typeof origGoto==='function')window.gotoPlannerTab=function(){const r=origGoto.apply(this,arguments);
+    if(window._spReturnAfterPlan){window._spReturnAfterPlan=false;setTimeout(()=>openSetupProjection('planner'),80);}return r;};
+  // Closing the planner form without calculating cancels the round-trip.
+  const origClose=window.closePlannerIntro;
+  if(typeof origClose==='function')window.closePlannerIntro=function(){window._spReturnAfterPlan=false;return origClose.apply(this,arguments);};
   // Phones fire resize on every scroll (address bar), so only a WIDTH change redraws — and without replaying the animation.
   let rz=null,lastW=innerWidth;addEventListener('resize',()=>{if(innerWidth===lastW)return;lastW=innerWidth;clearTimeout(rz);rz=setTimeout(()=>{if(sim&&$f('spFuturesHost')&&$f('spFuturesHost').offsetParent)draw(yrs*52,true);},200);});
   setTimeout(show,0);   // deep link (/projection) may have opened the panel before this file loaded

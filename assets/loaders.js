@@ -287,44 +287,6 @@
   wrapPlanner('submitPlannerCapital', false);
   wrapPlanner('submitPlannerTarget', true);
 
-  // =================================================================================
-  // Growth Projection (My Setup and My Plan)
-  // =================================================================================
-  const _runProj = window.runSetupProjection;
-  if (typeof _runProj === 'function') {
-    window.runSetupProjection = function () {
-      if (typeof S === 'undefined' || !S.loaded) return _runProj.apply(this, arguments);
-      const load = document.getElementById('spPageLoading');
-      let started = false, finished = false;
-      const watch = setInterval(() => {
-        const shown = load && load.style.display === 'flex';
-        if (shown) started = true;
-        else if (started || !load) finished = true;
-      }, 40);
-      const planner = window._spMode === 'planner';
-      let sel = null;
-      try { sel = typeof spSelection === 'function' ? spSelection() : null; } catch (e) {}
-      const i = (() => { try { return inp(); } catch (e) { return null; } })();
-      let weeks = 0, wkT = 0;
-      const ctl = run(null, {
-        fixed: true, icon: '/gmt-optimizer-logo.svg?v=2', minMs: 2300, maxMs: 15000,
-        kicker: 'Growth Projection', title: planner ? 'Projecting your plan forward' : 'Projecting your farm forward',
-        onDone: () => { clearInterval(watch); clearInterval(wkT); toTop(); if (typeof animateSetupResults === 'function') setTimeout(animateSetupResults, 60); },
-        steps: [
-          { label: planner ? 'Loading your planned allocation' : 'Loading your farm', ok: () => true,
-            v: () => { if (!i) return 'setup ready'; const th = (+i.th || 0) + (+i.gth || 0); return th > 0 ? (th < 100 ? nf(th, 2).replace(/\.?0+$/, '') : nf(th)) + ' TH' : 'setup ready'; } },
-          { label: 'Fitting GMT price elasticity', ok: () => typeof _gmtBeta === 'undefined' || !!_gmtBeta || finished, v: () => 'daily history' },
-          { label: 'Walking BTC along the rainbow band', ok: () => true,
-            v: () => sel && sel.bpEnd ? '$' + nf(Math.round(sel.bpEnd)) + ' by ' + new Date(sel.targetMs).getFullYear() : 'power-law path' },
-          { label: 'Simulating weekly reinvestment',
-            ok: () => { const total = sel && sel.days ? Math.round(sel.days / 7) : 260; if (!wkT) wkT = setInterval(() => { weeks = Math.min(total, weeks + Math.max(1, Math.round(total / 30))); }, 50); return finished && weeks >= total; },
-            v: () => nf(sel && sel.days ? Math.round(sel.days / 7) : weeks) + ' weeks' },
-          { label: 'Applying halvings & difficulty', ok: () => finished, v: () => 'halvings + difficulty grind' }
-        ]
-      });
-      const r = _runProj.apply(this, arguments);
-      setTimeout(() => { if (!started && !finished && ctl) { ctl.cancel(); clearInterval(watch); clearInterval(wkT); } }, 300);
-      return r;
-    };
-  }
+  // Growth Projection: no loader — it re-runs in place on every horizon / payout change
+  // (assets/futures.js), so a full-screen overlay would flash on every tap.
 })();

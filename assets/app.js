@@ -4714,105 +4714,28 @@ function btcSelectionFrom(selId){
 // ===== Growth Projection popup (for users who already invested) =====
 // Seeds the same compounding-reinvest engine from the CURRENT setup (no new
 // capital), so existing users can project their farm forward.
+// The projection is one page now (chart + controls + results), so both of these just show it.
 function spShowForm(){
-  const f=document.getElementById('spFormView'),r=document.getElementById('spResultsView');
-  if(f)f.style.display='';if(r)r.style.display='none';
+  const f=document.getElementById('spFormView');if(f)f.style.display='';
   const m=document.getElementById('setupProjModal');if(m)m.scrollTop=0;
 }
-function spShowResults(){
-  const f=document.getElementById('spFormView'),r=document.getElementById('spResultsView');
-  if(f)f.style.display='none';if(r)r.style.display='';
-  const m=document.getElementById('setupProjModal');if(m)m.scrollTop=0;
-}
+function spShowResults(){spShowForm();}
 function syncPayoutUnit(){
   const t=document.getElementById('spPayoutType'),u=document.getElementById('spPayoutUnit');
   if(t&&u)u.textContent=t.value==='usd'?'USD':'%';
 }
-// Resolve what the "Project To" control is actually asking for — a halving from the dropdown,
-// or a hand-set horizon and BTC price. ONE source of truth for the preview, the run and the
-// results narrative, so they can never disagree about the window being projected.
-//   custom     — user picked their own horizon
-//   userPriced — user also typed an end price, so the run leaves the rainbow curve behind
-//   modelEnd   — what the fair-value model says for that date, for comparison
-const SP_MAX_DAYS=7300;   // 20 years — beyond this the difficulty/APR decay curves are meaningless
+// What the projection runs to: the horizon picked on the 4,000-futures chart (assets/futures.js)
+// and the price its TYPICAL (median) path reaches by then. ONE source of truth for the chart,
+// the run, the results narrative and the share image. Before the futures load, falls back to
+// the rainbow Still-cheap band at the same date so a projection never waits on the simulation.
 function spSelection(){
-  const sel=document.getElementById('spTarget'), now=Date.now();
-  if(sel&&sel.value==='custom'){
-    const amt=Math.max(0,+(($('spCustomAmt')||{}).value)||0)||12;
-    const unit=(($('spCustomUnit')||{}).value)||'m';
-    const days=Math.min(SP_MAX_DAYS,Math.max(1,Math.round(amt*(unit==='y'?365.25:30.4375))));
-    const targetMs=now+days*86400000;
-    const modelEnd=_rbFit?rbProjPrice(targetMs):S.btcPrice;
-    const typed=+(($('spCustomBtc')||{}).value)||0;
-    return{custom:true,userPriced:typed>0,targetMs,days,bpEnd:typed>0?typed:modelEnd,modelEnd};
-  }
-  let targetMs=sel?parseFloat(sel.value):0;
-  if(!(targetMs>now)){const fut=HALVING_DATES.filter(h=>h>now);targetMs=fut.length?fut[0]:now+1095*86400000;}
-  const days=Math.min(SP_MAX_DAYS,Math.max(1,Math.round((targetMs-now)/86400000)));
-  const modelEnd=_rbFit?rbProjPrice(targetMs):S.btcPrice;
-  return{custom:false,userPriced:false,targetMs,days,bpEnd:modelEnd,modelEnd};
-}
-// Show/hide the custom inputs, and seed the price box with the model's own figure the first
-// time — so "custom" starts as the rainbow projection and the user edits away from it.
-function onSpTargetChange(){
-  const sel=document.getElementById('spTarget'), row=document.getElementById('spCustomRow');
-  const custom=!!(sel&&sel.value==='custom');
-  if(row)row.style.display=custom?'':'none';
-  if(custom){
-    const box=$('spCustomBtc');
-    if(box&&!(+box.value>0))box.value=Math.round(spSelection().modelEnd||S.btcPrice||0);
-  }
-  updateSpTargetPreview();
-}
-// Put the model's fair value back in the price box for the chosen horizon.
-function spResetCustomPrice(){
-  const box=$('spCustomBtc');if(!box)return;
-  box.value='';                                   // clear so spSelection() reports the model figure
-  box.value=Math.round(spSelection().modelEnd||S.btcPrice||0);
-  updateSpTargetPreview();
-}
-// Populate the "Project To" dropdown with each upcoming halving and its projected
-// Still-cheap band price, so the user sees the target the projection will converge on.
-function populateSpTargets(){
-  const sel=document.getElementById('spTarget');
-  if(!sel)return;
-  const now=Date.now();
-  const future=HALVING_DATES.filter(h=>h>now);
-  if(!_rbFit||!future.length){sel.innerHTML='<option value="">Loading fair-value model…</option>';return;}
-  const prev=sel.value;
-  sel.innerHTML=future.map((h,idx)=>{
-    const yr=new Date(h).getUTCFullYear();
-    const fv=rbProjPrice(h);
-    const label=(idx===0?'Next halving — ':'')+yr+' halving &mdash; '+fmtBTCPrice(fv);
-    return `<option value="${h}">${label}</option>`;
-  }).join('')+'<option value="custom">Custom &mdash; my own horizon &amp; BTC price</option>';
-  if(prev&&[...sel.options].some(o=>o.value===prev))sel.value=prev;
-  onSpTargetChange();
-}
-// Live preview under the dropdown: horizon, the BTC price path (today → HODL fair value),
-// and which halving(s) the projection crosses.
-function updateSpTargetPreview(){
-  const el=document.getElementById('spTargetPreview');
-  if(!el)return;
-  const sp=spSelection();
-  if(!_rbFit||!(sp.targetMs>Date.now())){el.innerHTML='';return;}
-  const days=sp.days, yrs=days/365;
-  const P0=S.btcPrice||0;
-  const hv=halvingsInWindow(days);
-  const endLbl=sp.userPriced?'BTC: today &rarr; your figure':'BTC: today &rarr; Still cheap (rainbow)';
-  const cagr=(P0>0&&sp.bpEnd>0&&yrs>0)?(Math.pow(sp.bpEnd/P0,1/yrs)-1)*100:0;
-  el.innerHTML=
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${yrs.toFixed(1)} yr</div><div class="sp-prev-lbl">horizon (${days} days)</div></div>`+
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${fmtBTCPrice(P0)} &rarr; ${fmtBTCPrice(sp.bpEnd)}</div><div class="sp-prev-lbl">${endLbl} &middot; ${cagr>=0?'+':''}${fN(cagr,0)}%/yr</div></div>`+
-    `<div class="sp-prev-chip"><div class="sp-prev-val">${hv.length?hv.join(' &amp; '):'—'}</div><div class="sp-prev-lbl">halving${hv.length===1?'':'s'} crossed${hv.length?' (−50% reward each)':''}</div></div>`;
-  // Difficulty is paired to the model's price path. Set a price far above it and you are banking
-  // a bull case while still paying the difficulty grind of a modest one — say so rather than
-  // quietly returning a flattering number.
-  if(sp.userPriced){
-    const skipped=Math.round((1-difficultyMultAt(sp.targetMs))*100);
-    const rich=sp.modelEnd>0&&sp.bpEnd>sp.modelEnd*1.5;
-    el.innerHTML+=`<div class="sp-prev-note">&#9888; <strong style="color:var(--text2)">Difficulty growth is off</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, so applying it to your own would stack two different scenarios. Reward moves only on halvings and the no-arbitrage floor; the model would otherwise have taken <strong style="color:var(--text2)">−${skipped}%</strong> off reward per TH over ${fN(sp.days/365,1)} yr.${rich?` Your ${fmtBTCPrice(sp.bpEnd)} is also ${fN(sp.bpEnd/sp.modelEnd,1)}&times; the fair-value band for that date (${fmtBTCPrice(sp.modelEnd)}).`:''}</div>`;
-  }
+  const F=window.GMFutures, now=Date.now();
+  const yrs=(F&&F.years())||5;
+  const days=Math.max(1,Math.round(yrs*365.25));
+  const targetMs=now+days*86400000;
+  const typical=(F&&F.ready())?F.typicalAt(targetMs):0;
+  const model=_rbFit?rbProjPrice(targetMs):S.btcPrice;
+  return{custom:false,userPriced:false,futures:typical>0,yrs,targetMs,days,bpEnd:typical>0?typical:model,modelEnd:model};
 }
 function openSetupProjection(mode){
   // 'planner' = project the post-investment allocation; otherwise the current My Setup.
@@ -4824,14 +4747,14 @@ function openSetupProjection(mode){
   window._spMode=(mode==='planner')?'planner':'setup';
   const m=document.getElementById('setupProjModal');
   if(!m)return;
-  ensureRainbowFit(populateSpTargets);   // load the HODL fair-value model, then fill the targets
-  populateSpTargets();
+  ensureRainbowFit();   // the Power-Law fit the futures are built around
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
     ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
     : 'Already invested? Project your current farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   renderSpModeSwitch();
+  renderSpPlanLink();
   syncPayoutUnit();
   showPanelView('setupProjModal');
   // Its own page. The planner-mode projection (projecting the RECOMMENDED allocation) is
@@ -4847,9 +4770,20 @@ function openSetupProjection(mode){
     const npl=$('navProjection');if(npl)npl.classList.add('nav-active');
     try{history.replaceState({panel:'projection'},'','/projection'+location.hash);}catch(e){}
   }
-  const btn=document.getElementById('spRunBtn');
-  if(btn)btn.disabled=false;
 }
+// The planner and the projection are one flow: capital goes in on the Capital Planner, and its
+// split comes back here as "My Plan". Say which is on screen and offer the way round.
+function renderSpPlanLink(){
+  const el=document.getElementById('spPlanLink');if(!el)return;
+  if(window._spMode==='planner'){
+    const c=(()=>{try{return inp().cap||0;}catch(e){return 0;}})();
+    el.innerHTML=`Projecting the Capital Planner's split${c>0?` of <strong>${fU(c,0)}</strong>`:''}. <a href="#" onclick="spEditPlan();return false">Change the amount &rarr;</a>`;
+  }else{
+    el.innerHTML=`Adding new capital? <a href="#" onclick="spEditPlan();return false">Plan it in the Capital Planner &rarr;</a> and it projects here as My Plan.`;
+  }
+}
+// Open the planner form; once it calculates, come straight back to this projection as My Plan.
+function spEditPlan(){window._spReturnAfterPlan=true;openPlannerForm();}
 // The projection answers one of two different questions and the answer is nowhere near the same
 // number. Name which one is on screen, and let it be switched without leaving the page.
 // Whether there is a plan to project. NOT window._plannerCalcDone: that flag is only set by the
@@ -4975,28 +4909,21 @@ function closeSetupProjection(){
     }
   },650);
 }
-function newSetupProjection(){
-  spShowForm();
-  const btn=document.getElementById('spRunBtn');
-  if(btn)btn.disabled=false;
-}
-// Show a brief full-page "crunching" state, compute, then switch to the results page.
+// Compute in place. Re-runs on every horizon / payout / mode change, so no full-page overlay.
+// The GMT elasticity is fitted from daily history and cached for a day: wait for it (bounded)
+// the first time rather than running the first projection on the fallback path.
+let _spRunSeq=0;
 function runSetupProjection(){
   if(!S.loaded)return;
-  const btn=document.getElementById('spRunBtn');
-  const load=document.getElementById('spPageLoading');
-  if(btn)btn.disabled=true;
-  if(load)load.style.display='flex';
-  const go=function(){
-    try{computeSetupProjection();spShowResults();animateSetupResults();}
-    finally{if(load)load.style.display='none';if(btn)btn.disabled=false;}
-  };
-  // The GMT elasticity is fitted from daily history; wait for it behind the overlay that is
-  // already showing rather than running the first projection on the fallback path. It is cached
-  // for a day, so this only ever costs the first run of a session, and a failed fetch just
-  // proceeds — the fallback is the model this always used.
-  Promise.race([ensureGmtBeta(),new Promise(r=>setTimeout(r,4000))])
-    .then(()=>setTimeout(go,300)).catch(()=>setTimeout(go,300));
+  const seq=++_spRunSeq;
+  Promise.race([ensureGmtBeta(),new Promise(r=>setTimeout(r,4000))]).catch(()=>{}).then(()=>{
+    if(seq!==_spRunSeq)return;   // a newer run superseded this one
+    // Every run reports back, including the early exits (no farm yet, data still loading), so the
+    // page never waits on a result that isn't coming. _spEnd stays null unless the run finished.
+    window._spEnd=null;
+    try{computeSetupProjection();animateSetupResults();}
+    finally{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}}
+  });
 }
 function computeSetupProjection(){
   if(!S.loaded)return;
@@ -5017,9 +4944,9 @@ function computeSetupProjection(){
   const nowMs=Date.now();
   const spSel=spSelection();
   const targetMs=spSel.targetMs, days=spSel.days, bpEnd=spSel.bpEnd;
-  // A hand-set end price replaces the rainbow band as the destination; a custom horizon on its
-  // own still rides the band, just to a date of the user's choosing.
-  const customPath=spSel.userPriced;
+  // The horizon and price path both come from the 4,000-futures chart (spSelection). The old
+  // hand-set-price mode is gone, so customPath is always false and its branches below are inert.
+  const customPath=false;   // the price path is always the futures' typical line now
   // The modelled difficulty grind (DIFF_G0/TAU) is CALIBRATED TO PAIR with the rainbow price path
   // — a better-funded network adds hashrate. Bolting it onto a price the user set themselves
   // double-stacks two unrelated scenarios, so a manual projection runs without it: reward then
@@ -5033,7 +4960,7 @@ function computeSetupProjection(){
   const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from that band
   const btcSel=customPath
     ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
-    : {mode:'powerlaw',label:'Still cheap '+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
+    : {mode:spSel.futures?'futures':'powerlaw',label:(spSel.futures?'Typical future ':'Still cheap ')+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
   //      otherwise the current My Setup state (no new capital deployed). ----
@@ -5145,6 +5072,8 @@ function computeSetupProjection(){
     // Hand-set target: walk today's price to it geometrically (a constant %/yr), which is the
     // honest reading of "BTC is $X by then" — no shape smuggled in that the user didn't ask for.
     if(customPath)return bpStart*Math.pow(bpEnd/bpStart,progress);
+    // The 4,000-futures typical (median) path — the line drawn on the chart above the results.
+    if(spSel.futures&&window.GMFutures){const v=window.GMFutures.typicalAt(t);if(v>0)return v;}
     const c=rbProjPrice(t)||bpEnd;
     return c*Math.exp(offset0*(1-progress));
   }
@@ -5244,7 +5173,7 @@ function computeSetupProjection(){
   }
 
   const daily=[];
-  let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0;
+  let weeklyGrossUSD=0,totalDistributionUSD=0,startSS_capture=0,startDisc_capture=0;
   // ---- standing contributions ----
   // Money the operator keeps adding after the lump sum. It joins the weekly allocation as fresh
   // cash, so it is split across TH / efficiency / lock by the same allocator that spends rewards.
@@ -5274,7 +5203,7 @@ function computeSetupProjection(){
                          // and every GMT purchase reprice off the walking token price
     apr=stakeAprAt(apr0,(d-1)/365.25);   // and the staking yield relaxes toward its funded floor
     dbtToday=Math.max(dbt*subsidyMultAt(projStartMs+(d-1)*86400000)*(applyDiffGrind?difficultyMultAt(projStartMs+(d-1)*86400000):1), rewardFloorBTC(bpToday));  // halving (+ difficulty grind, unless the price is hand-set), floored at the network no-arbitrage break-even
-    if(d===1)startSS_capture=dailyNet(th,gmtLocked).net;
+    if(d===1){const _d1=dailyNet(th,gmtLocked);startSS_capture=_d1.net;startDisc_capture=_d1.disc;}
     totalAmbUSD+=ambDaily;
     if(d%7===0){
       gmtLocked+=gmtLocked*(apr/100)/52;            // weekly staking yield auto-compounds
@@ -5400,12 +5329,13 @@ function computeSetupProjection(){
   const lockedUSD=gmtLocked*gp;
 
   const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
-  const btcModeBadge=customPath
-    ? '<span class="badge" style="background:rgba(245,166,35,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">YOUR PRICE</span>'
-    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">WORST CASE</span>';
-  const btcRangeLine=customPath
-    ? `BTC walks from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> — the figure you set — at a steady ${fN((Math.pow(bpEnd/bpStart,365/Math.max(1,days))-1)*100,0)}%/yr (${days}d). Fair-value band for that date: ${fmtBTCPrice(spSel.modelEnd)}`
-    : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong>, converging to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by the ${new Date(targetMs).getUTCFullYear()} halving (${days}d)`;
+  const btcModeBadge=spSel.futures
+    ? '<span class="badge" style="background:rgba(245,166,35,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
+    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">STILL CHEAP</span>';
+  const _yrsLbl=spSel.yrs+' year'+(spSel.yrs>1?'s':'');
+  const btcRangeLine=spSel.futures
+    ? `BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} today</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> (${_yrsLbl})`
+    : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by ${_endWhen} (${_yrsLbl})`;
 
   // Say plainly what the GMT leg is and how little it is worth trusting. The centre is a rough
   // average, not a forecast, and the band is the point of showing it at all.
@@ -5429,8 +5359,9 @@ function computeSetupProjection(){
       // marketplace miner in it against one without, or the current setup against the plan —
       // and none of it was visible, because the banner named the farm without pricing it. This
       // is the number to compare against the planner's headline; if they differ, the inputs did.
-      const d1=dailyNet(th,gmtLocked);
-      return ` &mdash; earning <strong style="color:var(--text2)">${fU(d1.net*30)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(d1.disc,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
+      // Captured on day 1 of the run. Reading dailyNet() here, after the loop, priced the END state
+      // and labelled it day 1 — so the "day 1" figure changed with the horizon.
+      return ` &mdash; earning <strong style="color:var(--text2)">${fU(startSS_capture*30)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(startDisc_capture,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
     })()}
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
@@ -5447,16 +5378,11 @@ function computeSetupProjection(){
     const a=Math.min(loMo,hiMo), b=Math.max(loMo,hiMo);
     gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range ($${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
   }
+  // The end-of-period daily / monthly / yearly figures are shown in the hero cards on the futures
+  // chart (assets/futures.js), so they are published here instead of drawn as a second card.
   const fb=dailyNet(th,gmtLocked);
-  const breakdownMonthly=`mining ${fU(fb.mining*30)} + staking ${fU(fb.staking*30)}${ambDaily>0?` + ambassador ${fU(fb.amb*30)}`:''}${fb.greedy>0?` + greedy growth ${fU(fb.greedy*30)}`:''}`;
-  h+=`<div class="ri-single-card">
-    <div class="ri-label">Monthly Reward (End of Period)</div>
-    <div class="ri-headline cyan">${fU(finalMonthly)}</div>
-    <div class="ri-mo-yr alt"><span class="v">${fU(finalSS)}<i>/day</i></span><span class="ri-sep">&bull;</span><span class="v">${fU(finalYearly)}<i>/yr</i></span></div>
-    <div class="ri-breakdown">${breakdownMonthly}</div>
-    ${gmtRangeNote}
-    <div class="ri-gain">${ssPct>=0?'+':''}${fN(ssPct,1)}% vs start</div>
-  </div>`;
+  window._spEnd={daily:finalSS,mining:fb.mining,staking:fb.staking,amb:fb.amb||0,greedy:fb.greedy||0,
+    ssPct,startSS,th:totEndTH,gmtLocked,bpEnd:bpAtEnd,gp,targetMs,days,yrs:spSel.yrs,mode:window._spMode,gmtRange:gmtRangeNote};
   {
     const yrs=days/365;
     const roiYr=yrs>0?ssPct/yrs:0;
@@ -5730,7 +5656,7 @@ function buildShareCanvas(d){
   x.shadowColor='rgba(245,166,35,0.55)';x.shadowBlur=28;
   x.fillText(d.days+'-Day Growth Projection',W/2,72);x.shadowBlur=0;
   x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Share Tech Mono",monospace';
-  const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (linear)';
+  const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (typical future)';
   x.fillText('Auto-Reinvest Compound Strategy'+btcSub+'  •  powered by gmt-optimizer.com',W/2,108);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
   lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.6)');lg.addColorStop(1,'transparent');
