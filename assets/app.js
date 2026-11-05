@@ -4,7 +4,7 @@ if('scrollRestoration' in history){history.scrollRestoration='manual';}
 window.scrollTo(0,0);
 window.addEventListener('load',()=>window.scrollTo(0,0));
 // ---- STATE ----
-const S = { btcPrice:0, gmtPrice:0, difficulty:0, netHashrate:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null };
+const S = { btcPrice:0, gmtPrice:0, difficulty:0, netHashrate:0, avgTxFees:0, satsPerTHDay:0, apiOk:false, timer:3600, loaded:false, currency:'USD', fxRate:1, priceStale:false, priceCachedAt:0, discountOverride:null, vipOverride:null };
 const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
@@ -53,6 +53,17 @@ const TIERS=[
 // discount and keep growing the farm).
 const vipOf=(th,veg)=>{let t=TIERS[0];for(const x of TIERS)if(th>=x.th||veg>=x.veg)t=x;return t};
 const nextVip=(th,veg)=>{for(const x of TIERS)if(th<x.th&&veg<x.veg)return x;return null};
+// Manual VIP override: the tier GoMining actually shows you, for when the auto-calc is wrong
+// (e.g. veGMT depends on lock length, so locked GMT can over- or under-state it). Applied as
+// a SHIFT from the auto-calc tier at today's setup, so projections still climb as the farm grows.
+const vipBasisTH=i=>{const g=Math.max(0,i.gth||0);return(i.th||0)+Math.max(0,g-Math.min(Math.max(0,i.gInit||0),g))+Math.max(0,i.offTH||0)};
+function vipFor(th,veg,i){
+  const t=vipOf(th,veg),o=S.vipOverride?TIERS.findIndex(x=>x.n===S.vipOverride):-1;
+  if(o<0||!i)return t;
+  const base=TIERS.indexOf(vipOf(vipBasisTH(i),i.gl||0));
+  const k=Math.max(0,Math.min(TIERS.length-1,TIERS.indexOf(t)+o-base));
+  return Object.assign({},TIERS[k],{ovr:true});
+}
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
 
 // ---- TH COST TIERS ----
@@ -231,7 +242,7 @@ function effectiveCompoundedROI(i,m){
       if(!(tot>0)&&!(locked>0))continue;
       const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
       const f=fees(Math.max(tot,1e-9),bw,bp);
-      const v=vipOf(th+Math.max(0,gTH-gInit),locked);
+      const v=vipFor(th+Math.max(0,gTH-gInit),locked,i);
       const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
       const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                     // GMT/day at full fee
       const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
@@ -683,7 +694,7 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
     locked*=Math.pow(1+(i.apr/100)/52,WK);                 // staking yield auto-compounds
     const tot=othTH+gTH, bw=tot>0?(othTH*othW+gTH*gW)/tot:othW;
     const f=fees(tot,bw,bp);
-    const v=vipOf(othTH+Math.max(0,gTH-(a.gInit||0)),locked);
+    const v=vipFor(othTH+Math.max(0,gTH-(a.gInit||0)),locked,i);
     const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
     const burn=(f.t*(1-nonTok/100)*bp)/gp;
     const cov=burn>0?(locked+gmtW)/burn:Infinity;
@@ -2720,7 +2731,8 @@ function readInputs(){
     inCurrency:$('inCurrency').value,
     piVipBonus:$('piVipBonus')?$('piVipBonus').checked:false,
     // Manual discount override travels WITH the setup so it never leaks across profiles.
-    discountOverride:(S.discountOverride!=null&&isFinite(S.discountOverride))?S.discountOverride:null
+    discountOverride:(S.discountOverride!=null&&isFinite(S.discountOverride))?S.discountOverride:null,
+    vipOverride:S.vipOverride||null
   };
 }
 // Apply a setup's saved discount override (or clear it). Keeps the global persistence key
@@ -2729,6 +2741,7 @@ function applyDiscountOverrideFor(d){
   const raw=d?d.discountOverride:undefined;
   const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(30,Number(raw))):null;
   S.discountOverride=v;
+  S.vipOverride=(d&&TIERS.some(t=>t.n===d.vipOverride))?d.vipOverride:null;   // VIP override is per-setup too
   try{v!=null?localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v)):localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
 }
 function applyInputs(d){
@@ -3040,6 +3053,7 @@ function loadSetup(){
       // New profiles store their own override; legacy ones (field absent) keep the
       // global value loadDiscountOverride() already restored above.
       if(p.data&&p.data.discountOverride!==undefined)applyDiscountOverrideFor(p.data);
+      else if(p.data&&p.data.vipOverride)S.vipOverride=p.data.vipOverride;
       return true;
     }
   }
@@ -3225,7 +3239,7 @@ function calc(i){
   // but you still own it, so it still counts toward your VIP tier. It is switched off,
   // so it enters NEITHER the reward nor the fee basis — only the VIP one.
   const offTH=Math.max(0,i.offTH||0),offWth=offTH>0?(i.offWth>0?i.offWth:15):0;
-  const vipTH=i.th+Math.max(0,gth-gInit)+offTH;   // VIP tier basis — still owned, so it still counts
+  const vipTH=vipBasisTH(i);                     // VIP tier basis — still owned, so it still counts
   const earnTH=i.th+gth;                          // hashrate that mines AND is billed
   const totTH=earnTH+offTH;                       // hashrate OWNED (farm value, VIP) — not the fee basis
   // A paused miner is switched off: it mines nothing and it is billed nothing. Fees and
@@ -3234,7 +3248,8 @@ function calc(i){
   // fee for the same GMT coverage to stretch over — which is the real-world effect.
   const bwth=earnTH>0?(i.th*i.wth+gth*gwth)/earnTH:i.wth;
   const gross=dbt*earnTH,f=fees(earnTH,bwth,bp);
-  const vip=vipOf(vipTH,i.gl),nxt=nextVip(vipTH,i.gl);
+  const vip=vipFor(vipTH,i.gl,i);
+  const nxt=vip.ovr?(TIERS[TIERS.findIndex(x=>x.n===vip.n)+1]||null):nextVip(vipTH,i.gl);
   const vd=vip.d,cb=i.click?3:0;
   const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
@@ -3263,6 +3278,19 @@ function calc(i){
 // ---- RENDER HELPERS ----
 function row(l,v,c=''){return`<div class="out-row"><span class="out-label">${l}</span><span class="out-val ${c}">${v}</span></div>`}
 function badge(vip){return`<span class="vip-badge ${tierCls(vip.n)}">${vip.n}${vip.est?' (est.)':''}</span>`}
+// Tier picker under the VIP badge — "Auto" follows the calc, anything else pins today's tier.
+function vipPicker(cur){
+  const opts=['<option value="">Auto (calculated)</option>'].concat(TIERS.map(t=>`<option value="${t.n}"${t.n===cur?' selected':''}>${t.n}</option>`));
+  return`<div style="display:flex;align-items:center;justify-content:center;gap:.45rem;flex-wrap:wrap;margin:.2rem 0 .5rem;font-size:.75rem;color:var(--text3)">
+    <label for="inVipOverride">Wrong tier? Set yours:</label>
+    <select id="inVipOverride" onchange="setVipOverride(this.value)" style="font-size:.75rem;padding:.15rem .3rem">${opts.join('')}</select></div>`;
+}
+function setVipOverride(n){
+  S.vipOverride=n&&TIERS.some(t=>t.n===n)?n:null;
+  autoSave();   // the override travels with the active setup, like the discount override
+  if(S.loaded)recalc();
+  flashStatus(S.vipOverride?'VIP tier set to '+S.vipOverride:'VIP tier back to auto-calc');
+}
 
 // ---- ANIMATED NUMBER COUNTER ----
 // Eases a metric from its previous value to the new one (~800ms). First render
@@ -3506,7 +3534,7 @@ function recalc(){
   // VIP next-tier progress: the tier qualifies on TH OR locked GMT, so show whichever path is
   // CLOSER to the next tier (e.g. a GMT-qualified user sees "X GMT to next", not the TH path).
   let vipNext=null;
-  if(m.nxt){
+  if(m.nxt&&!m.vip.ovr){
     const thP=m.nxt.th>0?m.vipTH/m.nxt.th:0, gP=m.nxt.veg>0?i.gl/m.nxt.veg:0, useG=gP>=thP;
     const cur=useG?i.gl:m.vipTH, tgt=useG?m.nxt.veg:m.nxt.th;
     vipNext={unit:useG?'GMT':'TH',cur,tgt,need:Math.max(0,tgt-cur),pct:tgt>0?Math.min(100,cur/tgt*100):0,dec:useG?0:1};
@@ -3515,14 +3543,16 @@ function recalc(){
   // detail still renders in the VIP section below. Guarded in case it returns.
   if($('heroVip')){
     $('heroVip').innerHTML=badge(m.vip);
-    $('heroVipSub').textContent=vipNext?fN(vipNext.need,0)+' '+vipNext.unit+' to '+m.nxt.n:'Max tier reached';
+    $('heroVipSub').textContent=m.vip.ovr?'Set by you':vipNext?fN(vipNext.need,0)+' '+vipNext.unit+' to '+m.nxt.n:'Max tier reached';
   }
 
   // VIP section
   let vh='<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem">'+badge(m.vip);
   if(m.vip.rb)vh+=` <span class="badge green">+${m.vip.rb}% TH reinvest bonus</span>`;
   if(m.vip.est)vh+=` <span class="badge orange">discount estimated</span>`;
-  vh+='</div>';
+  if(m.vip.ovr)vh+=` <span class="badge orange">set by you</span>`;
+  vh+='</div>'+vipPicker(S.vipOverride);
+  if(m.vip.ovr&&m.nxt)vh+=`<div class="tier-progress" style="font-size:.78rem;color:var(--text2);text-align:center">Next: ${badge(m.nxt)} <span style="color:var(--text3)">at ${fN(m.nxt.th,0)} TH or ${fN(m.nxt.veg,0)} veGMT</span></div>`;
   if(vipNext){
     vh+=`<div class="tier-progress"><div style="display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:.78rem;color:var(--text2)">Next: ${badge(m.nxt)}</span>
@@ -3956,7 +3986,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     const newMinted=Math.max(0,totFeeTH-i.th-gth0-mpTH);
     const bw=blendWTH(newMinted);
     const rf=fees(totFeeTH||1,bw||15,bp);
-    const rd=Math.min(30,(vipOf(vipBasis,lockedGMT).d)+(i.click?3:0)+(i.mm||0));
+    const rd=Math.min(30,(vipFor(vipBasis,lockedGMT,i).d)+(i.click?3:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
     return Math.min(reserveNeeded,gmtAvail);
@@ -3997,7 +4027,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const walletAfter=reserve;
       const bwth=blendWTH(addVip,addGreedy,addGreedyWatts);
       const fTest=fees(feeTH,bwth,bp);
-      const vTest=vipOf(vipTH,totalLocked);
+      const vTest=vipFor(vipTH,totalLocked,i);
       const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
@@ -4050,7 +4080,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const bwth=blendWTH(addVip,addGreedy,sol.addGreedyWatts);   // minted TH at 15 W, greedy top-up at its own machine's rating
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
-  const nv=vipOf(vipTH,newLocked);     // tier from VIP-eligible TH only
+  const nv=vipFor(vipTH,newLocked,i);     // tier from VIP-eligible TH only
   const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
@@ -4562,7 +4592,7 @@ function renderPlanner(i,m){
   updateEffCompare();
 
   // --- Post-investment projections ---
-  const ov=vipOf(i.th,i.gl),tc=nv.n!==ov.n;
+  const ov=m.vip,tc=nv.n!==ov.n;
   const curMo=m.net*m.bp*30,imp=projMoMining-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
@@ -5121,7 +5151,7 @@ function computeSetupProjection(){
     const totTH=curTH+MP_TH+gTH;
     const bw=totTH>0?(curTH*cW+MP_TH*MP_WTH+gTH*gW)/totTH:cW;
     const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
-    const v=vipOf(curTH+Math.max(0,gTH-GINIT),curLocked);
+    const v=vipFor(curTH+Math.max(0,gTH-GINIT),curLocked,i);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
@@ -5172,7 +5202,7 @@ function computeSetupProjection(){
     const totTH=curTH+MP_TH+greedyTH;
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
     const f=fees(totTH,bw,bpToday);
-    const v=vipOf(curTH+Math.max(0,greedyTH-GINIT),curLocked);
+    const v=vipFor(curTH+Math.max(0,greedyTH-GINIT),curLocked,i);
     const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*360-(curLocked+gmtW));
