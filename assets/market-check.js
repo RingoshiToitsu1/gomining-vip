@@ -33,7 +33,7 @@
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const STAKE_APR        = 19.52;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
+  const STAKE_APR        = 18.87;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
   const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js

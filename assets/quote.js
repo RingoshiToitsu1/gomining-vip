@@ -32,10 +32,10 @@
   const EFF_BEST       = 12;      // best efficiency reachable, by upgrading (W/TH)
   const EFF_BASE_MAX   = 15;      // 15 W/TH hashrate curve
   const EFF_NEW        = EFF_BASE_MAX;   // what a new miner mints at: 15 W only since 2026-10-30
-  // % — GMT locked-staking APR (observed 2026-10-30). Kept in step with STAKING_APR in
+  // % — GMT locked-staking APR (observed 2026-11-06). Kept in step with STAKING_APR in
   // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 19.52;
-  const MINING_MODE    = 1.06;    // % — solo mining discount (console inMiningMode, observed 2026-10-30)
+  const STAKE_APR0     = 18.87;
+  const MINING_MODE    = 1.09;    // % — solo mining discount (console inMiningMode, observed 2026-11-06)
   const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
@@ -319,7 +319,7 @@
   const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US',
     { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
   const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
-  const APR = 19.52;   // mirrors inLockAPR in console/index.html and STAKING_APR in scripts/constants.js
+  const APR = 18.87;   // mirrors inLockAPR in console/index.html and STAKING_APR in scripts/constants.js
   // When the tier tables above were last read off the live GoMining app. Mirrors
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
   const TH_PRICES_ASOF = '30 Oct 2026';

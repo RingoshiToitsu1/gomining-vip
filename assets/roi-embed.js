@@ -23,10 +23,10 @@
   const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
   const EFF_BEST       = 12;      // best efficiency reachable, by upgrading a 15 W miner (W/TH)
   const EFF_BASE_MAX   = 15;      // cheaper marketplace hashrate (W/TH)
-  // % — GMT locked-staking APR (observed 2026-10-30). Kept in step with STAKING_APR in
+  // % — GMT locked-staking APR (observed 2026-11-06). Kept in step with STAKING_APR in
   // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 19.52;
-  const MINING_MODE    = 1.06;    // % — solo mining discount (console inMiningMode, observed 2026-10-30)
+  const STAKE_APR0     = 18.87;
+  const MINING_MODE    = 1.09;    // % — solo mining discount (console inMiningMode, observed 2026-11-06)
   const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
