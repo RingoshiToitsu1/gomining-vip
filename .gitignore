@@ -49,3 +49,10 @@ __pycache__/
 
 # Claude Code transcripts + local memory — contain API keys, never publish
 .claude/projects/
+
+# toolchains and download caches — never part of the site (they once got committed: 80k files)
+.rustup/
+.cargo/
+.npm/
+.local/
+.claude/plugins/
