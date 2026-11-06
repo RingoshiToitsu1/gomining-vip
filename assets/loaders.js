@@ -71,6 +71,7 @@
 .cb-load.done .cb-hash{color:#57d9a3}
 .cb-wipe{animation:cbWipe .95s cubic-bezier(.65,0,.35,1) both}
 @keyframes cbWipe{from{clip-path:inset(0 100% 0 0);filter:brightness(1.6) saturate(1.3)}60%{filter:brightness(1.15)}to{clip-path:inset(0 0 0 0);filter:none}}
+.cb-load.cb-inline{align-items:flex-start;padding-top:72px;border-radius:inherit}
 @media(max-width:420px){.cb-v{font-size:.62rem}.cb-step{font-size:.74rem}}
 @media(prefers-reduced-motion:reduce){.cb-load *,.cb-load::before{animation:none!important}.cb-wipe{animation:none}}
 `;
@@ -85,12 +86,12 @@
   // Run a loader over a page's chart area. steps: [{label, ok(), v()}]. target: element to wipe in.
   function run(pageId, opts) {
     const page = pageId ? document.getElementById(pageId) : null;
-    const wrap = opts.fixed ? document.body : page && page.querySelector('.btc-chart-wrap');
+    const wrap = opts.host || (opts.fixed ? document.body : page && page.querySelector('.btc-chart-wrap'));
     if (!wrap) return null;
     if (active) active.cancel();
 
     const el = document.createElement('div');
-    el.className = 'cb-load' + (opts.rainbow ? ' cb-rainbow' : '') + (opts.fixed ? ' cb-fixed' : '');
+    el.className = 'cb-load' + (opts.rainbow ? ' cb-rainbow' : '') + (opts.fixed ? ' cb-fixed' : '') + (opts.host ? ' cb-inline' : '');
     el.setAttribute('role', 'status');
     el.setAttribute('aria-live', 'polite');
     el.innerHTML = '<div class="cb-core"><div class="cb-orb"><img src="' + opts.icon + '" alt=""></div>' +
@@ -287,6 +288,7 @@
   wrapPlanner('submitPlannerCapital', false);
   wrapPlanner('submitPlannerTarget', true);
 
-  // Growth Projection: no loader — it re-runs in place on every horizon / payout change
-  // (assets/futures.js), so a full-screen overlay would flash on every tap.
+  // Growth Projection: no full-screen loader — it re-runs in place on every horizon / payout
+  // change. assets/futures.js runs an in-panel one (opts.host) when you switch the horizon.
+  window.GMLoader = { run };
 })();

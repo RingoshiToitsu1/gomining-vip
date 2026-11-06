@@ -1,5 +1,5 @@
 /* 4,000 Bitcoin futures — Growth Projection (assets/futures.js) */
-.fx-wrap{margin:2rem auto 0;max-width:980px;background:radial-gradient(120% 90% at 0% 40%,rgba(245,166,35,.08),transparent 60%),var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.1rem 1.1rem 1rem}
+.fx-wrap{position:relative;margin:2rem auto 0;max-width:980px;background:radial-gradient(120% 90% at 0% 40%,rgba(245,166,35,.08),transparent 60%),var(--bg-card);border:1px solid var(--card-border);border-radius:var(--radius);padding:1.1rem 1.1rem 1rem}
 .fx-head{display:flex;justify-content:space-between;align-items:flex-end;gap:.8rem;flex-wrap:wrap;margin-bottom:.7rem}
 .fx-title{font-weight:800;font-size:1.15rem;color:var(--text)}
 .fx-sub{font-size:.76rem;color:var(--text3);margin-top:.15rem}
@@ -7,7 +7,16 @@
 .fx-chip{font-family:var(--mono);font-size:.78rem;font-weight:700;padding:6px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;transition:var(--transition)}
 .fx-chip:hover{color:var(--text2);border-color:var(--text4)}
 .fx-chip.on{background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#100a02;border-color:transparent}
-#fxCanvas{display:block;width:100%;height:300px}
+#fxCanvas{display:block;width:100%;height:300px;touch-action:pan-y;cursor:crosshair}
+.fx-plot{position:relative}
+.fx-x{position:absolute;top:10px;bottom:24px;width:0;border-left:1px dashed rgba(255,244,224,.35);pointer-events:none}
+.fx-x i{position:absolute;left:-5px;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;border:2px solid #0a0b0e}
+.fx-x .mid{background:#FFC65A;box-shadow:0 0 10px #FFC65A}.fx-x .hi{background:#7fd37a;box-shadow:0 0 10px #7fd37a}.fx-x .lo{background:#ff8080;box-shadow:0 0 10px #ff8080}
+.fx-tip{position:absolute;pointer-events:none;min-width:128px;padding:.45rem .6rem;border-radius:10px;background:rgba(10,11,14,.92);border:1px solid rgba(245,166,35,.35);box-shadow:0 6px 24px rgba(0,0,0,.5),0 0 18px rgba(245,166,35,.15);font-size:.74rem;color:var(--text);backdrop-filter:blur(4px)}
+.fx-tip b{display:block;font-size:.72rem;color:var(--text2);font-weight:600;margin-bottom:.2rem}
+.fx-tip .r{display:flex;justify-content:space-between;gap:.8rem;font-family:var(--mono);font-weight:700}
+.fx-tip .r span{font-family:inherit;font-weight:600;color:var(--text2)}
+.fx-tip .mid{color:#FFC65A}.fx-tip .hi{color:#7fd37a}.fx-tip .lo{color:#ff8080}
 .fx-leg{display:flex;flex-wrap:wrap;gap:.35rem 1rem;margin-top:.55rem;font-size:.7rem;color:var(--text3)}
 .fx-leg i{display:inline-block;width:16px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
 .fx-leg .lg-p{border-color:rgba(255,198,90,.35);border-top-width:1px}

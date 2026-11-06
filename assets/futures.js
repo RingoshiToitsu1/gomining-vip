@@ -59,8 +59,9 @@
           <div class="fx-sub" id="fxSub">Pick how far ahead to project</div></div>
           <div class="fx-chips" role="tablist" aria-label="Horizon">${YEARS.map(y=>`<button type="button" class="fx-chip${y===yrs?' on':''}" data-y="${y}" role="tab" aria-selected="${y===yrs}">${y}Y</button>`).join('')}</div>
         </div>
-        <canvas id="fxCanvas" aria-label="Fan chart of simulated Bitcoin price paths"></canvas>
-        <div class="fx-leg"><span><i class="lg-p"></i>One possible future</span><span><i class="lg-m"></i>Typical</span><span><i class="lg-b"></i>Bad / good (10th–90th)</span><span><i class="lg-c"></i>"Still cheap" band</span></div>
+        <div class="fx-plot" id="fxPlot"><canvas id="fxCanvas" aria-label="Fan chart of simulated Bitcoin price paths"></canvas>
+          <div class="fx-x" id="fxX" hidden><i class="hi"></i><i class="mid"></i><i class="lo"></i></div><div class="fx-tip" id="fxTip" hidden></div></div>
+        <div class="fx-leg"><span><i class="lg-p"></i>One possible future</span><span><i class="lg-m"></i>Avg</span><span><i class="lg-b"></i>Low / high (10th–90th)</span><span><i class="lg-c"></i>"Still cheap" band</span></div>
         <div class="fx-when" id="fxWhen"></div>
         <div class="hero-grid fx-grid">
           <div class="hero-card green-accent"><span class="corners"></span>
@@ -80,7 +81,7 @@
         <div class="fx-foot">A model, not a forecast: price swings are sampled from Bitcoin's own history and drift toward the rainbow chart's Still-cheap band. The projection below walks the typical line, reinvesting each week. Not financial advice.</div>
       </div>`;
     host.querySelectorAll('.fx-chip').forEach(b=>b.addEventListener('click',()=>{yrs=+b.dataset.y;
-      host.querySelectorAll('.fx-chip').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on);});project();}));
+      host.querySelectorAll('.fx-chip').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on);});project(true);}));
   }
 
   function render(){
@@ -118,15 +119,58 @@
   // Re-run the reinvesting projection for the current horizon / payout / mode.
   // The run is synchronous and a 10-year one takes several seconds, so: show a busy state, let it
   // paint, run, and only then animate the chart and the cards together.
-  function project(){
+  // A horizon switch (loud) also plays the console's step loader over the panel; payout / mode
+  // changes stay quiet. The loader's steps tick off as the real run finishes ('gm:proj').
+  let ran=0;
+  function project(loud){
     if(!sim||typeof runSetupProjection!=='function')return;
     ['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.add('fx-busy');});
     const w=$f('fxWhen');if(w)w.innerHTML=`<span class="fx-spin"></span>Projecting ${yrs} year${yrs>1?'s':''} of weekly reinvesting…`;
-    setTimeout(runSetupProjection,40);
+    const host=loud&&window.GMLoader&&document.querySelector('#spFuturesHost .fx-wrap');
+    if(!host){setTimeout(runSetupProjection,40);return;}
+    const id=++ran,Y=yrs,wk=Y*52,done=()=>ran!==id||!building&&window._fxRan===id;
+    window._fxRan=0;
+    addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);window._fxRan=id;});
+    GMLoader.run(null,{host,icon:'/gmt-optimizer-logo.svg?v=2',minMs:1700,maxMs:20000,
+      kicker:Y+' Year Forecast',title:'Projecting '+Y+' year'+(Y>1?'s':'')+' ahead',doneText:'projection ready',
+      steps:[
+        {label:'Loading '+PATHS.toLocaleString()+' Bitcoin futures',ok:()=>true,v:()=>PATHS.toLocaleString()+' paths'},
+        {label:'Walking every path week by week',ok:()=>true,v:()=>wk.toLocaleString()+' weeks'},
+        {label:'Reinvesting your rewards each week',ok:done,v:()=>window._spEnd?fN(window._spEnd.th,window._spEnd.th<100?1:0)+' TH':'done'},
+        {label:'Pricing the avg, low and high path',ok:done,v:()=>fU(sim.p50[wk-1],0)}
+      ]});
+    setTimeout(runSetupProjection,380);   // let the first steps tick before the synchronous run
   }
   addEventListener('gm:proj',()=>{['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.remove('fx-busy');});render();});
 
+  // ---- hover / touch readout: crosshair, a dot on each headline line, and their prices ----
+  let geo=null;
+  function hover(ev){
+    const tip=$f('fxTip'),xh=$f('fxX'),cv=$f('fxCanvas');if(!tip||!xh)return;
+    if(!ev||!geo||!sim){tip.hidden=xh.hidden=true;return;}
+    const r=cv.getBoundingClientRect(),px=ev.clientX-r.left;
+    const {X,Y,Wn,pad,pw,cssW}=geo;
+    const w=Math.round((px-pad.l)/pw*Wn)-1;
+    if(px<pad.l-4||px>pad.l+pw+4){tip.hidden=xh.hidden=true;return;}
+    const today=w<0, i=Math.max(0,Math.min(Wn-1,w)), x=today?geo.x0:X(i);
+    const v=today?{hi:sim.bp,mid:sim.bp,lo:sim.bp}:{hi:sim.p90[i],mid:sim.p50[i],lo:sim.p10[i]};
+    xh.hidden=false;xh.style.left=x+'px';
+    for(const k of ['hi','mid','lo'])xh.querySelector('.'+k).style.top=Y(v[k])+'px';
+    const date=today?'Today':new Date(sim.now+(i+1)*WEEK).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    tip.innerHTML=today?`<b>${date}</b><div class="r mid"><span>BTC</span>${fU(sim.bp,0)}</div>`:
+      `<b>${date}</b><div class="r hi"><span>High</span>${fU(v.hi,0)}</div><div class="r mid"><span>Avg</span>${fU(v.mid,0)}</div><div class="r lo"><span>Low</span>${fU(v.lo,0)}</div>`;
+    tip.hidden=false;
+    const tw=tip.offsetWidth, left=x+12+tw>cssW?x-12-tw:x+12;
+    tip.style.left=Math.max(0,left)+'px';tip.style.top=Math.max(0,Math.min(Y(v.mid)-tip.offsetHeight/2,(cv.clientHeight||300)-tip.offsetHeight))+'px';
+  }
+  function bindHover(){
+    const cv=$f('fxCanvas');if(!cv||cv.dataset.hv)return;cv.dataset.hv='1';
+    ['pointermove','pointerdown'].forEach(e=>cv.addEventListener(e,hover));
+    cv.addEventListener('pointerleave',()=>hover(null));
+  }
+
   function draw(Wn,still){
+    bindHover();
     const cv=$f('fxCanvas');if(!cv||!sim)return;
     const W=sim.W, all=sim.all, p10=sim.p10, p50=sim.p50, p90=sim.p90, lane=sim.lane;
     // Scale to the bands (always fully visible); individual paths may run off the edges.
@@ -150,11 +194,16 @@
         if(endYs.some(z=>Math.abs(z-y)<13))continue;
         g.fillStyle='rgba(235,226,210,.38)';g.fillText(short(v),pad.l+pw+6,y);}
       g.textBaseline='alphabetic';g.fillStyle='rgba(235,226,210,.38)';
-      const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=X(k*52-1);g.fillText('Yr '+k,Math.min(x-12,pad.l+pw-30),cssH-6);}
-      g.fillText('Now',pad.l,cssH-6);
+      const now$=fU(sim.bp,0);g.font='600 11px ui-monospace,monospace';const nowW=g.measureText(now$).width;g.font='11px ui-monospace,monospace';
+      const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText('Yr '+k,x,cssH-6);}
+      g.fillStyle='#FFC65A';g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
     }
-    function line(arr,stroke,width,dash,upto){g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);g.beginPath();g.moveTo(x0,y0);
-      for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(arr[w]));g.stroke();g.setLineDash([]);}
+    // glow: a soft halo in the line's own colour (only on the few headline lines — 260 paths would crawl)
+    function line(arr,stroke,width,dash,upto,glow){g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);
+      if(glow){g.shadowColor=glow;g.shadowBlur=width*5;}
+      g.beginPath();g.moveTo(x0,y0);
+      for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(arr[w]));g.stroke();g.setLineDash([]);g.shadowBlur=0;}
+    geo={X,Y,Wn,pad,pw,cssW,x0,y0};hover(null);
     const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     const DUR=(reduce||still)?0:1800, t0=performance.now();
     if(anim)cancelAnimationFrame(anim);
@@ -170,10 +219,11 @@
         g.beginPath();g.moveTo(x0,y0);for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(all[p*W+w]));g.stroke();
       }
       line(lane,'rgba(235,226,210,.55)',1.2,[4,4],upto);
-      line(p10,'rgba(255,128,128,.9)',1.4,[2,3],upto);
-      line(p90,'rgba(127,211,122,.9)',1.4,[2,3],upto);
-      line(p50,'#FFC65A',2.4,null,upto);
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(X(upto),Y(p50[upto]),3.5,0,7);g.fill();g.beginPath();g.arc(x0,y0,3,0,7);g.fill();
+      line(p10,'rgba(255,128,128,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
+      line(p90,'rgba(127,211,122,.95)',1.6,[2,3],upto,'rgba(110,220,110,.8)');
+      line(p50,'#FFC65A',2.6,null,upto,'rgba(255,190,70,.95)');
+      g.shadowColor='rgba(255,190,70,.95)';g.shadowBlur=14;g.fillStyle='#FFC65A';
+      g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();g.shadowBlur=0;
       if(k>=1){g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
         [[p90,'#7fd37a'],[p50,'#FFC65A'],[p10,'#ff8080']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
         anim=null;return;}
