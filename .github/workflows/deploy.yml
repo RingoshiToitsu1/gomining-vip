@@ -19,8 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v4
+      # Publish only the site: hidden folders (.rustup, .npm, .claude, ...) are tooling that got
+      # committed, and shipping 80k of their files made Pages' sync step stall and time out.
+      - name: Stage site
+        run: mkdir -p "$RUNNER_TEMP/site" && tar --exclude='./.*' -cf - . | tar -xf - -C "$RUNNER_TEMP/site"
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ${{ runner.temp }}/site
       - id: deployment
         uses: actions/deploy-pages@v4
