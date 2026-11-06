@@ -54,7 +54,8 @@
 .fx-lc{margin:.35rem 0 .6rem;text-align:center;line-height:1.1}
 .fx-lc span{display:block;font-family:var(--mono);font-weight:700;font-size:clamp(2rem,9vw,3rem);color:#FFF4E0;text-shadow:0 0 22px rgba(245,166,35,.6);font-variant-numeric:tabular-nums}
 .fx-lc small{font-size:.8rem;color:var(--text2)}
-.fx-lcv{display:block;width:100%;max-width:900px;height:clamp(180px,34vw,280px)}
+.fx-lplot{position:relative;width:100%;max-width:900px;height:clamp(180px,34vw,280px)}
+.fx-lcv{display:block;position:absolute;inset:0;width:100%;height:100%}
 .fx-lbar{width:min(420px,90%);height:3px;margin:.8rem 0 .7rem;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
 .fx-lbar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;transition:transform .25s;background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 12px rgba(245,166,35,.8)}
 .fx-lsteps{list-style:none;margin:0;padding:0;width:min(420px,100%);display:grid;grid-template-columns:minmax(0,1fr);gap:6px}

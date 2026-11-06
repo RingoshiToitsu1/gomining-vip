@@ -140,7 +140,7 @@
     const el=document.createElement('div');el.className='fx-load';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
     el.innerHTML=`<div class="fx-lk">${Y} Year Forecast</div>
       <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString()} Bitcoin futures</small></div>
-      <canvas class="fx-lcv"></canvas>
+      <div class="fx-lplot"><canvas class="fx-lcv"></canvas><canvas class="fx-lcv fx-ltop"></canvas></div>
       <div class="fx-lbar"><i></i></div>
       <ul class="fx-lsteps">
         <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString()} weeks</em></li>
@@ -148,48 +148,51 @@
         <li><b></b><span>Reinvesting your rewards each week</span><em></em></li>
       </ul>`;
     host.appendChild(el);
-    const cv=el.querySelector('canvas'),num=el.querySelector('#fxLN'),bar=el.querySelector('.fx-lbar i'),rows=[...el.querySelectorAll('.fx-lsteps li')];
-    const cssW=cv.clientWidth||600,cssH=cv.clientHeight||220,dpr=Math.min(2,devicePixelRatio||1);
-    cv.width=cssW*dpr;cv.height=cssH*dpr;
-    // trail: persistent layer the paths are painted onto; fx: cleared each frame (sparks, lines)
-    const trail=document.createElement('canvas');trail.width=cv.width;trail.height=cv.height;
-    const tg=trail.getContext('2d'),g=cv.getContext('2d');tg.setTransform(dpr,0,0,dpr,0,0);g.setTransform(dpr,0,0,dpr,0,0);
+    const [cv,top]=el.querySelectorAll('canvas'),num=el.querySelector('#fxLN'),bar=el.querySelector('.fx-lbar i'),rows=[...el.querySelectorAll('.fx-lsteps li')];
+    const cssW=cv.clientWidth||600,cssH=cv.clientHeight||220,dpr=Math.min(1.5,devicePixelRatio||1);
+    // two stacked layers: the bottom one keeps the paths painted so far (never cleared or copied),
+    // the top one is cleared each frame and holds only the sparks, the origin pulse and the lines
+    for(const c of [cv,top]){c.width=cssW*dpr;c.height=cssH*dpr;}
+    const tg=cv.getContext('2d'),g=top.getContext('2d');tg.setTransform(dpr,0,0,dpr,0,0);g.setTransform(dpr,0,0,dpr,0,0);
     let lo=sim.bp,hi=sim.bp;for(let w=0;w<Wn;w++){if(sim.p10[w]<lo)lo=sim.p10[w];if(sim.p90[w]>hi)hi=sim.p90[w];}
     lo*=0.7;hi*=1.6;
     const pad={l:6,r:6,t:8,b:8},pw=cssW-pad.l-pad.r,ph=cssH-pad.t-pad.b,L0=Math.log(lo),L1=Math.log(hi);
     const X=w=>pad.l+(w+1)/Wn*pw,Yv=v=>pad.t+(1-(Math.log(v)-L0)/(L1-L0))*ph,x0=pad.l,y0=Yv(sim.bp);   // unclamped: wild paths run off the edge
-    const N=Math.min(PATHS,cssW<500?260:420),STEP=Math.max(1,Math.ceil(Wn/120)),W=sim.W,med=sim.p50[Wn-1];
+    const N=Math.min(PATHS,cssW<500?140:240),STEP=Math.max(1,Math.ceil(Wn/120)),W=sim.W,med=sim.p50[Wn-1];
     // each drawn path: start time and speed, staggered so they burst out in waves
-    const P=[];for(let k=0;k<N;k++){const p=(k*9973)%PATHS;P.push({p,s:Math.pow(k/N,1.35)*1500,d:520+((k*37)%300),f:0,b:-1,up:sim.all[p*W+Wn-1]>=med});}
-    const T1=reduce?0:2050, T2=reduce?0:900, t0=performance.now();   // paths, then the three lines
+    const P=[];for(let k=0;k<N;k++){const p=(k*9973)%PATHS;P.push({p,s:Math.pow(k/N,1.35)*650,d:280+((k*37)%200),f:0,b:-1,up:sim.all[p*W+Wn-1]>=med});}
+    const T1=reduce?0:1000, T2=reduce?0:500, t0=performance.now();   // paths, then the three lines
     let phase=0,gone=false;
     const at=(arr,k)=>arr[Math.min(Wn-1,k)];
-    function path(ctx,p,from,to){ctx.beginPath();ctx.moveTo(from<0?x0:X(from),from<0?y0:Yv(sim.all[p*W+from]));
+    function path(ctx,p,from,to){ctx.moveTo(from<0?x0:X(from),from<0?y0:Yv(sim.all[p*W+from]));
       for(let w=Math.max(0,from)+STEP;w<=to;w+=STEP)ctx.lineTo(X(w),Yv(sim.all[p*W+w]));
-      if((to-Math.max(0,from))%STEP)ctx.lineTo(X(to),Yv(sim.all[p*W+to]));ctx.stroke();}
-    function band(arr,col,glow,width,k,dash){g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.shadowColor=glow;g.shadowBlur=width*6;
-      g.beginPath();g.moveTo(x0,y0);for(let w=0;w<=k;w+=STEP)g.lineTo(X(w),Yv(arr[w]));g.lineTo(X(k),Yv(arr[k]));g.stroke();g.setLineDash([]);
-      g.fillStyle=col;g.beginPath();g.arc(X(k),Yv(arr[k]),width+1.5,0,7);g.fill();g.shadowBlur=0;}
+      if((to-Math.max(0,from))%STEP)ctx.lineTo(X(to),Yv(sim.all[p*W+to]));}   // caller strokes: one stroke per colour per frame
+    // glow = a wide, faint stroke under the line (shadowBlur on a moving path is what made this lag)
+    function band(arr,col,glow,width,k,dash){const ln=new Path2D();ln.moveTo(x0,y0);for(let w=0;w<=k;w+=STEP)ln.lineTo(X(w),Yv(arr[w]));ln.lineTo(X(k),Yv(arr[k]));
+      g.globalAlpha=.22;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;
+      g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);
+      const hx=X(k),hy=Yv(arr[k]);g.fillStyle=glow;g.globalAlpha=.3;g.beginPath();g.arc(hx,hy,width*4,0,7);g.fill();g.globalAlpha=1;
+      g.fillStyle=col;g.beginPath();g.arc(hx,hy,width+1.5,0,7);g.fill();}
     function frame(now){
       if(gone||ran!==id||!el.isConnected)return;
       const t=now-t0;
       // paths
-      tg.globalCompositeOperation='lighter';tg.lineWidth=1;
-      let alive=0;
-      g.clearRect(0,0,cssW,cssH);g.globalAlpha=1;g.drawImage(trail,0,0,cssW,cssH);
-      g.globalCompositeOperation='lighter';
+      g.clearRect(0,0,cssW,cssH);
+      // batch every new segment and spark by colour: four draw calls a frame, not hundreds
+      const segUp=new Path2D(),segDn=new Path2D(),spUp=new Path2D(),spDn=new Path2D();
       for(const q of P){
         const f=Math.max(0,Math.min(1,(t-q.s)/q.d));if(f<=q.f)continue;
         const a=q.b,b=Math.floor((1-Math.pow(1-f,2))*(Wn-1));
-        if(b>a){tg.strokeStyle=q.up?'rgba(255,190,80,.11)':'rgba(255,110,70,.10)';path(tg,q.p,a,b);q.b=b;}
-        if(f<1){alive++;const hx=X(b),hy=Yv(sim.all[q.p*W+b]);   // spark at the head
-          g.fillStyle=q.up?'rgba(255,220,140,.9)':'rgba(255,150,110,.85)';g.shadowColor=g.fillStyle;g.shadowBlur=8;
-          g.beginPath();g.arc(hx,hy,1.3,0,7);g.fill();}
+        if(b>a){path(q.up?segUp:segDn,q.p,a,b);q.b=b;}
+        if(f<1){const hx=X(b),hy=Yv(sim.all[q.p*W+b]);(q.up?spUp:spDn).rect(hx-1.2,hy-1.2,2.4,2.4);}   // spark at the head
         q.f=f;
       }
-      g.shadowBlur=0;g.globalCompositeOperation='source-over';
+      tg.globalCompositeOperation='lighter';tg.lineWidth=1;
+      tg.strokeStyle='rgba(255,190,80,.16)';tg.stroke(segUp);tg.strokeStyle='rgba(255,110,70,.14)';tg.stroke(segDn);
+      g.fillStyle='rgba(255,225,150,.95)';g.fill(spUp);g.fillStyle='rgba(255,155,115,.9)';g.fill(spDn);
       // origin pulse
-      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='#FFC65A';g.shadowColor='#FFC65A';g.shadowBlur=18;g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();g.shadowBlur=0;
+      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(255,198,90,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
+      g.fillStyle='#FFC65A';g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
       const pk=Math.min(1,t/Math.max(1,T1));
       num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString();
       // the three lines sweep in once the paths are out
@@ -272,11 +275,12 @@
       const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText('Yr '+k,x,cssH-6);}
       g.fillStyle='#FFC65A';g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
     }
-    // glow: a soft halo in the line's own colour (only on the few headline lines — 260 paths would crawl)
-    function line(arr,stroke,width,dash,upto,glow){g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);
-      if(glow){g.shadowColor=glow;g.shadowBlur=width*5;}
-      g.beginPath();g.moveTo(x0,y0);
-      for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(arr[w]));g.stroke();g.setLineDash([]);g.shadowBlur=0;}
+    // glow: a wide, faint stroke in the line's own colour under it (shadowBlur re-run every frame lagged)
+    function line(arr,stroke,width,dash,upto,glow){const ln=new Path2D();ln.moveTo(x0,y0);
+      for(let w=0;w<=upto;w++)ln.lineTo(X(w),Y(arr[w]));
+      if(glow){g.globalAlpha=.2;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;}
+      g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);}
+    const PSTEP=Math.max(1,Math.ceil(Wn/150));   // background paths: ~150 points each is plenty at this size
     geo={X,Y,Wn,pad,pw,cssW,x0,y0};hover(null);
     const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     const DUR=(reduce||still)?0:1800, t0=performance.now();
@@ -287,17 +291,18 @@
       g.fillStyle='rgba(245,166,35,.10)';g.beginPath();g.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(p90[w]));for(let w=upto;w>=0;w--)g.lineTo(X(w),Y(p10[w]));g.lineTo(x0,y0);g.fill();
       g.lineWidth=1;
+      const pUp=new Path2D(),pDn=new Path2D();   // batched by colour: two strokes, not 260
       for(let p=0;p<SAMPLE;p++){
-        const up=all[p*W+Wn-1]>=p50[Wn-1];
-        g.strokeStyle=up?'rgba(255,198,90,.085)':'rgba(255,120,80,.07)';
-        g.beginPath();g.moveTo(x0,y0);for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(all[p*W+w]));g.stroke();
+        const pp=all[p*W+Wn-1]>=p50[Wn-1]?pUp:pDn;
+        pp.moveTo(x0,y0);for(let w=0;w<=upto;w+=PSTEP)pp.lineTo(X(w),Y(all[p*W+w]));pp.lineTo(X(upto),Y(all[p*W+upto]));
       }
+      g.strokeStyle='rgba(255,198,90,.085)';g.stroke(pUp);g.strokeStyle='rgba(255,120,80,.07)';g.stroke(pDn);
       line(lane,'rgba(235,226,210,.55)',1.2,[4,4],upto);
       line(p10,'rgba(255,128,128,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
       line(p90,'rgba(127,211,122,.95)',1.6,[2,3],upto,'rgba(110,220,110,.8)');
       line(p50,'#FFC65A',2.6,null,upto,'rgba(255,190,70,.95)');
-      g.shadowColor='rgba(255,190,70,.95)';g.shadowBlur=14;g.fillStyle='#FFC65A';
-      g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();g.shadowBlur=0;
+      g.fillStyle='rgba(255,190,70,.25)';g.beginPath();g.arc(X(upto),Y(p50[upto]),11,0,7);g.fill();
+      g.fillStyle='#FFC65A';g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
       if(k>=1){g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
         [[p90,'#7fd37a'],[p50,'#FFC65A'],[p10,'#ff8080']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
         anim=null;return;}
