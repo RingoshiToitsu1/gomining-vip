@@ -119,27 +119,101 @@
   // Re-run the reinvesting projection for the current horizon / payout / mode.
   // The run is synchronous and a 10-year one takes several seconds, so: show a busy state, let it
   // paint, run, and only then animate the chart and the cards together.
-  // A horizon switch (loud) also plays the console's step loader over the panel; payout / mode
-  // changes stay quiet. The loader's steps tick off as the real run finishes ('gm:proj').
+  // A horizon switch (loud) plays the futures loader over the panel; payout / mode changes stay quiet.
   let ran=0;
   function project(loud){
     if(!sim||typeof runSetupProjection!=='function')return;
     ['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.add('fx-busy');});
     const w=$f('fxWhen');if(w)w.innerHTML=`<span class="fx-spin"></span>Projecting ${yrs} year${yrs>1?'s':''} of weekly reinvesting…`;
-    const host=loud&&window.GMLoader&&document.querySelector('#spFuturesHost .fx-wrap');
+    const host=loud&&document.querySelector('#spFuturesHost .fx-wrap');
     if(!host){setTimeout(runSetupProjection,40);return;}
-    const id=++ran,Y=yrs,wk=Y*52,done=()=>ran!==id||!building&&window._fxRan===id;
-    window._fxRan=0;
-    addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);window._fxRan=id;});
-    GMLoader.run(null,{host,icon:'/gmt-optimizer-logo.svg?v=2',minMs:1700,maxMs:20000,
-      kicker:Y+' Year Forecast',title:'Projecting '+Y+' year'+(Y>1?'s':'')+' ahead',doneText:'projection ready',
-      steps:[
-        {label:'Loading '+PATHS.toLocaleString()+' Bitcoin futures',ok:()=>true,v:()=>PATHS.toLocaleString()+' paths'},
-        {label:'Walking every path week by week',ok:()=>true,v:()=>wk.toLocaleString()+' weeks'},
-        {label:'Reinvesting your rewards each week',ok:done,v:()=>window._spEnd?fN(window._spEnd.th,window._spEnd.th<100?1:0)+' TH':'done'},
-        {label:'Pricing the avg, low and high path',ok:done,v:()=>fU(sim.p50[wk-1],0)}
-      ]});
-    setTimeout(runSetupProjection,380);   // let the first steps tick before the synchronous run
+    loader(host,++ran);
+  }
+
+  // ---- futures loader: the real simulated paths for this horizon streak out of today's price,
+  // a counter races to 4,000, then the high / low / avg lines sweep across. Only after that does
+  // the (synchronous, multi-second for 10Y) reinvesting run start, so the animation never stalls
+  // mid-flight; its last step ticks off when the run lands ('gm:proj').
+  function loader(host,id){
+    const old=host.querySelector('.fx-load');if(old)old.remove();
+    const Y=yrs,Wn=Y*52,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const el=document.createElement('div');el.className='fx-load';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+    el.innerHTML=`<div class="fx-lk">${Y} Year Forecast</div>
+      <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString()} Bitcoin futures</small></div>
+      <canvas class="fx-lcv"></canvas>
+      <div class="fx-lbar"><i></i></div>
+      <ul class="fx-lsteps">
+        <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString()} weeks</em></li>
+        <li><b></b><span>Finding the high, avg and low path</span><em>${fU(sim.p50[Wn-1],0)} avg</em></li>
+        <li><b></b><span>Reinvesting your rewards each week</span><em></em></li>
+      </ul>`;
+    host.appendChild(el);
+    const cv=el.querySelector('canvas'),num=el.querySelector('#fxLN'),bar=el.querySelector('.fx-lbar i'),rows=[...el.querySelectorAll('.fx-lsteps li')];
+    const cssW=cv.clientWidth||600,cssH=cv.clientHeight||220,dpr=Math.min(2,devicePixelRatio||1);
+    cv.width=cssW*dpr;cv.height=cssH*dpr;
+    // trail: persistent layer the paths are painted onto; fx: cleared each frame (sparks, lines)
+    const trail=document.createElement('canvas');trail.width=cv.width;trail.height=cv.height;
+    const tg=trail.getContext('2d'),g=cv.getContext('2d');tg.setTransform(dpr,0,0,dpr,0,0);g.setTransform(dpr,0,0,dpr,0,0);
+    let lo=sim.bp,hi=sim.bp;for(let w=0;w<Wn;w++){if(sim.p10[w]<lo)lo=sim.p10[w];if(sim.p90[w]>hi)hi=sim.p90[w];}
+    lo*=0.7;hi*=1.6;
+    const pad={l:6,r:6,t:8,b:8},pw=cssW-pad.l-pad.r,ph=cssH-pad.t-pad.b,L0=Math.log(lo),L1=Math.log(hi);
+    const X=w=>pad.l+(w+1)/Wn*pw,Yv=v=>pad.t+(1-(Math.log(v)-L0)/(L1-L0))*ph,x0=pad.l,y0=Yv(sim.bp);   // unclamped: wild paths run off the edge
+    const N=Math.min(PATHS,cssW<500?260:420),STEP=Math.max(1,Math.ceil(Wn/120)),W=sim.W,med=sim.p50[Wn-1];
+    // each drawn path: start time and speed, staggered so they burst out in waves
+    const P=[];for(let k=0;k<N;k++){const p=(k*9973)%PATHS;P.push({p,s:Math.pow(k/N,1.35)*1500,d:520+((k*37)%300),f:0,b:-1,up:sim.all[p*W+Wn-1]>=med});}
+    const T1=reduce?0:2050, T2=reduce?0:900, t0=performance.now();   // paths, then the three lines
+    let phase=0,gone=false;
+    const at=(arr,k)=>arr[Math.min(Wn-1,k)];
+    function path(ctx,p,from,to){ctx.beginPath();ctx.moveTo(from<0?x0:X(from),from<0?y0:Yv(sim.all[p*W+from]));
+      for(let w=Math.max(0,from)+STEP;w<=to;w+=STEP)ctx.lineTo(X(w),Yv(sim.all[p*W+w]));
+      if((to-Math.max(0,from))%STEP)ctx.lineTo(X(to),Yv(sim.all[p*W+to]));ctx.stroke();}
+    function band(arr,col,glow,width,k,dash){g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.shadowColor=glow;g.shadowBlur=width*6;
+      g.beginPath();g.moveTo(x0,y0);for(let w=0;w<=k;w+=STEP)g.lineTo(X(w),Yv(arr[w]));g.lineTo(X(k),Yv(arr[k]));g.stroke();g.setLineDash([]);
+      g.fillStyle=col;g.beginPath();g.arc(X(k),Yv(arr[k]),width+1.5,0,7);g.fill();g.shadowBlur=0;}
+    function frame(now){
+      if(gone||ran!==id||!el.isConnected)return;
+      const t=now-t0;
+      // paths
+      tg.globalCompositeOperation='lighter';tg.lineWidth=1;
+      let alive=0;
+      g.clearRect(0,0,cssW,cssH);g.globalAlpha=1;g.drawImage(trail,0,0,cssW,cssH);
+      g.globalCompositeOperation='lighter';
+      for(const q of P){
+        const f=Math.max(0,Math.min(1,(t-q.s)/q.d));if(f<=q.f)continue;
+        const a=q.b,b=Math.floor((1-Math.pow(1-f,2))*(Wn-1));
+        if(b>a){tg.strokeStyle=q.up?'rgba(255,190,80,.11)':'rgba(255,110,70,.10)';path(tg,q.p,a,b);q.b=b;}
+        if(f<1){alive++;const hx=X(b),hy=Yv(sim.all[q.p*W+b]);   // spark at the head
+          g.fillStyle=q.up?'rgba(255,220,140,.9)':'rgba(255,150,110,.85)';g.shadowColor=g.fillStyle;g.shadowBlur=8;
+          g.beginPath();g.arc(hx,hy,1.3,0,7);g.fill();}
+        q.f=f;
+      }
+      g.shadowBlur=0;g.globalCompositeOperation='source-over';
+      // origin pulse
+      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='#FFC65A';g.shadowColor='#FFC65A';g.shadowBlur=18;g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();g.shadowBlur=0;
+      const pk=Math.min(1,t/Math.max(1,T1));
+      num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString();
+      // the three lines sweep in once the paths are out
+      const lk=T2?Math.max(0,Math.min(1,(t-T1+250)/T2)):1;
+      if(lk>0){const k=Math.max(0,Math.floor((1-Math.pow(1-lk,3))*(Wn-1)));
+        band(sim.p90,'rgba(127,211,122,.95)','rgba(110,220,110,.9)',1.5,k,[3,3]);
+        band(sim.p10,'rgba(255,128,128,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
+        band(sim.p50,'#FFC65A','rgba(255,190,70,1)',2.6,k);
+        if(lk>=1){g.font='700 12px ui-monospace,monospace';g.textAlign='right';g.textBaseline='bottom';g.fillStyle='#FFC65A';g.shadowColor='#FFC65A';g.shadowBlur=10;
+          g.fillText(fU(at(sim.p50,Wn-1),0),cssW-pad.r,Yv(at(sim.p50,Wn-1))-6);g.shadowBlur=0;g.textAlign='left';}}
+      const prog=Math.min(1,t/(T1+T2));bar.style.transform=`scaleX(${0.08+prog*0.8})`;
+      if(phase===0){rows[0].classList.add('on');phase=1;}
+      if(phase===1&&t>=T1*0.75){rows[0].className='ok';rows[1].classList.add('on');phase=2;}
+      if(phase===2&&t>=T1+T2){rows[1].className='ok';rows[2].classList.add('on');phase=3;
+        num.textContent=PATHS.toLocaleString();
+        // now the heavy, synchronous run — the finished frame holds still while it works
+        addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;
+          const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
+          bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},380);});
+        setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),500);}},20000);   // never strand it
+        setTimeout(runSetupProjection,60);return;}
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
   addEventListener('gm:proj',()=>{['fxDay','fxMo','fxYr'].forEach(id=>{const e=$f(id);if(e)e.classList.remove('fx-busy');});render();});
 

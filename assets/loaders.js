@@ -289,6 +289,7 @@
   wrapPlanner('submitPlannerTarget', true);
 
   // Growth Projection: no full-screen loader — it re-runs in place on every horizon / payout
-  // change. assets/futures.js runs an in-panel one (opts.host) when you switch the horizon.
+  // change; assets/futures.js plays its own path-streak loader over the panel on a horizon switch.
+  // run() is exposed (with an in-panel opts.host mode) for any other panel that wants one.
   window.GMLoader = { run };
 })();
