@@ -16,7 +16,13 @@
 .fx-leg .lg-c{border-color:rgba(235,226,210,.55);border-top-style:dashed}
 .fx-when{margin:1rem 0 .8rem;font-size:.86rem;line-height:1.55;color:var(--text2);text-align:center}
 .fx-when b{color:var(--text)}.fx-when b.g{color:var(--gold-hi);font-family:var(--mono)}
-.fx-when span{color:var(--text4);font-size:.78rem}
+.fx-title{font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:.01em;margin-bottom:.55rem}
+.fx-title span{font-weight:500;color:var(--text2);font-size:.85rem;margin-left:.3rem}
+.fx-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.fx-stat{padding:.15rem .2rem}.fx-stat+.fx-stat{border-left:1px solid var(--border,rgba(255,255,255,.12))}
+.fx-k{font-size:.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+.fx-v{font-family:var(--mono);font-weight:700;font-size:clamp(1.15rem,4.6vw,1.6rem);color:var(--text);line-height:1.3;white-space:nowrap}
+.fx-stat.mid .fx-v{color:var(--gold-hi)}
 .fx-grid{grid-template-columns:repeat(3,1fr)!important;margin-bottom:.4rem}
 .fx-grid .hero-card{text-align:left}
 @media(max-width:640px){.fx-grid{grid-template-columns:1fr!important;gap:.5rem}.fx-wrap{padding:.9rem .8rem}}

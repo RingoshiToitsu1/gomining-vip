@@ -88,7 +88,10 @@
     const Wn=yrs*52, wEnd=Wn-1, t=sim.now+Wn*WEEK, P=sim.p50[wEnd];
     draw(Wn);
     const date=new Date(t).toLocaleDateString('en-US',{month:'short',year:'numeric'});
-    $f('fxWhen').innerHTML=`In <b>${yrs} year${yrs>1?'s':''}</b> (${date}) the typical future has BTC at <b class="g">${fU(P,0)}</b> <span>· bad ${fU(sim.p10[wEnd],0)} · good ${fU(sim.p90[wEnd],0)}</span>`;
+    // Headline: one row, three equal stats — low and high get the same weight as the middle.
+    const st=(k,v,c)=>`<div class="fx-stat${c?' '+c:''}"><div class="fx-k">${k}</div><div class="fx-v">${fU(v,0)}</div></div>`;
+    $f('fxWhen').innerHTML=`<div class="fx-title">${yrs} Year Forecast <span>${date}</span></div>
+      <div class="fx-stats">${st('Avg',P,'mid')}${st('Low',sim.p10[wEnd])}${st('High',sim.p90[wEnd])}</div>`;
     const sub=$f('fxSub');if(sub)sub.textContent=(window._spMode==='planner'?'Your plan':'Your farm')+', reinvesting along the typical path';
   }
   // Cards = the reinvesting projection's end-of-period figures, so they always match the results below.
