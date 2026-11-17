@@ -141,3 +141,4 @@ html.sc-on .gmt-resgate, html.sc-on .ob-overlay { top: var(--header-h); }
 #toTop.show { opacity: 1; pointer-events: auto; }
 #toTop:hover { border-color: var(--color-gold); }
 #toTop:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+@media (max-width: 640px) { #toTop { display: none; } }   /* on phones it covered text; a swipe does the same */

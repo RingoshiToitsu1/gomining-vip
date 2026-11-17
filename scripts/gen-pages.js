@@ -115,7 +115,7 @@ ${JSON.stringify(faqLd,null,2)}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=4">
-<link rel="stylesheet" href="/assets/site-chrome.css?v=7">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=8">
 <link rel="stylesheet" href="/assets/content.css?v=17">
 <link rel="stylesheet" href="/assets/topbar.css?v=7">
 <script src="/assets/site-chrome.js?v=4" defer></script>
@@ -129,7 +129,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=30"></script>
+<script src="/assets/site.js?v=31"></script>
 </body>
 </html>
 `;

@@ -21,7 +21,7 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-tip-x{position:absolute;top:4px;right:6px;background:none;border:0;color:var(--color-text-2);font-size:20px;line-height:1;cursor:pointer;padding:4px}
 
 .gc-panel{position:fixed;right:18px;bottom:90px;z-index:451;margin:0;padding:0;width:380px;max-width:calc(100vw - 32px);
-  height:min(560px,70vh,calc(100vh - 120px));display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:var(--color-text);
+  height:auto;max-height:min(560px,70vh,calc(100vh - 120px));   /* grows with the conversation, up to the cap */display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:var(--color-text);
   border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;box-shadow:0 30px 80px -20px rgb(var(--color-black-rgb) / .85),0 0 0 1px rgb(var(--color-gold-rgb) / .06);
   font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
 .gc-panel[hidden]{display:none}
@@ -34,7 +34,7 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-head button:hover{color:var(--color-text);background:rgb(var(--color-white-rgb) / .05)}
 .gc-head .gc-restart{font-size:19px}
 
-.gc-log{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.gc-log{flex:0 1 auto;min-height:0;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
 .gc-msg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .gc-msg b{color:var(--color-gold-300);font-weight:700}
 .gc-bot{align-self:flex-start;background:#161616;border:1px solid #262321;border-bottom-left-radius:4px}
