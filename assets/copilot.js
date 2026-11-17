@@ -277,6 +277,25 @@
   }
   window.gmCopilot = { open: open, close: close };
 
+  // Keep clear of anything a page marks [data-copilot-clear] (the landing quick estimate): while the panel
+  // would sit over it and there is room to its left, the panel moves beside it on the same bottom line.
+  // It returns to the corner once the marked block scrolls out of view. Phones use the full-screen panel.
+  function dodge() {
+    panel.style.right = '';
+    if (panel.hidden || window.innerWidth <= 640) return;
+    var keep = document.querySelector('[data-copilot-clear]'); if (!keep) return;
+    var k = keep.getBoundingClientRect(), p = panel.getBoundingClientRect();
+    var overlaps = p.left < k.right && p.right > k.left && p.top < k.bottom && p.bottom > k.top;
+    if (!overlaps) return;
+    var right = window.innerWidth - k.left + 16;
+    if (window.innerWidth - right - p.width >= 16) panel.style.right = right + 'px';
+  }
+  var dodgeRaf = 0;
+  var queueDodge = function () { if (!dodgeRaf) dodgeRaf = requestAnimationFrame(function () { dodgeRaf = 0; dodge(); }); };
+  window.addEventListener('scroll', queueDodge, { passive: true });
+  window.addEventListener('resize', queueDodge);
+  new MutationObserver(queueDodge).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+
   // ---------- rendering ----------
   function scroll() { log.scrollTop = log.scrollHeight; }
   function bot(lines, instant, after) {
