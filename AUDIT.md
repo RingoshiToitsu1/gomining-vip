@@ -411,3 +411,38 @@ bar from `site.js` and the `menu.js` drawer. (`menu.js` stays on disk; its URL i
 - Golden test: 27/27 identical. Offer check: 0. Internal link check: 0 broken.
 
 **Title / H1 log:** new pages only; no existing title or H1 changed in Phase 2.
+
+---
+
+## 16. Phase 3: landing page (done)
+
+`/` was rebuilt in place on the component library (`assets/landing.css`, tokens only). Top to bottom:
+1. **Hero:** eyebrow "Independent GoMining calculator", H1 *Model your GoMining returns before you buy*, one line of
+   support copy, **Open Calculator** (`/console`) + **Get Started** (`/claim`), "Estimates only. Not financial advice."
+   On the right, a **live mini-calculator** (hashrate + efficiency → net/month, net/day, est. cost, fee discount). It
+   runs on `assets/roi-embed.js` through its `re-*` ids, so its maths is the golden-tested ROI widget, not a copy.
+2. **Trust strip:** who it's for, plus live BTC, GMT, sats/TH/day and difficulty (only data the site already pulls).
+3. **How it works:** three steps; projections labelled as estimates.
+4. **Tools:** Calculator, Growth Projection, RINGO5 Bonuses, Co-pilot (opens the co-pilot via its `data-copilot`
+   hook), Marketplace Checker, Community chat (3 × 2), plus links to the ROI calculator and income statement.
+5. **RINGO5 offer block:** the exact rule-8 copy, the code copies on click, and the GoMining docs link.
+6. **Guides preview:** three cards + "All guides and data pages".
+7. **FAQ:** six questions, accordion; FAQPage JSON-LD rewritten to match the visible answers exactly.
+8. **"The GoMining calculator, explained"**: the keyword-rich prose and every guide/data-page link, kept from the old page.
+9. **Final CTA band.**
+
+Removed from `/`: starfield canvas, orbs/beams/scanlines, cinematic intro (`cine.js`), ticker, magnetic buttons, the
+old `design.css` dependency. `cine.js` / `chrome.js` stay on disk (URLs unchanged; the console still uses `chrome.js`).
+
+**Title / H1 log (SEO):** `<title>` unchanged ("GoMining Calculator: Profit, ROI & Earnings | GMT-Optimizer").
+H1 changed from "Plan your work. Work your plan." to "Model your GoMining returns before you buy". The old H1 had no
+keyword; the new one carries "GoMining", and "GoMining calculator" stays in the eyebrow, title, meta description
+and the explained section. Meta description unchanged.
+
+**Site-wide fixes found in the Phase 3 screenshots:** body margin reset; hyphenation limited to German (English read
+"dis-count"); back-to-top styled globally and moved bottom-left (the co-pilot owns bottom-right); the co-pilot hint
+bubble is hidden on phones (it covered page content; Phase 6 rebuilds the widget); cache bumps now follow references
+transitively (a CSS bump also bumps the script that loads it).
+
+Checks: golden 27/27 identical; offer check 0; landing JSON-LD valid; 0 broken internal links. Screenshots at 360,
+768, 1280 and 1920 px reviewed (full page).
