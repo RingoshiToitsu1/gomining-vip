@@ -185,7 +185,7 @@
 
   // ---------- styles ----------
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=3";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=4";
   document.head.appendChild(css);
 
   // ---------- shell ----------
@@ -194,7 +194,7 @@
   fab.type = "button";
   fab.setAttribute("aria-label", "Ask Ringo");
   fab.setAttribute("aria-expanded", "false");
-  fab.innerHTML = '<img src="' + AVATAR + '" alt="" width="56" height="56"><span class="gc-dot"></span>';
+  fab.innerHTML = '<img class="gc-fab-mark" src="/assets/brand/GMT_icon_transparent.svg" alt="" width="56" height="28"><span class="gc-dot"></span>';
 
   var tip = el("div", "gc-tip");
   tip.innerHTML = '<button type="button" class="gc-tip-x" aria-label="Dismiss">×</button><span>Need a hand with the numbers? Ask me.</span>';

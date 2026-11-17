@@ -86,7 +86,7 @@
   mobile.setAttribute('aria-modal', 'true');
   mobile.setAttribute('aria-label', 'Menu');
   mobile.innerHTML =
-    '<nav aria-label="Main">' + NAV.map(function (n) { return '<a href="' + n.href + '"' + cur(n.on) + '>' + n.label + '</a>'; }).join('') + '</nav>' +
+    '<nav class="sc-mobile-nav" aria-label="Main">' + NAV.map(function (n) { return '<a href="' + n.href + '"' + cur(n.on) + '>' + n.label + '</a>'; }).join('') + '</nav>' +
     FOOT.slice(0, 3).map(function (c) {
       return '<div class="sc-mobile__group"><h2>' + c[0] + '</h2><div class="sc-mobile__links">' +
         c[1].map(function (l) { return '<a href="' + l[1] + '"' + ext(l[2]) + '>' + l[0] + '</a>'; }).join('') + '</div></div>';
