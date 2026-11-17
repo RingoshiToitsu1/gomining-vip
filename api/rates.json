@@ -1,19 +1,28 @@
 {
   "stakingApr": 18.87,
-  "stakingAprPrevious": 19.52,
+  "stakingAprPrevious": 18.87,
   "soloDiscount": 1.09,
   "greedyGrowthWeekly": 0.3347,
+  "thSalePct": 20,
   "clickStreak": 3,
   "unit": "percent",
-  "updated": "2026-11-06",
+  "updated": "2026-11-17",
   "source": "https://gmt-optimizer.com",
   "notes": {
     "stakingApr": "GoMining veGMT locked-staking APR, %, read off the app",
     "soloDiscount": "solo mining (reward distribution) fee discount, %",
     "greedyGrowthWeekly": "Greedy Machine passive hashrate growth, % per week",
+    "thSalePct": "GoMining promotional discount on TH prices (new miners and TH top-ups), %; 0 when no sale",
     "clickStreak": "fee discount for a 10+ day click streak, %"
   },
   "history": [
+    {
+      "date": "2026-11-17",
+      "stakingApr": 18.87,
+      "soloDiscount": 1.09,
+      "greedyGrowthWeekly": 0.3347,
+      "thSalePct": 20
+    },
     {
       "date": "2026-11-06",
       "stakingApr": 18.87,

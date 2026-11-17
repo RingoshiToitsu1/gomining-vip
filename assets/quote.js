@@ -73,6 +73,10 @@
   {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
   {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
 ];
+  // GoMining TH sale: % off every TH price (new miners and TH added to a miner you own) — efficiency
+  // upgrades are NOT discounted. Set ONLY with `node scripts/set-rates.js --sale 20` (--sale 0 ends it).
+  const TH_SALE_PCT = 20;
+  [TH_TIERS_12W, TH_TIERS_15W].forEach(T => T.forEach(t => { t.cpt = +(t.cpt * (1 - TH_SALE_PCT / 100)).toFixed(4); }));
 
   function cptOf(th, T) {
     if (th <= 0) return T[0].cpt;

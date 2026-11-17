@@ -135,6 +135,10 @@ const TH_TIERS_12W=[
   {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
   {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
 ];
+// GoMining TH sale: % off every TH price (new miners and TH added to a miner you own) — efficiency
+// upgrades are NOT discounted. Set ONLY with `node scripts/set-rates.js --sale 20` (--sale 0 ends it).
+const TH_SALE_PCT = 20;
+[TH_TIERS, TH_TIERS_12W].forEach(T => T.forEach(t => { t.cpt = +(t.cpt * (1 - TH_SALE_PCT / 100)).toFixed(4); }));
 // Efficiency upgrades are bought one W/TH step at a time, and the step price depends on the rating
 // you step DOWN FROM: cheap at the inefficient end, $2.67 on the last three steps into 12 W/TH.
 // Each band covers the steps whose starting rating is in (previous upTo, upTo] — so 16→15 through
