@@ -503,3 +503,35 @@ Golden values re-recorded on purpose. Every change, field by field:
 Proof: with the old month lengths (30 / 30.44) temporarily put back, all 33 cases matched the old recording exactly.
 Yearly figures built as monthly × 12 now come to 365.25 days instead of 360. Daily figures are unchanged.
 Also replaced two leftover cap literals (the discount-bar `/30` and the widget's `0.20`) with config values; no output change.
+
+## 18. Phase 5: accounts (built; logged-in screenshots pending)
+
+**New pages** (file pages, same style as /guides; `noindex,follow`, not in the sitemap):
+`/login`, `/signup`, `/profile` (own, or anyone's at `/profile?u=username`), `/settings`, `/dashboard`.
+No existing URL changed. `/console?view=login|signup|profile|settings|edit` still open the console modals as before.
+
+**No backend change.** Everything goes through assets/account.js with the calls it already made:
+- sign up / log in (username → internal address, password ≥ 8);
+- change password (current password required first);
+- profile update (display_name, bio), avatar upload to the existing `avatars` bucket;
+- reads: own profile, any profile by username (public under `profiles_read`), own miners (`miners_all_own`),
+  a user's message count.
+Login and signup say "Forgot your password? Message @RingoMining on Telegram." The console modal now uses the same line.
+`?next=` sends you back where you came from (same-site paths only).
+
+**Dashboard** shows the saved farm (`profiles.setup`) at today's prices, computed with lib/mining.js. Wallet GMT counts
+toward fee coverage, as in the console (tests/lib.test.js checks this against calc()). It also shows the miners table and links.
+It leaves out Greedy Machines, inactive hashrate and ambassador rewards and says so, pointing to the calculator.
+
+**Header**: Log in, Dashboard, Profile and Settings are links to the new pages. Log out stays an action.
+
+### Proposals (not built; each needs your OK, and some need backend changes)
+1. **Delete my account.** Needs a server function (an edge function with the service key) to remove the auth user;
+   rows cascade. Backend change.
+2. **Change username.** Update `profiles.username` and the internal login address together. Needs a server function.
+   Also old chat messages show the username at the time they were sent.
+3. **Remove avatar** (set `avatar_url` to null and delete the file). Small; no schema change.
+4. **Profile privacy**: hide hashrate on the public profile. Needs a `profiles.show_th boolean` column.
+5. **Preferences** (display currency, language) stored on the account instead of per device. Needs a `profiles.prefs jsonb` column.
+6. **Log out everywhere** (`signOut({ scope: 'global' })`). No schema change.
+7. DMs: unchanged from §5 (needs new tables).

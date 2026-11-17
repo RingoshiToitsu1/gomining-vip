@@ -41,7 +41,7 @@
   function needLogin(what) {
     root.innerHTML = '<section class="ui-card acct-card acct-card--narrow">' +
       '<h1 class="ui-h2">Log in to see your ' + esc(what) + '</h1>' +
-      '<p class="ui-text-2">Your ' + esc(what) + ' lives on your GMT-Optimizer account. Log in, or create a free account with just a username and password.</p>' +
+      '<p class="ui-text-2">This page is part of your GMT-Optimizer account. Log in, or create a free account with just a username and password.</p>' +
       '<div class="ui-row"><a class="ui-btn ui-btn--primary" href="/login?next=' + encodeURIComponent(location.pathname) + '">Log in</a>' +
       '<a class="ui-btn ui-btn--secondary" href="/signup?next=' + encodeURIComponent(location.pathname) + '">Create account</a></div></section>';
   }
