@@ -28,10 +28,11 @@
   // ---- CALIBRATION (mirror of assets/app.js) ----
   const EFF_BEST = P.EFF_BEST;              // best efficiency available (W/TH)
   const EFF_BASE_MAX = P.EFF_BASE_MAX;          // the 15 W/TH hashrate curve
-  const GREEDY_CAP = 5000;          // max TH per miner via manual upgrades; passive growth compounds past it
+  const C = window.GMT_CONFIG;
+  const GREEDY_CAP = C.pricing.minerCapTh;   // max TH per miner via manual upgrades; passive growth compounds past it
   const FB = { gmt: 0.28 };
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
-  const GREEDY_GROWTH_DEFAULT = 0.3347;                              // %/wk — console inGreedyGrowth default; observed, not a constant
+  const GREEDY_GROWTH_DEFAULT = C.rates.greedyGrowthWeeklyPct;   // %/wk default (data/config.json); observed, not a constant
   const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36']; // mirror of app.js: a saved old default is not the user's own number
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
@@ -196,10 +197,10 @@
     for (let k = 0; k < sizes.length;) {
       const s = sizes[k], kind = s.capped ? 'cap' : s.add <= 0.0005 ? 'free' : 'top';
       let z = k; if (kind !== 'top') while (z + 1 < sizes.length && (kind === 'cap' ? sizes[z + 1].capped : sizes[z + 1].add <= 0.0005 && !sizes[z + 1].capped)) z++;
-      const when = '<td>' + span(k + 1, z + 1) + '</td>';
-      if (kind === 'cap') rows.push('<tr>' + when + '<td colspan="4" class="mc-cap">not reachable: needs more than the ' + num(GREEDY_CAP, 0) + ' TH top-up cap</td></tr>');
-      else if (kind === 'free') rows.push('<tr class="hl">' + when + '<td colspan="3" class="mc-cap">no top-up needed: growth covers it in ' + (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</td><td>' + money(base) + '</td></tr>');
-      else rows.push('<tr>' + when + '<td>' + fmtTH(s.T) + ' TH</td><td>+' + fmtTH(s.add) + '</td><td>' + money(s.cost) + '</td><td>' + money(base + s.cost) + '</td></tr>');
+      const when = '<td data-label="Pay back in">' + span(k + 1, z + 1) + '</td>';
+      if (kind === 'cap') rows.push('<tr>' + when + '<td colspan="4" class="mc-cap" data-label="">not reachable: needs more than the ' + num(GREEDY_CAP, 0) + ' TH top-up cap</td></tr>');
+      else if (kind === 'free') rows.push('<tr class="hl">' + when + '<td colspan="3" class="mc-cap" data-label="">no top-up needed: growth covers it in ' + (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</td><td class="num" data-label="All-in">' + money(base) + '</td></tr>');
+      else rows.push('<tr>' + when + '<td class="num" data-label="Grow it to">' + fmtTH(s.T) + ' TH</td><td class="num" data-label="Add">+' + fmtTH(s.add) + '</td><td class="num" data-label="Top-up cost">' + money(s.cost) + '</td><td class="num" data-label="All-in">' + money(base + s.cost) + '</td></tr>');
       k = z + 1;
     }
     const nowTxt = now < 1 ? 'under a month' : trimN(now, 1) + ' months' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '');
@@ -207,7 +208,7 @@
       '<p class="mc-pb-lead">You\'d pay <b>' + money(b.prem) + '</b> over what its hashrate costs today. At its current <b>' + fmtTH(th) + ' TH</b>, its free growth pays that back in <b>' + nowTxt + '</b> on its own' +
         (now <= 12 ? (now > 1 ? '. Adding TH only helps if you want it back sooner:' : ', so no top-up is needed:') : '. To get it back sooner, grow it to:') + '</p>' +
       (effUp > 0 ? '<p class="mc-pb-up">Running it at ' + trimN(r, 2) + ' W adds a one-time <b>' + money(effUp) + '</b> efficiency upgrade, included in All-in below. It doesn\'t change the premium.</p>' : '') +
-      '<div class="mc-tbl-wrap"><table class="mc-tbl mc-pb"><thead><tr><th>Pay back in</th><th>Grow it to</th><th>Add</th><th>Top-up cost</th><th>All-in</th></tr></thead><tbody>' +
+      '<div class="ui-table-wrap mc-pb-wrap"><table class="ui-table ui-table--stack mc-pb" aria-label="Top-up needed to repay the premium, by payback time"><thead><tr><th>Pay back in</th><th class="num">Grow it to</th><th class="num">Add</th><th class="num">Top-up cost</th><th class="num">All-in</th></tr></thead><tbody>' +
       rows.join('') + '</tbody></table></div>' +
       '<p class="mc-tbl-note">All-in = ' + money(b.ask) + ' to buy' + (effUp > 0 ? ' + ' + money(effUp) + ' upgrade to ' + trimN(r, 2) + ' W' : '') + ' + top-up. ' +
       'Growth ' + trimN(g * 100, 4) + '%/week compounding; each free TH is valued at the full ' + trimN(r, 2) + ' W price (' + money(growthVal(th, r)) + '/TH)' +

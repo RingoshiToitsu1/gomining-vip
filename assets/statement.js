@@ -64,7 +64,7 @@
   // ---- assumptions used only to DERIVE display-only metrics (never money) ----
   // Money on this page comes from the file. These two recover fleet efficiency,
   // which the export does not state outright. Mirrors scripts/constants.js.
-  const ELEC_RATE = 0.05;    // $/kWh — GoMining's flat electricity rate
+  const ELEC_RATE = (window.GMT_CONFIG ? window.GMT_CONFIG.fees.electricityUsdPerKwh : 0.05);   // $/kWh (data/config.json)
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 

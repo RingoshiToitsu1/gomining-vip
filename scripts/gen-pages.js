@@ -23,8 +23,11 @@ const {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH, COV_DAYS_PER_PCT,
   HALVING_DATES, TH_TIERS_12W, FB,
-  cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC
+  cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC, CFG
 } = require('./constants.js');
+const TOKEN_CAP = CFG.discount.tokenCapPct;   // max token (GMT coverage) discount, % — data/config.json
+// 'Fees and rates as of …' (data/config.json meta.updated), filled by scripts/build-config.js on every build
+const ASOF_DATE = require('../assets/pricing.js').UPDATED;
 
 // Per-scenario economics at TODAY's price and difficulty — no forward projection.
 // Total-capital model: the GMT you must LOCK to hold the discount is
@@ -114,7 +117,7 @@ ${JSON.stringify(faqLd,null,2)}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=4">
+<link rel="stylesheet" href="/assets/components.css?v=5">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=8">
 <link rel="stylesheet" href="/assets/content.css?v=17">
 <link rel="stylesheet" href="/assets/topbar.css?v=7">
@@ -123,6 +126,7 @@ ${JSON.stringify(faqLd,null,2)}
 <body>
 <main class="content-wrap">
 ${body}
+  <p class="cfg-asof">Fees and rates as of <time data-cfg="meta.updated" data-cfg-fmt="date">${ASOF_DATE}</time>. They may change.</p>
   <h2>Frequently asked questions</h2>
   <div class="faq">
 ${faqHtml}
@@ -170,19 +174,19 @@ function hashratePage(th, live, dateStr){
   <div class="stats">
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(full.totalCapital)}</div><div class="s">${usd(full.hashCost)} hashrate + ${usd(full.gmtLockUSD)} GMT lock</div></div>
     <div class="stat"><div class="k">Net / month</div><div class="v">${usd(full.monthlyUSD)}</div><div class="s">${usd(full.miningMonthlyUSD)} mining + ${usd(full.stakingMonthlyUSD)} staking</div></div>
-    <div class="stat"><div class="k">GMT to lock</div><div class="v">${usd(full.gmtLockUSD)}</div><div class="s">for the 20% discount</div></div>
+    <div class="stat"><div class="k">GMT to lock</div><div class="v">${usd(full.gmtLockUSD)}</div><div class="s">for the ${TOKEN_CAP}% discount</div></div>
     <div class="stat"><div class="k">Per day</div><div class="v">${usd2(full.netUSD)}</div><div class="s">${(full.yearlyUSD/full.totalCapital*100).toFixed(1)}% a year on capital</div></div>
   </div>
-  <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the ${CONVERSION_FEE*100}% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined, ${verdict(full)}.</p>
+  <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum ${TOKEN_CAP}% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the BTC→GMT conversion fee (currently ${CONVERSION_FEE*100}%, may change), and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined, ${verdict(full)}.</p>
   <h2>Why the locked GMT is not a normal cost</h2>
-  <p>Unlike the hashrate, the ${usd(full.gmtLockUSD)} in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns ${STAKING_APR}% staking. Without any discount, ${th} TH nets only about <strong>${usd(none.monthlyUSD)}/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
+  <p>Unlike the hashrate, the ${usd(full.gmtLockUSD)} in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by ${TOKEN_CAP}% <em>and</em> earns ${STAKING_APR}% staking. Without any discount, ${th} TH nets only about <strong>${usd(none.monthlyUSD)}/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
   <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × ${th} TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365\ntotal capital = hashrate + GMT locked for the discount</div>
   <h2>Why there is no multi-year forecast on this page</h2>
   <p>Every figure above is today's: live Bitcoin price (${usd(live.bp)}), live network difficulty, current fee rates and the ${STAKING_APR}% staking APR. None of it is projected forward, because a multi-year total printed into a static page is a number you did not choose and cannot inspect — and it will be read as a promise no matter how it is labelled. What happens next depends on the Bitcoin price, difficulty growth, the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving and whether you keep the discount funded. Those are your assumptions to set, so set them in the calculator and watch what moves.</p>
 ${CTA}`;
   const faq=[
-    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 15 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
-    {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the ${CONVERSION_FEE*100}% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
+    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 15 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum ${TOKEN_CAP}% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
+    {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the BTC→GMT conversion fee (currently ${CONVERSION_FEE*100}%, may change) (with the ${TOKEN_CAP}% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
     {q:`What will ${th} TH be earning in a few years?`,a:`Nobody can tell you that, and any page quoting a single number is guessing. It depends on the Bitcoin price, how fast network difficulty grows, whether you keep the fee discount funded, and the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving cutting the block subsidy in half. What this page gives you is today's figures, computed from live data. If you want a projection, run one in the calculator where you set the assumptions yourself and can see exactly what they are.`}
   ];
   const related=[
@@ -210,11 +214,11 @@ function pricePage(price, live, dateStr){
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
     <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
   </div>
-  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $${pk},000, the 100 TH hashrate nets about ${usd(m.miningMonthlyUSD)}/month, and the ${usd(m.gmtLockUSD)} of GMT you lock for the 20% discount adds roughly ${usd(m.stakingMonthlyUSD)}/month in staking — about ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, ${verdict(m)}.</p>
+  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $${pk},000, the 100 TH hashrate nets about ${usd(m.miningMonthlyUSD)}/month, and the ${usd(m.gmtLockUSD)} of GMT you lock for the ${TOKEN_CAP}% discount adds roughly ${usd(m.stakingMonthlyUSD)}/month in staking — about ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, ${verdict(m)}.</p>
   <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
 ${CTA}`;
   const faq=[
-    {q:`Is GoMining profitable at $${pk}k Bitcoin?`,a:`At a $${pk},000 price and current difficulty, a 100 TH GoMining farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the 20% discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of capital. Earnings scale with your hashrate.`},
+    {q:`Is GoMining profitable at $${pk}k Bitcoin?`,a:`At a $${pk},000 price and current difficulty, a 100 TH GoMining farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the ${TOKEN_CAP}% discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of capital. Earnings scale with your hashrate.`},
     {q:`Why does the Bitcoin price matter so much for GoMining?`,a:`Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — every dollar of price increase lands in your margin. A falling price does the opposite.`},
     {q:`Does difficulty change these numbers?`,a:`Yes, and this page holds it at today's level rather than guessing where it goes. Rising difficulty steadily reduces the sats each TH earns, so a figure computed at today's difficulty is a snapshot, not a forecast. The calculator lets you project difficulty growth forward and see how much it costs you.`}
   ];
@@ -246,7 +250,7 @@ function monthlyPage(live, dateStr){
     <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
     <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
   </div>
-  <p>As of ${dateStr.full}, Bitcoin trades near ${usd(live.bp)} and the network mines about ${Math.round(satsPerTHDay(live.diff))} sats per TH per day. On those numbers a 100 TH GoMining farm nets roughly <strong>${usd(m.miningMonthlyUSD)}/month</strong> from mining, and the ${usd(m.gmtLockUSD)} of GMT locked for the 20% discount adds about ${usd(m.stakingMonthlyUSD)}/month in staking — around <strong>${usd(m.monthlyUSD)} combined</strong> on ${usd(m.totalCapital)} of committed capital. In short, ${verdict(m)}.</p>
+  <p>As of ${dateStr.full}, Bitcoin trades near ${usd(live.bp)} and the network mines about ${Math.round(satsPerTHDay(live.diff))} sats per TH per day. On those numbers a 100 TH GoMining farm nets roughly <strong>${usd(m.miningMonthlyUSD)}/month</strong> from mining, and the ${usd(m.gmtLockUSD)} of GMT locked for the ${TOKEN_CAP}% discount adds about ${usd(m.stakingMonthlyUSD)}/month in staking — around <strong>${usd(m.monthlyUSD)} combined</strong> on ${usd(m.totalCapital)} of committed capital. In short, ${verdict(m)}.</p>
   <h2>What would change this</h2>
   <p>These figures move constantly. A rising Bitcoin price improves margin (fees are fixed in dollars); rising difficulty erodes sats per TH; and letting your GMT coverage lapse can wipe out the discount and gut your net. That's why it pays to check current numbers rather than trust a static estimate — run yours below.</p>
 ${CTA}`;
@@ -312,7 +316,7 @@ function injectLiveBlocks(live,dateStr){
   const html=
 `  <div class="formula">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; updated ${dateStr.full}</div>
   <p>Take a 50 TH setup on a new miner (${EFF_BASE_MAX} W/TH, the only efficiency GoMining sells new). Buying the hashrate costs about
-  <strong>${usd(good.hashCost)}</strong>, and holding the maximum 20% fee discount means locking roughly
+  <strong>${usd(good.hashCost)}</strong>, and holding the maximum ${TOKEN_CAP}% fee discount means locking roughly
   <strong>${usd(good.gmtLockUSD)}</strong> of GMT — <strong>${usd(good.totalCapital)}</strong> of capital in total.
   That pays about <strong>${usd(good.monthlyUSD)}/month</strong>, or <strong>${yGood.toFixed(1)}% a year</strong>
   on the capital committed.</p>

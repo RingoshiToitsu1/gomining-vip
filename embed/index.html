@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=4">
+<link rel="stylesheet" href="/assets/components.css?v=5">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=3">
 <style>
 /* Self-contained: no content.css, no site.js chrome (galaxy backdrop, menu, top bar). Tokens
@@ -159,6 +159,7 @@ html.theme-ember{
   <div class="re-hint" id="re-hint" style="display:none"></div>
 
   <div class="re-foot">
+    <p class="cfg-asof">Fees and rates as of <time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time>.</p>
     <p class="note" data-i18n="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
     <div class="re-btns">
       <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener" data-i18n="claim">See your RINGO5 bonuses →</a>
@@ -343,7 +344,8 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/pricing.js?v=2"></script>
-<script src="/assets/roi-embed.js?v=31"></script>
+<script src="/assets/pricing.js?v=3"></script>
+<script src="/lib/mining.js?v=1"></script>
+<script src="/assets/roi-embed.js?v=32"></script>
 </body>
 </html>

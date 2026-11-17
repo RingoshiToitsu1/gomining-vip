@@ -110,7 +110,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=4">
+<link rel="stylesheet" href="/assets/components.css?v=5">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=8">
 <link rel="stylesheet" href="/assets/landing.css?v=4">
 <script src="/assets/site-chrome.js?v=4" defer></script>
@@ -152,7 +152,7 @@
       <p class="lp-calc__basis lp-calc__note">Net figures include GMT lock rewards.</p>
       <p class="lp-hidden" id="re-hint"></p>
       <div class="lp-calc__basis" id="re-basis">loading live market data…</div>
-      <div class="lp-calc__foot"><span class="ui-disclaimer">Estimate at today's rates.</span><a class="ui-link" href="/console">Full calculator →</a></div>
+      <div class="lp-calc__foot"><span class="ui-disclaimer">Estimate at today's rates. Fees and rates as of <time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time>.</span><a class="ui-link" href="/console">Full calculator →</a></div>
     </div>
   </div>
 </section>
@@ -210,7 +210,7 @@
         <div class="lp-bonus"><i aria-hidden="true"></i><div><b>Card cashback bonus</b><span>spend with the GoMining Card in your first 90 days and earn bonus TH</span></div></div>
       </div>
       <p class="ui-small" style="margin-top:var(--space-4)">Enter code RINGO5 before your first purchase, within 30 days of signing up. New accounts only.</p>
-      <p class="ui-disclaimer"><a class="ui-link" href="https://docs.gomining.com/en/product/promos/referral-program" target="_blank" rel="noopener">Bonuses set by GoMining and may change</a></p>
+      <p class="ui-disclaimer"><a class="ui-link" href="https://docs.gomining.com/en/product/promos/referral-program" target="_blank" rel="noopener">Bonuses set by GoMining and may change</a> · as of <time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time></p>
     </div>
   </div>
 </section>
@@ -277,8 +277,9 @@
 /* Quick-estimate wording (the shared ROI widget reads overrides from RE_I18N). */
 window.RE_I18N = { yearCap: function (p) { return '\u2248' + p + '% est. yearly at today\u2019s rates'; } };
 </script>
-<script src="/assets/pricing.js?v=2"></script>
-<script src="/assets/roi-embed.js?v=31"></script>
+<script src="/assets/pricing.js?v=3"></script>
+<script src="/lib/mining.js?v=1"></script>
+<script src="/assets/roi-embed.js?v=32"></script>
 <script src="/assets/components.js?v=2" defer></script>
 <script src="/assets/site.js?v=31"></script>
 <script>

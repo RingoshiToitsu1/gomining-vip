@@ -1,0 +1,77 @@
+{
+  "_readme": "THE single source for every number GMT-Optimizer uses. Edit values here, then run `node scripts/build-config.js` (deploy runs it too). Never edit assets/pricing.js's generated block or the data-cfg values in pages by hand.",
+
+  "meta": {
+    "updated": "2026-11-17",
+    "ratesObserved": "2026-11-06",
+    "pricesObserved": "2026-10-30"
+  },
+
+  "fees": {
+    "electricityUsdPerKwh": 0.05,
+    "serviceUsdPerThDay": 0.0089,
+    "btcToGmtConversion": 0.0225,
+    "usdToGmt": 0.02,
+    "nftHolderDiscount": 0.05
+  },
+
+  "rates": {
+    "stakingAprPct": 18.87,
+    "soloMiningDiscountPct": 1.09,
+    "clickStreakPct": 3,
+    "greedyGrowthWeeklyPct": 0.3347
+  },
+
+  "discount": {
+    "coverageDaysPerPct": 18,
+    "tokenCapPct": 20,
+    "totalCapPct": 30
+  },
+
+  "network": {
+    "blockSubsidyBtc": 3.125
+  },
+
+  "pricing": {
+    "salePct": 20,
+    "effBest": 12,
+    "effBaseMax": 15,
+    "minerCapTh": 5000,
+    "thTiers15wList": [
+      {"th":1,"cpt":13.00},{"th":2,"cpt":12.51},{"th":4,"cpt":12.00},{"th":8,"cpt":12.00},
+      {"th":16,"cpt":11.87},{"th":32,"cpt":11.78},{"th":48,"cpt":11.71},{"th":64,"cpt":11.64},
+      {"th":96,"cpt":11.58},{"th":128,"cpt":11.53},{"th":192,"cpt":11.47},{"th":256,"cpt":11.41},
+      {"th":384,"cpt":11.35},{"th":512,"cpt":11.29},{"th":768,"cpt":11.23},{"th":1024,"cpt":11.18},
+      {"th":1536,"cpt":11.13},{"th":2560,"cpt":11.06},{"th":3584,"cpt":11.01},{"th":5000,"cpt":10.96}
+    ],
+    "effUpgradeBands": [
+      {"upTo":15,"step":2.67},{"upTo":20,"step":1.10},{"upTo":28,"step":1.00},{"upTo":35,"step":0.50},{"upTo":50,"step":0.10}
+    ]
+  },
+
+  "vipTiers": [
+    {"n":"Bronze I","th":0,"veg":0,"d":0,"rb":0},{"n":"Bronze II","th":5,"veg":50,"d":0.3,"rb":0},
+    {"n":"Silver I","th":10,"veg":100,"d":0.6,"rb":5},{"n":"Silver II","th":25,"veg":250,"d":0.9,"rb":0},
+    {"n":"Silver III","th":50,"veg":500,"d":1.2,"rb":0},{"n":"Gold I","th":100,"veg":1000,"d":1.5,"rb":0},
+    {"n":"Gold II","th":200,"veg":2000,"d":1.8,"rb":0},{"n":"Platinum I","th":500,"veg":5000,"d":2.1,"rb":0},
+    {"n":"Platinum II","th":1000,"veg":10000,"d":2.4,"rb":0},{"n":"Platinum III","th":2500,"veg":25000,"d":2.7,"rb":0},
+    {"n":"Diamond I","th":5000,"veg":50000,"d":3.0,"rb":10},{"n":"Diamond II","th":7000,"veg":70000,"d":3.3,"rb":0},
+    {"n":"Diamond III","th":9000,"veg":90000,"d":3.6,"rb":0},{"n":"Diamond IV","th":12000,"veg":120000,"d":3.9,"rb":0},
+    {"n":"Diamond V","th":20000,"veg":200000,"d":4.2,"rb":0},
+    {"n":"Legend I","th":50000,"veg":500000,"d":4.5,"rb":0},{"n":"Legend II","th":100000,"veg":1000000,"d":4.8,"rb":0},
+    {"n":"Legend III","th":250000,"veg":2500000,"d":5.1,"rb":0},{"n":"Legend IV","th":400000,"veg":4000000,"d":5.4,"rb":0},
+    {"n":"Legend V","th":750000,"veg":7500000,"d":5.7,"rb":0},{"n":"Elite","th":1000000,"veg":10000000,"d":6.0,"rb":0}
+  ],
+
+  "referral": {
+    "code": "RINGO5",
+    "bonusThPct": 5,
+    "bonusThCap": 25,
+    "codeWindowDays": 30,
+    "vipTier": "VIP Platinum+",
+    "vipMonths": 1,
+    "cardWindowDays": 90,
+    "newAccountsOnly": true,
+    "docsUrl": "https://docs.gomining.com/en/product/promos/referral-program"
+  }
+}

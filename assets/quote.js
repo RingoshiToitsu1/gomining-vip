@@ -31,36 +31,27 @@
 })(function () {
   'use strict';
   const P = window.GMT_PRICING;   // TH tiers (sale applied), efficiency ratings, upgrade steps
+  const C = window.GMT_CONFIG;    // data/config.json: fees, rates, discount rules, VIP tiers, RINGO5 terms
 
-  // ---- CALIBRATION (mirror of assets/app.js) ----
-  const CONVERSION_FEE = 0.0225;  // BTC → GMT skim applied at payout
-  const USD_GMT_FEE    = 0.02;    // fee on USD deployed into GMT (lock + TH mint)
-  const BLOCK_SUBSIDY  = 3.125;   // BTC/block — halve at the 2028 halving
-  const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
-  const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
+  // ---- calibration: all from data/config.json ----
+  const CONVERSION_FEE = C.fees.btcToGmtConversion;
+  const USD_GMT_FEE    = C.fees.usdToGmt;
+  const BLOCK_SUBSIDY  = C.network.blockSubsidyBtc;
+  const ELEC_RATE      = C.fees.electricityUsdPerKwh;
+  const SERVICE_RATE   = C.fees.serviceUsdPerThDay;
   const EFF_BEST       = P.EFF_BEST;      // best efficiency reachable, by upgrading (W/TH)
   const EFF_BASE_MAX   = P.EFF_BASE_MAX;      // 15 W/TH hashrate curve
   const EFF_NEW        = EFF_BASE_MAX;   // what a new miner mints at: 15 W only since 2026-10-30
-  // % — GMT locked-staking APR (observed 2026-11-06). Kept in step with STAKING_APR in
-  // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 18.87;
-  const MINING_MODE    = 1.09;    // % — solo mining discount (console inMiningMode, observed 2026-11-06)
-  const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
+  const STAKE_APR0     = C.rates.stakingAprPct;          // % GMT locked-staking APR
+  const MINING_MODE    = C.rates.soloMiningDiscountPct;  // % solo mining discount
+  const CLICK_STREAK   = C.rates.clickStreakPct;         // % daily click streak
+  const COV_PER_PCT = C.discount.coverageDaysPerPct, TOK_CAP = C.discount.tokenCapPct, TOT_CAP = C.discount.totalCapPct;
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
   const TH_TIERS_12W = P.TH_TIERS_12W;
 
   // VIP tiers — qualify on hashrate OR locked GMT, whichever lifts you higher.
-  const TIERS = [
-    { n: 'Bronze I', th: 0, veg: 0, d: 0 }, { n: 'Bronze II', th: 5, veg: 50, d: .3 },
-    { n: 'Silver I', th: 10, veg: 100, d: .6 }, { n: 'Silver II', th: 25, veg: 250, d: .9 },
-    { n: 'Silver III', th: 50, veg: 500, d: 1.2 }, { n: 'Gold I', th: 100, veg: 1000, d: 1.5 },
-    { n: 'Gold II', th: 200, veg: 2000, d: 1.8 }, { n: 'Platinum I', th: 500, veg: 5000, d: 2.1 },
-    { n: 'Platinum II', th: 1000, veg: 10000, d: 2.4 }, { n: 'Platinum III', th: 2500, veg: 25000, d: 2.7 },
-    { n: 'Diamond I', th: 5000, veg: 50000, d: 3.0 }, { n: 'Diamond II', th: 7000, veg: 70000, d: 3.3 },
-    { n: 'Diamond III', th: 9000, veg: 90000, d: 3.6 }, { n: 'Diamond IV', th: 12000, veg: 120000, d: 3.9 },
-    { n: 'Diamond V', th: 20000, veg: 200000, d: 4.2 }
-  ];
+  const TIERS = C.vipTiers;   // VIP tiers: data/config.json
   const vipOf = (th, veg) => { let t = TIERS[0]; for (const x of TIERS) if (th >= x.th || veg >= x.veg) t = x; return t; };
 
 
@@ -136,12 +127,12 @@
     // nonTokD = min(30, VIP bonus + click streak + mining mode + other).
     const vip = vipOf(th, gmtLocked);
     const cb = streak ? CLICK_STREAK : 0;
-    const nonTok = Math.min(30, vip.d + cb + MINING_MODE);
+    const nonTok = Math.min(TOT_CAP, vip.d + cb + MINING_MODE);
     const feesGMT = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
     const cov = feesGMT > 0 ? gmtLocked / feesGMT : (gmtLocked > 0 ? Infinity : 0);
-    const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
-    const totD = Math.min(30, tok + nonTok);
-    const gmtFor20 = feesGMT * 360;                            // 360 coverage days = the 20% cap
+    const tok = cov < COV_PER_PCT ? 0 : Math.min(TOK_CAP, Math.floor(cov / COV_PER_PCT));
+    const totD = Math.min(TOT_CAP, tok + nonTok);
+    const gmtFor20 = feesGMT * COV_PER_PCT * TOK_CAP;                            // 360 coverage days = the 20% cap
 
     // What this setup costs to build from scratch, at live prices. Total-capital model:
     // the GMT you must lock to hold the discount counts as invested capital. Matches
@@ -188,13 +179,13 @@
   // none. The lock is solved to the SMALLEST amount that still covers 360 days of fees (the 20%
   // token-discount cap): past that point extra GMT buys no more discount, and hashrate pays
   // better than staking. Below it, coverage is what the discount is made of.
-  const COV_DAYS = 360;
+  const COV_DAYS = COV_PER_PCT * TOK_CAP;   // 360: the coverage that holds the full token discount
   // GMT still missing from a 360-day coverage buffer for this farm — what the discount is made
   // of, and the one number both the opening allocation and every reinvestment are solved against.
   function covDeficitGMT(th, locked, streak, gp) {
     const feeUSD = feePerTHDay(EFF_NEW) * Math.max(th, 0.0001);
     const vip = vipOf(th, locked);
-    const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+    const nonTok = Math.min(TOT_CAP, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
     const burn = gp > 0 ? (feeUSD * (1 - nonTok / 100)) / gp : 0;   // GMT/day
     return Math.max(0, burn * COV_DAYS - locked);
   }
@@ -257,11 +248,11 @@
     for (let k = 1; k <= Math.round(years * 12); k++) {
       const feesUSD = feePerTHDay(EFF_NEW) * th;
       const vip = vipOf(th, locked);
-      const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+      const nonTok = Math.min(TOT_CAP, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
       const burn = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
       const cov = burn > 0 ? locked / burn : (locked > 0 ? Infinity : 0);
-      const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
-      const totD = Math.min(30, tok + nonTok);
+      const tok = cov < COV_PER_PCT ? 0 : Math.min(TOK_CAP, Math.floor(cov / COV_PER_PCT));
+      const totD = Math.min(TOT_CAP, tok + nonTok);
       // Floored at zero: an operator switches a loss-making miner off, they don't pay to run it.
       const miningMo = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE) * DPM;
       const stakingMo = locked * gp * (apr0 / 100) * DPM / 365.25;
@@ -311,7 +302,7 @@
   const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US',
     { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
   const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
-  const APR = 18.87;   // mirrors inLockAPR in console/index.html and STAKING_APR in scripts/constants.js
+  const APR = C.rates.stakingAprPct;   // data/config.json
   // When the tier tables above were last read off the live GoMining app. Mirrors
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
   const TH_PRICES_ASOF = '30 Oct 2026';
@@ -346,7 +337,7 @@
         + '</title><rect x="' + x.toFixed(1) + '" y="' + yPos.toFixed(1) + '" width="' + bw.toFixed(1)
         + '" height="' + hPos.toFixed(1) + '" rx="3" fill="url(#qcGold)"></rect>'
         + (hCash > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + (yPos - 2 - hCash).toFixed(1) + '" width="' + bw.toFixed(1)
-          + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#8B9CF7"></rect>' : '')
+          + '" height="' + hCash.toFixed(1) + '" rx="3" style="fill:var(--color-series-4)"></rect>' : '')
         + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">M' + r.mo + '</text>';
     });
     // Only the final column is labelled — a number on every column is noise, not information.
@@ -354,11 +345,11 @@
     g += '<text class="qc-lab" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + money(c.last.total, 0) + '</text>';
     return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each month end">'
       + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
-      + '<stop offset="0" stop-color="#F7D88A"/><stop offset="1" stop-color="#E2B259"/></linearGradient></defs>'
+      + '<stop offset="0" style="stop-color:var(--color-gold-300)"/><stop offset="1" style="stop-color:var(--color-gold)"/></linearGradient></defs>'
       + '<polyline class="qc-cap" fill="none" points="' + paidPts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"></polyline>'
       + g
       // drawn over the bars, outlined in the card colour so it reads even where a bar sits behind it
-      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end" stroke="#17181c" stroke-width="3" paint-order="stroke">' + money(c.last.paidIn, 0) + ' in</text>' + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
+      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end" style="stroke:var(--color-surface-2)" stroke-width="3" paint-order="stroke">' + money(c.last.paidIn, 0) + ' in</text>' + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
   }
 
   // The compounding block: controls, the headline rate, the chart and the year-by-year table.
@@ -368,9 +359,10 @@
     const reChips = REIN_CHIPS.map(o => '<button type="button" data-rein="' + o.v + '"' + (o.v === reinvest ? ' class="on"' : '') + '>' + o.l + '</button>').join('');
     // Quarter ends in the table; the chart carries every month.
     const rowsHTML = c.rows.filter(r => r.mo % 3 === 0).map(r =>
-      '<tr><td>Month ' + r.mo + '</td>' + (adds ? '<td>' + money(r.paidIn, 0) + '</td>' : '') + '<td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
-      + money(r.income, 0) + '</td><td>' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td><td>'
-      + money(r.total, 0) + '</td></tr>').join('');
+      '<tr><td data-label="">Month ' + r.mo + '</td>' + (adds ? '<td class="num" data-label="Paid in">' + money(r.paidIn, 0) + '</td>' : '')
+      + '<td class="num" data-label="Hashrate">' + num(r.th, 0) + ' TH</td><td class="num" data-label="Locked GMT">' + num(r.locked, 0) + '</td>'
+      + '<td class="num" data-label="Net income">' + money(r.income, 0) + '</td><td class="num" data-label="Cash taken">' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td>'
+      + '<td class="num" data-label="Total value">' + money(r.total, 0) + '</td></tr>').join('');
     return '<div class="comp">'
       + '<div class="comp-top"><h3>Then compound it for a year</h3>'
       + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
@@ -391,15 +383,15 @@
       + (c.rows.length > 1
         ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
           + '<span><i style="background:none;border-top:1px dashed var(--t3);border-radius:0;height:0;vertical-align:middle"></i>' + (adds ? 'Paid in so far' : 'Capital in') + '</span>'
-          + (tookCash ? '<span><i style="background:#8B9CF7"></i>Income taken as cash</span>' : '') + '</div>'
+          + (tookCash ? '<span><i style="background:var(--color-series-4)"></i>Income taken as cash</span>' : '') + '</div>'
           + compChart(c, cap, wpx)
         : '')
-      + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th>' + (adds ? '<th>Paid in</th>' : '') + '<th>Hashrate</th><th>Locked GMT</th>'
-      + '<th>Net income</th><th>Cash taken</th><th>Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
+      + '<div class="ui-table-wrap comp-tbl-wrap"><table class="ui-table ui-table--stack comp-tbl" aria-label="Your position every three months"><thead><tr><th></th>' + (adds ? '<th class="num">Paid in</th>' : '') + '<th class="num">Hashrate</th><th class="num">Locked GMT</th>'
+      + '<th class="num">Net income</th><th class="num">Cash taken</th><th class="num">Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
       + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT $' + S.gmt.toFixed(4)
       + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + num(APR, 2) + '% staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
-      + 'Reinvestment tops the fee coverage back to 360 days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
-      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the ' + num(USD_GMT_FEE * 100, 0) + '% fee on USD into GMT; weekly amounts are averaged into the month.' : '')
+      + 'Reinvestment tops the fee coverage back to ' + COV_DAYS + ' days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
+      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the USD-to-GMT fee (currently ' + num(USD_GMT_FEE * 100, 0) + '%, may change); weekly amounts are averaged into the month.' : '')
       + '</div>'
       + '</div>';
   }
@@ -449,9 +441,9 @@
           <div class="leg"><div class="lk"><span class="sw" style="background:var(--gold)"></span>Buy hashrate</div>
             <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${num(pct(thUSD), 0)}%</div>
             <div class="ls">${num(a.th, 1)} TH minted at 15 W/TH</div></div>
-          <div class="leg"><div class="lk"><span class="sw" style="background:#8B9CF7"></span>Lock GMT</div>
-            <div class="lv" style="color:#8B9CF7">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
-            <div class="ls">${num(a.ag, 0)} GMT &mdash; 360 days of fee coverage</div></div>
+          <div class="leg"><div class="lk"><span class="sw" style="background:var(--color-series-4)"></span>Lock GMT</div>
+            <div class="lv" style="color:var(--color-series-4)">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
+            <div class="ls">${num(a.ag, 0)} GMT &mdash; ${COV_DAYS} days of fee coverage</div></div>
         </div>
       </div>
       <div class="grid" style="margin-top:.8rem">
@@ -497,9 +489,11 @@
     const SC = 2, W = 1200, H = 675;
     const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
     const x = c.getContext('2d'); x.scale(SC, SC);
-    const GOLD = '#E2B259', GSOFT = '#F7D88A', GHI = '#F7D88A', UP = '#2EE59D', PURP = '#8B9CF7';
+    // brand colours from the tokens (assets/charts.js resolves them for canvas); literal fallbacks if the kit is absent
+    const K = window.GMTCharts, tok = (n, f) => (K ? K.color(n) : f);
+    const GOLD = tok('gold', '#E2B259'), GSOFT = tok('gold-300', '#F7D88A'), GHI = GSOFT, UP = tok('success', '#22C55E'), PURP = tok('series-4', '#8B9CF7');
     const SANS = '"Inter",system-ui,sans-serif', MONO = '"Inter",monospace';
-    const gold = a => 'rgba(245,166,35,' + a + ')';
+    const gold = a => 'rgba(226,178,89,' + a + ')';   // --color-gold-rgb
     const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
     // backdrop: dark room, amber light columns, floor
     const bg = x.createLinearGradient(0, 0, 0, H);

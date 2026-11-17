@@ -22,6 +22,10 @@ jobs:
       # The data pages bake in TH prices from assets/pricing.js (and live BTC/difficulty), so rebuild
       # them on every deploy: a price edit then reaches them with no manual step. If the generator
       # fails, the committed pages are published as they are rather than blocking the deploy.
+      # data/config.json is the single source for prices, fees, rates and RINGO5 terms. Apply it first;
+      # an invalid config FAILS the deploy, so a typo never ships (the live site keeps its last good build).
+      - name: Apply data/config.json
+        run: node scripts/build-config.js
       - name: Regenerate data pages
         run: node scripts/gen-pages.js
         continue-on-error: true

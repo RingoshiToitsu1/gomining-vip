@@ -264,3 +264,7 @@ img.ui-wordmark { display: block; height: 28px !important; width: auto !importan
   filter: none !important; border-radius: 0 !important; }
 @media (max-width: 600px) { img.ui-wordmark { height: 24px !important; } }
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
+
+/* 'Fees and rates as of …' next to any fee or rate (date from data/config.json, filled at build) */
+.cfg-asof { font-size: var(--font-size-xs); color: var(--color-text-2); margin: var(--space-2) 0 var(--space-4); }
+.cfg-asof time { color: var(--color-text); font-variant-numeric: tabular-nums; }

@@ -15,43 +15,37 @@
 // Prices come from assets/pricing.js (the single source). Pages load it first; if one didn't,
 // fetch it from next to this script before running, so the widget never prices off nothing.
 (function (run) {
-  if (window.GMT_PRICING) return run();
-  const me = document.currentScript, s = document.createElement('script');
-  s.src = new URL('pricing.js', me && me.src ? me.src : location.origin + '/assets/').href;
-  s.onload = run;
-  document.head.appendChild(s);
+  const me = document.currentScript, base = me && me.src ? me.src : location.origin + '/assets/';
+  const need = [['GMT_PRICING', 'pricing.js'], ['GMTMining', '../lib/mining.js']].filter(([g]) => !window[g]);
+  (function next() {
+    if (!need.length) return run();
+    const [, file] = need.shift(), s = document.createElement('script');
+    s.src = new URL(file, base).href; s.onload = next; document.head.appendChild(s);
+  })();
 })(function () {
   'use strict';
   const P = window.GMT_PRICING;   // TH tiers (sale applied), efficiency ratings, upgrade steps
+  const C = window.GMT_CONFIG;    // data/config.json: fees, rates, discount rules, VIP tiers, RINGO5 terms
+  const M = window.GMTMining;     // lib/mining.js: the pure, tested maths
 
-  // ---- CALIBRATION (mirror of assets/app.js) ----
-  const CONVERSION_FEE = 0.0225;  // BTC → GMT skim applied at payout
-  const USD_GMT_FEE    = 0.02;    // fee on USD deployed into GMT (lock + TH mint)
-  const BLOCK_SUBSIDY  = 3.125;   // BTC/block — halve at the 2028 halving
-  const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
-  const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
+  // ---- calibration: all from data/config.json ----
+  const CONVERSION_FEE = C.fees.btcToGmtConversion;
+  const USD_GMT_FEE    = C.fees.usdToGmt;
+  const BLOCK_SUBSIDY  = C.network.blockSubsidyBtc;
+  const ELEC_RATE      = C.fees.electricityUsdPerKwh;
+  const SERVICE_RATE   = C.fees.serviceUsdPerThDay;
   const EFF_BEST       = P.EFF_BEST;      // best efficiency reachable, by upgrading a 15 W miner (W/TH)
   const EFF_BASE_MAX   = P.EFF_BASE_MAX;      // cheaper marketplace hashrate (W/TH)
-  // % — GMT locked-staking APR (observed 2026-11-06). Kept in step with STAKING_APR in
-  // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 18.87;
-  const MINING_MODE    = 1.09;    // % — solo mining discount (console inMiningMode, observed 2026-11-06)
-  const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
+  const STAKE_APR0     = C.rates.stakingAprPct;          // % GMT locked-staking APR
+  const MINING_MODE    = C.rates.soloMiningDiscountPct;  // % solo mining discount
+  const CLICK_STREAK   = C.rates.clickStreakPct;         // % daily click streak
+  const COV_DAYS = C.discount.coverageDaysPerPct, TOK_CAP = C.discount.tokenCapPct, TOT_CAP = C.discount.totalCapPct;
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
   const TH_TIERS_12W = P.TH_TIERS_12W;
 
   // VIP tiers — qualify on hashrate OR locked GMT, whichever lifts you higher.
-  const TIERS = [
-    { n: 'Bronze I', th: 0, veg: 0, d: 0 }, { n: 'Bronze II', th: 5, veg: 50, d: .3 },
-    { n: 'Silver I', th: 10, veg: 100, d: .6 }, { n: 'Silver II', th: 25, veg: 250, d: .9 },
-    { n: 'Silver III', th: 50, veg: 500, d: 1.2 }, { n: 'Gold I', th: 100, veg: 1000, d: 1.5 },
-    { n: 'Gold II', th: 200, veg: 2000, d: 1.8 }, { n: 'Platinum I', th: 500, veg: 5000, d: 2.1 },
-    { n: 'Platinum II', th: 1000, veg: 10000, d: 2.4 }, { n: 'Platinum III', th: 2500, veg: 25000, d: 2.7 },
-    { n: 'Diamond I', th: 5000, veg: 50000, d: 3.0 }, { n: 'Diamond II', th: 7000, veg: 70000, d: 3.3 },
-    { n: 'Diamond III', th: 9000, veg: 90000, d: 3.6 }, { n: 'Diamond IV', th: 12000, veg: 120000, d: 3.9 },
-    { n: 'Diamond V', th: 20000, veg: 200000, d: 4.2 }
-  ];
+  const TIERS = C.vipTiers;   // VIP tiers: data/config.json
   const vipOf = (th, veg) => { let t = TIERS[0]; for (const x of TIERS) if (th >= x.th || veg >= x.veg) t = x; return t; };
 
 
@@ -116,47 +110,19 @@
   // Returns today's economics plus cumulative earnings at each year mark.
   function model(th, wth, gmtLocked, apr0, streak) {
     const bp = S.btc, gp = S.gmt;
-    const dbt0 = Math.round(S.satsPerTHDay) / 1e8;            // BTC/TH/day, rounded like the app
-    const feeUSDperTH = (ELEC_RATE * 24 * wth) / 1000 + SERVICE_RATE;
-    const feesUSD = feeUSDperTH * th;                          // daily, pre-discount
-
-    // Discount: VIP tier bonus, then the GMT coverage discount in 1% steps.
-    // Non-token discounts stack before coverage, matching calc() in app.js:
-    // nonTokD = min(30, VIP bonus + click streak + mining mode + other).
-    const vip = vipOf(th, gmtLocked);
-    const cb = streak ? CLICK_STREAK : 0;
-    const nonTok = Math.min(30, vip.d + cb + MINING_MODE);
-    const feesGMT = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
-    const cov = feesGMT > 0 ? gmtLocked / feesGMT : (gmtLocked > 0 ? Infinity : 0);
-    const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
-    const totD = Math.min(30, tok + nonTok);
-    const gmtFor20 = feesGMT * 360;                            // 360 coverage days = the 20% cap
-
-    // What this setup costs to build from scratch, at live prices. Total-capital model:
-    // the GMT you must lock to hold the discount counts as invested capital. Matches
-    // gen-pages.js totalCapital (which excludes USD_GMT_FEE — kept consistent deliberately).
+    // Today's picture from the shared library: fees, VIP tier, coverage → token discount, net mining, staking.
+    const f = M.farmToday({ th, wth, lockedGmt: gmtLocked, aprPct: apr0, clickStreak: streak, btcPrice: bp, gmtPrice: gp, satsPerTH: S.satsPerTHDay }, C);
+    // Total-capital model: the GMT you lock to hold the discount counts as invested capital
+    // (matches gen-pages.js totalCapital, which excludes USD_GMT_FEE, kept consistent deliberately).
     const thCost = th * cptAtEff(th, wth);
     const lockCost = gmtLocked * gp;
     const invested = thCost + lockCost;
-
-    const grossToday = dbt0 * th * bp;
-    const stakedUSD = gmtLocked * gp;                          // lock value, pre-fee
-    const miningToday = (grossToday - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE);
-    const stakingToday = stakedUSD * (apr0 / 100) / 365.25;
-    const netToday = miningToday + stakingToday;
-
-    // Project forward on TOTAL capital (hashrate + GMT lock), matching the model the
-    // /gomining-*-th-roi pages publish: BTC on the rainbow Still-cheap path, mining reward eroded by
-    // halvings and the difficulty grind (floored at the network no-arbitrage break-even),
-    // mining clamped at >=0 (a rational operator stops rather than pays fees at a loss),
-    // and staking valued at today's GMT price rather than marked up with BTC.
-    // Mining margin at zero is the teaching case: with no discount you ARE the
-    // marginal miner the reward floor is defined by. Checked at today's rates only —
-    // this widget answers "what does this earn now", never "what will it earn".
-    const miningDead = netToday <= 0 || miningToday <= 0;
-    const yieldPct = invested > 0 ? (netToday * 365.25 / invested) * 100 : 0;
-    return { dbt0, feesUSD, totD, tok, nonTok, vip, gmtFor20, invested, thCost, lockCost,
-             netToday, miningToday, stakingToday, grossToday, miningDead, yieldPct, bp, gp };
+    // Checked at today's rates only: this widget answers "what does this earn now", never "what will it earn".
+    const miningDead = f.net <= 0 || f.mining <= 0;
+    const yieldPct = invested > 0 ? (f.net * 365.25 / invested) * 100 : 0;
+    return { dbt0: f.btcPerTH, feesUSD: f.feesUsd, totD: f.totD, tok: f.tok, nonTok: f.nonTok, vip: f.vip, gmtFor20: f.gmtForFull,
+             invested, thCost, lockCost, netToday: f.net, miningToday: f.mining, stakingToday: f.staking, grossToday: f.grossUsd,
+             miningDead, yieldPct, bp, gp };
   }
 
   // ---- render ----
@@ -194,8 +160,8 @@
   // priced two ways — all hashrate, or hashrate plus the GMT that holds the 20% discount —
   // and the better one at today's prices is shown (the optimum is always one of those two
   // corners, never a split in between). The RINGO5 terms are counted in.
-  const REF_BONUS_TH     = 0.05;    // +5% bonus TH on the first miner, from GoMining via the referral code…
-  const REF_BONUS_CAP    = 25;      // …capped at 25 TH (docs.gomining.com referral program)
+  const REF_BONUS_TH     = C.referral.bonusThPct / 100;   // RINGO5 bonus TH on the first miner…
+  const REF_BONUS_CAP    = C.referral.bonusThCap;         // …capped (data/config.json → referral)
   const bonusOf = th => Math.min(th * REF_BONUS_TH, REF_BONUS_CAP);
 
   // TH the budget buys. Cost is monotonic in TH, so bisect.

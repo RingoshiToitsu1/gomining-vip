@@ -16,7 +16,9 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(__dirname, 'golden');
 const UPDATE = process.argv.includes('--update');
-const read = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
+// GOLDEN_REV=<commit> runs every suite against the code at that commit (e.g. to prove a refactor changed nothing).
+const REV = process.env.GOLDEN_REV;
+const read = f => REV ? require('child_process').execSync(`git show ${REV}:${f}`, { cwd: ROOT, encoding: 'utf8' }) : fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 // ---------- fake page ----------
 function makeDom(page) {
@@ -143,6 +145,7 @@ async function roiSuite() {
   for (const [page, cases] of Object.entries(pages)) {
     const dom = makeDom(page), ctx = makeCtx(dom);
     run(ctx, 'assets/pricing.js');
+    try { run(ctx, 'lib/mining.js'); } catch (e) { /* older revisions (GOLDEN_REV) predate lib/ */ }
     run(ctx, 'assets/roi-embed.js');
     for (let k = 0; k < 20; k++) await flush();     // loadMarket() falls back to its fixed prices
     const ids = ['re-th', 're-wth', 're-gmt', 're-usd', 're-apr', 're-streak'].filter(id => dom.document.getElementById(id));
@@ -174,8 +177,23 @@ async function checkerSuite() {
   return out;
 }
 
+// ---------- 4. quote tool (/quote) ----------
+async function quoteSuite() {
+  const dom = makeDom('quote/index.html'), ctx = makeCtx(dom);
+  run(ctx, 'assets/pricing.js'); run(ctx, 'assets/quote.js');
+  for (let k = 0; k < 20; k++) await flush();
+  const out = {};
+  const cases = [[10000, 0, true], [50000, 0, true], [250000, 0, true], [50000, 500, true], [50000, 0, false], [1000, 100, true]];
+  for (const [cap, add, streak] of cases) {
+    dom.get('qCap').value = String(cap); dom.get('qAdd').value = String(add); dom.get('qStreak').checked = streak;
+    dom.fire('qCap'); dom.fire('qAdd'); dom.fire('qStreak', 'change'); await flush();
+    out[`$${cap} + $${add}/mo, streak ${streak}`] = text(dom.get('qOut').innerHTML);
+  }
+  return out;
+}
+
 (async () => {
-  const suites = { console: consoleSuite(), roi: await roiSuite(), checker: await checkerSuite() };
+  const suites = { console: consoleSuite(), roi: await roiSuite(), checker: await checkerSuite(), quote: await quoteSuite() };
   fs.mkdirSync(OUT, { recursive: true });
   let fails = 0;
   for (const [name, got] of Object.entries(suites)) {

@@ -9,8 +9,9 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
-const CONVERSION_FEE  = 0.0225;  // BTC → GMT conversion skim (reinvesting rewards into GMT), applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
-const USD_GMT_FEE     = 0.02;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
+const CONFIG=GMT_CONFIG;   // data/config.json (via assets/pricing.js): every fee, rate, cap and tier below comes from it
+const CONVERSION_FEE  = CONFIG.fees.btcToGmtConversion;  // BTC → GMT conversion skim (reinvesting rewards into GMT), applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
+const USD_GMT_FEE     = CONFIG.fees.usdToGmt;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
 // GMT tracks BTC. Calibration anchor from observed history: BTC $120k ↔ GMT $0.52.
 // The New Monthly Income sim fits a line through (live BTC, live GMT) and this anchor.
 const GMT_ANCHOR_BTC  = 120000;
@@ -19,10 +20,15 @@ const GMT_ANCHOR_GMT  = 0.52;
 // mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
 // subsidy-only at current difficulty ≈ 45, matching the GoMining app. The app rounds to the
 // nearest whole sat (not floor) — see dailyBTCperTH. Bump at each halving.
-const BLOCK_SUBSIDY   = 3.125;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
-const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
-const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
-const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passive growth compounds past this
+const BLOCK_SUBSIDY   = CONFIG.network.blockSubsidyBtc;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
+const ELECTRICITY_RATE= CONFIG.fees.electricityUsdPerKwh;    // $/kWh charged on (W/TH × TH × 24h)
+const SERVICE_RATE    = CONFIG.fees.serviceUsdPerThDay;
+const CLICK_STREAK_PCT     = CONFIG.rates.clickStreakPct;      // daily click streak, %
+const COV_DAYS_PER_PCT     = CONFIG.discount.coverageDaysPerPct;  // days of fee coverage per 1% token discount
+const TOKEN_DISCOUNT_CAP   = CONFIG.discount.tokenCapPct;      // max token (coverage) discount, %
+const TOTAL_DISCOUNT_CAP   = CONFIG.discount.totalCapPct;      // max total fee discount, %
+const ELEC_USD_PER_W_DAY   = ELECTRICITY_RATE*24/1000;           // $ per W/TH per TH per day (0.0012 at $0.05/kWh)  // $/TH/day platform service fee
+const GREEDY_CAP      = CONFIG.pricing.minerCapTh;    // max TH per miner via manual upgrades; passive growth compounds past this
 
 // ---- AMBASSADOR (referral) COMMISSION ----
 // GoMining pays an ambassador $0.005 per kWh their referrals' miners consume, so the stream is
@@ -35,19 +41,7 @@ const AMB_DEFAULT_WTH  = 15;
 function ambDailyUSD(th,wth){return Math.max(0,+th||0)*((wth>0?wth:AMB_DEFAULT_WTH)*24/1000)*AMB_RATE_PER_KWH;}
 
 // ---- VIP TIERS ----
-const TIERS=[
-  {n:'Bronze I',th:0,veg:0,d:0,rb:0},{n:'Bronze II',th:5,veg:50,d:.3,rb:0},
-  {n:'Silver I',th:10,veg:100,d:.6,rb:5},{n:'Silver II',th:25,veg:250,d:.9,rb:0},
-  {n:'Silver III',th:50,veg:500,d:1.2,rb:0},{n:'Gold I',th:100,veg:1000,d:1.5,rb:0},
-  {n:'Gold II',th:200,veg:2000,d:1.8,rb:0},{n:'Platinum I',th:500,veg:5000,d:2.1,rb:0},
-  {n:'Platinum II',th:1000,veg:10000,d:2.4,rb:0},{n:'Platinum III',th:2500,veg:25000,d:2.7,rb:0},
-  {n:'Diamond I',th:5000,veg:50000,d:3.0,rb:10},{n:'Diamond II',th:7000,veg:70000,d:3.3,rb:0},
-  {n:'Diamond III',th:9000,veg:90000,d:3.6,rb:0},{n:'Diamond IV',th:12000,veg:120000,d:3.9,rb:0},
-  {n:'Diamond V',th:20000,veg:200000,d:4.2,rb:0},
-  {n:'Legend I',th:50000,veg:500000,d:4.5,rb:0},{n:'Legend II',th:100000,veg:1000000,d:4.8,rb:0},
-  {n:'Legend III',th:250000,veg:2500000,d:5.1,rb:0},{n:'Legend IV',th:400000,veg:4000000,d:5.4,rb:0},
-  {n:'Legend V',th:750000,veg:7500000,d:5.7,rb:0},{n:'Elite',th:1000000,veg:10000000,d:6.0,rb:0}
-];
+const TIERS=CONFIG.vipTiers;   // VIP tiers live in data/config.json
 // VIP tier qualifies via locked GMT OR hashrate — whichever lifts you higher. GMT is the cheaper
 // path per discount %, but TH still climbs your VIP level (matters once you're at the max token
 // discount and keep growing the farm).
@@ -71,7 +65,7 @@ const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver'
 // 15 W/TH is the only machine GoMining mints; tiers are per-miner-size $/TH with any sale applied,
 // stored PRE-avatar-discount (avatarDiscMult() applies the 5% NFT discount separately).
 const TH_TIERS=GMT_PRICING.TH_TIERS_15W;
-function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
+function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?1-CONFIG.fees.nftHolderDiscount:1;}
 function estimateCPT(th){
   const disc=avatarDiscMult();
   if(th<=0)return TH_TIERS[0].cpt*disc;
@@ -144,11 +138,11 @@ document.addEventListener('click',function(e){
 function thPriceBadge(extraClass){
   return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
     title="See what these prices are and when they were last checked">
-    <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
+    <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span> · fees &amp; rates ${GMT_PRICING.UPDATED}</button>`;
 }
 const EFF_BEST=GMT_PRICING.EFF_BEST;            // best efficiency available now (assets/pricing.js)
 const EFF_BASE_MAX=GMT_PRICING.EFF_BASE_MAX;    // the 15 W/TH hashrate curve; also the marketplace-machine baseline
-const MINER_CAP=5000;         // TH per machine via upgrades before a new machine is required
+const MINER_CAP=CONFIG.pricing.minerCapTh;         // TH per machine via upgrades before a new machine is required
 // What a freshly minted machine gets. GoMining mints 15 W/TH only since 2026-10-30, so every "buy new
 // hashrate" path prices off TH_TIERS at this rating; reaching 12 W is a separate upgrade decision.
 const EFF_NEW=EFF_BASE_MAX;
@@ -202,11 +196,11 @@ function effectiveCompoundedROI(i,m){
       const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
       const f=fees(Math.max(tot,1e-9),bw,bp);
       const v=vipFor(th+Math.max(0,gTH-gInit),locked,i);
-      const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+      const nonTok=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0)+(i.od||0));
       const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                     // GMT/day at full fee
       const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
-      const tokD=i.payG?Math.min(20,Math.floor(cov/18)):0;
-      const totD=Math.min(30,tokD+nonTok);
+      const tokD=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+      const totD=Math.min(TOTAL_DISCOUNT_CAP,tokD+nonTok);
       const mineWk=Math.max(0,(dbt*tot-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE))*7;
       const stakeWk=locked*(i.apr/100)/52*gp;
       let budget=mineWk+stakeWk+(withAmb?ambWk:0);
@@ -216,7 +210,7 @@ function effectiveCompoundedROI(i,m){
       // Coverage first, exactly as the planner prioritises it: hashrate bought without the
       // coverage to match simply moves the fee discount down and can net less than it costs.
       if(i.payG){
-        const need=Math.max(0,burnGMT*360-(locked+wallet))*gp;
+        const need=Math.max(0,burnGMT*COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP-(locked+wallet))*gp;
         const toLock=Math.min(budget,need);
         if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
       }
@@ -654,11 +648,11 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
     const tot=othTH+gTH, bw=tot>0?(othTH*othW+gTH*gW)/tot:othW;
     const f=fees(tot,bw,bp);
     const v=vipFor(othTH+Math.max(0,gTH-(a.gInit||0)),locked,i);
-    const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+    const nonTok=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0)+(i.od||0));
     const burn=(f.t*(1-nonTok/100)*bp)/gp;
     const cov=burn>0?(locked+gmtW)/burn:Infinity;
-    const tok=i.payG?Math.min(20,Math.floor(cov/18)):0;
-    const fd=Math.min(30,tok+nonTok);
+    const tok=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,tok+nonTok);
     const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*30;
     const stakeMo=locked*(i.apr/100)/52*gp*4.33;
     const greedyMo=(gTH>0&&gGrow>0)?(gTH*gGrow)*4.33*cptAtEff(gTH,gW):0;
@@ -2580,13 +2574,13 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.09;   // observed 2026-11-06
+const MINING_MODE_DEFAULT=CONFIG.rates.soloMiningDiscountPct;   // observed 2026-11-06
 // Greedy Machine free weekly growth. A platform rate, not a preference, so a saved setup still
 // carrying a previous default has to pick up the new one — but the field also invites the user
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
 // mining mode above: a value matching any rate this input has ever shipped with is a stale
 // default; anything else is the user's number and is left alone.
-const GREEDY_GROWTH_DEFAULT='0.3347';   // observed 2026-10-07: 4,805.30 → 4,837.52 TH over two weeks
+const GREEDY_GROWTH_DEFAULT=String(CONFIG.rates.greedyGrowthWeeklyPct);   // observed 2026-10-07: 4,805.30 → 4,837.52 TH over two weeks
 const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
@@ -2619,7 +2613,7 @@ function loadDiscountOverride(){
     const raw=localStorage.getItem(DISCOUNT_OVERRIDE_KEY);
     if(raw===null)return;
     const v=Number(raw);
-    if(isFinite(v))S.discountOverride=Math.max(0,Math.min(30,v));
+    if(isFinite(v))S.discountOverride=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,v));
   }catch(e){}
 }
 function toggleDiscountOverride(){
@@ -2637,7 +2631,7 @@ function toggleDiscountOverride(){
 function applyDiscountOverride(){
   let v=parseFloat($('inDiscOverride').value);
   if(!isFinite(v)){resetDiscountOverride();return;}
-  v=Math.max(0,Math.min(30,v));
+  v=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,v));
   S.discountOverride=v;
   try{localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v))}catch(e){}
   autoSave();   // persist the override into the active setup so it stays tied to THIS setup
@@ -2698,7 +2692,7 @@ function readInputs(){
 // in sync so a page reload of the same setup restores the same override.
 function applyDiscountOverrideFor(d){
   const raw=d?d.discountOverride:undefined;
-  const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(30,Number(raw))):null;
+  const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,Number(raw))):null;
   S.discountOverride=v;
   S.vipOverride=(d&&TIERS.some(t=>t.n===d.vipOverride))?d.vipOverride:null;   // VIP override is per-setup too
   try{v!=null?localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v)):localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
@@ -3183,7 +3177,7 @@ function difficultyMultAt(t){
 // uses the undiscounted 12 W cost, so a GoMining user keeps a thin margin via their GMT discount.
 // MINER_FLOOR_WTH is tunable: lower it if you think the marginal global miner is more efficient/cheaper.
 const MINER_FLOOR_WTH=EFF_BEST;   // efficiency (W/TH) of the price-setting marginal network miner
-function rewardFloorBTC(price){return price>0?(0.0012*MINER_FLOOR_WTH+0.0089)/price:0;}  // BTC/TH/day
+function rewardFloorBTC(price){return price>0?(ELEC_USD_PER_W_DAY*MINER_FLOOR_WTH+SERVICE_RATE)/price:0;}  // BTC/TH/day
 // Halving years that fall within [now, now+days] — for projection notes.
 function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
 
@@ -3209,23 +3203,23 @@ function calc(i){
   const gross=dbt*earnTH,f=fees(earnTH,bwth,bp);
   const vip=vipFor(vipTH,i.gl,i);
   const nxt=vip.ovr?(TIERS[TIERS.findIndex(x=>x.n===vip.n)+1]||null):nextVip(vipTH,i.gl);
-  const vd=vip.d,cb=i.click?3:0;
-  const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
+  const vd=vip.d,cb=i.click?CLICK_STREAK_PCT:0;
+  const nonTokD=Math.min(TOTAL_DISCOUNT_CAP,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
   const feesGMT=(f.t*(1-nonTokD/100)*bp)/gp; // daily fees in GMT after non-token discounts
   // Wallet (liquid) GMT counts toward coverage alongside locked.
   const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
   // GoMining grants the token discount in 1% steps based on coverage days.
   // GoMining uses 18 days per 1% step (360 days = 20% max), not 18.9.
-  const eTok=cov<18?0:Math.min(20,Math.floor(cov/18));
+  const eTok=cov<COV_DAYS_PER_PCT?0:Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT));
   let tok=i.payG?eTok:0;
-  let totD=Math.min(30,tok+nonTokD);
+  let totD=Math.min(TOTAL_DISCOUNT_CAP,tok+nonTokD);
   // Manual override: user enters the real discount they see in the GoMining app.
   // The delta from the auto-calc is attributed to the token (coverage) discount so
   // the breakdown still sums to the displayed total.
   let ovr=false;
   if(S.discountOverride!=null&&isFinite(S.discountOverride)){
-    totD=Math.max(0,Math.min(30,S.discountOverride));
+    totD=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,S.discountOverride));
     tok=Math.max(0,totD-nonTokD);
     ovr=true;
   }
@@ -3884,7 +3878,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const at=thUSD>0?thForBudgetTiers(thUSD*(1-USD_GMT_FEE),TH_TIERS_NEW):0;
       const fT=fees(at||1,EFF_NEW,bp);   // a referral's capital mints a new machine ⇒ 15 W/TH
       const vT=vipOf(at,ag);
-      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const ntd=Math.min(TOTAL_DISCOUNT_CAP,vT.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0));
       const burn=(fT.t*(1-ntd/100)*bp)/gp;
       return{deficit:Math.max(0,burn*COV-ag),at,ag,thUSD};
     }
@@ -3923,7 +3917,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0&&mpTHraw<=0)return null;
 
-  const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
+  const covNeeded=COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP; // 20 steps * 18 days/step (GoMining's actual)
 
   // VIP-only blended efficiency (existing farm + freshly minted TH, which is 15 W/TH only).
   function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_NEW)/(i.th+addTH):i.wth}
@@ -3945,7 +3939,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     const newMinted=Math.max(0,totFeeTH-i.th-gth0-mpTH);
     const bw=blendWTH(newMinted);
     const rf=fees(totFeeTH||1,bw||15,bp);
-    const rd=Math.min(30,(vipFor(vipBasis,lockedGMT,i).d)+(i.click?3:0)+(i.mm||0));
+    const rd=Math.min(TOTAL_DISCOUNT_CAP,(vipFor(vipBasis,lockedGMT,i).d)+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
     return Math.min(reserveNeeded,gmtAvail);
@@ -3987,7 +3981,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const bwth=blendWTH(addVip,addGreedy,addGreedyWatts);
       const fTest=fees(feeTH,bwth,bp);
       const vTest=vipFor(vipTH,totalLocked,i);
-      const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
+      const ntkD=Math.min(TOTAL_DISCOUNT_CAP,vTest.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
       return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:feeTH,
@@ -4040,12 +4034,12 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipFor(vipTH,newLocked,i);     // tier from VIP-eligible TH only
-  const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
+  const newNonTokD=Math.min(TOTAL_DISCOUNT_CAP,nv.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
   const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
-  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18)):0;
-  const td2=Math.min(30,ntd+newNonTokD);
+  const ntd=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(covAfter/COV_DAYS_PER_PCT)):0;
+  const td2=Math.min(TOTAL_DISCOUNT_CAP,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
 
@@ -4111,7 +4105,7 @@ function computeEffPlan(st){
   // GMT-lock capital freed per TH by upgrading to 12 W/TH. The lock for max discount is
   // 20×18 = 360 days of fee coverage; a lower fee (from better efficiency) needs less
   // coverage, so upgrading returns real capital — worth ~$1.24/TH at 15→12 W.
-  const lockFreedPerTH=(i.wth>EFF_BEST)?(18*20)*(0.0012*(i.wth-EFF_BEST))*(1-nonTokD):0;
+  const lockFreedPerTH=(i.wth>EFF_BEST)?(COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP)*(ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST))*(1-nonTokD):0;
 
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
   // dollar than buying new TH, divert that slice of the TH budget into the upgrade (whole farm).
@@ -4122,10 +4116,10 @@ function computeEffPlan(st){
     const cptUnet=Math.max(0.01,cptU-lockFreedPerTH);   // net of the freed GMT-lock capital
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
-      const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
+      const savedMo=cap*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
       upgradeROI=savedMo*12/(cap*cptUnet);   // ROI on the NET cost (saves fees AND frees GMT-lock capital)
       const cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);   // alternative is MINTING new 15 W TH
-      const thNetMo=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
+      const thNetMo=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*30;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
         const upgradeCost=cap*cptU;
@@ -4150,12 +4144,12 @@ function computeEffPlan(st){
         const gGrow=(+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100;   // free growth, fraction/wk
         // Mean TH across the next year at weekly compounding — the base the saving really lands on.
         const grownAvg=gGrow>0?gth*((Math.pow(1+gGrow,52)-1)/(52*gGrow)):gth;
-        const gLockFreed=(18*20)*(0.0012*(gwth-EFF_BEST))*(1-nonTokD);
+        const gLockFreed=(COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP)*(ELEC_USD_PER_W_DAY*(gwth-EFF_BEST))*(1-nonTokD);
         const gCptUnet=Math.max(0.01,gCptU-gLockFreed);
-        const gSavedYrPerTH=0.0012*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
+        const gSavedYrPerTH=ELEC_USD_PER_W_DAY*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
         const gROI=(gSavedYrPerTH*grownAvg)/(gth*gCptUnet);
         const cptTHg=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
-        const thNetMoG=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
+        const thNetMoG=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*30;
         const thROIg=cptTHg>0?thNetMoG*12/cptTHg:0;
         if(gROI>thROIg){
           const gEff=Math.min(thUSD,gth*gCptU);
@@ -4196,8 +4190,8 @@ function computeEffPlan(st){
   if(i.th>0 && i.wth>EFF_BEST){
     const cptU=Math.max(0.01,effUpgradeCostPerTH(i.wth)-lockFreedPerTH);
     if(cptU>0){
-      const M=0.0012*EFF_NEW+0.0089, cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
-      const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
+      const M=ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE, cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
+      const bpStar=(M*(1-d)+cptTH*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
       if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
     }
   }
@@ -5016,7 +5010,7 @@ function computeSetupProjection(){
     if(refFleetTH>0){
       const f0=fees(refFleetTH,EFF_BEST,bpStart);
       const v0=vipOf(refFleetTH,0);
-      refFleetLocked=(f0.t*(1-Math.min(30,v0.d)/100)*bpStart)/gp0*360;
+      refFleetLocked=(f0.t*(1-Math.min(TOTAL_DISCOUNT_CAP,v0.d)/100)*bpStart)/gp0*360;
       REF_AMB_EXCL=refFleetTH;
     }
     GGROW=(i.ggrow||0)/100;
@@ -5111,12 +5105,12 @@ function computeSetupProjection(){
     const bw=totTH>0?(curTH*cW+MP_TH*MP_WTH+gTH*gW)/totTH:cW;
     const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
     const v=vipFor(curTH+Math.max(0,gTH-GINIT),curLocked,i);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc2>0?tg2/fc2:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
-    const fd=Math.min(30,td+ntd);
+    const td=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cv/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,td+ntd);
     const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
     const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
     // The greedy machine's free weekly TH, valued as income — the same treatment the console
@@ -5140,11 +5134,11 @@ function computeSetupProjection(){
     refFleetLocked+=refFleetLocked*(apr/100)/52;              // their locked GMT stakes too
     const f=fees(refFleetTH,EFF_NEW,bpToday);
     const v=vipOf(refFleetTH,refFleetLocked);
-    const ntd=Math.min(30,v.d);                                // VIP only — their streak/mode is unknown
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d);                                // VIP only — their streak/mode is unknown
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;                   // their daily GMT fee burn
     const cov=burn>0?refFleetLocked/burn:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cov/18)):0;
-    const fd=Math.min(30,td+ntd);
+    const td=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,td+ntd);
     const netWk=Math.max(0,(dbtToday*refFleetTH-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE))*7;
     const spend=netWk*refReinvest;
     if(!(spend>0))return 0;
@@ -5162,7 +5156,7 @@ function computeSetupProjection(){
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
     const f=fees(totTH,bw,bpToday);
     const v=vipFor(curTH+Math.max(0,greedyTH-GINIT),curLocked,i);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*360-(curLocked+gmtW));
   }
