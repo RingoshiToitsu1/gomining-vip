@@ -111,7 +111,7 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-msgs .gc-link{align-self:center;margin-bottom:24px}
 
 /* ---- /copilot: the same conversation, inline on the page ---- */
-.gc-page{display:flex;flex-direction:column;height:clamp(460px,calc(100vh - var(--header-h) - 230px),720px);
+.gc-page{display:flex;flex-direction:column;height:clamp(460px,calc(100vh - var(--header-h) - 256px),720px);
   background:#0d0d0d;border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;overflow:hidden;
   box-shadow:0 30px 80px -30px rgb(var(--color-black-rgb) / .85);font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
 .gc-page .gc-log{flex:1 1 auto;padding:20px 20px 10px}

@@ -133,7 +133,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=37"></script>
+<script src="/assets/site.js?v=38"></script>
 </body>
 </html>
 `;
