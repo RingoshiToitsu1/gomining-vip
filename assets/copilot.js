@@ -286,12 +286,14 @@
     var keep = document.querySelector('[data-copilot-clear]'); if (!keep) return;
     // Layout box, not getBoundingClientRect: the open animation scales the panel, which would under-measure it.
     var cs = getComputedStyle(panel), w = panel.offsetWidth, h = panel.offsetHeight;
-    var pr = window.innerWidth - (parseFloat(cs.right) || 0), pb = window.innerHeight - (parseFloat(cs.bottom) || 0);
+    // clientWidth, not innerWidth: fixed `right` is measured from the inside of the scrollbar.
+    var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+    var pr = vw - (parseFloat(cs.right) || 0), pb = vh - (parseFloat(cs.bottom) || 0);
     var k = keep.getBoundingClientRect(), p = { left: pr - w, right: pr, top: pb - h, bottom: pb, width: w };
     var overlaps = p.left < k.right && p.right > k.left && p.top < k.bottom && p.bottom > k.top;
     if (!overlaps) return;
-    var right = window.innerWidth - k.left + 16;
-    if (window.innerWidth - right - p.width >= 16) panel.style.right = right + 'px';
+    var right = vw - k.left + 16;
+    if (vw - right - p.width >= 16) panel.style.right = right + 'px';
   }
   var dodgeRaf = 0;
   var queueDodge = function () { if (!dodgeRaf) dodgeRaf = requestAnimationFrame(function () { dodgeRaf = 0; dodge(); }); };
