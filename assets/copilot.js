@@ -25,7 +25,7 @@
   var SMS = "sms:+1" + PHONE.replace(/\D/g, "");
   var FORM = "https://formspree.io/f/xojokqwe";   // same endpoint as /claim
   var STORE = "gmt_copilot";
-  var AVATAR = "/assets/brand/ringo.png";
+  var AVATAR = "/assets/brand/GMT_icon_transparent.svg";   // same mark as the launcher
 
   var NODES = {
     start: {
@@ -185,7 +185,7 @@
 
   // ---------- styles ----------
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=5";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=6";
   document.head.appendChild(css);
 
   // ---------- shell ----------

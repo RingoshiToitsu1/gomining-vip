@@ -1,15 +1,15 @@
 /* GMT-Optimizer landing page (/). Tokens only; layout on top of components.css. */
 .lp main { display: block; }
-.lp-section { padding-block: var(--space-8); border-top: 1px solid var(--color-border); }
+.lp-section { padding-block: var(--section-y); border-top: 1px solid var(--color-border); }
 .lp-section:first-of-type { border-top: 0; }
-@media (min-width: 1024px) { .lp-section { padding-block: var(--space-9); } }
-.lp-head { max-width: 720px; margin-bottom: var(--space-6); }
+@media (min-width: 1024px) { .lp-section { padding-block: var(--section-y-lg); } }
+.lp-head { max-width: 720px; margin-bottom: var(--space-5); }
 .lp-head .ui-h2 { margin-top: var(--space-2); }
 .lp-head .ui-lead { margin-top: var(--space-3); }
 
 /* hero */
-.lp-hero { padding-block: var(--space-7) var(--space-8); }
-@media (min-width: 1024px) { .lp-hero { padding-block: var(--space-8) var(--space-9); } }
+.lp-hero { padding-block: var(--section-y) var(--section-y); }
+@media (min-width: 1024px) { .lp-hero { padding-block: var(--section-y-lg) var(--section-y-lg); } }
 .lp-hero__grid { display: grid; gap: var(--space-7); align-items: center; }
 @media (min-width: 1024px) { .lp-hero__grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-8); } }
 .lp-hero .ui-h1 { margin-top: var(--space-3); }
@@ -84,7 +84,7 @@
 .lp-prose ul { padding-left: 1.2rem; margin: 0 0 var(--space-3); line-height: 1.9; }
 
 /* final CTA band */
-.lp-band { padding-block: var(--space-8); text-align: center; border-top: 1px solid var(--color-border);
+.lp-band { padding-block: var(--section-y-lg); text-align: center; border-top: 1px solid var(--color-border);
   background: radial-gradient(ellipse 60% 120% at 50% 100%, rgb(var(--color-gold-rgb) / .08), transparent 70%); }
 .lp-band .ui-row { justify-content: center; margin-top: var(--space-5); }
 .lp-band .ui-lead { margin: var(--space-3) auto 0; }

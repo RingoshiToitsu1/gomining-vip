@@ -179,6 +179,7 @@
     ofA: (p, a) => p + ' of ' + a + ' · at today\'s rates',
     lock: ' GMT lock', streak: ' click streak', solo: ' solo',
     costSub: 'bonus TH on your first miner',
+    yearCap: p => p + '% a year on capital',
     hint: o => o.A + ' buys <b>' + o.th + ' TH</b> at ' + o.wth + ' W/TH' +
       (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> locked for the 20% fee discount' : '') +
       ', and RINGO5 adds <b>' + o.bonus + ' bonus TH</b> on top. ' +
@@ -273,7 +274,7 @@
     $('re-net').textContent = money(m.netToday * 30.44);
     $('re-disc').textContent = num(m.totD, 1) + '%';
     $('re-be').textContent = money(m.netToday);
-    $('re-be-sub').textContent = num(m.yieldPct, 1) + '% a year on capital';
+    $('re-be-sub').textContent = tx('yearCap', num(m.yieldPct, 1));
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
       ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'

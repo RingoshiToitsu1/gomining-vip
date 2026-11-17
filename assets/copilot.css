@@ -21,12 +21,12 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-tip-x{position:absolute;top:4px;right:6px;background:none;border:0;color:var(--color-text-2);font-size:20px;line-height:1;cursor:pointer;padding:4px}
 
 .gc-panel{position:fixed;right:18px;bottom:90px;z-index:451;margin:0;padding:0;width:380px;max-width:calc(100vw - 32px);
-  height:min(600px,calc(100vh - 120px));display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:var(--color-text);
+  height:min(560px,70vh,calc(100vh - 120px));display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:var(--color-text);
   border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;box-shadow:0 30px 80px -20px rgb(var(--color-black-rgb) / .85),0 0 0 1px rgb(var(--color-gold-rgb) / .06);
   font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
 .gc-panel[hidden]{display:none}
 .gc-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;background:linear-gradient(180deg,#181410,#121010);border-bottom:1px solid rgb(var(--color-gold-rgb) / .16)}
-.gc-head img{border-radius:50%;flex:none}
+.gc-head img{border-radius:50%;flex:none;object-fit:contain;padding:7px;background:var(--color-bg);border:1px solid rgb(var(--color-gold-rgb) / .5)}
 .gc-head div{flex:1;min-width:0;line-height:1.2}
 .gc-head strong{display:block;font-size:16px;color:var(--color-text)}
 .gc-head small{color:var(--color-text-2);font-family:ui-monospace,"Inter",monospace;font-size:11.5px}

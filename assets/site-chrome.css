@@ -23,7 +23,8 @@
   width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 var(--space-4); }
 @media (min-width: 768px) { .sc-header .sc-bar { padding: 0 var(--space-6); } }
 .sc-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
-.sc-logo img { display: block; height: 28px; width: auto; }
+.sc-header .sc-logo img { display: block; height: 36px; width: auto; }
+@media (max-width: 600px) { .sc-header .sc-logo img { height: 30px; } }
 .sc-header .sc-nav { display: none; align-items: center; justify-content: center; gap: var(--space-1); min-width: 0; flex: 1 1 auto; }
 .sc-nav a { padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); color: var(--color-text-2); text-decoration: none;
   font-family: var(--font-ui); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); white-space: nowrap;
@@ -89,8 +90,10 @@
 html.sc-lock, html.sc-lock body { overflow: hidden; }
 
 /* ---------- footer ---------- */
-.sc-footer { margin-top: var(--space-8); background: var(--color-bg); border-top: 1px solid var(--color-border); }
-.sc-footer__inner { max-width: var(--content-max); margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-6); }
+.sc-footer { margin-top: var(--section-y-lg); background: var(--color-bg); border-top: 1px solid var(--color-border); }
+/* pages that end on a full-width band butt the footer against it (no empty strip between) */
+body.lp > .sc-footer { margin-top: 0; }
+.sc-footer__inner { max-width: var(--content-max); margin: 0 auto; padding: var(--section-y) var(--space-4) var(--space-6); }
 @media (min-width: 768px) { .sc-footer__inner { padding-inline: var(--space-6); } }
 .sc-footer__top { display: grid; gap: var(--space-7); grid-template-columns: 1fr; }
 @media (min-width: 900px) { .sc-footer__top { grid-template-columns: minmax(220px, 1.2fr) 3fr; } }

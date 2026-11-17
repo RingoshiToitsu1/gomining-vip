@@ -86,6 +86,10 @@
   --space-8: 64px;
   --space-9: 96px;
 
+  /* ---- section rhythm (vertical padding between page sections; ~30% under the old 64/96) ---- */
+  --section-y: 44px;
+  --section-y-lg: 68px;
+
   /* ---- shape, depth, motion ---- */
   --radius-control: 8px;
   --radius-card: 14px;

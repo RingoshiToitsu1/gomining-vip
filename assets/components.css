@@ -19,8 +19,8 @@ body.ui-scope { margin: 0; }
 .ui-scope:lang(de), .ui-scope :lang(de) { hyphens: auto; }
 .ui-container { width: 100%; max-width: var(--content-max); margin-inline: auto; padding-inline: var(--space-4); }
 @media (min-width: 768px) { .ui-container { padding-inline: var(--space-6); } }
-.ui-section { padding-block: var(--space-8); }
-@media (min-width: 1024px) { .ui-section { padding-block: var(--space-9); } }
+.ui-section { padding-block: var(--section-y); }
+@media (min-width: 1024px) { .ui-section { padding-block: var(--section-y-lg); } }
 .ui-stack > * + * { margin-top: var(--space-4); }
 .ui-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
 .ui-grid { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }

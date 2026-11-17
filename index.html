@@ -109,11 +109,11 @@
 <meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/tokens.css?v=3">
-<link rel="stylesheet" href="/assets/components.css?v=3">
-<link rel="stylesheet" href="/assets/site-chrome.css?v=6">
-<link rel="stylesheet" href="/assets/landing.css?v=3">
-<script src="/assets/site-chrome.js?v=3" defer></script>
+<link rel="stylesheet" href="/assets/tokens.css?v=4">
+<link rel="stylesheet" href="/assets/components.css?v=4">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=7">
+<link rel="stylesheet" href="/assets/landing.css?v=4">
+<script src="/assets/site-chrome.js?v=4" defer></script>
 </head>
 <body class="lp ui-scope">
 <main>
@@ -149,6 +149,7 @@
         <div class="ui-stat"><div class="ui-stat__label">Est. cost</div><div class="ui-stat__value" id="re-cost">—</div><div class="ui-stat__meta" id="re-cost-sub">to build this</div></div>
         <div class="ui-stat ui-stat--wide"><div class="ui-stat__label">Fee discount</div><div class="ui-stat__value" id="re-disc">—</div><div class="ui-stat__meta" id="re-disc-sub">with GMT locked for the full discount</div></div>
       </div>
+      <p class="lp-calc__basis lp-calc__note">Net figures include GMT lock rewards.</p>
       <p class="lp-hidden" id="re-hint"></p>
       <div class="lp-calc__basis" id="re-basis">loading live market data…</div>
       <div class="lp-calc__foot"><span class="ui-disclaimer">Estimate at today's rates.</span><a class="ui-link" href="/console">Full calculator →</a></div>
@@ -272,10 +273,14 @@
 </section>
 
 </main>
+<script>
+/* Quick-estimate wording (the shared ROI widget reads overrides from RE_I18N). */
+window.RE_I18N = { yearCap: function (p) { return '\u2248' + p + '% est. yearly at today\u2019s rates'; } };
+</script>
 <script src="/assets/pricing.js?v=2"></script>
-<script src="/assets/roi-embed.js?v=30"></script>
+<script src="/assets/roi-embed.js?v=31"></script>
 <script src="/assets/components.js?v=2" defer></script>
-<script src="/assets/site.js?v=29"></script>
+<script src="/assets/site.js?v=30"></script>
 <script>
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */
 (function(){

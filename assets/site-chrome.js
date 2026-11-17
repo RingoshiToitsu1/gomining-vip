@@ -66,7 +66,7 @@
   header.innerHTML =
     '<a class="sc-skip" href="#sc-main">Skip to content</a>' +
     '<div class="sc-bar">' +
-      '<a class="sc-logo" href="/" aria-label="GMT-Optimizer home"><img src="' + WORDMARK + '" alt="GMT-Optimizer" width="108" height="28"></a>' +
+      '<a class="sc-logo" href="/" aria-label="GMT-Optimizer home"><img src="' + WORDMARK + '" alt="GMT-Optimizer" width="138" height="36"></a>' +
       '<nav class="sc-nav" aria-label="Main">' + NAV.map(function (n) { return '<a href="' + n.href + '"' + cur(n.on) + '>' + n.label + '</a>'; }).join('') + '</nav>' +
       '<div class="sc-actions">' +
         '<div class="sc-pop sc-lang"><button type="button" class="sc-pop__btn" aria-haspopup="true" aria-expanded="false" aria-label="Language: English">EN ' + chev + '</button>' +
