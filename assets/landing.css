@@ -1,0 +1,89 @@
+/* GMT-Optimizer landing page (/). Tokens only; layout on top of components.css. */
+.lp main { display: block; }
+.lp-section { padding-block: var(--space-8); border-top: 1px solid var(--color-border); }
+.lp-section:first-of-type { border-top: 0; }
+@media (min-width: 1024px) { .lp-section { padding-block: var(--space-9); } }
+.lp-head { max-width: 720px; margin-bottom: var(--space-6); }
+.lp-head .ui-h2 { margin-top: var(--space-2); }
+.lp-head .ui-lead { margin-top: var(--space-3); }
+
+/* hero */
+.lp-hero { padding-block: var(--space-7) var(--space-8); }
+@media (min-width: 1024px) { .lp-hero { padding-block: var(--space-8) var(--space-9); } }
+.lp-hero__grid { display: grid; gap: var(--space-7); align-items: center; }
+@media (min-width: 1024px) { .lp-hero__grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-8); } }
+.lp-hero .ui-h1 { margin-top: var(--space-3); }
+.lp-hero .ui-lead { margin-top: var(--space-4); }
+.lp-hero__ctas { margin-top: var(--space-6); }
+.lp-hero__note { margin-top: var(--space-4); }
+
+/* live mini-calculator (driven by assets/roi-embed.js through its re-* ids) */
+.lp-calc { background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  padding: var(--space-5); box-shadow: var(--shadow-card); min-width: 0; }
+.lp-calc__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.lp-calc__head h2 { margin: 0; font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.lp-calc__inputs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-4); }
+.lp-calc .ui-stats { margin-top: var(--space-4); grid-template-columns: 1fr 1fr; }
+.lp-calc .ui-stat { background: var(--color-bg); }
+.lp-calc .ui-stat--wide { grid-column: 1 / -1; }
+.lp-calc .ui-stat__value--xl { font-size: var(--font-size-3xl); }
+.lp-calc__basis { margin-top: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-2); }
+.lp-calc__foot { margin-top: var(--space-4); display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.re-loading .ui-stat__value { color: var(--color-text-3); }
+.lp-hidden { display: none !important; }
+
+/* trust strip */
+.lp-trust { padding-block: var(--space-6); border-block: 1px solid var(--color-border); background: var(--color-surface-1); }
+.lp-trust__grid { display: grid; gap: var(--space-5); align-items: center; }
+@media (min-width: 1024px) { .lp-trust__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } }
+.lp-trust__copy p { margin: 0; color: var(--color-text-2); font-size: var(--font-size-sm); max-width: 46ch; }
+.lp-trust__copy strong { display: block; color: var(--color-text); font-family: var(--font-ui); font-weight: var(--font-weight-semibold); margin-bottom: var(--space-1); }
+.lp-trust .ui-stat { background: var(--color-bg); }
+.lp-live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); margin-right: var(--space-1); vertical-align: 1px; }
+
+/* how it works */
+.lp-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); counter-reset: s; }
+.lp-steps li { counter-increment: s; }
+.lp-steps li::before { content: counter(s); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border-radius: 50%; border: 1px solid rgb(var(--color-gold-rgb) / .5); color: var(--color-gold); font-family: var(--font-ui);
+  font-weight: var(--font-weight-semibold); margin-bottom: var(--space-3); }
+.lp-steps h3 { margin: 0 0 var(--space-2); font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.lp-steps p { margin: 0; color: var(--color-text-2); font-size: var(--font-size-sm); line-height: var(--line-height-body); }
+
+/* tools */
+.lp-tools .ui-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.lp-tools .ui-card__cta { margin-top: auto; padding-top: var(--space-3); font-family: var(--font-ui); font-size: var(--font-size-sm); color: var(--color-gold); }
+.lp-tools button.ui-card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: var(--space-2);
+  background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-5);
+  box-shadow: var(--shadow-card); transition: border-color var(--duration-base), transform var(--duration-base); }
+.lp-tools button.ui-card:hover { border-color: rgb(var(--color-gold-rgb) / .55); transform: translateY(-2px); }
+.lp-tools button.ui-card:focus-visible { box-shadow: var(--focus-ring); }
+.lp-more { margin-top: var(--space-5); font-size: var(--font-size-sm); color: var(--color-text-2); }
+
+/* RINGO5 offer */
+.lp-offer { display: grid; gap: var(--space-6); }
+@media (min-width: 900px) { .lp-offer { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; } }
+.lp-bonuses { display: grid; gap: var(--space-3); }
+.lp-bonus { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-4); background: var(--color-surface-1);
+  border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.lp-bonus b { display: block; font-family: var(--font-ui); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.lp-bonus span { color: var(--color-text-2); font-size: var(--font-size-sm); }
+.lp-bonus i { flex: 0 0 auto; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: var(--color-gold-gradient); }
+.lp-code { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-ui); font-weight: var(--font-weight-semibold);
+  letter-spacing: .08em; color: var(--color-gold); border: 1px dashed rgb(var(--color-gold-rgb) / .6); border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-3); background: none; cursor: pointer; font-size: var(--font-size-base); }
+.lp-code:hover { background: rgb(var(--color-gold-rgb) / .08); }
+.lp-code.copied::after { content: '✓ copied'; font-size: var(--font-size-xs); letter-spacing: 0; color: var(--color-success); }
+
+/* explained (SEO prose) */
+.lp-prose { max-width: var(--prose-max); color: var(--color-text-2); }
+.lp-prose h3 { color: var(--color-text); font-family: var(--font-ui); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); margin: var(--space-6) 0 var(--space-2); }
+.lp-prose p { margin: 0 0 var(--space-3); line-height: var(--line-height-body); }
+.lp-prose a { color: var(--color-gold); }
+.lp-prose ul { padding-left: 1.2rem; margin: 0 0 var(--space-3); line-height: 1.9; }
+
+/* final CTA band */
+.lp-band { padding-block: var(--space-8); text-align: center; border-top: 1px solid var(--color-border);
+  background: radial-gradient(ellipse 60% 120% at 50% 100%, rgb(var(--color-gold-rgb) / .08), transparent 70%); }
+.lp-band .ui-row { justify-content: center; margin-top: var(--space-5); }
+.lp-band .ui-lead { margin: var(--space-3) auto 0; }
