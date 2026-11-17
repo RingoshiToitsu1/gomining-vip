@@ -247,37 +247,35 @@
     var slot = header.querySelector('.sc-acct'), mslot = mobile.querySelector('.sc-mobile__acct'), msg = header.querySelector('.sc-msg');
     msg.hidden = !state.in;
     if (!state.in) {
-      slot.innerHTML = '<button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" data-sc="login">Log in</button>';
-      mslot.innerHTML = '<div class="sc-mobile__group"><h2>Account</h2><button type="button" class="ui-btn ui-btn--secondary ui-btn--block" data-sc="login">Log in</button></div>';
+      var nx = /^\/(login|signup)$/.test(location.pathname.replace(/\.html$/, '')) ? '' : '?next=' + encodeURIComponent(location.pathname + location.search);
+      slot.innerHTML = '<a class="ui-btn ui-btn--ghost ui-btn--sm" href="/login' + nx + '">Log in</a>';
+      mslot.innerHTML = '<div class="sc-mobile__group"><h2>Account</h2><div class="ui-stack"><a class="ui-btn ui-btn--secondary ui-btn--block" href="/login' + nx + '">Log in</a>' +
+        '<a class="ui-btn ui-btn--ghost ui-btn--block" href="/signup' + nx + '">Create account</a></div></div>';
     } else {
       slot.innerHTML = '<div class="sc-pop">' +
         '<button type="button" class="sc-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu for ' + esc(state.name) + '">' + avatarHTML('sm') + '</button>' +
         '<div class="sc-pop__menu" hidden>' +
           '<div class="sc-pop__head">' + avatarHTML('') + '<div><b>' + esc(state.name) + '</b>' + (state.username ? '<span>@' + esc(state.username) + '</span>' : '') + '</div></div>' +
           '<div class="sc-pop__sep"></div>' +
-          '<button type="button" data-sc="profile">Profile</button>' +
-          '<a href="/console">Dashboard</a>' +
-          '<button type="button" data-sc="settings">Settings</button>' +
+          '<a href="/dashboard">Dashboard</a>' +
+          '<a href="/profile">Profile</a>' +
+          '<a href="/settings">Settings</a>' +
           '<div class="sc-pop__sep"></div>' +
           '<button type="button" class="sc-danger" data-sc="logout">Log out</button>' +
         '</div></div>';
       mslot.innerHTML = '<div class="sc-mobile__group"><h2>Account</h2><div class="sc-mobile__links">' +
-        '<a href="/chat">Messages</a><a href="/console">Dashboard</a>' +
-        '<button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" data-sc="profile">Profile</button>' +
-        '<button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" data-sc="settings">Settings</button>' +
+        '<a href="/dashboard">Dashboard</a><a href="/chat">Messages</a><a href="/profile">Profile</a><a href="/settings">Settings</a>' +
         '<button type="button" class="ui-btn ui-btn--danger ui-btn--sm" data-sc="logout">Log out</button></div></div>';
       unread();
     }
   }
 
-  // Actions route to the existing account UI (console modals). Phase 5 gives them their own pages.
+  // Log in, Dashboard, Profile and Settings are plain links to their own pages (Phase 5). Log out stays an action.
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-sc]'); if (!b) return;
     var act = b.getAttribute('data-sc'), a = GA();
     closeAll();
-    if (act === 'login') { if (a && a.openLogin) a.openLogin('login'); else location.href = '/console?view=login'; }
-    else if (act === 'profile' || act === 'settings') { if (a && a.openProfile) a.openProfile(); else location.href = '/console?view=profile'; }
-    else if (act === 'logout') logout();
+    if (act === 'logout') logout();
   });
   function logout() {
     var a = GA();

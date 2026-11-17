@@ -253,14 +253,13 @@
     if (m === 'login') {
       els.title.textContent = 'Log in'; els.sub.textContent = 'Welcome back.';
       els.go.textContent = 'Log in'; els.p.setAttribute('autocomplete', 'current-password');
-      els.note.innerHTML = 'Forgotten your password? Accounts have no email, so it cannot be reset automatically — ' +
-        '<a href="https://t.me/RinGoMining" target="_blank" rel="noopener">message me on Telegram</a> with your username and I will reset it by hand.';
+      els.note.innerHTML = 'Forgot your password? <a href="https://t.me/RinGoMining" target="_blank" rel="noopener">Message @RingoMining on Telegram.</a>';
       els.swap.innerHTML = 'New here? <a data-to="signup">Create an account</a>';
     } else {
       els.title.textContent = 'Create an account'; els.sub.textContent = 'Just a username and password — no email.';
       els.go.textContent = 'Create account'; els.p.setAttribute('autocomplete', 'new-password');
-      els.note.innerHTML = 'There is no email on the account, so a forgotten password cannot be reset automatically — save it somewhere safe. ' +
-        'If you do lose it, <a href="https://t.me/RinGoMining" target="_blank" rel="noopener">message me on Telegram</a> and I will reset it by hand. Minimum 8 characters.';
+      els.note.innerHTML = 'There is no email on the account, so save your password somewhere safe. ' +
+        'Forgot your password? <a href="https://t.me/RinGoMining" target="_blank" rel="noopener">Message @RingoMining on Telegram.</a>';
       els.swap.innerHTML = 'Already have one? <a data-to="login">Log in</a>';
     }
     els.swap.querySelector('a').addEventListener('click', function () { setMode(this.getAttribute('data-to')); });

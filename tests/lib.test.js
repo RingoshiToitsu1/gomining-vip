@@ -81,13 +81,13 @@ eq('farmToday staking $/mo', Math.round(f.staking * M.DAYS_PER_MONTH * 100) / 10
   // whole-farm discount and net mining vs calc()
   const S = 'S.btcPrice=84000;S.gmtPrice=0.28;S.satsPerTHDay=' + M.satsPerTHDay(113e12, cfg) + ';S.loaded=true;S.fxRate=1;';
   app(S);
-  for (const [th, wth, gl] of [[100, 15, 3266], [100, 15, 0], [1000, 12, 200000], [250, 18, 20000], [5000, 15, 600000]]) {
+  for (const [th, wth, gl, gw = 0] of [[100, 15, 3266], [100, 15, 0], [1000, 12, 200000], [250, 18, 20000], [5000, 15, 600000], [100, 15, 1500, 2000], [800, 14, 0, 60000]]) {
     const set = (id, v) => { const e = el(id); if (typeof v === 'boolean') e.checked = v; else e.value = String(v); };
-    Object.entries({ inTH: th, inWTH: wth, inGMTLocked: gl, inGMTWallet: 0, inLockAPR: 18.87, inClickStreak: true, inPayGMT: true, inMiningMode: cfg.rates.soloMiningDiscountPct, inCapital: 0, inGreedyTH: 0, inInactiveTH: 0 }).forEach(([k, v]) => set(k, v));
+    Object.entries({ inTH: th, inWTH: wth, inGMTLocked: gl, inGMTWallet: gw, inLockAPR: 18.87, inClickStreak: true, inPayGMT: true, inMiningMode: cfg.rates.soloMiningDiscountPct, inCapital: 0, inGreedyTH: 0, inInactiveTH: 0 }).forEach(([k, v]) => set(k, v));
     const c = app('calc(inp())');
-    const lib = M.farmToday({ th, wth, lockedGmt: gl, aprPct: 18.87, clickStreak: true, btcPrice: 84000, gmtPrice: 0.28, satsPerTH: M.satsPerTHDay(113e12, cfg) }, cfg);
-    eq(`total discount vs calc() ${th} TH @ ${wth} W, ${gl} GMT`, c.totD, lib.totD, 1e-9);
-    eq(`net mining vs calc() ${th} TH @ ${wth} W, ${gl} GMT`, c.net * 84000, lib.mining, 1e-6);
+    const lib = M.farmToday({ th, wth, lockedGmt: gl, coverageGmt: gl + gw, aprPct: 18.87, clickStreak: true, btcPrice: 84000, gmtPrice: 0.28, satsPerTH: M.satsPerTHDay(113e12, cfg) }, cfg);
+    eq(`total discount vs calc() ${th} TH @ ${wth} W, ${gl}+${gw} GMT`, c.totD, lib.totD, 1e-9);
+    eq(`net mining vs calc() ${th} TH @ ${wth} W, ${gl}+${gw} GMT`, c.net * 84000, lib.mining, 1e-6);
   }
 }
 
