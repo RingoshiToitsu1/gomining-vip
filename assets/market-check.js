@@ -1,50 +1,39 @@
-/* GMT Optimizer — GoMining marketplace deal checker (/gomining-marketplace-checker).
+/* GMT Optimizer — GoMining marketplace checker (/gomining-marketplace-checker).
    =========================================================================
    Paste a miner link from app.gomining.com/nft/view/<id>; the page reads that miner's
    hashrate, efficiency and asking price through the nft-lookup Supabase function (GoMining's
-   API sends no CORS header, so the browser can't read it directly), then prices the listing
-   against the only alternative every buyer has: minting the same TH new. GoMining stopped selling
-   12 W/TH machines; every new miner is 15 W/TH now, and 12 W is only reachable by upgrading one.
+   API sends no CORS header, so the browser can't read it directly).
 
-   Two ways to own a secondhand miner are compared, because efficiency is the whole story on
-   the secondary market:
-     • as-is      — keep it at its current W/TH and pay the higher electricity fee forever
-     • upgraded   — pay the one-time efficiency upgrade down to 12 W/TH on top of the price
-   The better of the two is what the listing is judged on. Every route is reduced to one
-   number — net USD a year per dollar spent, at TODAY's rates — so as-is and upgraded
-   compare fairly against new. No payback dates and no forecasts (site rule for content pages).
+   Built for buying a Greedy Machine. It answers three things only:
+     1. what the listing costs to buy
+     2. what it costs to upgrade its efficiency to 15 W/TH and to 12 W/TH
+     3. how big to grow it (TH) so its free weekly growth repays the premium in 1–12 months
+   Premium = asking price − what the same hashrate is worth at its rating (going $/TH).
+   Growth TH is valued at the rating you choose to run it at; top-up TH is bought at that rating.
 
-   IMPORTANT — the calibration constants below mirror assets/app.js and assets/roi-embed.js.
-   Recalibrate all three together (fees, tier prices, EFF_UPGRADE_BANDS, BLOCK_SUBSIDY).
+   IMPORTANT — the price constants below mirror assets/app.js and scripts/constants.js.
+   Recalibrate them together (tier prices, EFF_UPGRADE_BANDS).
 */
 (function () {
   'use strict';
 
   // ---- CALIBRATION (mirror of assets/app.js) ----
-  const CONVERSION_FEE   = 0.0225;  // BTC → GMT skim applied at payout
-  const USD_GMT_FEE      = 0.02;    // fee when buying GMT with dollars
-  const BLOCK_SUBSIDY    = 3.125;   // BTC/block — halve at the 2028 halving
-  const ELEC_RATE        = 0.05;    // $/kWh on (W/TH × TH × 24h)
-  const SERVICE_RATE     = 0.0089;  // $/TH/day platform service fee
-  const EFF_BEST         = 12;      // best efficiency available now (W/TH)
+  const EFF_BEST = 12;              // best efficiency available (W/TH)
+  const EFF_BASE_MAX = 15;          // the 15 W/TH hashrate curve
+  const GREEDY_CAP = 5000;          // max TH per miner via manual upgrades; passive growth compounds past it
   // Efficiency upgrade $/TH per W/TH step, by the rating stepped down FROM (prev upTo, upTo].
-  // Mirror of EFF_UPGRADE_BANDS in assets/app.js (GoMining app, 2026-09-13).
   const EFF_UPGRADE_BANDS = [
     { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
   ];
-  const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
-  const STAKE_APR        = 18.87;   // % — GMT locked-staking APR (mirror of STAKING_APR in scripts/constants.js)
-  const COV_DAYS_PER_PCT = 18;      // days of fees locked in GMT per 1% token discount (20% = 360 days)
-  const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
-  const SB_KEY = 'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';   // same client-safe key as assets/supabase-config.js
-  const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
-  const TOTAL_DISCOUNT_KEY = 'gmt_total_discount';                   // written by the console (assets/app.js)
+  const FB = { gmt: 0.28 };
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
   const GREEDY_GROWTH_DEFAULT = 0.3347;                              // %/wk — console inGreedyGrowth default; observed, not a constant
   const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36']; // mirror of app.js: a saved old default is not the user's own number
+  const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
+  const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
 
-  // $/TH for 12 W/TH hashrate, pre-avatar-discount. Mirror of TH_TIERS_12W: no longer sold new,
-  // so it is the 15 W price plus the 15 → 12 upgrade (3 × $2.67 = $8.01/TH).
+  // $/TH at 12 W/TH, pre-avatar-discount. Mirror of TH_TIERS_12W: no longer sold new, so it is the
+  // 15 W price plus the 15 → 12 upgrade (3 × $2.67 = $8.01/TH).
   const TH_TIERS_12W = [
     {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
     {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
@@ -52,7 +41,7 @@
     {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
     {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
   ];
-  // $/TH for new 15 W/TH hashrate, pre-avatar-discount — the only machine GoMining mints. Mirror of TH_TIERS.
+  // $/TH at 15 W/TH, pre-avatar-discount — the only machine GoMining mints. Mirror of TH_TIERS.
   const TH_TIERS = [
     {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
     {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
@@ -60,8 +49,6 @@
     {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
     {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
   ];
-  const EFF_BASE_MAX = 15;          // the 15 W/TH hashrate curve
-  const GREEDY_CAP   = 5000;        // max TH per miner via manual upgrades; passive growth compounds past it
   function cptTier(T, th) {
     if (th <= 0) return T[0].cpt;
     if (th >= T[T.length - 1].th) return T[T.length - 1].cpt;
@@ -71,15 +58,6 @@
     }
     return T[0].cpt;
   }
-  const cpt12 = th => cptTier(TH_TIERS_12W, th);
-  const cptNew = th => cptTier(TH_TIERS, th);         // a newly minted miner, 15 W/TH
-  // $/TH at a miner's own rating, linear in W between the 12 W and 15 W curves. Mirror of cptAtEff.
-  function cptAtEff(th, w) {
-    const f = (Math.min(Math.max(w, EFF_BEST), EFF_BASE_MAX) - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
-    return cptTier(TH_TIERS_12W, th) * (1 - f) + cptTier(TH_TIERS, th) * f;
-  }
-  // Adding TH to one miner: priced on its size after the top-up. Mirror of costToGrowTiers.
-  const costToGrow = (cur, add, w) => add > 0 ? Math.max(0, (cur + add) * cptAtEff(cur + add, w) - cur * cptAtEff(cur, w)) : 0;
   // One-time $/TH to bring a miner down to 12 W/TH, summed band by band (20 W → $13.51).
   function upgPerTH(w) {
     let c = 0, cur = w;
@@ -92,9 +70,25 @@
     }
     return c;
   }
+  // Upgrade $/TH from rating w down to rating to (0 when already there or better).
+  const upgBetween = (w, to) => Math.max(0, upgPerTH(w) - upgPerTH(to));
+  // What one TH is worth at rating w on a miner of size th: the going $/TH between the 12 W and
+  // 15 W curves (linear in W, mirror of cptAtEff); above 15 W, a 15 W TH less the upgrade it still needs.
+  function worthPerTH(th, w) {
+    if (w > EFF_BASE_MAX) return Math.max(0, cptTier(TH_TIERS, th) - upgBetween(w, EFF_BASE_MAX));
+    return cptAtEff(th, w);
+  }
+  // $/TH GoMining charges to add hashrate at rating w: linear between the curves, clamped to them
+  // (a miner above 15 W still pays the 15 W price per added TH). Mirror of cptAtEff.
+  function cptAtEff(th, w) {
+    const f = (Math.min(Math.max(w, EFF_BEST), EFF_BASE_MAX) - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
+    return cptTier(TH_TIERS_12W, th) * (1 - f) + cptTier(TH_TIERS, th) * f;
+  }
+  // Adding TH to one miner: priced on its size after the top-up. Mirror of costToGrowTiers.
+  const costToGrow = (cur, add, w) => add > 0 ? Math.max(0, (cur + add) * cptAtEff(cur + add, w) - cur * cptAtEff(cur, w)) : 0;
 
-  // ---- market data (same sources and fallbacks as roi-embed.js) ----
-  const S = { btc: 0, gmt: 0, diff: 0, satsPerTHDay: 0, live: false, ready: false };
+  // ---- market data: the GMT price turns the GMT ask into dollars ----
+  const S = { gmt: 0, live: false, ready: false };
   function fetchTO(url, ms = 8000) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), ms);
@@ -102,92 +96,32 @@
       .then(r => { clearTimeout(id); if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .catch(e => { clearTimeout(id); throw e; });
   }
-  async function btcPrice() {
-    try { const r = await fetchTO('https://api.coinpaprika.com/v1/tickers/btc-bitcoin'); const p = +r?.quotes?.USD?.price; if (p > 0) return p; } catch (e) {}
-    try { const r = await fetchTO('https://mempool.space/api/v1/prices'); const p = +r?.USD; if (p > 0) return p; } catch (e) {}
-    return 0;
-  }
   async function gmtPrice() {
     try { const r = await fetchTO('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token'); const p = +r?.quotes?.USD?.price; if (p > 0) return p; } catch (e) {}
     try { const r = await fetchTO('https://api.coingecko.com/api/v3/simple/price?ids=gmt-token&vs_currencies=usd'); const p = +r?.['gmt-token']?.usd; if (p > 0) return p; } catch (e) {}
     return 0;
   }
   async function loadMarket() {
-    const [b, g] = await Promise.all([btcPrice(), gmtPrice()]);
-    S.btc = b > 0 ? b : FB.btc;
+    const g = await gmtPrice();
     S.gmt = g > 0 ? g : FB.gmt;
-    let diffOk = false;
-    try {
-      const h = await fetchTO('https://mempool.space/api/v1/mining/hashrate/3d');
-      if (h?.currentDifficulty > 0) { S.diff = h.currentDifficulty; diffOk = true; }
-    } catch (e) {}
-    if (!diffOk) S.diff = FB.diff;
-    S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
-    S.live = b > 0 && g > 0 && diffOk;
+    S.live = g > 0;
     S.ready = true;
   }
 
   // ---- the model ----
-  // Net USD/day for one TH at efficiency w, after the fee discount and the payout skim.
-  function netPerTH(w, disc) {
-    const dbt = Math.round(S.satsPerTHDay) / 1e8;
-    const fee = (ELEC_RATE * 24 * w) / 1000 + SERVICE_RATE;
-    return (dbt * S.btc - fee * (1 - disc / 100)) * (1 - CONVERSION_FEE);
+  const WK_PER_MO = 52 / 12;
+  // Grow the machine to T TH so that T · ((1+g)^weeks − 1) · worth(T, r) = premium. Worth/TH falls a
+  // little with size, so iterate. Capped at the 5,000 TH manual-upgrade limit (or its size, if bigger).
+  function sizeFor(th, r, g, prem, months) {
+    const wks = months * WK_PER_MO, f = Math.pow(1 + g, wks) - 1;
+    const cap = Math.max(th, GREEDY_CAP);
+    let need = th;
+    for (let i = 0; i < 16; i++) need = Math.max(th, prem / (worthPerTH(need, r) * f));
+    const T = Math.min(need, cap), add = Math.max(0, T - th);
+    return { months, T, add, capped: need > cap + 1e-9, cost: costToGrow(th, add, r) };
   }
-
-  function evaluate(th, w, priceGMT, disc) {
-    const cost = priceGMT * S.gmt;                        // what the listing costs, at market
-    const upg = th * upgPerTH(w);                         // one-time, to reach 12 W
-    const newCost = th * cptNew(th);                      // mint the same TH new, at 15 W
-    const netAsIs = netPerTH(w, disc) * th;               // mining only
-    const net12 = netPerTH(EFF_BEST, disc) * th;
-    const netNew = netPerTH(EFF_BASE_MAX, disc) * th;
-    const canUpgrade = w > EFF_BEST + 1e-9;
-
-    // Total capital, as everywhere else on the site. Your discount is only yours on THIS miner if
-    // its fees are covered too: the token part (up to 20%) needs 18 days of fees per 1% locked in
-    // GMT. An inefficient miner pays more fee, so it needs MORE GMT locked — real capital that the
-    // hardware price alone hides. That GMT isn't spent: it earns the staking APR, counted as income.
-    const tok = Math.min(20, disc), nonTok = Math.max(0, disc - tok);
-    const feeDay = wt => ((ELEC_RATE * 24 * wt) / 1000 + SERVICE_RATE) * th;
-    const lockFor = wt => COV_DAYS_PER_PCT * tok * feeDay(wt) * (1 - nonTok / 100);
-    const stake = lock => lock * (STAKE_APR / 100) / 365.25;
-    const route = (hw, lock, mining) => {
-      const net = mining + stake(lock), capital = hw + lock;
-      return { cost: hw, lock, mining, net, capital, y: capital > 0 ? (net * 365) / capital : 0 };
-    };
-    const lockAsIs = lockFor(w), lock12 = lockFor(EFF_BEST), lockNew = lockFor(EFF_BASE_MAX);
-    const routes = {
-      asIs:     route(cost, lockAsIs, netAsIs),
-      upgraded: canUpgrade ? route(cost + upg, lock12, net12) : null,
-      fresh:    route(newCost, lockNew, netNew)
-    };
-    const best = routes.upgraded && routes.upgraded.y > routes.asIs.y ? 'upgraded' : 'asIs';
-    const yF = routes.fresh.y;
-    const vsNew = r => (r && yF > 0 ? r.y / yF - 1 : null);
-
-    // Highest asking price at which this listing still matches minting new, per route.
-    // Both are yield-matched: the price at which that route's income + staking earns the new miner's
-    // yield on its capital. Upgraded also pays the upgrade, and runs at 12 W where new runs at 15 W.
-    const fairUpg = canUpgrade && yF > 0 ? Math.max(0, (net12 + stake(lock12)) * 365 / yF - lock12 - upg) : 0;
-    const fairAsIs = yF > 0 ? Math.max(0, routes.asIs.net * 365 / yF - lockAsIs) : 0;
-    const fairUSD = Math.max(fairUpg, fairAsIs);
-
-    // Edge vs minting new, by yield on total capital; if nothing earns at today's price, by cost.
-    let edge;
-    if (yF > 0 && routes.fresh.mining > 0) edge = vsNew(routes[best]);
-    else edge = fairUSD > 0 ? fairUSD / Math.max(cost, 1e-9) - 1 : -1;
-
-    // What the upgrade itself returns: the yearly fee it saves over what it costs, net of the GMT
-    // lock it frees (a lower fee needs less coverage).
-    const upgSaveDay = net12 - netAsIs;
-    const lockFreed = Math.max(0, lockAsIs - lock12);
-    const upgNetCost = Math.max(upg * 0.05, upg - lockFreed);
-    const upgYield = upg > 0 ? (upgSaveDay * 365) / upgNetCost : 0;
-
-    return { cost, upg, newCost, netAsIs, net12, routes, best, fairUSD, edge, upgSaveDay, upgYield, canUpgrade, lockFreed, tok, vsNew,
-             lockPerTH: wt => th > 0 ? lockFor(wt) / th : 0 };
-  }
+  // Months for growth alone to repay the premium at size T.
+  const monthsAt = (T, r, g, prem) => Math.log(1 + prem / (T * worthPerTH(T, r))) / Math.log(1 + g) / WK_PER_MO;
 
   // ---- render ----
   const $ = id => document.getElementById(id);
@@ -195,238 +129,89 @@
     minimumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0),
     maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
   const num = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const trimN = (n, d) => d > 0 ? num(n, d).replace(/\.?0+$/, '') : num(n, 0);
+  const fmtTH = n => trimN(n, n < 10 ? 3 : n < 100 ? 2 : 0);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  const VERDICTS = [
-    { min: 0.15,  cls: 'great', label: 'Great deal' },
-    { min: 0.05,  cls: 'good',  label: 'Good deal' },
-    { min: -0.05, cls: 'fair',  label: 'Fair price' },
-    { min: -Infinity, cls: 'bad', label: 'Overpriced' }
-  ];
-  const MO = 30.44;
-  const stakeMo = r => r.lock * (STAKE_APR / 100) / 365.25 * MO;
+  let runAt = '12';                 // 'asis' | '15' | '12' — the rating the payback table assumes
+  const ratingFor = w => runAt === '12' ? EFF_BEST : runAt === '15' ? Math.min(w, EFF_BASE_MAX) : w;
 
-  function render() {
-    const th = Math.max(0, parseFloat($('mc-th').value) || 0);
-    const w = Math.max(EFF_BEST, parseFloat($('mc-wth').value) || 0);
-    const p = Math.max(0, parseFloat($('mc-price').value) || 0);
-    const disc = Math.min(30, Math.max(0, parseFloat($('mc-disc').value) || 0));
-    const out = $('mc-result');
-    if (scanning) { out.hidden = true; return; }   // the scan panel owns the stage until it lands
-    if (!S.ready || th <= 0 || p <= 0 || !(parseFloat($('mc-wth').value) > 0)) { out.hidden = true; return; }
-    out.hidden = false;
-
-    const e = evaluate(th, w, p, disc);
-    const v = VERDICTS.find(x => e.edge >= x.min);
-    const bestR = e.routes[e.best];
-    const how = e.best === 'upgraded' ? 'buying it and upgrading it to 12 W/TH' : 'buying it and keeping it at ' + num(w, 2).replace(/\.?0+$/, '') + ' W/TH';
-    const gap = num(Math.abs(e.edge) * 100, 0) + '%';
-
-    const vd = $('mc-verdict');
-    vd.className = 'mc-verdict ' + v.cls;
-    $('mc-v-label').textContent = v.label;
-    // How far the ask sits from "Worth up to": the premium to swallow, or the margin in your favour.
-    const premUSD = e.cost - e.fairUSD, premGMT = premUSD / S.gmt;
-    const amt = $('mc-v-amt');
-    if (e.fairUSD > 0 && v.cls === 'bad') { amt.textContent = 'by ' + num(premGMT, 0) + ' GMT (≈' + money(premUSD) + ')'; amt.hidden = false; }
-    else if (e.fairUSD > 0 && (v.cls === 'good' || v.cls === 'great')) { amt.textContent = num(-premGMT, 0) + ' GMT under fair value (≈' + money(-premUSD) + ')'; amt.hidden = false; }
-    else if (e.fairUSD <= 0 && v.cls === 'bad') { amt.textContent = 'not worth buying at any price today'; amt.hidden = false; }
-    else amt.hidden = true;
-    const at = 'At ' + num(p, 0) + ' GMT, ' + how;
-    $('mc-v-line').textContent = e.routes.fresh.net <= 0
-      ? 'Mining is under water at today\'s BTC price, so this compares cost only. ' +
-        (e.edge >= 0 ? 'The listing is cheaper than minting the same TH new.' : 'Minting the same TH new is cheaper.')
-      : (v.cls === 'fair' ? at + ' earns about the same per dollar as minting the same TH new.'
-        : at + ' earns ' + gap + (e.edge > 0 ? ' more' : ' less') + ' per dollar than minting the same TH new.') +
-        // The verdict follows the better way to own it. When that's keeping it as it is, say plainly
-        // if upgrading would be the worse move — the upgrade row alone can read like the whole story.
-        (e.best === 'asIs' && e.routes.upgraded && e.vsNew(e.routes.upgraded) != null && e.vsNew(e.routes.upgraded) < -0.005
-          ? ' Don\'t upgrade it, though: bought and upgraded it would cost ' + money(e.routes.upgraded.cost) + ' against ' + money(e.newCost) + ' new, and earn ' + num(Math.abs(e.vsNew(e.routes.upgraded)) * 100, 0) + '% less per dollar than minting new.'
-          : '');
-
-    $('mc-t-cost').textContent = money(e.cost);
-    $('mc-t-cost-s').textContent = num(p, 0) + ' GMT · ' + money(e.cost / th) + '/TH';
-    $('mc-t-new').textContent = money(e.newCost);
-    $('mc-t-new-s').textContent = num(th, 2).replace(/\.?0+$/, '') + ' TH new @ ' + money(cptNew(th)) + '/TH';
-    $('mc-t-net').textContent = money(bestR.net * MO);
-    $('mc-t-net-s').textContent = (e.best === 'upgraded' ? 'a month, after upgrading' : 'a month, as it is') + (bestR.lock > 0 ? ' · incl. ' + money(stakeMo(bestR)) + ' staking' : '');
-    const fairGMT = e.fairUSD / S.gmt;
-    $('mc-t-fair').textContent = fairGMT > 0 ? num(fairGMT, 0) + ' GMT' : '—';
-    $('mc-t-fair-s').textContent = fairGMT > 0 ? '≈ ' + money(e.fairUSD) + ' — matches minting new' : 'not worth buying at any price today';
-
-    const vs = r => { const x = e.vsNew(r); return x == null ? '—' : '<b class="' + (x >= 0.005 ? 'pos' : x <= -0.005 ? 'neg' : '') + '">' + (x > 0 ? '+' : x < 0 ? '−' : '') + num(Math.abs(x) * 100, 0) + '%</b>'; };
-    const row = (label, r, note, hl, isNew) => r ? '<tr' + (hl ? ' class="hl"' : '') + '><td>' + label + (note ? '<span>' + note + '</span>' : '') + '</td>' +
-      '<td>' + money(r.cost) + '</td><td>' + (r.lock > 0 ? money(r.lock) : '—') + '</td><td>' + money(r.net * MO) + '</td><td class="' + (r.y < 0 ? 'neg' : '') + '">' + num(r.y * 100, 1) + '%</td>' +
-      '<td>' + (isNew ? 'benchmark' : vs(r)) + '</td></tr>' : '';
-    $('mc-rows').innerHTML =
-      row('Buy this listing as it is', e.routes.asIs, num(w, 2).replace(/\.?0+$/, '') + ' W/TH', e.best === 'asIs') +
-      row('Buy it and upgrade to 12 W', e.routes.upgraded, '+' + money(e.upg) + ' upgrade', e.best === 'upgraded') +
-      row('Mint the same TH new', e.routes.fresh, '15 W/TH', false, true);
-    $('mc-tbl-note').textContent = e.tok > 0
-      ? 'GMT lock = the GMT that keeps your ' + num(e.tok, 0) + '% token discount on this hashrate (18 days of fees per 1%). It isn\'t spent: it earns ' + STAKE_APR + '% staking, included in net. A year on capital = net ÷ (cost + GMT lock).'
-      : 'No token discount set, so no GMT lock is needed. A year on capital = net ÷ cost.';
-
-    const hint = $('mc-upg');
-    if (!e.canUpgrade) {
-      hint.textContent = 'This miner is already at 12 W/TH, the best efficiency there is, so there is no upgrade to price in.';
-    } else if (e.upgSaveDay <= 0) {
-      hint.textContent = 'The upgrade to 12 W/TH costs ' + money(e.upg) + ' but saves nothing at your discount today, so keep it as it is.';
-    } else {
-      const worth = e.best === 'upgraded';
-      hint.innerHTML = '<b>Efficiency upgrade:</b> taking it from ' + esc(num(w, 2).replace(/\.?0+$/, '')) + ' to 12 W/TH costs ' + money(e.upg) +
-        ' once (' + money(upgPerTH(w)) + '/TH) and cuts fees by ' + money(e.upgSaveDay * MO) + ' a month' +
-        (e.lockFreed > 0 ? ', freeing ' + money(e.lockFreed) + ' of GMT lock' : '') + ', which returns ' +
-        num(e.upgYield * 100, 0) + '% a year on the upgrade. ' +
-        (worth ? 'That beats what the miner earns on its price, so upgrade it.' : 'The miner already earns more on its capital than the upgrade would, so skip the upgrade.') +
-        (w > 15 ? ' Steps above 15 W/TH are the cheap ones; the last three into 12 W/TH cost $2.67/TH each.' : '');
-    }
-
-    renderGreedy(e, th, w, p, premUSD, v);
-
-    $('mc-basis').textContent = 'BTC ' + money(S.btc, 0) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
-      num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)') +
-      ' · buying the GMT with dollars adds ' + (USD_GMT_FEE * 100) + '%';
-  }
-
-  // ---- Greedy Machine: free weekly growth ----
-  // A Greedy Machine's TH grows by a % every week for free, and every free TH inherits the machine's
-  // rating. So the growth has a dollar value: each new TH is worth what that TH would cost to get
-  // another way — a new 12 W TH if you upgrade the machine (its growth then arrives at 12 W), or the
-  // same yield-matched value the "Worth up to" figure uses if you keep it as it is. Growth compounds
-  // on the current TH, so the weeks to accumulate X dollars of it are ln(1 + X / (TH · value)) / ln(1 + g).
-  // ---- Greedy optimizer: how much TH to add so growth repays the premium in N weeks ----
-  // Growth is a % of the machine's TH, so a bigger machine grows more dollars a week. Topping it up
-  // with hashrate bought at the going rate doesn't add premium (you pay about what that TH is worth);
-  // it just makes the free growth big enough to swallow the listing premium sooner. Solve
-  //   T · ((1+g)^weeks − 1) · value(T) = premium
-  // for the total TH T (value/TH falls a little with size, so iterate), capped at the 5,000 TH
-  // manual-upgrade limit. Added TH carries the machine's rating: 12 W if you upgrade it, else its own.
-  function sizeGreedy(e, th, w, g, premUSD, wks) {
-    const rating = e.best === 'upgraded' ? EFF_BEST : w;
-    const ratio = e.best === 'upgraded' ? 1 : (e.net12 > 0 ? Math.max(0, e.netAsIs / e.net12) : 0);
-    const val = t => cpt12(t) * ratio;
-    const f = Math.pow(1 + g, wks) - 1;
-    if (!(premUSD > 0) || !(f > 0) || !(val(th) > 0)) return null;
-    let need = th;
-    for (let i = 0; i < 12; i++) need = Math.max(th, premUSD / (val(need) * f));
-    const capped = need > Math.max(th, GREEDY_CAP) + 1e-9;
-    const T = Math.min(need, Math.max(th, GREEDY_CAP));
-    const add = Math.max(0, T - th);
+  function readInputs() {
     return {
-      wks, T, add, capped, rating,
-      cost: costToGrow(th, add, rating),
-      lock: add * e.lockPerTH(rating),
-      weeks: Math.log(1 + premUSD / (T * val(T))) / Math.log(1 + g)
+      th: Math.max(0, parseFloat($('mc-th').value) || 0),
+      w: Math.max(EFF_BEST, parseFloat($('mc-wth').value) || 0),
+      p: Math.max(0, parseFloat($('mc-price').value) || 0),
+      g: Math.max(0, parseFloat($('mc-growth').value) || 0) / 100,
+      wOk: parseFloat($('mc-wth').value) > 0
     };
   }
+  // Headline figures for the scan panel and the tiles.
+  function basics(th, w, p) {
+    const ask = p * S.gmt, worth = th * worthPerTH(th, w);
+    return { ask, worth, prem: ask - worth, up15: th * upgBetween(w, EFF_BASE_MAX), up12: th * upgPerTH(w) };
+  }
 
-  function renderGreedy(e, th, w, p, premUSD, v) {
-    const box = $('mc-greedy');
-    const on = $('mc-greedy-on').checked;
-    $('mc-growth-fld').hidden = !on;
-    $('mc-payback-fld').hidden = !on;
-    if (!on) { box.hidden = true; return; }
-    const g = Math.max(0, parseFloat($('mc-growth').value) || 0) / 100;
-    const v12 = cpt12(th);
-    const valPerTH = e.best === 'upgraded' ? v12 : (e.net12 > 0 ? Math.max(0, v12 * e.netAsIs / e.net12) : 0);
-    box.hidden = false;
-    if (!(g > 0) || !(valPerTH > 0)) {
-      box.innerHTML = '<b>Greedy Machine.</b> ' + (g > 0 ? 'Its free TH has no value at today\'s rates, so growth can\'t offset the price.' : 'Set its weekly growth to value the free TH it adds.');
+  function render() {
+    const { th, w, p, g, wOk } = readInputs();
+    const out = $('mc-result');
+    if (scanning) { out.hidden = true; return; }   // the scan panel owns the stage until it lands
+    if (!S.ready || th <= 0 || p <= 0 || !wOk) { out.hidden = true; return; }
+    out.hidden = false;
+
+    const b = basics(th, w, p);
+    const wTxt = trimN(w, 2) + ' W/TH';
+
+    $('mc-t-cost').textContent = money(b.ask);
+    $('mc-t-cost-s').textContent = num(p, 0) + ' GMT · ' + money(b.ask / th) + '/TH';
+    $('mc-t-15').textContent = w > EFF_BASE_MAX + 1e-9 ? money(b.up15) : '—';
+    $('mc-t-15-s').textContent = w > EFF_BASE_MAX + 1e-9 ? wTxt + ' → 15 · ' + money(b.up15 / th) + '/TH' : 'already at ' + wTxt;
+    $('mc-t-12').textContent = w > EFF_BEST + 1e-9 ? money(b.up12) : '—';
+    $('mc-t-12-s').textContent = w > EFF_BEST + 1e-9 ? wTxt + ' → 12 · ' + money(b.up12 / th) + '/TH' : 'already at 12 W/TH';
+    $('mc-t-prem').textContent = b.prem > 0 ? money(b.prem) : 'none';
+    $('mc-t-prem-s').textContent = 'its ' + fmtTH(th) + ' TH is worth ' + money(b.worth);
+
+    // Rating switch: only the options that mean something for this miner.
+    const asIs = ['asis', 'As is · ' + trimN(w, 2) + ' W'];
+    const opts = w > EFF_BASE_MAX + 1e-9 ? [asIs, ['15', '15 W'], ['12', '12 W']]
+      : Math.abs(w - EFF_BASE_MAX) < 1e-9 ? [['15', 'As is · 15 W'], ['12', '12 W']]
+      : w > EFF_BEST + 1e-9 ? [asIs, ['12', '12 W']]
+      : [['12', '12 W']];
+    if (!opts.some(o => o[0] === runAt)) runAt = '12';
+    $('mc-runat').innerHTML = opts.length > 1 ? '<span>Run it at</span>' + opts.map(o =>
+      '<button type="button" data-r="' + o[0] + '" class="' + (o[0] === runAt ? 'on' : '') + '">' + esc(o[1]) + '</button>').join('') : '';
+
+    const r = ratingFor(w);
+    const effUp = th * upgBetween(w, r);
+    const pb = $('mc-payback');
+    if (!(b.prem > 0)) {
+      pb.innerHTML = '<p class="mc-pb-lead">No premium to pay back: the asking price is at or under what its hashrate is worth (' + money(b.worth) + '). Its growth is profit from week one.</p>';
       return;
     }
-    const weeks = usd => Math.log(1 + usd / (th * valPerTH)) / Math.log(1 + g);
-    const wkTH = th * g, wkUSD = wkTH * valPerTH;
-    const yrTH = th * (Math.pow(1 + g, 52) - 1), yrUSD = yrTH * valPerTH;
-    const fmtW = n => n < 1 ? 'under a week' : num(Math.ceil(n), 0) + (Math.ceil(n) === 1 ? ' week' : ' weeks') + (n >= 104 ? ' (~' + num(n / 52, 1) + ' yrs)' : '');
-    const where = e.best === 'upgraded' ? 'at 12 W/TH once upgraded' : 'at ' + num(w, 2).replace(/\.?0+$/, '') + ' W/TH';
-    let lead;
-    if (premUSD > 0) {
-      lead = 'Its free growth covers the <b>' + money(premUSD) + ' premium in ' + fmtW(weeks(premUSD)) + '</b>. After that, every week of growth is value you didn\'t pay for.';
-    } else {
-      lead = 'The price is already at or under fair value, so its growth is pure upside from week one.';
+    if (!(g > 0)) {
+      pb.innerHTML = '<p class="mc-pb-lead">Set its weekly growth % to size the payback.</p>';
+      return;
     }
-    box.innerHTML = '<div class="mc-g-h"><span class="mc-pill ok">Greedy Machine</span> grows ' + num(g * 100, 4).replace(/\.?0+$/, '') + '% a week, free</div>' +
-      '<p>' + lead + '</p>' +
-      '<div class="mc-g-stats">' +
-        '<div><span>This week</span><b>+' + num(wkTH, wkTH < 10 ? 3 : 1) + ' TH</b><em>≈ ' + money(wkUSD) + '</em></div>' +
-        '<div><span>Over a year</span><b>+' + num(yrTH, yrTH < 10 ? 2 : 0) + ' TH</b><em>≈ ' + money(yrUSD) + '</em></div>' +
-        '<div><span>Growth repays the full price</span><b>' + fmtW(weeks(e.routes[e.best].cost)) + '</b><em>' + num(p, 0) + ' GMT' + (e.best === 'upgraded' ? ' + upgrade' : '') + '</em></div>' +
-      '</div>' +
-      optimizerHTML(e, th, w, g, premUSD) +
-      '<p class="mc-g-n">Each free TH is valued ' + where + ' (' + money(valPerTH) + '/TH), compounding weekly at the rate you set. The rate is last week\'s observed growth, not a promise; mining income on the new TH comes on top.</p>';
-  }
-
-  function optimizerHTML(e, th, w, g, premUSD) {
-    const wks = Math.min(520, Math.max(1, parseFloat($('mc-payback').value) || 13));
-    const trim = (n, d) => d > 0 ? num(n, d).replace(/\.?0+$/, '') : num(n, 0);
-    const head = '<div class="mc-g-opt"><div class="mc-g-h">Greedy optimizer · premium back in ' + trim(wks, 1) + (wks === 1 ? ' week' : ' weeks') + '</div>';
-    if (!(premUSD > 0)) return head + '<p>No premium to pay back: the asking price is at or under what it\'s worth, so there\'s no need to top it up.</p></div>';
-    const r = sizeGreedy(e, th, w, g, premUSD, wks);
-    if (!r) return '';
-    const fmtTH = n => trim(n, n < 10 ? 3 : n < 100 ? 2 : 0);
-    const rate = trim(r.rating, 2) + ' W/TH';
-    const wk = n => { const c = Math.ceil(n - 1e-6); return num(c, 0) + (c === 1 ? ' week' : ' weeks'); };
-    let lead;
-    if (r.add <= 0.0005) {
-      lead = 'At its current <b>' + fmtTH(th) + ' TH</b> it\'s already big enough: growth covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>. No top-up needed.';
-    } else if (r.capped) {
-      lead = 'Even topped up to the <b>' + num(GREEDY_CAP, 0) + ' TH</b> manual-upgrade cap (<b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b>), growth takes <b>' + wk(r.weeks) + '</b> to cover the ' + money(premUSD) + ' premium. The premium is too big for ' + trim(wks, 1) + ' weeks at ' + trim(g * 100, 4) + '% a week.';
-    } else {
-      lead = 'Buy it, then add <b>+' + fmtTH(r.add) + ' TH</b> for <b>' + money(r.cost) + '</b> to take it to <b>' + fmtTH(r.T) + ' TH</b>. Its free growth then covers the <b>' + money(premUSD) + '</b> premium in <b>' + wk(r.weeks) + '</b>.';
+    const now = monthsAt(th, r, g, b.prem);
+    const rows = [];
+    for (let m = 1; m <= 12; m++) {
+      const s = sizeFor(th, r, g, b.prem, m);
+      const total = b.ask + effUp + s.cost;
+      rows.push('<tr' + (s.add <= 0.0005 ? ' class="hl"' : '') + '><td>' + m + (m === 1 ? ' month' : ' months') + '</td>' +
+        (s.capped
+          ? '<td colspan="4" class="mc-cap">over the ' + num(GREEDY_CAP, 0) + ' TH cap</td>'
+          : '<td>' + fmtTH(s.T) + ' TH</td><td>' + (s.add <= 0.0005 ? '—' : '+' + fmtTH(s.add)) + '</td><td>' + (s.cost > 0 ? money(s.cost) : '—') + '</td><td>' + money(total) + '</td>') +
+        '</tr>');
     }
-    // Quarter, half-year and year targets, whichever the input isn't already showing.
-    const alts = [13, 26, 52].filter(m => Math.abs(m - wks) > 1e-9).map(m => {
-      const a = sizeGreedy(e, th, w, g, premUSD, m);
-      if (!a) return '';
-      return m + ' weeks: ' + (a.add <= 0.0005 ? 'no top-up' : (a.capped ? 'not reachable under the cap' : '+' + fmtTH(a.add) + ' TH for ' + money(a.cost)));
-    }).filter(Boolean);
-    return head + '<p>' + lead + '</p>' +
-      (r.add > 0.0005 ? '<div class="mc-g-stats">' +
-        '<div><span>Upgrade it to</span><b>' + fmtTH(r.T) + ' TH</b><em>+' + fmtTH(r.add) + ' TH at ' + rate + '</em></div>' +
-        '<div><span>Hashrate cost</span><b>' + money(r.cost) + '</b><em>' + money(r.cost / r.add) + '/TH</em></div>' +
-        '<div><span>Extra GMT lock</span><b>' + (r.lock > 0 ? money(r.lock) : '—') + '</b><em>' + (r.lock > 0 ? 'keeps your discount, earns staking' : 'no token discount set') + '</em></div>' +
-      '</div>' : '') +
-      (alts.length ? '<p class="mc-g-n">' + alts.join(' · ') + '</p>' : '') +
-      '</div>';
+    pb.innerHTML =
+      '<p class="mc-pb-lead">Premium <b>' + money(b.prem) + '</b>. At its current <b>' + fmtTH(th) + ' TH</b> the free growth repays it in <b>' +
+        (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</b>' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '') + '. Grow it to:</p>' +
+      '<div class="mc-tbl-wrap"><table class="mc-tbl mc-pb"><thead><tr><th>Pay back in</th><th>Grow it to</th><th>Add</th><th>Top-up cost</th><th>Total outlay</th></tr></thead><tbody>' +
+      rows.join('') + '</tbody></table></div>' +
+      '<p class="mc-tbl-note">Growth ' + trimN(g * 100, 4) + '%/week compounding, each free TH valued at ' + trimN(r, 2) + ' W/TH (' + money(worthPerTH(th, r)) + '/TH). ' +
+      'Top-up TH is bought at ' + trimN(r, 2) + ' W/TH' + (r > EFF_BASE_MAX ? ' (charged at the 15 W price)' : '') + '. Total outlay = asking price' + (effUp > 0 ? ' + ' + money(effUp) + ' efficiency upgrade' : '') + ' + top-up. ' +
+      'Growth is last week\'s observed rate, not a promise; mining income comes on top.</p>';
   }
-
-  // ---- your discount, from the console ----
-  // The console writes its live total discount to localStorage on every recalculation. When this
-  // device has never run the console, a logged-in user's saved account setup carries it instead.
-  const ago = t => {
-    const d = Math.floor((Date.now() - t) / 86400000);
-    return d <= 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago';
-  };
-  function setDisc(pct, note) {
-    const el = $('mc-disc');
-    if (el.dataset.touched) return;
-    el.value = String(Math.round(Math.min(30, Math.max(0, pct)) * 100) / 100);
-    $('mc-disc-src').innerHTML = note;
-    render();
-  }
-  async function loadDiscount() {
-    try {
-      const d = JSON.parse(localStorage.getItem(TOTAL_DISCOUNT_KEY) || 'null');
-      if (d && isFinite(d.pct)) {
-        setDisc(+d.pct, 'Your total discount from the <a href="/console">console</a>, updated ' + ago(d.at) + '.');
-        return;
-      }
-    } catch (e) {}
-    try {
-      const k = Object.keys(localStorage).find(x => /^sb-.*-auth-token$/.test(x));
-      const s = k && JSON.parse(localStorage.getItem(k));
-      const tok = s && (s.access_token || (s.currentSession && s.currentSession.access_token));
-      const uid = s && ((s.user && s.user.id) || (s.currentSession && s.currentSession.user && s.currentSession.user.id));
-      if (tok && uid && !(s.expires_at && s.expires_at * 1000 < Date.now())) {
-        const r = await fetch(SB_URL + '/rest/v1/profiles?select=setup&id=eq.' + encodeURIComponent(uid),
-          { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + tok } });
-        const rows = r.ok ? await r.json() : [];
-        const td = rows[0] && rows[0].setup && +rows[0].setup.totalDiscount;
-        if (isFinite(td) && td >= 0) { setDisc(td, 'Your total discount from your saved <a href="/console">console</a> setup.'); return; }
-      }
-    } catch (e) {}
-    $('mc-disc-src').innerHTML = 'Starting at the full 20%. Set up your farm in the <a href="/console">console</a> and this fills in your own discount.';
-  }
+  const basisLine = () => 'GMT $' + num(S.gmt, 3) + (S.live ? '' : ' (cached)') + ' · TH priced at GoMining\'s going rate';
 
   // ---- lookup ----
   function parseId(s) {
@@ -439,7 +224,6 @@
   // ---- scan: the lookup plays out step by step, each step ticking off only when its data is in ----
   let scanning = false, scans = 0;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const trimN = (n, d) => num(n, d).replace(/\.?0+$/, '');
 
   function runScan(id, req) {
     const box = $('mc-scan'), rows = Array.from(box.querySelectorAll('.mc-sstep'));
@@ -461,9 +245,9 @@
       { ok: () => !!d(), v: () => listed() ? num(d().price || 0, 0) + ' GMT · ' + (d().saleType === 'auction' ? 'auction' : 'fixed price') : 'not for sale right now' },
       { ok: () => !!d() && S.ready, v: () => { const u = upgPerTH(d().efficiency); return u > 0 ? money(u) + '/TH to reach 12 W' : 'already at 12 W/TH'; } },
       { ok: () => !!d() && S.ready, v: () => {
-          if (!listed() || !(d().price > 0)) return 'enter a price to judge';
-          const e = evaluate(d().power, Math.max(EFF_BEST, d().efficiency), d().price, Math.min(30, Math.max(0, parseFloat($('mc-disc').value) || 0)));
-          return VERDICTS.find(x => e.edge >= x.min).label.toLowerCase();
+          if (!listed() || !(d().price > 0)) return 'enter a price to size it';
+          const b = basics(d().power, Math.max(EFF_BEST, d().efficiency), d().price);
+          return b.prem > 0 ? money(b.prem) + ' premium' : 'no premium';
         } }
     ];
 
@@ -545,21 +329,21 @@
       render();
       showErr(e.message || 'Something went wrong.');
     } finally {
-      btn.disabled = false; btn.textContent = 'Check deal';
+      btn.disabled = false; btn.textContent = 'Check miner';
     }
   }
 
   // ---- reveal: the result rises in piece by piece and every figure counts up into place ----
   function revealResult() {
     if (reduce) return;
-    const parts = ['#mc-card', '#mc-verdict', '#mc-result .re-tile', '#mc-result .mc-tbl-wrap', '#mc-greedy', '#mc-upg']
+    const parts = ['#mc-card', '#mc-result .re-tile', '#mc-runat', '#mc-payback']
       .flatMap(s => Array.from(document.querySelectorAll(s))).filter(el => !el.hidden && !el.closest('[hidden]'));
     parts.forEach((el, i) => {
       el.classList.remove('mc-rise'); void el.offsetWidth;
       el.style.animationDelay = (i * 0.06) + 's';
       el.classList.add('mc-rise');
     });
-    countUp(['#mc-card .mc-card-m', '#mc-v-amt', '#mc-v-line', '#mc-result .re-tile .v', '#mc-result .re-tile .s', '#mc-rows td', '#mc-greedy b', '#mc-greedy em']);
+    countUp(['#mc-card .mc-card-m', '#mc-result .re-tile .v', '#mc-result .re-tile .s', '#mc-payback .mc-pb-lead b', '#mc-payback td']);
   }
 
   function countUp(selectors) {
@@ -623,7 +407,6 @@
     $('mc-th').value = d.power > 0 ? String(+d.power.toFixed(4)) : '';
     $('mc-wth').value = d.efficiency > 0 ? String(+d.efficiency.toFixed(2)) : '';
     $('mc-price').value = priceGMT > 0 ? String(Math.round(priceGMT * 100) / 100) : '';
-    $('mc-greedy-on').checked = /greedy/i.test(d.name || '');
 
     const card = $('mc-card');
     let status;
@@ -650,8 +433,11 @@
       if (!id) { showErr('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.'); return; }
       lookup(id);
     });
-    ['mc-th', 'mc-wth', 'mc-price', 'mc-growth', 'mc-payback'].forEach(id => $(id).addEventListener('input', render));
-    $('mc-greedy-on').addEventListener('change', render);
+    ['mc-th', 'mc-wth', 'mc-price', 'mc-growth'].forEach(id => $(id).addEventListener('input', render));
+    $('mc-runat').addEventListener('click', ev => {
+      const b = ev.target.closest('button[data-r]');
+      if (b) { runAt = b.dataset.r; render(); }
+    });
     // Weekly growth: your console's figure when this browser has a saved setup, else the console default.
     let gr = GREEDY_GROWTH_DEFAULT;
     try {
@@ -662,20 +448,13 @@
       if (Number.isFinite(v) && v >= 0 && !GREEDY_GROWTH_PAST_DEFAULTS.includes(raw)) gr = v;
     } catch (e) {}
     $('mc-growth').value = String(gr);
-    $('mc-disc').addEventListener('input', () => {
-      $('mc-disc').dataset.touched = '1';
-      $('mc-disc-src').textContent = 'Changed here only; your console setup is untouched.';
-      render();
-    });
     loadMarket().then(() => {
       root.classList.remove('re-loading');
-      loadDiscount();
       render();
       const q = new URLSearchParams(location.search).get('id');
       const id = parseId(q);
       if (id) { $('mc-link').value = 'https://app.gomining.com/nft/view/' + id; lookup(id); }
-      else $('mc-basis').textContent = 'BTC ' + money(S.btc, 0) + ' · GMT $' + num(S.gmt, 3) + ' · ' +
-        num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)');
+      $('mc-basis').textContent = basisLine();
     });
   }
 

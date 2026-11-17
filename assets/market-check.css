@@ -142,3 +142,16 @@
 .mc-tbl td b{font-weight:600}.mc-tbl td b.pos{color:#57d9a3}.mc-tbl td b.neg{color:#ff8a66}
 .mc-tbl{min-width:38rem}
 .mc-tbl-note{font-size:.72rem;color:var(--ink3);line-height:1.5;margin:-.4rem 0 .9rem}
+
+/* ---- greedy payback overhaul ---- */
+.mc-runat{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:.2rem 0 .8rem}
+.mc-runat:empty{display:none}
+.mc-runat span{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-right:.2rem}
+.mc-runat button{padding:.42rem .8rem;border-radius:999px;border:1px solid var(--line);background:rgba(8,10,14,.5);color:var(--ink);
+  font-family:var(--mono);font-size:.78rem;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.mc-runat button:hover{border-color:var(--gold-soft)}
+.mc-runat button.on{border-color:var(--gold);color:var(--gold-soft);background:rgba(245,166,35,.1)}
+.mc-pb-lead{font-size:.88rem;line-height:1.55;color:var(--ink);margin:0 0 .6rem}
+.mc-pb-lead b{color:var(--gold-soft);font-weight:600}
+.mc-tbl.mc-pb{min-width:30rem}
+.mc-tbl td.mc-cap{text-align:center;color:var(--ink3);font-family:var(--sans);font-style:italic}

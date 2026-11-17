@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GoMining Marketplace Deal Checker — Is That Miner Worth the Price?</title>
-<meta name="description" content="Paste a GoMining marketplace miner link and see if it's a good deal. Compares the asking price, efficiency and upgrade cost against minting the same TH new, on live BTC and GMT prices. Free, no signup.">
+<meta name="description" content="Paste a GoMining marketplace miner link. See what it costs to buy, to upgrade to 15 W or 12 W, and how big to grow a Greedy Machine so its free growth repays the premium in 1 to 12 months.">
 <link rel="canonical" href="https://gmt-optimizer.com/gomining-marketplace-checker">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="website">
@@ -16,7 +16,7 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"How do I know if a GoMining marketplace miner is a good deal?","acceptedAnswer":{"@type":"Answer","text":"Compare it with the alternative every buyer has: minting the same hashrate new, which GoMining now sells at 15 W/TH only. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty."}},
+    {"@type":"Question","name":"How long does a Greedy Machine take to pay back its premium?","acceptedAnswer":{"@type":"Answer","text":"It depends on the premium, the machine's size and its weekly growth. The premium is the asking price minus what its hashrate costs at the going rate. Growth is a percentage of the machine's TH, so a bigger machine repays the same premium faster. Paste the listing into this checker and it shows how many TH the machine needs for a 1 to 12 month payback, and what topping it up costs."}},
     {"@type":"Question","name":"Should I upgrade the efficiency of a miner I buy on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Upgrades are bought one W/TH step at a time, and the price per TH depends on where the miner starts: $0.10 a step from 50 down to 35 W/TH, $0.50 down to 28, $1.00 down to 20, $1.10 down to 15, and $2.67 for each of the last three steps to 12. Taking a 20 W/TH miner to 12 costs $13.51 per TH. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste."}},
     {"@type":"Question","name":"Why are older GoMining miners cheaper on the marketplace?","acceptedAnswer":{"@type":"Answer","text":"Many secondhand miners run at 20 W/TH or more, while new miners are 15 W/TH (12 W/TH is only reachable by upgrading). Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted."}},
     {"@type":"Question","name":"Does this checker see my GoMining account?","acceptedAnswer":{"@type":"Answer","text":"No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored."}}
@@ -34,7 +34,7 @@
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Any (web browser)",
       "browserRequirements": "Requires JavaScript",
-      "description": "Checks whether a GoMining marketplace miner is a good deal by comparing its asking price, efficiency and upgrade cost against minting the same hashrate new, on live market data.",
+      "description": "Prices a GoMining marketplace miner: the cost to buy it, the cost to upgrade it to 15 W or 12 W, and how big to grow a Greedy Machine so its free growth repays the premium in 1 to 12 months.",
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
       "publisher": {"@type": "Organization", "name": "Ringoshi", "url": "https://gmt-optimizer.com/"}
     },
@@ -54,22 +54,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=12">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=7">
+<link rel="stylesheet" href="/assets/market-check.css?v=8">
 <link rel="stylesheet" href="/assets/topbar.css?v=5">
 </head>
 <body>
 <main class="content-wrap">
   <h1>GoMining Marketplace Deal Checker</h1>
-  <p class="lead">A cheap miner on the GoMining marketplace isn't always a good deal. Paste the link to any listing and this checks the asking price against minting the same hashrate new, counting the efficiency upgrade it may need, on today's live BTC and GMT prices.</p>
+  <p class="lead">Buying a Greedy Machine on the GoMining marketplace? Paste the listing and see what it costs to buy, what it costs to upgrade to 15 W or 12 W, and how big to grow it so its free weekly growth pays back the premium in 1 to 12 months.</p>
 
   <div id="mc" class="re-loading">
-    <h2>Check a listing</h2>
+    <h2>Check a miner</h2>
     <div class="re-basis" id="mc-basis">loading live market data…</div>
 
     <form id="mc-form" class="mc-url" autocomplete="off">
       <input id="mc-link" type="text" inputmode="url" aria-label="GoMining miner link"
         placeholder="https://app.gomining.com/nft/view/10854">
-      <button type="submit" id="mc-go">Check deal</button>
+      <button type="submit" id="mc-go">Check miner</button>
     </form>
     <div class="mc-err" id="mc-err" role="alert" hidden></div>
     <div class="mc-scan" id="mc-scan" role="status" aria-live="polite" hidden>
@@ -81,8 +81,8 @@
           <li class="mc-sstep"><b></b><span>Locating miner on GoMining</span><em class="mc-sv"></em></li>
           <li class="mc-sstep"><b></b><span>Reading hashrate &amp; efficiency</span><em class="mc-sv"></em></li>
           <li class="mc-sstep"><b></b><span>Checking the listing</span><em class="mc-sv"></em></li>
-          <li class="mc-sstep"><b></b><span>Pricing upgrades &amp; new hashrate</span><em class="mc-sv"></em></li>
-          <li class="mc-sstep"><b></b><span>Weighing the deal</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Pricing efficiency upgrades</span><em class="mc-sv"></em></li>
+          <li class="mc-sstep"><b></b><span>Working out the premium</span><em class="mc-sv"></em></li>
         </ul>
         <div class="mc-scan-hash" id="mc-scan-hash">0x</div>
       </div>
@@ -103,82 +103,57 @@
         <input id="mc-price" type="number" inputmode="decimal" min="0" step="any" placeholder="from link">
       </div>
       <div class="re-field">
-        <label for="mc-disc">Your fee discount %</label>
-        <input id="mc-disc" type="number" inputmode="decimal" min="0" max="30" step="0.1" value="20">
-      </div>
-    </div>
-    <div class="mc-disc-src" id="mc-disc-src"></div>
-    <div class="mc-greedy-row">
-      <label class="re-check"><input id="mc-greedy-on" type="checkbox"> Greedy Machine <span>(grows a % every week, free)</span></label>
-      <div class="re-field mc-growth-fld" id="mc-growth-fld" hidden>
         <label for="mc-growth">Weekly growth %</label>
         <input id="mc-growth" type="number" inputmode="decimal" min="0" step="0.0001" value="0.3347">
-      </div>
-      <div class="re-field mc-growth-fld" id="mc-payback-fld" hidden>
-        <label for="mc-payback">Pay premium back in (weeks)</label>
-        <input id="mc-payback" type="number" inputmode="numeric" min="1" max="520" step="1" value="13">
       </div>
     </div>
 
     <div id="mc-result" hidden>
-      <div class="mc-verdict" id="mc-verdict">
-        <div class="l"><span id="mc-v-label">—</span> <span class="mc-v-amt" id="mc-v-amt" hidden></span></div>
-        <div class="s" id="mc-v-line">—</div>
-      </div>
-
       <div class="re-out">
-        <div class="re-tile">
-          <div class="k">Asking price</div>
+        <div class="re-tile hero">
+          <div class="k">Buy it</div>
           <div class="v" id="mc-t-cost">—</div>
           <div class="s" id="mc-t-cost-s">—</div>
         </div>
         <div class="re-tile">
-          <div class="k">Same TH new</div>
-          <div class="v" id="mc-t-new">—</div>
-          <div class="s" id="mc-t-new-s">—</div>
+          <div class="k">Upgrade to 15 W</div>
+          <div class="v" id="mc-t-15">—</div>
+          <div class="s" id="mc-t-15-s">—</div>
         </div>
         <div class="re-tile">
-          <div class="k">Earns</div>
-          <div class="v" id="mc-t-net">—</div>
-          <div class="s" id="mc-t-net-s">a month</div>
+          <div class="k">Upgrade to 12 W</div>
+          <div class="v" id="mc-t-12">—</div>
+          <div class="s" id="mc-t-12-s">—</div>
         </div>
-        <div class="re-tile hero">
-          <div class="k">Worth up to</div>
-          <div class="v" id="mc-t-fair">—</div>
-          <div class="s" id="mc-t-fair-s">—</div>
+        <div class="re-tile">
+          <div class="k">Premium</div>
+          <div class="v" id="mc-t-prem">—</div>
+          <div class="s" id="mc-t-prem-s">—</div>
         </div>
       </div>
 
-      <div class="mc-tbl-wrap">
-        <table class="mc-tbl">
-          <thead><tr><th>Option</th><th>Cost</th><th>GMT lock</th><th>Net / month</th><th>A year on capital</th><th>vs new</th></tr></thead>
-          <tbody id="mc-rows"></tbody>
-        </table>
-      </div>
-      <p class="mc-tbl-note" id="mc-tbl-note"></p>
-
-      <div class="mc-greedy" id="mc-greedy" hidden></div>
-      <div class="re-hint" id="mc-upg">—</div>
+      <div class="mc-runat" id="mc-runat"></div>
+      <div class="mc-payback" id="mc-payback"></div>
     </div>
 
     <div class="re-foot">
-      <p class="note">Today's rates only, with no forecast. Net is after the electricity and service fee at your discount and the payout conversion fee. Upgrade prices and new-miner prices are the ones the rest of GMT Optimizer uses.</p>
+      <p class="note">Premium = asking price minus what its hashrate costs at GoMining's going $/TH for its efficiency. Upgrade and hashrate prices are the ones the rest of GMT Optimizer uses.</p>
       <a href="/console" class="btn">Plan your whole farm →</a>
     </div>
   </div>
 
-  <h2>How a listing is judged</h2>
-  <p>Anyone can mint new hashrate from GoMining at 15 W/TH (12 W/TH machines are no longer sold), so that's the price a secondhand miner has to beat. The checker works out three ways to end up with the same TH:</p>
+  <h2>How the payback is worked out</h2>
+  <p>A Greedy Machine's hashrate grows by a small percentage every week, for free. The checker turns that into one question: how long until the free TH covers what you overpaid?</p>
   <ul>
-    <li><strong>Buy the listing as it is</strong>: the asking price, and the higher electricity fee its efficiency carries every day.</li>
-    <li><strong>Buy it and upgrade it to 12 W/TH</strong>: the asking price plus the one-time upgrade, after which it earns more per TH than a new 15 W miner.</li>
-    <li><strong>Mint the same TH new</strong>: the benchmark.</li>
+    <li><strong>Premium</strong>: the asking price minus what the same hashrate costs at GoMining's going $/TH for its efficiency. That's the part of the price only growth pays back.</li>
+    <li><strong>Free growth</strong>: compounds weekly on the machine's current TH, and each new TH is valued at the efficiency you run it at.</li>
+    <li><strong>Growing it</strong>: growth is a percentage, so a bigger machine grows more TH a week. Topping it up at the going rate adds no premium, it just makes the growth big enough to repay the premium sooner.</li>
   </ul>
-  <p>Each option becomes one number: what it earns in a year at today's rates, divided by the capital it ties up. That capital includes the GMT you'd lock to keep your fee discount on that hashrate: an inefficient miner pays more fee, so it needs more GMT locked, and that GMT earns staking. The better of the two ways to buy the listing is compared with minting new, which gives the verdict.</p>
-  <div class="formula">a year on capital = (mining net + staking on the lock) × 365 ÷ (cost + GMT lock)</div>
+  <p>For every payback target from 1 to 12 months, the checker solves for the size the machine needs to be, what the top-up costs, and the total you'd put in. Manual top-ups stop at 5,000 TH, so a target that needs more than that is marked as out of reach.</p>
+  <div class="formula">size &times; ((1 + weekly growth)<sup>weeks</sup> &minus; 1) &times; $/TH = premium</div>
 
   <h2>Why efficiency decides most marketplace deals</h2>
-  <p>The electricity fee is charged per watt, so a 20 W/TH miner pays two thirds more electricity fee than a 12 W/TH one for the same hashrate. That gap is permanent unless you pay to upgrade it away. The "Worth up to" figure is the highest price at which the listing still matches minting new: offer below it and you come out ahead.</p>
+  <p>The electricity fee is charged per watt, so a 20 W/TH miner pays two thirds more electricity fee than a 12 W/TH one for the same hashrate. That gap is permanent unless you pay to upgrade it away, which is why the checker prices both the 15 W and the 12 W upgrade.</p>
   <p>Upgrades are bought one W/TH step at a time, and the steps get more expensive the closer you get to 12:</p>
   <div class="mc-tbl-wrap"><table class="mc-tbl mc-steps">
     <thead><tr><th>Stepping down</th><th>$/TH per W/TH step</th></tr></thead>
@@ -192,9 +167,6 @@
   </table></div>
   <p>So the first watts off a very inefficient miner are cheap: a 35 W/TH miner gets to 28 for $3.50 per TH, which cuts its electricity fee by a fifth. That's why an old 25&ndash;35 W/TH miner can still be a bargain at the right price, even though the full trip to 12 W/TH costs about $25 per TH.</p>
 
-  <h2>What your fee discount changes</h2>
-  <p>Locking GMT cuts your electricity fee by up to 20%. The bigger your discount, the less an inefficient miner costs you to run, so the same listing looks better to a holder with the full discount than to a new user with none. If you've set up your farm in the <a href="/console">console</a>, the checker fills in your total discount automatically (GMT coverage, VIP tier, click streak and mining mode together). Otherwise it starts at the full 20%, and you can change it.</p>
-
   <div class="cta">
     <h3>Buying hashrate? Start with a bonus</h3>
     <p>New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH, and I'll fund your first TH to start you off.</p>
@@ -203,7 +175,7 @@
 
   <h2>Frequently asked questions</h2>
   <div class="faq">
-    <details><summary>How do I know if a GoMining marketplace miner is a good deal?</summary><p>Compare it with the alternative every buyer has: minting the same hashrate new, which GoMining now sells at 15 W/TH only. A secondhand miner is only a good deal if, after any efficiency upgrade you'd need, it earns more per dollar than a new miner would. This checker does that comparison on live BTC price, GMT price and network difficulty.</p></details>
+    <details><summary>How long does a Greedy Machine take to pay back its premium?</summary><p>It depends on the premium, the machine's size and its weekly growth. The premium is the asking price minus what its hashrate costs at the going rate. Growth is a percentage of the machine's TH, so a bigger machine repays the same premium faster. Paste the listing into this checker and it shows how many TH the machine needs for a 1 to 12 month payback, and what topping it up costs.</p></details>
     <details><summary>Should I upgrade the efficiency of a miner I buy on the marketplace?</summary><p>Upgrades are bought one W/TH step at a time, and the price per TH depends on where the miner starts: $0.10 a step from 50 down to 35 W/TH, $0.50 down to 28, $1.00 down to 20, $1.10 down to 15, and $2.67 for each of the last three steps to 12. Taking a 20 W/TH miner to 12 costs $13.51 per TH. It pays off when the electricity fee it saves each year is a better return on the upgrade cost than the miner earns on its own price. The checker works this out for the listing you paste.</p></details>
     <details><summary>Why are older GoMining miners cheaper on the marketplace?</summary><p>Many secondhand miners run at 20 W/TH or more, while new miners are 15 W/TH (12 W/TH is only reachable by upgrading). Every extra watt per TH adds to the daily electricity fee, so an older miner earns less from the same hashrate. A low asking price can still be a bad deal once that fee, or the cost of upgrading it away, is counted.</p></details>
     <details><summary>Does this checker see my GoMining account?</summary><p>No. It only reads the public listing for the miner number in the link you paste: its hashrate, efficiency and asking price. You never log in, and nothing about your account is requested or stored.</p></details>
@@ -212,6 +184,6 @@
   <div class="related">Read next: <a href="/gomining-roi-calculator">GoMining ROI calculator</a> &middot; <a href="/gomining-discount-explained">How the GMT discount works</a> &middot; <a href="/is-gomining-worth-it">Is GoMining worth it?</a></div>
 </main>
 <script src="/assets/site.js?v=25"></script>
-<script src="/assets/market-check.js?v=12"></script>
+<script src="/assets/market-check.js?v=13"></script>
 </body>
 </html>
