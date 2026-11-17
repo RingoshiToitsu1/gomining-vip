@@ -234,3 +234,73 @@ differs from GitHub Pages, so URL-check results won't transfer to production one
 6. **Two co-pilot copies** (this site and ringomining.com share the engine). Moving its script to JSON is
    per-site, and ringomining.com is untouched.
 7. **Lighthouse on `/console`** (Q12).
+
+---
+
+## 11. Decisions (owner, 2026-11-17)
+
+| # | Decision |
+|---|---|
+| Preview | GitHub Pages user site **https://ringoshitoitsu1.github.io/** (repo `RingoshiToitsu1/ringoshitoitsu1.github.io`). Its workflow pulls `gomining-vip@overhaul`, strips `CNAME`, sets `robots.txt` to `Disallow: /`, and injects `noindex,nofollow` into every page. Rebuilds on `gh workflow run preview.yml` after each push, plus every 30 min as a fallback. |
+| Q1 Chat | Phase 6 restyles the **existing global room only**. DM tables are proposed in §12, **not built**. |
+| Q5 Co-pilot | Full page at **`/copilot`**. |
+| Q7 Nav | "Calculator" → `/console`; "RINGO5 Bonuses" → `/claim`. |
+| Q8 Promo page | `/gomining-promo-code`: remove the whole "free offer to fund your first TH" line (**the offer has ended**). Keep title, H1 and keywords; rewrite the body around the three RINGO5 bonuses (**definition still needed from the owner**). |
+| Q9 Fees | Keep fee figures in guides, pulled from config and worded "currently X%, may change", with the config's last-updated date. |
+| D-1 | `gomining-optimizer.html`, `gomining-vip-index.html` set to `noindex,nofollow` (URLs unchanged). |
+| D-2 | `neon-miner/`: kept; every file is a redirect page to `/` (URLS.md §G). |
+| Analytics | None. Don't add any. |
+| Q2 Auth | Username + password stays. No password reset or magic link in this overhaul. |
+| Open | The funded-first-TH offer has ended but **is still advertised on the live site** (home, `/claim`, `/gomining-promo-code`, co-pilot). Hotfix now or wait for the overhaul? Asked. |
+
+## 12. Proposal (NOT built): direct messages, conversation list, unread counts, report/block
+
+Kept separate from the global room (`messages` is untouched). Everything is RLS-gated, so only members
+of a conversation can read it. Apply only after explicit approval.
+
+```sql
+-- One row per conversation (a DM between two users, or a small group later).
+create table public.conversations (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  last_msg_at timestamptz not null default now()
+);
+-- Who is in it, and how far each member has read (drives unread counts).
+create table public.conversation_members (
+  conversation_id uuid references public.conversations(id) on delete cascade,
+  user_id         uuid references auth.users(id) on delete cascade,
+  last_read_at    timestamptz not null default now(),
+  primary key (conversation_id, user_id)
+);
+create table public.dm_messages (
+  id              bigserial primary key,
+  conversation_id uuid not null references public.conversations(id) on delete cascade,
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  body            text not null check (char_length(body) between 1 and 2000),
+  created_at      timestamptz not null default now()
+);
+create index on public.dm_messages (conversation_id, created_at desc);
+-- Safety
+create table public.user_blocks (
+  blocker_id uuid references auth.users(id) on delete cascade,
+  blocked_id uuid references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id)
+);
+create table public.reports (
+  id          bigserial primary key,
+  reporter_id uuid not null references auth.users(id) on delete cascade,
+  target_user uuid references auth.users(id) on delete set null,
+  message_ref text,                     -- 'global:<id>' or 'dm:<id>'
+  reason      text not null check (char_length(reason) between 1 and 500),
+  created_at  timestamptz not null default now(),
+  status      text not null default 'open' check (status in ('open','actioned','dismissed'))
+);
+-- RLS (sketch): members-only read/write on conversations, members and dm_messages; you can only
+-- update your own last_read_at; insert into dm_messages is blocked if either side has blocked the
+-- other or the sender is banned; blocks are visible to the blocker only; reports are insert-own and
+-- readable by mods (public.is_mod()). A security-definer RPC start_dm(other_user) creates or returns
+-- the DM so clients never insert membership rows directly.
+-- Realtime: postgres_changes on dm_messages filtered by conversation_id (RLS applies to realtime).
+-- Unread count = dm_messages newer than my last_read_at, per conversation (one view or RPC).
+```

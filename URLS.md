@@ -153,8 +153,17 @@ Read by other sites (ringomining.com reads `/api/rates.json` and `/assets/rates.
 | `/robots.txt` | 200 | — | (none) |  |
 | `/sitemap.xml` | 200 | — | (none) |  |
 
-## G. Committed junk that is technically live
+## G. Approved exception: `neon-miner/` (redirect pages)
 
-`neon-miner/` (36 tracked files, including `node_modules` HTML such as
-`/neon-miner/frontend/node_modules/tslib/tslib.html`, which returns 200). Not site content. It's listed
-here so the URL check accounts for it; whether to remove it is a question for you (AUDIT.md D-2).
+`neon-miner/` held 36 committed `node_modules` HTML files that were live on this domain. Approved
+2026-11-17: **not deleted**. Every one of those 36 files, plus a new `neon-miner/index.html`, is now a
+redirect page: `noindex,follow`, `<link rel="canonical" href="https://gmt-optimizer.com/">`, and a
+meta refresh to `/`. The URL check expects **200 with a meta refresh to `/`** for any `/neon-miner/…`
+path that existed (example: `/neon-miner/frontend/node_modules/tslib/tslib.html`), and for `/neon-miner/`.
+
+## H. Changes to existing pages that keep their URL
+
+| URL | Change | Approved |
+|---|---|---|
+| `/gomining-optimizer`, `/gomining-optimizer.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
+| `/gomining-vip-index`, `/gomining-vip-index.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
