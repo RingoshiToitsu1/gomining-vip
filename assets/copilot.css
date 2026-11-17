@@ -111,14 +111,18 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-msgs .gc-link{align-self:center;margin-bottom:24px}
 
 /* ---- /copilot: the same conversation, inline on the page ---- */
-.gc-page{display:flex;flex-direction:column;min-height:min(640px,calc(100vh - var(--header-h) - 160px));max-height:calc(100vh - var(--header-h) - 48px);
+.gc-page{display:flex;flex-direction:column;height:clamp(460px,calc(100vh - var(--header-h) - 230px),720px);
   background:#0d0d0d;border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;overflow:hidden;
   box-shadow:0 30px 80px -30px rgb(var(--color-black-rgb) / .85);font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
 .gc-page .gc-log{flex:1 1 auto;padding:20px 20px 10px}
 .gc-page .gc-msg{max-width:min(86%,560px)}
 .gc-page .gc-foot{padding-left:20px;padding-right:20px}
 @media (max-width:640px){
-  .gc-page{border-radius:14px;min-height:calc(100vh - var(--header-h) - 120px)}
+  .gc-page{border-radius:14px;height:clamp(460px,calc(100svh - var(--header-h) - 40px),720px)}
   .gc-page .gc-log{padding:14px 12px 8px}
   .gc-page .gc-foot{padding-left:12px;padding-right:12px}
 }
+/* phones: the sheet is full screen; the desktop height cap must not apply (it cut the sheet to 70vh) */
+@media (max-width:600px){ .gc-panel, .gc-panel.gc-on-msgs { max-height:none; } }
+/* one-line subtitle in the header, whatever buttons sit beside it */
+.gc-head small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
