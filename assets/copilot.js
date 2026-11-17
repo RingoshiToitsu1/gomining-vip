@@ -185,7 +185,7 @@
 
   // ---------- styles ----------
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=4";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=5";
   document.head.appendChild(css);
 
   // ---------- shell ----------

@@ -84,3 +84,5 @@ html.gc-on #toTop{bottom:90px !important}
 }
 @media (prefers-reduced-motion:reduce){.gc-tip,.gc-fab{transition:none}.gc-typing i{animation:none;opacity:.6}}
 @media print{.gc-fab,.gc-tip,.gc-panel{display:none !important}}
+
+@media (max-width:640px){.gc-tip{display:none!important}}

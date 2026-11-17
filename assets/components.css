@@ -12,8 +12,11 @@
   font-family: var(--font-body); font-size: var(--font-size-base); line-height: var(--line-height-body);
   color: var(--color-text); background: var(--color-bg);
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-  hyphens: auto; overflow-wrap: break-word;
+  hyphens: manual; overflow-wrap: break-word;
 }
+body.ui-scope { margin: 0; }
+/* German runs long: let it hyphenate. English reads better unbroken. */
+.ui-scope:lang(de), .ui-scope :lang(de) { hyphens: auto; }
 .ui-container { width: 100%; max-width: var(--content-max); margin-inline: auto; padding-inline: var(--space-4); }
 @media (min-width: 768px) { .ui-container { padding-inline: var(--space-6); } }
 .ui-section { padding-block: var(--space-8); }

@@ -110,9 +110,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=3">
-<link rel="stylesheet" href="/assets/components.css?v=2">
-<link rel="stylesheet" href="/assets/site-chrome.css?v=5">
-<link rel="stylesheet" href="/assets/landing.css?v=1">
+<link rel="stylesheet" href="/assets/components.css?v=3">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=6">
+<link rel="stylesheet" href="/assets/landing.css?v=2">
 <script src="/assets/site-chrome.js?v=3" defer></script>
 </head>
 <body class="lp ui-scope">
@@ -186,10 +186,11 @@
       <a class="ui-card ui-card--link" href="/console"><h3 class="ui-card__title">Calculator</h3><p class="ui-card__body">Your farm's live profit, fees, discount and VIP tier, plus a capital planner for new money.</p><span class="ui-card__cta">Open the calculator →</span></a>
       <a class="ui-card ui-card--link" href="/projection"><h3 class="ui-card__title">Growth Projection</h3><p class="ui-card__body">Your farm over 1 to 10 years across thousands of possible Bitcoin futures, reinvesting as you go. Estimates only.</p><span class="ui-card__cta">See the projection →</span></a>
       <a class="ui-card ui-card--link" href="/claim"><h3 class="ui-card__title">RINGO5 Bonuses</h3><p class="ui-card__body">Three sign-up bonuses from GoMining for new accounts that use code RINGO5.</p><span class="ui-card__cta">See the bonuses →</span></a>
-      <button type="button" class="ui-card" data-open-copilot><h3 class="ui-card__title">Co-pilot</h3><p class="ui-card__body">A guided chat that walks you through the tools, the GMT discount and getting started.</p><span class="ui-card__cta">Ask the co-pilot →</span></button>
+      <button type="button" class="ui-card" data-copilot><h3 class="ui-card__title">Co-pilot</h3><p class="ui-card__body">A guided chat that walks you through the tools, the GMT discount and getting started.</p><span class="ui-card__cta">Ask the co-pilot →</span></button>
+      <a class="ui-card ui-card--link" href="/gomining-marketplace-checker"><h3 class="ui-card__title">Marketplace Checker</h3><p class="ui-card__body">Paste a GoMining marketplace listing to see its premium, upgrade costs and how fast a Greedy Machine pays it back.</p><span class="ui-card__cta">Check a miner →</span></a>
       <a class="ui-card ui-card--link" href="/chat"><h3 class="ui-card__title">Community chat</h3><p class="ui-card__body">Talk GoMining with other miners in real time. Reading is open to all; posting needs a free account.</p><span class="ui-card__cta">Join the chat →</span></a>
     </div>
-    <p class="lp-more">More tools: <a class="ui-link" href="/gomining-roi-calculator">ROI calculator</a> · <a class="ui-link" href="/gomining-marketplace-checker">Marketplace checker</a> · <a class="ui-link" href="/statement">Income statement</a></p>
+    <p class="lp-more">More tools: <a class="ui-link" href="/gomining-roi-calculator">ROI calculator</a> · <a class="ui-link" href="/statement">Income statement</a></p>
   </div>
 </section>
 
@@ -297,8 +298,6 @@
   });
   /* copy RINGO5 */
   document.addEventListener('click',function(e){var b=e.target.closest('.lp-code[data-copy]');if(!b)return;try{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy);}catch(_){}b.classList.add('copied');setTimeout(function(){b.classList.remove('copied');},1500);});
-  /* the Co-pilot card opens the co-pilot */
-  document.addEventListener('click',function(e){if(!e.target.closest('[data-open-copilot]'))return;var f=document.querySelector('.gc-fab');if(f)f.click();else location.href='/console';});
 })();
 </script>
 </body>

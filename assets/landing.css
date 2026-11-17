@@ -51,8 +51,9 @@
 .lp-steps p { margin: 0; color: var(--color-text-2); font-size: var(--font-size-sm); line-height: var(--line-height-body); }
 
 /* tools */
-.lp-tools .ui-card { display: flex; flex-direction: column; gap: var(--space-2); }
-.lp-tools .ui-card__cta { margin-top: auto; padding-top: var(--space-3); font-family: var(--font-ui); font-size: var(--font-size-sm); color: var(--color-gold); }
+.lp .ui-card--link, .lp-tools .ui-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.lp .ui-card__cta { margin-top: auto; padding-top: var(--space-3); font-family: var(--font-ui); font-size: var(--font-size-sm); color: var(--color-gold); }
+.lp-tools .ui-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
 .lp-tools button.ui-card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: var(--space-2);
   background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-5);
   box-shadow: var(--shadow-card); transition: border-color var(--duration-base), transform var(--duration-base); }
