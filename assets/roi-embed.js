@@ -178,13 +178,12 @@
     afterFees: 'mining, after fees',
     ofA: (p, a) => p + ' of ' + a + ' · at today\'s rates',
     lock: ' GMT lock', streak: ' click streak', solo: ' solo',
-    costSub: '10% back with RINGO5',
+    costSub: 'bonus TH on your first miner',
     hint: o => o.A + ' buys <b>' + o.th + ' TH</b> at ' + o.wth + ' W/TH' +
       (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> locked for the 20% fee discount' : '') +
       ', and RINGO5 adds <b>' + o.bonus + ' bonus TH</b> on top. ' +
       (o.lock ? 'That split earns more than putting it all into hashrate at today\'s prices.'
-              : 'At today\'s prices, all hashrate earns more than locking GMT for the discount.') +
-      ' After ' + o.cash + ' cash back, it costs you ' + o.net + '.'
+              : 'At today\'s prices, all hashrate earns more than locking GMT for the discount.')
   };
   const tx = (k, ...a) => { const v = (window.RE_I18N && window.RE_I18N[k]) || EN[k]; return typeof v === 'function' ? v(...a) : v; };
 
@@ -197,8 +196,6 @@
   const REF_BONUS_TH     = 0.05;    // +5% bonus TH on the first miner, from GoMining via the referral code…
   const REF_BONUS_CAP    = 25;      // …capped at 25 TH (docs.gomining.com referral program)
   const bonusOf = th => Math.min(th * REF_BONUS_TH, REF_BONUS_CAP);
-  const REF_CASHBACK     = 0.10;    // 10% back on hashrate purchases…
-  const REF_CASHBACK_CAP = 10000;   // …up to $10,000 spent ($1,000 back)
 
   // TH the budget buys. Cost is monotonic in TH, so bisect.
   function thForBudget(budget, wth, withLock) {
@@ -235,8 +232,6 @@
     const a = planFor(A, wth, false, apr), b = planFor(A, wth, true, apr);
     const p = (b.th >= 1 && b.m.netToday > a.m.netToday) ? b : a;
     const m = p.m, net = m.netToday;
-    const thSpend = p.th * cptAtEff(p.th, wth);
-    const cash = REF_CASHBACK * Math.min(thSpend, REF_CASHBACK_CAP);
 
     $('re-be').textContent = money(net * 30.44);
     $('re-be-sub').textContent = m.stakingToday > 0
@@ -251,11 +246,11 @@
     parts.push(pct(CLICK_STREAK) + tx('streak'));
     if (MINING_MODE > 0) parts.push(pct(MINING_MODE, 2) + tx('solo'));
     $('re-disc-sub').textContent = parts.join(' + ');
-    $('re-cost').textContent = money(cash);
+    $('re-cost').textContent = '+' + num(p.thTot - p.th, 1) + ' TH';   // the RINGO5 +5% bonus TH (capped at 25 TH)
     $('re-cost-sub').textContent = tx('costSub');
 
     hintEl.innerHTML = tx('hint', { A: money(A), th: num(p.th, 1), wth: num(wth, 1), lock: p.withLock,
-      gmt: num(p.gmt, 0), bonus: num(p.thTot - p.th, 1), cash: money(cash), net: money(A - cash) });
+      gmt: num(p.gmt, 0), bonus: num(p.thTot - p.th, 1) });
   }
 
   function render() {

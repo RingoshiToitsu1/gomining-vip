@@ -47,7 +47,7 @@
     if(window.ResizeObserver) new ResizeObserver(pad).observe(nav);
   })();
   /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
-  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=13';document.body.appendChild(menuJs);
+  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=14';document.body.appendChild(menuJs);
 
   /* ---- live values for the strip above (same sources the ticker used) ---- */
   (function(){
@@ -106,7 +106,7 @@
       '<div><h4>Legal</h4><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div>'+
     '</div></div>'+
     '<div class="foot-donate">'+
-      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/claim">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
+      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> to unlock three sign-up bonuses &mdash; <a href="/claim">see your RINGO5 bonuses&nbsp;&rarr;</a></div>'+
       '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
       '<div class="fd-addrs">'+
         '<button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>'+
@@ -204,4 +204,4 @@
 })();
 
 // Ask-Ringo co-pilot (assets/copilot.js): loaded here so every page that uses this script gets it.
-;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=2";s.defer=true;(document.head||document.documentElement).appendChild(s);})();
+;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=3";s.defer=true;(document.head||document.documentElement).appendChild(s);})();

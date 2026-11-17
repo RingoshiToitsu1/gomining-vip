@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="V6vX7VZoM-hvNLKQUqsenHVh-sLM-SFPvn6PQjhgujQ" />
 <title>GoMining Console — Live Dashboard, Capital Planner &amp; Projections | GMT Optimizer</title>
-<meta name="description" content="Free GoMining calculator: project your mining profit, ROI and GMT earnings with live BTC difficulty and halving decay. New to GoMining? Sign up with code RINGO5 and we'll fund your first TH to get your account started.">
+<meta name="description" content="Free GoMining calculator: project your mining profit, ROI and GMT earnings with live BTC difficulty and halving decay. New to GoMining? Sign up with code RINGO5 to unlock three sign-up bonuses.">
 <link rel="canonical" href="https://gmt-optimizer.com/console">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <!-- Social link preview (Open Graph + Twitter Card) -->
@@ -13,13 +13,13 @@
 <meta property="og:site_name" content="GMT Optimizer">
 <meta property="og:url" content="https://gmt-optimizer.com/console">
 <meta property="og:title" content="GoMining Calculator — Profit, ROI & Earnings Projector">
-<meta property="og:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: sign up with code RINGO5 and we'll fund your first TH.">
+<meta property="og:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: code RINGO5 unlocks three sign-up bonuses.">
 <meta property="og:image" content="https://gmt-optimizer.com/og-console.png?v=3">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="GoMining Calculator — Profit, ROI & Earnings Projector">
-<meta name="twitter:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: sign up with code RINGO5 and we'll fund your first TH.">
+<meta name="twitter:description" content="Free GoMining calculator with live BTC difficulty & halving decay. New users: code RINGO5 unlocks three sign-up bonuses.">
 <meta name="twitter:image" content="https://gmt-optimizer.com/og-console.png?v=3">
 <!-- Structured data: helps Google understand this is a free GoMining calculator web app -->
 <script type="application/ld+json">
@@ -977,13 +977,6 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
           <div style="font-size:.65rem;color:var(--text4);margin-top:.3rem;text-align:center">Above 0, growth projections grow their farm and pay you your bonus on <strong style="color:var(--green)">every TH they buy</strong>. Off by default — it forecasts their behaviour, not yours.</div>
           </div>
         </div>
-        <div style="display:none;background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:.6rem .8rem" data-feature="vip-bonus-hidden-promo-not-offered">
-          <label style="display:flex;align-items:center;gap:.55rem;cursor:pointer;margin:0">
-            <input type="checkbox" id="piVipBonus" style="width:16px;height:16px;cursor:pointer;accent-color:#ffd700">
-            <span style="font-size:.8rem;color:var(--text);font-weight:600">VIP Member — 10% bonus TH on deposits ≥ $10,000</span>
-          </label>
-          <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;padding-left:1.55rem">When the USD spent on TH is $10k+, GoMining adds 10% extra TH. Planner re-balances locked GMT so 20% token discount still holds at the larger farm.</div>
-        </div>
       </div>
       <div class="sp-run-wrap">
         <button id="plannerCalcBtn" class="ri-btn" onclick="submitPlanner()">Calculate Optimal Split</button>
@@ -1179,8 +1172,8 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <!-- Conversion CTA: peak-intent moment, right after seeing the growth forecast -->
       <div style="margin:1.6rem auto 0;max-width:520px;padding:1.3rem;text-align:center;background:linear-gradient(160deg,rgba(245,166,35,.12),rgba(245,166,35,.03));border:1px solid var(--card-border);border-radius:var(--radius-sm)">
         <div style="color:var(--text);font-weight:700;font-size:1.05rem;margin-bottom:.4rem">Like what you see? Make it real.</div>
-        <div style="color:var(--text2);font-size:.9rem">New to GoMining? Sign up with code <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> for <strong style="color:var(--text)">+5% bonus TH</strong> — and I'll personally fund your first TH to get you started.</div>
-        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.href='/claim';},60)">Claim your funded TH &rarr;</button>
+        <div style="color:var(--text2);font-size:.9rem">New to GoMining? Sign up with code <span style="font-family:var(--mono);font-weight:700;color:var(--orange);cursor:pointer" onclick="copyFooterAddr('RINGO5')">RINGO5</span> to unlock <strong style="color:var(--text)">three sign-up bonuses</strong>: +5% bonus TH on your first miner (up to 25 TH), 1 month of VIP Platinum+ and a GoMining Card cashback bonus.</div>
+        <button style="margin-top:1rem;padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#000;font-weight:700;border:none;border-radius:12px;cursor:pointer;font-family:var(--sans);font-size:.95rem" onclick="closeSetupProjection();setTimeout(function(){location.href='/claim';},60)">See your RINGO5 bonuses &rarr;</button>
       </div>
     </div>
 
@@ -1213,7 +1206,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       </div>
     </div>
     <div class="foot-donate">
-      <div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH — <a href="/claim">plus I'll fund your first TH&nbsp;→</a></div>
+      <div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> to unlock three sign-up bonuses &mdash; <a href="/claim">see your RINGO5 bonuses&nbsp;&rarr;</a></div>
       <div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>
       <div class="fd-addrs">
         <button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>
@@ -1242,7 +1235,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <script src="/assets/chrome.js?v=9"></script>
 <script src="/assets/boot.js?v=3"></script>
 <script src="/assets/loaders.js?v=4"></script>
-<script src="/assets/visualizer.js?v=6"></script>
+<script src="/assets/visualizer.js?v=7"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
    Global so the header links' inline onclick can reach it. */
@@ -1328,7 +1321,7 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
 </script>
-<script src="/assets/menu.js?v=13"></script>
+<script src="/assets/menu.js?v=14"></script>
 <style>
 .ytp{position:relative;margin:0 0 1.1rem;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:linear-gradient(180deg,rgba(245,166,35,.07),transparent),var(--bg-card)}
 .ytp[hidden]{display:none}

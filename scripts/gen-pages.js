@@ -121,7 +121,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=25"></script>
+<script src="/assets/site.js?v=26"></script>
 </body>
 </html>
 `;
@@ -130,7 +130,7 @@ ${faqHtml}
 const CTA = `  <div class="cta">
     <h3>Run your own numbers — free</h3>
     <p>Plug in your hashrate for live P&amp;L on today's numbers &mdash; then project it forward on assumptions you choose.</p>
-    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> to unlock three bonuses: +5% bonus TH on your first miner (up to 25 TH), 1 month of VIP Platinum+ and a GoMining Card cashback bonus.</p>
     <a href="/console" class="btn">Open the calculator →</a>
   </div>`;
 

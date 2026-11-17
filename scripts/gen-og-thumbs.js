@@ -1,11 +1,12 @@
 /* Per-URL social/OG thumbnails (1200x630 PNG) for every page on the site.
  * Branded template (dark + gold, matches gmt-optimizer-og.svg); each page gets a
  * distinct eyebrow + headline + subline. Renders with @resvg/resvg-js.
- *   run:  cd ~ && node scripts/gen-og-thumbs.js
+ *   run:  node scripts/gen-og-thumbs.js [og-claim.png …]   (no args = every page)
  */
 const fs = require('fs');
 const { Resvg } = require('@resvg/resvg-js');
-const ROOT = '/home/ringoshi';
+const ROOT = require('path').join(__dirname, '..');
+const ONLY = process.argv.slice(2);   // optional: just these output files
 
 const b64 = (p, mime) => 'data:' + mime + ';base64,' + fs.readFileSync(ROOT + '/' + p).toString('base64');
 const LOGO = b64('gmt-optimizer-logo.svg', 'image/svg+xml');
@@ -63,11 +64,11 @@ function thumb({ eyebrow, lines, sub }) {
 const PAGES = [
   { page: 'index.html',          out: 'og-home.png',    eyebrow: 'GOMINING PROFIT OPTIMIZER', lines: ['Free GoMining', 'Profit Optimizer'], sub: 'Live P&L, a capital planner, and honest projections.' },
   { page: 'console/index.html',  out: 'og-console.png', eyebrow: 'LIVE DASHBOARD',            lines: ['Your GoMining', 'farm, live.'],      sub: 'Daily net, monthly yield, discount & VIP — sat by sat.' },
-  { page: 'claim/index.html',    out: 'og-claim.png',   eyebrow: 'NEW USER OFFER',           lines: ['Claim your funded', 'first TH.'],     sub: 'Sign up with RINGO5 — I fund your first TH.' },
+  { page: 'claim/index.html',    out: 'og-claim.png',   eyebrow: 'RINGO5 BONUSES',           lines: ['Your RINGO5', 'bonuses.'],           sub: '+5% bonus TH · 1 month VIP Platinum+ · Card cashback.' },
   { page: 'rainbow/index.html',  out: 'og-rainbow.png', eyebrow: 'BITCOIN RAINBOW CHART',     lines: ['Bitcoin Rainbow', 'Chart'],          sub: 'Power-law valuation bands on live price history.' },
   { page: 'gomining-roi-calculator.html',   out: 'og-gomining-roi-calculator.png',   eyebrow: 'CALCULATOR',        lines: ['GoMining ROI', 'Calculator'], sub: 'See what a setup earns, on live network data.' },
   { page: 'gomining-discount-explained.html', out: 'og-gomining-discount-explained.png', eyebrow: 'GUIDE',           lines: ['The GoMining', 'Discount, Explained'],    sub: 'How locking GMT cuts your electricity fee.' },
-  { page: 'gomining-promo-code.html',       out: 'og-gomining-promo-code.png',       eyebrow: 'PROMO CODE',        lines: ['GoMining Promo', 'Code: RINGO5'],         sub: '+5% bonus TH — and a funded first TH.' },
+  { page: 'gomining-promo-code.html',       out: 'og-gomining-promo-code.png',       eyebrow: 'PROMO CODE',        lines: ['GoMining Promo', 'Code: RINGO5'],         sub: 'Three sign-up bonuses for new GoMining accounts.' },
   { page: 'gomining-worth-it-now.html',     out: 'og-gomining-worth-it-now.png',     eyebrow: 'LIVE VERDICT',      lines: ['Is GoMining', 'Worth It Right Now?'],     sub: 'Updated monthly on live figures.' },
   { page: 'how-gomining-works.html',        out: 'og-how-gomining-works.png',        eyebrow: "BEGINNER'S GUIDE",  lines: ['How Does', 'GoMining Work?'],             sub: 'Cloud Bitcoin mining, explained simply.' },
   { page: 'is-gomining-worth-it.html',      out: 'og-is-gomining-worth-it.png',      eyebrow: 'HONEST BREAKDOWN',  lines: ['Is GoMining', 'Worth It in 2026?'],       sub: 'An honest, numbers-first breakdown.' },
@@ -84,7 +85,7 @@ const PAGES = [
 }));
 
 let n = 0;
-PAGES.forEach(p => {
+PAGES.filter(p => !ONLY.length || ONLY.includes(p.out)).forEach(p => {
   const png = new Resvg(thumb(p), { fitTo: { mode: 'width', value: W }, font: { loadSystemFonts: true } }).render().asPng();
   fs.writeFileSync(ROOT + '/' + p.out, png);
   n++;
