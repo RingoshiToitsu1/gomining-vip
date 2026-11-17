@@ -15,9 +15,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=2">
 <link rel="stylesheet" href="/assets/components.css?v=2">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=1">
 <style>
   body { margin: 0; }
-  .sg-nav { position: sticky; top: 0; z-index: var(--z-header); background: rgb(var(--color-bg-rgb) / .92); backdrop-filter: blur(8px);
+  .sg-nav { position: sticky; top: var(--header-h); z-index: calc(var(--z-header) - 1); background: rgb(var(--color-bg-rgb) / .92); backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--color-border); }
   .sg-nav .ui-container { display: flex; align-items: center; gap: var(--space-4); min-height: var(--header-h); flex-wrap: wrap; }
   .sg-nav nav { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-left: auto; font-family: var(--font-ui); font-size: var(--font-size-sm); }
@@ -40,6 +41,7 @@
   .sg-space span { display: block; font-size: var(--font-size-xs); color: var(--color-text-2); margin-top: var(--space-1); text-align: center; }
   .sg-demo { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
 </style>
+<script src="/assets/site-chrome.js?v=1" defer></script>
 </head>
 <body class="ui-scope">
 <header class="sg-nav">

@@ -105,7 +105,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=2">
 <link rel="stylesheet" href="/assets/components.css?v=2">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=1">
 <link rel="stylesheet" href="assets/design.css?v=15">
+<script src="/assets/site-chrome.js?v=1" defer></script>
 </head>
 <body class="rd">
 
@@ -140,14 +142,6 @@
 </div>
 
 <!-- ===== NAV ===== -->
-<nav id="nav">
-  <a href="/" class="brand"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>
-  <div class="nav-links">
-    <a href="#dashboard">Dashboard</a><a href="#features">System</a><a href="/quote">Quote</a><a href="#start">Access</a><a href="#learn">Learn</a><a href="#faq">FAQ</a>
-  </div>
-  <a href="/console" class="nav-cta" data-magnetic>Launch Console</a>
-</nav>
-
 <!-- ===== CINEMATIC INTRO =====
      Scroll-scrubbed canvas: galaxy -> clusters -> mesh -> a rising earnings chart.
      Without JS this collapses to a plain title block (see .cine-on in design.css),
@@ -399,38 +393,6 @@
 </section>
 
 <!-- ===== FOOTER ===== -->
-<footer>
-  <div class="wrap">
-    <div class="foot-inner">
-      <div class="foot-brand">
-        <a href="/" class="brand"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>
-        <p>The free, ad-free GoMining profit optimizer. Live network data, honest projections, no ads — ever.</p>
-        <div class="foot-social">
-          <a href="https://x.com/ringoshitoitsu" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.6l-5.2-6.8L5.7 22H2.4l7.7-8.8L1.9 2h6.8l4.7 6.2L18.9 2Zm-1.2 18h1.8L7.1 3.9H5.2L17.7 20Z"/></svg></a>
-          <a href="https://t.me/ringoshitoitsu" target="_blank" rel="noopener" aria-label="Telegram"><svg viewBox="0 0 24 24"><path d="M21.9 4.3 18.6 20c-.2 1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-4.9 8.9-8c.4-.3-.1-.5-.6-.2L6.4 13.9l-4.7-1.5c-1-.3-1-1 .2-1.5l18.4-7.1c.9-.3 1.6.2 1.6 1.5Z"/></svg></a>
-        </div>
-      </div>
-      <div class="foot-cols">
-        <div class="foot-col"><h4>Tool</h4><a href="/console">Console</a><a href="/console?view=planner">Planner</a><a href="/gomining-marketplace-checker">Marketplace checker</a><a href="/#faq">FAQ</a></div>
-        <div class="foot-col"><h4>Learn</h4><a href="/how-gomining-works">How GoMining works</a><a href="/is-gomining-worth-it">Is it worth it?</a><a href="/gomining-roi-calculator">ROI Calculator</a></div>
-        <div class="foot-col"><h4>Legal</h4><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>
-      </div>
-    </div>
-    <div class="foot-donate">
-      <div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> to unlock three sign-up bonuses &mdash; <a href="/claim">see your RINGO5 bonuses&nbsp;&rarr;</a></div>
-      <div class="fd-tip">GMT-Optimizer is free and ad-free forever. If it helps, consider donating:</div>
-      <div class="fd-addrs">
-        <button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>
-        <button type="button" class="fd-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1"><span class="fd-tag">GMT · ETH/BNB</span><span class="fd-val">0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>
-      </div>
-    </div>
-    <div class="foot-base">
-      <span>© 2026 GMT-Optimizer · Independent community tool, not affiliated with GoMining.</span>
-      <span>Made for miners who plan their work.</span>
-    </div>
-  </div>
-</footer>
-
 <script src="assets/chrome.js?v=9"></script>
 <script src="assets/cine.js?v=5"></script>
 <script>
@@ -490,6 +452,5 @@ document.addEventListener('click',function(e){var el=e.target.closest&&e.target.
   addEventListener('blur',clr);
 })();
 </script>
-<script src="/assets/menu.js?v=15"></script>
 </body>
 </html>

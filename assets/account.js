@@ -498,6 +498,8 @@
   }
 
   Account.openLogin = function (m) { open(m); };
+  // The global header's Profile / Settings items open the existing profile editor (it holds the password change).
+  Account.openProfile = function () { if (Account.isLoggedIn()) openProfile(); else open('login'); };
 
   function mount() {
     buildModal(); renderHeader();

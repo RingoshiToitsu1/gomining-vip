@@ -5985,6 +5985,14 @@ function _activateTabById(id){
   // Panel views each write their own pretty URL when opened, and need the right tab
   // underneath so that closing them returns where the stub implied.
   switch(view){
+    case 'login': case 'signup': case 'profile': case 'settings': {
+      // From the global header on pages that don't load account.js. Wait for it to mount, then open.
+      let n=0;(function go(){const A=window.GMTAccount;
+        if(A&&A.openLogin){ if(view==='profile'||view==='settings'){A.openProfile();} else A.openLogin(view); }
+        else if(++n<50)setTimeout(go,100);})();
+      try{history.replaceState({},'',location.pathname+location.hash);}catch(e){}
+      return;
+    }
     case 'edit':               openEditSetup(); return;
     case 'rainbow':            openRainbow();   return;
     case 'combined':           openCombined();  return;

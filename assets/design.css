@@ -136,7 +136,7 @@
 .rd .btn:hover::after{left:170%}
 
 /* ============ HERO ============ */
-.rd .hero{min-height:100vh;display:flex;align-items:center;padding-top:150px;padding-bottom:60px}
+.rd .hero{min-height:calc(100vh - var(--header-h));display:flex;align-items:center;padding-top:var(--space-8);padding-bottom:60px}
 .rd .hero-inner{display:grid;grid-template-columns:1.02fr .98fr;gap:52px;align-items:center}
 .rd .hero h1{font-size:clamp(2.7rem,6.6vw,4.9rem);font-weight:600;line-height:.96;letter-spacing:-.035em;color:var(--warm);margin:22px 0;font-variant-ligatures:none}
 .rd .hero h1 .line2{display:block}
@@ -315,7 +315,7 @@
   .rd .cta-band{padding:40px 22px}
   .rd .foot-inner{flex-direction:column}
   .rd section{padding:66px 0}
-  .rd .hero{padding-top:140px}
+  .rd .hero{padding-top:var(--space-7)}
 }
 /* ============ LANDING PHONE PASS ============
    Scoped to body.rd, which is index.html only — the console carries .rd on inner
@@ -325,7 +325,7 @@
      screen: headline, both CTAs and the chips all started below the fold. */
   body.rd .instrument{display:none}
   body.rd .hero-inner{gap:0}
-  body.rd .hero{min-height:0;padding-top:132px;padding-bottom:44px}
+  body.rd .hero{min-height:0;padding-top:var(--space-6);padding-bottom:44px}
   body.rd .hero h1{font-size:clamp(2.2rem,8.5vw,3.4rem);margin:16px 0}
   body.rd .hero-sub{font-size:1.02rem;margin-bottom:24px}
 

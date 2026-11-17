@@ -175,6 +175,7 @@
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function (p) {
         messages.push(p.new); if (messages.length > 200) messages.shift(); renderList();
         if (collapsed && !POPOUT && !(A.isLoggedIn() && p.new && p.new.user_id === A.user.id)) { unread++; renderOnline(); }
+        else if (!collapsed || POPOUT) markSeen();
         notifyIfMentioned(p.new);
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'messages' }, function (p) {
@@ -307,7 +308,7 @@
       if (chip) chip.setAttribute('aria-expanded', v ? 'false' : 'true');
       updateVisibility();
       watchViewport(!v); fitViewport();
-      if (!v) { unread = 0; mentioned = false; renderOnline(); el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
+      if (!v) { unread = 0; mentioned = false; markSeen(); renderOnline(); el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
     }
 
     function renderFoot() {
@@ -435,7 +436,11 @@
       else if (u) openUserCard(u, t);
     });
 
+    // The site header shows unread messages on every page: it counts messages newer than this stamp.
+    function markSeen() { try { localStorage.setItem('gmt_chat_seen_at', new Date().toISOString()); } catch (e) {} }
+    if (POPOUT) markSeen();
     function renderOnline() {
+      try { document.dispatchEvent(new CustomEvent('gmt-chat-unread', { detail: unread })); } catch (e) {}
       var hdr = document.getElementById('gmtOnline');
       if (hdr) {
         var badge = unread > 0 ? '<span class="gmt-chat-new' + (mentioned ? ' at' : '') + '">' + (mentioned ? '@ ' : '') + (unread > 99 ? '99+' : unread) + ' new</span>' : '';

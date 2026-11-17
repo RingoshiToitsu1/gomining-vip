@@ -101,10 +101,10 @@
   --content-max: 1200px;
   --prose-max: 72ch;
   --header-h: 64px;
-  --z-header: 50;
-  --z-widget: 80;
-  --z-modal: 100;
-  --z-toast: 120;
+  --z-header: 150;    /* above the console tool bar (100), below page dropdowns and every modal */
+  --z-widget: 9000;
+  --z-modal: 10050;   /* above the console's own overlays (10000–10040) */
+  --z-toast: 10100;
 }
 
 /* Figures line up everywhere: tabular numerals site-wide (Inter and Poppins both support tnum). */
