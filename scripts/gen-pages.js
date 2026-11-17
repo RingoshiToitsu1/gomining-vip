@@ -61,8 +61,8 @@ function model({th, bp, diff, disc, wth=EFF_BASE_MAX}){   // default: a new mine
 
   return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,bp0:bp,
           hashCost,gmtLockUSD,totalCapital,cost:totalCapital,
-          monthlyUSD:netUSD*30.44, yearlyUSD:netUSD*365.25,
-          miningMonthlyUSD:miningUSD*30.44, stakingMonthlyUSD:stakingUSD*30.44};
+          monthlyUSD:netUSD*(365.25 / 12), yearlyUSD:netUSD*365.25,
+          miningMonthlyUSD:miningUSD*(365.25 / 12), stakingMonthlyUSD:stakingUSD*(365.25 / 12)};
 }
 
 /* ===== live data ===== */

@@ -200,9 +200,9 @@
     const p = (b.th >= 1 && b.m.netToday > a.m.netToday) ? b : a;
     const m = p.m, net = m.netToday;
 
-    $('re-be').textContent = money(net * 30.44);
+    $('re-be').textContent = money(net * M.DAYS_PER_MONTH);
     $('re-be-sub').textContent = m.stakingToday > 0
-      ? tx('split', money(m.miningToday * 30.44), money(m.stakingToday * 30.44))
+      ? tx('split', money(m.miningToday * M.DAYS_PER_MONTH), money(m.stakingToday * M.DAYS_PER_MONTH))
       : tx('afterFees');
     $('re-net').textContent = money(net * 365.25);
     $('re-net-sub').textContent = tx('ofA', pct(net * 365.25 / A * 100, 1), money(A));
@@ -237,13 +237,13 @@
     }
 
     const m = model(th, wth, gl, apr, streak);
-    $('re-net').textContent = money(m.netToday * 30.44);
+    $('re-net').textContent = money(m.netToday * M.DAYS_PER_MONTH);
     $('re-disc').textContent = num(m.totD, 1) + '%';
     $('re-be').textContent = money(m.netToday);
     $('re-be-sub').textContent = tx('yearCap', num(m.yieldPct, 1));
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
-      ? money(m.miningToday * 30.44) + ' mining + ' + money(m.stakingToday * 30.44) + ' staking'
+      ? money(m.miningToday * M.DAYS_PER_MONTH) + ' mining + ' + money(m.stakingToday * M.DAYS_PER_MONTH) + ' staking'
       : 'after fees & discount';
 
     const parts = [];
@@ -264,11 +264,11 @@
         ' GMT (~' + money(m.gmtFor20 * m.gp * (1 + USD_GMT_FEE)) + ') for the full 20% discount is what makes this setup viable.';
     } else if (m.tok >= 20) {
       hint.textContent = 'You are at the 20% maximum token discount — extra GMT past this only lifts your VIP tier. ' +
-        'The discount is saving you ' + money(m.feesUSD * (m.totD / 100) * 30.44) + '/mo at this size.';
+        'The discount is saving you ' + money(m.feesUSD * (m.totD / 100) * M.DAYS_PER_MONTH) + '/mo at this size.';
     } else {
       hint.textContent = 'Lock ' + num(need, 0) + ' more GMT (~' + money(need * m.gp * (1 + USD_GMT_FEE)) +
         ') to reach the 20% maximum electricity discount — worth ' +
-        money(m.feesUSD * 0.20 * 30.44) + '/mo at this size.';
+        money(m.feesUSD * (TOK_CAP / 100) * M.DAYS_PER_MONTH) + '/mo at this size.';
     }
 
     $('re-basis').textContent = 'BTC ' + money(m.bp) + ' · GMT $' + num(m.gp, 3) + ' · ' +

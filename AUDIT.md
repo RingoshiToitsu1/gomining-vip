@@ -487,3 +487,19 @@ charts still use their own palette and en-US formatting; they move onto the kit 
 **Open question.** The landing quick estimate shows months as 30.44 days and the console as 30 days, so monthly
 figures differ by about 1.4% (daily figures are identical). Unifying them changes the console golden numbers,
 so it needs the owner's OK.
+
+### 17a. Month length unified to 30.4375 days (owner-approved, 2026-11-17)
+
+One month = 365.25 / 12 = 30.4375 days everywhere: `DAYS_PER_MONTH` in assets/app.js and lib/mining.js
+(the ROI widget, quote tool, gen-pages.js and network-facts.js use the same value). Before: console ×30,
+widget and data pages ×30.44.
+
+Golden values re-recorded on purpose. Every change, field by field:
+- console: 8 monthly figures ×1.01458 (30.4375 / 30).
+- console: 3 `monthlyFor10k` figures +0.84% to +0.94%. That figure is mining × days-per-month (+1.46%) plus
+  staking and Greedy growth, which are weekly × 4.33 and never used the 30, so the blend lands lower.
+- roi widget: 3 values moved by a cent (30.44 → 30.4375).
+- checker and quote: unchanged.
+Proof: with the old month lengths (30 / 30.44) temporarily put back, all 33 cases matched the old recording exactly.
+Yearly figures built as monthly × 12 now come to 365.25 days instead of 360. Daily figures are unchanged.
+Also replaced two leftover cap literals (the discount-bar `/30` and the widget's `0.20`) with config values; no output change.

@@ -79,7 +79,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 406.523524,
+  "monthlyFor10k": 411.327365,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,
@@ -281,7 +281,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 406.523524,
+  "monthlyFor10k": 411.327365,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,
@@ -483,7 +483,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 443.695664,
+  "monthlyFor10k": 448.938764,
   "planner": null
  },
  "100 TH 15W 20% coverage": {
@@ -566,7 +566,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 918.539384,
+  "monthlyFor10k": 929.184992,
   "planner": null
  },
  "1000 TH 12W": {
@@ -649,7 +649,7 @@
    "thOnly": false,
    "wth": 12
   },
-  "monthlyFor10k": 2322.404772,
+  "monthlyFor10k": 2342.524384,
   "planner": null
  },
  "1000 TH 20W": {
@@ -732,7 +732,7 @@
    "thOnly": false,
    "wth": 20
   },
-  "monthlyFor10k": 1294.528163,
+  "monthlyFor10k": 1309.142003,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,
@@ -934,7 +934,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 6634.610457,
+  "monthlyFor10k": 6690.118821,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,
@@ -1136,7 +1136,7 @@
    "thOnly": false,
    "wth": 16
   },
-  "monthlyFor10k": 3964.693718,
+  "monthlyFor10k": 4001.888982,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,
@@ -1347,7 +1347,7 @@
    "thOnly": false,
    "wth": 18
   },
-  "monthlyFor10k": 642.844469,
+  "monthlyFor10k": 650.844405,
   "planner": null
  },
  "inactive hashrate": {
@@ -1430,7 +1430,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 1199.40335,
+  "monthlyFor10k": 1212.770012,
   "planner": null
  },
  "marketplace miner in plan": {
@@ -1513,7 +1513,7 @@
    "thOnly": false,
    "wth": 15
   },
-  "monthlyFor10k": 375.664206,
+  "monthlyFor10k": 379.956816,
   "planner": {
    "REF_GMT_BONUS": 0.05,
    "VIP_BONUS_MIN": 10000,

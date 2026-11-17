@@ -241,7 +241,7 @@
     if (!a || !(a.capUSD > 0) || !(years > 0)) return null;
     const bp = S.btc, gp = S.gmt;
     const dbt = Math.round(S.satsPerTHDay) / 1e8;   // today's BTC per TH per day, held
-    const DPM = 365.25 / 12;
+    const DPM = window.GMTMining ? window.GMTMining.DAYS_PER_MONTH : 365.25 / 12;
     let th = a.th, locked = a.ag, cash = 0, income = 0, paidIn = a.capUSD;
     // series / paid: total value and money paid in at every month end, for the screenshot
     const rows = [], series = [a.capUSD], paid = [a.capUSD];

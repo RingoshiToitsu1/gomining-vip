@@ -27,6 +27,7 @@ const CLICK_STREAK_PCT     = CONFIG.rates.clickStreakPct;      // daily click st
 const COV_DAYS_PER_PCT     = CONFIG.discount.coverageDaysPerPct;  // days of fee coverage per 1% token discount
 const TOKEN_DISCOUNT_CAP   = CONFIG.discount.tokenCapPct;      // max token (coverage) discount, %
 const TOTAL_DISCOUNT_CAP   = CONFIG.discount.totalCapPct;      // max total fee discount, %
+const DAYS_PER_MONTH       = 365.25/12;                          // 30.4375: one month everywhere on the site (lib/mining.js DAYS_PER_MONTH)
 const ELEC_USD_PER_W_DAY   = ELECTRICITY_RATE*24/1000;           // $ per W/TH per TH per day (0.0012 at $0.05/kWh)  // $/TH/day platform service fee
 const GREEDY_CAP      = CONFIG.pricing.minerCapTh;    // max TH per miner via manual upgrades; passive growth compounds past this
 
@@ -349,7 +350,7 @@ function effWthAfterSpend(curW,usdPerTH){
 function netMonthlyAt(i,bpOverride){
   const save=S.btcPrice;
   if(bpOverride!=null&&isFinite(bpOverride))S.btcPrice=bpOverride;
-  let mo=0;try{const c=calc(i);mo=c.net*c.bp*30;}finally{S.btcPrice=save;}
+  let mo=0;try{const c=calc(i);mo=c.net*c.bp*DAYS_PER_MONTH;}finally{S.btcPrice=save;}
   return mo;
 }
 
@@ -639,7 +640,7 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
   const othW=othTH>0?Math.max(EFF_BEST,(finTH*finW-gTH*gW)/othTH):finW;
   const gGrow=Math.max(0,+(i.ggrow||0))/100;
   const WK=52/12;
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_NEW))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_NEW))*DAYS_PER_MONTH;
   const gmtW=Math.max(0,a.gmtReserve||0);
   const out=[];
   for(let mo=1;mo<=months;mo++){
@@ -653,7 +654,7 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
     const cov=burn>0?(locked+gmtW)/burn:Infinity;
     const tok=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
     const fd=Math.min(TOTAL_DISCOUNT_CAP,tok+nonTok);
-    const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*30;
+    const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*DAYS_PER_MONTH;
     const stakeMo=locked*(i.apr/100)/52*gp*4.33;
     const greedyMo=(gTH>0&&gGrow>0)?(gTH*gGrow)*4.33*cptAtEff(gTH,gW):0;
     out.push(mineMo+stakeMo+ambMo+greedyMo);
@@ -671,18 +672,18 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
     // price the efficiency-inclusive total (finTH) and value the greedy's free weekly growth.
     const ep=computeEffPlan(effStateFrom(i,a,gp,bp));
     const projTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, projWth=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
-    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee
+    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*DAYS_PER_MONTH;   // incl. 2% BTC→GMT fee
     locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
     gTHf=(ep&&ep.gTHf>0)?ep.gTHf:(a.greedyTot||0);gWf=(ep&&ep.gWthf>0)?ep.gWthf:(a.gwthAfter||15);
   }else{
     // Nothing to allocate (e.g. zero capital on a blank/empty setup): the farm just
     // earns its current income — a $0 baseline on a blank setup, not an error.
-    mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
+    mineMo=m.net*m.bp*DAYS_PER_MONTH;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
   }
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
   // NOT refPriorTH: that hashrate is already inside the Ambassador "referred TH" figure, so
   // counting it here would pay the user twice for the same miners.
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW))*DAYS_PER_MONTH;
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -693,9 +694,9 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
 // solve routes through a different discount path and drifts a few dollars.
 function currentMonthlyIncomeUSD(){
   const i=inp(),m=calc(i),gp=m.gp;
-  const mineMo=m.net*m.bp*30;                                   // includes discount + 2.25% conversion fee
+  const mineMo=m.net*m.bp*DAYS_PER_MONTH;                                   // includes discount + 2.25% conversion fee
   const stakingMo=m.wkGMT*gp*4.33;
-  const ambMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
+  const ambMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*DAYS_PER_MONTH;
   const gGrow=+(i.ggrow||0);
   const greedyMo=((m.gth||0)>0&&gGrow>0)?(m.gth*gGrow/100)*4.33*cptAtEff(m.gth,m.gwth||15):0;
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -3408,7 +3409,7 @@ function recalc(){
   // Monthly must equal the "Total monthly income" breakdown below, which uses
   // 4.33 weeks/month for staking (52/12), not daily×30/7. Compose it the same way.
   const stakingMonthlyUSD=m.wkGMT*m.gp*4.33;
-  const cashMoUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;   // reinvestable cash income
+  const cashMoUSD=netUSD*DAYS_PER_MONTH+stakingMonthlyUSD+heroAmbDaily*DAYS_PER_MONTH;   // reinvestable cash income
   const moUSD=cashMoUSD+greedyMonthlyUSD;                        // + greedy TH-credit value
   animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
   // Always converted from the USD figure at the live BTC price — fU() renders whatever display
@@ -3423,8 +3424,8 @@ function recalc(){
   animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   if(_bp>0)animateMetric($('heroMonthlyBtcVal'),moUSD/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
   else if($('heroMonthlyBtcVal'))$('heroMonthlyBtcVal').textContent='';
-  let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
-  if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
+  let heroMoSub=fU(netUSD*DAYS_PER_MONTH)+' mining + '+fU(stakingMonthlyUSD)+' staking';
+  if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*DAYS_PER_MONTH)+' ambassador';
   if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
   $('heroMonthlyBTC').textContent=heroMoSub;
   // Stream-mode visualizer (visualizer.js) reads the same composed income the hero shows, so the
@@ -3439,7 +3440,7 @@ function recalc(){
   // Shared with the marketplace checker (same origin) so it prices listings at THIS farm's total
   // discount instead of a guess. Only once a farm exists — an empty console has no discount to share.
   if((m.totTH||0)>0){try{localStorage.setItem(TOTAL_DISCOUNT_KEY,JSON.stringify({pct:+(+m.totD).toFixed(2),at:Date.now()}));}catch(e){}}
-  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
+  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*DAYS_PER_MONTH)+'/mo';
   // Effective compounded ROI: a simulated year of weekly reinvestment at today's prices,
   // reported as the growth in what the farm is worth. The old figure here divided income by
   // capital, which understated the answer — it credited none of the compounding, and a farm
@@ -3466,7 +3467,7 @@ function recalc(){
   window._farmShot={
     dailyUSD:totalDailyUSD, dailySub:heroSub,
     monthlyUSD:moUSD, yearlyUSD:moUSD*12, monthlySub:heroMoSub,
-    disc:m.totD, saveMoUSD:m.save*m.bp*30,
+    disc:m.totD, saveMoUSD:m.save*m.bp*DAYS_PER_MONTH,
     velocity, velSub:velSub?velSub.textContent:'',
     th:m.totTH||0, wth:m.bwth||0,
     gmtLocked:Math.max(0,i.gl||0), gmtValueUSD:Math.max(0,i.gl||0)*m.gp,
@@ -3524,18 +3525,18 @@ function recalc(){
   if(i.od>0)pts.push({l:'Other '+fP(i.od),p:i.od,c:'ds-other'});
   if(pts.length){
     dh+='<div class="discount-visual">';
-    for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/30)*100}%">${p.l}</div>`;
+    for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/TOTAL_DISCOUNT_CAP)*100}%">${p.l}</div>`;
     dh+='</div>';
   }
   dh+=row('Total Discount',fP(m.totD),'cyan');
-  dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
-  dh+=row('Yearly savings',`${fU(m.save*m.bp*30*12)}/yr`,'green');
+  dh+=row('Monthly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH)}/mo`,'green');
+  dh+=row('Yearly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH*12)}/yr`,'green');
   // Paused hashrate: off the books entirely on both sides — no rewards, no fees — but
   // still owned, so it still counts toward the VIP tier. Show the fee it would incur if
   // switched back on, since that's the number that decides whether it's worth running.
   if(m.offTH>0){
-    const wouldCostMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*30;
-    const wouldEarnMo=m.dbt*m.offTH*m.bp*30;
+    const wouldCostMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*DAYS_PER_MONTH;
+    const wouldEarnMo=m.dbt*m.offTH*m.bp*DAYS_PER_MONTH;
     dh+=row('Paused hashrate',`${fN(m.offTH,2)} TH @ ${fN(m.offWth,1)} W/TH`,'orange');
     dh+=row('↳ If switched on',`${fU(wouldEarnMo-wouldCostMo)}/mo<span class="sub">${fU(wouldEarnMo)} mined − ${fU(wouldCostMo)} fees · counts toward VIP either way</span>`,
       (wouldEarnMo-wouldCostMo)>0?'green':'red');
@@ -3548,11 +3549,11 @@ function recalc(){
   g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
 
   const stakingMonthly=m.wkGMT*m.gp*4.33;
-  const miningMonthly=m.net*m.bp*30;
+  const miningMonthly=m.net*m.bp*DAYS_PER_MONTH;
   const isAmb=$('inAmbassador').checked;
   const refTH=isAmb?(+$('inReferredTH').value||0):0;
   const ambDaily=ambDailyUSD(refTH,AMB_DEFAULT_WTH);
-  const ambMonthly=ambDaily*30;
+  const ambMonthly=ambDaily*DAYS_PER_MONTH;
   // Greedy Machine free weekly growth, valued as TH credits (see hero card) — free TH
   // accrued × the cost of that TH at the greedy's efficiency. Real income, in hashrate.
   const ggrowB=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
@@ -3718,8 +3719,8 @@ function moAtBTC(P,bp,gmtScale){
   const dfees=f.t*(1-(P.totD||0)/100);
   const netBTC=((P.grossBTC||0)-dfees)*(1-CONVERSION_FEE);
   // Greedy free-growth income is a USD TH-credit value (BTC-independent) — add it flat.
-  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/30+(P.ambMo||0)/30+(P.greedyMo||0)/30;
-  return{daily,mo:daily*30};
+  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/DAYS_PER_MONTH+(P.ambMo||0)/DAYS_PER_MONTH+(P.greedyMo||0)/DAYS_PER_MONTH;
+  return{daily,mo:daily*DAYS_PER_MONTH};
 }
 function updateProjCell(){
   const p=window._projParams;
@@ -4116,10 +4117,10 @@ function computeEffPlan(st){
     const cptUnet=Math.max(0.01,cptU-lockFreedPerTH);   // net of the freed GMT-lock capital
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
-      const savedMo=cap*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
+      const savedMo=cap*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)*(1-cf)*DAYS_PER_MONTH;   // $/TH/day electricity saving is already USD — no ×bp
       upgradeROI=savedMo*12/(cap*cptUnet);   // ROI on the NET cost (saves fees AND frees GMT-lock capital)
       const cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);   // alternative is MINTING new 15 W TH
-      const thNetMo=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*30;
+      const thNetMo=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*DAYS_PER_MONTH;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
         const upgradeCost=cap*cptU;
@@ -4146,10 +4147,10 @@ function computeEffPlan(st){
         const grownAvg=gGrow>0?gth*((Math.pow(1+gGrow,52)-1)/(52*gGrow)):gth;
         const gLockFreed=(COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP)*(ELEC_USD_PER_W_DAY*(gwth-EFF_BEST))*(1-nonTokD);
         const gCptUnet=Math.max(0.01,gCptU-gLockFreed);
-        const gSavedYrPerTH=ELEC_USD_PER_W_DAY*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
+        const gSavedYrPerTH=ELEC_USD_PER_W_DAY*(gwth-EFF_BEST)*(1-d)*(1-cf)*DAYS_PER_MONTH*12;
         const gROI=(gSavedYrPerTH*grownAvg)/(gth*gCptUnet);
         const cptTHg=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
-        const thNetMoG=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*30;
+        const thNetMoG=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*DAYS_PER_MONTH;
         const thROIg=cptTHg>0?thNetMoG*12/cptTHg:0;
         if(gROI>thROIg){
           const gEff=Math.min(thUSD,gth*gCptU);
@@ -4181,8 +4182,8 @@ function computeEffPlan(st){
   const curTH=i.th+gthv, curWth=curTH>0?(i.th*i.wth+gthv*gwthv)/curTH:i.wth;
   const finTH=curTH+addTH+mpTH, finWth=finTH>0?(ngWatts+gWatts+mpTH*mpWth)/finTH:curWth;
 
-  const baseMo=calc(i).net*bp*30;
-  const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
+  const baseMo=calc(i).net*bp*DAYS_PER_MONTH;
+  const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*DAYS_PER_MONTH + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
   // BTC-price threshold below which upgrading the WHOLE FARM out-yields buying TH.
@@ -4407,7 +4408,7 @@ function renderPlanner(i,m){
   const cap=totalValue;
 
   const gr=dbt*nt;
-  const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*30;
+  const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*DAYS_PER_MONTH;
 
   // --- Display ---
   let ah='';
@@ -4455,7 +4456,7 @@ function renderPlanner(i,m){
   // the reader to find it below the split and wonder why it isn't in the pot.
   if(ref&&i.refCap>0){
     exp+=`<strong style="color:var(--green)">Referral:</strong> their ${fU(i.refCap)} buys <strong>${fN(ref.at,1)} TH</strong> and locks <strong>${fN(ref.ag,0)} GMT</strong>`;
-    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_NEW)*30)}/mo</strong> in ambassador rewards`;
+    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_NEW)*DAYS_PER_MONTH)}/mo</strong> in ambassador rewards`;
     if(refBonusGMT>0)exp+=` plus a one-off <strong style="color:var(--text2)">${fN(refBonusGMT,0)} GMT</strong> bonus (${fU(refBonusUSD)}), which IS in the pot below`;
     exp+=`. <span style="color:var(--text3)">Their ${fU(i.refCap)} is their capital, not yours — it never enters the split.</span><br>`;
   }
@@ -4498,7 +4499,7 @@ function renderPlanner(i,m){
   const projWth=(_ep&&_ep.finWth>0)?_ep.finWth:bwth;
   // Mining monthly for THAT total (same formula as the solver's `mo`, but on the efficiency-
   // inclusive TH/efficiency) so the "Projected monthly" headline matches the projection table.
-  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
+  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*DAYS_PER_MONTH;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
 
   // Path to 20%
   ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
@@ -4546,7 +4547,7 @@ function renderPlanner(i,m){
 
   // --- Post-investment projections ---
   const ov=m.vip,tc=nv.n!==ov.n;
-  const curMo=m.net*m.bp*30,imp=projMoMining-curMo;
+  const curMo=m.net*m.bp*DAYS_PER_MONTH,imp=projMoMining-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
   let ph='<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
@@ -4570,7 +4571,7 @@ function renderPlanner(i,m){
   // fleet so it COMPOUNDS. Adding it to the ambassador basis here would bill it twice.
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
   const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW);
-  const projAmbMo=projAmbDaily*30;
+  const projAmbMo=projAmbDaily*DAYS_PER_MONTH;
   // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
   // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
   const gGrow=+(i.ggrow||0);
@@ -4639,7 +4640,7 @@ function renderPlanner(i,m){
   const curStakingMo=m.wkGMT*m.gp*4.33;
   const totalImp=imp+(newStakingMo-curStakingMo)+(greedyMoAfter-greedyMoBefore);
   ph+=row('Monthly improvement',`${totalImp>=0?'+':''}${fU(totalImp)}<span class="sub">mining + staking</span>`,totalImp>=0?'green':'red');
-  ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
+  ph+=row('Monthly maintenance saved',fU(svBTC*bp*DAYS_PER_MONTH),'green');
   ph+=`<div class="divider"></div>`;
   const recAdj=totalImp>0?cap/totalImp:Infinity;
   ph+=row('New locked GMT',`${fU(newLocked*gp)}`+(gmtReserve>0?`<span class="sub">+${fU(gmtReserve*gp)} reserve</span>`:''));
@@ -4652,7 +4653,7 @@ function renderPlanner(i,m){
     // the old line under-counted and the split didn't sum to the capital they invested.
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(ref.thUSD)} invested${refPriorTH>0?` &middot; on top of ${fN(refPriorTH,0)} TH they already own`:''}</span>`,'cyan');
     ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(Math.max(0,i.refCap-ref.thUSD))} invested</span>`,'cyan');
-    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_NEW)*30)}/mo`,'green');
+    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_NEW)*DAYS_PER_MONTH)}/mo`,'green');
     if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
@@ -4661,7 +4662,7 @@ function renderPlanner(i,m){
   const moStakingUSD=newWkStake*gp*4.33;
   const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''}${greedyMoAfter>0?' + greedy growth':''})`;
   // Current (pre-investment) state, for the before/after comparison.
-  const curAmbMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
+  const curAmbMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*DAYS_PER_MONTH;
   // earnTH, not totTH: switched-off miners must not be credited with rewards in the
   // "before" baseline, or the projection would show income they can't produce.
   const curP={th:m.earnTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.earnTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
@@ -5112,15 +5113,15 @@ function computeSetupProjection(){
     const td=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cv/COV_DAYS_PER_PCT)):0;
     const fd=Math.min(TOTAL_DISCOUNT_CAP,td+ntd);
     const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
-    const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
+    const stakingUSD=(curLocked*(apr/100)/52)*4.33/DAYS_PER_MONTH*gp;
     // The greedy machine's free weekly TH, valued as income — the same treatment the console
     // hero and the Capital Planner give it, so all three headline numbers now mean one thing.
     // It is NOT double counting: this is income received in the form of hashrate, exactly like
     // mined BTC that gets reinvested, and the resulting TH earns on top from then on. It is
     // deliberately kept OUT of `reinvest` — the value arrived already deployed as TH, so it must
     // never be handed to the allocator to spend a second time.
-    // 4.33/30 (not /7) so a day x30 lands on the planner's weekly x 4.33 monthly figure exactly.
-    const greedyUSD=(gTH>0&&GGROW>0)?(gTH*GGROW)*4.33/30*cptAtEff(gTH,gW):0;
+    // 4.33/DAYS_PER_MONTH (not /7) so a day x30 lands on the planner's weekly x 4.33 monthly figure exactly.
+    const greedyUSD=(gTH>0&&GGROW>0)?(gTH*GGROW)*4.33/DAYS_PER_MONTH*cptAtEff(gTH,gW):0;
     return{net:miningUSD+stakingUSD+ambDaily+greedyUSD,reinvest:miningUSD+ambDaily,
       mining:miningUSD,staking:stakingUSD,amb:ambDaily,greedy:greedyUSD,disc:fd,tokD:td,vip:v.n};
   }
@@ -5176,7 +5177,7 @@ function computeSetupProjection(){
   function contributionDue(d){
     if(!(CONTRIB>0))return 0;
     if(CONTRIB_WEEKLY)return CONTRIB;
-    const monthsDue=Math.floor(d/30.4375);
+    const monthsDue=Math.floor(d/DAYS_PER_MONTH);
     if(monthsDue<=contribMonthsPaid)return 0;
     const owed=(monthsDue-contribMonthsPaid)*CONTRIB;
     contribMonthsPaid=monthsDue;
@@ -5314,7 +5315,7 @@ function computeSetupProjection(){
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
   const gmtGain=gmtLocked-startLocked;
   const bpAtEnd=bpForDay(days);
-  const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*30,finalYearly=finalSS*365;
+  const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*DAYS_PER_MONTH,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
   const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
@@ -5350,7 +5351,7 @@ function computeSetupProjection(){
       // is the number to compare against the planner's headline; if they differ, the inputs did.
       // Captured on day 1 of the run. Reading dailyNet() here, after the loop, priced the END state
       // and labelled it day 1 — so the "day 1" figure changed with the horizon.
-      return ` &mdash; earning <strong style="color:var(--text2)">${fU(startSS_capture*30)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(startDisc_capture,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
+      return ` &mdash; earning <strong style="color:var(--text2)">${fU(startSS_capture*DAYS_PER_MONTH)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(startDisc_capture,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
     })()}
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
@@ -5361,8 +5362,8 @@ function computeSetupProjection(){
   let gmtRangeNote='';
   if(gpSigma>0){
     const _gpSave=gp;
-    gp=gpLo; const loMo=dailyNet(th,gmtLocked).net*30;
-    gp=gpHi; const hiMo=dailyNet(th,gmtLocked).net*30;
+    gp=gpLo; const loMo=dailyNet(th,gmtLocked).net*DAYS_PER_MONTH;
+    gp=gpHi; const hiMo=dailyNet(th,gmtLocked).net*DAYS_PER_MONTH;
     gp=_gpSave;
     const a=Math.min(loMo,hiMo), b=Math.max(loMo,hiMo);
     gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range ($${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
@@ -5398,7 +5399,7 @@ function computeSetupProjection(){
       <div class="ri-label">Your Referral's Fleet (End of Period)</div>
       <div class="ri-headline cyan">${fN(refFleetTH,1)} TH</div>
       <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 15 W/TH${refReinvest>0?` &middot; reinvesting ${fN(refReinvest*100,0)}% of their rewards`:' &middot; static (no reinvest rate set)'}</div>
-      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_NEW)*30)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
+      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_NEW)*DAYS_PER_MONTH)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
     </div>`;
     if(totalRefBonusUSD>0){
       h+=`<div class="ri-single-card">
@@ -5414,7 +5415,7 @@ function computeSetupProjection(){
     h+=`<div class="ri-single-card">
       <div class="ri-label">Income Paid Out (over period)</div>
       <div class="ri-headline green">${fU(totalDistributionUSD)}</div>
-      <div class="ri-mo-yr">${fU(totalDistributionUSD/(days/30))}/mo avg<span class="ri-sep">&bull;</span>${payRate}</div>
+      <div class="ri-mo-yr">${fU(totalDistributionUSD/(days/DAYS_PER_MONTH))}/mo avg<span class="ri-sep">&bull;</span>${payRate}</div>
       <div class="ri-gain">taken as income instead of reinvested</div>
     </div>`;
   }
@@ -5543,7 +5544,7 @@ window._reinvestPeriod='day';
 function riChartUpdateAxis(){
   const c=window._reinvestChart;if(!c)return;
   const unit=window._reinvestUnit,period=window._reinvestPeriod;
-  const mult=period==='month'?30:1;
+  const mult=period==='month'?DAYS_PER_MONTH:1;
   const ys=c.pts.map(p=>p.v);
   const yMax=Math.max(...ys,1e-9);
   // GMT price moves across the run, so convert point-wise rather than at one rate.
@@ -5599,7 +5600,7 @@ function riChartHover(e){
   dot.setAttribute('cx',ptX);dot.setAttribute('cy',ptY);dot.style.opacity='1';
 
   const unit=window._reinvestUnit,period=window._reinvestPeriod;
-  const mult=period==='month'?30:1;
+  const mult=period==='month'?DAYS_PER_MONTH:1;
   const val=unit==='gmt'?(pt.v/(pt.gp||c.gp))*mult:pt.v*mult;
   const valStr=unit==='gmt'?fN(val,val>=1000?0:2)+' GMT':fU(val);
   const suffix=period==='month'?'/mo':'/day';
@@ -5670,13 +5671,13 @@ function buildShareCanvas(d){
   drawCard(leftX,cardY,'STARTING POSITION',GLT,[
     {label:'HASHRATE',val:fN(d.startTH,0)+' TH'},
     {label:'DAILY REWARD',val:fU(d.startSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.startSS*30,0)},
+    {label:'MONTHLY INCOME',val:fU(d.startSS*DAYS_PER_MONTH,0)},
     {label:'GMT Value',val:fU((d.startLocked||0)*d.gp,0)},
   ]);
   drawCard(rightX,cardY,'AFTER '+d.days+' DAYS',GSOFT,[
     {label:'HASHRATE',val:fN(d.th,0)+' TH'},
     {label:'DAILY REWARD',val:fU(d.finalSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.finalSS*30,0)},
+    {label:'MONTHLY INCOME',val:fU(d.finalSS*DAYS_PER_MONTH,0)},
     {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
   x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=22;
@@ -5840,7 +5841,7 @@ function obPreview(){
     const gDaily=gWk/7*cptAtEff(m.gth||1,gwp);
     const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily+gDaily;
     document.getElementById('obPrevDaily').textContent=fU(totalDailyUSD);
-    document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*30);
+    document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*DAYS_PER_MONTH);
     document.getElementById('obPrevDiscount').textContent=fP(m.totD);
     document.getElementById('obPrevVip').textContent=m.vip.n;
   }
