@@ -106,7 +106,8 @@ html.sc-lock, html.sc-lock body { overflow: hidden; }
   padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-control); }
 .sc-addr:hover, .sc-addr:focus-visible { border-color: var(--color-border-strong); color: var(--color-text); }
 .sc-addr b { color: var(--color-gold); font-weight: var(--font-weight-semibold); }
-.sc-addr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46ch; font-variant-numeric: tabular-nums; }
+.sc-addr { min-width: 0; }
+.sc-addr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 46ch; font-variant-numeric: tabular-nums; }
 .sc-addr.copied::after { content: '✓'; color: var(--color-success); }
 .sc-footer__legal { margin-top: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5);
   font-size: var(--font-size-xs); color: var(--color-text-2); line-height: 1.6; }
@@ -115,4 +116,14 @@ html.sc-lock, html.sc-lock body { overflow: hidden; }
 /* console: its tool tabs + live strip dock below the global header */
 html.sc-on .topbar { top: var(--header-h); }
 html.sc-on .topbar .header .c-brand, html.sc-on .topbar #gmtAccountSlot { display: none; }
-@media (max-width: 820px) { html.sc-on .topbar > .header { top: var(--header-h) !important; } }
+@media (max-width: 820px) {
+  html.sc-on .topbar > .header { top: var(--header-h) !important; }
+  /* the console's tool tabs scroll sideways on phones instead of widening the page */
+  html.sc-on .topbar .header .nav-links { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+  html.sc-on .topbar .header .nav-links::-webkit-scrollbar { display: none; }
+  html.sc-on .topbar .header .nav-links a { flex: 0 0 auto; }
+  html.sc-on .topbar .header-inner { min-width: 0; }
+}
+/* the console's first-visit overlay and sign-in gate sit below the global header, so the site nav stays usable */
+html.sc-on .gmt-resgate, html.sc-on .ob-overlay { top: var(--header-h); }
