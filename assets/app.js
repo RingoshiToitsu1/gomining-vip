@@ -67,27 +67,10 @@ function vipFor(th,veg,i){
 const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver':n.startsWith('Gold')?'gold':n.startsWith('Platinum')?'platinum':n.startsWith('Legend')||n==='Elite'?'legend':'diamond';
 
 // ---- TH COST TIERS ----
-// 15 W/TH hashrate — since 2026-10-30 the ONLY machine GoMining mints (12 W/TH was pulled from
-// sale; you can still upgrade a 15 W machine down to 12 W). Applies whether you are minting or
-// adding TH. Repriced 2026-10-30 from all twenty tiers — this time a RISE (1 TH $11.49 → $13.00
-// list), grossed up /0.95 from quotes net of the 5% NFT discount; every tier round-trips exactly.
-// Older history below.
-// Repriced 2026-07-30 (cut ~9.5%), then +11.77% GoMining-wide on 2026-09-08. All twenty tiers
-// re-observed 2026-09-08 against a 1 TH 15 W miner and written here exactly, so nothing on this
-// curve is extrapolated. The flat +11.77% estimate it replaced was already within a cent on
-// 14 of 20 tiers, which is why the two agree so closely.
-// Quotes are net of the 5% NFT discount and stored grossed up by /0.95 — avatarDiscMult()
-// applies that discount separately, so storing the net figure would take it twice.
-// All twenty tiers observed this time, so nothing is extrapolated. Quotes were net of a
-// 5% NFT discount and are grossed up by /0.95 to the list price a reader actually pays;
-// every tier round-trips to the quote exactly.
-const TH_TIERS=[
-  {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
-  {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
-  {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
-  {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
-  {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
-];
+// ALL prices live in assets/pricing.js (loaded before this file) — edit them there, never here.
+// 15 W/TH is the only machine GoMining mints; tiers are per-miner-size $/TH with any sale applied,
+// stored PRE-avatar-discount (avatarDiscMult() applies the 5% NFT discount separately).
+const TH_TIERS=GMT_PRICING.TH_TIERS_15W;
 function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
 function estimateCPT(th){
   const disc=avatarDiscMult();
@@ -115,40 +98,12 @@ function thForBudget(budget){
 /* ============================================================
    12 W/TH economics — new-miner pricing & efficiency upgrades
    ============================================================ */
-// 12 W/TH hashrate is NO LONGER SOLD NEW (2026-10-30). The only way to get it is to mint at 15 W
-// and pay the 15 → 12 efficiency upgrade, so this curve is DERIVED: TH_TIERS + 3 × EFF_UPGRADE_STEP
-// ($8.01/TH) at every tier. Keep it that way on a reprice — it is what 12 W hashrate costs, and
-// every path that prices a 12 W machine (cptAtEff, 12 W top-ups) stays right without special cases.
-// History of the old minted curve, for reference:
-// Repriced 2026-07-25: GoMining cut 12 W/TH pricing, and the volume taper compressed with it —
-// 20.0% end-to-end down to 13.8%. Four CONFIRMED observations anchor the curve:
-//   1 TH $19.99 (was 21.99) · 64 TH $18.33 · 512 TH $17.78 · 5000 TH $17.24 (was 17.60)
-// All twenty tiers re-observed 2026-09-08 after the +11.77% rise and written in exactly —
-// nothing on this curve is interpolated any more. The flat scale they replace was within a
-// cent on 15 of 20 tiers and never off by more than $0.04.
-// Stored PRE-avatar-discount: quotes come net of the 5% NFT discount and are grossed up by
-// /0.95, because avatarDiscMult() applies that discount separately.
-const TH_TIERS_12W=[
-  {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
-  {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
-  {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
-  {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
-  {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
-];
-// GoMining TH sale: % off every TH price (new miners and TH added to a miner you own) — efficiency
-// upgrades are NOT discounted. Set ONLY with `node scripts/set-rates.js --sale 20` (--sale 0 ends it).
-const TH_SALE_PCT = 20;
-[TH_TIERS, TH_TIERS_12W].forEach(T => T.forEach(t => { t.cpt = +(t.cpt * (1 - TH_SALE_PCT / 100)).toFixed(4); }));
-// Efficiency upgrades are bought one W/TH step at a time, and the step price depends on the rating
-// you step DOWN FROM: cheap at the inefficient end, $2.67 on the last three steps into 12 W/TH.
-// Each band covers the steps whose starting rating is in (previous upTo, upTo] — so 16→15 through
-// 20→19 are $1.10, 21→20 through 28→27 are $1.00, 29→28 through 35→34 are $0.50, and 36→35
-// through 50→49 are $0.10. Every step from 50 down to 12 was read off the GoMining app on
-// 2026-09-13; it replaces the old model that priced anything above 15 W/TH as if it were 15.
-// Priced INDEPENDENTLY of the TH curves — do not scale it with them.
-const EFF_UPGRADE_BANDS=[
-  {upTo:15,step:2.67},{upTo:20,step:1.10},{upTo:28,step:1.00},{upTo:35,step:0.50},{upTo:50,step:0.10}
-];
+// 12 W/TH hashrate is no longer sold new: it is DERIVED in assets/pricing.js as the 15 W price plus
+// the 15 → 12 upgrade, so every path that prices a 12 W machine (cptAtEff, 12 W top-ups) stays right.
+const TH_TIERS_12W=GMT_PRICING.TH_TIERS_12W;
+// Efficiency upgrades: per-TH price for each W/TH step, by the rating stepped DOWN FROM (see
+// assets/pricing.js). Priced INDEPENDENTLY of the TH curves and never discounted by a TH sale.
+const EFF_UPGRADE_BANDS=GMT_PRICING.EFF_UPGRADE_BANDS;
 const EFF_UPGRADE_STEP=EFF_UPGRADE_BANDS[0].step;   // the 15 → 12 W/TH step price
 // localStorage key the console writes its live total discount to; read by /gomining-marketplace-checker.
 const TOTAL_DISCOUNT_KEY='gmt_total_discount';
@@ -156,7 +111,7 @@ const TOTAL_DISCOUNT_KEY='gmt_total_discount';
 // the planner and projection so the numbers can be trusted without taking it on faith. Update
 // this in the same commit as the curves — a stale date is worse than none, because it claims
 // freshness the figures no longer have.
-const TH_PRICES_ASOF='30 Oct 2026';
+const TH_PRICES_ASOF=GMT_PRICING.PRICES_ASOF;   // set in assets/pricing.js
 function openPriceInfo(){
   const el=document.getElementById('pxInfo');
   if(!el)return;
@@ -170,7 +125,7 @@ function openPriceInfo(){
     const av=(typeof avatarDiscMult==='function')&&avatarDiscMult()<1;
     el.innerHTML=`<div class="px-info-card"><button type="button" class="px-info-x" onclick="openPriceInfo()" aria-label="Close">&times;</button>
       <div class="px-info-t">Where these numbers come from</div>
-      <div class="px-info-b">New miners are 15 W/TH only — GoMining no longer sells 12 W machines. All twenty tiers of the 15 W curve were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong>, no interpolation; 12 W hashrate is that price plus the 15&rarr;12 upgrade. Everything the planner, the projection and the quote page cost is priced from them.</div>
+      <div class="px-info-b">New miners are 15 W/TH only — GoMining no longer sells 12 W machines. All twenty tiers of the 15 W curve were read straight off the GoMining app on <strong>${TH_PRICES_ASOF}</strong>, no interpolation; 12 W hashrate is that price plus the 15&rarr;12 upgrade. Everything the planner, the projection and the quote page cost is priced from them.${GMT_PRICING.SALE_PCT>0?` <strong>GoMining sale: ${GMT_PRICING.SALE_PCT}% off TH is applied to every price below</strong> (efficiency upgrades aren't discounted).`:''}</div>
       <table class="px-tbl"><tr><th>TH</th><th>New miner<span>15 W/TH</span></th><th>Upgraded<span>12 W/TH</span></th></tr>
       ${[1,100,1000,5000].map(th=>`<tr><td>${fN(th,0)}</td><td>${fU(q(TH_TIERS,th))}</td><td>${fU(q(TH_TIERS_12W,th))}</td></tr>`).join('')}
       </table>
@@ -191,8 +146,8 @@ function thPriceBadge(extraClass){
     title="See what these prices are and when they were last checked">
     <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
 }
-const EFF_BEST=12;            // best efficiency available now
-const EFF_BASE_MAX=15;        // the 15 W/TH hashrate curve; also the marketplace-machine baseline
+const EFF_BEST=GMT_PRICING.EFF_BEST;            // best efficiency available now (assets/pricing.js)
+const EFF_BASE_MAX=GMT_PRICING.EFF_BASE_MAX;    // the 15 W/TH hashrate curve; also the marketplace-machine baseline
 const MINER_CAP=5000;         // TH per machine via upgrades before a new machine is required
 // What a freshly minted machine gets. GoMining mints 15 W/TH only since 2026-10-30, so every "buy new
 // hashrate" path prices off TH_TIERS at this rating; reaching 12 W is a separate upgrade decision.

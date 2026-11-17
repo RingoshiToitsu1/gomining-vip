@@ -54,7 +54,7 @@ const CUR = {
   apr: cap('scripts/constants.js', /^const STAKING_APR\s*=\s*([\d.]+);/m),
   solo: cap('scripts/constants.js', /^const MINING_MODE\s*=\s*([\d.]+);/m),
   greedy: cap('assets/app.js', /^const GREEDY_GROWTH_DEFAULT='([\d.]+)';/m),
-  sale: cap('scripts/constants.js', /^const TH_SALE_PCT = ([\d.]+);/m),
+  sale: cap('assets/pricing.js', /^  const SALE_PCT = ([\d.]+);/m),
 };
 
 // Replace exactly one match of `re` in file `f`, via fn(match, ...groups) -> replacement.
@@ -121,8 +121,8 @@ if (NEW.greedy != null && NEW.greedy !== CUR.greedy) {
 
 // ---- GoMining TH sale (% off every TH price; efficiency upgrades are not discounted) ----
 if (NEW.sale != null && NEW.sale !== CUR.sale) {
-  for (const f of ['scripts/constants.js', 'assets/app.js', 'assets/roi-embed.js', 'assets/quote.js', 'assets/market-check.js'])
-    sub(f, /const TH_SALE_PCT = [\d.]+;/, () => `const TH_SALE_PCT = ${NEW.sale};`);
+  // The single price source: every page and the data-page generator read the sale from here.
+  sub('assets/pricing.js', /^  const SALE_PCT = [\d.]+;/m, () => `  const SALE_PCT = ${NEW.sale};`);
 }
 
 // ---- cache-busters: every page loading a script we changed gets its ?v= bumped ----

@@ -19,6 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v4
+      # The data pages bake in TH prices from assets/pricing.js (and live BTC/difficulty), so rebuild
+      # them on every deploy: a price edit then reaches them with no manual step. If the generator
+      # fails, the committed pages are published as they are rather than blocking the deploy.
+      - name: Regenerate data pages
+        run: node scripts/gen-pages.js
+        continue-on-error: true
       # Publish only the site: hidden folders (.rustup, .npm, .claude, ...) are tooling that got
       # committed, and shipping 80k of their files made Pages' sync step stall and time out.
       - name: Stage site

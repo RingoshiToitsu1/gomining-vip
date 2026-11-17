@@ -6,9 +6,9 @@
    index.html but not gen-pages.js, leaving the SEO pages publishing a retired
    conversion fee and staking APR for three weeks. One file to recalibrate.
 
-   The browser side (assets/app.js, assets/roi-embed.js) cannot require() this,
-   so those still carry their own copies — when you recalibrate, update this
-   file AND that pair. Nothing else should hold these numbers.
+   PRICES (TH tiers, sale, efficiency, upgrade steps) are NOT here: they live in
+   assets/pricing.js, which both this file and the browser load. The fee and rate
+   constants below are still mirrored in the browser scripts; recalibrate together.
 */
 'use strict';
 
@@ -20,8 +20,8 @@ const CONVERSION_FEE  = 0.0225;  // BTC→GMT payout skim (calibrated 2026-07-07
 const STAKING_APR     = 18.87;   // % — GMT locked-staking APR (observed 2026-11-06)
 const MINING_MODE     = 1.09;    // % — solo mining discount (observed 2026-11-06)
 const CLICK_STREAK    = 3;       // % — daily click streak, binary once held 10 days
-const EFF_BEST        = 12;      // W/TH — freshly-minted new miners
-const EFF_BASE_MAX    = 15;      // W/TH — cheaper marketplace hashrate
+const EFF_BEST        = require('../assets/pricing.js').EFF_BEST;      // W/TH — best reachable (assets/pricing.js)
+const EFF_BASE_MAX    = require('../assets/pricing.js').EFF_BASE_MAX;  // W/TH — what GoMining mints (assets/pricing.js)
 const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage floor
 const COV_DAYS_PER_PCT= 18;      // 18 days of fee coverage per 1% token discount (360d = 20% cap)
 
@@ -53,37 +53,11 @@ const rbDayOf = t => Math.max(1,(t-RB_GEN)/86400000);
 const rbBandPrice = (t,off=RB_STILL_CHEAP_OFF) =>
   Math.pow(10, RB_FIT.m*Math.log(rbDayOf(t)) + RB_FIT.b + off);
 
-// 12 W/TH tiered $/TH, LIST price. Keep in sync with TH_TIERS_12W in assets/app.js and
-// assets/roi-embed.js. GoMining stopped minting 12 W on 2026-10-30, so this is now DERIVED:
-// the 15 W tier + the 15 → 12 upgrade (3 × $2.67 = $8.01/TH). History of the minted curve:
-// Repriced 2026-07-29: GoMining cut 12 W/TH pricing ~10-15%. Observed prices were net
-// of a 5% NFT holder discount, so every tier is grossed up by /0.95 to the list price a
-// new user actually pays — 1 TH reconstructs to exactly $17.00, which confirms the
-// discount is 5% off list rather than 5% added on. Do NOT paste discounted quotes in
-// here: the site must quote what its readers pay, not what one account pays.
-const TH_TIERS_12W=[
-  {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
-  {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
-  {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
-  {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
-  {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
-];
-
-// 15 W/TH hashrate — the cheaper, less efficient curve. Mirrors TH_TIERS in assets/app.js
-// and TH_TIERS_15W in assets/roi-embed.js. The ONLY machine minted since 2026-10-30. Repriced
-// 2026-10-30 (all twenty tiers), grossed up /0.95 from quotes net of a 5% NFT discount. The split against TH_TIERS_12W is by EFFICIENCY, not
-// mint-versus-upgrade: at a given W/TH the price per TH is the same either way.
-const TH_TIERS_15W=[
-  {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
-  {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
-  {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
-  {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
-  {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
-];
-// GoMining TH sale: % off every TH price (new miners and TH added to a miner you own) — efficiency
-// upgrades are NOT discounted. Set ONLY with `node scripts/set-rates.js --sale 20` (--sale 0 ends it).
-const TH_SALE_PCT = 20;
-[TH_TIERS_12W, TH_TIERS_15W].forEach(T => T.forEach(t => { t.cpt = +(t.cpt * (1 - TH_SALE_PCT / 100)).toFixed(4); }));
+// TH prices — ALL of them live in assets/pricing.js, the single source the browser uses too.
+// Edit prices there, never here. Tiers are per-miner-size $/TH with any GoMining sale applied.
+const PRICING=require('../assets/pricing.js');
+const TH_TIERS_12W=PRICING.TH_TIERS_12W;   // derived: 15 W + the 15 → 12 upgrade
+const TH_TIERS_15W=PRICING.TH_TIERS_15W;   // the only machine GoMining mints
 
 // Citable analyst price milestones. Used ONLY for clearly-labeled forecast cases.
 const BTC_ANCHORS=[

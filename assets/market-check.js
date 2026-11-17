@@ -11,20 +11,24 @@
    Premium = asking price − what the same hashrate is worth at its rating (going $/TH).
    Growth TH is valued at the rating you choose to run it at; top-up TH is bought at that rating.
 
-   IMPORTANT — the price constants below mirror assets/app.js and scripts/constants.js.
-   Recalibrate them together (tier prices, EFF_UPGRADE_BANDS).
+   All prices (TH tiers, sale, efficiency upgrade steps) come from assets/pricing.js — edit them there.
 */
-(function () {
+// Prices come from assets/pricing.js (the single source). Pages load it first; if one didn't,
+// fetch it from next to this script before running, so the widget never prices off nothing.
+(function (run) {
+  if (window.GMT_PRICING) return run();
+  const me = document.currentScript, s = document.createElement('script');
+  s.src = new URL('pricing.js', me && me.src ? me.src : location.origin + '/assets/').href;
+  s.onload = run;
+  document.head.appendChild(s);
+})(function () {
   'use strict';
+  const P = window.GMT_PRICING;   // TH tiers (sale applied), efficiency ratings, upgrade steps
 
   // ---- CALIBRATION (mirror of assets/app.js) ----
-  const EFF_BEST = 12;              // best efficiency available (W/TH)
-  const EFF_BASE_MAX = 15;          // the 15 W/TH hashrate curve
+  const EFF_BEST = P.EFF_BEST;              // best efficiency available (W/TH)
+  const EFF_BASE_MAX = P.EFF_BASE_MAX;          // the 15 W/TH hashrate curve
   const GREEDY_CAP = 5000;          // max TH per miner via manual upgrades; passive growth compounds past it
-  // Efficiency upgrade $/TH per W/TH step, by the rating stepped down FROM (prev upTo, upTo].
-  const EFF_UPGRADE_BANDS = [
-    { upTo: 15, step: 2.67 }, { upTo: 20, step: 1.10 }, { upTo: 28, step: 1.00 }, { upTo: 35, step: 0.50 }, { upTo: 50, step: 0.10 }
-  ];
   const FB = { gmt: 0.28 };
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
   const GREEDY_GROWTH_DEFAULT = 0.3347;                              // %/wk — console inGreedyGrowth default; observed, not a constant
@@ -32,27 +36,8 @@
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
 
-  // $/TH at 12 W/TH, pre-avatar-discount. Mirror of TH_TIERS_12W: no longer sold new, so it is the
-  // 15 W price plus the 15 → 12 upgrade (3 × $2.67 = $8.01/TH).
-  const TH_TIERS_12W = [
-    {th:1,cpt:21.01},{th:2,cpt:20.52},{th:4,cpt:20.01},{th:8,cpt:20.01},
-    {th:16,cpt:19.88},{th:32,cpt:19.79},{th:48,cpt:19.72},{th:64,cpt:19.65},
-    {th:96,cpt:19.59},{th:128,cpt:19.54},{th:192,cpt:19.48},{th:256,cpt:19.42},
-    {th:384,cpt:19.36},{th:512,cpt:19.30},{th:768,cpt:19.24},{th:1024,cpt:19.19},
-    {th:1536,cpt:19.14},{th:2560,cpt:19.07},{th:3584,cpt:19.02},{th:5000,cpt:18.97}
-  ];
-  // $/TH at 15 W/TH, pre-avatar-discount — the only machine GoMining mints. Mirror of TH_TIERS.
-  const TH_TIERS = [
-    {th:1,cpt:13.00},{th:2,cpt:12.51},{th:4,cpt:12.00},{th:8,cpt:12.00},
-    {th:16,cpt:11.87},{th:32,cpt:11.78},{th:48,cpt:11.71},{th:64,cpt:11.64},
-    {th:96,cpt:11.58},{th:128,cpt:11.53},{th:192,cpt:11.47},{th:256,cpt:11.41},
-    {th:384,cpt:11.35},{th:512,cpt:11.29},{th:768,cpt:11.23},{th:1024,cpt:11.18},
-    {th:1536,cpt:11.13},{th:2560,cpt:11.06},{th:3584,cpt:11.01},{th:5000,cpt:10.96}
-  ];
-  // GoMining TH sale: % off every TH price (new miners and TH added to a miner you own) — efficiency
-  // upgrades are NOT discounted. Set ONLY with `node scripts/set-rates.js --sale 20` (--sale 0 ends it).
-  const TH_SALE_PCT = 20;
-  [TH_TIERS_12W, TH_TIERS].forEach(T => T.forEach(t => { t.cpt = +(t.cpt * (1 - TH_SALE_PCT / 100)).toFixed(4); }));
+  const TH_TIERS_12W = P.TH_TIERS_12W;
+  const TH_TIERS = P.TH_TIERS_15W;
   function cptTier(T, th) {
     if (th <= 0) return T[0].cpt;
     if (th >= T[T.length - 1].th) return T[T.length - 1].cpt;
@@ -62,18 +47,8 @@
     }
     return T[0].cpt;
   }
-  // One-time $/TH to bring a miner down to 12 W/TH, summed band by band (20 W → $13.51).
-  function upgPerTH(w) {
-    let c = 0, cur = w;
-    while (cur > EFF_BEST + 1e-9) {
-      let floor = EFF_BEST, step = EFF_UPGRADE_BANDS[EFF_UPGRADE_BANDS.length - 1].step, found = false;
-      for (const b of EFF_UPGRADE_BANDS) { if (cur <= b.upTo + 1e-9) { step = b.step; found = true; break; } floor = b.upTo; }
-      if (!found) floor = EFF_UPGRADE_BANDS[EFF_UPGRADE_BANDS.length - 1].upTo;
-      const stop = Math.max(EFF_BEST, floor);
-      c += (cur - stop) * step; cur = stop;
-    }
-    return c;
-  }
+  // One-time $/TH to bring a miner down to 12 W/TH (20 W → $13.51), from the single price source.
+  const upgPerTH = P.upgPerTH;
   // Upgrade $/TH from rating w down to rating to (0 when already there or better).
   const upgBetween = (w, to) => Math.max(0, upgPerTH(w) - upgPerTH(to));
   // What one TH is worth at rating w on a miner of size th: the going $/TH between the 12 W and
@@ -464,4 +439,4 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
-})();
+});
