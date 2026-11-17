@@ -446,3 +446,44 @@ transitively (a CSS bump also bumps the script that loads it).
 
 Checks: golden 27/27 identical; offer check 0; landing JSON-LD valid; 0 broken internal links. Screenshots at 360,
 768, 1280 and 1920 px reviewed (full page).
+
+## 17. Phase 4: data layer (done)
+
+**One config.** `data/config.json` holds every price, fee, rate, discount rule, VIP tier and the RINGO5 terms
+(5% bonus TH, 25 TH cap, 30-day code window, 1 month VIP Platinum+, 90-day card window, docs link).
+`node scripts/build-config.js` validates it and:
+- writes the generated CONFIG block in `assets/pricing.js` (`window.GMT_CONFIG` in the browser, `.CONFIG` in Node);
+- fills `data-cfg` values in pages (dates, %, amounts);
+- rewrites numbers inside known phrases (referral %, cap, windows, 18-day step, 20% cap, 360 days) in pages, meta, JSON-LD and JS strings, all four languages;
+- keeps calculator input defaults in step.
+Deploy and the preview build run it; an invalid config fails the deploy. `--check` reports drift, `--list` audits phrase hits.
+`set-rates.js` now edits the config, then builds and bumps versions.
+
+**Engines read the config.** app.js, roi-embed.js, quote.js, market-check.js, statement.js and scripts/constants.js.
+No fee or rate literals remain in them.
+
+**As-of dates.** "Fees and rates as of <date>. They may change." beside every fee or rate: claim, faq, glossary,
+discount-explained, checker, promo-code, roi-calculator, how-gomining-works, is-gomining-worth-it, disclosures,
+guides, landing (quick estimate and RINGO5 block), quote badge, /embed, and all 14 generated data pages.
+Fees in prose read "currently X%, may change".
+
+**/lib.** `lib/mining.js` holds the pure maths (fees, VIP tier, coverage → token discount, caps, net mining,
+staking, referral bonus, upgrade cost, price curve, `farmToday`). `tests/lib.test.js` has 62 checks: hand-worked
+values, plus agreement with app.js's own `fees`/`vipOf`/`cptTier`/`calc` on a grid of farms.
+The landing/ROI widget now computes on the library. The console engine still has its own copy (agreement-tested);
+moving the console onto /lib is a larger refactor and is left for later.
+
+**Golden test: 33 cases** (console 11, roi 8, checker 8, quote 6). Two accepted changes, each proven to be the only diff:
+- the quote tool now knows the Legend VIP tiers like the console ($250k case: 83.7% → 84.0%);
+- one quote sentence reworded to "USD-to-GMT fee (currently 2%, may change)" (the two cases with monthly top-ups).
+
+**Tables** on `ui-table` (tabular numbers, cards under 640px): checker payback table, checker upgrade steps
+(sortable), quote compounding table. Statement and console tables are unchanged (Phase 8 pass).
+
+**Charts.** `assets/charts.js` gives token colours (SVG via `var(--color-*)`, canvas via resolved values) and
+locale-aware Intl formatters keyed to `<html lang>`. The quote chart and share image use it. The console's canvas
+charts still use their own palette and en-US formatting; they move onto the kit with the i18n work in Phase 7.
+
+**Open question.** The landing quick estimate shows months as 30.44 days and the console as 30 days, so monthly
+figures differ by about 1.4% (daily figures are identical). Unifying them changes the console golden numbers,
+so it needs the owner's OK.
