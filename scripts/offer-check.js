@@ -24,6 +24,9 @@ const BANNED = [
   ['claim free TH', /claim\s+(?:your\s+)?free\s+TH/i],
   ['fund your first TH', /fund(?:s|ed|ing)?\s+(?:your|my|their|the|a)?\s*first\s+(?:TH|terahash)/i],
   ['funded first TH', /funded[\s-]+(?:first[\s-]+)?(?:TH|terahash)/i],
+  // reversed word order: "have their first TH funded", "first TH is funded"
+  ['first TH funded', /first\s+(?:TH|terahash)\s+(?:is\s+|be\s+|gets?\s+)?funded/i],
+  ['have your/their first TH', /have\s+(?:your|their|my)\s+first\s+(?:TH|terahash)\b/i],
   ['I/we will fund', /\b(?:I|we|I'll|we'll|I\s+will|we\s+will|team\s+will|team)\s+fund\b/i],
   ['TH rebate / rebate', /\brebates?\b/i],
   ['personal cash back', /\b(?:my|personal)\s+(?:\d+\s?%\s+)?cash\s?-?back\b/i],
