@@ -126,14 +126,16 @@ Old full-app copies and prototypes. Not linked or in the sitemap, but publicly r
 | `/redesign-prototype` | 200 | `redesign-prototype.html` | noindex,nofollow | GMT Optimizer — Redesign Prototype |
 | `/redesign-prototype.html` | 200 | `redesign-prototype.html` | noindex,nofollow | GMT Optimizer — Redesign Prototype |
 
-## E. Unrelated side project published on this domain
+## E. Approved removals (expected 404)
 
-See AUDIT.md finding X-1.
+Removed on purpose with the owner's approval. The URL check expects **404** for these, not their old response.
 
-| URL | Live response | Served file | robots meta | Title |
-|---|---|---|---|---|
-| `/carbon` | 301 → `/carbon/` | `carbon/index.html` | (none) |  |
-| `/carbon/` | 200 | `carbon/index.html` | (none) |  |
+| URL | Was | Expected now | Approved |
+|---|---|---|---|
+| `/carbon` | 301 → `/carbon/` | **404** | 2026-11-17 hotfix f01ba6450 (Carbon sales desk taken off the public site; it published its login) |
+| `/carbon/` | 200 | **404** | same |
+
+`robots.txt` also has `Disallow: /carbon/`.
 
 ## F. Feeds, embeds and site files
 

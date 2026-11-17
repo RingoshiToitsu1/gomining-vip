@@ -130,10 +130,17 @@ These decide scope. Nothing here is done until you answer.
 
 ## 6. Findings to clean up (no URL changes)
 
-- **X-1. Security, one flag:** `carbon/index.html` is published at **gmt-optimizer.com/carbon/** and contains the
-  Carbon sales-desk login in plain text (`USER="ringoshi", PASS=…`, line 232). Anyone can read it. It's
-  your call. Options: change that password, or stop publishing `carbon/` (which would change a URL, so
-  it's your decision).
+- **X-1. Carbon sales desk: REMOVED (hotfix `f01ba6450` on `main`, 2026-11-17).** `carbon/index.html` was
+  published at gmt-optimizer.com/carbon/ with the desk's login in plain text. It is now untracked and
+  git-ignored (your local `~/carbon/` copy is kept), `robots.txt` disallows `/carbon/`, and URLS.md lists
+  `/carbon` and `/carbon/` as approved removals (expected 404). Nothing on the site linked to it, and it
+  was never in the sitemap.
+  **Carbon's backend, as found:** none on this site. It has **no Supabase tables, users, storage or edge
+  functions**. Its "login" was a hard-coded username/password check in the page's own JavaScript, and its
+  data lived in the browser. It called `api.anthropic.com/v1/messages` directly from the page with **no
+  API key in the file** (so no key was exposed). Nothing to delete on the backend.
+  **Still to do on your side:** the old page is still readable in this public repo's git history (and
+  possibly in search caches), so treat that password as public and change it wherever it's still used.
 - **D-1. Legacy full-app copies:** `gomining-optimizer.html`, `gomining-vip-index.html` (old inline app with
   **stale prices and VIP tables**), `redesign-prototype.html`, `ob_research_dashboard.html`,
   `gomining-calc/` (broken image refs). Live but unlinked. Recommendation: add `noindex` (URL keeps working).
