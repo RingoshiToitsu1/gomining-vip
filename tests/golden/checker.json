@@ -1,0 +1,90 @@
+{
+ "2408.5496 TH @ 15 W, 90000 GMT, run asis": {
+  "mc-t-cost": "$25,200",
+  "mc-t-cost-s": "90,000 GMT · $10.46/TH",
+  "mc-t-15": "—",
+  "mc-t-15-s": "already at 15 W/TH",
+  "mc-t-12": "$19,292",
+  "mc-t-12-s": "15 W/TH → 12 · $8.01/TH",
+  "mc-t-prem": "$3,869",
+  "mc-t-prem-s": "over its 2,409 TH's worth of $21,331 at sale prices",
+  "mc-payback": "You'd pay $3,869 over what its hashrate costs today. At its current 2,409 TH , its free growth pays that back in 9.4 months on its own. Adding TH only helps if you want it back sooner: Pay back in Grow it to Add Top-up cost All-in 1–4 months not reachable: needs more than the 5,000 TH top-up cap 5 months 4,697 TH +2,289 $19,895 $45,095 6 months 3,876 TH +1,467 $12,773 $37,973 7 months 3,290 TH +882 $7,687 $32,887 8 months 2,852 TH +444 $3,873 $29,073 9 months 2,513 TH +104 $908 $26,108 10–12 months no top-up needed: growth covers it in 9.4 months $25,200 All-in = $25,200 to buy + top-up. Growth 0.3347%/week compounding; each free TH is valued at the full 15 W price ($11.07/TH), not the 20% sale price, since most of it arrives after the sale. Top-up TH is bought at today's 15 W price. Growth is last week's observed rate, not a promise; mining income comes on top."
+ },
+ "2408.5496 TH @ 15 W, 90000 GMT, run 12": {
+  "mc-t-cost": "$25,200",
+  "mc-t-cost-s": "90,000 GMT · $10.46/TH",
+  "mc-t-15": "—",
+  "mc-t-15-s": "already at 15 W/TH",
+  "mc-t-12": "$19,292",
+  "mc-t-12-s": "15 W/TH → 12 · $8.01/TH",
+  "mc-t-prem": "$3,869",
+  "mc-t-prem-s": "over its 2,409 TH's worth of $21,331 at sale prices",
+  "mc-payback": "You'd pay $3,869 over what its hashrate costs today. At its current 2,409 TH , its free growth pays that back in 5.6 months on its own. Adding TH only helps if you want it back sooner: Running it at 12 W adds a one-time $19,292 efficiency upgrade, included in All-in below. It doesn't change the premium. Pay back in Grow it to Add Top-up cost All-in 1–2 months not reachable: needs more than the 5,000 TH top-up cap 3 months 4,591 TH +2,182 $32,958 $77,450 4 months 3,410 TH +1,002 $15,147 $59,639 5 months 2,703 TH +295 $4,461 $48,954 6–12 months no top-up needed: growth covers it in 5.6 months $44,492 All-in = $25,200 to buy + $19,292 upgrade to 12 W + top-up. Growth 0.3347%/week compounding; each free TH is valued at the full 12 W price ($19.08/TH), not the 20% sale price, since most of it arrives after the sale. Top-up TH is bought at today's 12 W price. Growth is last week's observed rate, not a promise; mining income comes on top."
+ },
+ "2408.5496 TH @ 15 W, 66666 GMT, run asis": {
+  "mc-t-cost": "$18,666",
+  "mc-t-cost-s": "66,666 GMT · $7.75/TH",
+  "mc-t-15": "—",
+  "mc-t-15-s": "already at 15 W/TH",
+  "mc-t-12": "$19,292",
+  "mc-t-12-s": "15 W/TH → 12 · $8.01/TH",
+  "mc-t-prem": "none",
+  "mc-t-prem-s": "over its 2,409 TH's worth of $21,331 at sale prices",
+  "mc-payback": "No premium to pay back: the asking price is at or under what its hashrate is worth ($21,331). Its growth is profit from week one."
+ },
+ "2408.5496 TH @ 15 W, 66666 GMT, run 12": {
+  "mc-t-cost": "$18,666",
+  "mc-t-cost-s": "66,666 GMT · $7.75/TH",
+  "mc-t-15": "—",
+  "mc-t-15-s": "already at 15 W/TH",
+  "mc-t-12": "$19,292",
+  "mc-t-12-s": "15 W/TH → 12 · $8.01/TH",
+  "mc-t-prem": "none",
+  "mc-t-prem-s": "over its 2,409 TH's worth of $21,331 at sale prices",
+  "mc-payback": "No premium to pay back: the asking price is at or under what its hashrate is worth ($21,331). Its growth is profit from week one."
+ },
+ "153 TH @ 21 W, 11000 GMT, run asis": {
+  "mc-t-cost": "$3,080",
+  "mc-t-cost-s": "11,000 GMT · $20.13/TH",
+  "mc-t-15": "$995",
+  "mc-t-15-s": "21 W/TH → 15 · $6.50/TH",
+  "mc-t-12": "$2,220",
+  "mc-t-12-s": "21 W/TH → 12 · $14.51/TH",
+  "mc-t-prem": "$2,666",
+  "mc-t-prem-s": "over its 153 TH's worth of $414 at sale prices",
+  "mc-payback": "You'd pay $2,666 over what its hashrate costs today. At its current 153 TH , its free growth pays that back in 103.6 months (~8.6 yrs) on its own. Adding TH won't speed that up at 21 W: GoMining charges the 15 W price for hashrate that runs at 21 W, so every TH you add costs more than it's worth. Pick 15 W or 12 W above to see top-up options with the upgrade priced in."
+ },
+ "153 TH @ 21 W, 11000 GMT, run 12": {
+  "mc-t-cost": "$3,080",
+  "mc-t-cost-s": "11,000 GMT · $20.13/TH",
+  "mc-t-15": "$995",
+  "mc-t-15-s": "21 W/TH → 15 · $6.50/TH",
+  "mc-t-12": "$2,220",
+  "mc-t-12-s": "21 W/TH → 12 · $14.51/TH",
+  "mc-t-prem": "$2,666",
+  "mc-t-prem-s": "over its 153 TH's worth of $414 at sale prices",
+  "mc-payback": "You'd pay $2,666 over what its hashrate costs today. At its current 153 TH , its free growth pays that back in 44.1 months (~3.7 yrs) on its own. To get it back sooner, grow it to: Running it at 12 W adds a one-time $2,220 efficiency upgrade, included in All-in below. It doesn't change the premium. Pay back in Grow it to Add Top-up cost All-in 1 month not reachable: needs more than the 5,000 TH top-up cap 2 months 4,781 TH +4,628 $70,202 $75,502 3 months 3,154 TH +3,001 $45,654 $50,954 4 months 2,343 TH +2,190 $33,381 $38,681 5 months 1,857 TH +1,704 $26,018 $31,318 6 months 1,535 TH +1,382 $21,111 $26,411 7 months 1,304 TH +1,151 $17,606 $22,906 8 months 1,132 TH +979 $14,978 $20,278 9 months 998 TH +845 $12,935 $18,235 10 months 891 TH +738 $11,301 $16,601 11 months 803 TH +650 $9,964 $15,264 12 months 730 TH +577 $8,851 $14,151 All-in = $3,080 to buy + $2,220 upgrade to 12 W + top-up. Growth 0.3347%/week compounding; each free TH is valued at the full 12 W price ($19.52/TH), not the 20% sale price, since most of it arrives after the sale. Top-up TH is bought at today's 12 W price. Growth is last week's observed rate, not a promise; mining income comes on top."
+ },
+ "500 TH @ 20 W, 25000 GMT, run 15": {
+  "mc-t-cost": "$7,000",
+  "mc-t-cost-s": "25,000 GMT · $14.00/TH",
+  "mc-t-15": "$2,750",
+  "mc-t-15-s": "20 W/TH → 15 · $5.50/TH",
+  "mc-t-12": "$6,755",
+  "mc-t-12-s": "20 W/TH → 12 · $13.51/TH",
+  "mc-t-prem": "$5,232",
+  "mc-t-prem-s": "over its 500 TH's worth of $1,768 at sale prices",
+  "mc-payback": "You'd pay $5,232 over what its hashrate costs today. At its current 500 TH , its free growth pays that back in 45.3 months (~3.8 yrs) on its own. To get it back sooner, grow it to: Running it at 15 W adds a one-time $2,750 efficiency upgrade, included in All-in below. It doesn't change the premium. Pay back in Grow it to Add Top-up cost All-in 1–6 months not reachable: needs more than the 5,000 TH top-up cap 7 months 4,467 TH +3,967 $34,718 $44,468 8 months 3,873 TH +3,373 $29,562 $39,312 9 months 3,411 TH +2,911 $25,552 $35,302 10 months 3,043 TH +2,543 $22,345 $32,095 11 months 2,742 TH +2,242 $19,723 $29,473 12 months 2,492 TH +1,992 $17,538 $27,288 All-in = $7,000 to buy + $2,750 upgrade to 15 W + top-up. Growth 0.3347%/week compounding; each free TH is valued at the full 15 W price ($11.30/TH), not the 20% sale price, since most of it arrives after the sale. Top-up TH is bought at today's 15 W price. Growth is last week's observed rate, not a promise; mining income comes on top."
+ },
+ "300 TH @ 12 W, 12000 GMT, run 12": {
+  "mc-t-cost": "$3,360",
+  "mc-t-cost-s": "12,000 GMT · $11.20/TH",
+  "mc-t-15": "—",
+  "mc-t-15-s": "already at 12 W/TH",
+  "mc-t-12": "—",
+  "mc-t-12-s": "already at 12 W/TH",
+  "mc-t-prem": "none",
+  "mc-t-prem-s": "over its 300 TH's worth of $4,656 at sale prices",
+  "mc-payback": "No premium to pay back: the asking price is at or under what its hashrate is worth ($4,656). Its growth is profit from week one."
+ }
+}

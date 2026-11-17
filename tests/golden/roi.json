@@ -1,0 +1,98 @@
+{
+ "gomining-roi-calculator.html / 10 TH 15W": {
+  "re-net": "$9.25",
+  "re-net-sub": "$7.75 mining + $1.50 staking",
+  "re-cost": "$191",
+  "re-cost-sub": "10 TH @ $9.57/TH + GMT lock",
+  "re-be": "$0.30",
+  "re-be-sub": "58.1% a year on capital",
+  "re-disc": "22.0%",
+  "re-disc-sub": "20% GMT coverage + 0.9% Silver II + 1.09% mining mode",
+  "re-hint": "You are at the 20% maximum token discount — extra GMT past this only lifts your VIP tier. The discount is saving you $1.80/mo at this size.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "gomining-roi-calculator.html / 100 TH 15W": {
+  "re-net": "$65.10",
+  "re-net-sub": "$63.60 mining + $1.50 staking",
+  "re-cost": "$1,021",
+  "re-cost-sub": "100 TH @ $9.26/TH + GMT lock",
+  "re-be": "$2.14",
+  "re-be-sub": "76.5% a year on capital",
+  "re-disc": "4.6%",
+  "re-disc-sub": "2% GMT coverage + 1.5% Gold I + 1.09% mining mode",
+  "re-hint": "Lock 3,028 more GMT (~$865) to reach the 20% maximum electricity discount — worth $16.38/mo at this size.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "gomining-roi-calculator.html / 500 TH 12W, 20k GMT": {
+  "re-net": "$523",
+  "re-net-sub": "$435 mining + $88.07 staking",
+  "re-cost": "$13,322",
+  "re-cost-sub": "500 TH @ $15.44/TH + GMT lock",
+  "re-be": "$17.17",
+  "re-be-sub": "47.1% a year on capital",
+  "re-disc": "23.5%",
+  "re-disc-sub": "20% GMT coverage + 2.4% Platinum II + 1.09% mining mode",
+  "re-hint": "You are at the 20% maximum token discount — extra GMT past this only lifts your VIP tier. The discount is saving you $83.30/mo at this size.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "gomining-roi-calculator.html / 250 TH 20W": {
+  "re-net": "$251",
+  "re-net-sub": "$163 mining + $88.07 staking",
+  "re-cost": "$7,883",
+  "re-cost-sub": "250 TH @ $9.13/TH + GMT lock",
+  "re-be": "$8.24",
+  "re-be-sub": "38.2% a year on capital",
+  "re-disc": "23.5%",
+  "re-disc-sub": "20% GMT coverage + 2.4% Platinum II + 1.09% mining mode",
+  "re-hint": "You are at the 20% maximum token discount — extra GMT past this only lifts your VIP tier. The discount is saving you $58.81/mo at this size.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "gomining-roi-calculator.html / 1000 TH 15W apr 25": {
+  "re-net": "$832",
+  "re-net-sub": "$715 mining + $117 staking",
+  "re-cost": "$14,548",
+  "re-cost-sub": "1,000 TH @ $8.95/TH + GMT lock",
+  "re-be": "$27.33",
+  "re-be-sub": "68.6% a year on capital",
+  "re-disc": "14.5%",
+  "re-disc-sub": "11% GMT coverage + 2.4% Platinum II + 1.09% mining mode",
+  "re-hint": "Lock 13,379 more GMT (~$3,821) to reach the 20% maximum electricity discount — worth $164/mo at this size.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "embed/index.html / $500": {
+  "re-net": "$295",
+  "re-net-sub": "59.0% of $500 · at today's rates",
+  "re-cost": "$50.00",
+  "re-cost-sub": "10% back with RINGO5",
+  "re-be": "$24.57",
+  "re-be-sub": "mining, after fees",
+  "re-disc": "5.0%",
+  "re-disc-sub": "0.9% Silver II + 3% click streak + 1.09% solo",
+  "re-hint": "$500 buys 31.6 TH at 12.0 W/TH, and RINGO5 adds 1.6 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $50.00 cash back, it costs you $450.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "embed/index.html / $5k": {
+  "re-net": "$3,035",
+  "re-net-sub": "60.7% of $5,000 · at today's rates",
+  "re-cost": "$500",
+  "re-cost-sub": "10% back with RINGO5",
+  "re-be": "$253",
+  "re-be-sub": "mining, after fees",
+  "re-disc": "5.9%",
+  "re-disc-sub": "1.8% Gold II + 3% click streak + 1.09% solo",
+  "re-hint": "$5,000 buys 322.3 TH at 12.0 W/TH, and RINGO5 adds 16.1 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $500 cash back, it costs you $4,500.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ },
+ "embed/index.html / $50k at 12W": {
+  "re-net": "$29,911",
+  "re-net-sub": "59.8% of $50,000 · at today's rates",
+  "re-cost": "$1,000",
+  "re-cost-sub": "10% back with RINGO5",
+  "re-be": "$2,493",
+  "re-be-sub": "mining, after fees",
+  "re-disc": "6.8%",
+  "re-disc-sub": "2.7% Platinum III + 3% click streak + 1.09% solo",
+  "re-hint": "$50,000 buys 3,283.5 TH at 12.0 W/TH, and RINGO5 adds 25.0 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $1,000 cash back, it costs you $49,000.",
+  "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
+ }
+}
