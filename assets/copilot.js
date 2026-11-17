@@ -284,7 +284,10 @@
     panel.style.right = '';
     if (panel.hidden || window.innerWidth <= 640) return;
     var keep = document.querySelector('[data-copilot-clear]'); if (!keep) return;
-    var k = keep.getBoundingClientRect(), p = panel.getBoundingClientRect();
+    // Layout box, not getBoundingClientRect: the open animation scales the panel, which would under-measure it.
+    var cs = getComputedStyle(panel), w = panel.offsetWidth, h = panel.offsetHeight;
+    var pr = window.innerWidth - (parseFloat(cs.right) || 0), pb = window.innerHeight - (parseFloat(cs.bottom) || 0);
+    var k = keep.getBoundingClientRect(), p = { left: pr - w, right: pr, top: pb - h, bottom: pb, width: w };
     var overlaps = p.left < k.right && p.right > k.left && p.top < k.bottom && p.bottom > k.top;
     if (!overlaps) return;
     var right = window.innerWidth - k.left + 16;
