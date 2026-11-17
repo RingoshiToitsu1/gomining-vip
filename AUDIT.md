@@ -374,3 +374,40 @@ Never say the owner pays them; no dollar amount for the card cashback.
 - **`scripts/offer-check.js`**: scans every published file for the old phrases in EN/FR/ES/DE (the GoMining Card
   cashback is allowed). It reports 0 matches on `main` and `overhaul`, and caught 137 on the pre-hotfix copy.
   Phase 8 runs it against the built site in all languages.
+
+---
+
+## 15. Phase 2: information architecture and global chrome (done)
+
+**One header and one footer on every page** (`assets/site-chrome.css` + `assets/site-chrome.js`, linked in each
+page's `<head>` and in the data-page template). It replaces the landing nav, the console brand bar, the content-page
+bar from `site.js` and the `menu.js` drawer. (`menu.js` stays on disk; its URL is unchanged.)
+
+- **Header (sticky, 64 px):** wordmark → `/` · **Calculator** `/console` · **Growth Projection** `/projection` ·
+  **Guides** `/guides` · **RINGO5 Bonuses** `/claim` (current page underlined in gold) · language switcher (EN live;
+  ES/FR/DE shown as "soon" until Phase 7, no links to pages that don't exist yet) · **Messages** with unread badge
+  (logged in only) · **Log in** / avatar menu (Profile, Dashboard, Settings, Log out) · gold **Get Started** → `/claim`.
+  Under 1024 px it becomes a hamburger panel (focus-trapped, Esc closes, scroll locked).
+- **Footer:** Tools · Learn · Company (About, Contact, Telegram @RingoMining, ringomining.com) · Legal (Privacy,
+  Terms, Disclosures), the existing BTC/GMT support addresses, and the legal bar with the independence and
+  referral disclaimers. `/quote` and `/statement` (tools with their own print view) get the header only.
+- **Accounts without a backend change:** where `account.js` runs (console, `/chat`) the header uses it; elsewhere it
+  reads the saved Supabase session and fetches the profile once over REST (public read under existing RLS).
+  "Log in" on other pages goes to `/console?view=login`; Profile/Settings open the existing profile editor
+  (`GMTAccount.openProfile`, newly exposed; `?view=profile` from other pages). Dashboard → `/console` until Phase 5.
+- **Unread badge without a backend change:** `chat.js` writes `localStorage.gmt_chat_seen_at` when the chat is
+  opened and broadcasts its live count (`gmt-chat-unread`); other pages count newer messages with a `HEAD
+  … Prefer: count=exact` on the public `messages` table. On the console the icon opens the in-page chat.
+- **New pages:** `/guides` (hub; card text comes from each page's own meta description), `/faq` (10 Q&As +
+  FAQPage JSON-LD), `/glossary` (17 terms, anchor per term), `/about` (with `#contact`), `/disclosures`
+  (independence, referral relationship, RINGO5 block, estimates, data sources, no ads/trackers). No fee
+  percentages in their copy (Q9). Added to `sitemap.xml`.
+- **Removed effects (calm direction):** the content pages' galaxy canvas, orbs and beams, cursor spotlight and
+  magnetic buttons, and the live BTC/GMT strip in their bar (the console keeps its own live strip).
+- **Layout:** the console's tool tabs and live strip now dock under the global header; old top padding reserved
+  for fixed bars is removed; z-index tokens raised above the console's layers (header 150, modals 10050).
+- **Left for later phases:** `/chat` (the console's pop-out window) keeps its own minimal UI until Phase 6; the
+  landing body is rebuilt in Phase 3; the back-to-top button moves when the Phase 6 widget takes the corner.
+- Golden test: 27/27 identical. Offer check: 0. Internal link check: 0 broken.
+
+**Title / H1 log:** new pages only; no existing title or H1 changed in Phase 2.
