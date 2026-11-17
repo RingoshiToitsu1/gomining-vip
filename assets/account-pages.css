@@ -35,3 +35,4 @@
   .acct-head .ui-row { width: 100%; }
   .acct-head .ui-row .ui-btn { flex: 1; }
 }
+.acct-stats a, .acct-card .ui-stat__meta a { color: var(--color-gold-300); }
