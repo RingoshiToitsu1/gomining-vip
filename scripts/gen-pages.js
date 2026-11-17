@@ -121,7 +121,7 @@ ${JSON.stringify(faqLd,null,2)}
 <link rel="stylesheet" href="/assets/site-chrome.css?v=8">
 <link rel="stylesheet" href="/assets/content.css?v=17">
 <link rel="stylesheet" href="/assets/topbar.css?v=7">
-<script src="/assets/site-chrome.js?v=5" defer></script>
+<script src="/assets/site-chrome.js?v=6" defer></script>
 </head>
 <body>
 <main class="content-wrap">
@@ -133,7 +133,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=35"></script>
+<script src="/assets/site.js?v=36"></script>
 </body>
 </html>
 `;

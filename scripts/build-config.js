@@ -84,7 +84,7 @@ const PHRASES = [
   ['derived.fullCoverageDays', /(?<=\bup to (?:<b>)?\d+%(?:<\/b>)? at (?:<b>)?)\d+(?= days)/g],
   ['discount.tokenCapPct', /(?<=\b(?:up to|to) a )\d+(?=% cap)|(?<=\bup to (?:<b>)?)\d+(?=%(?:<\/b>)? at (?:<b>)?\d+ days)|(?<![\d.$+])\d+(?=%\s+(?:discount|fee discount|token discount|GMT discount|coverage discount))/g],
 ];
-const PHRASE_FILES = ['assets/copilot.js', 'assets/roi-embed.js', 'assets/quote.js', 'assets/market-check.js'];
+const PHRASE_FILES = ['assets/copilot/en.js', 'assets/roi-embed.js', 'assets/quote.js', 'assets/market-check.js'];
 const phraseHits = {};
 function applyPhrases(f, s) {
   for (const [p, re] of PHRASES) {

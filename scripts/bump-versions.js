@@ -9,10 +9,10 @@ const fs = require('fs'), path = require('path'), { execSync } = require('child_
 const ROOT = path.join(__dirname, '..');
 const sh = c => execSync(c, { cwd: ROOT, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
 const base = process.argv[2] || '@{u}';
-const files = sh('git ls-files "*.html" "assets/*.js" "lib/*.js" "scripts/gen-pages.js"').trim().split('\n')
+const files = sh('git ls-files "*.html" "assets/*.js" "assets/**/*.js" "lib/*.js" "scripts/gen-pages.js"').trim().split('\n')
   .concat(sh('git ls-files --others --exclude-standard "*.html" "assets/*.js" "lib/*.js"').trim().split('\n'))
   .filter(f => f && !/^neon-miner\//.test(f));
-const RE = /\/((?:assets|lib)\/[A-Za-z0-9._-]+\.(?:css|js))\?v=(\d+)/g;   // captures e.g. 'assets/app.js', 'lib/mining.js'
+const RE = /\/((?:assets|lib)\/[A-Za-z0-9._\/-]+\.(?:css|js))\?v=(\d+)/g;   // captures e.g. 'assets/app.js', 'lib/mining.js'
 const changed = () => new Set(sh(`git diff --name-only ${base} -- assets lib`).trim().split('\n')
   .concat(sh('git ls-files --others --exclude-standard assets lib').trim().split('\n'))
   .filter(Boolean).filter(a => /\.(css|js)$/.test(a)));

@@ -535,3 +535,38 @@ It leaves out Greedy Machines, inactive hashrate and ambassador rewards and says
 5. **Preferences** (display currency, language) stored on the account instead of per device. Needs a `profiles.prefs jsonb` column.
 6. **Log out everywhere** (`signOut({ scope: 'global' })`). No schema change.
 7. DMs: unchanged from §5 (needs new tables).
+
+### 18a. Approved account extras: status (2026-11-17)
+- **Remove profile picture**: built (Settings → Remove picture). No backend change: it uses the existing `avatars_delete_own` policy.
+- **Delete account, hide TH, preferences (language)**: client built, SQL **awaiting review**:
+  `supabase/proposals/2026-11-17_account_extras.sql`. The Settings sections for them appear only once that SQL is live
+  (the site detects `get_my_profile()`). Until then the site keeps working on today's schema.
+  - Deleting an account removes the auth user; profile, miners and **chat messages are deleted** (cascade; messages
+    only live 24h anyway). Avatar files are removed first. The current password is required.
+  - Hide TH is enforced in the database, not just hidden in the UI: the private columns (`th_total`, `setup`, `prefs`)
+    stop being publicly readable; public cards come from the `profile_cards` view, own row from `get_my_profile()`.
+    Today **every user's saved console setup (`setup`) is readable by anyone** via the REST API; this SQL closes that too.
+- Username change: not now (owner, 2026-11-17).
+
+## 19. Phase 6: chat, co-pilot, widget
+
+**Co-pilot.** One engine (`assets/copilot.js`) drives the corner widget and the new full page **/copilot** (file page,
+indexed, in the sitemap and the footer; the landing Co-pilot card links to it). The words moved out of the engine into
+`assets/copilot/en.js` (script + UI strings, unchanged wording); `es.js`, `fr.js`, `de.js` are empty stubs that fall
+back to English until Phase 7. `build-config.js` phrase rules now point at `en.js`. The Formspree "Send Ringo my
+username" flow is unchanged and mentions no ended offer (offer-check 0).
+
+**Widget.** Two tabs: **Co-pilot** and **Messages** (the global room; the tab shows only when logged in, with an unread
+count on the tab and the launcher). Messages loads the chat on first use (Supabase SDK, account.js, chat.js) and mounts
+the same room inside the tab. On the console the tab opens the console's own chat panel instead of a second copy.
+On /copilot the corner launcher stays off. The "slides beside the quick estimate" behaviour is kept.
+
+**Community chat.** Restyled only: new `assets/chat.css` on the tokens, loaded by chat.js wherever the room appears
+(console panel, /chat, widget). /chat stays the console pop-out at the same URL. "Log in to chat" goes to /login.
+The user card says "Hashrate hidden" once hide-TH is live. No backend change.
+
+**Proposals (not built):**
+- DMs / conversation list / unread tables: unchanged from §5.
+- Report and block need backend tables: `supabase/proposals/2026-11-17_chat_report_block.sql`.
+  Report = a mod-only queue with a snapshot of the message (messages vanish after 24h). Block = hides that user's
+  messages for you on every device. A browser-only block (no backend) is possible but wouldn't follow the account.

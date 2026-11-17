@@ -86,3 +86,39 @@ html.gc-on #toTop{bottom:90px !important}
 @media print{.gc-fab,.gc-tip,.gc-panel{display:none !important}}
 
 @media (max-width:640px){.gc-tip{display:none!important}}
+
+/* ---- Phase 6: tabs (Co-pilot | Messages), the Messages pane, unread badges ---- */
+.gc-head .gc-full{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;color:var(--color-text-2);text-decoration:none;font-size:18px}
+.gc-head .gc-full:hover{color:var(--color-text);background:rgb(var(--color-white-rgb) / .05)}
+.gc-head button[hidden]{display:none}
+.gc-tabs{display:flex;gap:4px;padding:6px 8px 0;border-bottom:1px solid rgb(var(--color-gold-rgb) / .16);background:#121010}
+.gc-tabs[hidden]{display:none}
+.gc-tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--color-text-2);font:600 14px/1 Inter,system-ui,sans-serif;
+  padding:10px 8px 11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.gc-tab:hover{color:var(--color-text)}
+.gc-tab[aria-selected="true"]{color:var(--color-gold-300);border-bottom-color:var(--color-gold)}
+.gc-tab:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:6px}
+.gc-tab-n,.gc-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--color-success);color:#04140b;
+  font:700 11px/18px Inter,system-ui,sans-serif;text-align:center}
+.gc-tab-n[hidden],.gc-badge[hidden]{display:none}
+.gc-badge{position:absolute;left:-4px;top:-4px;border:2px solid var(--color-bg);height:22px;line-height:18px}
+.gc-pane{display:flex;flex-direction:column;min-height:0;flex:0 1 auto}
+.gc-pane[hidden]{display:none}
+.gc-panel.gc-on-msgs{height:min(560px,70vh,calc(100vh - 120px))}   /* the room needs a fixed height to scroll */
+.gc-pane--msgs{flex:1}
+.gc-msgs{flex:1;min-height:0;display:flex;flex-direction:column}
+.gc-msgs-note{margin:auto;padding:24px;color:var(--color-text-2);font-size:14px;text-align:center}
+.gc-msgs .gc-link{align-self:center;margin-bottom:24px}
+
+/* ---- /copilot: the same conversation, inline on the page ---- */
+.gc-page{display:flex;flex-direction:column;min-height:min(640px,calc(100vh - var(--header-h) - 160px));max-height:calc(100vh - var(--header-h) - 48px);
+  background:#0d0d0d;border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;overflow:hidden;
+  box-shadow:0 30px 80px -30px rgb(var(--color-black-rgb) / .85);font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
+.gc-page .gc-log{flex:1 1 auto;padding:20px 20px 10px}
+.gc-page .gc-msg{max-width:min(86%,560px)}
+.gc-page .gc-foot{padding-left:20px;padding-right:20px}
+@media (max-width:640px){
+  .gc-page{border-radius:14px;min-height:calc(100vh - var(--header-h) - 120px)}
+  .gc-page .gc-log{padding:14px 12px 8px}
+  .gc-page .gc-foot{padding-left:12px;padding-right:12px}
+}

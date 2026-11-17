@@ -100,9 +100,14 @@
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
     if (!Account.user) { Account.profile = null; return Promise.resolve(null); }
-    return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup')
-      .eq('id', Account.user.id).single()
-      .then(function (r) { Account.profile = r.data || null; return Account.profile; });
+    // get_my_profile() (supabase/proposals/2026-11-17_account_extras.sql) returns the full own row once the
+    // private columns are locked down; until that SQL is applied it doesn't exist and we read the table directly.
+    return sb.rpc('get_my_profile').then(function (r) {
+      if (!r.error && r.data) { Account.profile = (Array.isArray(r.data) ? r.data[0] : r.data) || null; Account.features = { privacy: true }; return Account.profile; }
+      return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup,th_total')
+        .eq('id', Account.user.id).single()
+        .then(function (r2) { Account.profile = r2.data || null; Account.features = { privacy: false }; return Account.profile; });
+    });
   }
 
   // ---- fleet (cloud store; fleet.js falls back to localStorage when logged out) ----
@@ -138,12 +143,45 @@
   // Public user card: profile fields anyone may read, plus their message count.
   Account.fetchUserCard = function (userId) {
     return Promise.all([
-      sb.from('profiles').select('username,display_name,avatar_url,bio,created_at,th_total,role')
-        .eq('id', userId).single(),
+      Account.cardQuery(function (q) { return q.eq('id', userId).single(); }),
       sb.from('messages').select('id', { count: 'exact', head: true }).eq('user_id', userId)
     ]).then(function (res) {
       return { profile: res[0].data || {}, msgCount: res[1].count || 0 };
     });
+  };
+  // Public profile fields. profile_cards (supabase/proposals/2026-11-17_account_extras.sql) hides TH when the owner
+  // turned it off; until that SQL is applied the view doesn't exist, so fall back to the table. Probed once.
+  var CARD_COLS = 'id,username,display_name,avatar_url,bio,created_at,th_total,role';
+  var _cardsOk = null;
+  Account.cardQuery = function (apply) {
+    if (!_cardsOk) _cardsOk = sb.from('profile_cards').select('id').limit(1).then(function (r) { return !r.error; }, function () { return false; });
+    return _cardsOk.then(function (ok) {
+      return apply(ok ? sb.from('profile_cards').select(CARD_COLS + ',show_th') : sb.from('profiles').select(CARD_COLS));
+    });
+  };
+  Account.removeAvatar = function () {
+    if (!Account.user) return Promise.reject(new Error('not logged in'));
+    var dir = Account.user.id;
+    return sb.storage.from('avatars').list(dir).then(function (r) {
+      var files = (r.data || []).map(function (f) { return dir + '/' + f.name; });
+      return files.length ? sb.storage.from('avatars').remove(files) : null;
+    }).then(function () { return Account.updateProfile({ avatar_url: null }); });
+  };
+  // Only once the proposal SQL is applied (Account.features.privacy): hide-TH toggle, saved preferences, delete account.
+  Account.setShowTh = function (on) { return Account.updateProfile({ show_th: !!on }); };
+  Account.setPrefs = function (patch) {
+    var cur = (Account.profile && Account.profile.prefs) || {};
+    return Account.updateProfile({ prefs: Object.assign({}, cur, patch) });
+  };
+  Account.deleteAccount = function (password) {
+    var u = Account.profile && Account.profile.username;
+    if (!Account.user || !u) return Promise.reject(new Error('You are not logged in.'));
+    var dir = Account.user.id;
+    return sb.auth.signInWithPassword({ email: emailFor(u), password: password || '' })
+      .then(function (r) { if (r.error) throw new Error('Your password is not right.'); return sb.storage.from('avatars').list(dir); })
+      .then(function (r) { var f = (r.data || []).map(function (x) { return dir + '/' + x.name; }); return f.length ? sb.storage.from('avatars').remove(f) : null; })
+      .then(function () { return sb.rpc('delete_my_account'); })
+      .then(function (r) { if (r.error) throw r.error; return sb.auth.signOut(); });
   };
   Account.banUser = function (userId) {
     return sb.from('profiles').update({ banned: true }).eq('id', userId)

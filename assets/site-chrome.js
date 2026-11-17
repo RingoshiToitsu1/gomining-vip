@@ -37,7 +37,7 @@
     { href: '/claim', label: 'RINGO5 Bonuses', on: /^\/claim(\/|$)/ }
   ];
   var FOOT = [
-    ['Tools', [['Calculator', '/console'], ['Growth Projection', '/projection'], ['ROI Calculator', '/gomining-roi-calculator'], ['Marketplace Checker', '/gomining-marketplace-checker'], ['RINGO5 Bonuses', '/claim']]],
+    ['Tools', [['Calculator', '/console'], ['Growth Projection', '/projection'], ['ROI Calculator', '/gomining-roi-calculator'], ['Marketplace Checker', '/gomining-marketplace-checker'], ['Co-pilot', '/copilot'], ['RINGO5 Bonuses', '/claim']]],
     ['Learn', [['Guides', '/guides'], ['FAQ', '/faq'], ['Glossary', '/glossary'], ['How GoMining works', '/how-gomining-works']]],
     ['Company', [['About', '/about'], ['Contact', '/about#contact'], ['Telegram (@RingoMining)', TG, 1], ['ringomining.com', 'https://ringomining.com/', 1]]],
     ['Legal', [['Privacy Policy', '/privacy'], ['Terms of Use', '/terms'], ['Disclosures', '/disclosures']]]

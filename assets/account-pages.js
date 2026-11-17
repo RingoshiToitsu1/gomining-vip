@@ -103,14 +103,15 @@
   // ---------------------------------------------------------------- profile (own, or ?u=username)
   function profileView(p, msgCount, own) {
     var name = p.display_name || p.username;
-    var tier = M && C ? M.vipTier(+p.th_total || 0, 0, C).n : '';
+    var hidden = p.th_total == null && p.show_th === false && !own;
+    var tier = hidden ? 'Hidden' : (M && C ? M.vipTier(+p.th_total || 0, 0, C).n : '');
     root.innerHTML = '<section class="ui-card acct-card acct-profile">' +
       '<div class="acct-who">' + avatarHTML(p, 'xl') + '<div class="acct-who__txt">' +
         '<h1 class="ui-h2">' + esc(name) + ' ' + roleBadge(p.role) + '</h1>' +
         '<p class="ui-text-2">@' + esc(p.username) + (p.created_at ? ' · Member since ' + esc(since(p.created_at)) : '') + '</p></div></div>' +
       (p.bio ? '<p class="acct-bio">' + esc(p.bio) + '</p>' : (own ? '<p class="ui-text-2 acct-bio">No bio yet. <a href="/settings">Add one in settings.</a></p>' : '')) +
       '<div class="ui-stats acct-stats">' +
-        '<div class="ui-stat"><div class="ui-stat__label">Hashrate</div><div class="ui-stat__value">' + fmtN(p.th_total, (+p.th_total % 1) ? 1 : 0) + ' TH</div><div class="ui-stat__meta">from their saved farm</div></div>' +
+        '<div class="ui-stat"><div class="ui-stat__label">Hashrate</div><div class="ui-stat__value">' + (hidden ? 'Hidden' : fmtN(p.th_total, (+p.th_total % 1) ? 1 : 0) + ' TH') + '</div><div class="ui-stat__meta">' + (hidden ? 'kept private by @' + esc(p.username) : (own && p.show_th === false ? 'hidden from others' : 'from their saved farm')) + '</div></div>' +
         '<div class="ui-stat"><div class="ui-stat__label">VIP by hashrate</div><div class="ui-stat__value">' + esc(tier) + '</div><div class="ui-stat__meta">locked GMT can lift it higher</div></div>' +
         '<div class="ui-stat"><div class="ui-stat__label">Chat messages</div><div class="ui-stat__value">' + fmtN(msgCount) + '</div><div class="ui-stat__meta"><a href="/chat">Open chat</a></div></div>' +
       '</div>' +
@@ -124,9 +125,7 @@
     if (own && !A.isLoggedIn()) return needLogin('profile');
     root.innerHTML = '<p class="ui-text-2">Loading profile…</p>';
     // Profiles are publicly readable under the existing RLS (profiles_read). ilike = case-insensitive exact match.
-    var q = A.sb.from('profiles').select('id,username,display_name,avatar_url,bio,created_at,th_total,role');
-    q = own ? q.eq('id', A.user.id) : q.ilike('username', u.replace(/_/g, '\\_'));
-    q.limit(1).then(function (r) {
+    A.cardQuery(function (q) { return (own ? q.eq('id', A.user.id) : q.ilike('username', u.replace(/_/g, '\\_'))).limit(1); }).then(function (r) {
       var p = r.data && r.data[0];
       if (!p) { root.innerHTML = '<div class="ui-notice ui-notice--error"><div>No user called @' + esc(u) + '.</div></div>'; return; }
       document.title = (p.display_name || p.username) + ' (@' + p.username + ') | GMT-Optimizer';
@@ -142,7 +141,8 @@
       '<h1 class="ui-h2">Settings</h1>' +
       '<section class="ui-card acct-card"><h2 class="ui-h4">Profile</h2>' +
         '<div class="acct-who">' + '<span id="stAv">' + avatarHTML(p, 'lg') + '</span>' +
-          '<div><button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" id="stAvBtn">Change picture</button>' +
+          '<div><div class="ui-row"><button type="button" class="ui-btn ui-btn--secondary ui-btn--sm" id="stAvBtn">Change picture</button>' +
+          '<button type="button" class="ui-btn ui-btn--ghost ui-btn--sm" id="stAvDel"' + (p.avatar_url ? '' : ' hidden') + '>Remove picture</button></div>' +
           '<input type="file" accept="image/*" id="stFile" hidden><p class="ui-help">A square image works best.</p></div></div>' +
         '<form class="ui-stack" id="stProf" novalidate>' +
           '<div class="ui-field"><span class="ui-label">Username</span><p class="acct-fixed">@' + esc(p.username) + '</p><span class="ui-help">Usernames can\'t be changed.</span></div>' +
@@ -160,8 +160,23 @@
           '<p class="acct-status" id="stPwMsg" role="status"></p>' +
           '<div><button class="ui-btn ui-btn--primary" type="submit" id="stPwGo">Update password</button></div>' +
         '</form><p class="acct-forgot">' + FORGOT + '</p></section>' +
+      (A.features && A.features.privacy ?
+      '<section class="ui-card acct-card"><h2 class="ui-h4">Privacy and preferences</h2>' +
+        '<label class="ui-check acct-toggle"><input type="checkbox" id="stHideTh"' + (p.show_th === false ? ' checked' : '') + '> <span>Hide my hashrate on my public profile and in chat</span></label>' +
+        '<div class="ui-field"><label class="ui-label" for="stLang">Language</label><select class="ui-select" id="stLang">' +
+          [['en', 'English'], ['es', 'Español'], ['fr', 'Français'], ['de', 'Deutsch']].map(function (o) { return '<option value="' + o[0] + '"' + (((p.prefs || {}).lang || 'en') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+          '</select><span class="ui-help">Saved to your account, so every device opens in it.</span></div>' +
+        '<p class="acct-status" id="stPrefMsg" role="status"></p></section>' : '') +
       '<section class="ui-card acct-card"><h2 class="ui-h4">Session</h2><p class="ui-text-2">Log out of GMT-Optimizer on this device.</p>' +
-        '<div><button type="button" class="ui-btn ui-btn--danger" id="stOut">Log out</button></div></section>';
+        '<div><button type="button" class="ui-btn ui-btn--danger" id="stOut">Log out</button></div></section>' +
+      (A.features && A.features.privacy ?
+      '<section class="ui-card acct-card acct-danger"><h2 class="ui-h4">Delete account</h2>' +
+        '<p class="ui-text-2">Deletes your account, your saved farm and miners, your picture and your chat messages. This can\'t be undone.</p>' +
+        '<form class="ui-stack" id="stDel" novalidate><input type="text" autocomplete="username" value="' + esc(p.username) + '" hidden>' +
+        '<div class="ui-field"><label class="ui-label" for="stDelPw">Your password</label><input class="ui-input" id="stDelPw" type="password" autocomplete="current-password"></div>' +
+        '<label class="ui-check"><input type="checkbox" id="stDelOk"> <span>I understand this permanently deletes @' + esc(p.username) + '.</span></label>' +
+        '<p class="acct-status" id="stDelMsg" role="status"></p>' +
+        '<div><button class="ui-btn ui-btn--danger" type="submit" id="stDelGo">Delete my account</button></div></form></section>' : '');
 
     var bio = $('#stBio'); bio.addEventListener('input', function () { $('#stBioN').textContent = bio.value.length; });
     $('#stAvBtn').addEventListener('click', function () { $('#stFile').click(); });
@@ -190,6 +205,32 @@
         .catch(function (ex) { go.disabled = false; setStatus(msg, 'error', ex.message || 'Could not update the password.'); });
     });
     $('#stOut').addEventListener('click', function () { A.signOut().then(function () { location.href = '/'; }); });
+    $('#stAvDel').addEventListener('click', function () {
+      var msg = $('#stProfMsg'); setStatus(msg, '', 'Removing…');
+      A.removeAvatar().then(function () { $('#stAv').innerHTML = avatarHTML(A.profile, 'lg'); $('#stAvDel').hidden = true; setStatus(msg, 'success', 'Picture removed.'); })
+        .catch(function (e) { setStatus(msg, 'error', e.message || 'Could not remove the picture.'); });
+    });
+    if (A.features && A.features.privacy) {
+      var pm = $('#stPrefMsg');
+      $('#stHideTh').addEventListener('change', function () {
+        var hide = this.checked; setStatus(pm, '', 'Saving…');
+        A.setShowTh(!hide).then(function () { setStatus(pm, 'success', hide ? 'Your hashrate is now hidden.' : 'Your hashrate is now shown.'); })
+          .catch(function (e) { setStatus(pm, 'error', e.message || 'Could not save.'); });
+      });
+      $('#stLang').addEventListener('change', function () {
+        setStatus(pm, '', 'Saving…');
+        A.setPrefs({ lang: this.value }).then(function () { setStatus(pm, 'success', 'Language saved.'); })
+          .catch(function (e) { setStatus(pm, 'error', e.message || 'Could not save.'); });
+      });
+      $('#stDel').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var msg = $('#stDelMsg'), go = $('#stDelGo');
+        if (!$('#stDelOk').checked) return setStatus(msg, 'error', 'Tick the box to confirm.');
+        go.disabled = true; setStatus(msg, '', 'Deleting…');
+        A.deleteAccount($('#stDelPw').value).then(function () { location.href = '/'; })
+          .catch(function (ex) { go.disabled = false; setStatus(msg, 'error', ex.message || 'Could not delete the account.'); });
+      });
+    }
   }
 
   // ---------------------------------------------------------------- dashboard

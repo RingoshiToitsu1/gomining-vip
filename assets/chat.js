@@ -22,6 +22,11 @@
   start();
 
   function start() {
+    // The room's styles (assets/chat.css) travel with the script, so every place the room appears matches.
+    if (!document.querySelector('link[data-gmt-chat-css]')) {
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=1'; css.setAttribute('data-gmt-chat-css', '');
+      document.head.appendChild(css);
+    }
     var A = window.GMTAccount, sb = A.sb;
     var LIMIT = 50, MIN_GAP = 1000, lastSent = 0;
     var MAX_AGE_MS = 24 * 60 * 60 * 1000;   // keep chat clean: only the last day is shown/kept
@@ -202,6 +207,9 @@
     // UI  (styles live in assets/accounts.css)
     // ===========================================================================
     var POPOUT = window.GMT_CHAT_POPOUT === true;   // running in the detached /chat window
+    // EMBED: the co-pilot widget's Messages tab (any page without its own chat). Nothing mounts until the widget
+    // calls GMTChat.mountInto(container); the room then lives inside that tab. It counts as "collapsed" while hidden.
+    var EMBED = window.GMT_CHAT_EMBED === true;
     var POPOUT_KEY = 'gmt_chat_popout';             // localStorage flag: a detached window is open
     function popoutIsOpen() { try { return localStorage.getItem(POPOUT_KEY) === '1'; } catch (e) { return false; } }
     // The detached window owns the flag: sets it while alive, clears it on close, so
@@ -213,33 +221,37 @@
       window.addEventListener('beforeunload', _clr);
     }
 
-    function mount() {
+    function mount(target) {
       if (mounted) return; mounted = true;
+      var EMB = !!target;
 
       // A panel that slides in from the right, opened from the chat button in the header (the
       // "online" chip). Closed, nothing is on screen but that button — no edge rail, no floating
       // pill (which collided with the Ask-Ringo bubble on phones). The detached /chat window
       // fills its viewport instead.
       var head =
-        '<div class="gmt-chat-head"><span class="gmt-chat-av" aria-hidden="true">&#128172;</span><div class="gmt-chat-ttl"><div class="t">Global Chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
+        '<div class="gmt-chat-head">' + (POPOUT ? '<a class="gmt-chat-av" href="/" title="GMT-Optimizer home" target="_blank" rel="noopener">' : '<span class="gmt-chat-av" aria-hidden="true">') +
+          '<img src="/assets/brand/GMT_icon_transparent.svg" alt="GMT-Optimizer" width="22" height="22">' + (POPOUT ? '</a>' : '</span>') +
+          '<div class="gmt-chat-ttl"><div class="t">Community chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
         '<div class="gmt-chat-ctl">' +
-          (POPOUT ? '' :
+          (POPOUT || EMB ? '' :
             '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
             '<button class="ci" data-collapse title="Close chat" aria-label="Close chat">&times;</button>') +
         '</div></div>';
-      var box = document.createElement('div'); box.className = 'gmt-chat' + (POPOUT ? ' popout' : ' gmt-dock');
+      var box = document.createElement('div'); box.className = 'gmt-chat' + (EMB ? ' embed' : POPOUT ? ' popout' : ' gmt-dock');
       box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Global chat');
       box.innerHTML =
         '<div class="gmt-chat-body">' + head +
           '<div class="gmt-chat-list" id="gmtChatList"></div>' +
           '<div class="gmt-chat-foot" id="gmtChatFoot"></div>' +
         '</div>';
-      document.body.appendChild(box); el.box = box;
+      (target || document.body).appendChild(box); el.box = box;
       el.list = box.querySelector('#gmtChatList');
       el.online2 = box.querySelector('#gmtChatOnline');
       el.foot = box.querySelector('#gmtChatFoot');
 
-      if (!POPOUT) {
+      if (EMB) { el.embed = true; }
+      else if (!POPOUT) {
         box.querySelector('[data-collapse]').addEventListener('click', function () { setCollapsed(true); });
         box.querySelector('[data-pop]').addEventListener('click', function () {
           var w = window.open('/chat/', 'gmtchat', 'width=400,height=660,menubar=no,toolbar=no,location=no');
@@ -281,7 +293,7 @@
     // Anyone can open and read the chat from the header button (posting asks them to log in).
     // The panel itself is only ever on screen while open, and never while a popout window has it.
     function updateVisibility() {
-      if (!el.box || POPOUT) return;
+      if (!el.box || POPOUT || el.embed) return;
       el.box.style.display = (!collapsed && !popoutIsOpen()) ? 'flex' : 'none';
     }
 
@@ -302,6 +314,10 @@
     function setCollapsed(v) {
       if (POPOUT) return;
       collapsed = v;
+      if (el.embed) {   // the widget tab: no dock to show/hide, just unread bookkeeping
+        if (!v) { unread = 0; mentioned = false; markSeen(); renderOnline(); el.list.scrollTop = el.list.scrollHeight; if (el.input) el.input.focus(); }
+        return;
+      }
       el.box.classList.toggle('collapsed', v);
       document.documentElement.classList.toggle('gmt-chat-open', !v);
       var chip = document.getElementById('gmtOnline');
@@ -335,9 +351,9 @@
           if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(el.input.value); }
         });
       } else {
-        el.foot.innerHTML = '<button class="gmt-chat-login" id="gmtChatLogin">Log in to chat</button><div class="gmt-flash" id="gmtFlash"></div>';
+        var nx = POPOUT ? '/chat/' : location.pathname + location.search;
+        el.foot.innerHTML = '<a class="gmt-chat-login" href="/login?next=' + encodeURIComponent(nx) + '"' + (POPOUT ? '' : '') + '>Log in to chat</a><div class="gmt-flash" id="gmtFlash"></div>';
         el.flash = el.foot.querySelector('#gmtFlash');
-        el.foot.querySelector('#gmtChatLogin').addEventListener('click', function () { if (A.openLogin) A.openLogin('login'); });
       }
     }
     function flash(m) { if (el.flash) { el.flash.textContent = m; setTimeout(function () { if (el.flash) el.flash.textContent = ''; }, 2500); } }
@@ -419,7 +435,8 @@
           '<div class="uc-info">' +
             '<div><span class="uc-ic">📅</span> Joined <b>' + joined + '</b></div>' +
             '<div><span class="uc-ic">💬</span> <b>' + d.msgCount + '</b> message' + (d.msgCount === 1 ? '' : 's') + ' sent</div>' +
-            '<div><span class="uc-ic">⛏️</span> <b>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</b> TH fleet</div>' +
+            (p.th_total == null && p.show_th === false ? '<div><span class="uc-ic">⛏️</span> Hashrate hidden</div>' :
+              '<div><span class="uc-ic">⛏️</span> <b>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</b> TH fleet</div>') +
           '</div>' + (modBtn ? '<div class="uc-actions">' + modBtn + '</div>' : '');
         positionCard(anchor);   // re-clamp now that the card has its real height
       }).catch(function () { card.querySelector('.uc-inner').innerHTML = '<div class="uc-loading">Could not load profile.</div>'; });
@@ -457,6 +474,12 @@
       messages = messages.filter(function (m) { return new Date(m.created_at).getTime() >= cutoff; });
       if (messages.length !== before) renderList();
     }, 60000);
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
+    window.GMTChat = {
+      mountInto: function (container) { mount(container); setCollapsed(true); },
+      setVisible: function (on) { if (el.embed) setCollapsed(!on); },
+      unread: function () { return unread; }
+    };
+    if (!EMBED) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { mount(); }); else mount(); }
+    try { document.dispatchEvent(new CustomEvent('gmt-chat-ready')); } catch (e) {}
   }
 })();
