@@ -56,3 +56,6 @@ __pycache__/
 .npm/
 .local/
 .claude/plugins/
+
+# Carbon sales desk — removed from the public site 2026-11-17 (it published its login). Local copy only.
+/carbon/
