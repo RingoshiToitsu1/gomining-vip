@@ -53,10 +53,18 @@
   const upgBetween = (w, to) => Math.max(0, upgPerTH(w) - upgPerTH(to));
   // What one TH is worth at rating w on a miner of size th: the going $/TH between the 12 W and
   // 15 W curves (linear in W, mirror of cptAtEff); above 15 W, a 15 W TH less the upgrade it still needs.
-  function worthPerTH(th, w) {
-    if (w > EFF_BASE_MAX) return Math.max(0, cptTier(TH_TIERS, th) - upgBetween(w, EFF_BASE_MAX));
-    return cptAtEff(th, w);
+  // With list=true it uses full (non-sale) prices: what that TH is worth once a GoMining sale ends.
+  const TH_TIERS_LIST = P.TH_TIERS_15W_LIST;
+  const TH_TIERS_12W_LIST = P.TH_TIERS_15W_LIST.map(t => ({ th: t.th, cpt: t.cpt + P.UPG_15_TO_12 }));
+  function worthPerTH(th, w, list) {
+    const T15 = list ? TH_TIERS_LIST : TH_TIERS, T12 = list ? TH_TIERS_12W_LIST : TH_TIERS_12W;
+    if (w > EFF_BASE_MAX) return Math.max(0, cptTier(T15, th) - upgBetween(w, EFF_BASE_MAX));
+    const f = (Math.max(w, EFF_BEST) - EFF_BEST) / (EFF_BASE_MAX - EFF_BEST);
+    return cptTier(T12, th) * (1 - f) + cptTier(T15, th) * f;
   }
+  // Free growth arrives over the coming months, mostly after any sale ends, so it is valued at full
+  // price. The premium and the top-ups are what you pay today, so they use today's (sale) prices.
+  const growthVal = (T, r) => worthPerTH(T, r, true);
   // $/TH GoMining charges to add hashrate at rating w: linear between the curves, clamped to them
   // (a miner above 15 W still pays the 15 W price per added TH). Mirror of cptAtEff.
   function cptAtEff(th, w) {
@@ -95,12 +103,12 @@
     const wks = months * WK_PER_MO, f = Math.pow(1 + g, wks) - 1;
     const cap = Math.max(th, GREEDY_CAP);
     let need = th;
-    for (let i = 0; i < 16; i++) need = Math.max(th, prem / (worthPerTH(need, r) * f));
+    for (let i = 0; i < 16; i++) need = Math.max(th, prem / (growthVal(need, r) * f));
     const T = Math.min(need, cap), add = Math.max(0, T - th);
     return { months, T, add, capped: need > cap + 1e-9, cost: costToGrow(th, add, r) };
   }
   // Months for growth alone to repay the premium at size T.
-  const monthsAt = (T, r, g, prem) => Math.log(1 + prem / (T * worthPerTH(T, r))) / Math.log(1 + g) / WK_PER_MO;
+  const monthsAt = (T, r, g, prem) => Math.log(1 + prem / (T * growthVal(T, r))) / Math.log(1 + g) / WK_PER_MO;
 
   // ---- render ----
   const $ = id => document.getElementById(id);
@@ -112,7 +120,7 @@
   const fmtTH = n => trimN(n, n < 10 ? 3 : n < 100 ? 2 : 0);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-  let runAt = '12';                 // 'asis' | '15' | '12' — the rating the payback table assumes
+  let runAt = 'asis';               // 'asis' | '15' | '12' — the rating the payback table assumes; no upgrade unless picked
   const ratingFor = w => runAt === '12' ? EFF_BEST : runAt === '15' ? Math.min(w, EFF_BASE_MAX) : w;
 
   function readInputs() {
@@ -147,7 +155,7 @@
     $('mc-t-12').textContent = w > EFF_BEST + 1e-9 ? money(b.up12) : '—';
     $('mc-t-12-s').textContent = w > EFF_BEST + 1e-9 ? wTxt + ' → 12 · ' + money(b.up12 / th) + '/TH' : 'already at 12 W/TH';
     $('mc-t-prem').textContent = b.prem > 0 ? money(b.prem) : 'none';
-    $('mc-t-prem-s').textContent = 'its ' + fmtTH(th) + ' TH is worth ' + money(b.worth);
+    $('mc-t-prem-s').textContent = 'over its ' + fmtTH(th) + ' TH\'s worth of ' + money(b.worth) + (P.SALE_PCT > 0 ? ' at sale prices' : '');
 
     // Rating switch: only the options that mean something for this miner.
     const asIs = ['asis', 'As is · ' + trimN(w, 2) + ' W'];
@@ -155,7 +163,7 @@
       : Math.abs(w - EFF_BASE_MAX) < 1e-9 ? [['15', 'As is · 15 W'], ['12', '12 W']]
       : w > EFF_BEST + 1e-9 ? [asIs, ['12', '12 W']]
       : [['12', '12 W']];
-    if (!opts.some(o => o[0] === runAt)) runAt = '12';
+    if (!opts.some(o => o[0] === runAt)) runAt = opts[0][0];   // "as is" for this miner
     $('mc-runat').innerHTML = opts.length > 1 ? '<span>Run it at</span>' + opts.map(o =>
       '<button type="button" data-r="' + o[0] + '" class="' + (o[0] === runAt ? 'on' : '') + '">' + esc(o[1]) + '</button>').join('') : '';
 
@@ -171,23 +179,40 @@
       return;
     }
     const now = monthsAt(th, r, g, b.prem);
-    const rows = [];
-    for (let m = 1; m <= 12; m++) {
-      const s = sizeFor(th, r, g, b.prem, m);
-      const total = b.ask + effUp + s.cost;
-      rows.push('<tr' + (s.add <= 0.0005 ? ' class="hl"' : '') + '><td>' + m + (m === 1 ? ' month' : ' months') + '</td>' +
-        (s.capped
-          ? '<td colspan="4" class="mc-cap">over the ' + num(GREEDY_CAP, 0) + ' TH cap</td>'
-          : '<td>' + fmtTH(s.T) + ' TH</td><td>' + (s.add <= 0.0005 ? '—' : '+' + fmtTH(s.add)) + '</td><td>' + (s.cost > 0 ? money(s.cost) : '—') + '</td><td>' + money(total) + '</td>') +
-        '</tr>');
+    const base = b.ask + effUp;                    // what you spend before any top-up
+    const nowTxt0 = now < 1 ? 'under a month' : trimN(now, 1) + ' months' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '');
+    // Above 15 W, GoMining charges the 15 W price for TH that runs at the miner's worse rating, so a
+    // top-up costs more than it's worth: don't size one, point at the upgrade instead.
+    if (r > EFF_BASE_MAX + 1e-9) {
+      pb.innerHTML = '<p class="mc-pb-lead">You\'d pay <b>' + money(b.prem) + '</b> over what its hashrate costs today. At its current <b>' + fmtTH(th) + ' TH</b>, its free growth pays that back in <b>' + nowTxt0 + '</b> on its own.</p>' +
+        '<p class="mc-pb-up">Adding TH won\'t speed that up at ' + trimN(r, 2) + ' W: GoMining charges the 15 W price for hashrate that runs at ' + trimN(r, 2) + ' W, so every TH you add costs more than it\'s worth. Pick <b>15 W</b> or <b>12 W</b> above to see top-up options with the upgrade priced in.</p>';
+      return;
     }
+    const span = (a, z) => a === z ? a + (a === 1 ? ' month' : ' months') : a + '–' + z + ' months';
+    // One row per month that needs a top-up; months over the cap, and months growth already covers,
+    // collapse into one row each so the table only shows what changes.
+    const sizes = []; for (let m = 1; m <= 12; m++) sizes.push(sizeFor(th, r, g, b.prem, m));
+    const rows = [];
+    for (let k = 0; k < sizes.length;) {
+      const s = sizes[k], kind = s.capped ? 'cap' : s.add <= 0.0005 ? 'free' : 'top';
+      let z = k; if (kind !== 'top') while (z + 1 < sizes.length && (kind === 'cap' ? sizes[z + 1].capped : sizes[z + 1].add <= 0.0005 && !sizes[z + 1].capped)) z++;
+      const when = '<td>' + span(k + 1, z + 1) + '</td>';
+      if (kind === 'cap') rows.push('<tr>' + when + '<td colspan="4" class="mc-cap">not reachable: needs more than the ' + num(GREEDY_CAP, 0) + ' TH top-up cap</td></tr>');
+      else if (kind === 'free') rows.push('<tr class="hl">' + when + '<td colspan="3" class="mc-cap">no top-up needed: growth covers it in ' + (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</td><td>' + money(base) + '</td></tr>');
+      else rows.push('<tr>' + when + '<td>' + fmtTH(s.T) + ' TH</td><td>+' + fmtTH(s.add) + '</td><td>' + money(s.cost) + '</td><td>' + money(base + s.cost) + '</td></tr>');
+      k = z + 1;
+    }
+    const nowTxt = now < 1 ? 'under a month' : trimN(now, 1) + ' months' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '');
     pb.innerHTML =
-      '<p class="mc-pb-lead">Premium <b>' + money(b.prem) + '</b>. At its current <b>' + fmtTH(th) + ' TH</b> the free growth repays it in <b>' +
-        (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</b>' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '') + '. Grow it to:</p>' +
-      '<div class="mc-tbl-wrap"><table class="mc-tbl mc-pb"><thead><tr><th>Pay back in</th><th>Grow it to</th><th>Add</th><th>Top-up cost</th><th>Total outlay</th></tr></thead><tbody>' +
+      '<p class="mc-pb-lead">You\'d pay <b>' + money(b.prem) + '</b> over what its hashrate costs today. At its current <b>' + fmtTH(th) + ' TH</b>, its free growth pays that back in <b>' + nowTxt + '</b> on its own' +
+        (now <= 12 ? (now > 1 ? '. Adding TH only helps if you want it back sooner:' : ', so no top-up is needed:') : '. To get it back sooner, grow it to:') + '</p>' +
+      (effUp > 0 ? '<p class="mc-pb-up">Running it at ' + trimN(r, 2) + ' W adds a one-time <b>' + money(effUp) + '</b> efficiency upgrade, included in All-in below. It doesn\'t change the premium.</p>' : '') +
+      '<div class="mc-tbl-wrap"><table class="mc-tbl mc-pb"><thead><tr><th>Pay back in</th><th>Grow it to</th><th>Add</th><th>Top-up cost</th><th>All-in</th></tr></thead><tbody>' +
       rows.join('') + '</tbody></table></div>' +
-      '<p class="mc-tbl-note">Growth ' + trimN(g * 100, 4) + '%/week compounding, each free TH valued at ' + trimN(r, 2) + ' W/TH (' + money(worthPerTH(th, r)) + '/TH). ' +
-      'Top-up TH is bought at ' + trimN(r, 2) + ' W/TH' + (r > EFF_BASE_MAX ? ' (charged at the 15 W price)' : '') + '. Total outlay = asking price' + (effUp > 0 ? ' + ' + money(effUp) + ' efficiency upgrade' : '') + ' + top-up. ' +
+      '<p class="mc-tbl-note">All-in = ' + money(b.ask) + ' to buy' + (effUp > 0 ? ' + ' + money(effUp) + ' upgrade to ' + trimN(r, 2) + ' W' : '') + ' + top-up. ' +
+      'Growth ' + trimN(g * 100, 4) + '%/week compounding; each free TH is valued at the full ' + trimN(r, 2) + ' W price (' + money(growthVal(th, r)) + '/TH)' +
+      (P.SALE_PCT > 0 ? ', not the ' + P.SALE_PCT + '% sale price, since most of it arrives after the sale' : '') + '. ' +
+      'Top-up TH is bought at today\'s ' + trimN(r, 2) + ' W price' + (r > EFF_BASE_MAX ? ' (charged at the 15 W rate)' : '') + '. ' +
       'Growth is last week\'s observed rate, not a promise; mining income comes on top.</p>';
   }
   const basisLine = () => 'GMT $' + num(S.gmt, 3) + (S.live ? '' : ' (cached)') + ' · TH priced at GoMining\'s going rate';
@@ -379,6 +404,7 @@
   }
 
   function fill(d) {
+    runAt = 'asis';   // each new miner starts with no upgrade assumed
     // Only a secondary-market listing has a real asking price. Other miners carry GoMining's
     // internal reference price, which nobody can buy at — never present it as the ask.
     const listed = d.marketplace === 'gmt-secondary' && d.status === 'available';

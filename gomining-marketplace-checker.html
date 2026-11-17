@@ -54,7 +54,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/content.css?v=12">
 <link rel="stylesheet" href="/assets/roi-embed.css?v=1">
-<link rel="stylesheet" href="/assets/market-check.css?v=8">
+<link rel="stylesheet" href="/assets/market-check.css?v=9">
 <link rel="stylesheet" href="/assets/topbar.css?v=5">
 </head>
 <body>
@@ -146,8 +146,8 @@
   <p>A Greedy Machine's hashrate grows by a small percentage every week, for free. The checker turns that into one question: how long until the free TH covers what you overpaid?</p>
   <ul>
     <li><strong>Premium</strong>: the asking price minus what the same hashrate costs at GoMining's going $/TH for its efficiency. That's the part of the price only growth pays back.</li>
-    <li><strong>Free growth</strong>: compounds weekly on the machine's current TH, and each new TH is valued at the efficiency you run it at.</li>
-    <li><strong>Growing it</strong>: growth is a percentage, so a bigger machine grows more TH a week. Topping it up at the going rate adds no premium, it just makes the growth big enough to repay the premium sooner.</li>
+    <li><strong>Free growth</strong>: compounds weekly on the machine's current TH, and each new TH is valued at the efficiency you run it at, at full price: if GoMining is running a sale, most of the growth arrives after it ends.</li>
+    <li><strong>Growing it</strong>: growth is a percentage, so a bigger machine grows more TH a week. Topping it up at the going rate adds no premium, it just makes the growth big enough to repay the premium sooner. The checker assumes no efficiency upgrade unless you pick one, and shows any upgrade as its own cost.</li>
   </ul>
   <p>For every payback target from 1 to 12 months, the checker solves for the size the machine needs to be, what the top-up costs, and the total you'd put in. Manual top-ups stop at 5,000 TH, so a target that needs more than that is marked as out of reach.</p>
   <div class="formula">size &times; ((1 + weekly growth)<sup>weeks</sup> &minus; 1) &times; $/TH = premium</div>
@@ -185,6 +185,6 @@
 </main>
 <script src="/assets/site.js?v=25"></script>
 <script src="/assets/pricing.js?v=1"></script>
-<script src="/assets/market-check.js?v=15"></script>
+<script src="/assets/market-check.js?v=16"></script>
 </body>
 </html>

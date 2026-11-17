@@ -155,3 +155,5 @@
 .mc-pb-lead b{color:var(--gold-soft);font-weight:600}
 .mc-tbl.mc-pb{min-width:30rem}
 .mc-tbl td.mc-cap{text-align:center;color:var(--ink3);font-family:var(--sans);font-style:italic}
+.mc-pb-up{font-size:.8rem;line-height:1.5;color:var(--ink2);margin:-.2rem 0 .6rem}
+.mc-pb-up b{color:var(--gold-soft);font-weight:600}
