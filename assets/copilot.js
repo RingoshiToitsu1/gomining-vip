@@ -298,6 +298,8 @@
   window.addEventListener('scroll', queueDodge, { passive: true });
   window.addEventListener('resize', queueDodge);
   new MutationObserver(queueDodge).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+  // The panel opens short and grows upward as messages arrive, so re-check whenever its size changes.
+  if (window.ResizeObserver) new ResizeObserver(queueDodge).observe(panel);
 
   // ---------- rendering ----------
   function scroll() { log.scrollTop = log.scrollHeight; }
