@@ -1,4 +1,4 @@
-/* GMT Optimizer — the shared top bar: the console's chrome, worn by every other page.
+/* GMT-Optimizer — the shared top bar: the console's chrome, worn by every other page.
    =========================================================================
    The console builds its own bar out of assets/app.css (.topbar > .header + .subbar). The tools
    and guides can't take app.css — it is the console's whole design system and would restyle each
@@ -9,18 +9,18 @@
    Sizes are FIXED, not rem: these pages run a 16px root and the console runs 19.8px, and the bar
    has to look identical on both. Keep it in step with the .header / .live-chip rules in app.css. */
 .gmbar{
-  --gm-gold:#F5A623;--gm-gold-hi:#FFC65A;--gm-gold-soft:#FFCF7A;--gm-warm:#FFF4E0;
-  --gm-ink:#EBE2D2;--gm-ink2:#C3B8A6;--gm-ink3:#A79B89;--gm-ink4:#8C8170;
-  --gm-line:rgba(240,196,120,.16);--gm-card:#111111;--gm-card-hi:#1a1a1a;
-  --gm-mono:'Share Tech Mono',ui-monospace,monospace;--gm-sans:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --gm-gold:var(--color-gold);--gm-gold-hi:var(--color-gold-300);--gm-gold-soft:var(--color-gold-300);--gm-warm:var(--color-text);
+  --gm-ink:var(--color-text);--gm-ink2:var(--color-text-2);--gm-ink3:var(--color-text-2);--gm-ink4:var(--color-text-2);
+  --gm-line:rgb(var(--color-gold-rgb) / .16);--gm-card:var(--color-surface-1);--gm-card-hi:var(--color-surface-2);
+  --gm-mono:var(--font-body);--gm-sans:var(--font-body);
   --gm-ease:cubic-bezier(.22,.61,.36,1);
   position:fixed;top:0;left:0;right:0;z-index:50;font-family:var(--gm-sans);line-height:1.4}
 
 /* ---- header row ---- */
 .gmbar-head{
-  background:linear-gradient(180deg,rgba(10,12,18,.9),rgba(8,10,14,.78));
+  background:linear-gradient(180deg,rgb(var(--color-bg-rgb) / .9),rgb(var(--color-bg-rgb) / .78));
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
-  border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgba(0,0,0,.42);
+  border-bottom:1px solid var(--gm-line);box-shadow:0 10px 34px rgb(var(--color-black-rgb) / .42);
   transition:padding .3s var(--gm-ease)}
 /* brand + page name hard left, Launch Console + menu hard right — the console's composition,
    stated here rather than left to the menu script's own layout rules. */
@@ -32,29 +32,29 @@
 .gmbar .brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--gm-warm);
   font-size:16px;letter-spacing:.01em;text-decoration:none;white-space:nowrap}
 .gmbar .brand:hover{color:var(--gm-gold-soft)}
-.gmbar .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgba(245,166,35,.55))}
+.gmbar .brand img{width:27px;height:27px;filter:drop-shadow(0 0 10px rgb(var(--color-gold-rgb) / .55))}
 .gmbar .brand .v{font-family:var(--gm-mono);font-size:9px;color:var(--gm-ink4);letter-spacing:.15em;
   border:1px solid var(--gm-line);padding:2px 6px;border-radius:6px;margin-left:2px}
-.gmbar .nav-cta{flex:0 0 auto;padding:9px 16px;border-radius:12px;font-size:13px;font-weight:600;color:#100a02;
+.gmbar .nav-cta{flex:0 0 auto;padding:9px 16px;border-radius:12px;font-size:13px;font-weight:600;color:var(--color-on-gold);
   text-decoration:none;white-space:nowrap;background:linear-gradient(135deg,var(--gm-gold-hi),var(--gm-gold-soft));
-  box-shadow:0 6px 22px rgba(245,166,35,.34);transition:transform .25s var(--gm-ease),box-shadow .25s}
-.gmbar .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(245,166,35,.5)}
+  box-shadow:0 6px 22px rgb(var(--color-gold-rgb) / .34);transition:transform .25s var(--gm-ease),box-shadow .25s}
+.gmbar .nav-cta:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgb(var(--color-gold-rgb) / .5)}
 
 /* ---- live strip: the console's chips, same shapes and colours ---- */
 .gmbar-sub{display:flex;justify-content:center;padding:0 14px}
 .gmbar .live-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;
   width:fit-content;max-width:100%;margin:8px auto 0;padding:6px 12px;border-radius:16px;
-  border:1px solid var(--gm-line);background:linear-gradient(180deg,rgba(20,22,30,.78),rgba(10,12,18,.72));
+  border:1px solid var(--gm-line);background:linear-gradient(180deg,rgba(20,22,30,.78),rgb(var(--color-bg-rgb) / .72));
   backdrop-filter:blur(20px) saturate(150%);-webkit-backdrop-filter:blur(20px) saturate(150%);
-  box-shadow:0 10px 34px rgba(0,0,0,.44)}
+  box-shadow:0 10px 34px rgb(var(--color-black-rgb) / .44)}
 .gmbar .live-chip{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:16px;
   border:1px solid transparent;font-size:13px;color:var(--gm-ink2);text-decoration:none;transition:.15s}
 .gmbar .live-chip img{width:17px;height:17px;border-radius:50%;object-fit:contain;flex:0 0 auto}
 .gmbar .live-chip .lbl{color:var(--gm-ink2);font-weight:600}
 .gmbar .live-chip .val{font-family:var(--gm-mono);color:var(--gm-gold);font-weight:700}
 .gmbar .live-chip-btn{cursor:pointer}
-.gmbar .live-chip-btn:hover{background:rgba(255,255,255,.05)}
-.gmbar .live-dot{width:7px;height:7px;border-radius:50%;background:#3ddc84;box-shadow:0 0 8px #3ddc84;flex:0 0 auto}
+.gmbar .live-chip-btn:hover{background:rgb(var(--color-white-rgb) / .05)}
+.gmbar .live-dot{width:7px;height:7px;border-radius:50%;background:var(--color-success);box-shadow:0 0 8px var(--color-success);flex:0 0 auto}
 
 /* ---- the page under it ---- */
 body.has-bar{padding-top:108px}

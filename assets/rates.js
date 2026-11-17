@@ -1,4 +1,4 @@
-/* GMT Optimizer — live GoMining rates for any site.
+/* GMT-Optimizer — live GoMining rates for any site.
    ===========================================================================
    Reads https://gmt-optimizer.com/api/rates.json (updated weekly by scripts/set-rates.js)
    and fills elements in the host page:
@@ -45,8 +45,8 @@
     '.b{display:inline-flex;align-items:center;flex-wrap:wrap;gap:.35em .6em;padding:.45em .95em;border-radius:999px;' +
     'background:var(--gmr-bg,rgba(246,181,58,.08));border:1px solid var(--gmr-line,rgba(246,181,58,.35));line-height:1.2}' +
     '.l{opacity:.75;font-size:.82em;letter-spacing:.06em;text-transform:uppercase}' +
-    '.v{font-weight:700;font-size:1.1em;color:var(--gmr-accent,#f6b53a)}' +
-    '.c{font-size:.8em;opacity:.8}.c.up{color:#4fd18b;opacity:1}.c.dn{color:#ff8f3f;opacity:1}' +
+    '.v{font-weight:700;font-size:1.1em;color:var(--gmr-accent,#E2B259)}' +
+    '.c{font-size:.8em;opacity:.8}.c.up{color:#22C55E;opacity:1}.c.dn{color:#EF4444;opacity:1}' +
     '.d{font-size:.75em;opacity:.6}';
   function badge(el, r) {
     var root = el.attachShadow ? (el.shadowRoot || el.attachShadow({ mode: 'open' })) : el;

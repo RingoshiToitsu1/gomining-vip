@@ -1,4 +1,4 @@
-/* GMT Optimizer — cinematic scroll intro.
+/* GMT-Optimizer — cinematic scroll intro.
    =========================================
    One canvas of particles, scrubbed by scroll position, morphing through four
    formations: galaxy -> clusters -> mesh -> a rising earnings chart. The chart

@@ -1,4 +1,4 @@
-/* GMT Optimizer — shared UI chrome/behaviors (reveal, count-up, tilt,
+/* GMT-Optimizer — shared UI chrome/behaviors (reveal, count-up, tilt,
    magnetic, nav-shrink, decode headline, galaxy backdrop).
    Scoped to the .rd design-system container so it is safe to load on pages
    that also contain the (non-.rd) tool UI; no-ops on anything it can't find. */
@@ -198,8 +198,8 @@
     ctx.globalCompositeOperation='lighter';
     var ccx=cx0+mx*46*dpr,ccy=cy0+my*46*dpr;
     var core=ctx.createRadialGradient(ccx,ccy,0,ccx,ccy,maxR*.34);
-    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(255,207,122,.45)');
-    core.addColorStop(.5,'rgba(245,166,35,.12)');core.addColorStop(1,'rgba(245,166,35,0)');
+    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(247,216,138,.45)');
+    core.addColorStop(.5,'rgba(226,178,89,.12)');core.addColorStop(1,'rgba(226,178,89,0)');
     ctx.fillStyle=core;ctx.beginPath();ctx.arc(ccx,ccy,maxR*.34,0,6.28);ctx.fill();
     rot+=.0015;
     for(var i=0;i<gal.length;i++){var p=gal[i];p.tw+=p.tws;var a=p.ang+rot*p.w;
@@ -216,4 +216,4 @@
 })();
 
 // Ask-Ringo co-pilot (assets/copilot.js): loaded here so every page that uses this script gets it.
-;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=2";s.defer=true;(document.head||document.documentElement).appendChild(s);})();
+;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=3";s.defer=true;(document.head||document.documentElement).appendChild(s);})();

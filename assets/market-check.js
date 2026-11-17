@@ -1,4 +1,4 @@
-/* GMT Optimizer — GoMining marketplace checker (/gomining-marketplace-checker).
+/* GMT-Optimizer — GoMining marketplace checker (/gomining-marketplace-checker).
    =========================================================================
    Paste a miner link from app.gomining.com/nft/view/<id>; the page reads that miner's
    hashrate, efficiency and asking price through the nft-lookup Supabase function (GoMining's

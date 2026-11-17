@@ -304,3 +304,40 @@ create table public.reports (
 -- Realtime: postgres_changes on dm_messages filtered by conversation_id (RLS applies to realtime).
 -- Unread count = dm_messages newer than my last_read_at, per conversation (one view or RPC).
 ```
+
+---
+
+## 13. Phase 1: brand system (done)
+
+**New files**
+- `assets/brand/`: the five logo SVGs and PNGs, plus `favicon.svg`, `apple-touch-icon.png`, `icon-192/512.png`, `icon-maskable-512.png`.
+- `/favicon.ico` (16/32/48) and `/site.webmanifest`: new URLs, additive.
+- `assets/tokens.css`: every colour, font, size, space, radius, shadow and z-index. Contrast ratios are documented in its header.
+- `assets/components.css` + `assets/components.js`: buttons, inputs, select, textarea, checkbox, switch, cards, stat tiles, sortable/stackable tables, tabs, segmented control, badges, counts, notices, modal (`<dialog>`), toasts (`UI.toast`), accordion (`<details>`), avatars, message bubbles, quick-reply chips, logo. All `ui-` prefixed.
+- `/styleguide` (noindex, in robots.txt): every component, plus a "German-length text" switch that swaps in ~40–60% longer labels.
+- `scripts/build-brand.js`: rebuilds every icon from `GMT_icon_transparent.svg`.
+- `tests/golden.js`: the calculator golden test (rule 3). **Passes after every Phase 1 change: 27/27 cases identical.**
+
+**Applied to every live page** (the legacy copies in D-1 are excluded, apart from removing GoMining's logo from them, rule 7):
+- Fonts: Space Grotesk / Share Tech Mono / General Sans replaced by **Poppins** (headings, UI) + **Inter** (body, figures), tabular numerals site-wide.
+- Every page loads `tokens.css` + `components.css` first; the old stylesheets' variables now resolve to tokens.
+- **1,340 hard-coded colours** converted: 887 to `var(--color-…)` in CSS contexts, 453 to the new literal values in JS
+  and SVG attributes (canvas and SVG attributes can't read CSS variables; Phase 4 gives charts a token reader).
+- Favicons, apple-touch icon, manifest and `theme-color` on every page; the old `/gmt-optimizer-logo.svg` and
+  `/site-logo.png` keep their paths with the new mark inside.
+- Header and footer logos are now the white-text wordmark (the "v2" badge is gone). The landing hero's spinning
+  old mark is now the static new icon (Phase 3 rebuilds the hero).
+- The data-page generator template uses the same head, so the 14 data pages stay rebranded when deploy regenerates them.
+- Changed scripts and stylesheets have their `?v=` cache-busters bumped on every page.
+
+**Title / H1 changes (SEO log):** only the brand suffix in `<title>`, `og:site_name` and JSON-LD `name`:
+"GMT Optimizer" → "GMT-Optimizer" (120 occurrences). No H1 or keyword changed.
+
+**Deliberately left as they were**
+- `/embed`'s **ember theme** (host-selected palette matching ringomining.com) and `/statement`'s **print
+  stylesheet** (dark colours chosen for white paper) were restored verbatim after the colour pass.
+- VIP-tier identity colours (bronze/silver/platinum…) and third-party brand colours on share buttons
+  (WhatsApp, Telegram, X).
+- ~300 one-off colour literals in a long tail; Phases 2–4 rebuild those pages on components and remove them.
+- Social/OG images still show the old branding: regenerated in Phase 8 (the brief puts them there).
+- Glow and orbit effects in the old page styles are recoloured, not removed; Phases 2–3 replace them with the calmer components.

@@ -3,26 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Quote a GoMining Setup — Capital &amp; Income Calculator | GMT Optimizer</title>
+<title>Quote a GoMining Setup — Capital &amp; Income Calculator | GMT-Optimizer</title>
 <meta name="description" content="Quote a new GoMining setup in seconds: enter a capital amount or a monthly income target and get the optimal hashrate / locked-GMT split at live prices.">
 <link rel="canonical" href="https://gmt-optimizer.com/quote">
 <meta name="robots" content="noindex,follow">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="GMT Optimizer">
+<meta property="og:site_name" content="GMT-Optimizer">
 <meta property="og:url" content="https://gmt-optimizer.com/quote">
 <meta property="og:title" content="Quote a GoMining Setup">
 <meta property="og:description" content="Enter a capital amount or an income target — get the optimal setup at live prices.">
-<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/tokens.css?v=1">
+<link rel="stylesheet" href="/assets/components.css?v=1">
 <style>
-:root{--bg:#0a0a0a;--card:#121316;--card2:#17181c;--bd:#26272c;--gold:#F5A623;--gold2:#F7B84E;--pale:#FFCF7A;
-  --txt:#EBE2D2;--t2:#C3B8A6;--t3:#8C8170;--t4:#6F6759;--green:#16c784;--mono:'Share Tech Mono',ui-monospace,monospace;
-  --sans:'Space Grotesk',system-ui,-apple-system,sans-serif}
+:root{--bg:var(--color-bg);--card:#121316;--card2:#17181c;--bd:#26272c;--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
+  --txt:var(--color-text);--t2:var(--color-text-2);--t3:var(--color-text-2);--t4:var(--color-text-3);--green:var(--color-success);--mono:var(--font-body);
+  --sans:var(--font-body)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
-  background-image:radial-gradient(ellipse 70% 50% at 15% -10%,rgba(245,166,35,.10),transparent 60%),
-    radial-gradient(ellipse 60% 45% at 110% 5%,rgba(245,166,35,.06),transparent 60%);
+  background-image:radial-gradient(ellipse 70% 50% at 15% -10%,rgb(var(--color-gold-rgb) / .10),transparent 60%),
+    radial-gradient(ellipse 60% 45% at 110% 5%,rgb(var(--color-gold-rgb) / .06),transparent 60%);
   background-attachment:fixed;min-height:100vh}
 .wrap{max-width:1080px;margin:0 auto;padding:1.4rem 1.1rem 4rem}
 .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.6rem}
@@ -46,10 +52,10 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .modes{display:inline-flex;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:3px;gap:3px;margin-bottom:1rem}
 .modes button{background:none;border:none;color:var(--t3);font-family:var(--sans);font-size:.84rem;font-weight:700;
   padding:.5rem 1rem;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
-.modes button.on{background:var(--gold);color:#1a1206}
+.modes button.on{background:var(--gold);color:var(--color-on-gold)}
 .field{display:flex;align-items:center;gap:.6rem;background:var(--bg);border:1px solid var(--bd);border-radius:12px;
   padding:.7rem .9rem;transition:.15s}
-.field:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.14)}
+.field:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgb(var(--color-gold-rgb) / .14)}
 .field .cur{color:var(--t3);font-family:var(--mono);font-size:1.1rem}
 .field input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
   font-family:var(--mono);font-size:1.5rem;font-weight:700;padding:0;-moz-appearance:textfield}
@@ -60,7 +66,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .chk{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;color:var(--t2);font-size:.8rem;
   border:1px solid var(--bd);border-radius:999px;padding:.4rem .8rem;transition:.15s;user-select:none}
 .chk:hover{border-color:var(--t4)}
-.chk.on{border-color:var(--gold);color:var(--txt);background:rgba(245,166,35,.08)}
+.chk.on{border-color:var(--gold);color:var(--txt);background:rgb(var(--color-gold-rgb) / .08)}
 .chk input{accent-color:var(--gold);margin:0}
 .addrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:1rem}
 .addrow .field{flex:1;min-width:220px;padding:.5rem .8rem}
@@ -70,13 +76,13 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .presets button{background:var(--bg);border:1px solid var(--bd);color:var(--t3);border-radius:9px;
   font-family:var(--mono);font-size:.78rem;padding:.4rem .7rem;cursor:pointer;transition:.15s}
 .presets button:hover{border-color:var(--gold);color:var(--gold2)}
-.go{margin-left:auto;background:var(--gold);color:#1a1206;border:none;border-radius:999px;font-family:var(--sans);
+.go{margin-left:auto;background:var(--gold);color:var(--color-on-gold);border:none;border-radius:999px;font-family:var(--sans);
   font-weight:800;font-size:.82rem;padding:.5rem 1.1rem;cursor:pointer}
 .go:hover{filter:brightness(1.06)}
 @media(max-width:600px){.go{margin-left:0;width:100%}}
 .out{margin-top:1.5rem;display:none}
-.headline{background:linear-gradient(150deg,rgba(245,166,35,.13),rgba(245,166,35,.02));
-  border:1px solid rgba(245,166,35,.32);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:1rem}
+.headline{background:linear-gradient(150deg,rgb(var(--color-gold-rgb) / .13),rgb(var(--color-gold-rgb) / .02));
+  border:1px solid rgb(var(--color-gold-rgb) / .32);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:1rem}
 .headline .lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
 .headline .big{font-family:var(--mono);font-size:clamp(2rem,6vw,2.9rem);font-weight:700;color:var(--gold);line-height:1.1;margin-top:.25rem}
 .headline .sub{color:var(--t2);font-family:var(--mono);font-size:.95rem;margin-top:.35rem}
@@ -93,7 +99,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .bar{display:flex;height:11px;border-radius:999px;overflow:hidden;background:var(--bg);margin-bottom:.7rem}
 .bar i{display:block;height:100%}
 .bar .th{background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.bar .gm{background:linear-gradient(90deg,#A78BFA,#c4b0ff)}
+.bar .gm{background:linear-gradient(90deg,var(--color-series-4),#c4b0ff)}
 .legs{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .leg .lk{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2);font-weight:600}
 .leg .sw{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
@@ -101,7 +107,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .leg .ls{color:var(--t3);font-size:.72rem;margin-top:.15rem}
 .foot{margin-top:1.4rem;color:var(--t4);font-size:.72rem;line-height:1.6}
 .cta{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.2rem}
-.cta a,.cta button{background:var(--gold);color:#1a1206;border:none;border-radius:11px;font-family:var(--sans);
+.cta a,.cta button{background:var(--gold);color:var(--color-on-gold);border:none;border-radius:11px;font-family:var(--sans);
   font-weight:800;font-size:.88rem;padding:.7rem 1.15rem;cursor:pointer;text-decoration:none;display:inline-block}
 .cta .ghost{background:none;border:1px solid var(--bd);color:var(--t2)}
 .cta .ghost:hover{border-color:var(--t4);color:var(--txt)}
@@ -112,7 +118,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .chips button{background:none;border:none;color:var(--t3);font-family:var(--mono);font-size:.72rem;
   padding:.32rem .55rem;border-radius:7px;cursor:pointer;transition:.15s;white-space:nowrap}
 .chips button:hover{color:var(--txt)}
-.chips button.on{background:var(--gold);color:#1a1206}
+.chips button.on{background:var(--gold);color:var(--color-on-gold)}
 .comp-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem;margin-bottom:1rem}
 .comp .cell{background:var(--bg)}
 .comp-leg{display:flex;gap:1rem;flex-wrap:wrap;font-size:.72rem;color:var(--t3);margin-bottom:.3rem}
@@ -133,7 +139,7 @@ table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:v
 .shot{position:fixed;inset:0;z-index:50;background:rgba(6,6,8,.84);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;padding:1rem}
 .shot[hidden]{display:none}
-.shot-box{background:var(--card);border:1px solid rgba(245,166,35,.25);border-radius:16px;width:min(880px,100%);max-height:92vh;overflow:auto;padding:1rem}
+.shot-box{background:var(--card);border:1px solid rgb(var(--color-gold-rgb) / .25);border-radius:16px;width:min(880px,100%);max-height:92vh;overflow:auto;padding:1rem}
 .shot-head{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-bottom:.7rem}
 .shot-head button{background:none;border:none;color:var(--t3);font-size:1.5rem;line-height:1;cursor:pointer}
 .shot-box img{display:block;width:100%;aspect-ratio:16/9;border-radius:10px;background:var(--bg)}
@@ -142,7 +148,7 @@ table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:v
 .comp-note{color:var(--t4);font-size:.72rem;line-height:1.6;margin-top:.8rem}
 @media(max-width:600px){.legs{grid-template-columns:1fr}.comp{padding:.85rem .7rem}.comp-top h3{width:100%;margin-bottom:.2rem}.wrap{padding:1rem .8rem 3rem}.panel{padding:1rem .9rem 1.1rem}}
 </style>
-<link rel="stylesheet" href="/assets/topbar.css?v=5">
+<link rel="stylesheet" href="/assets/topbar.css?v=6">
 </head>
 <body>
 <div class="wrap">
@@ -208,7 +214,7 @@ table.comp-tbl{width:100%;min-width:480px;border-collapse:collapse;font-family:v
      shared link: no account.js (which renders the results gate), no chat.js, no Supabase, no
      localStorage. If you ever need one of those here, gate the feature — never the page. -->
 <script src="/assets/pricing.js?v=1"></script>
-<script src="/assets/quote.js?v=21"></script>
-<script src="/assets/site.js?v=25" data-chrome="bar"></script>
+<script src="/assets/quote.js?v=22"></script>
+<script src="/assets/site.js?v=26" data-chrome="bar"></script>
 </body>
 </html>

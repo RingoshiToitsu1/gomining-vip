@@ -1,4 +1,4 @@
-/* GMT Optimizer — console loaders: charts, Capital Planner and the Growth Projection.
+/* GMT-Optimizer — console loaders: charts, Capital Planner and the Growth Projection.
    =========================================================================
    Same idea as the console boot screen (assets/boot.js): a loader whose steps tick off when each
    piece REALLY lands, each showing the value it read, then the result is revealed.
@@ -25,50 +25,50 @@
 
   const CSS = `
 .cb-load{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;
-  background:radial-gradient(ellipse 60% 55% at 50% 45%,rgba(245,166,35,.1),transparent 70%),#0a0b0e;
+  background:radial-gradient(ellipse 60% 55% at 50% 45%,rgba(226,178,89,.1),transparent 70%),#0a0b0e;
   transition:opacity .45s cubic-bezier(.16,1,.3,1),filter .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1)}
 .cb-load::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);
-  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);
+  background-image:linear-gradient(rgba(226,178,89,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(226,178,89,.05) 1px,transparent 1px);
+  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000000 25%,transparent 80%);
   animation:cbGrid 4s linear infinite}
-.cb-load.cb-rainbow{background:radial-gradient(ellipse 60% 55% at 50% 45%,rgba(95,184,90,.08),transparent 70%),#0a0b0e}
+.cb-load.cb-rainbow{background:radial-gradient(ellipse 60% 55% at 50% 45%,rgba(34,197,94,.08),transparent 70%),#0a0b0e}
 .cb-load.out{opacity:0;filter:blur(8px);transform:scale(1.03);pointer-events:none}
 .cb-load.cb-fixed{position:fixed;z-index:2147482000;padding:24px;
-  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(245,166,35,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(255,138,61,.08),transparent 60%),rgba(6,7,9,.97);
+  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(226,178,89,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(169,119,47,.08),transparent 60%),rgba(11,11,13,.97);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .cb-fixed .cb-core{width:min(420px,100%)}
 .cb-fixed .cb-orb{width:92px;height:92px}.cb-fixed .cb-orb img{inset:25px;width:42px;height:42px;border-radius:0}
 .cb-fixed .cb-title{font-size:1.15rem}
-.cb-kicker{font-family:'Share Tech Mono',ui-monospace,monospace;letter-spacing:.3em;font-size:.66rem;color:#FFCF7A;text-transform:uppercase;margin-bottom:.3rem}
+.cb-kicker{font-family:'Inter',ui-monospace,monospace;letter-spacing:.3em;font-size:.66rem;color:#F7D88A;text-transform:uppercase;margin-bottom:.3rem}
 @keyframes cbGrid{to{background-position:0 36px,36px 0}}
-.cb-core{position:relative;width:min(380px,100%);text-align:center;font-family:'Space Grotesk',system-ui,sans-serif;color:#EBE2D2}
+.cb-core{position:relative;width:min(380px,100%);text-align:center;font-family:'Inter',system-ui,sans-serif;color:#FFFFFF}
 .cb-orb{position:relative;width:78px;height:78px;margin:0 auto 14px}
-.cb-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(245,166,35,.9) 80%,#FFCF7A 100%);
-  -webkit-mask:radial-gradient(circle,transparent 60%,#000 61%);mask:radial-gradient(circle,transparent 60%,#000 61%);animation:cbSpin 1.05s linear infinite}
+.cb-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(226,178,89,.9) 80%,#F7D88A 100%);
+  -webkit-mask:radial-gradient(circle,transparent 60%,#000000 61%);mask:radial-gradient(circle,transparent 60%,#000000 61%);animation:cbSpin 1.05s linear infinite}
 .cb-rainbow .cb-orb::before{background:conic-gradient(${RB.map((c, i) => c + ' ' + Math.round(i / (RB.length - 1) * 100) + '%').join(',')});animation-duration:1.6s}
-.cb-orb img{position:absolute;inset:21px;width:36px;height:36px;border-radius:50%;animation:cbBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(245,166,35,.6))}
+.cb-orb img{position:absolute;inset:21px;width:36px;height:36px;border-radius:50%;animation:cbBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(226,178,89,.6))}
 @keyframes cbSpin{to{transform:rotate(360deg)}}
 @keyframes cbBreathe{50%{transform:scale(1.08)}}
-.cb-title{font-size:1.02rem;font-weight:600;color:#FFF4E0;margin-bottom:.8rem}
+.cb-title{font-size:1.02rem;font-weight:600;color:#FFFFFF;margin-bottom:.8rem}
 .cb-meter{display:flex;align-items:center;gap:10px;margin-bottom:.85rem}
 .cb-bar{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
-.cb-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 12px rgba(245,166,35,.8)}
-.cb-rainbow .cb-bar i{background:linear-gradient(90deg,${RB.slice().reverse().join(',')});box-shadow:0 0 12px rgba(95,184,90,.5)}
-.cb-pct{font-family:'Share Tech Mono',ui-monospace,monospace;color:#FFF4E0;font-size:.86rem;min-width:3em;text-align:right}
+.cb-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#E2B259,#F7D88A);box-shadow:0 0 12px rgba(226,178,89,.8)}
+.cb-rainbow .cb-bar i{background:linear-gradient(90deg,${RB.slice().reverse().join(',')});box-shadow:0 0 12px rgba(34,197,94,.5)}
+.cb-pct{font-family:'Inter',ui-monospace,monospace;color:#FFFFFF;font-size:.86rem;min-width:3em;text-align:right}
 .cb-steps{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:6px}
-.cb-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6F6759;transition:color .25s;min-width:0}
+.cb-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6B6B75;transition:color .25s;min-width:0}
 .cb-step b{flex:0 0 14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;transition:all .25s}
-.cb-step.on{color:#FFF4E0}
-.cb-step.on b{border-color:rgba(245,166,35,.3);border-top-color:#F5A623;animation:cbSpin .7s linear infinite}
-.cb-step.ok{color:#C3B8A6}
-.cb-step.ok b{border-color:#57d9a3;background:#57d9a3;box-shadow:0 0 9px rgba(87,217,163,.6)}
-.cb-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #06140d;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.cb-step.bad{color:#ff8a66}.cb-step.bad b{border-color:#ff8a66}
+.cb-step.on{color:#FFFFFF}
+.cb-step.on b{border-color:rgba(226,178,89,.3);border-top-color:#E2B259;animation:cbSpin .7s linear infinite}
+.cb-step.ok{color:#A1A1AA}
+.cb-step.ok b{border-color:#22C55E;background:#22C55E;box-shadow:0 0 9px rgba(34,197,94,.6)}
+.cb-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #0B0B0D;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.cb-step.bad{color:#EF4444}.cb-step.bad b{border-color:#EF4444}
 .cb-step span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cb-v{font-style:normal;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:.7rem;color:#FFCF7A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
+.cb-v{font-style:normal;font-family:'Inter',ui-monospace,monospace;font-size:.7rem;color:#F7D88A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
 .cb-step.ok .cb-v{opacity:1;transform:none}
-.cb-hash{margin-top:.8rem;font-family:'Share Tech Mono',ui-monospace,monospace;font-size:.62rem;letter-spacing:.05em;color:#5A5346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cb-load.done .cb-hash{color:#57d9a3}
+.cb-hash{margin-top:.8rem;font-family:'Inter',ui-monospace,monospace;font-size:.62rem;letter-spacing:.05em;color:#6B6B75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cb-load.done .cb-hash{color:#22C55E}
 .cb-wipe{animation:cbWipe .95s cubic-bezier(.65,0,.35,1) both}
 @keyframes cbWipe{from{clip-path:inset(0 100% 0 0);filter:brightness(1.6) saturate(1.3)}60%{filter:brightness(1.15)}to{clip-path:inset(0 0 0 0);filter:none}}
 .cb-load.cb-inline{align-items:flex-start;padding-top:72px;border-radius:inherit}

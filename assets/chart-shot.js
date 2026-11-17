@@ -14,8 +14,8 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const SC=2,W=1200,H=opts.height||675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const GOLD='#F5A623',GSOFT='#F7B84E',GHI='#FFCF7A',UP='#2EE59D',DN='#FF4D5E';
-  const SANS='"Space Grotesk",system-ui,sans-serif',MONO='"Share Tech Mono",monospace';
+  const GOLD='#E2B259',GSOFT='#F7D88A',GHI='#F7D88A',UP='#2EE59D',DN='#FF4D5E';
+  const SANS='"Inter",system-ui,sans-serif',MONO='"Inter",monospace';
   const price=p=>p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
     :p>=1?'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
     :'$'+p.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
@@ -40,7 +40,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   // floor horizon
   const FY=575;   // panel bottom (564) + a sliver
   const fl=x.createLinearGradient(0,FY,0,H);
-  fl.addColorStop(0,'rgba(245,166,35,0.10)');fl.addColorStop(0.15,'rgba(20,13,6,0.9)');fl.addColorStop(1,'#040302');
+  fl.addColorStop(0,'rgba(226,178,89,0.10)');fl.addColorStop(0.15,'rgba(20,13,6,0.9)');fl.addColorStop(1,'#040302');
   x.fillStyle=fl;x.fillRect(0,FY,W,H-FY);
 
   // ---- the glass panel, drawn offscreen so it can be reflected in the floor ----
@@ -90,7 +90,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   };
   side(true);side(false);
   // dotted baseline at the starting price
-  p.save();p.setLineDash([2,5]);p.strokeStyle='rgba(255,240,215,0.55)';p.lineWidth=1.3;
+  p.save();p.setLineDash([2,5]);p.strokeStyle='rgba(255,255,255,0.55)';p.lineWidth=1.3;
   p.beginPath();p.moveTo(L,base);p.lineTo(R,base);p.stroke();p.restore();
   // start + end dots
   const pos=last>=first,chg=first?(last-first)/first*100:0;
@@ -104,12 +104,12 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
   let ax=34;
   if(imgs.coin){p.save();p.beginPath();p.arc(ax+21,58,21,0,7);p.closePath();p.clip();p.drawImage(imgs.coin,ax,37,42,42);p.restore();ax+=56;}
-  p.textAlign='left';p.fillStyle='#fff';p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
-  p.fillStyle='rgba(255,236,205,0.55)';p.font='18px '+MONO;
+  p.textAlign='left';p.fillStyle='#FFFFFF';p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
+  p.fillStyle='rgba(255,255,255,0.55)';p.font='18px '+MONO;
   p.fillText(asset.pair+'  ·  '+data.interval+'  ·  last '+daysSpan+' days',34,112);
   p.textAlign='right';
   p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=22;
-  p.fillStyle='#fff';p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
+  p.fillStyle='#FFFFFF';p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
   p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=12;
   p.fillStyle=pos?UP:DN;p.font='700 38px '+SANS;
   p.fillText(opts.sub||((pos?'▲ ':'▼ ')+Math.abs(chg).toFixed(2)+'% ('+daysSpan+'D)'),PW-34,160);p.restore();
@@ -135,16 +135,16 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   // ---- brand: top-left / url top-right ----
   let bx=PX+4;
   if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,34,46,46);bx+=60;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='700 34px '+SANS;x.fillText('GMT Optimizer',bx,69);
+  x.textAlign='left';x.fillStyle='#FFFFFF';x.font='700 34px '+SANS;x.fillText('GMT-Optimizer',bx,69);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='20px '+MONO;x.fillText('gmt-optimizer.com',W-PX-4,66);
 
   // ---- footer on the floor ----
   const fy=H-24;
   let fx=PX+4;
   if(imgs.token){x.save();x.beginPath();x.arc(fx+10,fy-6,10,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,fy-16,20,20);x.restore();fx+=28;}
-  x.textAlign='left';x.fillStyle='rgba(255,240,215,0.72)';x.font='600 16px '+SANS;
+  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='600 16px '+SANS;
   x.fillText('Free GoMining ROI & discount optimizer',fx,fy);
-  x.textAlign='right';x.fillStyle='rgba(255,240,215,0.4)';x.font='14px '+MONO;
+  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   x.fillText(opts.footRight||now+'   ·   not financial advice',W-PX-4,fy);
   x.textAlign='left';

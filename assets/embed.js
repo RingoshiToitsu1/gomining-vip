@@ -1,4 +1,4 @@
-/* GMT Optimizer — embed loader for other sites.
+/* GMT-Optimizer — embed loader for other sites.
    ===========================================================================
    Drop this on any page:
 
@@ -12,7 +12,7 @@
      data-theme="ember"                      RinGoMining look (automatic on ringomining.com)
      data-offer="off"                        hide the RINGO5 offer block inside the frame
      data-src="my-funnel"                    utm_source on outbound links (default: host domain)
-     data-credit="off"                       hide the "by GMT Optimizer" line under the frame
+     data-credit="off"                       hide the "by GMT-Optimizer" line under the frame
      data-lang="fr"                          en | fr | es | de (default: the host page's <html lang>)
 
    CTA clicks inside the frame are re-dispatched on the host element as a
@@ -24,10 +24,10 @@
   var OPTS = ['amount', 'wth', 'bg', 'theme', 'offer', 'src'];
   var LANGS = ['en', 'fr', 'es', 'de'];
   var CREDIT = {
-    en: ['GoMining ROI calculator', ' by GMT Optimizer'],
-    fr: ['Calculateur de rendement GoMining', ' par GMT Optimizer'],
-    es: ['Calculadora de rentabilidad GoMining', ' de GMT Optimizer'],
-    de: ['GoMining-Rendite-Rechner', ' von GMT Optimizer']
+    en: ['GoMining ROI calculator', ' by GMT-Optimizer'],
+    fr: ['Calculateur de rendement GoMining', ' par GMT-Optimizer'],
+    es: ['Calculadora de rentabilidad GoMining', ' de GMT-Optimizer'],
+    de: ['GoMining-Rendite-Rechner', ' von GMT-Optimizer']
   };
   var frames = [];
 
@@ -46,7 +46,7 @@
     if (lang !== 'en') q.push('lang=' + lang);
     var f = document.createElement('iframe');
     f.src = ORIGIN + '/embed/' + (q.length ? '?' + q.join('&') : '');
-    f.title = 'GoMining ROI calculator by GMT Optimizer';
+    f.title = 'GoMining ROI calculator by GMT-Optimizer';
     f.loading = 'lazy';
     f.setAttribute('allow', 'clipboard-write');
     // A sensible first height so the page doesn't jump much before the frame reports its own.

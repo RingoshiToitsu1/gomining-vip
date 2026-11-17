@@ -1,4 +1,4 @@
-/* GMT Optimizer — Fleet builder (Phase 1, no backend).
+/* GMT-Optimizer — Fleet builder (Phase 1, no backend).
    =====================================================
    Lets a user enter their miners one NFT at a time — collection, NFT code, TH,
    W/TH, cost — instead of hand-computing a single blended Total Hashrate and

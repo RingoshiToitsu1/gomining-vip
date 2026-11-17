@@ -1,4 +1,4 @@
-/* GMT Optimizer — shared site chrome for content pages.
+/* GMT-Optimizer — shared site chrome for content pages.
    Injects the galaxy backdrop, fixed nav, footer, and back-to-top, then runs
    the galaxy + nav-shrink. Content pages only need content.css + this file. */
 (function(){
@@ -26,7 +26,7 @@
   nav.className='gmbar';
   nav.innerHTML=
     '<div class="gmbar-head"><div class="header-inner gmbar-inner">'+
-      '<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
+      '<a href="/" class="brand"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>'+
       '<span class="gmbar-gap"></span>'+
       '<a href="/console" class="nav-cta">Launch Console</a>'+
     '</div></div>'+
@@ -47,7 +47,7 @@
     if(window.ResizeObserver) new ResizeObserver(pad).observe(nav);
   })();
   /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
-  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=13';document.body.appendChild(menuJs);
+  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=14';document.body.appendChild(menuJs);
 
   /* ---- live values for the strip above (same sources the ticker used) ---- */
   (function(){
@@ -98,7 +98,7 @@
   /* ---- footer ---- */
   var foot=document.createElement('footer');
   foot.className='site-foot';
-  foot.innerHTML='<div class="fwrap"><div class="fbrand"><a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer</a>'+
+  foot.innerHTML='<div class="fwrap"><div class="fbrand"><a href="/" class="brand"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>'+
     '<p>The free, ad-free GoMining profit optimizer. Live network data, honest projections, no ads &mdash; ever.</p></div>'+
     '<div class="fcols">'+
       '<div><h4>Tool</h4><a href="/console">Console</a><a href="/planner">Capital Planner</a><a href="/projection">Growth Projection</a><a href="/gomining-marketplace-checker">Marketplace checker</a></div>'+
@@ -107,12 +107,12 @@
     '</div></div>'+
     '<div class="foot-donate">'+
       '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> for +5% bonus TH &mdash; <a href="/claim">plus I&rsquo;ll fund your first TH&nbsp;&rarr;</a></div>'+
-      '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
+      '<div class="fd-tip">GMT-Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
       '<div class="fd-addrs">'+
         '<button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>'+
         '<button type="button" class="fd-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1"><span class="fd-tag">GMT · ETH/BNB</span><span class="fd-val">0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>'+
       '</div></div>'+
-    '<div class="fbase">&copy; 2026 GMT Optimizer &middot; Independent community tool, not affiliated with GoMining. Informational only, not financial advice.</div>';
+    '<div class="fbase">&copy; 2026 GMT-Optimizer &middot; Independent community tool, not affiliated with GoMining. Informational only, not financial advice.</div>';
   document.body.appendChild(foot);
 
   /* ---- footer donation copy-to-clipboard (delegated) ---- */
@@ -190,8 +190,8 @@
       ctx.beginPath();ctx.arc(s.x,s.y,s.sz,0,6.28);ctx.fillStyle='rgba(255,225,175,'+o+')';ctx.fill();}
     ctx.globalCompositeOperation='lighter';
     var core=ctx.createRadialGradient(cx0,cy0,0,cx0,cy0,maxR*.34);
-    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(255,207,122,.45)');
-    core.addColorStop(.5,'rgba(245,166,35,.12)');core.addColorStop(1,'rgba(245,166,35,0)');
+    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(247,216,138,.45)');
+    core.addColorStop(.5,'rgba(226,178,89,.12)');core.addColorStop(1,'rgba(226,178,89,0)');
     ctx.fillStyle=core;ctx.beginPath();ctx.arc(cx0,cy0,maxR*.34,0,6.28);ctx.fill();
     rot+=.0014;
     for(var i=0;i<gal.length;i++){var p=gal[i];p.tw+=p.tws;var a=p.ang+rot*p.w;
@@ -204,4 +204,4 @@
 })();
 
 // Ask-Ringo co-pilot (assets/copilot.js): loaded here so every page that uses this script gets it.
-;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=2";s.defer=true;(document.head||document.documentElement).appendChild(s);})();
+;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=3";s.defer=true;(document.head||document.documentElement).appendChild(s);})();

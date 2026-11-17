@@ -1,4 +1,4 @@
-/* GMT Optimizer — site menu (hamburger + slide-out drawer), shared by every page.
+/* GMT-Optimizer — site menu (hamburger + slide-out drawer), shared by every page.
    =========================================================================
    One list of pages, one component. Each page keeps its own header (the landing #nav,
    the content-page #nav injected by site.js, the console .header-inner, and the plain
@@ -53,9 +53,9 @@
   const CSS = `
 .gm-burger{position:relative;flex:0 0 auto;width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;
   margin-left:10px;padding:0;border-radius:12px;cursor:pointer;background:rgba(255,255,255,.035);
-  border:1px solid rgba(240,196,120,.2);color:#FFF4E0;transition:border-color .2s,background .2s;-webkit-tap-highlight-color:transparent}
-.gm-burger:hover{border-color:rgba(245,166,35,.55);background:rgba(245,166,35,.08)}
-.gm-burger:focus-visible{outline:2px solid #F5A623;outline-offset:2px}
+  border:1px solid rgba(226,178,89,.2);color:#FFFFFF;transition:border-color .2s,background .2s;-webkit-tap-highlight-color:transparent}
+.gm-burger:hover{border-color:rgba(226,178,89,.55);background:rgba(226,178,89,.08)}
+.gm-burger:focus-visible{outline:2px solid #E2B259;outline-offset:2px}
 .gm-burger i{position:absolute;left:12px;right:12px;height:1.6px;border-radius:2px;background:currentColor;transition:transform .3s cubic-bezier(.22,.61,.36,1),opacity .2s,top .3s cubic-bezier(.22,.61,.36,1)}
 .gm-burger i:nth-child(1){top:14px}.gm-burger i:nth-child(2){top:20px}.gm-burger i:nth-child(3){top:26px}
 .gm-burger[aria-expanded="true"] i:nth-child(1){top:20px;transform:rotate(45deg)}
@@ -64,8 +64,8 @@
 .gm-has-menu .nav-links,.gm-hide{display:none!important}
 /* the page you are on, named in the header — same source as the menu, so they can't disagree */
 .gm-title{display:inline-block;vertical-align:middle;margin-left:11px;flex:0 1 auto;min-width:0;
-  font-family:'Space Grotesk',system-ui,sans-serif;font-size:14px;font-weight:600;color:#EBE2D2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gm-title::before{content:'';display:inline-block;vertical-align:middle;width:1px;height:16px;margin:-2px 9px 0 0;background:rgba(240,196,120,.28)}
+  font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:600;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-title::before{content:'';display:inline-block;vertical-align:middle;width:1px;height:16px;margin:-2px 9px 0 0;background:rgba(226,178,89,.28)}
 .gm-title[hidden]{display:none}
 @media(max-width:560px){.gm-title{font-size:12.5px;margin-left:8px;gap:7px}}
 @media(max-width:400px){.gm-title{font-size:12px;margin-left:6px}}
@@ -91,58 +91,58 @@
 .gm-scrim{position:fixed;inset:0;z-index:10050;background:rgba(3,4,6,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
 .gm-drawer{position:fixed;top:0;right:0;bottom:0;z-index:10051;width:min(400px,100vw);display:flex;flex-direction:column;
-  background:linear-gradient(180deg,rgba(18,19,25,.97),rgba(9,10,14,.98));border-left:1px solid rgba(240,196,120,.16);
+  background:linear-gradient(180deg,rgba(18,19,25,.97),rgba(9,10,14,.98));border-left:1px solid rgba(226,178,89,.16);
   box-shadow:-30px 0 80px rgba(0,0,0,.55);transform:translateX(100%);visibility:hidden;
   transition:transform .38s cubic-bezier(.16,1,.3,1),visibility 0s .38s;
-  font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;color:#EBE2D2;font-size:15px;line-height:1.45;text-align:left}
+  font-family:'Inter',system-ui,-apple-system,sans-serif;color:#FFFFFF;font-size:15px;line-height:1.45;text-align:left}
 .gm-open .gm-scrim{opacity:1;visibility:visible;transition:opacity .3s}
 .gm-open .gm-drawer{transform:none;visibility:visible;transition:transform .38s cubic-bezier(.16,1,.3,1)}
 html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-drawer *{box-sizing:border-box}
-.gm-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px 22px;border-bottom:1px solid rgba(200,210,235,.08)}
-.gm-brand{display:flex;align-items:center;gap:10px;color:#FFF4E0!important;font-weight:600;font-size:16px;text-decoration:none!important;letter-spacing:.01em}
-.gm-brand img{width:26px;height:26px;filter:drop-shadow(0 0 10px rgba(245,166,35,.5))}
-.gm-x{width:38px;height:38px;border-radius:11px;border:1px solid rgba(240,196,120,.18);background:transparent;color:#EBE2D2;cursor:pointer;
+.gm-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px 22px;border-bottom:1px solid rgba(255,255,255,.08)}
+.gm-brand{display:flex;align-items:center;gap:10px;color:#FFFFFF!important;font-weight:600;font-size:16px;text-decoration:none!important;letter-spacing:.01em}
+.gm-brand img{width:26px;height:26px;filter:drop-shadow(0 0 10px rgba(226,178,89,.5))}
+.gm-x{width:38px;height:38px;border-radius:11px;border:1px solid rgba(226,178,89,.18);background:transparent;color:#FFFFFF;cursor:pointer;
   display:inline-flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s}
-.gm-x:hover{border-color:rgba(245,166,35,.55);color:#FFF4E0}
-.gm-x:focus-visible,.gm-drawer a:focus-visible{outline:2px solid #F5A623;outline-offset:2px}
+.gm-x:hover{border-color:rgba(226,178,89,.55);color:#FFFFFF}
+.gm-x:focus-visible,.gm-drawer a:focus-visible{outline:2px solid #E2B259;outline-offset:2px}
 .gm-body{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;padding:8px 14px 18px}
 .gm-sec{padding:14px 0 6px}
-.gm-sec+.gm-sec{border-top:1px solid rgba(200,210,235,.06)}
-.gm-h{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8C8170;padding:0 10px 8px}
+.gm-sec+.gm-sec{border-top:1px solid rgba(255,255,255,.06)}
+.gm-h{font-family:'Inter',ui-monospace,monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#A1A1AA;padding:0 10px 8px}
 .gm-list{list-style:none;margin:0;padding:0}
-.gm-item{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:11px;text-decoration:none!important;color:#EBE2D2;transition:background .18s,color .18s}
-.gm-item:hover{background:rgba(245,166,35,.075);color:#FFF4E0}
+.gm-item{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:11px;text-decoration:none!important;color:#FFFFFF;transition:background .18s,color .18s}
+.gm-item:hover{background:rgba(226,178,89,.075);color:#FFFFFF}
 .gm-item .gm-t{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px}
-.gm-item .gm-d{display:block;font-size:12px;color:#A79B89;margin-top:1px}
+.gm-item .gm-d{display:block;font-size:12px;color:#A1A1AA;margin-top:1px}
 .gm-item .gm-tx{flex:1 1 auto;min-width:0}
-.gm-item .gm-arr{flex:0 0 auto;color:#6F6759;transition:transform .2s,color .2s}
-.gm-item:hover .gm-arr{color:#F5A623;transform:translateX(2px)}
+.gm-item .gm-arr{flex:0 0 auto;color:#6B6B75;transition:transform .2s,color .2s}
+.gm-item:hover .gm-arr{color:#E2B259;transform:translateX(2px)}
 .gm-compact .gm-item{padding:7px 10px}
-.gm-compact .gm-item .gm-t{font-size:14.5px;font-weight:400;color:#C3B8A6}
-.gm-item.gm-on{background:rgba(245,166,35,.1);color:#FFF4E0}
-.gm-item.gm-on::before{content:'';width:3px;align-self:stretch;margin:-2px 0 -2px -6px;border-radius:3px;background:#F5A623}
-.gm-badge{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#1a1206;
-  background:linear-gradient(135deg,#FFC65A,#FFCF7A);border-radius:6px;padding:2px 6px;font-weight:400}
+.gm-compact .gm-item .gm-t{font-size:14.5px;font-weight:400;color:#A1A1AA}
+.gm-item.gm-on{background:rgba(226,178,89,.1);color:#FFFFFF}
+.gm-item.gm-on::before{content:'';width:3px;align-self:stretch;margin:-2px 0 -2px -6px;border-radius:3px;background:#E2B259}
+.gm-badge{font-family:'Inter',ui-monospace,monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#0B0B0D;
+  background:linear-gradient(135deg,#F7D88A,#F7D88A);border-radius:6px;padding:2px 6px;font-weight:400}
 .gm-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px}
-.gm-chip{font-family:'Share Tech Mono',ui-monospace,monospace;font-size:12.5px;color:#C3B8A6;text-decoration:none!important;
-  padding:6px 10px;border-radius:9px;border:1px solid rgba(240,196,120,.14);background:rgba(255,255,255,.02);transition:border-color .18s,color .18s,background .18s}
-.gm-chip:hover{border-color:rgba(245,166,35,.5);color:#FFF4E0;background:rgba(245,166,35,.06)}
-.gm-chip.gm-on{border-color:#F5A623;color:#FFF4E0;background:rgba(245,166,35,.12)}
-.gm-foot{padding:14px 22px 18px;border-top:1px solid rgba(200,210,235,.08);display:grid;gap:10px}
+.gm-chip{font-family:'Inter',ui-monospace,monospace;font-size:12.5px;color:#A1A1AA;text-decoration:none!important;
+  padding:6px 10px;border-radius:9px;border:1px solid rgba(226,178,89,.14);background:rgba(255,255,255,.02);transition:border-color .18s,color .18s,background .18s}
+.gm-chip:hover{border-color:rgba(226,178,89,.5);color:#FFFFFF;background:rgba(226,178,89,.06)}
+.gm-chip.gm-on{border-color:#E2B259;color:#FFFFFF;background:rgba(226,178,89,.12)}
+.gm-foot{padding:14px 22px 18px;border-top:1px solid rgba(255,255,255,.08);display:grid;gap:10px}
 .gm-cta{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:600;font-size:15px;
-  color:#120a01!important;text-decoration:none!important;background:linear-gradient(135deg,#FFC65A,#FFCF7A);box-shadow:0 8px 26px rgba(245,166,35,.3)}
-.gm-cta:hover{box-shadow:0 12px 32px rgba(245,166,35,.45)}
-.gm-offer{font-size:13px;color:#A79B89;text-align:center}
-.gm-offer a{color:#FFCF7A}
-.gm-offer b{font-family:'Share Tech Mono',ui-monospace,monospace;color:#FFF4E0;font-weight:400;letter-spacing:.04em}
+  color:#0B0B0D!important;text-decoration:none!important;background:linear-gradient(135deg,#F7D88A,#F7D88A);box-shadow:0 8px 26px rgba(226,178,89,.3)}
+.gm-cta:hover{box-shadow:0 12px 32px rgba(226,178,89,.45)}
+.gm-offer{font-size:13px;color:#A1A1AA;text-align:center}
+.gm-offer a{color:#F7D88A}
+.gm-offer b{font-family:'Inter',ui-monospace,monospace;color:#FFFFFF;font-weight:400;letter-spacing:.04em}
 .gm-legal{display:flex;justify-content:center;gap:14px;font-size:11.5px}
-.gm-legal a{color:#8C8170;text-decoration:none}.gm-legal a:hover{color:#EBE2D2}
+.gm-legal a{color:#A1A1AA;text-decoration:none}.gm-legal a:hover{color:#FFFFFF}
 .gm-back{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;height:38px;margin-left:10px;padding:0 14px 0 11px;border-radius:12px;cursor:pointer;
-  font-family:'Space Grotesk',system-ui,sans-serif;font-size:13px;font-weight:600;color:#FFCF7A;background:rgba(245,166,35,.08);
-  border:1px solid rgba(245,166,35,.4);white-space:nowrap;transition:background .2s,border-color .2s,color .2s,opacity .25s,transform .25s}
-.gm-back:hover{background:rgba(245,166,35,.16);border-color:#F5A623;color:#FFF4E0}
-.gm-back:focus-visible{outline:2px solid #F5A623;outline-offset:2px}
+  font-family:'Inter',system-ui,sans-serif;font-size:13px;font-weight:600;color:#F7D88A;background:rgba(226,178,89,.08);
+  border:1px solid rgba(226,178,89,.4);white-space:nowrap;transition:background .2s,border-color .2s,color .2s,opacity .25s,transform .25s}
+.gm-back:hover{background:rgba(226,178,89,.16);border-color:#E2B259;color:#FFFFFF}
+.gm-back:focus-visible{outline:2px solid #E2B259;outline-offset:2px}
 .gm-back[hidden]{display:none}
 .gm-back svg{transition:transform .2s}.gm-back:hover svg{transform:translateX(-2px)}
 @media(max-width:520px){.gm-back{height:36px;padding:0 10px 0 8px;margin-left:6px;font-size:12px}}
@@ -189,7 +189,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
     wrap.innerHTML =
       '<div class="gm-scrim" data-gm-close></div>' +
       '<aside class="gm-drawer" id="gm-drawer" role="dialog" aria-modal="true" aria-label="Site menu" tabindex="-1">' +
-        '<div class="gm-top"><a class="gm-brand" href="/"><img src="' + LOGO + '" alt="">GMT Optimizer</a>' +
+        '<div class="gm-top"><a class="gm-brand" href="/"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>' +
           '<button type="button" class="gm-x" data-gm-close aria-label="Close menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>' +
         '<div class="gm-body" role="navigation" aria-label="All pages">' + secs + '</div>' +
         '<div class="gm-foot">' +
@@ -274,7 +274,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
       title.hidden = !l;
       // The console never changes its tab title as you move between views; every other page
       // states its own, so leave those alone.
-      if (isConsole() && l) document.title = l + ' · GMT Optimizer';
+      if (isConsole() && l) document.title = l + ' · GMT-Optimizer';
       else if (isConsole()) document.title = BASE_TITLE;
     }
     syncTitle();

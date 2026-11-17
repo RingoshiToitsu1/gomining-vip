@@ -1,4 +1,4 @@
-/* GMT Optimizer — inline ROI / earnings calculator for the content pages.
+/* GMT-Optimizer — inline ROI / earnings calculator for the content pages.
    =========================================================================
    A trimmed, self-contained mirror of the engine in assets/app.js. It exists so
    /gomining-roi-calculator answers its own query (a calculator) instead of only

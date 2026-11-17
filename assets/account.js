@@ -1,4 +1,4 @@
-/* GMT Optimizer — account layer (Phase 2 step 1: auth pipe).
+/* GMT-Optimizer — account layer (Phase 2 step 1: auth pipe).
    ==========================================================
    Username + password only. There is no email: a username maps to a synthetic
    internal address so Supabase's hardened password auth does the real work while

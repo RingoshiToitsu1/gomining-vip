@@ -1,4 +1,4 @@
-/* GMT Optimizer — app engine (extracted verbatim from index.html) */
+/* GMT-Optimizer — app engine (extracted verbatim from index.html) */
 // Always load at the top — don't let the browser restore a stale scroll position.
 if('scrollRestoration' in history){history.scrollRestoration='manual';}
 window.scrollTo(0,0);
@@ -1099,7 +1099,7 @@ function drawBtcRainbow(){
   const cur=S.btcPrice||series[series.length-1].v;
   let curBand=8;
   if(cur>0){const tNow=Math.min(Date.now(),dataT1);const xx=X(tNow),yy=Y(Math.log10(cur));
-    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle='#fff';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#0a0a0a';x.lineWidth=1.6;x.stroke();}
+    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle='#FFFFFF';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#0B0B0D';x.lineWidth=1.6;x.stroke();}
     const cl=Math.log10(cur)-centerAt(tNow);
     if(cl>=RB_OFFSETS[0])curBand=0;else{curBand=8;for(let bi=0;bi<RB_OFFSETS.length-1;bi++){if(cl<RB_OFFSETS[bi]&&cl>=RB_OFFSETS[bi+1]){curBand=bi;break;}}}
   }
@@ -1211,10 +1211,10 @@ function buildChart(symbol,allowChange){
       studies:['MAExp@tv-basicstudies'],
       studies_overrides:{
         'moving average exponential.length':50,
-        'moving average exponential.plot.color':'#F5A623',
+        'moving average exponential.plot.color':'#E2B259',
         'moving average exponential.plot.linewidth':2
       },
-      backgroundColor:'rgba(10,10,10,1)', gridColor:'rgba(245,166,35,0.06)'
+      backgroundColor:'rgba(11,11,13,1)', gridColor:'rgba(226,178,89,0.06)'
     });
   };
   if(window.TradingView){make();return;}
@@ -1239,14 +1239,14 @@ let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='co
 // Line or candle for BOTH series; candles pair inside each day rather than overlapping.
 let _cmbStyle='line';
 const CMB_EMA_N=50;
-const CMB_BTC='#F5A623', CMB_GMT='#A78BFA', CMB_EMA='#16c784';
+const CMB_BTC='#E2B259', CMB_GMT='#8B9CF7', CMB_EMA='#22C55E';
 // Two candle series need two palettes, or you cannot tell whose day was up. Each asset keeps its
 // brand colour for up days and goes near-white for down days. The two whites are TINTED — warm
 // for Bitcoin, cool for GMT — because a shared pure white would make a down day on one
 // indistinguishable from a down day on the other, which is the one thing the pairing exists to
 // show. They still read as white next to a saturated orange or purple.
-const CMB_BTC_UP='#F5A623', CMB_BTC_DN='#FFEFD2';
-const CMB_GMT_UP='#A78BFA', CMB_GMT_DN='#EAE4FF';
+const CMB_BTC_UP='#E2B259', CMB_BTC_DN='#FFEFD2';
+const CMB_GMT_UP='#8B9CF7', CMB_GMT_DN='#EAE4FF';
 
 // Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
 async function cmbFetchBTC(){
@@ -1500,10 +1500,10 @@ function drawCombined(){
   const Y=v=>T+ph*(1-((v-lo)/((hi-lo)||1)));
 
   // grid + right axis, labelled as % change since the left edge
-  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  x.font=(sm?'10px':'11px')+' "Inter",monospace';x.textAlign='left';
   for(let k=0;k<=4;k++){
     const v=lo+(hi-lo)*k/4, gy=Y(v);
-    x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(245,166,35,0.07)';
+    x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(226,178,89,0.07)';
     x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(R,gy);x.stroke();
     x.fillStyle='rgba(255,255,255,0.45)';
     x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',R+6,gy+4);
@@ -1598,7 +1598,7 @@ function drawCombined(){
   if(lg)lg.innerHTML=
      `<span class="rb-pill" style="border-left-color:${CMB_BTC}">${cndl?sw(CMB_BTC_UP,CMB_BTC_DN):''}BTC ${pct(last.biR)} &middot; ${fmtBTCPrice(last.btc)}</span>`
     +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">${cndl?sw(CMB_GMT_UP,CMB_GMT_DN):''}GMT ${pct(last.giR)} &middot; $${last.gmt.toFixed(4)}</span>`
-    +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#16c784':corr>=0.2?'#f3a93a':'#ea3943'}">correlation ${corr.toFixed(2)}</span>`:'');
+    +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#22C55E':corr>=0.2?'#f3a93a':'#EF4444'}">correlation ${corr.toFixed(2)}</span>`:'');
   const note=document.getElementById('cmbCorrNote');
   if(note)note.textContent=corr==null?''
     :corr>=0.7?'They move together closely — GMT is largely riding Bitcoin day to day.'
@@ -1633,13 +1633,13 @@ function drawCmbSignal(x,all,want,W,H,sm){
     x.closePath();x.fillStyle=fill;x.fill();x.restore();
   };
   zone(2,1,'rgba(234,57,67,0.10)');      // rich
-  zone(-1,-2,'rgba(22,199,132,0.10)');   // cheap
+  zone(-1,-2,'rgba(34,197,94,0.10)');   // cheap
   zone(1,-1,'rgba(255,255,255,0.03)');   // fair
 
-  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  x.font=(sm?'10px':'11px')+' "Inter",monospace';x.textAlign='left';
   for(let k=0;k<=4;k++){
     const v=lo+(hi-lo)*k/4,gy=Y(v);
-    x.strokeStyle='rgba(245,166,35,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
+    x.strokeStyle='rgba(226,178,89,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
     x.fillStyle='rgba(255,255,255,0.45)';x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',Rr+6,gy+4);
   }
   x.textAlign='center';let lastM=null;
@@ -1656,8 +1656,8 @@ function drawCmbSignal(x,all,want,W,H,sm){
   };
   path(()=>100,'rgba(255,255,255,0.45)',1.4,[5,4]);   // the 50-day EMA itself
   path(p=>band(p,1),'rgba(234,57,67,0.5)',1);
-  path(p=>band(p,-1),'rgba(22,199,132,0.5)',1);
-  path(rel,'#FFCF7A',2.4);                            // GMT priced in BTC
+  path(p=>band(p,-1),'rgba(34,197,94,0.5)',1);
+  path(rel,'#F7D88A',2.4);                            // GMT priced in BTC
 
   const last=S[S.length-1];
   if(_cmbHover!=null){
@@ -1667,14 +1667,14 @@ function drawCmbSignal(x,all,want,W,H,sm){
       const px=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
       x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
-      x.fillStyle='#FFCF7A';x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
+      x.fillStyle='#F7D88A';x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
         tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-actual">GMT ${'$'+p.gmt.toFixed(4)} &middot; BTC ${fmtBTCPrice(p.btc)}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-lbl">vs 50d avg</span><span class="rb-tip-px">${(rel(p)>=100?'+':'')+(rel(p)-100).toFixed(1)}%</span></div>`
-          +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#16c784':p.z>=1?'#ea3943':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
+          +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#22C55E':p.z>=1?'#EF4444':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
         const tw=tip.offsetWidth||150;
         tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';tip.style.top=(T+6)+'px';
       }
@@ -1684,11 +1684,11 @@ function drawCmbSignal(x,all,want,W,H,sm){
   const slope=cmbRatioSlope(R), v=cmbVerdict(last.z,slope);
   const lg=document.getElementById('cmbLegend');
   if(lg)lg.innerHTML=
-     `<span class="rb-pill" style="border-left-color:#FFCF7A">GMT/BTC ${(rel(last)>=100?'+':'')+(rel(last)-100).toFixed(1)}% vs 50d</span>`
-    +`<span class="rb-pill" style="border-left-color:${last.z<=-1?'#16c784':last.z>=1?'#ea3943':'rgba(255,255,255,.4)'}">z ${last.z!=null?last.z.toFixed(2):'—'}</span>`
-    +`<span class="rb-pill" style="border-left-color:${slope>0.02?'#16c784':slope<-0.02?'#ea3943':'rgba(255,255,255,.4)'}">30d trend ${(slope>=0?'+':'')+(slope*100).toFixed(1)}%</span>`;
+     `<span class="rb-pill" style="border-left-color:#F7D88A">GMT/BTC ${(rel(last)>=100?'+':'')+(rel(last)-100).toFixed(1)}% vs 50d</span>`
+    +`<span class="rb-pill" style="border-left-color:${last.z<=-1?'#22C55E':last.z>=1?'#EF4444':'rgba(255,255,255,.4)'}">z ${last.z!=null?last.z.toFixed(2):'—'}</span>`
+    +`<span class="rb-pill" style="border-left-color:${slope>0.02?'#22C55E':slope<-0.02?'#EF4444':'rgba(255,255,255,.4)'}">30d trend ${(slope>=0?'+':'')+(slope*100).toFixed(1)}%</span>`;
   const note=document.getElementById('cmbCorrNote');
-  if(note&&v)note.innerHTML=`<strong style="color:${v.tone==='buy'?'#16c784':v.tone==='sell'?'#ea3943':'var(--text2)'}">${v.label}.</strong> ${v.body}`;
+  if(note&&v)note.innerHTML=`<strong style="color:${v.tone==='buy'?'#22C55E':v.tone==='sell'?'#EF4444':'var(--text2)'}">${v.label}.</strong> ${v.body}`;
 }
 function renderCmbVerdict(){
   const el=document.getElementById('cmbVerdict');
@@ -1737,7 +1737,7 @@ function cmbSwapBlock(){
       <span class="cmb-swap-leg ${stretched==='sell'?'hit':''}"><b>Swap to stablecoin above</b> ${px(last.sell)} <i>${((last.sell/now-1)*100>=0?'+':'')+((last.sell/now-1)*100).toFixed(1)}%</i></span>
       <span class="cmb-swap-leg ${stretched==='buy'?'hit':''}"><b>Swap back to GMT below</b> ${px(last.buy)} <i>${((last.buy/now-1)*100).toFixed(1)}%</i></span>
     </div>
-    ${bt?`<div class="cmb-swap-bt">On the last <strong>${bt.days}</strong> days this rule made <strong>${bt.trips}</strong> swap${bt.trips===1?'':'s'} and ended with <strong style="color:${bt.edge>=0?'#16c784':'#ea3943'}">${(bt.edge>=0?'+':'')+bt.edge.toFixed(1)}%</strong> ${bt.edge>=0?'more':'less'} GMT than never moving.
+    ${bt?`<div class="cmb-swap-bt">On the last <strong>${bt.days}</strong> days this rule made <strong>${bt.trips}</strong> swap${bt.trips===1?'':'s'} and ended with <strong style="color:${bt.edge>=0?'#22C55E':'#EF4444'}">${(bt.edge>=0?'+':'')+bt.edge.toFixed(1)}%</strong> ${bt.edge>=0?'more':'less'} GMT than never moving.
       ${bt.trips<8?`That is only ${bt.trips} trade${bt.trips===1?'':'s'} &mdash; far too few to call it an edge rather than luck.`:''}</div>`:''}
     ${clash?`<div class="cmb-swap-clash">${clash}</div>`:''}
   </div>`;
@@ -2126,31 +2126,31 @@ function buildFarmShotCanvas(d,imgs){
   const SC=2,W=1200,H=675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const MONO='"Share Tech Mono",monospace',SANS='"Space Grotesk",system-ui,sans-serif';
-  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A',GPALE='#FFE0A8',RED='#FF4D4D';
+  const MONO='"Inter",monospace',SANS='"Inter",system-ui,sans-serif';
+  const GOLD='#E2B259',GSOFT='#F7D88A',GLT='#F7D88A',GPALE='#F7D88A',RED='#EF4444';
   // background — the site's gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  bgG.addColorStop(0,'#0B0B0D');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0B0B0D');
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(150,60,380,0.17);orb(1070,150,320,0.11);orb(600,780,420,0.07);
-  x.strokeStyle='rgba(245,166,35,0.04)';x.lineWidth=0.5;
+  x.strokeStyle='rgba(226,178,89,0.04)';x.lineWidth=0.5;
   for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
   for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
   const pad=44;
   // ---- header: brand left, VIP tier right ----
   let bx=pad;
   if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='800 26px '+SANS;
-  x.fillText('GMT Optimizer',bx,48);
+  x.textAlign='left';x.fillStyle='#FFFFFF';x.font='800 26px '+SANS;
+  x.fillText('GMT-Optimizer',bx,48);
   x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px '+MONO;
   x.fillText('gmt-optimizer.com',pad,74);
-  x.textAlign='right';x.fillStyle='#fff';x.font='800 26px '+SANS;
+  x.textAlign='right';x.fillStyle='#FFFFFF';x.font='800 26px '+SANS;
   x.fillText('My GoMining Farm',W-pad,46);
   x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px '+MONO;
   x.fillText('VIP '+(d.vip||'—')+'   ·   '+fN(d.th,1)+' TH   ·   live snapshot',W-pad,70);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.55)');lg.addColorStop(1,'transparent');
   x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,100);x.lineTo(W-pad,100);x.stroke();
   // ---- the four headline stats ----
   const neg=d.dailyUSD<0;
@@ -2164,9 +2164,9 @@ function buildFarmShotCanvas(d,imgs){
   cards.forEach((cd,i)=>{
     const cx=pad+i*(cardW+gap);
     const cbg=x.createLinearGradient(cx,cardY,cx,cardY+cardH);
-    cbg.addColorStop(0,'rgba(245,166,35,0.07)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
+    cbg.addColorStop(0,'rgba(226,178,89,0.07)');cbg.addColorStop(1,'rgba(226,178,89,0.015)');
     x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
+    x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
     // accent bar along the top edge, like the hero cards on the site
     x.shadowColor=cd.accent;x.shadowBlur=14;x.strokeStyle=cd.accent;x.lineWidth=3;
     x.beginPath();x.moveTo(cx+16,cardY);x.lineTo(cx+cardW-16,cardY);x.stroke();x.shadowBlur=0;
@@ -2179,7 +2179,7 @@ function buildFarmShotCanvas(d,imgs){
     x.fillText(cd.label,ix,cardY+66);
     const vsz=_fsFit(x,cd.val,iw,'bold',40,MONO);
     x.font='bold '+vsz+'px '+MONO;x.fillStyle=cd.accent;
-    x.shadowColor='rgba(245,166,35,0.45)';x.shadowBlur=18;
+    x.shadowColor='rgba(226,178,89,0.45)';x.shadowBlur=18;
     x.fillText(cd.val,ix,cardY+126);x.shadowBlur=0;
     x.fillStyle='rgba(255,255,255,0.5)';x.font='13px '+MONO;
     _fsWrap(x,cd.sub,iw,4).forEach((ln,k)=>x.fillText(ln,ix,cardY+164+k*20));
@@ -2201,8 +2201,8 @@ function buildFarmShotCanvas(d,imgs){
   const totalW=pw.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
   let px=(W-totalW)/2;
   pills.forEach((p,i)=>{const w=pw[i];
-    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.stroke();
+    x.fillStyle='rgba(226,178,89,0.06)';x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.fill();
+    x.strokeStyle='rgba(226,178,89,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.stroke();
     x.textAlign='center';
     x.fillStyle='rgba(255,255,255,0.55)';x.font='bold 14px '+MONO;x.fillText(p.label,px+w/2,pillY+26);
     x.fillStyle=GSOFT;x.font='bold 22px '+MONO;x.fillText(p.val,px+w/2,pillY+55);
@@ -2214,7 +2214,7 @@ function buildFarmShotCanvas(d,imgs){
   // ---- footer ----
   const footY=H-34;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(226,178,89,0.4)');fg.addColorStop(1,'transparent');
   x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-24);x.lineTo(W-pad,footY-24);x.stroke();
   let fx=pad;
   if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-8,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-19,22,22);x.restore();fx+=30;}
@@ -4475,7 +4475,7 @@ function renderPlanner(i,m){
     exp+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
   }
   if(sol.bonusActive){
-    exp+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
+    exp+=` <span style="color:var(--gold,#F7D88A);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
   }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
     exp+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
   }
@@ -4618,7 +4618,7 @@ function renderPlanner(i,m){
         : `<div style="margin-top:.45rem;color:var(--text2)">Even with its free weekly growth compounding, it does not overtake within ${fN(HORIZON/12,0)} years at today's prices.</div>`;
       if(delta<-0.5){
         const worth=(mPaid&&mPaid<=36);
-        ph+=`<div class="warn" style="margin:.5rem 0;background:${worth?'rgba(245,166,35,.07)':'rgba(239,68,68,.07)'};border-color:${worth?'rgba(245,166,35,.3)':'rgba(239,68,68,.28)'};color:var(--text2);font-size:.8rem;line-height:1.55">
+        ph+=`<div class="warn" style="margin:.5rem 0;background:${worth?'rgba(226,178,89,.07)':'rgba(239,68,68,.07)'};border-color:${worth?'rgba(226,178,89,.3)':'rgba(239,68,68,.28)'};color:var(--text2);font-size:.8rem;line-height:1.55">
           <strong style="color:${worth?'var(--gold-soft)':'#fca5a5'}">Starts ${fU(-delta)}/mo behind${worth?', pays for itself later':''}.</strong>
           The same plan without this miner projects <strong>${fU(moNoMiner)}/mo</strong> today.
           Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fN(aNo.ntd,0)}%</strong> instead of <strong>${fN(ntd,0)}%</strong>`:''} — and that discount applies to your whole farm, not just the new hashrate.
@@ -5325,7 +5325,7 @@ function computeSetupProjection(){
 
   const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
   const btcModeBadge=spSel.futures
-    ? '<span class="badge" style="background:rgba(245,166,35,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
+    ? '<span class="badge" style="background:rgba(226,178,89,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
     : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">STILL CHEAP</span>';
   const _yrsLbl=spSel.yrs+' year'+(spSel.yrs>1?'s':'');
   const btcRangeLine=spSel.futures
@@ -5346,7 +5346,7 @@ function computeSetupProjection(){
     ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`
     : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
-  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
+  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(226,178,89,.06);border-color:rgba(226,178,89,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
     <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${CONTRIB>0?`, adding <strong>${fU(CONTRIB)}${CONTRIB_WEEKLY?' a week':' a month'}</strong>`:''}${(function(){
       // State the seed's OWN day-one income and discount. Every "the projection lost money"
@@ -5533,7 +5533,7 @@ function buildReinvestChart(daily,days,gp){
       <path d="${area}" id="riChartArea" fill="url(#riChartGrad)"/>
       <path d="${line}" id="riChartLine" fill="none" stroke="#4ecffa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#4ecffa" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
-      <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#fff" stroke-width="1.5" opacity="0"/>
+      <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#FFFFFF" stroke-width="1.5" opacity="0"/>
       <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMax">${fAxisUSD(yMax)}</text>
       <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
       <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace">0</text>
@@ -5636,41 +5636,41 @@ function buildShareCanvas(d){
   c.width=W*S;c.height=H*S;
   const x=c.getContext('2d');x.scale(S,S);
   const pad=50;
-  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A';
+  const GOLD='#E2B259',GSOFT='#F7D88A',GLT='#F7D88A';
   // background — site gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  bgG.addColorStop(0,'#0B0B0D');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0B0B0D');
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(140,90,380,0.18);orb(1060,230,320,0.12);orb(600,770,380,0.07);orb(W/2,-40,460,0.10);
-  x.strokeStyle='rgba(245,166,35,0.05)';x.lineWidth=0.5;
+  x.strokeStyle='rgba(226,178,89,0.05)';x.lineWidth=0.5;
   for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
   for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
   // header
-  x.fillStyle='#ffffff';x.font='bold 56px Space Grotesk,system-ui,sans-serif';x.textAlign='center';
-  x.shadowColor='rgba(245,166,35,0.55)';x.shadowBlur=28;
+  x.fillStyle='#FFFFFF';x.font='bold 56px Poppins,system-ui,sans-serif';x.textAlign='center';
+  x.shadowColor='rgba(226,178,89,0.55)';x.shadowBlur=28;
   x.fillText(d.days+'-Day Growth Projection',W/2,72);x.shadowBlur=0;
-  x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Share Tech Mono",monospace';
+  x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Inter",monospace';
   const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (typical future)';
   x.fillText('Auto-Reinvest Compound Strategy'+btcSub+'  •  powered by gmt-optimizer.com',W/2,108);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.6)');lg.addColorStop(1,'transparent');
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.6)');lg.addColorStop(1,'transparent');
   x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
   // comparison cards
   const cardW=510,cardH=350,cardY=150,gap=80;
   const leftX=(W-cardW*2-gap)/2,rightX=leftX+cardW+gap;
   const drawCard=(cx,cy,title,accent,items)=>{
     const cbg=x.createLinearGradient(cx,cy,cx,cy+cardH);
-    cbg.addColorStop(0,'rgba(245,166,35,0.06)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
+    cbg.addColorStop(0,'rgba(226,178,89,0.06)');cbg.addColorStop(1,'rgba(226,178,89,0.015)');
     x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
+    x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
     x.shadowColor=accent;x.shadowBlur=16;x.strokeStyle=accent;x.lineWidth=3;
     x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();x.shadowBlur=0;
-    x.fillStyle=accent;x.font='bold 26px Space Grotesk,system-ui,sans-serif';x.textAlign='left';
+    x.fillStyle=accent;x.font='bold 26px Poppins,system-ui,sans-serif';x.textAlign='left';
     x.fillText(title,cx+30,cy+50);
     items.forEach((it,i)=>{const iy=cy+105+i*68;
-      x.fillStyle='rgba(255,255,255,0.55)';x.font='20px "Share Tech Mono",monospace';x.textAlign='left';x.fillText(it.label,cx+30,iy);
-      x.fillStyle=accent;x.font='bold 38px "Share Tech Mono",monospace';x.fillText(it.val,cx+30,iy+38);
+      x.fillStyle='rgba(255,255,255,0.55)';x.font='20px "Inter",monospace';x.textAlign='left';x.fillText(it.label,cx+30,iy);
+      x.fillStyle=accent;x.font='bold 38px "Inter",monospace';x.fillText(it.val,cx+30,iy+38);
     });
   };
   drawCard(leftX,cardY,'STARTING POSITION',GLT,[
@@ -5685,8 +5685,8 @@ function buildShareCanvas(d){
     {label:'MONTHLY INCOME',val:fU(d.finalSS*30,0)},
     {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
-  x.fillStyle=GSOFT;x.shadowColor='rgba(245,166,35,0.7)';x.shadowBlur=22;
-  x.font='bold 56px "General Sans",system-ui,sans-serif';x.textAlign='center';
+  x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=22;
+  x.font='bold 56px "Poppins",system-ui,sans-serif';x.textAlign='center';
   x.fillText('➤',W/2,cardY+cardH/2+10);x.shadowBlur=0;
   // stat pills (incl. ROI)
   const pillY=cardY+cardH+25;
@@ -5705,26 +5705,26 @@ function buildShareCanvas(d){
     {label:'VIP',val:vip}
   );
   const pillPad=20,pillGap=12,pillH=70;
-  const pwArr=pills.map(p=>{x.font='bold 15px "Share Tech Mono",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Share Tech Mono",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
+  const pwArr=pills.map(p=>{x.font='bold 15px "Inter",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Inter",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
   const totalW=pwArr.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
   let pxp=(W-totalW)/2;
   pills.forEach((p,i)=>{const w=pwArr[i];
-    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.6)';x.font='bold 15px "Share Tech Mono",monospace';x.textAlign='center';x.fillText(p.label,pxp+w/2,pillY+26);
-    x.fillStyle=GSOFT;x.font='bold 26px "Share Tech Mono",monospace';x.fillText(p.val,pxp+w/2,pillY+58);
+    x.fillStyle='rgba(226,178,89,0.06)';x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.fill();
+    x.strokeStyle='rgba(226,178,89,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.6)';x.font='bold 15px "Inter",monospace';x.textAlign='center';x.fillText(p.label,pxp+w/2,pillY+26);
+    x.fillStyle=GSOFT;x.font='bold 26px "Inter",monospace';x.fillText(p.val,pxp+w/2,pillY+58);
     pxp+=w+pillGap;
   });
   // footer
   const footY=H-38;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(226,178,89,0.4)');fg.addColorStop(1,'transparent');
   x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-22);x.lineTo(W-pad,footY-22);x.stroke();
-  x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "General Sans",system-ui,sans-serif';x.fillText('●',pad,footY);
-  x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Space Grotesk,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Share Tech Mono",monospace';
+  x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "Poppins",system-ui,sans-serif';x.fillText('●',pad,footY);
+  x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Poppins,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Inter",monospace';
   const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
-  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Share Tech Mono",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
+  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Inter",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
   x.textAlign='left';
   return c;
 }

@@ -1,4 +1,4 @@
-/* GMT Optimizer — THE single source of GoMining prices.
+/* GMT-Optimizer — THE single source of GoMining prices.
    =========================================================================
    Edit the numbers in the EDIT block below and nothing else, anywhere. Every pricing
    consumer reads from here:

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Styleguide | GMT-Optimizer</title>
+<meta name="description" content="GMT-Optimizer design system: brand, tokens and components. Internal reference.">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0B0B0D">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/tokens.css?v=1">
+<link rel="stylesheet" href="/assets/components.css?v=1">
+<style>
+  body { margin: 0; }
+  .sg-nav { position: sticky; top: 0; z-index: var(--z-header); background: rgb(var(--color-bg-rgb) / .92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border); }
+  .sg-nav .ui-container { display: flex; align-items: center; gap: var(--space-4); min-height: var(--header-h); flex-wrap: wrap; }
+  .sg-nav nav { display: flex; gap: var(--space-4); flex-wrap: wrap; margin-left: auto; font-family: var(--font-ui); font-size: var(--font-size-sm); }
+  .sg-nav nav a { color: var(--color-text-2); text-decoration: none; }
+  .sg-nav nav a:hover { color: var(--color-text); }
+  .sg-block { padding-block: var(--space-7); border-bottom: 1px solid var(--color-border); }
+  .sg-block > .ui-h3 { margin-bottom: var(--space-2); }
+  .sg-block > .ui-small { margin: 0 0 var(--space-5); }
+  .sg-swatches { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .sg-swatch { border: 1px solid var(--color-border); border-radius: var(--radius-card); overflow: hidden; background: var(--color-surface-1); }
+  .sg-swatch i { display: block; height: 64px; }
+  .sg-swatch div { padding: var(--space-2) var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-2); }
+  .sg-swatch b { display: block; color: var(--color-text); font-family: var(--font-ui); font-weight: var(--font-weight-medium); }
+  .sg-logos { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .sg-logo { border-radius: var(--radius-card); border: 1px solid var(--color-border); padding: var(--space-6); display: flex; align-items: center; justify-content: center; min-height: 140px; }
+  .sg-logo img { max-width: 100%; height: 44px; }
+  .sg-logo--light { background: var(--color-text); } /* the dark-text logo on white */
+  .sg-space { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+  .sg-space div { background: rgb(var(--color-gold-rgb) / .25); border: 1px solid rgb(var(--color-gold-rgb) / .5); }
+  .sg-space span { display: block; font-size: var(--font-size-xs); color: var(--color-text-2); margin-top: var(--space-1); text-align: center; }
+  .sg-demo { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+</style>
+</head>
+<body class="ui-scope">
+<header class="sg-nav">
+  <div class="ui-container">
+    <a class="ui-logo" href="/" aria-label="GMT-Optimizer home"><img src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="132" height="34"></a>
+    <span class="ui-badge">Styleguide</span>
+    <nav aria-label="Sections">
+      <a href="#brand">Brand</a><a href="#color">Colour</a><a href="#type">Type</a><a href="#buttons">Buttons</a><a href="#forms">Forms</a>
+      <a href="#data">Data</a><a href="#nav">Tabs</a><a href="#feedback">Feedback</a><a href="#chat">Chat</a>
+    </nav>
+    <label class="ui-switch"><input type="checkbox" id="sg-long"> <span>German-length text</span></label>
+  </div>
+</header>
+
+<main class="ui-container">
+
+  <section class="sg-block" id="brand">
+    <p class="ui-eyebrow">Brand</p>
+    <h1 class="ui-h2">GMT-Optimizer design system</h1>
+    <p class="ui-lead" style="margin-top: var(--space-3)">Institutional and calm. Plenty of space, strong type hierarchy, and gold used sparingly: primary actions, accents and key figures only.</p>
+    <div class="sg-logos" style="margin-top: var(--space-6)">
+      <div class="sg-logo" style="background: var(--color-bg)"><img src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer logo, for dark backgrounds"></div>
+      <div class="sg-logo sg-logo--light"><img src="/assets/brand/GMT-Optimizer_dark-text_transparent.svg" alt="GMT-Optimizer logo, for light backgrounds"></div>
+      <div class="sg-logo" style="background: var(--color-surface-1)"><img src="/assets/brand/GMT_icon_transparent.svg" alt="GMT icon" style="height: 64px"></div>
+    </div>
+    <p class="ui-small" style="margin-top: var(--space-4)">White-text logo on dark, dark-text logo on light. The icon alone is for the favicon, app icon, chat avatar, default profile avatar and social images. Never use GoMining's logo or trade dress.</p>
+  </section>
+
+  <section class="sg-block" id="color">
+    <h2 class="ui-h3">Colour</h2>
+    <p class="ui-small">All values live in <code>/assets/tokens.css</code>. Contrast is against the page background.</p>
+    <div class="sg-swatches">
+      <div class="sg-swatch"><i style="background: var(--color-gold-gradient)"></i><div><b>Gold gradient</b>F7D88A → E2B259 → A9772F</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-gold)"></i><div><b>Gold</b>#E2B259 · 10.1:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-gold-300)"></i><div><b>Gold 300</b>#F7D88A · 14.2:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-gold-700)"></i><div><b>Gold 700</b>#A9772F · large text only</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-bg)"></i><div><b>Background</b>#0B0B0D</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-surface-1)"></i><div><b>Surface 1</b>#131316</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-surface-2)"></i><div><b>Surface 2</b>#1A1A1F</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-border)"></i><div><b>Border</b>#26262C</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-text)"></i><div><b>Text</b>#FFFFFF · 19.7:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-text-2)"></i><div><b>Text secondary</b>#A1A1AA · 7.7:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-text-3)"></i><div><b>Text muted</b>#6B6B75 · large/decorative</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-success)"></i><div><b>Success</b>#22C55E · 8.6:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-warning)"></i><div><b>Warning</b>#F59E0B · 9.2:1</div></div>
+      <div class="sg-swatch"><i style="background: var(--color-error)"></i><div><b>Error</b>#EF4444 · 5.2:1</div></div>
+    </div>
+  </section>
+
+  <section class="sg-block" id="type">
+    <h2 class="ui-h3">Typography</h2>
+    <p class="ui-small">Poppins 400/500/600 for headings and UI; Inter for body copy and data. Tabular numbers everywhere. Both cover á é í ñ ü ö ä ß ç è œ.</p>
+    <div class="ui-stack">
+      <p class="ui-eyebrow">Eyebrow label</p>
+      <h1 class="ui-h1">Model your GoMining returns</h1>
+      <h2 class="ui-h2">Section heading H2</h2>
+      <h3 class="ui-h3">Card or block heading H3</h3>
+      <h4 class="ui-h4">Small heading H4</h4>
+      <p class="ui-lead">Lead paragraph in Inter: one or two sentences that set up the page.</p>
+      <p style="max-width: var(--prose-max)">Body copy in Inter at 16 px with a 1.6 line height. Figures stay aligned: <span class="ui-figure">1,234.56</span> · <span class="ui-figure">98,765.43</span> · <span class="ui-figure">0.0012 BTC</span>. A <a class="ui-link" href="#type">text link</a> looks like this. Ünterstützt Umlaute, ñ, ç, œ und ß.</p>
+      <p class="ui-disclaimer">Estimates only. Not financial advice.</p>
+    </div>
+  </section>
+
+  <section class="sg-block" id="space">
+    <h2 class="ui-h3">Spacing and radius</h2>
+    <p class="ui-small">Scale 4/8/12/16/24/32/48/64/96. Radius 8 px for controls, 14 px for cards.</p>
+    <div class="sg-space">
+      <div><div style="width: var(--space-1); height: var(--space-1)"></div><span>4</span></div>
+      <div><div style="width: var(--space-2); height: var(--space-2)"></div><span>8</span></div>
+      <div><div style="width: var(--space-3); height: var(--space-3)"></div><span>12</span></div>
+      <div><div style="width: var(--space-4); height: var(--space-4)"></div><span>16</span></div>
+      <div><div style="width: var(--space-5); height: var(--space-5)"></div><span>24</span></div>
+      <div><div style="width: var(--space-6); height: var(--space-6)"></div><span>32</span></div>
+      <div><div style="width: var(--space-7); height: var(--space-7)"></div><span>48</span></div>
+      <div><div style="width: var(--space-8); height: var(--space-8)"></div><span>64</span></div>
+      <div><div style="width: var(--space-9); height: var(--space-9)"></div><span>96</span></div>
+    </div>
+  </section>
+
+  <section class="sg-block" id="buttons">
+    <h2 class="ui-h3">Buttons</h2>
+    <p class="ui-small">One primary (gold) action per view. Minimum touch target 44 px. Labels wrap rather than overflow.</p>
+    <div class="ui-row">
+      <button class="ui-btn ui-btn--primary" data-l="Open Calculator|Rechner öffnen und Einstellungen übernehmen">Open Calculator</button>
+      <button class="ui-btn ui-btn--secondary" data-l="Get Started|Jetzt kostenlos loslegen">Get Started</button>
+      <button class="ui-btn ui-btn--ghost">Ghost</button>
+      <button class="ui-btn ui-btn--danger">Delete</button>
+      <button class="ui-btn ui-btn--primary" disabled>Disabled</button>
+    </div>
+    <div class="ui-row" style="margin-top: var(--space-4)">
+      <button class="ui-btn ui-btn--primary ui-btn--lg">Large</button>
+      <button class="ui-btn ui-btn--secondary ui-btn--sm">Small</button>
+      <button class="ui-btn ui-btn--secondary ui-btn--icon" aria-label="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+    </div>
+    <div style="max-width: 280px; margin-top: var(--space-4)"><button class="ui-btn ui-btn--primary ui-btn--block" data-l="Claim your RINGO5 bonuses|Sichern Sie sich Ihre RINGO5-Boni für das erste Gerät">Claim your RINGO5 bonuses</button></div>
+  </section>
+
+  <section class="sg-block" id="forms">
+    <h2 class="ui-h3">Forms</h2>
+    <div class="sg-demo">
+      <div class="ui-field">
+        <label class="ui-label" for="sg-th" data-l="Hashrate|Hashrate (Terahash pro Sekunde)">Hashrate</label>
+        <div class="ui-input-group"><input class="ui-input" id="sg-th" type="number" inputmode="decimal" value="100"><span class="ui-addon">TH</span></div>
+        <span class="ui-help" data-l="Your total across all miners.|Ihre Gesamtleistung über alle Miner hinweg, einschließlich inaktiver Geräte.">Your total across all miners.</span>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="sg-user">GoMining username</label>
+        <input class="ui-input" id="sg-user" aria-invalid="true" aria-describedby="sg-user-err" value="x">
+        <span class="ui-error-text" id="sg-user-err">Enter your GoMining username (3–32 characters).</span>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="sg-sel">Efficiency</label>
+        <select class="ui-select" id="sg-sel"><option>15 W/TH</option><option>12 W/TH</option></select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="sg-msg">Message</label>
+        <textarea class="ui-textarea" id="sg-msg" placeholder="Optional"></textarea>
+      </div>
+      <div class="ui-stack">
+        <label class="ui-check"><input type="checkbox" checked> <span data-l="Daily click streak (3%)|Tägliche Klickserie aktiv halten (3 %)">Daily click streak (3%)</span></label>
+        <label class="ui-switch"><input type="checkbox" checked> <span>Pay fees in GMT</span></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="sg-block" id="data">
+    <h2 class="ui-h3">Cards, stat tiles, tables</h2>
+    <div class="ui-stats">
+      <div class="ui-stat"><div class="ui-stat__label" data-l="Net per month|Nettoertrag pro Monat (geschätzt)">Net per month</div><div class="ui-stat__value ui-stat__value--gold">$1,234.56</div><div class="ui-stat__meta"><span class="ui-stat__delta--up">▲ 2.1%</span> vs last week</div></div>
+      <div class="ui-stat"><div class="ui-stat__label">BTC price</div><div class="ui-stat__value">$90,000</div><div class="ui-stat__meta">live</div></div>
+      <div class="ui-stat"><div class="ui-stat__label">Fee discount</div><div class="ui-stat__value">20.0%</div><div class="ui-stat__meta"><span class="ui-stat__delta--down">▼ 0.3%</span></div></div>
+      <div class="ui-stat"><div class="ui-stat__label">Payback</div><div class="ui-stat__value">14.2 mo</div><div class="ui-stat__meta">estimate</div></div>
+    </div>
+    <div class="ui-grid" style="margin-top: var(--space-5)">
+      <a class="ui-card ui-card--link" href="#data"><h3 class="ui-card__title" data-l="Calculator|Rechner für Rendite und Gebühren">Calculator</h3><p class="ui-card__body">Live earnings, fees and discount for your setup.</p></a>
+      <div class="ui-card ui-card--raised"><h3 class="ui-card__title">Raised card</h3><p class="ui-card__body">Surface 2, for content inside content.</p></div>
+      <div class="ui-card ui-card--accent"><h3 class="ui-card__title">Accent card</h3><p class="ui-card__body">Gold border for the one thing to notice.</p></div>
+    </div>
+    <div class="ui-table-wrap" style="margin-top: var(--space-5)">
+      <table class="ui-table ui-table--stack">
+        <thead><tr><th aria-sort="none">Miner size</th><th class="num" aria-sort="none">$/TH</th><th class="num" aria-sort="none">Net / month</th><th class="num" aria-sort="none">Payback</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Miner size">10 TH</td><td class="num" data-label="$/TH">$9.82</td><td class="num" data-label="Net / month">$9.25</td><td class="num" data-label="Payback" data-sort="20.6">20.6 mo</td></tr>
+          <tr><td data-label="Miner size">100 TH</td><td class="num" data-label="$/TH">$9.29</td><td class="num" data-label="Net / month">$65.10</td><td class="num" data-label="Payback" data-sort="14.3">14.3 mo</td></tr>
+          <tr><td data-label="Miner size">1,000 TH</td><td class="num" data-label="$/TH">$8.94</td><td class="num" data-label="Net / month">$832.00</td><td class="num" data-label="Payback" data-sort="10.7">10.7 mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ui-disclaimer" style="margin-top: var(--space-2)">Sample figures. Click a column to sort. On phones the rows become labelled cards.</p>
+  </section>
+
+  <section class="sg-block" id="nav">
+    <h2 class="ui-h3">Tabs, segmented control, badges</h2>
+    <div class="ui-tabs">
+      <div class="ui-tabs__list" role="tablist" aria-label="Demo tabs">
+        <button class="ui-tab" role="tab" id="sg-t1" aria-controls="sg-p1" aria-selected="true">Co-pilot</button>
+        <button class="ui-tab" role="tab" id="sg-t2" aria-controls="sg-p2" aria-selected="false" tabindex="-1" data-l="Messages|Nachrichten an die Community">Messages</button>
+        <button class="ui-tab" role="tab" id="sg-t3" aria-controls="sg-p3" aria-selected="false" tabindex="-1">Settings</button>
+      </div>
+      <div class="ui-tabs__panel" role="tabpanel" id="sg-p1" aria-labelledby="sg-t1">Arrow keys move between tabs.</div>
+      <div class="ui-tabs__panel" role="tabpanel" id="sg-p2" aria-labelledby="sg-t2" hidden>Messages panel.</div>
+      <div class="ui-tabs__panel" role="tabpanel" id="sg-p3" aria-labelledby="sg-t3" hidden>Settings panel.</div>
+    </div>
+    <div class="ui-row" style="margin-top: var(--space-5)">
+      <div class="ui-segmented" role="group" aria-label="Run it at"><button aria-pressed="true">As is</button><button aria-pressed="false">15 W</button><button aria-pressed="false">12 W</button></div>
+      <span class="ui-badge">Neutral</span><span class="ui-badge ui-badge--gold">RINGO5</span><span class="ui-badge ui-badge--success">Live</span>
+      <span class="ui-badge ui-badge--warning">Estimate</span><span class="ui-badge ui-badge--error">Offline</span><span class="ui-count">3</span>
+    </div>
+  </section>
+
+  <section class="sg-block" id="feedback">
+    <h2 class="ui-h3">Notices, modal, toast, accordion</h2>
+    <div class="ui-stack">
+      <div class="ui-notice ui-notice--gold"><div><strong>Estimates only.</strong> Not financial advice. Figures use live BTC and GMT prices and change every minute.</div></div>
+      <div class="ui-notice ui-notice--success"><div><strong>Claim sent.</strong> Ringo will message you on GoMining.</div></div>
+      <div class="ui-notice ui-notice--error"><div><strong>Couldn't send.</strong> Check your connection and try again.</div></div>
+      <div class="ui-row">
+        <button class="ui-btn ui-btn--secondary" data-ui-open="sg-modal">Open modal</button>
+        <button class="ui-btn ui-btn--secondary" onclick="UI.toast('Setup saved', {type:'success'})">Show toast</button>
+        <button class="ui-btn ui-btn--secondary" onclick="UI.toast('Couldn\'t reach GoMining', {type:'error'})">Error toast</button>
+      </div>
+      <div class="ui-accordion">
+        <details><summary data-l="How does the GMT discount work?|Wie funktioniert der GMT-Rabatt auf die Wartungsgebühren?">How does the GMT discount work?</summary><div class="ui-accordion__body">Locking GMT covers days of fees; every 18 days of coverage cuts the fee by 1%, up to 20%.</div></details>
+        <details><summary>Is this an official GoMining site?</summary><div class="ui-accordion__body">No. GMT-Optimizer is an independent tool, not affiliated with, endorsed by, or operated by GoMining.</div></details>
+      </div>
+    </div>
+    <dialog class="ui-modal ui-scope" id="sg-modal" aria-labelledby="sg-modal-t">
+      <div class="ui-modal__head"><h2 class="ui-modal__title" id="sg-modal-t">Log in</h2><button class="ui-btn ui-btn--ghost ui-btn--icon" data-ui-close aria-label="Close">×</button></div>
+      <div class="ui-modal__body ui-stack">
+        <div class="ui-field"><label class="ui-label" for="sg-m-u">Username</label><input class="ui-input" id="sg-m-u" autocomplete="username"></div>
+        <div class="ui-field"><label class="ui-label" for="sg-m-p">Password</label><input class="ui-input" id="sg-m-p" type="password" autocomplete="current-password"></div>
+      </div>
+      <div class="ui-modal__foot"><button class="ui-btn ui-btn--ghost" data-ui-close>Cancel</button><button class="ui-btn ui-btn--primary" data-ui-close>Log in</button></div>
+    </dialog>
+  </section>
+
+  <section class="sg-block" id="chat">
+    <h2 class="ui-h3">Avatars and message bubbles</h2>
+    <div class="ui-row">
+      <span class="ui-avatar ui-avatar--sm ui-avatar--default"><img src="/assets/brand/GMT_icon_transparent.svg" alt=""></span>
+      <span class="ui-avatar ui-avatar--default"><img src="/assets/brand/GMT_icon_transparent.svg" alt=""></span>
+      <span class="ui-avatar ui-avatar--lg ui-avatar--default"><img src="/assets/brand/GMT_icon_transparent.svg" alt="Default avatar"></span>
+      <span class="ui-avatar ui-avatar--lg"><img src="/assets/brand/ringo.png" alt="Ringo"></span>
+    </div>
+    <div class="ui-card" style="margin-top: var(--space-5); max-width: 520px">
+      <div class="ui-thread" aria-live="polite">
+        <div class="ui-msg ui-msg--bot"><span class="ui-avatar ui-avatar--sm"><img src="/assets/brand/ringo.png" alt=""></span><div><div class="ui-msg__meta"><a href="#chat">Ringo</a> · 09:41</div><div class="ui-msg__bubble">Hey, I'm Ringo. Want help setting up your first miner?</div></div></div>
+        <div class="ui-msg ui-msg--mine"><div><div class="ui-msg__meta">You · 09:42</div><div class="ui-msg__bubble">Yes, how much do I need to start?</div></div></div>
+        <div class="ui-quick-replies"><button class="ui-chip">Open the calculator</button><button class="ui-chip">RINGO5 bonuses</button><button class="ui-chip">Talk to Ringo on Telegram</button></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<script src="/assets/components.js?v=1" defer></script>
+<script>
+  // "German-length text": swaps in the long variant of every data-l="short|long" label to prove nothing breaks.
+  document.getElementById('sg-long').addEventListener('change', function () {
+    const long = this.checked;
+    document.documentElement.lang = long ? 'de' : 'en';
+    document.querySelectorAll('[data-l]').forEach(function (el) { el.textContent = el.dataset.l.split('|')[long ? 1 : 0]; });
+  });
+</script>
+</body>
+</html>

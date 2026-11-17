@@ -1,4 +1,4 @@
-/* GMT Optimizer — /quote: zero-setup quoting tool for prospective GoMining users.
+/* GMT-Optimizer — /quote: zero-setup quoting tool for prospective GoMining users.
    =========================================================================
    Answers the two questions you actually get asked on a call — "what does $X
    earn me?" and "what do I need to invest for $Y a month?" — for someone with
@@ -346,7 +346,7 @@
         + '</title><rect x="' + x.toFixed(1) + '" y="' + yPos.toFixed(1) + '" width="' + bw.toFixed(1)
         + '" height="' + hPos.toFixed(1) + '" rx="3" fill="url(#qcGold)"></rect>'
         + (hCash > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + (yPos - 2 - hCash).toFixed(1) + '" width="' + bw.toFixed(1)
-          + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#A78BFA"></rect>' : '')
+          + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#8B9CF7"></rect>' : '')
         + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">M' + r.mo + '</text>';
     });
     // Only the final column is labelled — a number on every column is noise, not information.
@@ -354,7 +354,7 @@
     g += '<text class="qc-lab" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + money(c.last.total, 0) + '</text>';
     return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each month end">'
       + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
-      + '<stop offset="0" stop-color="#F7B84E"/><stop offset="1" stop-color="#F5A623"/></linearGradient></defs>'
+      + '<stop offset="0" stop-color="#F7D88A"/><stop offset="1" stop-color="#E2B259"/></linearGradient></defs>'
       + '<polyline class="qc-cap" fill="none" points="' + paidPts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"></polyline>'
       + g
       // drawn over the bars, outlined in the card colour so it reads even where a bar sits behind it
@@ -391,7 +391,7 @@
       + (c.rows.length > 1
         ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
           + '<span><i style="background:none;border-top:1px dashed var(--t3);border-radius:0;height:0;vertical-align:middle"></i>' + (adds ? 'Paid in so far' : 'Capital in') + '</span>'
-          + (tookCash ? '<span><i style="background:#A78BFA"></i>Income taken as cash</span>' : '') + '</div>'
+          + (tookCash ? '<span><i style="background:#8B9CF7"></i>Income taken as cash</span>' : '') + '</div>'
           + compChart(c, cap, wpx)
         : '')
       + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th>' + (adds ? '<th>Paid in</th>' : '') + '<th>Hashrate</th><th>Locked GMT</th>'
@@ -449,8 +449,8 @@
           <div class="leg"><div class="lk"><span class="sw" style="background:var(--gold)"></span>Buy hashrate</div>
             <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${num(pct(thUSD), 0)}%</div>
             <div class="ls">${num(a.th, 1)} TH minted at 15 W/TH</div></div>
-          <div class="leg"><div class="lk"><span class="sw" style="background:#A78BFA"></span>Lock GMT</div>
-            <div class="lv" style="color:#A78BFA">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
+          <div class="leg"><div class="lk"><span class="sw" style="background:#8B9CF7"></span>Lock GMT</div>
+            <div class="lv" style="color:#8B9CF7">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
             <div class="ls">${num(a.ag, 0)} GMT &mdash; 360 days of fee coverage</div></div>
         </div>
       </div>
@@ -497,8 +497,8 @@
     const SC = 2, W = 1200, H = 675;
     const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
     const x = c.getContext('2d'); x.scale(SC, SC);
-    const GOLD = '#F5A623', GSOFT = '#F7B84E', GHI = '#FFCF7A', UP = '#2EE59D', PURP = '#A78BFA';
-    const SANS = '"Space Grotesk",system-ui,sans-serif', MONO = '"Share Tech Mono",monospace';
+    const GOLD = '#E2B259', GSOFT = '#F7D88A', GHI = '#F7D88A', UP = '#2EE59D', PURP = '#8B9CF7';
+    const SANS = '"Inter",system-ui,sans-serif', MONO = '"Inter",monospace';
     const gold = a => 'rgba(245,166,35,' + a + ')';
     const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
     // backdrop: dark room, amber light columns, floor
@@ -530,29 +530,29 @@
     // left: what is being quoted
     x.textAlign = 'left'; x.fillStyle = GSOFT; x.font = '18px ' + MONO;
     x.fillText('GOMINING QUOTE', L, PY + 52);
-    x.fillStyle = '#fff'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + (q.add ? ' + ' + q.add : ' invested'), L, PY + 100);
-    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '18px ' + MONO;
+    x.fillStyle = '#FFFFFF'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + (q.add ? ' + ' + q.add : ' invested'), L, PY + 100);
+    x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '18px ' + MONO;
     x.fillText(num(q.th, 1) + ' TH @ 15 W/TH  +  ' + num(q.gmt, 0) + ' GMT locked', L, PY + 136);
     // right: the monthly income, big
     x.textAlign = 'right';
-    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 22; x.fillStyle = '#fff'; x.font = '700 84px ' + SANS;
+    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 22; x.fillStyle = '#FFFFFF'; x.font = '700 84px ' + SANS;
     const big = money(q.mo, 0); x.fillText(big, R - 70, PY + 104);
     const bw = x.measureText(big).width; x.restore();
-    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
+    x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
     x.save(); x.shadowColor = UP; x.shadowBlur = 12; x.fillStyle = UP; x.font = '700 30px ' + SANS;
     x.fillText('▲ ' + num(q.yieldPct, 1) + '%/yr on capital', R, PY + 148); x.restore();
     // stat chips
     const stats = [
       ['FEE DISCOUNT', num(q.disc, 2) + '%', UP],
-      ['PER DAY', '$' + q.day.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), '#fff'],
-      ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#fff'],
+      ['PER DAY', '$' + q.day.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), '#FFFFFF'],
+      ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#FFFFFF'],
       ['VIP TIER', q.vip, GHI],
     ];
     const cw = (R - L - 3 * 14) / 4, cy = PY + 176;
     stats.forEach(([k, v, col], i) => {
       const cx = L + i * (cw + 14);
       rr(cx, cy, cw, 74, 14); x.fillStyle = 'rgba(255,200,110,0.05)'; x.fill(); x.strokeStyle = gold(.22); x.lineWidth = 1; x.stroke();
-      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
       x.fillStyle = col; x.font = '700 26px ' + SANS; x.fillText(v, cx + 16, cy + 59);
     });
     // growth line: total value month by month, filled down to a dashed line of the money paid
@@ -568,15 +568,15 @@
       x.fillStyle = ag; x.fill();
       x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 16; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
       path(); x.shadowBlur = 4; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
-      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,240,215,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
-      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
+      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,255,255,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
       const ex = pxs(s.length - 1), ey = py(s[s.length - 1]);
       x.save(); x.shadowColor = UP; x.shadowBlur = 16; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
       x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.arc(ex, ey, 3, 0, 7); x.fill();
       // end label to the right of the line
-      x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
+      x.textAlign = 'left'; x.fillStyle = '#FFFFFF'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
       x.fillStyle = UP; x.font = '700 18px ' + SANS; x.fillText(num(q.mult, 2) + '× in ' + q.yrs + ' yr', CR + 22, T + 62);
-      x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO;
+      x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO;
       x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
       x.fillText(num(q.cagr, 1) + '% compounded', CR + 22, T + 110);
       if (q.add) x.fillText(money(q.paidIn, 0) + ' paid in', CR + 22, T + 132);
@@ -588,11 +588,11 @@
     // brand + footer
     let bx = PX + 4;
     if (logo) { x.drawImage(logo, bx, 34, 46, 46); bx += 60; }
-    x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 34px ' + SANS; x.fillText('GMT Optimizer', bx, 69);
+    x.textAlign = 'left'; x.fillStyle = '#FFFFFF'; x.font = '700 34px ' + SANS; x.fillText('GMT-Optimizer', bx, 69);
     x.textAlign = 'right'; x.fillStyle = GSOFT; x.font = '20px ' + MONO; x.fillText('gmt-optimizer.com/quote', W - PX - 4, 66);
     const fy = H - 30;
     x.textAlign = 'left'; x.fillStyle = GHI; x.font = '700 18px ' + SANS; x.fillText('Start with code RINGO5 — +5% bonus TH', PX + 4, fy);
-    x.textAlign = 'right'; x.fillStyle = 'rgba(255,240,215,0.42)'; x.font = '14px ' + MONO;
+    x.textAlign = 'right'; x.fillStyle = 'rgba(255,255,255,0.42)'; x.font = '14px ' + MONO;
     const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     x.fillText(d + '  ·  today\u2019s BTC & sats/TH held  ·  not financial advice', W - PX - 4, fy);
     return c;
@@ -633,41 +633,41 @@
   // with each step showing a number from the quote that was just built, then reveals it.
   const LOAD_CSS = `
 .ql{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(245,166,35,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(255,138,61,.08),transparent 60%),rgba(6,7,9,.97);
+  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(226,178,89,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(169,119,47,.08),transparent 60%),rgba(11,11,13,.97);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   transition:opacity .45s cubic-bezier(.16,1,.3,1),filter .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1)}
 .ql::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);
-  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);
+  background-image:linear-gradient(rgba(226,178,89,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(226,178,89,.05) 1px,transparent 1px);
+  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000000 25%,transparent 80%);
   animation:qlGrid 4s linear infinite}
 .ql.out{opacity:0;filter:blur(8px);transform:scale(1.03);pointer-events:none}
 @keyframes qlGrid{to{background-position:0 36px,36px 0}}
-.ql-core{position:relative;width:min(420px,100%);text-align:center;color:#EBE2D2;font-family:var(--sans)}
+.ql-core{position:relative;width:min(420px,100%);text-align:center;color:#FFFFFF;font-family:var(--sans)}
 .ql-orb{position:relative;width:92px;height:92px;margin:0 auto 14px}
-.ql-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(245,166,35,.9) 80%,#FFCF7A 100%);
-  -webkit-mask:radial-gradient(circle,transparent 60%,#000 61%);mask:radial-gradient(circle,transparent 60%,#000 61%);animation:qlSpin 1.05s linear infinite}
-.ql-orb img{position:absolute;inset:25px;width:42px;height:42px;animation:qlBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(245,166,35,.6))}
+.ql-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(226,178,89,.9) 80%,#F7D88A 100%);
+  -webkit-mask:radial-gradient(circle,transparent 60%,#000000 61%);mask:radial-gradient(circle,transparent 60%,#000000 61%);animation:qlSpin 1.05s linear infinite}
+.ql-orb img{position:absolute;inset:25px;width:42px;height:42px;animation:qlBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(226,178,89,.6))}
 @keyframes qlSpin{to{transform:rotate(360deg)}}
 @keyframes qlBreathe{50%{transform:scale(1.08)}}
-.ql-kicker{font-family:var(--mono);letter-spacing:.3em;font-size:.66rem;color:#FFCF7A;text-transform:uppercase;margin-bottom:.3rem}
-.ql-title{font-size:1.15rem;font-weight:700;color:#FFF4E0;margin-bottom:.8rem}
+.ql-kicker{font-family:var(--mono);letter-spacing:.3em;font-size:.66rem;color:#F7D88A;text-transform:uppercase;margin-bottom:.3rem}
+.ql-title{font-size:1.15rem;font-weight:700;color:#FFFFFF;margin-bottom:.8rem}
 .ql-meter{display:flex;align-items:center;gap:10px;margin-bottom:.85rem}
 .ql-bar{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
-.ql-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 12px rgba(245,166,35,.8)}
-.ql-pct{font-family:var(--mono);color:#FFF4E0;font-size:.86rem;min-width:3em;text-align:right}
+.ql-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#E2B259,#F7D88A);box-shadow:0 0 12px rgba(226,178,89,.8)}
+.ql-pct{font-family:var(--mono);color:#FFFFFF;font-size:.86rem;min-width:3em;text-align:right}
 .ql-steps{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:6px}
-.ql-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6F6759;transition:color .25s;min-width:0}
+.ql-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6B6B75;transition:color .25s;min-width:0}
 .ql-step b{flex:0 0 14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;transition:all .25s}
-.ql-step.on{color:#FFF4E0}
-.ql-step.on b{border-color:rgba(245,166,35,.3);border-top-color:#F5A623;animation:qlSpin .7s linear infinite}
-.ql-step.ok{color:#C3B8A6}
-.ql-step.ok b{border-color:#57d9a3;background:#57d9a3;box-shadow:0 0 9px rgba(87,217,163,.6)}
-.ql-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #06140d;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ql-step.on{color:#FFFFFF}
+.ql-step.on b{border-color:rgba(226,178,89,.3);border-top-color:#E2B259;animation:qlSpin .7s linear infinite}
+.ql-step.ok{color:#A1A1AA}
+.ql-step.ok b{border-color:#22C55E;background:#22C55E;box-shadow:0 0 9px rgba(34,197,94,.6)}
+.ql-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #0B0B0D;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .ql-step span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ql-v{font-style:normal;font-family:var(--mono);font-size:.7rem;color:#FFCF7A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
+.ql-v{font-style:normal;font-family:var(--mono);font-size:.7rem;color:#F7D88A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
 .ql-step.ok .ql-v{opacity:1;transform:none}
-.ql-hash{margin-top:.8rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;color:#5A5346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ql.done .ql-hash{color:#57d9a3}
+.ql-hash{margin-top:.8rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;color:#6B6B75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ql.done .ql-hash{color:#22C55E}
 .q-reveal>*{animation:qReveal .6s cubic-bezier(.16,1,.3,1) both}
 .q-reveal>*:nth-child(2){animation-delay:.06s}.q-reveal>*:nth-child(3){animation-delay:.12s}
 .q-reveal>*:nth-child(4){animation-delay:.18s}.q-reveal>*:nth-child(n+5){animation-delay:.24s}

@@ -1,4 +1,4 @@
-/* GMT Optimizer — "4,000 Bitcoin futures" inside the Growth Projection.
+/* GMT-Optimizer — "4,000 Bitcoin futures" inside the Growth Projection.
    BTC price paths that wander around the Power-Law fit the way BTC has since 2010: weekly
    deviations from the fit follow an AR(1) whose speed (phi) and shocks (bootstrapped residuals)
    are measured from history, reverting toward RB_PROJ_BAND ("Still cheap") — the same band the
@@ -191,17 +191,17 @@
       tg.strokeStyle='rgba(255,190,80,.16)';tg.stroke(segUp);tg.strokeStyle='rgba(255,110,70,.14)';tg.stroke(segDn);
       g.fillStyle='rgba(255,225,150,.95)';g.fill(spUp);g.fillStyle='rgba(255,155,115,.9)';g.fill(spDn);
       // origin pulse
-      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(255,198,90,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
+      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(247,216,138,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
+      g.fillStyle='#F7D88A';g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
       const pk=Math.min(1,t/Math.max(1,T1));
       num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString();
       // the three lines sweep in once the paths are out
       const lk=T2?Math.max(0,Math.min(1,(t-T1+250)/T2)):1;
       if(lk>0){const k=Math.max(0,Math.floor((1-Math.pow(1-lk,3))*(Wn-1)));
         band(sim.p90,'rgba(127,211,122,.95)','rgba(110,220,110,.9)',1.5,k,[3,3]);
-        band(sim.p10,'rgba(255,128,128,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
-        band(sim.p50,'#FFC65A','rgba(255,190,70,1)',2.6,k);
-        if(lk>=1){g.font='700 12px ui-monospace,monospace';g.textAlign='right';g.textBaseline='bottom';g.fillStyle='#FFC65A';g.shadowColor='#FFC65A';g.shadowBlur=10;
+        band(sim.p10,'rgba(239,68,68,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
+        band(sim.p50,'#F7D88A','rgba(255,190,70,1)',2.6,k);
+        if(lk>=1){g.font='700 12px ui-monospace,monospace';g.textAlign='right';g.textBaseline='bottom';g.fillStyle='#F7D88A';g.shadowColor='#F7D88A';g.shadowBlur=10;
           g.fillText(fU(at(sim.p50,Wn-1),0),cssW-pad.r,Yv(at(sim.p50,Wn-1))-6);g.shadowBlur=0;g.textAlign='left';}}
       const prog=Math.min(1,t/(T1+T2));bar.style.transform=`scaleX(${0.08+prog*0.8})`;
       if(phase===0){rows[0].classList.add('on');phase=1;}
@@ -269,11 +269,11 @@
       for(let e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)for(const m of [1,2,5]){const v=m*Math.pow(10,e);if(v<lo||v>hi)continue;const y=Y(v);
         g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();
         if(endYs.some(z=>Math.abs(z-y)<13))continue;
-        g.fillStyle='rgba(235,226,210,.38)';g.fillText(short(v),pad.l+pw+6,y);}
-      g.textBaseline='alphabetic';g.fillStyle='rgba(235,226,210,.38)';
+        g.fillStyle='rgba(255,255,255,.38)';g.fillText(short(v),pad.l+pw+6,y);}
+      g.textBaseline='alphabetic';g.fillStyle='rgba(255,255,255,.38)';
       const now$=fU(sim.bp,0);g.font='600 11px ui-monospace,monospace';const nowW=g.measureText(now$).width;g.font='11px ui-monospace,monospace';
       const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText('Yr '+k,x,cssH-6);}
-      g.fillStyle='#FFC65A';g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
+      g.fillStyle='#F7D88A';g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
     }
     // glow: a wide, faint stroke in the line's own colour under it (shadowBlur re-run every frame lagged)
     function line(arr,stroke,width,dash,upto,glow){const ln=new Path2D();ln.moveTo(x0,y0);
@@ -288,7 +288,7 @@
     function frame(now){
       const k=DUR?Math.min(1,(now-t0)/DUR):1, ease=1-Math.pow(1-k,3), upto=Math.max(0,Math.min(Wn-1,Math.floor(ease*(Wn-1))));
       g.clearRect(0,0,cssW,cssH);axes();
-      g.fillStyle='rgba(245,166,35,.10)';g.beginPath();g.moveTo(x0,y0);
+      g.fillStyle='rgba(226,178,89,.10)';g.beginPath();g.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(p90[w]));for(let w=upto;w>=0;w--)g.lineTo(X(w),Y(p10[w]));g.lineTo(x0,y0);g.fill();
       g.lineWidth=1;
       const pUp=new Path2D(),pDn=new Path2D();   // batched by colour: two strokes, not 260
@@ -296,15 +296,15 @@
         const pp=all[p*W+Wn-1]>=p50[Wn-1]?pUp:pDn;
         pp.moveTo(x0,y0);for(let w=0;w<=upto;w+=PSTEP)pp.lineTo(X(w),Y(all[p*W+w]));pp.lineTo(X(upto),Y(all[p*W+upto]));
       }
-      g.strokeStyle='rgba(255,198,90,.085)';g.stroke(pUp);g.strokeStyle='rgba(255,120,80,.07)';g.stroke(pDn);
-      line(lane,'rgba(235,226,210,.55)',1.2,[4,4],upto);
-      line(p10,'rgba(255,128,128,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
+      g.strokeStyle='rgba(247,216,138,.085)';g.stroke(pUp);g.strokeStyle='rgba(255,120,80,.07)';g.stroke(pDn);
+      line(lane,'rgba(255,255,255,.55)',1.2,[4,4],upto);
+      line(p10,'rgba(239,68,68,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
       line(p90,'rgba(127,211,122,.95)',1.6,[2,3],upto,'rgba(110,220,110,.8)');
-      line(p50,'#FFC65A',2.6,null,upto,'rgba(255,190,70,.95)');
+      line(p50,'#F7D88A',2.6,null,upto,'rgba(255,190,70,.95)');
       g.fillStyle='rgba(255,190,70,.25)';g.beginPath();g.arc(X(upto),Y(p50[upto]),11,0,7);g.fill();
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
+      g.fillStyle='#F7D88A';g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
       if(k>=1){g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
-        [[p90,'#7fd37a'],[p50,'#FFC65A'],[p10,'#ff8080']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
+        [[p90,'#22C55E'],[p50,'#F7D88A'],[p10,'#EF4444']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
         anim=null;return;}
       anim=requestAnimationFrame(frame);
     }

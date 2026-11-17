@@ -1,5 +1,5 @@
 /*
-  GMT Optimizer co-pilot: a scripted guide in Ringo's voice. No AI, no API, no backend.
+  GMT-Optimizer co-pilot: a scripted guide in Ringo's voice. No AI, no API, no backend.
   Same engine as the ringomining.com co-pilot, tailored to this site: it walks people through the
   tools (opening them in place when they're already on the console), explains the GMT discount,
   gets new users signed up with RINGO5, and sends their GoMining username to the same Formspree
@@ -29,7 +29,7 @@
 
   var NODES = {
     start: {
-      say: ["What's up, Ringo here. I built GMT Optimizer.", "What can I help you with?"],
+      say: ["What's up, Ringo here. I built GMT-Optimizer.", "What can I help you with?"],
       opts: [
         { t: "Help me use the calculator", go: "tools" },
         { t: "I'm new to GoMining", go: "signup" },
@@ -155,7 +155,7 @@
       opts: [{ t: "Another question", go: "faq" }, { t: "Help me use the calculator", go: "tools" }]
     },
     f_legit: {
-      say: ["Fair question. It's the same risk as any investment. If you own a company's stock and it falls apart, your shares fall with it.", "GoMining has been around since 2017 and has offered this product since 2021. I trust them with my own money. But no investment is risk-free, and this one isn't either.", "GMT Optimizer is my own independent tool, not GoMining's."],
+      say: ["Fair question. It's the same risk as any investment. If you own a company's stock and it falls apart, your shares fall with it.", "GoMining has been around since 2017 and has offered this product since 2021. I trust them with my own money. But no investment is risk-free, and this one isn't either.", "GMT-Optimizer is my own independent tool, not GoMining's."],
       opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
     },
     f_bank: {
@@ -164,7 +164,7 @@
       opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
     },
     f_you: {
-      say: ["Full transparency: GoMining pays me a referral commission plus ongoing ambassador rewards tied to your mining fees.", "That's also how I keep GMT Optimizer free and ad-free."],
+      say: ["Full transparency: GoMining pays me a referral commission plus ongoing ambassador rewards tied to your mining fees.", "That's also how I keep GMT-Optimizer free and ad-free."],
       opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
     },
     human: {
@@ -185,7 +185,7 @@
 
   // ---------- styles ----------
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=1";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=2";
   document.head.appendChild(css);
 
   // ---------- shell ----------
@@ -205,7 +205,7 @@
   panel.hidden = true;
   panel.innerHTML =
     '<header class="gc-head"><img src="' + AVATAR + '" alt="" width="36" height="36">' +
-    '<div><strong>Ringo</strong><small>GMT Optimizer guide · code ' + CODE + '</small></div>' +
+    '<div><strong>Ringo</strong><small>GMT-Optimizer guide · code ' + CODE + '</small></div>' +
     '<button type="button" class="gc-restart" title="Start over">↺</button>' +
     '<button type="button" class="gc-close" aria-label="Close">×</button></header>' +
     '<div class="gc-log" aria-live="polite"></div>' +
@@ -395,7 +395,7 @@
       });
       log.appendChild(card);
       var fine = el("div", "gc-fine");
-      fine.innerHTML = 'By sending, you agree to the <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms</a>. GMT Optimizer is an independent tool, not affiliated with GoMining. Not financial advice.';
+      fine.innerHTML = 'By sending, you agree to the <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms</a>. GMT-Optimizer is an independent tool, not affiliated with GoMining. Not financial advice.';
       log.appendChild(fine);
       scroll();
       var wrap = el("div", "gc-opts");
@@ -415,7 +415,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({ name: d.name, gomining_username: d.user, contact: d.contact,
-        message: "Sent from the GMT Optimizer co-pilot chat (" + location.pathname + ")", _subject: "GMT Optimizer co-pilot: " + d.user })
+        message: "Sent from the GMT-Optimizer co-pilot chat (" + location.pathname + ")", _subject: "GMT-Optimizer co-pilot: " + d.user })
     }).then(function (r) {
       if (!r.ok) throw new Error("bad status");
       me("Send it");

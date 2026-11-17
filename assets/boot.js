@@ -1,4 +1,4 @@
-/* GMT Optimizer — console boot sequence + count-up reveal.
+/* GMT-Optimizer — console boot sequence + count-up reveal.
    =========================================================================
    The console fetches prices, difficulty, FX, then (if logged in) the saved setup and the cloud
    fleet, and every one of those re-renders the numbers. Shown raw, that reads as flicker: zeros,

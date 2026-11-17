@@ -1,4 +1,4 @@
-/* GMT Optimizer — Odds tab.
+/* GMT-Optimizer — Odds tab.
    Turns the single-path Growth Projection into a probability view. Same engine, run thousands
    of times: BTC price wanders around the Power-Law fit (_rbFit) the rest of the app projects on,
    with mean reversion and shocks measured from BTC's own weekly history (bootstrapped residuals,
@@ -285,8 +285,8 @@
       for(let e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)for(const m of [1,2,5]){const v=m*Math.pow(10,e);if(v<lo||v>hi)continue;const y=Y(v);
         g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();
         if(endYs.some(e=>Math.abs(e-y)<13))continue;   // don't collide with the end labels
-        g.fillStyle='rgba(235,226,210,.38)';g.fillText(short(v),pad.l+pw+6,y);}
-      g.textBaseline='alphabetic';g.fillStyle='rgba(235,226,210,.38)';
+        g.fillStyle='rgba(255,255,255,.38)';g.fillText(short(v),pad.l+pw+6,y);}
+      g.textBaseline='alphabetic';g.fillStyle='rgba(255,255,255,.38)';
       const yrs=W/52;for(let k=1;k<=Math.round(yrs);k++){const x=X(k*52-1);g.fillText('Yr '+k,Math.min(x-12,pad.l+pw-28),cssH-6);}
       g.fillText('Now',pad.l,cssH-6);
     }
@@ -302,26 +302,26 @@
       const k=DUR?Math.min(1,(now-t0)/DUR):1, ease=1-Math.pow(1-k,3), upto=Math.max(0,Math.min(W-1,Math.floor(ease*(W-1))));
       g.clearRect(0,0,cssW,cssH);axes();
       // band
-      g.fillStyle='rgba(245,166,35,.10)';g.beginPath();g.moveTo(x0,y0);
+      g.fillStyle='rgba(226,178,89,.10)';g.beginPath();g.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(p90[w]));for(let w=upto;w>=0;w--)g.lineTo(X(w),Y(p10[w]));g.lineTo(x0,y0);g.fill();
       // individual futures
       g.lineWidth=1;
       for(let p=0;p<SAMPLE;p++){
         const end=all[p*W+W-1], up=end>=p50[W-1];
-        g.strokeStyle=up?'rgba(255,198,90,.085)':'rgba(255,120,80,.07)';
+        g.strokeStyle=up?'rgba(247,216,138,.085)':'rgba(255,120,80,.07)';
         g.beginPath();g.moveTo(x0,y0);for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(all[p*W+w]));g.stroke();
       }
-      line(center,'rgba(235,226,210,.55)',1.2,[4,4],upto);
-      line(p10,'rgba(255,128,128,.9)',1.4,[2,3],upto);
+      line(center,'rgba(255,255,255,.55)',1.2,[4,4],upto);
+      line(p10,'rgba(239,68,68,.9)',1.4,[2,3],upto);
       line(p90,'rgba(127,211,122,.9)',1.4,[2,3],upto);
-      line(p50,'#FFC65A',2.4,null,upto);
+      line(p50,'#F7D88A',2.4,null,upto);
       // live head
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(X(upto),Y(p50[upto]),3.5,0,7);g.fill();
+      g.fillStyle='#F7D88A';g.beginPath();g.arc(X(upto),Y(p50[upto]),3.5,0,7);g.fill();
       g.beginPath();g.arc(x0,y0,3,0,7);g.fill();
       if(k>=1){
         g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
-        [[p90,'#7fd37a'],[p50,'#FFC65A'],[p10,'#ff8080']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[W-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[W-1]))));});
-        $o('oddsFanEnd').innerHTML=`In ${W>=52?Math.round(W/52)+' yr'+(W>=104?'s':''):''}: <b style="color:#ff8080">${short(p10[W-1])}</b> · <b style="color:#FFC65A">${short(p50[W-1])}</b> · <b style="color:#7fd37a">${short(p90[W-1])}</b>`;
+        [[p90,'#22C55E'],[p50,'#F7D88A'],[p10,'#EF4444']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[W-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[W-1]))));});
+        $o('oddsFanEnd').innerHTML=`In ${W>=52?Math.round(W/52)+' yr'+(W>=104?'s':''):''}: <b style="color:#EF4444">${short(p10[W-1])}</b> · <b style="color:#F7D88A">${short(p50[W-1])}</b> · <b style="color:#22C55E">${short(p90[W-1])}</b>`;
         fanAnim=null;return;
       }
       fanAnim=requestAnimationFrame(frame);

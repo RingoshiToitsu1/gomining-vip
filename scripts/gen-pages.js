@@ -106,11 +106,17 @@ function shell({slug,title,desc,faq,body,related,canonicalUrl}){
 <script type="application/ld+json">
 ${JSON.stringify(faqLd,null,2)}
 </script>
-<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/content.css?v=12">
-<link rel="stylesheet" href="/assets/topbar.css?v=5">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/tokens.css?v=1">
+<link rel="stylesheet" href="/assets/components.css?v=1">
+<link rel="stylesheet" href="/assets/content.css?v=13">
+<link rel="stylesheet" href="/assets/topbar.css?v=6">
 </head>
 <body>
 <main class="content-wrap">
@@ -121,7 +127,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=25"></script>
+<script src="/assets/site.js?v=26"></script>
 </body>
 </html>
 `;

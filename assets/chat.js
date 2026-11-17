@@ -1,4 +1,4 @@
-/* GMT Optimizer — global chat + presence (Phase 3).
+/* GMT-Optimizer — global chat + presence (Phase 3).
    ==================================================
    A Twitch-style global chat and a live "online" count, on Supabase Realtime.
    Anyone can read the chat and is counted as online; posting needs an account.

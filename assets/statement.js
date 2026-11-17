@@ -1,4 +1,4 @@
-/* GMT Optimizer — /statement: turn a GoMining income export into a partner-ready statement.
+/* GMT-Optimizer — /statement: turn a GoMining income export into a partner-ready statement.
    ==========================================================================
    Feed it the CSV that GoMining hands you ("<from>-<to>_nft_incomes.csv") and it
    renders a dated income statement — headline figures, four charts and a monthly
@@ -580,7 +580,7 @@
     doc.insertAdjacentHTML('beforeend',
       '<header class="doc-head">' +
         '<div class="dh-top">' +
-          '<div class="dh-brand"><img src="/gmt-optimizer-logo.svg?v=2" alt=""><span>GMT Optimizer</span></div>' +
+          '<div class="dh-brand"><img src="/gmt-optimizer-logo.svg?v=2" alt=""><span>GMT-Optimizer</span></div>' +
           '<div class="dh-kind">Mining income statement</div>' +
         '</div>' +
         '<div class="dh-meta">' +
