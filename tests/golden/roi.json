@@ -62,37 +62,37 @@
  "embed/index.html / $500": {
   "re-net": "$295",
   "re-net-sub": "59.0% of $500 · at today's rates",
-  "re-cost": "$50.00",
-  "re-cost-sub": "10% back with RINGO5",
+  "re-cost": "+1.6 TH",
+  "re-cost-sub": "bonus TH on your first miner",
   "re-be": "$24.57",
   "re-be-sub": "mining, after fees",
   "re-disc": "5.0%",
   "re-disc-sub": "0.9% Silver II + 3% click streak + 1.09% solo",
-  "re-hint": "$500 buys 31.6 TH at 12.0 W/TH, and RINGO5 adds 1.6 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $50.00 cash back, it costs you $450.",
+  "re-hint": "$500 buys 31.6 TH at 12.0 W/TH, and RINGO5 adds 1.6 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount.",
   "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
  },
  "embed/index.html / $5k": {
   "re-net": "$3,035",
   "re-net-sub": "60.7% of $5,000 · at today's rates",
-  "re-cost": "$500",
-  "re-cost-sub": "10% back with RINGO5",
+  "re-cost": "+16.1 TH",
+  "re-cost-sub": "bonus TH on your first miner",
   "re-be": "$253",
   "re-be-sub": "mining, after fees",
   "re-disc": "5.9%",
   "re-disc-sub": "1.8% Gold II + 3% click streak + 1.09% solo",
-  "re-hint": "$5,000 buys 322.3 TH at 12.0 W/TH, and RINGO5 adds 16.1 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $500 cash back, it costs you $4,500.",
+  "re-hint": "$5,000 buys 322.3 TH at 12.0 W/TH, and RINGO5 adds 16.1 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount.",
   "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
  },
  "embed/index.html / $50k at 12W": {
   "re-net": "$29,911",
   "re-net-sub": "59.8% of $50,000 · at today's rates",
-  "re-cost": "$1,000",
-  "re-cost-sub": "10% back with RINGO5",
+  "re-cost": "+25.0 TH",
+  "re-cost-sub": "bonus TH on your first miner",
   "re-be": "$2,493",
   "re-be-sub": "mining, after fees",
   "re-disc": "6.8%",
   "re-disc-sub": "2.7% Platinum III + 3% click streak + 1.09% solo",
-  "re-hint": "$50,000 buys 3,283.5 TH at 12.0 W/TH, and RINGO5 adds 25.0 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount. After $1,000 cash back, it costs you $49,000.",
+  "re-hint": "$50,000 buys 3,283.5 TH at 12.0 W/TH, and RINGO5 adds 25.0 bonus TH on top. At today's prices, all hashrate earns more than locking GMT for the discount.",
   "re-basis": "BTC $84,000 · GMT $0.280 · 56 sats/TH/day (cached)"
  }
 }

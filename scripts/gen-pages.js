@@ -113,10 +113,10 @@ ${JSON.stringify(faqLd,null,2)}
 <meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/tokens.css?v=1">
-<link rel="stylesheet" href="/assets/components.css?v=1">
-<link rel="stylesheet" href="/assets/content.css?v=13">
-<link rel="stylesheet" href="/assets/topbar.css?v=6">
+<link rel="stylesheet" href="/assets/tokens.css?v=2">
+<link rel="stylesheet" href="/assets/components.css?v=2">
+<link rel="stylesheet" href="/assets/content.css?v=14">
+<link rel="stylesheet" href="/assets/topbar.css?v=7">
 </head>
 <body>
 <main class="content-wrap">
@@ -127,7 +127,7 @@ ${faqHtml}
   </div>
   <div class="related">Read next: ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=26"></script>
+<script src="/assets/site.js?v=27"></script>
 </body>
 </html>
 `;
@@ -136,7 +136,7 @@ ${faqHtml}
 const CTA = `  <div class="cta">
     <h3>Run your own numbers — free</h3>
     <p>Plug in your hashrate for live P&amp;L on today's numbers &mdash; then project it forward on assumptions you choose.</p>
-    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> for +5% bonus TH — and I'll fund your first TH to get your account started.</p>
+    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> to unlock three bonuses: +5% bonus TH on your first miner (up to 25 TH), 1 month of VIP Platinum+ and a GoMining Card cashback bonus.</p>
     <a href="/console" class="btn">Open the calculator →</a>
   </div>`;
 

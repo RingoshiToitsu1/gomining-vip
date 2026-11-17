@@ -167,3 +167,5 @@ path that existed (example: `/neon-miner/frontend/node_modules/tslib/tslib.html`
 |---|---|---|
 | `/gomining-optimizer`, `/gomining-optimizer.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
 | `/gomining-vip-index`, `/gomining-vip-index.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
+| `/claim`, `/claim/` | **content replaced** (rule 8): now the RINGO5 bonuses explainer, claim form removed; title "Your RINGO5 Bonuses". Same status codes | 2026-11-17 hotfix 9d1f29432 |
+| `/gomining-promo-code` | body rewritten around the RINGO5 bonus block (rule 8); title and H1 unchanged | 2026-11-17 hotfix 9d1f29432 |

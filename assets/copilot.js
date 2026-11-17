@@ -107,7 +107,7 @@
       opts: [{ t: "Added it ✓", go: "buy" }, { t: "My account is older", go: "human" }, { t: "Back", go: "start" }]
     },
     buy: {
-      say: ["With my code, GoMining adds <b>5% bonus terahash</b> to your first miner.", "How much to start with is your call, not mine. Only put in money you can afford to lose. Run your numbers in the Capital Planner first."],
+      say: ["With my code, GoMining adds three sign-up bonuses: <b>+5% bonus TH</b> on your first miner (up to 25 TH), <b>1 month of VIP Platinum+</b>, and a <b>Card cashback bonus</b> when you spend with the GoMining Card in your first 90 days.", "How much to start with is your call, not mine. Only put in money you can afford to lose. Run your numbers in the Capital Planner first."],
       links: [{ t: "Open the Capital Planner", href: "/planner", run: ["consoleView", "tab-planner"] }],
       opts: [{ t: "Send Ringo my username", go: "claim" }, { t: "Questions first", go: "faq" }]
     },
@@ -185,7 +185,7 @@
 
   // ---------- styles ----------
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=2";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=3";
   document.head.appendChild(css);
 
   // ---------- shell ----------

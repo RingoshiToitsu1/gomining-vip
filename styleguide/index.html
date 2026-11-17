@@ -13,8 +13,8 @@
 <meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/tokens.css?v=1">
-<link rel="stylesheet" href="/assets/components.css?v=1">
+<link rel="stylesheet" href="/assets/tokens.css?v=2">
+<link rel="stylesheet" href="/assets/components.css?v=2">
 <style>
   body { margin: 0; }
   .sg-nav { position: sticky; top: 0; z-index: var(--z-header); background: rgb(var(--color-bg-rgb) / .92); backdrop-filter: blur(8px);
@@ -135,7 +135,7 @@
       <button class="ui-btn ui-btn--secondary ui-btn--sm">Small</button>
       <button class="ui-btn ui-btn--secondary ui-btn--icon" aria-label="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
     </div>
-    <div style="max-width: 280px; margin-top: var(--space-4)"><button class="ui-btn ui-btn--primary ui-btn--block" data-l="Claim your RINGO5 bonuses|Sichern Sie sich Ihre RINGO5-Boni für das erste Gerät">Claim your RINGO5 bonuses</button></div>
+    <div style="max-width: 280px; margin-top: var(--space-4)"><button class="ui-btn ui-btn--primary ui-btn--block" data-l="See your RINGO5 bonuses|Alle RINGO5-Boni für neue GoMining-Konten ansehen">See your RINGO5 bonuses</button></div>
   </section>
 
   <section class="sg-block" id="forms">
@@ -215,7 +215,7 @@
     <h2 class="ui-h3">Notices, modal, toast, accordion</h2>
     <div class="ui-stack">
       <div class="ui-notice ui-notice--gold"><div><strong>Estimates only.</strong> Not financial advice. Figures use live BTC and GMT prices and change every minute.</div></div>
-      <div class="ui-notice ui-notice--success"><div><strong>Claim sent.</strong> Ringo will message you on GoMining.</div></div>
+      <div class="ui-notice ui-notice--success"><div><strong>Setup saved.</strong> Your farm is stored in your account.</div></div>
       <div class="ui-notice ui-notice--error"><div><strong>Couldn't send.</strong> Check your connection and try again.</div></div>
       <div class="ui-row">
         <button class="ui-btn ui-btn--secondary" data-ui-open="sg-modal">Open modal</button>
@@ -255,7 +255,7 @@
   </section>
 
 </main>
-<script src="/assets/components.js?v=1" defer></script>
+<script src="/assets/components.js?v=2" defer></script>
 <script>
   // "German-length text": swaps in the long variant of every data-l="short|long" label to prove nothing breaks.
   document.getElementById('sg-long').addEventListener('change', function () {

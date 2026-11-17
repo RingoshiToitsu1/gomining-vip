@@ -341,3 +341,36 @@ create table public.reports (
 - ~300 one-off colour literals in a long tail; Phases 2–4 rebuild those pages on components and remove them.
 - Social/OG images still show the old branding: regenerated in Phase 8 (the brief puts them there).
 - Glow and orbit effects in the old page styles are recoloured, not removed; Phases 2–3 replace them with the calmer components.
+
+---
+
+## 14. Rule 8: ended personal offer (owner, 2026-11-17; overrides everything else)
+
+> My personal 10% cash back and the "Claim TH Rebate" / funded-TH / free TH offer have ended. Don't advertise
+> them anywhere: not in the nav, footer, landing page, tool cards, dashboard, co-pilot scripts, chat widget,
+> meta descriptions, or any language version. The only offer on the site is the RINGO5 bonus block.
+
+**The RINGO5 bonus block** (exact copy, used on the landing offer section, `/claim`, `/gomining-promo-code`):
+Title "Your RINGO5 bonuses" · +5% bonus TH on your first miner (up to 25 TH) · 1 month of VIP Platinum+, on
+GoMining · Card cashback bonus: spend with the GoMining Card in your first 90 days and earn bonus TH ·
+"Enter code RINGO5 before your first purchase, within 30 days of signing up. New accounts only." ·
+"Bonuses set by GoMining and may change" → https://docs.gomining.com/en/product/promos/referral-program.
+Never say the owner pays them; no dollar amount for the card cashback.
+
+**Hotfix shipped to `main`: `9d1f29432`** (merged into `overhaul`):
+- `/claim`: rewritten as the RINGO5 bonuses explainer. **The claim form is removed. Formspree form ID
+  `xojokqwe`** (endpoint `https://formspree.io/f/xojokqwe`) is no longer on `/claim`; it is still used by
+  the co-pilot's "send Ringo my username" support flow (`assets/copilot.js`).
+  **Title changed** "Claim Your Funded First TH" → "Your RINGO5 Bonuses" (the old title advertised the
+  ended offer; rule 8 overrides the keep-titles rule). URL unchanged.
+- `/gomining-promo-code`: title and H1 kept; body rebuilt on the bonus block; meta + FAQ rewritten.
+- Every guide, the 14 data pages and their generator, the landing/console/content footers, the menu, the console
+  projection card, the stream visualizer, the co-pilot, meta descriptions, privacy and terms: old offer copy replaced.
+- `/embed`: the 10% and 5% cash back are removed from its offer list (EN/FR/ES/DE) **and from its dollar-mode
+  maths**; that tile now shows the RINGO5 bonus TH. Golden ROI snapshot re-recorded: only the three embed `$`
+  cases changed, and only in the cash-back tile and the last sentence of the hint.
+- A hidden, unused "VIP 10% bonus on $10,000" planner block was removed.
+- `og-claim.png` and `og-gomining-promo-code.png` were regenerated without the old offer.
+- **`scripts/offer-check.js`**: scans every published file for the old phrases in EN/FR/ES/DE (the GoMining Card
+  cashback is allowed). It reports 0 matches on `main` and `overhaul`, and caught 137 on the pre-hotfix copy.
+  Phase 8 runs it against the built site in all languages.

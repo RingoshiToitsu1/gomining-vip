@@ -202,7 +202,7 @@
         '<div class="vz-bottom">' +
           '<div class="vz-legend" id="vzLegend"></div>' +
           '<div class="vz-brandrow">' +
-            '<div class="vz-brand"><strong>gmt-optimizer<span>.com</span></strong>code RINGO5 · we fund your first TH<span class="vz-qrcap">scan to sign up →</span></div>' +
+            '<div class="vz-brand"><strong>gmt-optimizer<span>.com</span></strong>code RINGO5 · 3 sign-up bonuses<span class="vz-qrcap">scan to sign up →</span></div>' +
             '<div class="vz-qr"><img id="vzQrImg" alt="QR code"></div>' +
           '</div>' +
         '</div>' +

@@ -194,7 +194,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
         '<div class="gm-body" role="navigation" aria-label="All pages">' + secs + '</div>' +
         '<div class="gm-foot">' +
           (isConsole() ? '' : '<a class="gm-cta" href="/console">Launch Console ' + ARROW.replace('gm-arr', '') + '</a>') +
-          '<div class="gm-offer">New to GoMining? Code <b>RINGO5</b> &middot; <a href="/claim">claim your first TH &rarr;</a></div>' +
+          '<div class="gm-offer">New to GoMining? Code <b>RINGO5</b> &middot; <a href="/claim">RINGO5 bonuses &rarr;</a></div>' +
           '<div class="gm-legal"><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div>' +
         '</div>' +
       '</aside>';
