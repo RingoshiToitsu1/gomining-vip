@@ -268,3 +268,8 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
 /* 'Fees and rates as of …' next to any fee or rate (date from data/config.json, filled at build) */
 .cfg-asof { font-size: var(--font-size-xs); color: var(--color-text-2); margin: var(--space-2) 0 var(--space-4); }
 .cfg-asof time { color: var(--color-text); font-variant-numeric: tabular-nums; }
+/* stacked (phone) tables: a cell with an empty data-label is the row's heading */
+@media (max-width: 640px) {
+  .ui-table--stack td[data-label=""] { justify-content: flex-start; font-family: var(--font-ui); font-weight: var(--font-weight-semibold); color: var(--color-text); text-align: left; }
+  .ui-table--stack td[data-label=""]::before { content: none; }
+}
