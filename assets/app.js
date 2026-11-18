@@ -4,6 +4,8 @@ const CK_FALLBACK={gold:'#E2B259','gold-300':'#F7D88A',success:'#22C55E',error:'
 const CC=n=>window.GMTCharts?window.GMTCharts.color(n):CK_FALLBACK[n];
 // TC(text): canvas text through the console's translation dictionary (assets/i18n-dom.js); English: unchanged.
 const TC=s=>{const t=window.GMTDomI18n&&window.GMTDomI18n.t&&window.GMTDomI18n.t(s);return t||s;};
+// isTxt(el, english): does el show this text? On translated pages the DOM translator has replaced it.
+const isTxt=(el,s)=>el.textContent===s||el.textContent===TC(s);
 /* GMT-Optimizer — app engine (extracted verbatim from index.html) */
 // Always load at the top — don't let the browser restore a stale scroll position.
 if('scrollRestoration' in history){history.scrollRestoration='manual';}
@@ -607,7 +609,7 @@ function submitPlannerCapital(){
     throw e;                    // still surfaces in the console for diagnosis
    }finally{
     if(btn)btn.disabled=false;
-    if(!txt||txt.textContent==='Finding your optimal split…')if(load)load.style.display='none';
+    if(!txt||isTxt(txt,'Finding your optimal split…'))if(load)load.style.display='none';
    }
   },800);
 }
@@ -771,7 +773,7 @@ function submitPlannerTarget(){
     throw e;
    }finally{
     if(btn)btn.disabled=false;
-    if(!txt||txt.textContent==='Finding the capital you need…')if(load)load.style.display='none';
+    if(!txt||isTxt(txt,'Finding the capital you need…'))if(load)load.style.display='none';
    }
   },800);
 }
@@ -911,7 +913,7 @@ function loadBtcRainbow(){
   if(_rainbowData||_rainbowLoading)return;
   _rainbowLoading=true;
   const msg=document.getElementById('btcRainbowMsg');
-  if(msg){msg.textContent='Loading price history…';msg.style.display='';}
+  if(msg){msg.dataset.err='';msg.textContent='Loading price history…';msg.style.display='';}
   fetchRainbowHistory()
     .then(data=>{
       // Trim to 2012+ so the Power-Law fit matches the canonical "since 2012" rainbow.
@@ -924,7 +926,7 @@ function loadBtcRainbow(){
     })
     .catch(()=>{
       _rainbowLoading=false;
-      if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
+      if(msg){msg.dataset.err='1';msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
       drawBtcRainbow();
     });
 }
@@ -1317,7 +1319,7 @@ function loadCombined(force){
     drawCombined();
   }).catch(()=>{
     _cmbLoading=false;
-    if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
+    if(msg){msg.dataset.err='1';msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
   });
 }
 // Pearson correlation of DAILY LOG RETURNS — the honest measure of "do they move together".

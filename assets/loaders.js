@@ -211,7 +211,7 @@
       doneText: 'power-law bands · live',
       target: () => document.getElementById('btcRainbowCanvas'),
       // loadBtcRainbow() writes "Couldn’t load price history…" into #btcRainbowMsg when every source fails.
-      failed: () => { const m = document.getElementById('btcRainbowMsg'); return !data() && !!m && m.style.display !== 'none' && /^Couldn/.test(m.textContent); },
+      failed: () => { const m = document.getElementById('btcRainbowMsg'); return !data() && !!m && m.style.display !== 'none' && (m.dataset.err === '1' || /^Couldn/.test(m.textContent)); },
       steps: [
         { label: 'Downloading BTC price history', ok: () => !!data(), v: () => nf(data().length) + ' days since 2012' },
         { label: 'Fitting the Power-Law regression', ok: () => { const ok = typeof _rbFit !== 'undefined' && !!_rbFit; if (ok && !fitAt) fitAt = performance.now(); return ok; }, v: () => 'log price vs log time' },
