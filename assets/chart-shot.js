@@ -14,9 +14,14 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const SC=2,W=1200,H=opts.height||675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const GOLD='#E2B259',GSOFT='#F7D88A',GHI='#F7D88A',UP='#2EE59D',DN='#FF4D5E';
+  // Browser: token colours, page-language text and number formats (chart kit + translations). Node (the OG
+  // image generator) has neither, so every hook falls back to the original value.
+  const W_=typeof window!=='undefined'?window:{}, UI_=W_.GMT_UI, CK_=UI_&&W_.GMTCharts;
+  const kc=(n,f)=>W_.GMTCharts?W_.GMTCharts.color(n):f;
+  const tt=(s,...a)=>UI_?UI_.t(s,...a):s.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:m);
+  const GOLD=kc('gold','#E2B259'),GSOFT=kc('gold-300','#F7D88A'),GHI=kc('gold-300','#F7D88A'),UP='#2EE59D',DN='#FF4D5E';
   const SANS='"Inter",system-ui,sans-serif',MONO='"Inter",monospace';
-  const price=p=>p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
+  const price=p=>CK_?W_.GMTCharts.money(p,p>=1000?0:p>=1?2:4):p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
     :p>=1?'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
     :'$'+p.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
   const rr=(g,X,Y,w,h,r)=>{g.beginPath();g.moveTo(X+r,Y);g.arcTo(X+w,Y,X+w,Y+h,r);g.arcTo(X+w,Y+h,X,Y+h,r);g.arcTo(X,Y+h,X,Y,r);g.arcTo(X,Y,X+w,Y,r);g.closePath();};
@@ -104,15 +109,15 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
   let ax=34;
   if(imgs.coin){p.save();p.beginPath();p.arc(ax+21,58,21,0,7);p.closePath();p.clip();p.drawImage(imgs.coin,ax,37,42,42);p.restore();ax+=56;}
-  p.textAlign='left';p.fillStyle='#FFFFFF';p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
+  p.textAlign='left';p.fillStyle=kc('text','#FFFFFF');p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
   p.fillStyle='rgba(255,255,255,0.55)';p.font='18px '+MONO;
-  p.fillText(asset.pair+'  ·  '+data.interval+'  ·  last '+daysSpan+' days',34,112);
+  p.fillText(tt('{0}  ·  {1}  ·  last {2} days',asset.pair,data.interval,daysSpan),34,112);
   p.textAlign='right';
   p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=22;
-  p.fillStyle='#FFFFFF';p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
+  p.fillStyle=kc('text','#FFFFFF');p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
   p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=12;
   p.fillStyle=pos?UP:DN;p.font='700 38px '+SANS;
-  p.fillText(opts.sub||((pos?'▲ ':'▼ ')+Math.abs(chg).toFixed(2)+'% ('+daysSpan+'D)'),PW-34,160);p.restore();
+  p.fillText(opts.sub||((pos?'▲ ':'▼ ')+(CK_?W_.GMTCharts.pct(Math.abs(chg),2):Math.abs(chg).toFixed(2)+'%')+tt(' ({0}D)',daysSpan)),PW-34,160);p.restore();
 
   // glass rim: bright gold top-left fading round to the bottom-right, plus a thin inner line
   const rim=p.createLinearGradient(0,0,PW,PH);
@@ -135,7 +140,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   // ---- brand: top-left / url top-right ----
   let bx=PX+4;
   if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,34,46,46);bx+=60;}
-  x.textAlign='left';x.fillStyle='#FFFFFF';x.font='700 34px '+SANS;x.fillText('GMT-Optimizer',bx,69);
+  x.textAlign='left';x.fillStyle=kc('text','#FFFFFF');x.font='700 34px '+SANS;x.fillText('GMT-Optimizer',bx,69);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='20px '+MONO;x.fillText('gmt-optimizer.com',W-PX-4,66);
 
   // ---- footer on the floor ----
@@ -143,10 +148,10 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   let fx=PX+4;
   if(imgs.token){x.save();x.beginPath();x.arc(fx+10,fy-6,10,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,fy-16,20,20);x.restore();fx+=28;}
   x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='600 16px '+SANS;
-  x.fillText('Free GoMining ROI & discount optimizer',fx,fy);
+  x.fillText(tt('Free GoMining ROI & discount optimizer'),fx,fy);
   x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(opts.footRight||now+'   ·   not financial advice',W-PX-4,fy);
+  const now=new Date().toLocaleDateString(CK_?W_.GMTCharts.locale():'en-US',{month:'short',day:'numeric',year:'numeric'});
+  x.fillText(opts.footRight||tt('{0}   ·   not financial advice',now),W-PX-4,fy);
   x.textAlign='left';
   return c;
 }

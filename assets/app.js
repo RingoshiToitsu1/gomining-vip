@@ -1,3 +1,9 @@
+// Canvas colours come from the shared chart kit (assets/charts.js → assets/tokens.css); the fallback values are
+// the same tokens, for the headless test harness and any page without the kit.
+const CK_FALLBACK={gold:'#E2B259','gold-300':'#F7D88A',success:'#22C55E',error:'#EF4444',bg:'#0B0B0D',text:'#FFFFFF','series-4':'#8B9CF7'};
+const CC=n=>window.GMTCharts?window.GMTCharts.color(n):CK_FALLBACK[n];
+// TC(text): canvas text through the console's translation dictionary (assets/i18n-dom.js); English: unchanged.
+const TC=s=>{const t=window.GMTDomI18n&&window.GMTDomI18n.t&&window.GMTDomI18n.t(s);return t||s;};
 /* GMT-Optimizer — app engine (extracted verbatim from index.html) */
 // Always load at the top — don't let the browser restore a stale scroll position.
 if('scrollRestoration' in history){history.scrollRestoration='manual';}
@@ -379,7 +385,7 @@ const UI_LOC=window.GMT_UI?({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lan
 // HTML with {0}... placeholders). Without GMT_UI (English) it just fills the placeholders, so output is unchanged.
 const T=window.GMT_UI?window.GMT_UI.t:(s,...a)=>s.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:m);
 const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;const n=cv.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});return UI_LOC?n+'\u00a0'+sym:sym+n};
-const fP=v=>v.toFixed(2)+'%';
+const fP=v=>UI_LOC?v.toLocaleString(UI_LOC,{minimumFractionDigits:2,maximumFractionDigits:2})+'\u00a0%':v.toFixed(2)+'%';
 const fN=(v,d=2)=>v.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
 // Compact formatters for chart axis labels (keep them narrow so monthly values
 // don't overflow the y-axis gutter).
@@ -941,7 +947,7 @@ const RB_HALVINGS=[
 ];
 // Plot padding adapts to width so the axis/labels stay readable on phones.
 function rbPads(W){return W<480?{l:6,r:52,t:10,b:44}:{l:8,r:74,t:12,b:46};}
-function rbAxisLabel(val,sm){if(!sm)return rbFmtUSD(val);return val>=1e6?'$'+(val/1e6)+'M':val>=1e3?'$'+(val/1e3)+'K':'$'+val;}
+function rbAxisLabel(val,sm){if(!sm)return rbFmtUSD(val);if(UI_LOC&&window.GMTCharts)return ckCompactUSD(val);return val>=1e6?'$'+(val/1e6)+'M':val>=1e3?'$'+(val/1e3)+'K':'$'+val;}
 let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null, _rbHover=null, _rbRaf=null;
 function rbRequestDraw(){if(_rbRaf)return;_rbRaf=requestAnimationFrame(()=>{_rbRaf=null;drawBtcRainbow();});}
 function rbHideTip(){const t=document.getElementById('btcRainbowTip');if(t)t.style.display='none';}
@@ -1034,7 +1040,10 @@ function rbPriceAt(series,t){
   const a=series[lo],c=series[hi],f=(t-a.t)/((c.t-a.t)||1);
   return a.v*Math.pow(c.v/a.v,f);
 }
-function rbFmtUSD(v){return '$'+Math.round(v).toLocaleString(UI_LOC||'en-US');}
+function rbFmtUSD(v){return UI_LOC&&window.GMTCharts?GMTCharts.money(Math.round(v),0):'$'+Math.round(v).toLocaleString('en-US');}
+// Translated pages: axis numbers in the page locale via the chart kit. English keeps its exact legacy strings.
+function ckCompactUSD(v){return new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:1}).format(v);}
+function ckSignedPct(n){return UI_LOC&&window.GMTCharts?new Intl.NumberFormat(GMTCharts.locale(),{style:'percent',signDisplay:'always',maximumFractionDigits:0}).format(Math.round(n)/100):(n>=0?'+':'')+Math.round(n)+'%';}
 function renderRainbowLegend(active){
   const el=document.getElementById('btcRainbowLegend');if(!el)return;
   el.innerHTML=RB_LABELS.map((l,i)=>`<span class="rb-pill${i===active?' active':''}" style="border-left-color:${RB_COLORS[i]}">${l}</span>`).join('');
@@ -1099,7 +1108,7 @@ function drawBtcRainbow(){
   const cur=S.btcPrice||series[series.length-1].v;
   let curBand=8;
   if(cur>0){const tNow=Math.min(Date.now(),dataT1);const xx=X(tNow),yy=Y(Math.log10(cur));
-    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle='#FFFFFF';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#0B0B0D';x.lineWidth=1.6;x.stroke();}
+    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle=CC('text');x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle=CC('bg');x.lineWidth=1.6;x.stroke();}
     const cl=Math.log10(cur)-centerAt(tNow);
     if(cl>=RB_OFFSETS[0])curBand=0;else{curBand=8;for(let bi=0;bi<RB_OFFSETS.length-1;bi++){if(cl<RB_OFFSETS[bi]&&cl>=RB_OFFSETS[bi+1]){curBand=bi;break;}}}
   }
@@ -1239,14 +1248,14 @@ let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='co
 // Line or candle for BOTH series; candles pair inside each day rather than overlapping.
 let _cmbStyle='line';
 const CMB_EMA_N=50;
-const CMB_BTC='#E2B259', CMB_GMT='#8B9CF7', CMB_EMA='#22C55E';
+const CMB_BTC=CC('gold'), CMB_GMT=CC('series-4'), CMB_EMA=CC('success');
 // Two candle series need two palettes, or you cannot tell whose day was up. Each asset keeps its
 // brand colour for up days and goes near-white for down days. The two whites are TINTED — warm
 // for Bitcoin, cool for GMT — because a shared pure white would make a down day on one
 // indistinguishable from a down day on the other, which is the one thing the pairing exists to
 // show. They still read as white next to a saturated orange or purple.
-const CMB_BTC_UP='#E2B259', CMB_BTC_DN='#FFEFD2';
-const CMB_GMT_UP='#8B9CF7', CMB_GMT_DN='#EAE4FF';
+const CMB_BTC_UP=CC('gold'), CMB_BTC_DN='#FFEFD2';
+const CMB_GMT_UP=CC('series-4'), CMB_GMT_DN='#EAE4FF';
 
 // Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
 async function cmbFetchBTC(){
@@ -1506,7 +1515,7 @@ function drawCombined(){
     x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(226,178,89,0.07)';
     x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(R,gy);x.stroke();
     x.fillStyle='rgba(255,255,255,0.45)';
-    x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',R+6,gy+4);
+    x.fillText(ckSignedPct(v-100),R+6,gy+4);
   }
   // month gridlines
   x.textAlign='center';let lastM=null;
@@ -1640,7 +1649,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
   for(let k=0;k<=4;k++){
     const v=lo+(hi-lo)*k/4,gy=Y(v);
     x.strokeStyle='rgba(226,178,89,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.45)';x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',Rr+6,gy+4);
+    x.fillStyle='rgba(255,255,255,0.45)';x.fillText(ckSignedPct(v-100),Rr+6,gy+4);
   }
   x.textAlign='center';let lastM=null;
   S.forEach(p=>{const d=new Date(p.t),mk=d.getUTCFullYear()+'-'+d.getUTCMonth();
@@ -1657,7 +1666,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
   path(()=>100,'rgba(255,255,255,0.45)',1.4,[5,4]);   // the 50-day EMA itself
   path(p=>band(p,1),'rgba(234,57,67,0.5)',1);
   path(p=>band(p,-1),'rgba(34,197,94,0.5)',1);
-  path(rel,'#F7D88A',2.4);                            // GMT priced in BTC
+  path(rel,CC('gold-300'),2.4);                            // GMT priced in BTC
 
   const last=S[S.length-1];
   if(_cmbHover!=null){
@@ -1667,7 +1676,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
       const px=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
       x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
-      x.fillStyle='#F7D88A';x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
+      x.fillStyle=CC('gold-300');x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
@@ -2127,10 +2136,10 @@ function buildFarmShotCanvas(d,imgs){
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
   const MONO='"Inter",monospace',SANS='"Inter",system-ui,sans-serif';
-  const GOLD='#E2B259',GSOFT='#F7D88A',GLT='#F7D88A',GPALE='#F7D88A',RED='#EF4444';
+  const GOLD=CC('gold'),GSOFT=CC('gold-300'),GLT=CC('gold-300'),GPALE=CC('gold-300'),RED=CC('error');
   // background — the site's gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0B0B0D');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0B0B0D');
+  bgG.addColorStop(0,CC('bg'));bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,CC('bg'));
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
   const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(150,60,380,0.17);orb(1070,150,320,0.11);orb(600,780,420,0.07);
@@ -2141,24 +2150,24 @@ function buildFarmShotCanvas(d,imgs){
   // ---- header: brand left, VIP tier right ----
   let bx=pad;
   if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
-  x.textAlign='left';x.fillStyle='#FFFFFF';x.font='800 26px '+SANS;
+  x.textAlign='left';x.fillStyle=CC('text');x.font='800 26px '+SANS;
   x.fillText('GMT-Optimizer',bx,48);
   x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px '+MONO;
   x.fillText('gmt-optimizer.com',pad,74);
-  x.textAlign='right';x.fillStyle='#FFFFFF';x.font='800 26px '+SANS;
-  x.fillText('My GoMining Farm',W-pad,46);
+  x.textAlign='right';x.fillStyle=CC('text');x.font='800 26px '+SANS;
+  x.fillText(TC('My GoMining Farm'),W-pad,46);
   x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px '+MONO;
-  x.fillText('VIP '+(d.vip||'—')+'   ·   '+fN(d.th,1)+' TH   ·   live snapshot',W-pad,70);
+  x.fillText(T('VIP {0}   ·   {1} TH   ·   live snapshot',d.vip||'—',fN(d.th,1)),W-pad,70);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
   lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.55)');lg.addColorStop(1,'transparent');
   x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,100);x.lineTo(W-pad,100);x.stroke();
   // ---- the four headline stats ----
   const neg=d.dailyUSD<0;
   const cards=[
-    {id:'DAILY.NET',  label:'Daily Net Profit',      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:d.dailySub},
-    {id:'MONTH.YIELD',label:'Monthly Earnings',      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:fU(d.yearlyUSD,0)+' / yr'},
-    {id:'COVERAGE',   label:'Total Discount',        val:fP(d.disc),              accent:GOLD,         sub:'Saving '+fU(d.saveMoUSD)+'/mo on fees'},
-    {id:'VELOCITY',   label:'Effective Compounded ROI', val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:d.velSub}
+    {id:'DAILY.NET',  label:TC('Daily Net Profit'),      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:TC(d.dailySub)},
+    {id:'MONTH.YIELD',label:TC('Monthly Earnings'),      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:TC(fU(d.yearlyUSD,0)+' / yr')},
+    {id:'COVERAGE',   label:TC('Total Discount'),        val:fP(d.disc),              accent:GOLD,         sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
+    {id:'VELOCITY',   label:TC('Effective Compounded ROI'), val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:TC(d.velSub)}
   ];
   const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
   cards.forEach((cd,i)=>{
@@ -2186,15 +2195,15 @@ function buildFarmShotCanvas(d,imgs){
   });
   // ---- supporting pills ----
   const pills=[
-    {label:'HASHRATE',   val:fN(d.th,1)+' TH'},
+    {label:TC('HASHRATE'),   val:fN(d.th,1)+' TH'},
     // m.bwth — the FLEET-WIDE weighted average, which is what fees are actually charged on, not
     // the Efficiency field on My Setup (that one rates the main farm only). A greedy machine at a
     // different rating pulls the two apart, so the label has to say which one this is.
-    {label:'AVG EFFICIENCY', val:fN(d.wth,1)+' W/TH'},
-    {label:'GMT LOCKED', val:fN(d.gmtLocked,0)},
-    {label:'GMT VALUE',  val:fU(d.gmtValueUSD,0)},
-    {label:'VIP TIER',   val:d.vip||'—'},
-    {label:'BTC',        val:fmtBTCPrice(d.btc)}
+    {label:TC('AVG EFFICIENCY'), val:fN(d.wth,1)+' W/TH'},
+    {label:TC('GMT LOCKED'), val:fN(d.gmtLocked,0)},
+    {label:TC('GMT VALUE'),  val:fU(d.gmtValueUSD,0)},
+    {label:TC('VIP TIER'),   val:d.vip||'—'},
+    {label:TC('BTC'),        val:fmtBTCPrice(d.btc)}
   ];
   const pillY=cardY+cardH+26,pillH=68,pillPad=18,pillGap=12;
   const pw=pills.map(p=>{x.font='bold 14px '+MONO;const lw=x.measureText(p.label).width;x.font='bold 22px '+MONO;const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
@@ -2210,7 +2219,7 @@ function buildFarmShotCanvas(d,imgs){
   });
   // ---- strapline ----
   x.textAlign='center';x.fillStyle='rgba(255,255,255,0.6)';x.font='700 18px '+SANS;
-  x.fillText('Free GoMining ROI, discount & compounding optimizer',W/2,pillY+pillH+46);
+  x.fillText(TC('Free GoMining ROI, discount & compounding optimizer'),W/2,pillY+pillH+46);
   // ---- footer ----
   const footY=H-34;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
@@ -2222,9 +2231,9 @@ function buildFarmShotCanvas(d,imgs){
   x.fillText('gmt-optimizer.com',fx,footY-1);
   x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
   const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now+'   ·   not financial advice',W/2,footY-1);
+  x.fillText(T('{0}   ·   not financial advice',now),W/2,footY-1);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px '+MONO;
-  x.fillText('use code RINGO5',W-pad,footY-1);
+  x.fillText(TC('use code RINGO5'),W-pad,footY-1);
   x.textAlign='left';
   return c;
 }
@@ -5636,10 +5645,10 @@ function buildShareCanvas(d){
   c.width=W*S;c.height=H*S;
   const x=c.getContext('2d');x.scale(S,S);
   const pad=50;
-  const GOLD='#E2B259',GSOFT='#F7D88A',GLT='#F7D88A';
+  const GOLD=CC('gold'),GSOFT=CC('gold-300'),GLT=CC('gold-300');
   // background — site gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0B0B0D');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0B0B0D');
+  bgG.addColorStop(0,CC('bg'));bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,CC('bg'));
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
   const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(140,90,380,0.18);orb(1060,230,320,0.12);orb(600,770,380,0.07);orb(W/2,-40,460,0.10);
@@ -5647,12 +5656,12 @@ function buildShareCanvas(d){
   for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
   for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
   // header
-  x.fillStyle='#FFFFFF';x.font='bold 56px Poppins,system-ui,sans-serif';x.textAlign='center';
+  x.fillStyle=CC('text');x.font='bold 56px Poppins,system-ui,sans-serif';x.textAlign='center';
   x.shadowColor='rgba(226,178,89,0.55)';x.shadowBlur=28;
-  x.fillText(d.days+'-Day Growth Projection',W/2,72);x.shadowBlur=0;
+  x.fillText(TC(d.days+'-Day Growth Projection'),W/2,72);x.shadowBlur=0;
   x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Inter",monospace';
-  const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (typical future)';
-  x.fillText('Auto-Reinvest Compound Strategy'+btcSub+'  •  powered by gmt-optimizer.com',W/2,108);
+  const btcSub=d.btcMode==='live'?'':T('  •  BTC {0} → {1} (typical future)',fmtBTCPrice(d.bpStart),fmtBTCPrice(d.bpAtEnd));
+  x.fillText(T('Auto-Reinvest Compound Strategy{0}  •  powered by gmt-optimizer.com',btcSub),W/2,108);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
   lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.6)');lg.addColorStop(1,'transparent');
   x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
@@ -5673,17 +5682,17 @@ function buildShareCanvas(d){
       x.fillStyle=accent;x.font='bold 38px "Inter",monospace';x.fillText(it.val,cx+30,iy+38);
     });
   };
-  drawCard(leftX,cardY,'STARTING POSITION',GLT,[
-    {label:'HASHRATE',val:fN(d.startTH,0)+' TH'},
-    {label:'DAILY REWARD',val:fU(d.startSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.startSS*DAYS_PER_MONTH,0)},
-    {label:'GMT Value',val:fU((d.startLocked||0)*d.gp,0)},
+  drawCard(leftX,cardY,TC('STARTING POSITION'),GLT,[
+    {label:TC('HASHRATE'),val:fN(d.startTH,0)+' TH'},
+    {label:TC('DAILY REWARD'),val:fU(d.startSS,0)},
+    {label:TC('MONTHLY INCOME'),val:fU(d.startSS*DAYS_PER_MONTH,0)},
+    {label:TC('GMT Value'),val:fU((d.startLocked||0)*d.gp,0)},
   ]);
-  drawCard(rightX,cardY,'AFTER '+d.days+' DAYS',GSOFT,[
-    {label:'HASHRATE',val:fN(d.th,0)+' TH'},
-    {label:'DAILY REWARD',val:fU(d.finalSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.finalSS*DAYS_PER_MONTH,0)},
-    {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp,0)},
+  drawCard(rightX,cardY,TC('AFTER '+d.days+' DAYS'),GSOFT,[
+    {label:TC('HASHRATE'),val:fN(d.th,0)+' TH'},
+    {label:TC('DAILY REWARD'),val:fU(d.finalSS,0)},
+    {label:TC('MONTHLY INCOME'),val:fU(d.finalSS*DAYS_PER_MONTH,0)},
+    {label:TC('GMT Value'),val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
   x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=22;
   x.font='bold 56px "Poppins",system-ui,sans-serif';x.textAlign='center';
@@ -5695,14 +5704,14 @@ function buildShareCanvas(d){
   // INVESTED + ROI are capital-deployment metrics — only show them when capital was actually
   // deployed (a Capital Planner projection). A My Setup projection invests nothing, so omit them.
   if(d.cap>0){
-    pills.push({label:'INVESTED',val:fU(d.cap,0)});
-    pills.push({label:'ROI',val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'});
+    pills.push({label:TC('INVESTED'),val:fU(d.cap,0)});
+    pills.push({label:TC('ROI'),val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'});
   }
   pills.push(
-    {label:'TH GROWTH',val:'+'+fN(d.thPct,0)+'%'},
-    {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
-    {label:'DISCOUNT',val:fN(d.disc,0)+'%'},
-    {label:'VIP',val:vip}
+    {label:TC('TH GROWTH'),val:'+'+fN(d.thPct,0)+'%'},
+    {label:TC('REWARD GROWTH'),val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
+    {label:TC('DISCOUNT'),val:fN(d.disc,0)+'%'},
+    {label:TC('VIP'),val:vip}
   );
   const pillPad=20,pillGap=12,pillH=70;
   const pwArr=pills.map(p=>{x.font='bold 15px "Inter",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Inter",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
@@ -5724,7 +5733,7 @@ function buildShareCanvas(d){
   x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Poppins,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
   x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Inter",monospace';
   const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
-  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Inter",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
+  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Inter",monospace';x.fillText(TC('use code RINGO5'),W-pad,footY+1);
   x.textAlign='left';
   return c;
 }
