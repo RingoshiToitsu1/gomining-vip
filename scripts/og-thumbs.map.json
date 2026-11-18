@@ -12,6 +12,14 @@
     "out": "og-claim.png"
   },
   {
+    "page": "bitcoin/index.html",
+    "out": "og-bitcoin.png"
+  },
+  {
+    "page": "gmt/index.html",
+    "out": "og-gmt.png"
+  },
+  {
     "page": "rainbow/index.html",
     "out": "og-rainbow.png"
   },

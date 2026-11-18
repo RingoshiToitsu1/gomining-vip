@@ -1,4 +1,6 @@
-/* OG thumbnails for /bitcoin and /gmt (1200x630 PNG): og-bitcoin.png, og-gmt.png.
+/* SUPERSEDED 2026-11-18: og-bitcoin.png and og-gmt.png now come from scripts/gen-og-thumbs.js (Phase 1 brand).
+   Kept for reference; do not run it, it renders the old glow style.
+ * OG thumbnails for /bitcoin and /gmt (1200x630 PNG): og-bitcoin.png, og-gmt.png.
  * Same glass price panel as the console's "Create chart screenshot" — both draw with
  * buildChartShotCanvas() from assets/chart-shot.js, rendered here in headless Chromium.
  * The line is real 1h data when the exchanges answer, else a seeded walk; the headline is
