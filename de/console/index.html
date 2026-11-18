@@ -158,7 +158,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <div class="ob-title ob-step-reveal">Anzeigewährung</div>
       <div class="ob-subtitle ob-step-reveal">Wähle deine bevorzugte Währung für alle Preise und Erträge.</div>
       <div class="ob-field">
-        <label>Währung</label>
+        <label for="obCurrency">Währung</label>
         <select id="obCurrency" class="ob-select">
           <option value="USD">USD ($)</option>
           <option value="GBP">GBP (&pound;)</option>
@@ -182,7 +182,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       </div>
       <span class="ob-tutorial-cap">GoMining-App &rarr; My miners &rarr; Mining farm &rarr; <b>Power</b> (Kachel)</span>
       <div class="ob-field">
-        <label>Gesamte Hashrate</label>
+        <label for="obTH">Gesamte Hashrate</label>
         <div class="ob-input-wrap"><input type="number" id="obTH" value="0" step="0.01" min="0" oninput="autoFillCPT('obTH','obCPT','obWTH')"><span class="ob-unit">TH</span></div>
       </div>
     </div>
@@ -202,7 +202,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       </div>
       <span class="ob-tutorial-cap">GoMining-App &rarr; My miners &rarr; Mining farm &rarr; <b>Efficiency</b> (Kachel)</span>
       <div class="ob-field">
-        <label>Effizienz</label>
+        <label for="obWTH">Effizienz</label>
         <div class="ob-input-wrap"><input type="number" id="obWTH" value="15" step="0.01" min="0"><span class="ob-unit">W/TH</span></div>
       </div>
     </div>
@@ -222,7 +222,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       </div>
       <span class="ob-tutorial-cap">app.gomining.com &rarr; Wallets &rarr; <b>GOMINING</b> &rarr; Balance</span>
       <div class="ob-field">
-        <label>Freie GMT</label>
+        <label for="obGMTWallet">Freie GMT</label>
         <div class="ob-input-wrap"><input type="number" id="obGMTWallet" value="0" step="0.01" min="0"><span class="ob-unit"><img src="/gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
     </div>
@@ -258,7 +258,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       </div>
       <span class="ob-tutorial-cap">Noch nichts gesperrt? Wallet &rarr; More &rarr; <b>Lock</b> zum Staken</span>
       <div class="ob-field">
-        <label>Gesperrte GMT</label>
+        <label for="obGMTLocked">Gesperrte GMT</label>
         <div class="ob-input-wrap"><input type="number" id="obGMTLocked" value="0" step="1" min="0"><span class="ob-unit"><img src="/gmt36.png" class="gmt-logo" alt="GMT"></span></div>
       </div>
       <input type="hidden" id="obLockAPR" value="18.69">
@@ -428,7 +428,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <div class="disc-override-panel" id="discOverridePanel" style="display:none">
           <div class="disc-override-hint">Gib den Gesamtrabatt aus deiner GoMining-App ein, um die Schätzung zu überschreiben.</div>
           <div class="disc-override-row">
-            <input type="number" id="inDiscOverride" min="0" max="30" step="0.1" placeholder="e.g. 24" inputmode="decimal">
+            <input aria-label="Gesamtrabatt laut deiner GoMining-App (%)" type="number" id="inDiscOverride" min="0" max="30" step="0.1" placeholder="e.g. 24" inputmode="decimal">
             <button onclick="applyDiscountOverride()">Übernehmen</button>
           </div>
           <button class="disc-override-reset" id="discOverrideReset" onclick="resetDiscountOverride()" style="display:none">Auf automatische Berechnung zurücksetzen</button>
@@ -651,7 +651,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   <div class="planner-top-row">
     <div class="section proj-hero" id="secProj2">
       <div class="section-header" onclick="toggleSection('secProj2')">
-        <div class="section-title"><img src="/btc36.png" style="height:20px;width:20px;border-radius:50%"> Neues Monatseinkommen</div>
+        <div class="section-title"><img src="/btc36.png" alt="" style="height:20px;width:20px;border-radius:50%"> New monthly income</div>
         <div class="section-toggle">&#9662;</div>
       </div>
       <div class="section-body">
@@ -677,31 +677,31 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     <div class="section-body">
       <div class="input-grid" style="max-width:360px">
         <div class="field">
-          <label>Zu investierendes Gesamtkapital</label>
+          <label for="inCapital">Zu investierendes Gesamtkapital</label>
           <div class="field-input"><input type="number" id="inCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
         <div class="field">
-          <label>Jede Woche / jeden Monat dazu <span class="tip" data-tip="Optional. Geld, das du nach der Einmalsumme weiter einzahlst. Eine Wachstumsprognose setzt es im selben Rhythmus ein, zusammen mit deinen reinvestierten Belohnungen, über den ganzen Zeitraum.">?</span></label>
+          <label for="inContribAmt">Jede Woche / jeden Monat dazu <span class="tip" data-tip="Optional. Geld, das du nach der Einmalsumme weiter einzahlst. Eine Wachstumsprognose setzt es im selben Rhythmus ein, zusammen mit deinen reinvestierten Belohnungen, über den ganzen Zeitraum.">?</span></label>
           <div class="field-input"><input type="number" id="inContribAmt" value="0" step="50" min="0"><span class="unit">USD</span></div>
         </div>
         <div class="field">
-          <label>Wie oft</label>
+          <label for="inContribFreq">Wie oft</label>
           <div class="field-input"><select id="inContribFreq" class="ed-dd" style="width:100%"><option value="monthly">Jeden Monat</option><option value="weekly">Jede Woche</option></select></div>
         </div>
         <div class="field">
-          <label>Geplantes Kapital des Geworbenen <span class="tip" data-tip="Optional. Kapital, das dein Geworbener investieren will, mit derselben TH/GMT-Strategie wie du. Seine TH erhöhen deine Ambassador-Belohnungen, und er reinvestiert in den Prognosen mit dir.">?</span></label>
+          <label for="inRefCapital">Geplantes Kapital des Geworbenen <span class="tip" data-tip="Optional. Kapital, das dein Geworbener investieren will, mit derselben TH/GMT-Strategie wie du. Seine TH erhöhen deine Ambassador-Belohnungen, und er reinvestiert in den Prognosen mit dir.">?</span></label>
           <div class="field-input"><input type="number" id="inRefCapital" value="0" step="100" min="0"><span class="unit">USD</span></div>
         </div>
         <div class="field">
-          <label>Empfehlungsbonus % <span class="tip" data-tip="Deine Ambassador-Provision auf die TH-Käufe eines Geworbenen, in GMT ausgezahlt. Der GoMining-Satz ist gestaffelt: 5 % Basis, steigend mit deinem Ambassador-Rang (z. B. 14 %). Trag deinen hier ein.">?</span></label>
+          <label for="inRefBonusPct">Empfehlungsbonus % <span class="tip" data-tip="Deine Ambassador-Provision auf die TH-Käufe eines Geworbenen, in GMT ausgezahlt. Der GoMining-Satz ist gestaffelt: 5 % Basis, steigend mit deinem Ambassador-Rang (z. B. 14 %). Trag deinen hier ein.">?</span></label>
           <div class="field-input"><input type="number" id="inRefBonusPct" value="5" step="0.5" min="0" max="100"><span class="unit">%</span></div>
         </div>
         <div class="field">
-          <label>Seine vorhandenen TH <span class="tip" data-tip="Hashrate, die dieser Geworbene schon mit deinem Code gekauft hat, vor dem Kapital oben. Sie kommt in dieselbe Farm, damit sie mitwächst, reinvestiert und dir auf jedes gekaufte TH deinen Bonus zahlt, statt stillzustehen. Sie erhöht die Ambassador-Belohnungen NICHT: Deine Zahl der „geworbenen TH“ enthält diese Miner schon, hier mitgezählt würdest du doppelt bezahlt. Nur das Wachstum obendrauf bringt zusätzliche Ambassador-Einnahmen.">?</span></label>
+          <label for="inRefPriorTH">Seine vorhandenen TH <span class="tip" data-tip="Hashrate, die dieser Geworbene schon mit deinem Code gekauft hat, vor dem Kapital oben. Sie kommt in dieselbe Farm, damit sie mitwächst, reinvestiert und dir auf jedes gekaufte TH deinen Bonus zahlt, statt stillzustehen. Sie erhöht die Ambassador-Belohnungen NICHT: Deine Zahl der „geworbenen TH“ enthält diese Miner schon, hier mitgezählt würdest du doppelt bezahlt. Nur das Wachstum obendrauf bringt zusätzliche Ambassador-Einnahmen.">?</span></label>
           <div class="field-input"><input type="number" id="inRefPriorTH" value="0" step="1" min="0"><span class="unit">TH</span></div>
         </div>
         <div class="field">
-          <label>Geworbener reinvestiert <span class="tip" data-tip="Optional. Welchen Anteil seiner eigenen Mining-Belohnungen dein Geworbener in Hashrate reinvestiert. Die Wachstumsprognosen lassen dann seine Farm wachsen, was deine Ambassador-Belohnungen erhöht, und zahlen dir deinen Bonus-% auf jeden seiner TH-Käufe. Auf 0 lassen, um seine Flotte fix zu halten: Das prognostiziert das Verhalten eines anderen, nicht deins.">?</span></label>
+          <label for="inRefReinvest">Geworbener reinvestiert <span class="tip" data-tip="Optional. Welchen Anteil seiner eigenen Mining-Belohnungen dein Geworbener in Hashrate reinvestiert. Die Wachstumsprognosen lassen dann seine Farm wachsen, was deine Ambassador-Belohnungen erhöht, und zahlen dir deinen Bonus-% auf jeden seiner TH-Käufe. Auf 0 lassen, um seine Flotte fix zu halten: Das prognostiziert das Verhalten eines anderen, nicht deins.">?</span></label>
           <div class="field-input"><input type="number" id="inRefReinvest" value="0" step="5" min="0" max="100"><span class="unit">%</span></div>
         </div>
       </div>
@@ -710,15 +710,15 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Ein günstiger Miner auf dem GoMining-Marketplace im Blick? Trag ihn hier ein. Seine Hashrate zählt für Belohnungen und Gebühren, aber <strong style="color:var(--text3)">nicht</strong> für dein VIP-Level. Der Planer setzt den Rest für GMT-Sperren / TH-Minting für den maximalen Rabatt ein.</div>
         <div class="input-grid">
           <div class="field">
-            <label>Miner-Hashrate</label>
+            <label for="inMpTH">Miner-Hashrate</label>
             <div class="field-input"><input type="number" id="inMpTH" value="0" step="10" min="0"><span class="unit">TH</span></div>
           </div>
           <div class="field">
-            <label>Miner-Preis <span class="tip" data-tip="Der Marketplace-Angebotspreis dieses Miners in GMT. Bezahlt zuerst aus deinen vorhandenen GMT, dann aus USD-Kapital.">?</span></label>
+            <label for="inMpGMT">Miner-Preis <span class="tip" data-tip="Der Marketplace-Angebotspreis dieses Miners in GMT. Bezahlt zuerst aus deinen vorhandenen GMT, dann aus USD-Kapital.">?</span></label>
             <div class="field-input"><input type="number" id="inMpGMT" value="0" step="1" min="0"><span class="unit">GMT</span></div>
           </div>
           <div class="field">
-            <label>Miner-Effizienz <span class="tip" data-tip="Watt pro Terahash dieses Marketplace-Miners: bestimmt seine täglichen Gebühren. Ältere Miner sind weniger effizient (höhere W/TH). Standard: 15.">?</span></label>
+            <label for="inMpWth">Miner-Effizienz <span class="tip" data-tip="Watt pro Terahash dieses Marketplace-Miners: bestimmt seine täglichen Gebühren. Ältere Miner sind weniger effizient (höhere W/TH). Standard: 15.">?</span></label>
             <div class="field-input"><input type="number" id="inMpWth" value="15" step="0.1" min="0"><span class="unit">W/TH</span></div>
           </div>
         </div>
@@ -728,8 +728,8 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         </div>
         <div id="mpGreedyNote" style="display:none;margin-top:.5rem">
           <div class="field" style="max-width:200px">
-            <label>Miner-Nr. <span style="color:var(--text4);font-weight:400">(optional)</span></label>
-            <div class="field-input"><input type="text" id="inMpCode" maxlength="16" placeholder="e.g. 1366"></div>
+            <label for="inMpCode">Miner-Nr. <span style="color:var(--text4);font-weight:400">(optional)</span></label>
+            <div class="field-input"><input aria-label="Miner-Nummer" type="text" id="inMpCode" maxlength="16" placeholder="e.g. 1366"></div>
           </div>
           <div style="font-size:.72rem;color:var(--text4);margin-top:.5rem;line-height:1.5">Als Greedy Machine geplant: Sie wächst ohne Kapital um den wöchentlichen % unten, reinvestierte Belohnungen füllen sie zuerst bis zu ihrer <strong style="color:var(--text3)">eigenen</strong> Obergrenze von 5.000 TH und zählt, wie jeder Marketplace-Kauf, nie für dein VIP-Level. Wird als eigenes NFT geführt, getrennt von jeder Greedy Machine, die du schon besitzt.</div>
         </div>
@@ -739,7 +739,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <div style="font-size:.72rem;color:var(--text4);margin-bottom:.8rem;line-height:1.5">Wöchentliches TH-Wachstum der Greedy Machine(s), die du in der Konsole eingetragen hast. Wächst jede Woche auf die aktuellen TH und ist das <strong style="color:var(--text3)">einzige</strong> Wachstum, sobald ein Miner die manuelle Upgrade-Grenze von 5.000 TH erreicht. Bis dahin füllen reinvestierte Belohnungen sie bis 5k (Rabatt zuerst). Trag das Wachstum der letzten Woche ein.</div>
         <div class="input-grid">
           <div class="field">
-            <label>Wöchentliches TH-Wachstum</label>
+            <label for="inGreedyGrowth">Wöchentliches TH-Wachstum</label>
             <div class="field-input"><input type="number" id="inGreedyGrowth" value="0.3347" step="0.0001" min="0"><span class="unit">%/wk</span></div>
           </div>
         </div>
@@ -846,7 +846,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
                 <input type="number" id="piContribAmt" value="0" step="50" min="0">
                 <span class="pi-unit">USD</span>
               </label>
-              <select id="piContribFreq" class="pi-contrib-freq"><option value="monthly">pro Monat</option><option value="weekly">pro Woche</option></select>
+              <select id="piContribFreq" class="pi-contrib-freq" aria-label="Wie oft"><option value="monthly">pro Monat</option><option value="weekly">pro Woche</option></select>
             </div>
             <div class="pi-note">Wird in diesem Rhythmus über den ganzen Zeitraum einer Wachstumsprognose eingesetzt.</div>
           </div>
@@ -868,15 +868,15 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
           <div id="piOptMiner" class="pi-opt" hidden>
           <div style="display:flex;gap:.5rem">
             <div style="flex:1.2">
-              <input type="number" id="piMpTH" value="0" step="10" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <input aria-label="Miner-Hashrate" type="number" id="piMpTH" value="0" step="10" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
               <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">Miner-TH</div>
             </div>
             <div style="flex:1.4">
-              <input type="number" id="piMpGMT" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <input aria-label="Miner-Preis" type="number" id="piMpGMT" value="0" step="1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
               <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">Preis (GMT)</div>
             </div>
             <div style="flex:1">
-              <input type="number" id="piMpWth" value="15" step="0.1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
+              <input aria-label="Miner-Effizienz" type="number" id="piMpWth" value="15" step="0.1" min="0" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 12px;font-size:1rem;font-family:var(--mono);width:100%;text-align:center">
               <div style="font-size:.6rem;color:var(--text4);margin-top:.25rem;text-align:center">W/TH</div>
             </div>
           </div>
@@ -885,7 +885,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
             <span class="toggle-label" onclick="document.getElementById('piMpGreedy').click()">Es ist eine Greedy Machine</span>
           </div>
           <div id="piMpGreedyNote" style="display:none;margin-top:.35rem">
-            <input type="text" id="piMpCode" placeholder="Miner-Nr. (optional)" maxlength="16" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:8px 12px;font-size:.85rem;font-family:var(--mono);width:100%;text-align:center">
+            <input aria-label="Miner-Nummer" type="text" id="piMpCode" placeholder="Miner-Nr. (optional)" maxlength="16" style="background:var(--bg-input);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:8px 12px;font-size:.85rem;font-family:var(--mono);width:100%;text-align:center">
             <div style="font-size:.65rem;color:var(--text4);margin-top:.35rem;text-align:center">Wächst jede Woche kostenlos, reinvestierte Belohnungen füllen sie zuerst, und sie behält ihre <strong style="color:var(--text3)">eigene</strong> Obergrenze von 5.000 TH &mdash; getrennt von jeder Greedy Machine geführt, die du schon besitzt. Den wöchentlichen % stellst du im Tab Investition ein.</div>
           </div>
           <div style="font-size:.65rem;color:var(--text4);margin-top:.4rem;text-align:center">Seine TH erhöhen die Belohnungen, aber <strong style="color:var(--text3)">nicht</strong> dein VIP-Level. Der Planer verteilt den Rest für den maximalen Rabatt.</div>
@@ -1089,7 +1089,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <div class="sp-form sp-form-tight">
         <div class="input-grid sp-form-grid sp-form-grid-1">
           <div class="field">
-            <label>Wöchentliche Auszahlung <span class="tip" data-tip="Nimm einen Teil der wöchentlichen Mining-Belohnungen als Einkommen, statt zu reinvestieren. Wähle % der Belohnungen oder einen festen $-Betrag und gib den Wert ein. 0 = volle Reinvestition.">?</span></label>
+            <label for="spPayoutType">Wöchentliche Auszahlung <span class="tip" data-tip="Nimm einen Teil der wöchentlichen Mining-Belohnungen als Einkommen, statt zu reinvestieren. Wähle % der Belohnungen oder einen festen $-Betrag und gib den Wert ein. 0 = volle Reinvestition.">?</span></label>
             <div class="sp-payout-row">
               <div class="field-input sp-selwrap sp-payout-type"><select id="spPayoutType" onchange="syncPayoutUnit()">
                 <option value="pct" selected>% der Belohnungen</option>

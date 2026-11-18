@@ -911,7 +911,11 @@
   "Calculating your plan…": "Calcul de votre plan…",
   "<b></b><span>Calculating your discount and earnings</span><em class=\"gb-v\"></em>": "<b></b><span>Calcul de votre remise et de vos gains</span><em class=\"gb-v\"></em>",
   "<b></b><span>Loading network difficulty</span><em class=\"gb-v\"></em>": "<b></b><span>Chargement de la difficulté du réseau</span><em class=\"gb-v\"></em>",
-  "<b></b><span>Loading live Bitcoin and GMT prices</span><em class=\"gb-v\"></em>": "<b></b><span>Chargement des prix Bitcoin et GMT en direct</span><em class=\"gb-v\"></em>"
+  "<b></b><span>Loading live Bitcoin and GMT prices</span><em class=\"gb-v\"></em>": "<b></b><span>Chargement des prix Bitcoin et GMT en direct</span><em class=\"gb-v\"></em>",
+  "Miner price": "Prix du mineur",
+  "Miner efficiency": "Efficacité du mineur",
+  "Total discount shown in your GoMining app (%)": "Remise totale affichée dans votre application GoMining (%)",
+  "Miner number": "Numéro du mineur"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "3 à 20 lettres, chiffres ou tirets bas. Affiché dans le chat.",
