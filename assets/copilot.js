@@ -31,7 +31,7 @@
   var CHAT_DEPS = [   // the Messages tab loads the chat room on first use, only on pages that don't already have it
     ["supabase", "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"],
     ["GMT_SUPABASE", "/assets/supabase-config.js?v=4"],
-    ["GMTAccount", "/assets/account.js?v=26"],
+    ["GMTAccount", "/assets/account.js?v=27"],
     ["GMTChat", "/assets/chat.js?v=20"]
   ];
   var LANG = (document.documentElement.lang || "en").slice(0, 2).toLowerCase();

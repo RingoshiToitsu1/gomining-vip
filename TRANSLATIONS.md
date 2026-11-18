@@ -31,7 +31,19 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | 7b | guides, FAQ, glossary, about, disclosures, privacy, terms, how-it-works, worth-it, discount, promo code, ROI calculator, marketplace checker (page text) | machine | machine | machine |
 | 7c | 14 generated data pages + live blocks (templates in `scripts/data-pages-text.js`) | machine | machine | machine |
 | 7d-1 | account pages (login, signup, profile, settings, dashboard), chat UI, marketplace checker results | machine | machine | machine |
-| 7d-2 | console app (`app.js`: /console, /planner, /projection) | – | – | – |
+| 7d-2 | console app (/console and its views; /planner, /projection, /planner/projection redirect to it) | machine | machine | machine |
+
+## Notes for reviewers (7d-2, console)
+- The console's text lives in three places in `locales/<lang>.json`:
+  `"strings"` (the page's static HTML), `"dom"` (text the app writes at runtime, looked up by `assets/i18n-dom.js`)
+  and `"ui"` (whole sentences `app.js` builds with markup, via `T()`).
+- `"dom"` keys are the English text with every number and month abbreviation replaced by `{0}`, `{1}`… in order.
+  Keep every placeholder; you may reorder them (dates do: `{0} {1}, {2}` = "Nov 17, 2026" → ES `{1} {0} {2}`).
+- Not translated on purpose: GoMining's own names (VIP tiers like "Gold II", "Greedy Machine", "VeGoMining"), the
+  GoMining app mock-ups in the setup tutorial (they show the app's real English labels), units, wallet addresses,
+  the TradingView widget, and the English YouTube video title.
+- Stream mode's overlay follows the page language; a streamer with a non-English audience may prefer English
+  there. Easy to switch off if so.
 
 ## Notes for reviewers (7b)
 - **Legal pages** (`/privacy`, `/terms`): **needs legal review before launch.** The privacy policy was rewritten on

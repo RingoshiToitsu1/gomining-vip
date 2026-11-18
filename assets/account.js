@@ -501,7 +501,7 @@
       return '<div class="card">' +
         '<h3>Your farm is ready</h3>' +
         '<div class="fleetstat">' + f.count + ' miner' + (f.count === 1 ? '' : 's') +
-          ' &middot; ' + Math.round(f.th).toLocaleString('en-US') + ' TH</div>' +
+          ' &middot; ' + Math.round(f.th).toLocaleString(({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[document.documentElement.lang] || 'en-US') + ' TH</div>' +
         '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your farm across devices.</p>' +
         '<div class="btns"><button class="gmt-btn-primary" data-g="signup">Create account</button>' +
         '<button class="gmt-btn-ghost" data-g="login">Log in</button></div>' +
