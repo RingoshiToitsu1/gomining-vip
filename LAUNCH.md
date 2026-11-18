@@ -25,7 +25,7 @@ old code is live would break login restores of saved farms.
 | G8 | Logged-in views | done 2026-11-18 (AUDIT Phase 8 checklist) | ✔ |
 | G9 | Legal sign-off | **OWNER** (with a lawyer): `/privacy`, `/terms` in EN (binding) and ES/FR/DE | written OK |
 | G10 | Social/OG images rebranded | AUDIT §13 | new images in place |
-| G11 | No secrets in the repo | `git grep -nIE "(service_role|sk_live|-----BEGIN|PRIVATE KEY)" overhaul` | no hits (the Supabase *publishable* key is public by design) |
+| G11 | No secrets in the repo | `git grep -nIE "(service_role|sk_live|-----BEGIN|PRIVATE KEY)" overhaul` | only 2 expected hits: this file (the pattern itself) and the Postgres role name `service_role` in `supabase/schema.sql` (a role, not a key). The Supabase *publishable* key is public by design |
 | G12 | CNAME untouched | `git diff main overhaul -- CNAME` | empty |
 | G13 | `/odds` still hidden | not in nav, sitemap or menu; `noindex` | ✔ |
 | G14 | No analytics | `git grep -nIiE "gtag|googletagmanager|plausible|analytics\\.js" overhaul -- '*.html' '*.js'` | no hits |

@@ -1433,4 +1433,18 @@ Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots
 - **URL check** `scripts/url-check.js`: parses URLS.md (§A–G) plus every sitemap URL. Preview: 201 URLs, 0 failures.
   Production today (before the merge): 110 failures, all expected (the 99 ES/FR/DE pages, 6 new pages, the retired
   copies and `/neon-miner/` not live yet). After the merge it must be 0.
-
+- **G16 (indexability)** added to LAUNCH.md and enforced by `url-check.js` (build files on the preview, live responses
+  on production; robots.txt; 5 key pages' canonical + hreflang on gmt-optimizer.com). Negative test (noindex on /faq,
+  preview canonical on /about, `Disallow: /`) caught all three. Allowed noindex list in LAUNCH.md, including the pages
+  that are noindex on the live site today (/quote, /statement, /edit, /embed, /chat, account pages): flagged to the owner.
+- **SEO baseline** (LAUNCH.md §5): top 20 pages by impressions (GSC snapshot to 2026-08-10), title and H1 live vs
+  overhaul. Only the brand in 6 titles and the home H1 change.
+- **OG images rebranded** (G10): `scripts/gen-og-thumbs.js` on the Phase 1 look; 26 images including the generic
+  `og-image.png` (93 pages) and the BTC/GMT chart cards; `og:image` cache-bust bumped. `gen-og-chart-images.js` marked
+  superseded.
+- **Tables pass** (§17): /statement with a synthetic 398-row CSV (flat headline card; monthly table on tokens) and the
+  planner results with a populated test farm (flat cards, chart-kit bar colours, left-aligned section titles,
+  sentence case), 360 and 1280, no overflow.
+- **Gate run on the current commit (2026-11-18):** G1 33/33 · G2 67/67 · G3 in sync · G4 in sync, 0 missing ·
+  G5 0 · G6+G16 0 failures (preview) · G11 2 expected hits only · G12 CNAME unchanged · G13 /odds noindex, not linked ·
+  G14 no analytics. Open: G9 legal sign-off, G15 native review (owner), and the launch-day steps.
