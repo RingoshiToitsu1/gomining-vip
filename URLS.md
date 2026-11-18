@@ -3,7 +3,7 @@
 Captured **2026-11-17** from the live site (`curl` against https://gmt-optimizer.com, GitHub Pages).
 **This list is frozen.** Every URL below must answer on the overhaul preview, and later on production,
 with the **same status code, the same redirect target and the same content** it has today. Phase 8 runs a
-script against this file. New URLs may be added (as a new section); none may be removed or changed
+script against this file: `node scripts/url-check.js <base-url>` (LAUNCH.md gate G6). New URLs may be added (as a new section); none may be removed or changed
 without written approval.
 
 ### How GitHub Pages answers today (the behavior to preserve)
@@ -179,3 +179,4 @@ path that existed (example: `/neon-miner/frontend/node_modules/tslib/tslib.html`
 | `/styleguide/` | folder page, noindex, robots-disallowed | Phase 1 |
 | `/favicon.ico`, `/site.webmanifest`, `/assets/brand/*` | static files | Phase 1 |
 | `/neon-miner/` | redirect page to `/` (see §G) | Phase 0 decisions |
+| `/es/…`, `/fr/…`, `/de/…` (33 pages each: content, data and tool pages, `/xx/console`, `/xx/planner`, `/xx/projection`, `/xx/planner/projection`; account pages and chat noindex) | same shapes as their English page (file pages `/xx/x` + `/xx/x.html`; folder pages 301 → slash); listed in `sitemap.xml` with hreflang | Phase 7 |

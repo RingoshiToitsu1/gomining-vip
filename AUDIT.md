@@ -1424,3 +1424,13 @@ sign-up gate removed from the screenshot browser only (the gate itself is unchan
 Look: flat card, GMT-Optimizer mark, one gold bar, dot/check step list; no rings, glow, % counter or hash readout.
 Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots\loaders\{en,de}-{1280,360}-L*.png`.
 
+## 28. Phase 8: quality bar and launch
+
+- **Old app copies retired (owner OK 2026-11-18):** `gomining-optimizer.html`, `gomining-vip-index.html` are redirect
+  pages to `/console` (200 at the same URLs, `noindex,follow`, canonical `/console`). URLS.md §D/§H updated.
+- **LAUNCH.md** written: gates G1–G15, launch-day steps, merge and deploy, database order (code first, SQL second),
+  rollback for each step, after-launch tasks.
+- **URL check** `scripts/url-check.js`: parses URLS.md (§A–G) plus every sitemap URL. Preview: 201 URLs, 0 failures.
+  Production today (before the merge): 110 failures, all expected (the 99 ES/FR/DE pages, 6 new pages, the retired
+  copies and `/neon-miner/` not live yet). After the merge it must be 0.
+
