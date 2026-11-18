@@ -43,7 +43,7 @@
       tagline: 'Calculadora, planificador y proyecciones independientes para GoMining, con datos de la red en directo. Sin anuncios.',
       'Support the site:': 'Apoya la web:', 'Copy BTC address': 'Copiar dirección BTC', 'Copy GMT address (ETH/BNB)': 'Copiar dirección GMT (ETH/BNB)',
       legal1: 'Herramienta independiente. No afiliada, respaldada ni gestionada por GoMining.', legal2: 'Recibo una recompensa por referido si usas mi código. No es asesoramiento financiero.',
-      'Log in': 'Iniciar sesión', 'Create account': 'Crear cuenta', Account: 'Cuenta', Dashboard: 'Panel', Profile: 'Perfil', Settings: 'Ajustes',
+      'Log in': 'Iniciar sesión', 'Log in (bar)': 'Entrar', 'Create account': 'Crear cuenta', Account: 'Cuenta', Dashboard: 'Panel', Profile: 'Perfil', Settings: 'Ajustes',
       'Log out': 'Cerrar sesión', 'Account menu for ': 'Menú de cuenta de ' },
     fr: { Calculator: 'Calculateur', 'Growth Projection': 'Projection', Guides: 'Guides', 'RINGO5 Bonuses': 'Bonus RINGO5', Tools: 'Outils',
       'ROI Calculator': 'Calculateur de ROI', 'Marketplace Checker': 'Vérificateur du marketplace', 'Co-pilot': 'Copilote', Learn: 'Apprendre',
@@ -54,7 +54,7 @@
       tagline: 'Calculateur, planificateur et projections GoMining indépendants, sur les données réseau en direct. Sans publicité.',
       'Support the site:': 'Soutenir le site :', 'Copy BTC address': 'Copier l\u2019adresse BTC', 'Copy GMT address (ETH/BNB)': 'Copier l\u2019adresse GMT (ETH/BNB)',
       legal1: 'Outil indépendant. Ni affilié à GoMining, ni approuvé, ni exploité par GoMining.', legal2: 'Je touche une récompense de parrainage si vous utilisez mon code. Pas un conseil financier.',
-      'Log in': 'Se connecter', 'Create account': 'Créer un compte', Account: 'Compte', Dashboard: 'Tableau de bord', Profile: 'Profil', Settings: 'Paramètres',
+      'Log in': 'Se connecter', 'Log in (bar)': 'Connexion', 'Create account': 'Créer un compte', Account: 'Compte', Dashboard: 'Tableau de bord', Profile: 'Profil', Settings: 'Paramètres',
       'Log out': 'Se déconnecter', 'Account menu for ': 'Menu du compte de ' },
     de: { Calculator: 'Rechner', 'Growth Projection': 'Wachstumsprognose', Guides: 'Ratgeber', 'RINGO5 Bonuses': 'RINGO5-Boni', Tools: 'Tools',
       'ROI Calculator': 'ROI-Rechner', 'Marketplace Checker': 'Marketplace-Check', 'Co-pilot': 'Co-Pilot', Learn: 'Lernen',
@@ -65,7 +65,7 @@
       tagline: 'Unabhängiger GoMining-Rechner, Planer und Prognosen auf Basis von Live-Netzwerkdaten. Ohne Werbung.',
       'Support the site:': 'Unterstütze die Seite:', 'Copy BTC address': 'BTC-Adresse kopieren', 'Copy GMT address (ETH/BNB)': 'GMT-Adresse kopieren (ETH/BNB)',
       legal1: 'Unabhängiges Tool. Weder mit GoMining verbunden noch von GoMining unterstützt oder betrieben.', legal2: 'Ich erhalte eine Empfehlungsprämie, wenn du meinen Code nutzt. Keine Finanzberatung.',
-      'Log in': 'Anmelden', 'Create account': 'Konto erstellen', Account: 'Konto', Dashboard: 'Dashboard', Profile: 'Profil', Settings: 'Einstellungen',
+      'Log in': 'Anmelden', 'Log in (bar)': 'Anmelden', 'Create account': 'Konto erstellen', Account: 'Konto', Dashboard: 'Dashboard', Profile: 'Profil', Settings: 'Einstellungen',
       'Log out': 'Abmelden', 'Account menu for ': 'Kontomenü von ' }
   };
   var EN_TEXT = { tagline: 'Independent GoMining calculator, planner and projections, on live network data. No ads.',
@@ -313,7 +313,8 @@
     msg.hidden = !state.in;
     if (!state.in) {
       var nx = /^\/(login|signup)$/.test(location.pathname.replace(/\.html$/, '')) ? '' : '?next=' + encodeURIComponent(location.pathname + location.search);
-      slot.innerHTML = '<a class="ui-btn ui-btn--ghost ui-btn--sm" href="' + L('/login') + nx + '">' + t('Log in') + '</a>';
+      var barLogin = (STR[LANG] && STR[LANG]['Log in (bar)']) || t('Log in');   // short label: the bar is tight on phones
+      slot.innerHTML = '<a class="ui-btn ui-btn--ghost ui-btn--sm" href="' + L('/login') + nx + '">' + barLogin + '</a>';
       mslot.innerHTML = '<div class="sc-mobile__group"><h2>' + t('Account') + '</h2><div class="ui-stack"><a class="ui-btn ui-btn--secondary ui-btn--block" href="' + L('/login') + nx + '">' + t('Log in') + '</a>' +
         '<a class="ui-btn ui-btn--ghost ui-btn--block" href="' + L('/signup') + nx + '">' + t('Create account') + '</a></div></div>';
     } else {

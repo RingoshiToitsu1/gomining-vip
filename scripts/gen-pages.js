@@ -118,10 +118,10 @@ ${JSON.stringify(faqLd,null,2)}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=6">
-<link rel="stylesheet" href="/assets/site-chrome.css?v=8">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=9">
 <link rel="stylesheet" href="/assets/content.css?v=17">
 <link rel="stylesheet" href="/assets/topbar.css?v=7">
-<script src="/assets/site-chrome.js?v=7" defer></script>
+<script src="/assets/site-chrome.js?v=8" defer></script>
 </head>
 <body>
 <main class="content-wrap">
