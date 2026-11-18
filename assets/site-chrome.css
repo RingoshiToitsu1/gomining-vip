@@ -120,13 +120,12 @@ body.lp > .sc-footer { margin-top: 0; }
 
 /* ---------- pages that keep their own app bar under the global header ---------- */
 /* console: its tool tabs + live strip dock below the global header */
-html.sc-on .topbar { top: var(--header-h); }
+/* (the console's tab row and live strip now scroll with the page; they no longer dock under the header) */
 html.sc-on .topbar .header .c-brand, html.sc-on .topbar #gmtAccountSlot { display: none; }
 @media (max-width: 820px) {
-  html.sc-on .topbar > .header { top: var(--header-h) !important; }
   /* the console's tool tabs scroll sideways on phones instead of widening the page */
   html.sc-on .topbar .header .nav-links { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%;
-    scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-bottom: 6px; }
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   html.sc-on .topbar .header .nav-links::-webkit-scrollbar { display: none; }
   html.sc-on .topbar .header .nav-links a { flex: 0 0 auto; }
   html.sc-on .topbar .header-inner { min-width: 0; }
