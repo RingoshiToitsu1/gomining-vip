@@ -303,6 +303,20 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .sp-payout-val{flex-direction:row!important;gap:var(--space-2)}
 .sp-payout-val .unit{color:var(--color-text-2)!important;font-family:var(--font-body)!important}
 
+/* ---------- pass 4 ---------- */
+.subbar{flex-direction:row!important;align-items:stretch!important;justify-content:flex-start!important}
+/* section panels: the accordion control ("+" turns to "×" when open), no CSS-written "Show"/"Hide" text (it was English on every page) */
+.section-collapsible .section-toggle{display:inline-flex!important;align-items:center;justify-content:center;width:32px;height:32px;padding:0!important;margin-left:auto;
+  border:0!important;background:none!important;border-radius:var(--radius-control);color:var(--color-gold)!important;box-shadow:none!important}
+.section-collapsible .section-toggle::before{content:none!important;display:none!important}
+.section-collapsible .section-toggle::after{content:'+'!important;font-size:var(--font-size-xl)!important;line-height:1;transform:rotate(45deg)!important;transition:transform var(--duration-base) var(--ease-standard)}
+.section-collapsible.collapsed .section-toggle::after{transform:none!important}
+.section-collapsible .section-header:hover .section-toggle{background:var(--color-surface-2)!important;color:var(--color-gold)!important}
+.section-header .section-title{margin:0}
+/* planner form: switch beside its label; disclosure rows read left to right */
+#plannerIntro .toggle-row,#plannerIntro label.toggle{flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:var(--space-3)}
+.pi-opt-toggle{justify-content:space-between!important;text-align:left!important}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
