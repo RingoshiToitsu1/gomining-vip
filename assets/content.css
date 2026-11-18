@@ -182,3 +182,7 @@ table.earnings tbody tr:last-child td{border-bottom:none}
 .stat:hover::after,.scenario:hover::after,.cta:hover::after,.claim-card:hover::after{opacity:1}
 /* v2 badge on the brand (matches the landing) */
 .brand .v{font-family:var(--mono);font-size:.58rem;color:var(--ink3);letter-spacing:.15em;border:1px solid var(--line);padding:2px 6px;border-radius:6px;margin-left:2px}
+
+/* Phase 7: long German compounds ("Datenschutzerklärung") hyphenate instead of overflowing phones */
+html:lang(de) body { hyphens: auto; }
+h1, h2, h3 { overflow-wrap: break-word; }
