@@ -1448,3 +1448,9 @@ Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots
 - **Gate run on the current commit (2026-11-18):** G1 33/33 · G2 67/67 · G3 in sync · G4 in sync, 0 missing ·
   G5 0 · G6+G16 0 failures (preview) · G11 2 expected hits only · G12 CNAME unchanged · G13 /odds noindex, not linked ·
   G14 no analytics. Open: G9 legal sign-off, G15 native review (owner), and the launch-day steps.
+- **Owner decisions 2026-11-18:** noindex allowed list kept as is; `/redesign-prototype` retired (redirect page to
+  `/`, 200 same URL, `noindex,follow`; URLS.md §D/§H); G9 owner-accepted without lawyer review; G15 skipped for launch.
+- **Quality bar:** `scripts/link-check.js` (G17: 2,975 internal links, 0 broken) and `scripts/a11y-check.js` (G18,
+  static: 0 errors after linking 17 console labels to their fields, `alt=""` on a decorative icon and 5 aria-labels;
+  29 warnings). An automated axe run in the owner's logged-in browser was blocked as a safety measure; not worked around.
+- **REVIEW.md** written. Phase 8 complete; the launch itself waits for the owner (LAUNCH.md).
