@@ -131,9 +131,9 @@
   }
 
   // ---- futures loader: the real simulated paths for this horizon streak out of today's price,
-  // a counter races to 4,000, then the high / low / avg lines sweep across. Only after that does
-  // the (synchronous, multi-second for 10Y) reinvesting run start, so the animation never stalls
-  // mid-flight; its last step ticks off when the run lands ('gm:proj').
+  // a counter races to 4,000, then the high / low / avg lines sweep across (~1 s). The reinvesting run
+  // starts at the same moment and works in time slices, so neither waits for the other; the last step
+  // ticks off when the run lands ('gm:proj').
   function loader(host,id){
     const old=host.querySelector('.fx-load');if(old)old.remove();
     const Y=yrs,Wn=Y*52,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -161,8 +161,16 @@
     const N=Math.min(PATHS,cssW<500?140:240),STEP=Math.max(1,Math.ceil(Wn/120)),W=sim.W,med=sim.p50[Wn-1];
     // each drawn path: start time and speed, staggered so they burst out in waves
     const P=[];for(let k=0;k<N;k++){const p=(k*9973)%PATHS;P.push({p,s:Math.pow(k/N,1.35)*650,d:280+((k*37)%200),f:0,b:-1,up:sim.all[p*W+Wn-1]>=med});}
-    const T1=reduce?0:1000, T2=reduce?0:500, t0=performance.now();   // paths, then the three lines
-    let phase=0,gone=false;
+    const T1=reduce?0:700, T2=reduce?0:350, t0=performance.now();   // paths, then the three lines (~1 s)
+    let phase=0,gone=false,projDone=false,closed=false;
+    // The reinvesting run starts now, alongside the animation: it runs in time slices (app.js runSetupProjection),
+    // so the paths keep moving while it works and the loader closes as soon as both are done.
+    const finish=()=>{if(closed||ran!==id)return;closed=true;
+      const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
+      bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},220);};
+    addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;projDone=true;if(phase===3)finish();});
+    setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),300);}},20000);   // never strand it
+    setTimeout(runSetupProjection,0);
     const at=(arr,k)=>arr[Math.min(Wn-1,k)];
     function path(ctx,p,from,to){ctx.moveTo(from<0?x0:X(from),from<0?y0:Yv(sim.all[p*W+from]));
       for(let w=Math.max(0,from)+STEP;w<=to;w+=STEP)ctx.lineTo(X(w),Yv(sim.all[p*W+w]));
@@ -207,12 +215,8 @@
       if(phase===1&&t>=T1*0.75){rows[0].className='ok';rows[1].classList.add('on');phase=2;}
       if(phase===2&&t>=T1+T2){rows[1].className='ok';rows[2].classList.add('on');phase=3;
         num.textContent=PATHS.toLocaleString();
-        // now the heavy, synchronous run — the finished frame holds still while it works
-        addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;
-          const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
-          bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},380);});
-        setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),500);}},20000);   // never strand it
-        setTimeout(runSetupProjection,60);return;}
+        if(projDone)finish();   // otherwise gm:proj closes it the moment the run lands
+        return;}
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
