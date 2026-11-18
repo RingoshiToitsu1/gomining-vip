@@ -5,6 +5,7 @@
      node scripts/gen-i18n.js --extract index.html   print the English text runs of a page (as JSON)
      node scripts/gen-i18n.js --missing  list text runs with no translation yet, per language
      node scripts/gen-i18n.js --check    exit 1 if a build would change any file (CI)
+     node scripts/gen-i18n.js --prune    remove translations that no listed page uses any more
 
    English pages stay the source and stay where they are. For each listed page the generator:
      • splits the page into text runs (text plus inline markup, split at block elements) and looks each
@@ -161,6 +162,7 @@ function build(f, lang, dict, missing) {
   if (ser(tree) !== src) throw new Error('parser did not round-trip ' + f);
   const tr = s => {
     const k = keyOf(s);
+    USED.add(k);
     if (Object.prototype.hasOwnProperty.call(dict, k)) return dict[k];
     missing.add(k); return s;
   };
@@ -205,6 +207,7 @@ if (arg === '--extract') {
   console.log(JSON.stringify([...keys], null, 1));
   process.exit(0);
 }
+const USED = new Set();
 const dicts = Object.fromEntries(LANGS.map(l => [l, JSON.parse(read('locales/' + l + '.json')).strings]));
 let changed = 0; const report = {};
 for (const lang of LANGS) {
@@ -213,7 +216,7 @@ for (const lang of LANGS) {
     const out = build(f, lang, dicts[lang], missing);
     const dest = path.join(ROOT, outFile(lang, f));
     const prev = fs.existsSync(dest) ? fs.readFileSync(dest, 'utf8') : null;
-    if (prev !== out) { changed++; if (arg !== '--check' && arg !== '--missing') { fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.writeFileSync(dest, out); } }
+    if (prev !== out) { changed++; if (arg !== '--check' && arg !== '--missing' && arg !== '--prune') { fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.writeFileSync(dest, out); } }
   }
   report[lang] = [...missing];
 }
@@ -235,6 +238,15 @@ for (const lang of LANGS) {
 for (const f of pages) {   // the English source carries the same hreflang block
   const src = read(f), out = putAlternates(src, f);
   if (out !== src) { changed++; if (arg !== '--check' && arg !== '--missing') fs.writeFileSync(path.join(ROOT, f), out); }
+}
+if (arg === '--prune') {   // drop translations no listed page uses any more (e.g. text removed from an English page)
+  for (const l of LANGS) {
+    const f = 'locales/' + l + '.json', d = JSON.parse(read(f)), before = Object.keys(d.strings).length;
+    d.strings = Object.fromEntries(Object.entries(d.strings).filter(([k]) => USED.has(k)));
+    fs.writeFileSync(path.join(ROOT, f), JSON.stringify(d, null, 1) + '\n');
+    console.log(l + ': pruned ' + (before - Object.keys(d.strings).length) + ' unused translation(s)');
+  }
+  process.exit(0);
 }
 if (arg === '--missing') { for (const l of LANGS) { console.log('## ' + l + ' (' + report[l].length + ' missing)'); report[l].forEach(k => console.log(JSON.stringify(k))); } process.exit(0); }
 for (const l of LANGS) if (report[l].length) console.log(l + ': ' + report[l].length + ' text run(s) not translated yet (node scripts/gen-i18n.js --missing)');

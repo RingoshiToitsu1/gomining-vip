@@ -6,7 +6,6 @@ Supabase SQL editor, after review.
 | When | File | Changes |
 |---|---|---|
 | Any time (read-only) | `2026-11-17_inspect_readonly.sql` | nothing: lists columns, RLS, policies, grants, foreign keys, functions |
-| Before launch (optional, owner's call) | `2026-11-17_interim_anon_lockdown.sql` | logged-out visitors lose `setup`; logged-in unchanged |
 | **Launch, required**, right after the overhaul is on `main` | `2026-11-17_fix_profile_exposure.sql` | read access on `profiles` (own `setup` only) |
 | After the launch fix | `2026-11-17_account_extras.sql` | `show_th`, `prefs`, `profile_cards` update, `delete_my_account()` |
 | Only when approved | `2026-11-17_chat_report_block.sql` | 2 new tables + a fill trigger |

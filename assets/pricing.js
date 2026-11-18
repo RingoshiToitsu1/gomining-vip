@@ -23,6 +23,10 @@
       "ratesObserved": "2026-11-06",
       "pricesObserved": "2026-10-30"
     },
+    "legal": {
+      "_note": "privacyUpdated: set to the launch date (Phase 8 checklist). Shown on /privacy in every language.",
+      "privacyUpdated": "2026-11-18"
+    },
     "fees": {
       "electricityUsdPerKwh": 0.05,
       "serviceUsdPerThDay": 0.0089,

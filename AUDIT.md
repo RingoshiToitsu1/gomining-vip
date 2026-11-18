@@ -592,6 +592,13 @@ Who reads profile data today (all must keep working after the fix):
 | Edge function `nft-lookup` | no profile data | unaffected |
 
 ## Phase 8 checklist (carried forward)
+- [ ] **LAUNCH, REQUIRED:** also apply `supabase/proposals/2026-11-17_account_extras.sql` right after the exposure fix.
+      The new privacy policy promises Settings → Delete account, hiding hashrate and the language preference, which
+      only appear once that SQL is live. (If you'd rather launch without it, the policy's "Accounts" and
+      "Keeping and deleting your data" sections must change first.)
+- [ ] **LAUNCH, REQUIRED:** set `legal.privacyUpdated` in `data/config.json` to the launch date (shown on /privacy in
+      every language), then rebuild.
+- [ ] Legal review of the rewritten /privacy and edited /terms (EN binding; ES/FR/DE convenience translations).
 - [ ] **LAUNCH, REQUIRED:** right after the overhaul is merged to `main` and live, apply
       `supabase/proposals/2026-11-17_fix_profile_exposure.sql` (back up first: `supabase/proposals/README.md`), then
       re-check every row of the §18b table on the live site. Until it runs, logged-in users can read every user's `setup`.
@@ -664,3 +671,22 @@ for anything not yet translated. 5 live-number runs (guides "This month", worth-
    (contact is Telegram, /about#contact, or the co-pilot's Formspree flow).
 3. `/privacy` "Last updated: June 30, 2026" predates accounts, chat and the co-pilot form; it doesn't mention
    Supabase (accounts, saved farms, chat). Worth a legal refresh before launch.
+
+### 21a. Owner decisions applied (2026-11-18)
+- Interim anon lockdown: **declined**; file removed. The full exposure fix stays a required launch step.
+- **/terms**: offer wording removed in all 4 languages. Referral clause now says only that RINGO5 may earn us a
+  referral reward and that GoMining sets/pays its own bonuses. "Acceptable use" is a short generic clause against
+  disrupting the site, spam, harassment, impersonation and unlawful use (moderators may remove messages / suspend).
+- **/privacy rewritten** (EN binding, ES/FR/DE convenience): no-account use (no analytics, ads or tracking cookies;
+  local storage only), accounts (username + password, no email, hashed by Supabase, manual reset via Telegram), what's
+  stored (profile, saved farm, miners, language), what's public (profile + total TH, hideable), chat (public, deleted
+  after 24 h, moderation), avatars (Supabase storage, public by link, removable), the co-pilot Formspree form (name,
+  GoMining username, contact, page; purpose; retention), processors (Supabase, Formspree, GitHub Pages, market-data
+  APIs, jsDelivr, Google Fonts), deletion (Settings → Delete account), rights, contact @RingoMining on Telegram.
+  Date comes from `legal.privacyUpdated` in config (set on launch day).
+- **Contact**: every "contact form on our homepage" now points to @RingoMining on Telegram.
+- `gen-i18n.js --prune` removed the old privacy/terms translations (22 per language), so no ended-offer wording
+  survives in any locale file. Offer check 0.
+- Report/block SQL: re-verified with the real PostgreSQL parser (pglast 8.8 / libpg_query): every proposal file parses
+  and both PL/pgSQL functions compile; a copy of `message_reports_fill` without `begin` is rejected, the file as
+  written compiles. Still not built (awaiting approval).

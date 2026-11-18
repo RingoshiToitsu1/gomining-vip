@@ -31,8 +31,10 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | 7d | console app (`app.js`), account pages, chat UI | – | – | – |
 
 ## Notes for reviewers (7b)
-- **Legal pages** (`/privacy`, `/terms`): the translations add "this translation is for convenience; the English version
-  prevails" to the first line. A lawyer, not a translator, should sign these off.
+- **Legal pages** (`/privacy`, `/terms`): **needs legal review before launch.** The privacy policy was rewritten on
+  2026-11-18 and the terms' referral and acceptable-use clauses changed; English is binding and the translations say so
+  ("this translation is for convenience; the English version prevails"). A lawyer, not a translator, should sign off
+  both the English and the ES/FR/DE versions.
 - **Live numbers stay English until 7c**: the "This month" card on `/guides` and the three live paragraphs on
   `/is-gomining-worth-it` are rewritten by `gen-pages.js` on every deploy; they get templated translations in 7c.
 - **Card cashback wording** must keep "Carte" / "Karte" / "tarjeta" next to "cashback" (FR "bonus cashback Carte",
