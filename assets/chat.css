@@ -35,7 +35,7 @@
 /* messages */
 .gmt-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);
   scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
-.gmt-chat-list:empty::after { content: "No messages in the last 24 hours. Say hi."; margin: auto; color: var(--color-text-3); font-size: var(--font-size-sm); text-align: center; }
+.gmt-chat-list:empty::after { content: attr(data-empty); margin: auto; color: var(--color-text-3); font-size: var(--font-size-sm); text-align: center; }
 .gmt-msg { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-sm); line-height: 1.45; color: var(--color-text-2);
   overflow-wrap: anywhere; padding: 4px 6px; border-radius: 8px; }
 .gmt-msg:hover { background: rgb(var(--color-white-rgb) / .03); }

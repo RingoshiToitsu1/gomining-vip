@@ -179,7 +179,7 @@ ${faqHtml}
   </div>
   <div class="related">${T.readNext} ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=42"></script>
+<script src="/assets/site.js?v=43"></script>
 </body>
 </html>
 `;

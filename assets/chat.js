@@ -29,7 +29,7 @@
     var LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
     // The room's styles (assets/chat.css) travel with the script, so every place the room appears matches.
     if (!document.querySelector('link[data-gmt-chat-css]')) {
-      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=1'; css.setAttribute('data-gmt-chat-css', '');
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=2'; css.setAttribute('data-gmt-chat-css', '');
       document.head.appendChild(css);
     }
     var A = window.GMTAccount, sb = A.sb;
@@ -252,6 +252,7 @@
         '</div>';
       (target || document.body).appendChild(box); el.box = box;
       el.list = box.querySelector('#gmtChatList');
+      el.list.setAttribute('data-empty', T('No messages in the last 24 hours. Say hi.'));
       el.online2 = box.querySelector('#gmtChatOnline');
       el.foot = box.querySelector('#gmtChatFoot');
 

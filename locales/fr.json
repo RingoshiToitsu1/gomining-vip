@@ -777,6 +777,7 @@
   "{0} months": "{0} mois",
   "{0} months (~{1} yrs)": "{0} mois (~{1} ans)",
   "{0} premium": "{0} de prime",
-  "{0}/TH to reach 12 W": "{0}/TH pour atteindre 12 W"
+  "{0}/TH to reach 12 W": "{0}/TH pour atteindre 12 W",
+  "No messages in the last 24 hours. Say hi.": "Aucun message ces dernières 24 heures. Dites bonjour."
  }
 }
