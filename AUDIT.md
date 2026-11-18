@@ -602,12 +602,12 @@ Who reads profile data today (all must keep working after the fix):
 - [ ] **LAUNCH, REQUIRED:** right after the overhaul is merged to `main` and live, apply
       `supabase/proposals/2026-11-17_fix_profile_exposure.sql` (back up first: `supabase/proposals/README.md`), then
       re-check every row of the §18b table on the live site. Until it runs, logged-in users can read every user's `setup`.
-- [ ] Logged-in screenshots, 360 and 1280: widget with both tabs, Messages tab, /chat, /copilot (Phase 6; skipped by owner 2026-11-17).
+- [x] (done 2026-11-18, same set) Logged-in screenshots, 360 and 1280: widget with both tabs, Messages tab, /chat, /copilot (Phase 6; skipped by owner 2026-11-17).
 - [ ] After the owner applies the SQL: re-check every row of the §18b table, and the Settings sections (hide TH, language, delete).
 - [ ] Social/OG images rebranded (§13).
 - [ ] Statement and console tables pass (§17).
 - [ ] Offer check = 0 on the built site, all languages.
-- [ ] Logged-in console screenshots, 360 and 1280, all 4 languages: dashboard with real results (no gate), planner
+- [x] (done 2026-11-18, `%TEMP%\gmtshots\logged2`, test account with a fake 5,000 TH farm, owner OK) Logged-in console screenshots, 360 and 1280, all 4 languages: dashboard with real results (no gate), planner
       results, projection, saved farms, fleet editor with miners (7d-2 covered logged-out views only, per owner).
 - [ ] Native review of the console dictionary (`locales/*.json` "dom" + "ui"), see TRANSLATIONS.md (7d-2 notes).
 
