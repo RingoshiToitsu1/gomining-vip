@@ -710,3 +710,21 @@ is-gomining-worth-it, sitemap), apart from the new hreflang block.
 
 **Noticed, not changed (owner's call):** the data pages' formula line says "× 0.98" for the BTC→GMT conversion, but
 the fee in config is 2.25% (× 0.9775). The figures themselves use the config value; only that printed formula is stale.
+
+## 23. Phase 7d-1: account pages, chat and checker in ES / FR / DE
+
+**UI strings for JavaScript.** Scripts call `T('English text', …)` (with `{0}`, `{1}` placeholders) and `LH('/path')`
+for same-language links. Translations live in `locales/<lang>.json` under `"ui"`; `gen-i18n.js` compiles them into
+`assets/i18n/<lang>.js` (content-hashed URL, no manual cache bump) and adds it to every translated page. English
+pages don't load it, so English output is unchanged (golden 33/33, including the 8 checker cases that snapshot text).
+
+- **Account pages** `/es|fr|de/login`, `/signup`, `/profile`, `/settings`, `/dashboard` (noindex, not in the
+  sitemap): 144 strings, incl. the error messages `account.js` throws (translated at display time).
+- **Chat** (console panel, `/chat`, widget Messages tab): 29 strings; `/es|fr|de/chat` shells (noindex).
+- **Marketplace checker** results, scan steps, errors and table: 61 strings; numbers and money in local format.
+  The sentence fragments were rebuilt as whole sentences with placeholders, so translators see full sentences.
+- Header "Log in", account menu and in-page links now go to the same-language page where it exists.
+
+**Remaining: 7d-2, the console app** (`/console`, `/planner`, `/projection` and its views, ~6,000 lines of
+`app.js` with text inline, plus `boot.js`, `loaders.js`, `fleet.js`). Same mechanism, but the console's golden test
+snapshots much of its text, so it goes in carefully, view by view.

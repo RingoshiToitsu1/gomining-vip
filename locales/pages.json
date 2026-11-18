@@ -16,7 +16,13 @@
     "gomining-discount-explained.html",
     "gomining-promo-code.html",
     "gomining-roi-calculator.html",
-    "gomining-marketplace-checker.html"
+    "gomining-marketplace-checker.html",
+    "login.html",
+    "signup.html",
+    "profile.html",
+    "settings.html",
+    "dashboard.html",
+    "chat/index.html"
   ],
   "generated": [
     "gomining-1-th-roi.html",
@@ -35,6 +41,12 @@
     "gomining-worth-it-now.html"
   ],
   "noSitemap": [
-    "gomining-worth-it-now.html"
+    "gomining-worth-it-now.html",
+    "login.html",
+    "signup.html",
+    "profile.html",
+    "settings.html",
+    "dashboard.html",
+    "chat/index.html"
   ]
 }

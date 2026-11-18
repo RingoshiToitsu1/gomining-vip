@@ -113,11 +113,16 @@
 
   // ---- render ----
   const $ = id => document.getElementById(id);
-  const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', {
+  // Translations (Phase 7d): translated pages load /assets/i18n/<lang>.js (GMT_UI); English pages don't.
+  const UI = window.GMT_UI, LANG = UI ? UI.lang : 'en';
+  const T = UI ? UI.t : (s, ...a) => String(s).replace(/\{(\d)\}/g, (m, i) => a[+i] != null ? a[+i] : m);
+  const LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
+  const money = (n, d) => { const v = Math.abs(n).toLocaleString(LOC, {
     minimumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0),
     maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
-  const num = (n, d = 0) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
-  const trimN = (n, d) => d > 0 ? num(n, d).replace(/\.?0+$/, '') : num(n, 0);
+    return (n < 0 ? '-' : '') + (LANG === 'en' ? '$' + v : v + '\u00a0$'); };
+  const num = (n, d = 0) => n.toLocaleString(LOC, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const trimN = (n, d) => d > 0 ? num(n, d).replace(LANG === 'en' ? /\.?0+$/ : /,?0+$/, '') : num(n, 0);
   const fmtTH = n => trimN(n, n < 10 ? 3 : n < 100 ? 2 : 0);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -152,44 +157,44 @@
     $('mc-t-cost').textContent = money(b.ask);
     $('mc-t-cost-s').textContent = num(p, 0) + ' GMT · ' + money(b.ask / th) + '/TH';
     $('mc-t-15').textContent = w > EFF_BASE_MAX + 1e-9 ? money(b.up15) : '—';
-    $('mc-t-15-s').textContent = w > EFF_BASE_MAX + 1e-9 ? wTxt + ' → 15 · ' + money(b.up15 / th) + '/TH' : 'already at ' + wTxt;
+    $('mc-t-15-s').textContent = w > EFF_BASE_MAX + 1e-9 ? wTxt + ' → 15 · ' + money(b.up15 / th) + '/TH' : T('already at {0}', wTxt);
     $('mc-t-12').textContent = w > EFF_BEST + 1e-9 ? money(b.up12) : '—';
-    $('mc-t-12-s').textContent = w > EFF_BEST + 1e-9 ? wTxt + ' → 12 · ' + money(b.up12 / th) + '/TH' : 'already at 12 W/TH';
-    $('mc-t-prem').textContent = b.prem > 0 ? money(b.prem) : 'none';
-    $('mc-t-prem-s').textContent = 'over its ' + fmtTH(th) + ' TH\'s worth of ' + money(b.worth) + (P.SALE_PCT > 0 ? ' at sale prices' : '');
+    $('mc-t-12-s').textContent = w > EFF_BEST + 1e-9 ? wTxt + ' → 12 · ' + money(b.up12 / th) + '/TH' : T('already at 12 W/TH');
+    $('mc-t-prem').textContent = b.prem > 0 ? money(b.prem) : T('none');
+    $('mc-t-prem-s').textContent = T(P.SALE_PCT > 0 ? 'over its {0} TH\'s worth of {1} at sale prices' : 'over its {0} TH\'s worth of {1}', fmtTH(th), money(b.worth));
 
     // Rating switch: only the options that mean something for this miner.
-    const asIs = ['asis', 'As is · ' + trimN(w, 2) + ' W'];
+    const asIs = ['asis', T('As is · {0} W', trimN(w, 2))];
     const opts = w > EFF_BASE_MAX + 1e-9 ? [asIs, ['15', '15 W'], ['12', '12 W']]
-      : Math.abs(w - EFF_BASE_MAX) < 1e-9 ? [['15', 'As is · 15 W'], ['12', '12 W']]
+      : Math.abs(w - EFF_BASE_MAX) < 1e-9 ? [['15', T('As is · {0} W', 15)], ['12', '12 W']]
       : w > EFF_BEST + 1e-9 ? [asIs, ['12', '12 W']]
       : [['12', '12 W']];
     if (!opts.some(o => o[0] === runAt)) runAt = opts[0][0];   // "as is" for this miner
-    $('mc-runat').innerHTML = opts.length > 1 ? '<span>Run it at</span>' + opts.map(o =>
+    $('mc-runat').innerHTML = opts.length > 1 ? '<span>' + T('Run it at') + '</span>' + opts.map(o =>
       '<button type="button" data-r="' + o[0] + '" class="' + (o[0] === runAt ? 'on' : '') + '">' + esc(o[1]) + '</button>').join('') : '';
 
     const r = ratingFor(w);
     const effUp = th * upgBetween(w, r);
     const pb = $('mc-payback');
     if (!(b.prem > 0)) {
-      pb.innerHTML = '<p class="mc-pb-lead">No premium to pay back: the asking price is at or under what its hashrate is worth (' + money(b.worth) + '). Its growth is profit from week one.</p>';
+      pb.innerHTML = '<p class="mc-pb-lead">' + T('No premium to pay back: the asking price is at or under what its hashrate is worth ({0}). Its growth is profit from week one.', money(b.worth)) + '</p>';
       return;
     }
     if (!(g > 0)) {
-      pb.innerHTML = '<p class="mc-pb-lead">Set its weekly growth % to size the payback.</p>';
+      pb.innerHTML = '<p class="mc-pb-lead">' + T('Set its weekly growth % to size the payback.') + '</p>';
       return;
     }
     const now = monthsAt(th, r, g, b.prem);
     const base = b.ask + effUp;                    // what you spend before any top-up
-    const nowTxt0 = now < 1 ? 'under a month' : trimN(now, 1) + ' months' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '');
+    const nowTxt0 = now < 1 ? T('under a month') : now > 24 ? T('{0} months (~{1} yrs)', trimN(now, 1), trimN(now / 12, 1)) : T('{0} months', trimN(now, 1));
     // Above 15 W, GoMining charges the 15 W price for TH that runs at the miner's worse rating, so a
     // top-up costs more than it's worth: don't size one, point at the upgrade instead.
     if (r > EFF_BASE_MAX + 1e-9) {
-      pb.innerHTML = '<p class="mc-pb-lead">You\'d pay <b>' + money(b.prem) + '</b> over what its hashrate costs today. At its current <b>' + fmtTH(th) + ' TH</b>, its free growth pays that back in <b>' + nowTxt0 + '</b> on its own.</p>' +
-        '<p class="mc-pb-up">Adding TH won\'t speed that up at ' + trimN(r, 2) + ' W: GoMining charges the 15 W price for hashrate that runs at ' + trimN(r, 2) + ' W, so every TH you add costs more than it\'s worth. Pick <b>15 W</b> or <b>12 W</b> above to see top-up options with the upgrade priced in.</p>';
+      pb.innerHTML = '<p class="mc-pb-lead">' + T('You\'d pay <b>{0}</b> over what its hashrate costs today. At its current <b>{1} TH</b>, its free growth pays that back in <b>{2}</b> on its own', money(b.prem), fmtTH(th), nowTxt0) + '.</p>' +
+        '<p class="mc-pb-up">' + T('Adding TH won\'t speed that up at {0} W: GoMining charges the 15 W price for hashrate that runs at {0} W, so every TH you add costs more than it\'s worth. Pick <b>15 W</b> or <b>12 W</b> above to see top-up options with the upgrade priced in.', trimN(r, 2)) + '</p>';
       return;
     }
-    const span = (a, z) => a === z ? a + (a === 1 ? ' month' : ' months') : a + '–' + z + ' months';
+    const span = (a, z) => a === z ? T(a === 1 ? '{0} month' : '{0} months', a) : T('{0} months', a + '–' + z);
     // One row per month that needs a top-up; months over the cap, and months growth already covers,
     // collapse into one row each so the table only shows what changes.
     const sizes = []; for (let m = 1; m <= 12; m++) sizes.push(sizeFor(th, r, g, b.prem, m));
@@ -197,26 +202,26 @@
     for (let k = 0; k < sizes.length;) {
       const s = sizes[k], kind = s.capped ? 'cap' : s.add <= 0.0005 ? 'free' : 'top';
       let z = k; if (kind !== 'top') while (z + 1 < sizes.length && (kind === 'cap' ? sizes[z + 1].capped : sizes[z + 1].add <= 0.0005 && !sizes[z + 1].capped)) z++;
-      const when = '<td data-label="Pay back in">' + span(k + 1, z + 1) + '</td>';
-      if (kind === 'cap') rows.push('<tr>' + when + '<td colspan="4" class="mc-cap" data-label="">not reachable: needs more than the ' + num(GREEDY_CAP, 0) + ' TH top-up cap</td></tr>');
-      else if (kind === 'free') rows.push('<tr class="hl">' + when + '<td colspan="3" class="mc-cap" data-label="">no top-up needed: growth covers it in ' + (now < 1 ? 'under a month' : trimN(now, 1) + ' months') + '</td><td class="num" data-label="All-in">' + money(base) + '</td></tr>');
-      else rows.push('<tr>' + when + '<td class="num" data-label="Grow it to">' + fmtTH(s.T) + ' TH</td><td class="num" data-label="Add">+' + fmtTH(s.add) + '</td><td class="num" data-label="Top-up cost">' + money(s.cost) + '</td><td class="num" data-label="All-in">' + money(base + s.cost) + '</td></tr>');
+      const when = '<td data-label="' + T('Pay back in') + '">' + span(k + 1, z + 1) + '</td>';
+      if (kind === 'cap') rows.push('<tr>' + when + '<td colspan="4" class="mc-cap" data-label="">' + T('not reachable: needs more than the {0} TH top-up cap', num(GREEDY_CAP, 0)) + '</td></tr>');
+      else if (kind === 'free') rows.push('<tr class="hl">' + when + '<td colspan="3" class="mc-cap" data-label="">' + T('no top-up needed: growth covers it in {0}', now < 1 ? T('under a month') : T('{0} months', trimN(now, 1))) + '</td><td class="num" data-label="' + T('All-in') + '">' + money(base) + '</td></tr>');
+      else rows.push('<tr>' + when + '<td class="num" data-label="' + T('Grow it to') + '">' + fmtTH(s.T) + ' TH</td><td class="num" data-label="' + T('Add') + '">+' + fmtTH(s.add) + '</td><td class="num" data-label="' + T('Top-up cost') + '">' + money(s.cost) + '</td><td class="num" data-label="' + T('All-in') + '">' + money(base + s.cost) + '</td></tr>');
       k = z + 1;
     }
-    const nowTxt = now < 1 ? 'under a month' : trimN(now, 1) + ' months' + (now > 24 ? ' (~' + trimN(now / 12, 1) + ' yrs)' : '');
+    const nowTxt = now < 1 ? T('under a month') : now > 24 ? T('{0} months (~{1} yrs)', trimN(now, 1), trimN(now / 12, 1)) : T('{0} months', trimN(now, 1));
     pb.innerHTML =
-      '<p class="mc-pb-lead">You\'d pay <b>' + money(b.prem) + '</b> over what its hashrate costs today. At its current <b>' + fmtTH(th) + ' TH</b>, its free growth pays that back in <b>' + nowTxt + '</b> on its own' +
-        (now <= 12 ? (now > 1 ? '. Adding TH only helps if you want it back sooner:' : ', so no top-up is needed:') : '. To get it back sooner, grow it to:') + '</p>' +
-      (effUp > 0 ? '<p class="mc-pb-up">Running it at ' + trimN(r, 2) + ' W adds a one-time <b>' + money(effUp) + '</b> efficiency upgrade, included in All-in below. It doesn\'t change the premium.</p>' : '') +
-      '<div class="ui-table-wrap mc-pb-wrap"><table class="ui-table ui-table--stack mc-pb" aria-label="Top-up needed to repay the premium, by payback time"><thead><tr><th>Pay back in</th><th class="num">Grow it to</th><th class="num">Add</th><th class="num">Top-up cost</th><th class="num">All-in</th></tr></thead><tbody>' +
+      '<p class="mc-pb-lead">' + T('You\'d pay <b>{0}</b> over what its hashrate costs today. At its current <b>{1} TH</b>, its free growth pays that back in <b>{2}</b> on its own', money(b.prem), fmtTH(th), nowTxt) +
+        T(now <= 12 ? (now > 1 ? '. Adding TH only helps if you want it back sooner:' : ', so no top-up is needed:') : '. To get it back sooner, grow it to:') + '</p>' +
+      (effUp > 0 ? '<p class="mc-pb-up">' + T('Running it at {0} W adds a one-time <b>{1}</b> efficiency upgrade, included in All-in below. It doesn\'t change the premium.', trimN(r, 2), money(effUp)) + '</p>' : '') +
+      '<div class="ui-table-wrap mc-pb-wrap"><table class="ui-table ui-table--stack mc-pb" aria-label="' + T('Top-up needed to repay the premium, by payback time') + '"><thead><tr><th>' + T('Pay back in') + '</th><th class="num">' + T('Grow it to') + '</th><th class="num">' + T('Add') + '</th><th class="num">' + T('Top-up cost') + '</th><th class="num">' + T('All-in') + '</th></tr></thead><tbody>' +
       rows.join('') + '</tbody></table></div>' +
-      '<p class="mc-tbl-note">All-in = ' + money(b.ask) + ' to buy' + (effUp > 0 ? ' + ' + money(effUp) + ' upgrade to ' + trimN(r, 2) + ' W' : '') + ' + top-up. ' +
-      'Growth ' + trimN(g * 100, 4) + '%/week compounding; each free TH is valued at the full ' + trimN(r, 2) + ' W price (' + money(growthVal(th, r)) + '/TH)' +
-      (P.SALE_PCT > 0 ? ', not the ' + P.SALE_PCT + '% sale price, since most of it arrives after the sale' : '') + '. ' +
-      'Top-up TH is bought at today\'s ' + trimN(r, 2) + ' W price' + (r > EFF_BASE_MAX ? ' (charged at the 15 W rate)' : '') + '. ' +
-      'Growth is last week\'s observed rate, not a promise; mining income comes on top.</p>';
+      '<p class="mc-tbl-note">' + (effUp > 0 ? T('All-in = {0} to buy + {1} upgrade to {2} W + top-up.', money(b.ask), money(effUp), trimN(r, 2)) : T('All-in = {0} to buy + top-up.', money(b.ask))) + ' ' +
+      T('Growth {0}%/week compounding; each free TH is valued at the full {1} W price ({2}/TH)', trimN(g * 100, 4), trimN(r, 2), money(growthVal(th, r))) +
+      (P.SALE_PCT > 0 ? T(', not the {0}% sale price, since most of it arrives after the sale', P.SALE_PCT) : '') + '. ' +
+      T(r > EFF_BASE_MAX ? 'Top-up TH is bought at today\'s {0} W price (charged at the 15 W rate).' : 'Top-up TH is bought at today\'s {0} W price.', trimN(r, 2)) + ' ' +
+      T('Growth is last week\'s observed rate, not a promise; mining income comes on top.') + '</p>';
   }
-  const basisLine = () => 'GMT $' + num(S.gmt, 3) + (S.live ? '' : ' (cached)') + ' · TH priced at GoMining\'s going rate';
+  const basisLine = () => 'GMT ' + (LANG === 'en' ? '$' + num(S.gmt, 3) : num(S.gmt, 3) + '\u00a0$') + (S.live ? '' : T(' (cached)')) + ' · ' + T('TH priced at GoMining\'s going rate');
 
   // ---- lookup ----
   function parseId(s) {
@@ -235,9 +240,9 @@
     const img = box.querySelector('.mc-scan-thumb img'), thumb = box.querySelector('.mc-scan-thumb');
     const first = scans++ === 0;
     const MIN_MS = reduce ? 300 : first ? 1900 : 1200, STEP_MS = reduce ? 40 : first ? 300 : 190;
-    $('mc-scan-title').textContent = 'Scanning miner #' + id;
+    $('mc-scan-title').textContent = T('Scanning miner #{0}', id);
     rows.forEach(r => { r.className = 'mc-sstep'; r.querySelector('.mc-sv').textContent = ''; });
-    rows[0].querySelector('span').textContent = 'Locating miner #' + id + ' on GoMining';
+    rows[0].querySelector('span').textContent = T('Locating miner #{0} on GoMining', id);
     img.hidden = true; img.removeAttribute('src'); thumb.classList.remove('has-img', 'bad');
     box.className = 'mc-scan'; box.hidden = false;
     ['mc-card', 'mc-result'].forEach(k => { $(k).hidden = true; });
@@ -245,14 +250,14 @@
     const d = () => req.data;
     const listed = () => d() && d().marketplace === 'gmt-secondary' && d().status === 'available';
     const steps = [
-      { ok: () => !!d(), v: () => d().name || 'miner #' + id },
+      { ok: () => !!d(), v: () => d().name || T('miner #{0}', id) },
       { ok: () => !!d(), v: () => trimN(d().power, 2) + ' TH · ' + trimN(d().efficiency, 2) + ' W/TH' },
-      { ok: () => !!d(), v: () => listed() ? num(d().price || 0, 0) + ' GMT · ' + (d().saleType === 'auction' ? 'auction' : 'fixed price') : 'not for sale right now' },
-      { ok: () => !!d() && S.ready, v: () => { const u = upgPerTH(d().efficiency); return u > 0 ? money(u) + '/TH to reach 12 W' : 'already at 12 W/TH'; } },
+      { ok: () => !!d(), v: () => listed() ? num(d().price || 0, 0) + ' GMT · ' + T(d().saleType === 'auction' ? 'auction' : 'fixed price') : T('not for sale right now') },
+      { ok: () => !!d() && S.ready, v: () => { const u = upgPerTH(d().efficiency); return u > 0 ? T('{0}/TH to reach 12 W', money(u)) : T('already at 12 W/TH'); } },
       { ok: () => !!d() && S.ready, v: () => {
-          if (!listed() || !(d().price > 0)) return 'enter a price to size it';
+          if (!listed() || !(d().price > 0)) return T('enter a price to size it');
           const b = basics(d().power, Math.max(EFF_BEST, d().efficiency), d().price);
-          return b.prem > 0 ? money(b.prem) + ' premium' : 'no premium';
+          return b.prem > 0 ? T('{0} premium', money(b.prem)) : T('no premium');
         } }
     ];
 
@@ -270,7 +275,7 @@
         if (req.error) {
           stop(); box.classList.add('failed');
           if (rows[done]) { rows[done].classList.remove('on'); rows[done].classList.add('bad'); }
-          $('mc-scan-hash').textContent = 'scan stopped';
+          $('mc-scan-hash').textContent = T('scan stopped');
           return setTimeout(() => reject(req.error), reduce ? 0 : 650);
         }
         if (d() && d().image && img.hidden) {
@@ -292,7 +297,7 @@
         if (done === steps.length && now - t0 >= MIN_MS && shown > 99.3) {
           stop();
           $('mc-scan-pct').textContent = '100'; $('mc-scan-bar').style.transform = 'scaleX(1)';
-          $('mc-scan-hash').textContent = 'scan complete';
+          $('mc-scan-hash').textContent = T('scan complete');
           box.classList.add('done');
           return setTimeout(resolve, reduce ? 0 : 320);
         }
@@ -306,18 +311,18 @@
     if (scanning) return;
     showErr('');
     const btn = $('mc-go');
-    btn.disabled = true; btn.textContent = 'Scanning…';
+    btn.disabled = true; btn.textContent = T('Scanning…');
     scanning = true;
     const req = { data: null, error: null };
     fetch(LOOKUP + '?id=' + encodeURIComponent(id))
       .then(async r => {
         const d = await r.json().catch(() => ({}));
-        if (r.status === 404 || d.error === 'not_found') throw new Error('No GoMining miner has the number ' + id + '. Check the link and try again.');
-        if (!r.ok || d.error) throw new Error('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.');
-        if (d.type && d.type !== 'miner') throw new Error('That NFT isn\'t a miner, so there is no hashrate to price.');
+        if (r.status === 404 || d.error === 'not_found') throw new Error(T('No GoMining miner has the number {0}. Check the link and try again.', id));
+        if (!r.ok || d.error) throw new Error(T('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.'));
+        if (d.type && d.type !== 'miner') throw new Error(T('That NFT isn\'t a miner, so there is no hashrate to price.'));
         req.data = d;
       })
-      .catch(e => { req.error = e instanceof Error ? e : new Error('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.'); });
+      .catch(e => { req.error = e instanceof Error ? e : new Error(T('Couldn\'t reach GoMining just now. Try again in a minute, or type the numbers in below.')); });
     try {
       await runScan(id, req);
       const box = $('mc-scan');
@@ -332,9 +337,9 @@
       $('mc-scan').hidden = true;
       scanning = false;
       render();
-      showErr(e.message || 'Something went wrong.');
+      showErr(e.message || T('Something went wrong.'));
     } finally {
-      btn.disabled = false; btn.textContent = 'Check miner';
+      btn.disabled = false; btn.textContent = T('Check miner');
     }
   }
 
@@ -416,15 +421,15 @@
 
     const card = $('mc-card');
     let status;
-    if (listed && d.saleType === 'auction') status = '<span class="mc-pill warn">Auction · price is the current bid</span>';
-    else if (listed) status = '<span class="mc-pill ok">Listed for sale</span>';
-    else status = '<span class="mc-pill off">Not listed right now · enter a price to test one</span>';
+    if (listed && d.saleType === 'auction') status = '<span class="mc-pill warn">' + T('Auction · price is the current bid') + '</span>';
+    else if (listed) status = '<span class="mc-pill ok">' + T('Listed for sale') + '</span>';
+    else status = '<span class="mc-pill off">' + T('Not listed right now · enter a price to test one') + '</span>';
     card.innerHTML =
       (d.image ? '<img src="' + esc(d.image) + '" alt="" loading="lazy" width="72" height="72">' : '') +
-      '<div class="mc-card-b"><div class="mc-card-n">' + esc(d.name || ('Miner #' + d.id)) + '</div>' +
+      '<div class="mc-card-b"><div class="mc-card-n">' + esc(d.name || T('Miner #{0}', d.id)) + '</div>' +
       '<div class="mc-card-m">' + esc(num(d.power, 2).replace(/\.?0+$/, '')) + ' TH · ' + esc(num(d.efficiency, 2).replace(/\.?0+$/, '')) + ' W/TH' +
-      (d.level ? ' · level ' + esc(d.level) : '') + (d.network ? ' · ' + esc(d.network) : '') + '</div>' + status + '</div>' +
-      '<a class="mc-card-l" href="https://app.gomining.com/nft/view/' + esc(d.id) + '" target="_blank" rel="noopener">View on GoMining ↗</a>';
+      (d.level ? ' · ' + T('level {0}', esc(d.level)) : '') + (d.network ? ' · ' + esc(d.network) : '') + '</div>' + status + '</div>' +
+      '<a class="mc-card-l" href="https://app.gomining.com/nft/view/' + esc(d.id) + '" target="_blank" rel="noopener">' + T('View on GoMining ↗') + '</a>';
     card.hidden = false;
     render();
     if (!listed) $('mc-price').focus();
@@ -436,7 +441,7 @@
     $('mc-form').addEventListener('submit', ev => {
       ev.preventDefault();
       const id = parseId($('mc-link').value);
-      if (!id) { showErr('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.'); return; }
+      if (!id) { showErr(T('Paste a miner link like https://app.gomining.com/nft/view/10854, or just the number.')); return; }
       lookup(id);
     });
     ['mc-th', 'mc-wth', 'mc-price', 'mc-growth'].forEach(id => $(id).addEventListener('input', render));

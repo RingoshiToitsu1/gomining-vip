@@ -22,6 +22,11 @@
   start();
 
   function start() {
+    // Translations (Phase 7d): translated pages load /assets/i18n/<lang>.js (GMT_UI); English pages don't.
+    var UI = window.GMT_UI, LANG = UI ? UI.lang : 'en';
+    var T = UI ? UI.t : function (s) { var a = arguments; return String(s).replace(/\{(\d)\}/g, function (m, i) { return a[+i + 1] != null ? a[+i + 1] : m; }); };
+    var LH = UI ? UI.L : function (h) { return h; };
+    var LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
     // The room's styles (assets/chat.css) travel with the script, so every place the room appears matches.
     if (!document.querySelector('link[data-gmt-chat-css]')) {
       var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=1'; css.setAttribute('data-gmt-chat-css', '');
@@ -91,7 +96,7 @@
       var away = document.hidden || collapsed;                           // not actively watching the chat
       if (away && 'Notification' in window && Notification.permission === 'granted') {
         try {
-          var n = new Notification((m.username || 'Someone') + ' mentioned you in GMT chat', {
+          var n = new Notification(T('{0} mentioned you in GMT chat', m.username || T('Someone')), {
             body: String(m.body || '').slice(0, 140),
             icon: location.origin + '/gmt-optimizer-logo.svg?v=2', tag: 'gmt-mention', renotify: true
           });
@@ -151,27 +156,27 @@
     }
     function send(body) {
       var now = Date.now();
-      if (now - lastSent < MIN_GAP) { flash('Slow down a moment.'); return; }
+      if (now - lastSent < MIN_GAP) { flash(T('Slow down a moment.')); return; }
       body = body.trim();
       if (!body) return;
       if (body.length > 500) body = body.slice(0, 500);
-      if (!A.isLoggedIn()) { flash('Log in to chat.'); return; }
+      if (!A.isLoggedIn()) { flash(T('Log in to chat.')); return; }
       lastSent = now;
       var name = (A.profile && (A.profile.display_name || A.profile.username)) || 'miner';
       var av = (A.profile && A.profile.avatar_url) || null;
       sb.from('messages').insert({ user_id: A.user.id, username: name, avatar_url: av, body: body })
-        .then(function (r) { if (r.error) { flash(r.error.message || 'Could not send.'); lastSent = 0; } });
+        .then(function (r) { if (r.error) { flash(T(r.error.message || 'Could not send.')); lastSent = 0; } });
       el.input.value = '';
     }
     function del(id) {
       sb.from('messages').delete().eq('id', id).then(function (r) {
-        if (r.error) flash(r.error.message || 'Delete failed.');
+        if (r.error) flash(T(r.error.message || 'Delete failed.'));
       });
     }
     function ban(userId, uname) {
-      if (!confirm('Ban ' + uname + '? They will no longer be able to post.')) return;
+      if (!confirm(T('Ban {0}? They will no longer be able to post.', uname))) return;
       sb.from('profiles').update({ banned: true }).eq('id', userId).then(function (r) {
-        if (r.error) flash(r.error.message || 'Ban failed.'); else flash(uname + ' banned.');
+        if (r.error) flash(T(r.error.message || 'Ban failed.')); else flash(T('{0} banned.', uname));
       });
     }
 
@@ -230,16 +235,16 @@
       // pill (which collided with the Ask-Ringo bubble on phones). The detached /chat window
       // fills its viewport instead.
       var head =
-        '<div class="gmt-chat-head">' + (POPOUT ? '<a class="gmt-chat-av" href="/" title="GMT-Optimizer home" target="_blank" rel="noopener">' : '<span class="gmt-chat-av" aria-hidden="true">') +
+        '<div class="gmt-chat-head">' + (POPOUT ? '<a class="gmt-chat-av" href="/" title="' + T('GMT-Optimizer home') + '" target="_blank" rel="noopener">' : '<span class="gmt-chat-av" aria-hidden="true">') +
           '<img src="/assets/brand/GMT_icon_transparent.svg" alt="GMT-Optimizer" width="22" height="22">' + (POPOUT ? '</a>' : '</span>') +
-          '<div class="gmt-chat-ttl"><div class="t">Community chat</div><div class="o" id="gmtChatOnline">0 online</div></div>' +
+          '<div class="gmt-chat-ttl"><div class="t">' + T('Community chat') + '</div><div class="o" id="gmtChatOnline">' + T('{0} online', 0) + '</div></div>' +
         '<div class="gmt-chat-ctl">' +
           (POPOUT || EMB ? '' :
-            '<button class="ci" data-pop title="Pop out into its own window">&#8599;</button>' +
-            '<button class="ci" data-collapse title="Close chat" aria-label="Close chat">&times;</button>') +
+            '<button class="ci" data-pop title="' + T('Pop out into its own window') + '">&#8599;</button>' +
+            '<button class="ci" data-collapse title="' + T('Close chat') + '" aria-label="' + T('Close chat') + '">&times;</button>') +
         '</div></div>';
       var box = document.createElement('div'); box.className = 'gmt-chat' + (EMB ? ' embed' : POPOUT ? ' popout' : ' gmt-dock');
-      box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Global chat');
+      box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', T('Community chat'));
       box.innerHTML =
         '<div class="gmt-chat-body">' + head +
           '<div class="gmt-chat-list" id="gmtChatList"></div>' +
@@ -269,7 +274,7 @@
         var chip = document.getElementById('gmtOnline');
         if (chip) {
           chip.setAttribute('role', 'button'); chip.setAttribute('tabindex', '0');
-          chip.setAttribute('aria-label', 'Open global chat'); chip.title = 'Open the global chat';
+          chip.setAttribute('aria-label', T('Open the community chat')); chip.title = T('Open the community chat');
           chip.classList.add('gmt-chat-btn');
           var openFromChip = function () {
             if (popoutIsOpen()) { var w2 = window.open('', 'gmtchat'); if (w2) { try { w2.focus(); } catch (e) {} } return; }
@@ -330,7 +335,7 @@
     function renderFoot() {
       if (!el.foot) return;
       if (A.isLoggedIn()) {
-        el.foot.innerHTML = '<div class="gmt-mention-ac" id="gmtMentionAc" style="display:none"></div><div class="gmt-chat-row"><textarea id="gmtChatIn" maxlength="500" rows="1" placeholder="Message…  (@ to mention)" enterkeyhint="send"></textarea><button type="button" class="gmt-chat-send" id="gmtChatSend">Send</button></div><div class="gmt-flash" id="gmtFlash"></div>';
+        el.foot.innerHTML = '<div class="gmt-mention-ac" id="gmtMentionAc" style="display:none"></div><div class="gmt-chat-row"><textarea id="gmtChatIn" maxlength="500" rows="1" placeholder="' + T('Message…  (@ to mention)') + '" enterkeyhint="send"></textarea><button type="button" class="gmt-chat-send" id="gmtChatSend">' + T('Send') + '</button></div><div class="gmt-flash" id="gmtFlash"></div>';
         el.input = el.foot.querySelector('#gmtChatIn');
         el.foot.querySelector('#gmtChatSend').addEventListener('click', function () { send(el.input.value); el.input.focus(); });
         el.flash = el.foot.querySelector('#gmtFlash');
@@ -352,7 +357,7 @@
         });
       } else {
         var nx = POPOUT ? '/chat/' : location.pathname + location.search;
-        el.foot.innerHTML = '<a class="gmt-chat-login" href="/login?next=' + encodeURIComponent(nx) + '"' + (POPOUT ? '' : '') + '>Log in to chat</a><div class="gmt-flash" id="gmtFlash"></div>';
+        el.foot.innerHTML = '<a class="gmt-chat-login" href="' + LH('/login') + '?next=' + encodeURIComponent(nx) + '">' + T('Log in to chat') + '</a><div class="gmt-flash" id="gmtFlash"></div>';
         el.flash = el.foot.querySelector('#gmtFlash');
       }
     }
@@ -372,11 +377,11 @@
       el.list.innerHTML = messages.filter(function (m) { return new Date(m.created_at).getTime() >= cutoff; }).map(function (m) {
         var canDel = mod || (mine && m.user_id === mine);
         var controls = '';
-        if (canDel) controls += '<span class="mod" data-del="' + m.id + '" title="Delete">✕</span>';
-        if (mod && (!mine || m.user_id !== mine)) controls += '<span class="mod" data-ban="' + esc(m.user_id) + '" data-name="' + esc(m.username) + '" title="Ban user">🚫</span>';
+        if (canDel) controls += '<span class="mod" data-del="' + m.id + '" title="' + T('Delete') + '">✕</span>';
+        if (mod && (!mine || m.user_id !== mine)) controls += '<span class="mod" data-ban="' + esc(m.user_id) + '" data-name="' + esc(m.username) + '" title="' + T('Ban user') + '">🚫</span>';
         var mentioned = m.user_id !== mine && mentionsMe(m.body);   // a message that @mentions me
         return '<div class="gmt-msg' + (mentioned ? ' mentioned' : '') + '">' + avatarHTML(m) +
-          '<div class="gmt-msg-txt"><span class="u" data-user="' + esc(m.user_id) + '" style="color:' + color(m.user_id) + '" title="View profile">' + esc(m.username) + '</span> ' +
+          '<div class="gmt-msg-txt"><span class="u" data-user="' + esc(m.user_id) + '" style="color:' + color(m.user_id) + '" title="' + T('View profile') + '">' + esc(m.username) + '</span> ' +
           renderBody(m.body) + controls + '</div></div>';
       }).join('');
       if (atBottom) el.list.scrollTop = el.list.scrollHeight;
@@ -411,12 +416,12 @@
     }
     function openUserCard(userId, anchor) {
       if (!card) buildUserCard();
-      card.innerHTML = '<button class="uc-x" title="Close">&times;</button><div class="uc-inner"><div class="uc-loading">Loading…</div></div>';
+      card.innerHTML = '<button class="uc-x" title="' + T('Close') + '">&times;</button><div class="uc-inner"><div class="uc-loading">' + T('Loading…') + '</div></div>';
       card.style.display = 'block'; positionCard(anchor);
       card.querySelector('.uc-x').addEventListener('click', hideCard);
       A.fetchUserCard(userId).then(function (d) {
         var p = d.profile || {};
-        var joined = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
+        var joined = p.created_at ? new Date(p.created_at).toLocaleDateString(LOC, { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
         var name = p.display_name || p.username || 'miner';
         var col = color(userId);
         var roleBadge = (p.role === 'admin' || p.role === 'mod')
@@ -425,7 +430,7 @@
           ? '<img class="uc-av" src="' + esc(p.avatar_url) + '" alt="">'
           : '<span class="uc-av uc-mono" style="background:' + col + '">' + esc(name.charAt(0).toUpperCase()) + '</span>';
         var modBtn = (A.isMod() && userId !== (A.user && A.user.id))
-          ? '<button class="gmt-btn-ghost uc-ban" data-ban="' + esc(userId) + '" data-name="' + esc(name) + '">Ban user</button>' : '';
+          ? '<button class="gmt-btn-ghost uc-ban" data-ban="' + esc(userId) + '" data-name="' + esc(name) + '">' + T('Ban user') + '</button>' : '';
         card.querySelector('.uc-inner').innerHTML =
           '<div class="uc-banner" style="background:linear-gradient(120deg,' + col + ',var(--bg2))"></div>' +
           '<div class="uc-head">' + av +
@@ -433,13 +438,13 @@
             '<div class="uc-user">@' + esc(p.username || '') + '</div></div></div>' +
           (p.bio ? '<div class="uc-bio">' + esc(p.bio) + '</div>' : '') +
           '<div class="uc-info">' +
-            '<div><span class="uc-ic">📅</span> Joined <b>' + joined + '</b></div>' +
-            '<div><span class="uc-ic">💬</span> <b>' + d.msgCount + '</b> message' + (d.msgCount === 1 ? '' : 's') + ' in the last 24 h</div>' +
-            (p.th_total == null && p.show_th === false ? '<div><span class="uc-ic">⛏️</span> Hashrate hidden</div>' :
-              '<div><span class="uc-ic">⛏️</span> <b>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</b> TH fleet</div>') +
+            '<div><span class="uc-ic">📅</span> ' + T('Joined {0}', '<b>' + joined + '</b>') + '</div>' +
+            '<div><span class="uc-ic">💬</span> ' + T(d.msgCount === 1 ? '{0} message in the last 24 h' : '{0} messages in the last 24 h', '<b>' + d.msgCount + '</b>') + '</div>' +
+            (p.th_total == null && p.show_th === false ? '<div><span class="uc-ic">⛏️</span> ' + T('Hashrate hidden') + '</div>' :
+              '<div><span class="uc-ic">⛏️</span> ' + T('{0} TH fleet', '<b>' + Math.round(p.th_total || 0).toLocaleString(LOC) + '</b>') + '</div>') +
           '</div>' + (modBtn ? '<div class="uc-actions">' + modBtn + '</div>' : '');
         positionCard(anchor);   // re-clamp now that the card has its real height
-      }).catch(function () { card.querySelector('.uc-inner').innerHTML = '<div class="uc-loading">Could not load profile.</div>'; });
+      }).catch(function () { card.querySelector('.uc-inner').innerHTML = '<div class="uc-loading">' + T('Could not load profile.') + '</div>'; });
     }
 
     // delegated actions: mod controls, username -> card, ban-from-card
@@ -464,7 +469,7 @@
         hdr.innerHTML = '<span class="gmt-chat-ic" aria-hidden="true">&#128172;</span><span class="gmt-chat-lbl">Chat</span><span class="dot"></span><span class="gmt-chat-n">' + online + '<span class="gmt-chat-on"> online</span></span>' + badge;
         hdr.classList.toggle('mention-alert', mentioned && collapsed);
       }
-      if (el.online2) el.online2.textContent = online + ' online';
+      if (el.online2) el.online2.textContent = T('{0} online', online);
     }
 
     loadHistory();

@@ -14,6 +14,7 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | Co-pilot | `assets/copilot/es.js`, `fr.js`, `de.js` | same nodes as `en.js` |
 | Data pages (live numbers) | `scripts/data-pages-text.js` | templates; numbers come in through `c`, never typed |
 | Quick-estimate widget (farm mode) | `assets/roi-embed.js` (`FARM`) | `/embed` keeps its own dollar-mode strings |
+| JS interfaces (account pages, chat, checker) | `locales/<lang>.json` → `"ui"` | keyed by the English text; `{0}`, `{1}` are values; compiled to `assets/i18n/<lang>.js` |
 
 ## Rules for reviewers
 - Keep HTML tags, `href`s, `class`es and `data-cfg` attributes exactly as they are; change only the words.
@@ -29,7 +30,8 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | 7a | landing, /claim, /copilot, header/footer, co-pilot, quick estimate | machine | machine | machine |
 | 7b | guides, FAQ, glossary, about, disclosures, privacy, terms, how-it-works, worth-it, discount, promo code, ROI calculator, marketplace checker (page text) | machine | machine | machine |
 | 7c | 14 generated data pages + live blocks (templates in `scripts/data-pages-text.js`) | machine | machine | machine |
-| 7d | console app (`app.js`), account pages, chat UI | – | – | – |
+| 7d-1 | account pages (login, signup, profile, settings, dashboard), chat UI, marketplace checker results | machine | machine | machine |
+| 7d-2 | console app (`app.js`: /console, /planner, /projection) | – | – | – |
 
 ## Notes for reviewers (7b)
 - **Legal pages** (`/privacy`, `/terms`): **needs legal review before launch.** The privacy policy was rewritten on
@@ -40,4 +42,5 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
   `scripts/data-pages-text.js` (7c). Keep every `${...}` placeholder; reword around them.
 - **Card cashback wording** must keep "Carte" / "Karte" / "tarjeta" next to "cashback" (FR "bonus cashback Carte",
   DE "Karten-Cashback-Bonus"), or `scripts/offer-check.js` flags it as an ended offer.
-- The marketplace checker's results panel and the quick-estimate dollar mode are JavaScript text: 7d.
+- `"ui"` strings keep their `{0}`/`{1}` placeholders and `<b>` tags exactly; reword around them.
+- French: avoid "remboursé(s)" for "pay back" (the offer check reads it as the ended cash-back offer); use "rentabilisé".
