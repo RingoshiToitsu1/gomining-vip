@@ -1454,3 +1454,9 @@ Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots
   static: 0 errors after linking 17 console labels to their fields, `alt=""` on a decorative icon and 5 aria-labels;
   29 warnings). An automated axe run in the owner's logged-in browser was blocked as a safety measure; not worked around.
 - **REVIEW.md** written. Phase 8 complete; the launch itself waits for the owner (LAUNCH.md).
+- **Live schema verified 2026-11-18** (read-only `inspect_readonly.sql`, run in the SQL editor with the owner's session;
+  SELECT-only). profiles has exactly the columns the exposure fix grants (id, username, display_name, avatar_url, bio,
+  role, created_at, banned) plus th_total and setup; show_th / prefs / get_my_profile / profile_cards /
+  delete_my_account don't exist yet; RLS on for all 3 tables; profiles readable by anon (confirms the exposure);
+  messages_insert reads profiles.banned (kept readable); every FK to auth.users cascades (Supabase's
+  auth.scim_users: SET NULL). **Both launch SQL files fit the live schema unchanged.**
