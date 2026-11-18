@@ -75,7 +75,8 @@
     if (t != null && t !== v) { node.nodeValue = t; done.set(node, t); }
   }
   function doAttrs(el) {
-    if (skipped(el, false)) return;
+    // An input's own tooltip / placeholder is translatable; only its value (and text inside skipped tags) is not.
+    if (/^(INPUT|TEXTAREA)$/.test(el.tagName) ? skipped(el.parentNode, true) : skipped(el, false)) return;
     for (var i = 0; i < ATTRS.length; i++) {
       var a = ATTRS[i], v = el.getAttribute(a);
       if (!v) continue;

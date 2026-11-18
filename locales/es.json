@@ -1260,6 +1260,7 @@
   "Password": "Contraseña",
   "Path to {0} Token Discount": "Camino al {0} de descuento por token",
   "Plan it in the Capital Planner →": "Planifícalo en el planificador de capital →",
+  "Power-Law regression fitted to BTC since {0} (R² {1} fit strength). Scroll to zoom, drag to pan, double-click to reset.": "Regresión de ley de potencia ajustada a BTC desde {0} (ajuste R² {1}). Desplaza para hacer zoom, arrastra para moverte, doble clic para reiniciar.",
   "Press & hold the image to save it": "Mantén pulsada la imagen para guardarla",
   "Press and hold the image to save or share it": "Mantén pulsada la imagen para guardarla o compartirla",
   "Projected ROI": "ROI previsto",
