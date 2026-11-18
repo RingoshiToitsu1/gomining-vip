@@ -765,3 +765,613 @@ only words that are correct in those languages (DE "FAQ", "Tools", "Status", "on
 "Projection", "Guides", "Contact", "Options"). Logged out, the console and planner results sit behind the sign-up gate;
 logged-in shots are on the Phase 8 checklist.
 
+
+## 25. Part 1: site-wide sweep for leftover old visuals (2026-11-18)
+
+Method: `sweep.py` scanned every stylesheet in `assets/`, every inline `<style>` and `style=""` in the 52 site pages,
+and the CSS and canvas effects written from JavaScript, for: glow/neon shadows, glow orbs and spotlight gradients, heavy
+glass blur, corner-bracket frames, ALL-CAPS letter-spaced text, non-token fonts, colours not from `tokens.css`, decorative
+animations and old effect code (starfield, particles, tilt, magnetic, typewriter, ticker, cinematic). ES/FR/DE pages are
+generated from the English ones and share every stylesheet, so a fix in the source fixes all four languages.
+Noise removed before listing: the legacy variables `--mono`/`--sans` (already Inter via tokens), plain white/black.
+
+**Exceptions that stay (owner):** the `/embed` ember theme (matches ringomining.com) and the `/statement` print styles.
+
+**Whole pages, not itemised:** `gomining-optimizer.html` and `gomining-vip-index.html` are full copies of the old app
+(2,283 and 2,139 lines, 127 and 121 findings each: old fonts, glow, caps, 51+ hard-coded colours, 8 animations). They are
+frozen URLs, `noindex,nofollow`, kept "same content" on 2026-11-17. **Proposal (needs your OK):** turn each into a
+redirect page like `/planner` (still 200 at the same URL, sends visitors to `/console`), instead of restyling an obsolete
+second app. Until you decide they stay as they are.
+
+**Dead files (not loaded by any page):** `assets/cine.js` (cinematic intro), `assets/topbar.js`. Left in place; no visual effect.
+
+**Findings: 525 rows** (file, line, element, what's wrong, verdict). Console files (`app.css`, `design.css`, `futures.css`,
+`console/index.html`, `chrome.js`, loaders) are fixed by the Part 2 redesign and Part 3 loaders; the rest in Part 1.
+
+| File | Line | Element | What's wrong | Verdict |
+|---|---|---|---|---|
+| `assets/account-pages.css` | 40 | `.acct-danger` | colour not from tokens.css (rgb(239 68 68 / .35)) | fix |
+| `assets/accounts.css` | 23 | `.gmt-field:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/accounts.css` | 57 | `.gmt-acc-menu` | colour not from tokens.css (#121316) | fix |
+| `assets/accounts.css` | 73 | `#gmtOnline .dot` | glow / neon shadow (box-shadow: 0 0 8px var(--color-success)) | fix |
+| `assets/accounts.css` | 80 | `#gmtOnline .gmt-chat-new` | colour not from tokens.css (#04140b) | fix |
+| `assets/accounts.css` | 92 | `.gmt-modal label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/accounts.css` | 97 | `.gmt-modal input:focus,.gmt-modal textarea:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/accounts.css` | 112 | `.gmt-modal .ok` | colour not from tokens.css (#7bd88f) | fix |
+| `assets/accounts.css` | 125 | `/* ---------- results gate: hide the data, prompt signup (fl` | glow orb / spotlight gradient | fix |
+| `assets/accounts.css` | 161 | `.fleet-thead span` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/accounts.css` | 176 | `.fleet-f:focus-within` | glow / neon shadow (box-shadow: 0 0 0 2px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/accounts.css` | 188 | `.fleet-lbl` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/accounts.css` | 198 | `/* The dropdown paints its own list background in some engin` | colour not from tokens.css (#12151a) | fix |
+| `assets/accounts.css` | 207 | `.fleet-pwr-dot` | glow / neon shadow (box-shadow: 0 0 7px var(--green,#3ddc97)); colour not from tokens.css (#3ddc97) | fix |
+| `assets/app.css` | 3 | `:root` | colour not from tokens.css (#c0c0c0, #cd7f32, #e0dfe0) | fix |
+| `assets/app.css` | 21 | `body` | glow orb / spotlight gradient | fix |
+| `assets/app.css` | 27 | `.header` | heavy glass blur | fix |
+| `assets/app.css` | 36 | `.live-dot` | decorative animation (pulse 2s infinite) | fix |
+| `assets/app.css` | 54 | `.tab-btn.active` | glow / neon shadow (box-shadow: 0 0 20px rgb(var(--color-gold-rgb) / .25)) | fix |
+| `assets/app.css` | 66 | `/* FLATTENED one-page layout: both panels render as one cont` | decorative animation (fadeIn .3s ease) | fix |
+| `assets/app.css` | 70 | `/* planner entry button (opens the existing capital form; re` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .34)) | fix |
+| `assets/app.css` | 71 | `.planner-open-btn:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/app.css` | 103 | `.idle-gmt-editwrap:focus-within` | glow / neon shadow (box-shadow: 0 0 0 2px rgb(var(--color-gold-rgb) / .16)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 104 | `.idle-gmt-editlbl` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 123 | `.idle-gmt-ask-row input:focus` | glow / neon shadow (box-shadow: 0 0 0 2px rgb(var(--color-gold-rgb) / .18)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 141 | `.px-dot` | glow / neon shadow (box-shadow: 0 0 6px var(--green,var(--color-success))) | fix |
+| `assets/app.css` | 148 | `/* Centred modal with its own backdrop. Two reasons it is no` | colour not from tokens.css (rgba(4,4,6,.72)); decorative animation (fadeIn .16s ease) | fix |
+| `assets/app.css` | 152 | `.px-info-card` | colour not from tokens.css (#111318) | fix |
+| `assets/app.css` | 161 | `.px-tbl th` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 175 | `.idle-gmt-leg-k` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 191 | `/* The number you act on breathes. This card exists because ` | decorative animation (idleActPulse 2.8s ease-in-out infinite) | fix |
+| `assets/app.css` | 199 | `/* A glow that breathes on its own is exactly the motion thi` | glow / neon shadow (text-shadow: 0 0 14px rgb(var(--color-gold-300-rgb) / .60),0) | fix |
+| `assets/app.css` | 208 | `.idle-gmt-btn` | glow / neon shadow (box-shadow: 0 6px 18px rgb(var(--color-gold-rgb) / .26)) | fix |
+| `assets/app.css` | 209 | `.idle-gmt-btn:hover` | glow / neon shadow (box-shadow: 0 9px 24px rgb(var(--color-gold-rgb) / .4)) | fix |
+| `assets/app.css` | 227 | `.hero-card-action:hover` | glow / neon shadow (box-shadow: 0 6px 26px rgb(var(--color-gold-rgb) / .28)) | fix |
+| `assets/app.css` | 231 | `.hero-card-action .hero-cta-btn` | glow / neon shadow (box-shadow: 0 3px 12px rgb(var(--color-gold-rgb) / .3)) | fix |
+| `assets/app.css` | 236 | `.hero-label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 257 | `/* The income split is reference detail, not a headline — co` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 271 | `.disc-override-panel` | decorative animation (fadeIn .2s ease) | fix |
+| `assets/app.css` | 289 | `/* The hero heading carries the badge on its own line, right` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 290 | `.sec-head .tag .dot` | glow / neon shadow (box-shadow: 0 0 10px var(--gold)) | fix |
+| `assets/app.css` | 297 | `.section:hover` | colour not from tokens.css (#232d48); glow / neon shadow (box-shadow: var(--sh),0 0 26px rgb(var(--color-gold-rgb) / .) | fix |
+| `assets/app.css` | 330 | `.section-collapsible .section-toggle::before` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 346 | `.field-input:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 347 | `.greedy-field.flash .field-input` | decorative animation (greedyFlash 1.4s ease var(--flash-delay,0s) both) | fix |
+| `assets/app.css` | 348 | `.greedy-field.flash label` | decorative animation (greedyLabelFlash 1.4s ease var(--flash-delay,0s) both) | fix |
+| `assets/app.css` | 378 | `.out-row` | colour not from tokens.css (rgba(26,32,56,.6)) | fix |
+| `assets/app.css` | 390 | `.vip-badge.bronze` | colour not from tokens.css (rgba(205,127,50,.08), rgba(205,127,50,.4)) | fix |
+| `assets/app.css` | 391 | `.vip-badge.silver` | colour not from tokens.css (rgba(192,192,192,.08), rgba(192,192,192,.4)) | fix |
+| `assets/app.css` | 393 | `.vip-badge.platinum` | colour not from tokens.css (rgba(224,223,224,.08), rgba(224,223,224,.4)) | fix |
+| `assets/app.css` | 394 | `.vip-badge.diamond` | colour not from tokens.css (rgba(126,232,250,.08), rgba(126,232,250,.4)) | fix |
+| `assets/app.css` | 395 | `.vip-badge.legend` | colour not from tokens.css (rgba(255,77,106,.08), rgba(255,77,106,.4)) | fix |
+| `assets/app.css` | 407 | `.ds-mining` | colour not from tokens.css (#e879f9) | fix |
+| `assets/app.css` | 414 | `.badge.red` | colour not from tokens.css (rgba(248,113,113,.08), rgba(248,113,113,.2)) | fix |
+| `assets/app.css` | 422 | `.donate-box` | decorative animation (fadeIn .3s ease); heavy glass blur | fix |
+| `assets/app.css` | 454 | `.alloc-split-gmt` | colour not from tokens.css (#E0E0E0) | fix |
+| `assets/app.css` | 458 | `.alloc-split-legend .dot-gmt` | colour not from tokens.css (#E0E0E0) | fix |
+| `assets/app.css` | 460 | `.alloc-card .a-label` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 467 | `.sub-title.centered` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 477 | `.nbm-head` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 481 | `.nbm-item.nbm-active` | glow / neon shadow (box-shadow: 0 0 0 1px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 488 | `.nbm-tag` | ALL-CAPS letter-spaced; colour not from tokens.css (#062) | fix |
+| `assets/app.css` | 492 | `.nbm-locked .nbm-cost` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 499 | `.eff-control input:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 501 | `.eff-splitbar>div` | colour not from tokens.css (#06121f) | fix |
+| `assets/app.css` | 506 | `.eff-gauge-win` | colour not from tokens.css (rgba(80,220,140,.5)) | fix |
+| `assets/app.css` | 515 | `.eff-card.eff-best` | glow / neon shadow (box-shadow: 0 0 0 1px var(--green),0 2px 14px rgba(80,220,14); colour not from tokens.css (rgba(80,220,140,.12)) | fix |
+| `assets/app.css` | 516 | `.eff-tag` | ALL-CAPS letter-spaced; colour not from tokens.css (#062) | fix |
+| `assets/app.css` | 532 | `.eff-upg-greedy` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 536 | `.eff-plainplan-lbl` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 560 | `.skel` | decorative animation (shimmer 1.5s infinite) | fix |
+| `assets/app.css` | 635 | `.pc-mode-tag` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 636 | `.proj-cell.current` | glow / neon shadow (box-shadow: 0 0 12px rgb(var(--color-success-rgb) / .20)) | fix |
+| `assets/app.css` | 652 | `.ba-label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 660 | `#projBtcSelect:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 666 | `.proj-cell .pc-tag` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 685 | `/* New-user onboarding — full page (same look a` | glow orb / spotlight gradient | fix |
+| `assets/app.css` | 688 | `/* The overlay itself stays fully opaque from frame 1 (so th` | decorative animation (obFadeIn .45s ease) | fix |
+| `assets/app.css` | 694 | `.ob-dot.active` | glow / neon shadow (box-shadow: 0 0 10px var(--purple)) | fix |
+| `assets/app.css` | 711 | `.lp-aurora-1` | glow orb / spotlight gradient; decorative animation (lpDrift1 19s ease-in-out infinite) | fix |
+| `assets/app.css` | 712 | `.lp-aurora-2` | glow orb / spotlight gradient; decorative animation (lpDrift2 23s ease-in-out infinite) | fix |
+| `assets/app.css` | 713 | `.lp-aurora-3` | glow orb / spotlight gradient; decorative animation (lpDrift3 27s ease-in-out infinite) | fix |
+| `assets/app.css` | 717 | `.lp-rings` | decorative animation (lpSpin 75s linear infinite) | fix |
+| `assets/app.css` | 723 | `.lp-headline` | colour not from tokens.css (#fff6e0); decorative animation (lpShimmer 6.5s linear infinite) | fix |
+| `assets/app.css` | 729 | `.lp-cta-primary` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .3)); colour not from tokens.css (#1a1205) | fix |
+| `assets/app.css` | 730 | `.lp-cta-primary:hover` | glow / neon shadow (box-shadow: 0 9px 30px rgb(var(--color-gold-rgb) / .45)) | fix |
+| `assets/app.css` | 739 | `.ob-step` | decorative animation (obSlideIn .35s ease) | fix |
+| `assets/app.css` | 758 | `.ob-field .ob-input-wrap:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 764 | `.ob-select:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 769 | `.ob-btn-primary` | glow / neon shadow (box-shadow: 0 4px 20px rgb(var(--color-gold-rgb) / .3)); colour not from tokens.css (#7540ef) | fix |
+| `assets/app.css` | 770 | `.ob-btn-primary:hover` | glow / neon shadow (box-shadow: 0 6px 30px rgb(var(--color-gold-rgb) / .4)) | fix |
+| `assets/app.css` | 783 | `.ob-reveal` | decorative animation (obReveal .6s ease forwards) | fix |
+| `assets/app.css` | 794 | `.ob-tutorial-wrap` | colour not from tokens.css (#0d0e1a) | fix |
+| `assets/app.css` | 801 | `.gm-mk` | colour not from tokens.css (#0f1020, #2a2c45) | fix |
+| `assets/app.css` | 803 | `.gm-mk-head .gm-mk-dot` | glow / neon shadow (box-shadow: 0 0 8px rgba(124,108,247,.7)); colour not from tokens.css (#7c6cf7, rgba(124,108,247,.7)) | fix |
+| `assets/app.css` | 807 | `.gm-mk-tile-lbl` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 808 | `.gm-mk-ico` | colour not from tokens.css (rgba(124,108,247,.18)) | fix |
+| `assets/app.css` | 811 | `.gm-mk-tile-sub` | colour not from tokens.css (#6fd08a) | fix |
+| `assets/app.css` | 812 | `.gm-mk-hl` | glow / neon shadow (box-shadow: 0 0 0 3px #FF3B3B); colour not from tokens.css (#FF3B3B) | fix |
+| `assets/app.css` | 817 | `.gm-mk-chev` | colour not from tokens.css (#6a6c8f) | fix |
+| `assets/app.css` | 818 | `.gm-mk-bal-lbl` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 823 | `.gm-mk-act` | colour not from tokens.css (#c9cae6) | fix |
+| `assets/app.css` | 824 | `.gm-mk-act-btn` | colour not from tokens.css (#2f3252, #7c6cf7) | fix |
+| `assets/app.css` | 826 | `.gm-mk-menu` | colour not from tokens.css (#2f3252) | fix |
+| `assets/app.css` | 828 | `.gm-mk-menu-ico` | colour not from tokens.css (rgba(124,108,247,.16)) | fix |
+| `assets/app.css` | 829 | `.gm-mk-arrow` | colour not from tokens.css (#FF3B3B) | fix |
+| `assets/app.css` | 871 | `.pi-overlay` | decorative animation (fadeIn .3s ease) | fix |
+| `assets/app.css` | 872 | `.pi-modal` | glow / neon shadow (box-shadow: 0 0 80px rgb(var(--color-gold-rgb) / .12)) | fix |
+| `assets/app.css` | 888 | `.sp-page` | glow orb / spotlight gradient; decorative animation (fadeIn .25s ease) | fix |
+| `assets/app.css` | 894 | `.live-chip-btn:hover` | glow / neon shadow (box-shadow: 0 0 0 2px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 911 | `.rb-pill.active` | glow / neon shadow (box-shadow: 0 0 0 1px var(--text3)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 912 | `.btc-rainbow-tip` | colour not from tokens.css (rgba(12,12,16,0.95)) | fix |
+| `assets/app.css` | 945 | `.cmb-swap-title` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 986 | `.sp-new-btn` | glow / neon shadow (box-shadow: 0 3px 12px rgb(var(--color-gold-rgb) / .25)) | fix |
+| `assets/app.css` | 1023 | `#secInputs .ed-group-title` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 1026 | `#secInputs .ed-fld:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1037 | `#secInputs .ed-dd:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1048 | `#secInputs .ed-sbtn` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 1050 | `#secInputs .ed-sbtn-primary` | glow / neon shadow (box-shadow: 0 2px 10px rgb(var(--color-gold-rgb) / .25)) | fix |
+| `assets/app.css` | 1083 | `.pi-mode-btn.active` | glow / neon shadow (box-shadow: 0 2px 8px rgb(var(--color-gold-rgb) / .25)) | fix |
+| `assets/app.css` | 1088 | `.pi-field-box:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1093 | `.pi-field-budget:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1100 | `.sp-page select:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1105 | `.sp-payout-val:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1118 | `.sp-page-loading` | decorative animation (fadeIn .2s ease) | fix |
+| `assets/app.css` | 1120 | `.planner-a` | glow / neon shadow (box-shadow: 0 2px 12px rgb(var(--color-gold-rgb) / .12)); decorative animation (adjustPulse 2.6s ease-in-out infinite) | fix |
+| `assets/app.css` | 1121 | `.planner-adjust-btn:hover` | glow / neon shadow (box-shadow: 0 5px 20px rgb(var(--color-gold-rgb) / .25)) | fix |
+| `assets/app.css` | 1130 | `.cshot-overlay` | colour not from tokens.css (rgba(6,6,8,.82)) | fix |
+| `assets/app.css` | 1133 | `.cshot-x` | colour not from tokens.css (#999) | fix |
+| `assets/app.css` | 1137 | `.cshot-loading` | colour not from tokens.css (#999) | fix |
+| `assets/app.css` | 1142 | `.cshare-sheet` | decorative animation (cshFade .18s ease) | fix |
+| `assets/app.css` | 1144 | `.cshare-panel` | colour not from tokens.css (#1c1c1e); decorative animation (cshUp .26s cubic-bezier(.2,.8,.2,1)) | fix |
+| `assets/app.css` | 1164 | `.planner-proj-btn:hover` | glow / neon shadow (box-shadow: 0 6px 24px rgb(var(--color-gold-rgb) / .2)) | fix |
+| `assets/app.css` | 1172 | `.planner-top-row .planner-proj-btn` | glow / neon shadow (box-shadow: 0 2px 14px rgb(var(--color-gold-rgb) / .1)) | fix |
+| `assets/app.css` | 1173 | `.planner-top-row .planner-proj-btn:hover` | glow / neon shadow (box-shadow: 0 6px 26px rgb(var(--color-gold-rgb) / .24)) | fix |
+| `assets/app.css` | 1181 | `.sp-loading` | decorative animation (fadeIn .2s ease) | fix |
+| `assets/app.css` | 1182 | `.sp-spinner` | decorative animation (spSpin .7s linear infinite) | fix |
+| `assets/app.css` | 1186 | `.pi-calc-loading` | decorative animation (fadeIn .2s ease) | fix |
+| `assets/app.css` | 1198 | `.hero-card` | decorative animation (cardEnter .4s ease backwards) | fix |
+| `assets/app.css` | 1203 | `.field input:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow),0 0 20px rgb(var(--) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1216 | `.ri-card .ri-label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 1231 | `.ri-table td` | colour not from tokens.css (rgba(58,57,64,.3)) | fix |
+| `assets/app.css` | 1238 | `.ri-btn:hover` | colour not from tokens.css (#4ae8ac) | fix |
+| `assets/app.css` | 1241 | `.ri-chart-title` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 1249 | `.ri-tip-day` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 1253 | `.ri-single-card .ri-label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/app.css` | 1323 | `.hero-card,.section,.sp-page` | heavy glass blur | fix |
+| `assets/app.css` | 1351 | `/* header -> EXACT copy of the landing nav: full-bleed docke` | heavy glass blur | fix |
+| `assets/app.css` | 1360 | `.header .c-brand img` | glow / neon shadow (filter: drop-shadow(...)) | fix |
+| `assets/app.css` | 1365 | `.header .nav-links a` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 1373 | `.header .nav-cta` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .34)) | fix |
+| `assets/app.css` | 1374 | `.header .nav-cta:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/app.css` | 1378 | `/* live strip` | heavy glass blur; colour not from tokens.css (rgba(20,22,30,.7)) | fix |
+| `assets/app.css` | 1404 | `html .topbar>.header` | colour not from tokens.css (#08090c) | fix |
+| `assets/app.css` | 1420 | `.tab-btn` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 1424 | `.field-input:has(input[type="number"]):focus-wit` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1426 | `.share-plan-btn,.disc-override-row` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .3)) | fix |
+| `assets/app.css` | 1427 | `.share-plan-btn:hover,.disc-override-row button:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .46)) | fix |
+| `assets/app.css` | 1433 | `/* =========================================================` | glow orb / spotlight gradient | fix |
+| `assets/app.css` | 1435 | `.donate-overlay` | colour not from tokens.css (rgba(2,3,5,.72)) | fix |
+| `assets/app.css` | 1448 | `.hero-card .corners::before` | corner bracket frame | fix |
+| `assets/app.css` | 1449 | `.hero-card .corners::after` | corner bracket frame | fix |
+| `assets/app.css` | 1450 | `.hero-card .hero-label` | ALL-CAPS letter-spaced | fix |
+| `assets/app.css` | 1460 | `.hero-card:hover` | glow / neon shadow (box-shadow: var(--sh),0 0 34px rgb(var(--color-gold-rgb) / .) | fix |
+| `assets/app.css` | 1477 | `` | glow orb / spotlight gradient | fix |
+| `assets/app.css` | 1505 | `/* =========================================================` | decorative animation (fadeIn .25s ease) | fix |
+| `assets/app.css` | 1541 | `#secInputs .ed-dd:hover,.sp-page select:hover,.tabs-saved se` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .1)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1563 | `.qk-pop input:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 1593 | `.pi-contrib-freq:focus` | glow / neon shadow (box-shadow: 0 0 0 3px var(--purple-glow)) | fix: focus ring → var(--focus-ring) |
+| `assets/app.css` | 37 | `@keyframes pulse` | old animation | fix |
+| `assets/app.css` | 68 | `@keyframes fadeIn` | old animation | fix |
+| `assets/app.css` | 192 | `@keyframes idleActPulse` | old animation | fix |
+| `assets/app.css` | 349 | `@keyframes greedyFlash` | old animation | fix |
+| `assets/app.css` | 350 | `@keyframes greedyLabelFlash` | old animation | fix |
+| `assets/app.css` | 561 | `@keyframes shimmer` | old animation | fix |
+| `assets/app.css` | 689 | `@keyframes obFadeIn` | old animation | fix |
+| `assets/app.css` | 714 | `@keyframes lpDrift1` | old animation | fix |
+| `assets/app.css` | 715 | `@keyframes lpDrift2` | old animation | fix |
+| `assets/app.css` | 716 | `@keyframes lpDrift3` | old animation | fix |
+| `assets/app.css` | 718 | `@keyframes lpSpin` | old animation | fix |
+| `assets/app.css` | 724 | `@keyframes lpShimmer` | old animation | fix |
+| `assets/app.css` | 741 | `@keyframes obSlideIn` | old animation | fix |
+| `assets/app.css` | 782 | `@keyframes obReveal` | old animation | fix |
+| `assets/app.css` | 1123 | `@keyframes adjustPulse` | old animation | fix |
+| `assets/app.css` | 1143 | `@keyframes cshFade` | old animation | fix |
+| `assets/app.css` | 1145 | `@keyframes cshUp` | old animation | fix |
+| `assets/app.css` | 1184 | `@keyframes spSpin` | old animation | fix |
+| `assets/app.css` | 1197 | `@keyframes cardEnter` | old animation | fix |
+| `assets/chat.css` | 9 | `.gmt-chat.gmt-dock` | decorative animation (gmtChatIn var(--duration-base) var(--ease-standard)) | fix |
+| `assets/chat.css` | 52 | `.gmt-msg.mentioned` | glow / neon shadow (box-shadow: inset 2px 0 0 var(--color-gold)) | fix |
+| `assets/chat.css` | 79 | `#gmtOnline.mention-al` | decorative animation (gmtMentionPulse 1s ease-in-out infinite) | fix |
+| `assets/chat.css` | 95 | `.uc-role` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/chat.css` | 12 | `@keyframes gmtChatIn` | old animation | fix |
+| `assets/chat.css` | 80 | `@keyframes gmtMentionPulse` | old animation | fix |
+| `assets/chat.css` | 109 | `@keyframes gmtChatUp` | old animation | fix |
+| `assets/components.css` | 30 | `.ui-eyebrow` | ALL-CAPS letter-spaced | keep: Phase 1 component (eyebrow / modal & toast pop) |
+| `assets/components.css` | 197 | `.ui-modal[open]` | decorative animation (ui-pop var(--duration-base) var(--ease-standard)) | keep: Phase 1 component (eyebrow / modal & toast pop) |
+| `assets/components.css` | 209 | `.ui-toast` | decorative animation (ui-pop var(--duration-base) var(--ease-standard)) | keep: Phase 1 component (eyebrow / modal & toast pop) |
+| `assets/components.css` | 204 | `@keyframes ui-pop` | old animation | keep: Phase 1 component (eyebrow / modal & toast pop) |
+| `assets/content.css` | 21 | `.orb-1` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 22 | `.orb-2` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 23 | `.orb-3` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 24 | `.beam` | colour not from tokens.css (rgba(255,210,140,.4)) | fix |
+| `assets/content.css` | 26 | `.grid-floor` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 31 | `.vignette` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 38 | `.ticker` | decorative animation (ticker 34s linear infinite) | fix |
+| `assets/content.css` | 46 | `.brand img` | glow / neon shadow (filter: drop-shadow(...)) | fix |
+| `assets/content.css` | 48 | `.nav-links a` | ALL-CAPS letter-spaced | fix |
+| `assets/content.css` | 51 | `.nav-cta` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .34)) | fix |
+| `assets/content.css` | 53 | `.nav-cta:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/content.css` | 80 | `.updated` | ALL-CAPS letter-spaced | fix |
+| `assets/content.css` | 83 | `.tag` | ALL-CAPS letter-spaced | fix |
+| `assets/content.css` | 84 | `.tag .dot` | glow / neon shadow (box-shadow: 0 0 10px var(--gold)) | fix |
+| `assets/content.css` | 88 | `.stat,.scenario,.formula,.faq details,.cta,.claim-card` | heavy glass blur | fix |
+| `assets/content.css` | 93 | `.stat .k` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/content.css` | 108 | `table.earnings thead th` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/content.css` | 118 | `.cta a.btn` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .4)) | fix |
+| `assets/content.css` | 136 | `.site-foot h4` | ALL-CAPS letter-spaced | fix |
+| `assets/content.css` | 152 | `.site-foot .fd-addr:hover` | glow / neon shadow (box-shadow: 0 8px 22px rgb(var(--color-gold-rgb) / .14)) | fix |
+| `assets/content.css` | 171 | `.stat:hover,.scenario:hover,.claim-card:hover` | glow / neon shadow (box-shadow: var(--sh),0 0 30px rgb(var(--color-gold-rgb) / .) | fix |
+| `assets/content.css` | 175 | `.cta a.btn:hover` | glow / neon shadow (box-shadow: 0 16px 40px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/content.css` | 179 | `.stat::after,.sce` | glow orb / spotlight gradient | fix |
+| `assets/content.css` | 40 | `@keyframes ticker` | old animation | fix |
+| `assets/copilot.css` | 3 | `/* GMT-Optimizer co-pilot chat (assets/copilot.js). Self-con` | glow / neon shadow (box-shadow: 0 10px 30px -6px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/copilot.css` | 9 | `.gc-fab:hover` | glow / neon shadow (box-shadow: 0 14px 36px -6px rgb(var(--color-gold-rgb) / .7)) | fix |
+| `assets/copilot.css` | 16 | `.gc-tip` | colour not from tokens.css (#151515) | fix |
+| `assets/copilot.css` | 23 | `.gc-panel` | glow / neon shadow (box-shadow: 0 30px 80px -20px rgb(var(--color-black-rgb) / .); non-token font (font-family: Inter,system-ui,-apple-system,sans-serif); colour not from tokens.css (#0d0d0d) | fix |
+| `assets/copilot.css` | 28 | `.gc-head` | colour not from tokens.css (#121010, #181410) | fix |
+| `assets/copilot.css` | 32 | `.gc-head small` | non-token font (font-family: ui-monospace,) | fix |
+| `assets/copilot.css` | 40 | `.gc-bot` | colour not from tokens.css (#161616, #262321) | fix |
+| `assets/copilot.css` | 43 | `.gc-typing i` | decorative animation (gc-blink 1s infinite) | fix |
+| `assets/copilot.css` | 56 | `.gc-card span` | ALL-CAPS letter-spaced; non-token font (font-family: ui-monospace,monospace) | fix |
+| `assets/copilot.css` | 57 | `.gc-card b` | non-token font (font-family: ui-monospace,monospace) | fix |
+| `assets/copilot.css` | 64 | `.gc-opt` | colour not from tokens.css (#1c160b, #5a4217) | fix |
+| `assets/copilot.css` | 71 | `.gc-ask input` | colour not from tokens.css (#060606, #2a2622) | fix |
+| `assets/copilot.css` | 94 | `.gc-tabs` | colour not from tokens.css (#121010) | fix |
+| `assets/copilot.css` | 101 | `.gc-tab-n,.gc-badge` | colour not from tokens.css (#04140b) | fix |
+| `assets/copilot.css` | 114 | `.gc-page` | non-token font (font-family: Inter,system-ui,-apple-system,sans-serif); colour not from tokens.css (#0d0d0d) | fix |
+| `assets/copilot.css` | 45 | `@keyframes gc-blink` | old animation | fix |
+| `assets/design.css` | 25 | `.rd .orb-1` | glow orb / spotlight gradient; decorative animation (drift1 11s var(--ease) infinite alternate) | fix |
+| `assets/design.css` | 26 | `.rd .orb-2` | glow orb / spotlight gradient; decorative animation (drift2 13s var(--ease) infinite alternate) | fix |
+| `assets/design.css` | 27 | `.rd .orb-3` | glow orb / spotlight gradient; decorative animation (drift3 9s var(--ease) infinite alternate) | fix |
+| `assets/design.css` | 31 | `.rd .grid-floor` | glow orb / spotlight gradient; decorative animation (gridscroll 6s linear infinite) | fix |
+| `assets/design.css` | 37 | `.rd .beam` | colour not from tokens.css (rgba(255,210,140,.5)) | fix |
+| `assets/design.css` | 39 | `.rd .beam-1` | decorative animation (beam 10s var(--ease) infinite) | fix |
+| `assets/design.css` | 40 | `.rd .beam-2` | decorative animation (beam 12s var(--ease) 3s infinite) | fix |
+| `assets/design.css` | 41 | `.rd .beam-3` | decorative animation (beam 9s var(--ease) 6s infinite) | fix |
+| `assets/design.css` | 44 | `.rd .vignette` | glow orb / spotlight gradient | fix |
+| `assets/design.css` | 52 | `.rd .glass` | heavy glass blur | fix |
+| `assets/design.css` | 60 | `.rd .spot::after` | glow orb / spotlight gradient | fix |
+| `assets/design.css` | 66 | `.rd .corners::before` | corner bracket frame | fix |
+| `assets/design.css` | 67 | `.rd .corners::after` | corner bracket frame | fix |
+| `assets/design.css` | 72 | `.rd .tag` | ALL-CAPS letter-spaced | fix |
+| `assets/design.css` | 75 | `.rd .tag .dot` | glow / neon shadow (box-shadow: 0 0 10px var(--gold)); decorative animation (pulse 2.4s ease infinite) | fix |
+| `assets/design.css` | 80 | `.rd .grad` | decorative animation (shimmer 7s linear infinite) | fix |
+| `assets/design.css` | 92 | `.rd .ticker` | decorative animation (ticker 34s linear infinite) | fix |
+| `assets/design.css` | 102 | `.rd .brand img` | glow / neon shadow (filter: drop-shadow(...)) | fix |
+| `assets/design.css` | 105 | `.rd .nav-links a` | ALL-CAPS letter-spaced | fix |
+| `assets/design.css` | 108 | `.rd .nav-cta` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .34)) | fix |
+| `assets/design.css` | 110 | `.rd .nav-cta:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/design.css` | 123 | `.rd .btn-primary` | glow / neon shadow (box-shadow: 0 10px 34px rgb(var(--color-gold-rgb) / .4),inse) | fix |
+| `assets/design.css` | 124 | `.rd .btn-primary small` | colour not from tokens.css (#3a2600) | fix |
+| `assets/design.css` | 125 | `.rd .btn-primary:hover` | glow / neon shadow (box-shadow: 0 16px 46px rgb(var(--color-gold-rgb) / .6)) | fix |
+| `assets/design.css` | 126 | `.rd .btn-alt` | colour not from tokens.css (rgba(16,18,24,.6), rgba(30,32,40,.6)) | fix |
+| `assets/design.css` | 127 | `.rd .btn-alt:hover` | glow / neon shadow (box-shadow: 0 12px 36px rgb(var(--color-gold-rgb) / .22)) | fix |
+| `assets/design.css` | 145 | `.rd .hero-trust i` | glow / neon shadow (box-shadow: 0 0 8px var(--gold)) | fix |
+| `assets/design.css` | 151 | `.rd .reticle .r-spin` | decorative animation (spin 60s linear infinite) | fix |
+| `assets/design.css` | 152 | `.rd .reticle .r-spin-rev` | decorative animation (spin 90s linear infinite reverse) | fix |
+| `assets/design.css` | 153 | `.rd .radar` | glow orb / spotlight gradient; decorative animation (spin 7s linear infinite) | fix |
+| `assets/design.css` | 159 | `.rd .holo::after` | glow orb / spotlight gradient; decorative animation (pulseGlow 4.2s var(--ease) infinite) | fix |
+| `assets/design.css` | 162 | `.rd .holo svg` | glow / neon shadow (filter: drop-shadow(...)); decorative animation (spin 46s linear infinite) | fix |
+| `assets/design.css` | 163 | `.rd .holo img.holo-mark` | glow / neon shadow (filter: drop-shadow(...)) | fix |
+| `assets/design.css` | 165 | `.rd .callout` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/design.css` | 171 | `.rd .callout .cd` | glow / neon shadow (box-shadow: 0 0 6px var(--gold)) | fix |
+| `assets/design.css` | 173 | `.rd .telem` | decorative animation (floatY 5s var(--ease) infinite alternate) | fix |
+| `assets/design.css` | 176 | `.rd .telem .t-head` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/design.css` | 178 | `.rd .telem .t-live i` | glow / neon shadow (box-shadow: 0 0 8px var(--color-success)); decorative animation (pulse 1.8s ease infinite) | fix |
+| `assets/design.css` | 179 | `.rd .telem .t-big` | glow / neon shadow (text-shadow: 0 0 22px rgb(var(--color-gold-rgb) / .35)) | fix |
+| `assets/design.css` | 184 | `.rd .telem .t-mini .ml` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/design.css` | 191 | `.rd .mq-track` | ALL-CAPS letter-spaced; decorative animation (ticker 32s linear infinite) | fix |
+| `assets/design.css` | 198 | `.rd .stat-card:hover` | glow / neon shadow (box-shadow: var(--sh),0 0 34px rgb(var(--color-gold-rgb) / .) | fix |
+| `assets/design.css` | 201 | `.rd .stat-card .s-label` | ALL-CAPS letter-spaced | fix |
+| `assets/design.css` | 216 | `.rd .feat .ico` | glow / neon shadow (box-shadow: inset 0 1px 0 rgb(var(--color-white-rgb) / .14),) | fix |
+| `assets/design.css` | 224 | `.rd .cta-band::after` | glow orb / spotlight gradient | fix |
+| `assets/design.css` | 226 | `.rd .cta-band .rings` | glow orb / spotlight gradient | fix |
+| `assets/design.css` | 269 | `.rd .foot-social a:hover` | glow / neon shadow (box-shadow: 0 8px 22px rgb(var(--color-gold-rgb) / .2)) | fix |
+| `assets/design.css` | 272 | `.rd .foot-col h4` | ALL-CAPS letter-spaced | fix |
+| `assets/design.css` | 287 | `.rd .fd-addr:hover` | glow / neon shadow (box-shadow: 0 8px 22px rgb(var(--color-gold-rgb) / .14)) | fix |
+| `assets/design.css` | 364 | `.rd .cine-sub,.rd .cine-cue` | ALL-CAPS letter-spaced | fix |
+| `assets/design.css` | 366 | `.rd .cine-cue` | decorative animation (cueBob 2.4s var(--ease) infinite) | fix |
+| `assets/design.css` | 400 | `/* The canvas already carries the motion — a drop shadow kee` | colour not from tokens.css (rgba(4,6,12,.92)) | fix |
+| `assets/design.css` | 413 | `/* ============ SCROLL-DRIVEN LAYER ============ Motion tied` | glow / neon shadow (box-shadow: 0 0 14px rgb(var(--color-gold-rgb) / .55)) | fix |
+| `assets/design.css` | 437 | `.rd .sprog` | decorative animation (sprogGrow linear both) | fix |
+| `assets/design.css` | 441 | `/* Reveals scrub with scroll position instead of snapping on` | decorative animation (revealScrub linear both) | fix |
+| `assets/design.css` | 451 | `.rd .sec-head::after` | decorative animation (headSweep linear both) | fix |
+| `assets/design.css` | 457 | `/* Hero drifts up and dissolves as it leaves — the parallax ` | decorative animation (heroExit linear both) | fix |
+| `assets/design.css` | 495 | `html.lite .rd .btn-alt` | colour not from tokens.css (rgba(16,18,24,.92), rgba(30,32,40,.92)) | fix |
+| `assets/design.css` | 28 | `@keyframes drift1` | old animation | fix |
+| `assets/design.css` | 29 | `@keyframes drift2` | old animation | fix |
+| `assets/design.css` | 30 | `@keyframes drift3` | old animation | fix |
+| `assets/design.css` | 36 | `@keyframes gridscroll` | old animation | fix |
+| `assets/design.css` | 42 | `@keyframes beam` | old animation | fix |
+| `assets/design.css` | 76 | `@keyframes pulse` | old animation | fix |
+| `assets/design.css` | 82 | `@keyframes shimmer` | old animation | fix |
+| `assets/design.css` | 94 | `@keyframes ticker` | old animation | fix |
+| `assets/design.css` | 157 | `@keyframes spin` | old animation | fix |
+| `assets/design.css` | 161 | `@keyframes pulseGlow` | old animation | fix |
+| `assets/design.css` | 175 | `@keyframes floatY` | old animation | fix |
+| `assets/design.css` | 367 | `@keyframes cueBob` | old animation | fix |
+| `assets/design.css` | 428 | `@keyframes sprogGrow` | old animation | fix |
+| `assets/design.css` | 429 | `@keyframes revealScrub` | old animation | fix |
+| `assets/design.css` | 431 | `@keyframes headSweep` | old animation | fix |
+| `assets/design.css` | 432 | `@keyframes heroExit` | old animation | fix |
+| `assets/futures.css` | 2 | `.fx-wrap` | glow orb / spotlight gradient | fix |
+| `assets/futures.css` | 13 | `.fx-x i` | colour not from tokens.css (#0a0b0e) | fix |
+| `assets/futures.css` | 14 | `.fx-x .mid` | glow / neon shadow (box-shadow: 0 0 10px var(--color-gold-300)) | fix |
+| `assets/futures.css` | 14 | `.fx-x .hi` | glow / neon shadow (box-shadow: 0 0 10px var(--color-success)) | fix |
+| `assets/futures.css` | 14 | `.fx-x .lo` | glow / neon shadow (box-shadow: 0 0 10px var(--color-error)) | fix |
+| `assets/futures.css` | 15 | `.fx-tip` | glow / neon shadow (box-shadow: 0 6px 24px rgb(var(--color-black-rgb) / .5),0 0 ); colour not from tokens.css (rgba(10,11,14,.92)) | fix |
+| `assets/futures.css` | 32 | `.fx-k` | ALL-CAPS letter-spaced | fix |
+| `assets/futures.css` | 46 | `.fx-spin` | decorative animation (fxspin .8s linear infinite) | fix |
+| `assets/futures.css` | 50 | `.fx-load` | glow orb / spotlight gradient; colour not from tokens.css (#08090c) | fix |
+| `assets/futures.css` | 53 | `.fx-lk` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/futures.css` | 55 | `.fx-lc span` | glow / neon shadow (text-shadow: 0 0 22px rgb(var(--color-gold-rgb) / .6)) | fix |
+| `assets/futures.css` | 60 | `.fx-lbar i` | glow / neon shadow (box-shadow: 0 0 12px rgb(var(--color-gold-rgb) / .8)) | fix |
+| `assets/futures.css` | 64 | `.fx-lsteps li.on b` | decorative animation (fxspin .7s linear infinite) | fix |
+| `assets/futures.css` | 65 | `.fx-lsteps li.ok b` | glow / neon shadow (box-shadow: 0 0 9px rgb(var(--color-success-rgb) / .6)) | fix |
+| `assets/futures.css` | 47 | `@keyframes fxspin` | old animation | fix |
+| `assets/landing.css` | 87 | `.lp-band` | glow orb / spotlight gradient | keep: landing page is the benchmark (faint CTA band tint) |
+| `assets/market-check.css` | 2 | `/* ===== Marketplace deal checker — /gomining-marketplace-ch` | heavy glass blur | fix |
+| `assets/market-check.css` | 10 | `.mc-url input:focus` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `assets/market-check.css` | 11 | `.mc-url button` | glow / neon shadow (box-shadow: 0 8px 24px rgb(var(--color-gold-rgb) / .3)) | fix |
+| `assets/market-check.css` | 14 | `.mc-url button:hover` | glow / neon shadow (box-shadow: 0 12px 30px rgb(var(--color-gold-rgb) / .42)) | fix |
+| `assets/market-check.css` | 17 | `.mc-err` | colour not from tokens.css (#ffc2b0) | fix |
+| `assets/market-check.css` | 27 | `.mc-pill` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/market-check.css` | 45 | `.mc-tbl th` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/market-check.css` | 52 | `.mc-tbl tr.hl td:first-child` | glow / neon shadow (box-shadow: inset 2px 0 0 var(--gold)) | fix |
+| `assets/market-check.css` | 80 | `.mc-g-stats span` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/market-check.css` | 88 | `.mc-scan` | glow / neon shadow (box-shadow: inset 0 0 40px rgb(var(--color-gold-rgb) / .05)); glow orb / spotlight gradient | fix |
+| `assets/market-check.css` | 92 | `.mc-scan::before` | decorative animation (mcGrid 3s linear infinite) | fix |
+| `assets/market-check.css` | 98 | `.mc-scan-ring` | glow orb / spotlight gradient; decorative animation (mcSpin 1s linear infinite) | fix |
+| `assets/market-check.css` | 105 | `.mc-scan-line` | glow / neon shadow (box-shadow: 0 2px 12px rgb(var(--color-gold-rgb) / .7)) | fix |
+| `assets/market-check.css` | 107 | `.mc-scan-thumb.has-img .mc-scan-line` | decorative animation (mcScanLine 1.15s cubic-bezier(.45,0,.55,1) infinite) | fix |
+| `assets/market-check.css` | 115 | `.mc-scan-bar i` | glow / neon shadow (box-shadow: 0 0 12px rgb(var(--color-gold-rgb) / .8)) | fix |
+| `assets/market-check.css` | 120 | `.mc-sstep.on b` | decorative animation (mcSpin .7s linear infinite) | fix |
+| `assets/market-check.css` | 122 | `.mc-sstep.ok b` | glow / neon shadow (box-shadow: 0 0 9px rgb(var(--color-success-rgb) / .6)) | fix |
+| `assets/market-check.css` | 137 | `.mc-rise` | decorative animation (mcRise .6s cubic-bezier(.16,1,.3,1) both) | fix |
+| `assets/market-check.css` | 139 | `.mc-counting` | glow / neon shadow (text-shadow: 0 0 16px rgb(var(--color-gold-rgb) / .55)) | fix |
+| `assets/market-check.css` | 140 | `.mc-counted` | decorative animation (mcCounted .85s ease-out) | fix |
+| `assets/market-check.css` | 150 | `.mc-runat span` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/market-check.css` | 95 | `@keyframes mcGrid` | old animation | fix |
+| `assets/market-check.css` | 109 | `@keyframes mcScanLine` | old animation | fix |
+| `assets/market-check.css` | 110 | `@keyframes mcSpin` | old animation | fix |
+| `assets/market-check.css` | 138 | `@keyframes mcRise` | old animation | fix |
+| `assets/market-check.css` | 141 | `@keyframes mcCounted` | old animation | fix |
+| `assets/odds.css` | 26 | `.odds-bar i.good` | colour not from tokens.css (#5fb85a) | fix |
+| `assets/odds.css` | 36 | `.odds-fan` | glow orb / spotlight gradient | fix |
+| `assets/odds.css` | 46 | `.odds-call` | glow orb / spotlight gradient | fix |
+| `assets/odds.css` | 47 | `.call-kicker` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/roi-embed.css` | 2 | `/* ===== ROI calculator widget — shared by /gomining-roi-cal` | heavy glass blur | fix |
+| `assets/roi-embed.css` | 8 | `.re-field label` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/roi-embed.css` | 13 | `.re-field input:focus` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `assets/roi-embed.css` | 20 | `.re-tile .k` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `assets/site-chrome.css` | 33 | `.sc-nav a[aria-current="page"]` | glow / neon shadow (box-shadow: inset 0 -2px 0 var(--color-gold)) | keep: header underline / tiny eyebrow labels (new design) |
+| `assets/site-chrome.css` | 71 | `.sc-soon` | ALL-CAPS letter-spaced | keep: header underline / tiny eyebrow labels (new design) |
+| `assets/site-chrome.css` | 84 | `.sc-mobile__group h2` | ALL-CAPS letter-spaced | keep: header underline / tiny eyebrow labels (new design) |
+| `assets/site-chrome.css` | 104 | `.sc-footer__cols h2` | ALL-CAPS letter-spaced | keep: header underline / tiny eyebrow labels (new design) |
+| `assets/topbar.css` | 20 | `.gmbar-head` | heavy glass blur | fix |
+| `assets/topbar.css` | 35 | `.gmbar .brand img` | glow / neon shadow (filter: drop-shadow(...)) | fix |
+| `assets/topbar.css` | 38 | `.gmbar .nav-cta` | glow / neon shadow (box-shadow: 0 6px 22px rgb(var(--color-gold-rgb) / .34)) | fix |
+| `assets/topbar.css` | 41 | `.gmbar .nav-cta:hover` | glow / neon shadow (box-shadow: 0 10px 30px rgb(var(--color-gold-rgb) / .5)) | fix |
+| `assets/topbar.css` | 45 | `.gmbar .live-bar` | heavy glass blur; colour not from tokens.css (rgba(20,22,30,.78)) | fix |
+| `assets/topbar.css` | 57 | `.gmbar .live-dot` | glow / neon shadow (box-shadow: 0 0 8px var(--color-success)) | fix |
+| `bitcoin/index.html` | 31 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `combined/index.html` | 29 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `console/index.html` | 71 | `#gmBoot` | glow orb / spotlight gradient; non-token font (font-family: 'Inter',system-ui,-apple-system,sans-serif); decorative animation (gbFailsafe 0s linear 12s forwards) | fix |
+| `console/index.html` | 76 | `#gmBoot::before` | glow orb / spotlight gradient; decorative animation (gbGrid 6s linear infinite) | fix |
+| `console/index.html` | 86 | `.gb-orb::before` | glow orb / spotlight gradient; decorative animation (gbSpin 1.1s linear infinite) | fix |
+| `console/index.html` | 88 | `.gb-orb::after` | decorative animation (gbPulse 1.6s ease-in-out infinite) | fix |
+| `console/index.html` | 89 | `.gb-orb img` | glow / neon shadow (filter: drop-shadow(...)); decorative animation (gbBreathe 1.6s ease-in-out infinite) | fix |
+| `console/index.html` | 93 | `.gb-brand` | ALL-CAPS letter-spaced; non-token font (font-family: 'Inter',ui-monospace,monospace) | fix |
+| `console/index.html` | 97 | `.gb-bar i` | glow / neon shadow (box-shadow: 0 0 14px rgb(var(--color-gold-rgb) / .8)) | fix |
+| `console/index.html` | 99 | `.gb-pct` | non-token font (font-family: 'Inter',ui-monospace,monospace) | fix |
+| `console/index.html` | 104 | `.gb-step.on b` | decorative animation (gbSpin .7s linear infinite) | fix |
+| `console/index.html` | 106 | `.gb-step.ok b` | glow / neon shadow (box-shadow: 0 0 10px rgb(var(--color-success-rgb) / .6)) | fix |
+| `console/index.html` | 109 | `.gb-v` | non-token font (font-family: 'Inter',ui-monospace,monospace) | fix |
+| `console/index.html` | 111 | `.gb-hash` | non-token font (font-family: 'Inter',ui-monospace,monospace) | fix |
+| `console/index.html` | 117 | `.gm-counting` | glow / neon shadow (text-shadow: 0 0 18px rgb(var(--color-gold-rgb) / .55)) | fix |
+| `console/index.html` | 118 | `.gm-counted` | decorative animation (gmCounted .9s ease-out) | fix |
+| `console/index.html` | 81 | `@keyframes gbFailsafe` | old animation | fix |
+| `console/index.html` | 82 | `@keyframes gbGrid` | old animation | fix |
+| `console/index.html` | 90 | `@keyframes gbSpin` | old animation | fix |
+| `console/index.html` | 91 | `@keyframes gbPulse` | old animation | fix |
+| `console/index.html` | 92 | `@keyframes gbBreathe` | old animation | fix |
+| `console/index.html` | 119 | `@keyframes gmCounted` | old animation | fix |
+| `console/index.html` | 1314 | `.ytp-play` | colour not from tokens.css (#FF0033) | fix |
+| `console/index.html` | 1315 | `.ytp-play::after` | corner bracket frame | fix |
+| `console/index.html` | 1317 | `.ytp-kicker` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `console/index.html` | 369 | `inline` | colour not from tokens.css (#dc2626, #ef4444); glow / neon shadow (box-shadow: 0 4px 20px rgb(var(--color-gold-rgb) / .3)); ALL-CAPS letter-spaced | fix |
+| `edit/index.html` | 18 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `gmt/index.html` | 31 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `odds/index.html` | 26 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `planner/index.html` | 32 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `planner/projection/index.html` | 32 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `projection/index.html` | 32 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `quote/index.html` | 26 | `:root` | colour not from tokens.css (#121316, #17181c, #26272c) | fix |
+| `quote/index.html` | 30 | `body` | glow orb / spotlight gradient | fix |
+| `quote/index.html` | 50 | `.dot` | glow / neon shadow (box-shadow: 0 0 7px var(--green)) | fix |
+| `quote/index.html` | 59 | `.field:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `quote/index.html` | 87 | `.headline .lab` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `quote/index.html` | 93 | `.cell .k` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `quote/index.html` | 103 | `.bar .gm` | colour not from tokens.css (#c4b0ff) | fix |
+| `quote/index.html` | 135 | `.shot` | colour not from tokens.css (rgba(6,6,8,.84)) | fix |
+| `rainbow/index.html` | 29 | `body` | non-token font (font-family: system-ui,-apple-system,sans-serif) | fix |
+| `statement/index.html` | 32 | `/* Palette note: the chart marks below are not chosen by eye` | colour not from tokens.css (#00b076, #121316, #17181c, #26272c, #b83719) | fix |
+| `statement/index.html` | 37 | `body` | glow orb / spotlight gradient; colour not from tokens.css (#111, #fff) | fix |
+| `statement/index.html` | 62 | `.err` | colour not from tokens.css (#ffb3a3) | fix |
+| `statement/index.html` | 66 | `.loaded .dot` | glow / neon shadow (box-shadow: 0 0 7px var(--c-pos)) | fix |
+| `statement/index.html` | 74 | `.fld label` | ALL-CAPS letter-spaced | fix |
+| `statement/index.html` | 77 | `.fld input:focus,.fld select:focus` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `statement/index.html` | 101 | `.dh-kind` | ALL-CAPS letter-spaced; colour not from tokens.css (#8a5a00) | fix |
+| `statement/index.html` | 103 | `.dh-meta i` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `statement/index.html` | 110 | `.h-lab` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `statement/index.html` | 112 | `.hero.neg .h-big` | colour not from tokens.css (#ff9b86) | fix |
+| `statement/index.html` | 118 | `.kpi .k` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `statement/index.html` | 154 | `.tbl th` | ALL-CAPS letter-spaced | fix → eyebrow: keep caps only if it is a tiny eyebrow label, else sentence case |
+| `statement/index.html` | 159 | `.tbl .neg` | colour not from tokens.css (#ff9b86) | fix |
+| `statement/index.html` | 199 | `.stake-item:focus-within` | glow / neon shadow (box-shadow: 0 0 0 3px rgb(var(--color-gold-rgb) / .14)) | fix: focus ring → var(--focus-ring) |
+| `statement/index.html` | 213 | `:root` | colour not from tokens.css (#00795a, #111, #333, #555, #777, #8a5a00, #999, #a06400, #b3) | fix |
+| `statement/index.html` | 222 | `.hero` | colour not from tokens.css (#e6d3ac, #fdf6e8) | fix |
+| `statement/index.html` | 223 | `.hero.neg` | colour not from tokens.css (#e8c4b6, #fdeee9) | fix |
+| `statement/index.html` | 224 | `.h-big` | colour not from tokens.css (#8a5a00) | fix |
+| `statement/index.html` | 226 | `.kpi,.fig,.pf,.tbl th,.tbl tfoot td` | colour not from tokens.css (#fafafa) | fix |
+| `statement/index.html` | 229 | `.pf b` | colour not from tokens.css (#8a5a00) | fix |
+| `statement/index.html` | 234 | `.tbl-scroll` | colour not from tokens.css (#d8d8d8) | fix |
+| `assets/account-pages.js` | 251 | `js` | old effect code | fix |
+| `assets/account.js` | 420 | `inline` | colour not from tokens.css (#e8ecf4, rgba(255,255,255,.05), rgba(255,255,255,.14)) | fix |
+| `assets/app.js` | 2182 | `canvas` | glow on canvas (shadowBlur) | fix |
+| `assets/app.js` | 1612 | `border-left-color:$` | colour not from tokens.css (#22C55E, #EF4444, #f3a93a) | fix |
+| `assets/app.js` | 1688 | `color:$` | colour not from tokens.css (#22C55E, #EF4444) | fix |
+| `assets/app.js` | 1698 | `inline` | colour not from tokens.css (#F7D88A) | fix |
+| `assets/app.js` | 4632 | `margin:.5rem 0;background:$` | colour not from tokens.css (rgba(226,178,89,.07), rgba(239,68,68,.07)) | fix |
+| `assets/app.js` | 4632 | `;border-color:$` | colour not from tokens.css (rgba(226,178,89,.3), rgba(239,68,68,.28)) | fix |
+| `assets/app.js` | 2415 | `js` | old effect code | fix |
+| `assets/chart-shot.js` | 56 | `canvas` | glow on canvas (shadowBlur) | fix: drop the glow on the snapshot image |
+| `assets/chrome.js` | 2 | `js` | old effect code | fix |
+| `assets/cine.js` | 1 | `js` | old effect code | fix |
+| `assets/futures.js` | 204 | `canvas` | glow on canvas (shadowBlur) | fix |
+| `assets/loaders.js` | 34 | `.cb-load.cb-rainbow` | glow orb / spotlight gradient; colour not from tokens.css (#0a0b0e, rgba(34,197,94,.08)) | fix |
+| `assets/loaders.js` | 36 | `.cb-load.cb-fixed` | glow orb / spotlight gradient; colour not from tokens.css (rgba(11,11,13,.97), rgba(169,119,47,.08), rgba(226,178,89,.1) | fix |
+| `assets/loaders.js` | 43 | `@keyframes cbGrid` | old animation | fix |
+| `assets/loaders.js` | 49 | `.cb-orb img` | glow / neon shadow (filter: drop-shadow(...)); colour not from tokens.css (rgba(226,178,89,.6)); decorative animation (cbBreathe 1.5s ease-in-out infinite) | fix |
+| `assets/loaders.js` | 54 | `.cb-bar` | colour not from tokens.css (rgba(255,255,255,.07)) | fix |
+| `assets/loaders.js` | 55 | `.cb-bar i` | glow / neon shadow (box-shadow: 0 0 12px rgba(226,178,89,.8)); colour not from tokens.css (#E2B259, #F7D88A, rgba(226,178,89,.8)) | fix |
+| `assets/loaders.js` | 50 | `@keyframes cbSpin` | old animation | fix |
+| `assets/loaders.js` | 51 | `@keyframes cbBreathe` | old animation | fix |
+| `assets/loaders.js` | 59 | `.cb-step` | colour not from tokens.css (#6B6B75) | fix |
+| `assets/loaders.js` | 62 | `.cb-step.on b` | colour not from tokens.css (#E2B259, rgba(226,178,89,.3)); decorative animation (cbSpin .7s linear infinite) | fix |
+| `assets/loaders.js` | 63 | `.cb-step.ok` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/loaders.js` | 64 | `.cb-step.ok b` | glow / neon shadow (box-shadow: 0 0 9px rgba(34,197,94,.6)); colour not from tokens.css (#22C55E, rgba(34,197,94,.6)) | fix |
+| `assets/loaders.js` | 66 | `.cb-step.bad` | colour not from tokens.css (#EF4444) | fix |
+| `assets/loaders.js` | 66 | `.cb-step.bad b` | colour not from tokens.css (#EF4444) | fix |
+| `assets/market-check.js` | 88 | `js` | old effect code | fix |
+| `assets/menu.js` | 91 | `.gm-scrim` | colour not from tokens.css (rgba(3,4,6,.6)) | fix |
+| `assets/menu.js` | 102 | `.gm-top` | colour not from tokens.css (rgba(255,255,255,.08)) | fix |
+| `assets/menu.js` | 104 | `.gm-brand img` | glow / neon shadow (filter: drop-shadow(...)); colour not from tokens.css (rgba(226,178,89,.5)) | fix |
+| `assets/menu.js` | 105 | `.gm-x` | colour not from tokens.css (#FFFFFF, rgba(226,178,89,.18)) | fix |
+| `assets/menu.js` | 107 | `.gm-x:hover` | colour not from tokens.css (#FFFFFF, rgba(226,178,89,.55)) | fix |
+| `assets/menu.js` | 108 | `.gm-x:focus-visible,.gm-drawer a:focus-visible` | colour not from tokens.css (#E2B259) | fix |
+| `assets/menu.js` | 111 | `.gm-sec+.gm-sec` | colour not from tokens.css (rgba(255,255,255,.06)) | fix |
+| `assets/menu.js` | 115 | `.gm-item:hover` | colour not from tokens.css (#FFFFFF, rgba(226,178,89,.075)) | fix |
+| `assets/menu.js` | 117 | `.gm-item .gm-d` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/menu.js` | 119 | `.gm-item .gm-arr` | colour not from tokens.css (#6B6B75) | fix |
+| `assets/menu.js` | 120 | `.gm-item:hover .gm-arr` | colour not from tokens.css (#E2B259) | fix |
+| `assets/menu.js` | 122 | `.gm-compact .gm-item .gm-t` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/menu.js` | 123 | `.gm-item.gm-on` | colour not from tokens.css (#FFFFFF, rgba(226,178,89,.1)) | fix |
+| `assets/menu.js` | 130 | `.gm-chip:hover` | colour not from tokens.css (#FFFFFF, rgba(226,178,89,.06), rgba(226,178,89,.5)) | fix |
+| `assets/menu.js` | 131 | `.gm-chip.gm-on` | colour not from tokens.css (#E2B259, #FFFFFF, rgba(226,178,89,.12)) | fix |
+| `assets/menu.js` | 132 | `.gm-foot` | colour not from tokens.css (rgba(255,255,255,.08)) | fix |
+| `assets/menu.js` | 133 | `.gm-cta` | glow / neon shadow (box-shadow: 0 8px 26px rgba(226,178,89,.3)); colour not from tokens.css (#0B0B0D, #F7D88A, rgba(226,178,89,.3)) | fix |
+| `assets/menu.js` | 135 | `.gm-cta:hover` | glow / neon shadow (box-shadow: 0 12px 32px rgba(226,178,89,.45)); colour not from tokens.css (rgba(226,178,89,.45)) | fix |
+| `assets/menu.js` | 136 | `.gm-offer` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/menu.js` | 137 | `.gm-offer a` | colour not from tokens.css (#F7D88A) | fix |
+| `assets/menu.js` | 140 | `.gm-legal a` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/quote.js` | 638 | `@keyframes qlGrid` | old animation | fix |
+| `assets/quote.js` | 643 | `.ql-orb img` | glow / neon shadow (filter: drop-shadow(...)); colour not from tokens.css (rgba(226,178,89,.6)); decorative animation (qlBreathe 1.5s ease-in-out infinite) | fix |
+| `assets/quote.js` | 646 | `.ql-kicker` | ALL-CAPS letter-spaced; colour not from tokens.css (#F7D88A) | fix |
+| `assets/quote.js` | 649 | `.ql-bar` | colour not from tokens.css (rgba(255,255,255,.07)) | fix |
+| `assets/quote.js` | 650 | `.ql-bar i` | glow / neon shadow (box-shadow: 0 0 12px rgba(226,178,89,.8)); colour not from tokens.css (#E2B259, #F7D88A, rgba(226,178,89,.8)) | fix |
+| `assets/quote.js` | 653 | `.ql-step` | colour not from tokens.css (#6B6B75) | fix |
+| `assets/quote.js` | 656 | `.ql-step.on b` | colour not from tokens.css (#E2B259, rgba(226,178,89,.3)); decorative animation (qlSpin .7s linear infinite) | fix |
+| `assets/quote.js` | 657 | `.ql-step.ok` | colour not from tokens.css (#A1A1AA) | fix |
+| `assets/quote.js` | 658 | `.ql-step.ok b` | glow / neon shadow (box-shadow: 0 0 9px rgba(34,197,94,.6)); colour not from tokens.css (#22C55E, rgba(34,197,94,.6)) | fix |
+| `assets/quote.js` | 644 | `@keyframes qlSpin` | old animation | fix |
+| `assets/quote.js` | 645 | `@keyframes qlBreathe` | old animation | fix |
+| `assets/quote.js` | 514 | `canvas` | glow on canvas (shadowBlur) | fix |
+| `assets/quote.js` | 94 | `js` | old effect code | fix |
+| `assets/rates.js` | 47 | `.l` | ALL-CAPS letter-spaced | keep: widget styles for ringomining.com (other site) |
+| `assets/rates.js` | 48 | `.v` | colour not from tokens.css (#E2B259) | keep: widget styles for ringomining.com (other site) |
+| `assets/rates.js` | 49 | `.c.up` | colour not from tokens.css (#22C55E) | keep: widget styles for ringomining.com (other site) |
+| `assets/rates.js` | 49 | `.c.dn` | colour not from tokens.css (#EF4444) | keep: widget styles for ringomining.com (other site) |
+| `assets/roi-embed.js` | 85 | `js` | old effect code | fix |
+| `assets/visualizer.js` | 50 | `.viz-launch .viz-dot` | glow / neon shadow (box-shadow: 0 0 10px #E2B259); colour not from tokens.css (#E2B259); decorative animation (vizPulse 1.6s ease-in-out infinite) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 52 | `#vizRoot` | colour not from tokens.css (#040508, #FFFFFF) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 58 | `.vz-label` | ALL-CAPS letter-spaced; colour not from tokens.css (rgba(247,216,138,.72)) | fix |
+| `assets/visualizer.js` | 59 | `.vz-big` | glow / neon shadow (filter: drop-shadow(...)); colour not from tokens.css (#E2B259, #F7D88A, #FFFFFF, rgba(226,178,89,.35)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 67 | `.vz-chip` | colour not from tokens.css (rgba(11,11,13,.55), rgba(226,178,89,.22)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 70 | `.vz-legend` | colour not from tokens.css (rgba(255,255,255,.55)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 73 | `.vz-qr` | glow / neon shadow (box-shadow: 0 0 28px rgba(226,178,89,.18)); colour not from tokens.css (#000000, rgba(226,178,89,.18), rgba(226,178,89,.45)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 76 | `.vz-qrcap` | colour not from tokens.css (#F7D88A) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 77 | `.vz-brand` | colour not from tokens.css (rgba(255,255,255,.7)) | fix |
+| `assets/visualizer.js` | 80 | `.vz-bar` | colour not from tokens.css (rgba(11,11,13,.72), rgba(255,255,255,.12)) | fix |
+| `assets/visualizer.js` | 82 | `#vizRoot.idle` | custom cursor | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 85 | `.vz-bar button.act` | colour not from tokens.css (#F7D88A, rgba(226,178,89,.18)) | fix |
+| `assets/visualizer.js` | 86 | `.vz-bar .sep` | colour not from tokens.css (rgba(255,255,255,.12)) | fix |
+| `assets/visualizer.js` | 89 | `.vz-msg` | colour not from tokens.css (#FFFFFF, rgba(11,11,13,.58), rgba(255,255,255,.07)); decorative animation (vzIn .35s ease-out) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 93 | `.vz-msg.sys` | ALL-CAPS letter-spaced; colour not from tokens.css (rgba(11,11,13,.4), rgba(247,216,138,.75)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 98 | `.vz-chan .tw` | colour not from tokens.css (#BF94FF) | fix |
+| `assets/visualizer.js` | 99 | `.vz-chan .tt` | colour not from tokens.css (#25F4EE) | fix |
+| `assets/visualizer.js` | 102 | `.vz-src.tw` | colour not from tokens.css (#9146FF) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 103 | `.vz-src.tt` | colour not from tokens.css (#000000, #25F4EE, #FE2C55) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 104 | `.vz-msg.join` | colour not from tokens.css (rgba(11,11,13,.35), rgba(255,255,255,.62)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 106 | `.vz-msg.gift` | colour not from tokens.css (rgba(11,11,13,.6), rgba(226,178,89,.2), rgba(226,178,89,.5)) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 108 | `.vz-stage` | colour not from tokens.css (#040508) | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+| `assets/visualizer.js` | 6 | `js` | old effect code | keep: stream-mode scene art (the visualizer itself); its controls are fixed |
+
+Totals: {'fix': 496, 'keep': 29}.
+
+## 26. Part 2: the six console tabs before the redesign (1280 px, 2026-11-18)
+
+Shots: `%TEMP%\gmtshots\before6\en-1280-0{1..6}-*.png` (Console, Edit farm, Planner, Projection, Quote, Statement), next to
+the landing page (`en-1280-00-landing.png`). Logged out, so Console and Planner results sit behind the sign-up gate (kept,
+owner 2026-11-18). Everything that differs between the tabs, or between a tab and the rest of the site:
+
+| # | Item | Console / Edit farm / Planner / Projection | Quote / Statement | Rest of site (target) |
+|---|---|---|---|---|
+| 1 | Page background | starfield particles, gold glow orb behind the content, faint grid | flat | flat `--color-bg` |
+| 2 | Tab row | ALL-CAPS letter-spaced links (`.nav-links`), only on these four | none at all | site tabs component, sentence case, gold underline like the header nav |
+| 3 | Chat entry | separate "Chat · 3 online" pill left of the tabs | none | header Messages icon only (one entry point) |
+| 4 | Live data strip | gold-bordered glass box, two centred rows, mixed sizes | one-line pills under the heading | landing "live figures" strip (bordered tiles, label / value / note) |
+| 5 | Page heading | none (Console), gold Inter "Edit Your Farm" left, gold centred "Growth Projection", none (Planner) | Poppins 600 white h1, left, with a lead paragraph | Poppins h1 + lead, left |
+| 6 | Page width | 1100 (Edit), 340 px centred column (Planner form), 870 (Projection), full (Console) | 1040 | `--content-max` container |
+| 7 | Back control | "← Return to Console" ghost button on Edit / Planner / Projection | none | not needed with a tab row |
+| 8 | Card style | gold-tinted borders, inner glow, corner brackets (Projection stat cards), glass blur | flat card, grey border | `ui-card` (surface-1, `--color-border`, `--radius-card`, no glow) |
+| 9 | Card / section titles | ALL-CAPS gold letter-spaced and centred ("SAVED FARMS", "YOUR FARM", "OPTIONS", "DAILY NET PROFIT") | ALL-CAPS small grey labels on stat tiles, sentence-case section titles | sentence case, Poppins 600; tiny caps only as eyebrows |
+| 10 | Stat figures | Inter, gold everywhere, mixed sizes; AVG / LOW / HIGH caps | gold or white per tile, green/purple accents | `ui-stat`: Inter tabular, gold only on each card's key figure |
+| 11 | Buttons | ALL-CAPS (SAVE, SAVE AS…, NEW, DELETE), gold glow shadow ("Share this setup"), oversized pill CTA ("Calculate Optimal Split") | sentence case, flat gold / ghost | `ui-btn` primary / secondary / ghost, sentence case, no glow |
+| 12 | Inputs | big centred numeric inputs, gold focus glow, unit inside; row style in Edit farm | left-aligned, compact | `ui-field` + `ui-input` / `ui-input-group` |
+| 13 | Segmented controls | gold pill toggles of different heights (My Farm / My Plan, Invest / Target, 1Y…10Y, Daily / Monthly) | gold segmented, same height | `ui-segmented` |
+| 14 | Switches | gold slider toggles | checkbox chip (Quote) | `ui-switch` |
+| 15 | Section panels | gold-titled boxes with SHOW / HIDE caps toggles (VIP Level & Discount Stack, Daily Operation & Rewards) | n/a | `ui-card` + `ui-accordion`, same show/hide control |
+| 16 | Charts | monospace axis labels, glowing lines, cyan area fill (reward growth), fan chart with glow | flat bars, Inter labels | chart kit: Inter, token colours, no glow |
+| 17 | Tables | bordered gold rows, caps headers | `ui-table`-like, sentence-case headers | `ui-table` |
+| 18 | Notes / banners | gold-bordered warn boxes with emoji glyphs | grey small print | `ui-notice` / `ui-disclaimer` |
+| 19 | Fonts | Inter for headings, monospace on charts and badges | Poppins headings, Inter body | Poppins headings / nav / buttons, Inter copy and figures |
+| 20 | Spacing | dense, centred, uneven gaps between blocks | even 16/24 px rhythm | token spacing, `--section-y` between sections |
+| 21 | "Support the site" video banner | thumbnail strip with its own style | n/a | standard dismissible `ui-card` |
+| 22 | "Stream mode" | glowing pill button | n/a | `ui-btn--secondary` |
+| 23 | Effects | count-up numbers, reveal-on-scroll, tilt / magnetic (`chrome.js`), shimmer, pulsing dots | none | none (number updates without animation) |
+
+Target: one console page template for all six tabs (same container, heading, tab row, live strip, card grid, fields, buttons,
+tables, charts, empty states); only the content changes. Quote and Statement keep their URLs and get the same tab row.
+
+## 27. Part 3: loading screens (inventory, 2026-11-18)
+
+| # | Where | Today | Real work behind it | Artificial time today |
+|---|---|---|---|---|
+| L1 | Console boot (`#gmBoot`, `boot.js`) | full-screen logo, % counter, 4 staged steps, scrolling fake hash "0x…" | live prices, network stats, account/fleet, first calculation | min 2.4 s first visit, 1.1 s after; steps tick ≥ 330 ms apart |
+| L2 | Planner calculate (`#plannerCalcLoading` + `loaders.js` overlay) | full-screen card: kicker, title, % bar, 5 steps incl. a random "1,200+ combinations" counter and "Holding the 20% token discount" | the split solve (a few ms) | 800 ms `setTimeout` before solving, then min 2.1 s overlay |
+| L3 | Planner goal mode (same overlay, "Finding the capital you need") | same, "Goal-seeking the capital" | binary search over capital (ms) | 800 ms + min 2.1 s |
+| L4 | Growth projection (`#spPageLoading`, "Crunching your projection…") | spinner + text | projection run (100–400 ms) | 650 ms `setTimeout` first |
+| L5 | Edit farm "Updating your farm…" (`#edLoading`) | spinner + text | recalc (ms) | 750 ms `setTimeout` |
+| L6 | New-user budget "Planning your capital…" (`#newUserLoading`) | spinner + text | planner solve | 850 ms `setTimeout` |
+| L7 | Close chart "Loading your farm…" (`#btcChartLoading`) | spinner + text | none: just switches the view back | fixed 650 ms |
+| L8 | BTC / GMT live chart (`loaders.js`) | overlay with orb, 4 steps ("Connecting to TradingView", "Plotting the 50 EMA"…) | TradingView widget load | min 1.5 s (0.75 s repeat), steps ≥ 260 ms apart |
+| L9 | Rainbow chart (`loaders.js` + `#rainbowLoading`) | overlay, 4 steps ("Painting the 9 valuation bands"…) | price-history download + fit | min 1.5 s; steps ≥ 260 ms |
+| L10 | Chart / farm snapshot (`#chartShotLoading`) | spinner + "Pulling the latest 1-hour candles…" | candle fetch + canvas render | none |
+| L11 | Marketplace checker scan (`market-check.js`, `.mc-scan-steps`) | staged scan steps with % bar | NFT lookup + prices | min 1.9 s first, 1.2 s after; steps ≥ 300 ms |
+| L12 | Quote tool (`quote.js`) | staged rows revealed one by one | quote solve (ms) | each row waits 300 ms |
+| L13 | ROI calculator / quick estimate (`.re-loading`) | skeleton until live data | live prices | none |
+| L14 | Chat / account pages (`.uc-loading`, `.skel`) | skeleton text | Supabase fetch | none |
+
+Rewrite rules (owner): site background and components; skeleton or one gold progress bar; GMT icon only if a mark is needed;
+no glow, particles or spinning rings. Calm, sentence-case copy naming only what the page really does. Shown only while the
+work runs, plus at most ~1 s minimum so it doesn't flash. All loader text in ES/FR/DE through the same dictionary.
