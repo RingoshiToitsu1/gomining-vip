@@ -332,6 +332,11 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .sp-spinner::after{content:'';position:absolute;top:0;bottom:0;left:0;width:40%;border-radius:inherit;background:var(--color-gold);
   animation:cxBar 1.1s var(--ease-standard) infinite}
 @keyframes cxBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+/* v3: smoother: linear sweep (no ease stutter per loop), GPU layer, overlay fades in instead of popping */
+.sp-spinner::after{animation-timing-function:linear!important;will-change:transform;
+  background:linear-gradient(90deg,rgb(var(--color-gold-rgb) / 0),var(--color-gold) 35%,var(--color-gold-300) 65%,rgb(var(--color-gold-rgb) / 0))}
+@media (prefers-reduced-motion:no-preference){.sp-page-loading{animation:cxFadeIn .18s ease-out}.sp-loading-txt{animation:cxFadeIn .3s ease-out .05s both}}
+@keyframes cxFadeIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.sp-spinner::after{animation:none;width:100%;opacity:.6}}
 .sp-loading-txt{font-family:var(--font-ui)!important;font-size:var(--font-size-sm)!important;font-weight:var(--font-weight-medium)!important;
   color:var(--color-text-2)!important;letter-spacing:0!important;text-transform:none!important}
@@ -392,6 +397,10 @@ html{font-size:16px!important}                         /* app.css scaled the con
 #tab-planner .sec-head{display:block!important}
 #tab-planner .sec-head .sec-lead{margin:0 0 var(--space-4)!important}
 .sub-title{display:block!important;width:100%!important;align-self:stretch!important;justify-self:stretch!important}
+
+/* ---------- v3: live change line in the strip tiles (assets/market-change.js) ---------- */
+.live-chip .cx-chg{display:block;font-size:var(--font-size-xs);color:var(--color-text-2);line-height:1.3}
+.live-chip .cx-chg:empty{display:none}
 
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}

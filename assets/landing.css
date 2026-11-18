@@ -92,3 +92,29 @@
 .lp-trust .ui-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 1024px) { .lp-trust .ui-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 768px) { .lp-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---------- v3 hero: badge + self-drawing earnings curve (decorative) ---------- */
+.lp-hero { position: relative; overflow: hidden; isolation: isolate; }
+.lp-hero__grid { position: relative; z-index: 1; }
+.lp-hero__art { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 78%; z-index: 0; pointer-events: none; }
+.lp-art-grid line { stroke: var(--color-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.lp-art-dots circle { fill: var(--color-gold-300); }
+.lp-v3 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 4px var(--space-3) 4px 4px;
+  border: 1px solid rgb(var(--color-gold-rgb) / .35); border-radius: var(--radius-pill); background: var(--color-surface-1);
+  font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-text-2); }
+.lp-v3__tag { padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--color-gold); color: var(--color-on-gold); font-weight: var(--font-weight-semibold); }
+@media (prefers-reduced-motion: no-preference) {
+  .lp-art-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: lpDraw 2.2s var(--ease-standard) .25s forwards; }
+  .lp-art-area { opacity: 0; animation: lpFade 1.4s ease-out 1.1s forwards; }
+  .lp-art-dots circle { opacity: 0; transform-box: fill-box; transform-origin: center; animation: lpDot .5s var(--ease-standard) forwards; }
+  .lp-art-dots circle:nth-child(1) { animation-delay: 1.05s; }
+  .lp-art-dots circle:nth-child(2) { animation-delay: 1.6s; }
+  .lp-art-dots circle:nth-child(3) { animation-delay: 2.15s; }
+  .lp-v3 { opacity: 0; animation: lpRise .6s var(--ease-standard) .05s forwards; }
+}
+@keyframes lpDraw { to { stroke-dashoffset: 0; } }
+@keyframes lpFade { to { opacity: 1; } }
+@keyframes lpDot { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+@keyframes lpRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 1023px) { .lp-hero__art { height: 46%; opacity: .7; } }
+

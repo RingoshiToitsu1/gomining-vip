@@ -3,7 +3,7 @@
    Load with:  <link rel="stylesheet" href="/assets/site-chrome.css">  +  <script src="/assets/site-chrome.js" defer>
    Options on the script tag:  data-footer="off"  (tool pages with their own print view)
 
-   Header: logo · Calculator · Growth Projection · Guides · RINGO5 Bonuses | language · Messages (logged in,
+   Header: logo · Calculator · Growth Projection · Guides · New to GoMining? | language · Messages (logged in,
    unread badge) · Log in / avatar menu (Profile, Dashboard, Settings, Log out) · Get Started.
    Footer: Tools · Learn · Company · Legal, the support addresses, and the legal bar.
 
@@ -34,7 +34,7 @@
   var TRANSLATED = /* i18n:pages */["/","/claim","/copilot","/about","/disclosures","/guides","/faq","/glossary","/how-gomining-works","/privacy","/terms","/is-gomining-worth-it","/gomining-discount-explained","/gomining-promo-code","/gomining-roi-calculator","/gomining-marketplace-checker","/login","/signup","/profile","/settings","/dashboard","/chat","/console","/planner","/projection","/planner/projection","/gomining-1-th-roi","/gomining-5-th-roi","/gomining-10-th-roi","/gomining-25-th-roi","/gomining-50-th-roi","/gomining-100-th-roi","/gomining-250-th-roi","/gomining-500-th-roi","/gomining-profit-btc-75k","/gomining-profit-btc-100k","/gomining-profit-btc-150k","/gomining-profit-btc-200k","/gomining-profit-btc-250k","/gomining-worth-it-now"]/* /i18n:pages */;
   var STR = {
     en: {},
-    es: { Calculator: 'Calculadora', 'Growth Projection': 'Proyección', Guides: 'Guías', 'RINGO5 Bonuses': 'Bonos RINGO5', Tools: 'Herramientas',
+    es: { Calculator: 'Calculadora', 'Growth Projection': 'Proyección', Guides: 'Guías', 'New to GoMining?': '¿Nuevo en GoMining?', Tools: 'Herramientas',
       'ROI Calculator': 'Calculadora de ROI', 'Marketplace Checker': 'Comprobador del marketplace', 'Co-pilot': 'Copiloto', Learn: 'Aprender',
       FAQ: 'Preguntas frecuentes', Glossary: 'Glosario', 'How GoMining works': 'Cómo funciona GoMining', Company: 'Empresa', About: 'Sobre GMT-Optimizer',
       Contact: 'Contacto', Legal: 'Legal', 'Privacy Policy': 'Política de privacidad', 'Terms of Use': 'Condiciones de uso', Disclosures: 'Divulgaciones',
@@ -45,7 +45,7 @@
       legal1: 'Herramienta independiente. No afiliada, respaldada ni gestionada por GoMining.', legal2: 'Recibo una recompensa por referido si usas mi código. No es asesoramiento financiero.',
       'Log in': 'Iniciar sesión', 'Log in (bar)': 'Entrar', 'Create account': 'Crear cuenta', Account: 'Cuenta', Dashboard: 'Panel', Profile: 'Perfil', Settings: 'Ajustes',
       'Log out': 'Cerrar sesión', 'Account menu for ': 'Menú de cuenta de ' },
-    fr: { Calculator: 'Calculateur', 'Growth Projection': 'Projection', Guides: 'Guides', 'RINGO5 Bonuses': 'Bonus RINGO5', Tools: 'Outils',
+    fr: { Calculator: 'Calculateur', 'Growth Projection': 'Projection', Guides: 'Guides', 'New to GoMining?': 'Nouveau sur GoMining ?', Tools: 'Outils',
       'ROI Calculator': 'Calculateur de ROI', 'Marketplace Checker': 'Vérificateur du marketplace', 'Co-pilot': 'Copilote', Learn: 'Apprendre',
       FAQ: 'FAQ', Glossary: 'Glossaire', 'How GoMining works': 'Comment fonctionne GoMining', Company: 'À propos', About: 'Qui sommes-nous',
       Contact: 'Contact', Legal: 'Mentions', 'Privacy Policy': 'Politique de confidentialité', 'Terms of Use': 'Conditions d\u2019utilisation', Disclosures: 'Transparence',
@@ -56,7 +56,7 @@
       legal1: 'Outil indépendant. Ni affilié à GoMining, ni approuvé, ni exploité par GoMining.', legal2: 'Je touche une récompense de parrainage si vous utilisez mon code. Pas un conseil financier.',
       'Log in': 'Se connecter', 'Log in (bar)': 'Connexion', 'Create account': 'Créer un compte', Account: 'Compte', Dashboard: 'Tableau de bord', Profile: 'Profil', Settings: 'Paramètres',
       'Log out': 'Se déconnecter', 'Account menu for ': 'Menu du compte de ' },
-    de: { Calculator: 'Rechner', 'Growth Projection': 'Wachstumsprognose', Guides: 'Ratgeber', 'RINGO5 Bonuses': 'RINGO5-Boni', Tools: 'Tools',
+    de: { Calculator: 'Rechner', 'Growth Projection': 'Wachstumsprognose', Guides: 'Ratgeber', 'New to GoMining?': 'Neu bei GoMining?', Tools: 'Tools',
       'ROI Calculator': 'ROI-Rechner', 'Marketplace Checker': 'Marketplace-Check', 'Co-pilot': 'Co-Pilot', Learn: 'Lernen',
       FAQ: 'FAQ', Glossary: 'Glossar', 'How GoMining works': 'So funktioniert GoMining', Company: 'Über uns', About: 'Über GMT-Optimizer',
       Contact: 'Kontakt', Legal: 'Rechtliches', 'Privacy Policy': 'Datenschutz', 'Terms of Use': 'Nutzungsbedingungen', Disclosures: 'Offenlegungen',
@@ -83,10 +83,10 @@
     { href: '/console', label: 'Calculator', on: /^\/(console|planner|edit)(\/|$)/ },
     { href: '/projection', label: 'Growth Projection', on: /^\/(projection|planner\/projection)(\/|$)/ },
     { href: '/guides', label: 'Guides', on: /^\/(guides|how-gomining-works|is-gomining-worth-it|gomining-worth-it-now|gomining-discount-explained|gomining-roi-calculator|gomining-promo-code|gomining-marketplace-checker|gomining-\d+-th-roi|gomining-profit-btc-\d+k|faq|glossary)(\/|$)/ },
-    { href: '/claim', label: 'RINGO5 Bonuses', on: /^\/claim(\/|$)/ }
+    { href: '/claim', label: 'New to GoMining?', on: /^\/claim(\/|$)/ }
   ];
   var FOOT = [
-    ['Tools', [['Calculator', '/console'], ['Growth Projection', '/projection'], ['ROI Calculator', '/gomining-roi-calculator'], ['Marketplace Checker', '/gomining-marketplace-checker'], ['Co-pilot', '/copilot'], ['RINGO5 Bonuses', '/claim']]],
+    ['Tools', [['Calculator', '/console'], ['Growth Projection', '/projection'], ['ROI Calculator', '/gomining-roi-calculator'], ['Marketplace Checker', '/gomining-marketplace-checker'], ['Co-pilot', '/copilot'], ['New to GoMining?', '/claim']]],
     ['Learn', [['Guides', '/guides'], ['FAQ', '/faq'], ['Glossary', '/glossary'], ['How GoMining works', '/how-gomining-works']]],
     ['Company', [['About', '/about'], ['Contact', '/about#contact'], ['Telegram (@RingoMining)', TG, 1], ['ringomining.com', 'https://ringomining.com/', 1]]],
     ['Legal', [['Privacy Policy', '/privacy'], ['Terms of Use', '/terms'], ['Disclosures', '/disclosures']]]

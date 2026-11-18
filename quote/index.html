@@ -20,9 +20,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=6">
+<link rel="stylesheet" href="/assets/components.css?v=7">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=10">
-<link rel="stylesheet" href="/assets/console.css?v=12">
+<link rel="stylesheet" href="/assets/console.css?v=13">
 <style>
 :root{--bg:var(--color-bg);--card:var(--color-surface-1);--card2:var(--color-surface-2);--bd:var(--color-border);--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
   --txt:var(--color-text);--t2:var(--color-text-2);--t3:var(--color-text-2);--t4:var(--color-text-3);--green:var(--color-success);--mono:var(--font-body);
@@ -143,12 +143,12 @@ h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--f
 @media(max-width:600px){.legs{grid-template-columns:1fr}.comp{padding:.85rem .7rem}.comp-top h3{width:100%;margin-bottom:.2rem}.wrap{padding:1rem .8rem 3rem}.panel{padding:1rem .9rem 1.1rem}}
 </style>
 <link rel="stylesheet" href="/assets/topbar.css?v=8">
-<script src="/assets/site-chrome.js?v=13" defer data-footer="off"></script>
+<script src="/assets/site-chrome.js?v=14" defer data-footer="off"></script>
 </head>
 <body>
 <!-- console tab row: the same one as /console (assets/console.css) -->
 <div class="topbar"><div class="header"><div class="header-inner"><nav class="nav-links cx-tabs" aria-label="Console sections"><a href="/console">Console</a><a href="/console?view=edit">Edit farm</a><a href="/console?view=planner">Planner</a><a href="/console?view=projection">Projection</a><a href="/quote" class="nav-active" aria-current="page">Quote</a><a href="/statement">Statement</a></nav></div></div>
-<div class="subbar"><div class="live-bar"><div class="live-chip"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="qBtc">&mdash;</span></div><div class="live-chip"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="qGmt">&mdash;</span></div><div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="qSats">&mdash;</span></div><div class="live-chip"><span class="lbl"><span class="dot off" id="qDot"></span>Status</span><span class="val" id="qLive">Loading&hellip;</span></div><div class="px-badge-row px-subbar"><span class="px-cred">15&nbsp;W TH costs updated <b id="qPxDate">30 Oct 2026</b> · fees &amp; rates <b><time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time></b></span></div></div></div>
+<div class="subbar"><div class="live-bar"><div class="live-chip"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="qBtc">&mdash;</span><span class="cx-chg" data-chg="btc"></span></div><div class="live-chip"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="qGmt">&mdash;</span><span class="cx-chg" data-chg="gmt"></span></div><div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="qSats">&mdash;</span><span class="cx-chg" data-chg="sats"></span></div><div class="live-chip"><span class="lbl"><span class="dot off" id="qDot"></span>Status</span><span class="val" id="qLive">Loading&hellip;</span></div><div class="px-badge-row px-subbar"><span class="px-cred">15&nbsp;W TH costs updated <b id="qPxDate">30 Oct 2026</b> · fees &amp; rates <b><time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time></b></span></div></div></div>
 </div>
 <div class="wrap">
 
@@ -210,6 +210,7 @@ h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--f
      localStorage. If you ever need one of those here, gate the feature — never the page. -->
 <script src="/assets/pricing.js?v=4"></script>
 <script src="/assets/charts.js?v=1"></script>
+<script src="/assets/market-change.js?v=1" defer></script>
 <script src="/assets/quote.js?v=26"></script>
 <script src="/assets/site.js?v=46" data-chrome="bar"></script>
 </body>

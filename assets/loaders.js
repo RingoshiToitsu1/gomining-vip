@@ -30,15 +30,26 @@
 .cb-load.cb-fixed{position:fixed;z-index:10030}
 .cb-load.cb-inline{position:relative;inset:auto;min-height:220px}
 .cb-load.out{opacity:0}
+@keyframes cbIn{from{opacity:0}to{opacity:1}}
+@keyframes cbCard{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes cbSweep{from{transform:translateX(-100%)}to{transform:translateX(320%)}}
+.cb-load{animation:cbIn .18s ease-out}
+.cb-core{animation:cbCard .28s var(--ease-standard)}
 .cb-core{box-sizing:border-box;width:min(380px,100%);background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);
   box-shadow:var(--shadow-card);padding:var(--space-5);text-align:left;font-family:var(--font-body)}
 .cb-icon{display:block;width:32px;height:32px;margin:0 0 var(--space-3)}
 .cb-kicker{font-family:var(--font-ui);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-gold);margin:0 0 var(--space-1)}
 .cb-title{font-family:var(--font-ui);font-weight:var(--font-weight-semibold);font-size:var(--font-size-lg);line-height:var(--line-height-tight);
   color:var(--color-text);margin:0 0 var(--space-4)}
-.cb-bar{height:4px;border-radius:var(--radius-pill);background:var(--color-border);overflow:hidden;margin:0 0 var(--space-4)}
-.cb-bar i{display:block;height:100%;width:100%;background:var(--color-gold);transform-origin:left;transform:scaleX(0);
-  transition:transform var(--duration-base) var(--ease-standard)}
+.cb-bar{position:relative;height:4px;border-radius:var(--radius-pill);background:var(--color-border);overflow:hidden;margin:0 0 var(--space-4)}
+.cb-bar i{display:block;height:100%;width:100%;background:var(--color-gold);transform-origin:left;transform:scaleX(.04);
+  transition:transform .4s var(--ease-standard);will-change:transform}
+/* a light sheen keeps moving while work runs; it's a transform animation, so it stays smooth even when the page is busy */
+.cb-bar::after{content:'';position:absolute;top:0;bottom:0;left:0;width:30%;border-radius:inherit;will-change:transform;
+  background:linear-gradient(90deg,transparent,rgb(var(--color-gold-300-rgb) / .55),transparent);animation:cbSweep 1.1s linear infinite}
+.cb-load.done .cb-bar::after{opacity:0;transition:opacity .2s}
+.cb-step,.cb-step b{transition:color .2s,background-color .2s}
+@media (prefers-reduced-motion:reduce){.cb-load,.cb-core{animation:none}.cb-bar::after{display:none}}
 .cb-steps{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-2)}
 .cb-step{display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-size-sm);color:var(--color-text-2)}
 .cb-step b{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--color-border-strong)}
@@ -118,9 +129,14 @@
       }
       paint();
       if (done === rows.length && now - t0 >= MIN_MS) {
-        el.classList.add('out');
-        if (opts.onDone) { try { opts.onDone(); } catch (e) {} }
-        setTimeout(() => ctl.cancel(), reduce ? 0 : 200);
+        // let the bar finish filling (its 0.4 s transition), then fade out: no jump from mid-bar to gone
+        el.classList.add('done');
+        setTimeout(() => {
+          if (dead) return;
+          el.classList.add('out');
+          if (opts.onDone) { try { opts.onDone(); } catch (e) {} }
+          setTimeout(() => ctl.cancel(), 200);
+        }, reduce ? 0 : 280);
         return;
       }
       requestAnimationFrame(tick);

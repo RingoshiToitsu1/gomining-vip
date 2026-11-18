@@ -117,17 +117,33 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=6">
+<link rel="stylesheet" href="/assets/components.css?v=7">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=10">
-<link rel="stylesheet" href="/assets/landing.css?v=4">
-<script src="/assets/site-chrome.js?v=13" defer></script>
+<link rel="stylesheet" href="/assets/landing.css?v=5">
+<script src="/assets/site-chrome.js?v=14" defer></script>
 </head>
 <body class="lp ui-scope">
 <main>
 
 <section class="lp-hero" aria-labelledby="hero-title">
+  <!-- v3 hero graphic: a compounding earnings curve that draws itself in (decorative; static with reduced motion) -->
+  <svg class="lp-hero__art" viewBox="0 0 1440 560" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="lpArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#E2B259" stop-opacity=".16"/><stop offset="1" stop-color="#E2B259" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="lpLine" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#A9772F" stop-opacity=".2"/><stop offset=".55" stop-color="#E2B259"/><stop offset="1" stop-color="#F7D88A"/>
+      </linearGradient>
+    </defs>
+    <g class="lp-art-grid"><line x1="0" y1="140" x2="1440" y2="140"/><line x1="0" y1="280" x2="1440" y2="280"/><line x1="0" y1="420" x2="1440" y2="420"/></g>
+    <path class="lp-art-area" d="M0 520 C 260 512, 470 488, 660 448 S 1010 330, 1180 228 S 1360 110, 1440 64 L 1440 560 L 0 560 Z" fill="url(#lpArea)"/>
+    <path class="lp-art-line" pathLength="1" d="M0 520 C 260 512, 470 488, 660 448 S 1010 330, 1180 228 S 1360 110, 1440 64" fill="none" stroke="url(#lpLine)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
+    <g class="lp-art-dots"><circle cx="660" cy="448" r="5"/><circle cx="1010" cy="330" r="5"/><circle cx="1300" cy="140" r="6"/></g>
+  </svg>
   <div class="ui-container lp-hero__grid">
     <div>
+      <p class="lp-v3"><span class="lp-v3__tag">v3</span>New design, now in 4 languages</p>
       <p class="ui-eyebrow">Independent GoMining calculator</p>
       <h1 class="ui-h1" id="hero-title">Model your GoMining returns <span class="ui-gold-text">before you buy</span></h1>
       <p class="ui-lead">Live Bitcoin price and network difficulty, every fee counted, and projections that show the downside as well as the upside. Free, with no ads.</p>
@@ -168,10 +184,10 @@
   <div class="ui-container lp-trust__grid">
     <div class="lp-trust__copy"><strong>For GoMining miners, new and existing</strong><p>GMT-Optimizer turns live network data into what a GoMining farm earns today and could earn over time, so you can decide what to buy, upgrade or lock.</p></div>
     <div class="ui-stats">
-      <div class="ui-stat"><div class="ui-stat__label"><span class="lp-live-dot" aria-hidden="true"></span>Bitcoin</div><div class="ui-stat__value" data-tk="btc">—</div><div class="ui-stat__meta">live price</div></div>
-      <div class="ui-stat"><div class="ui-stat__label">GMT</div><div class="ui-stat__value" data-tk="gmt">—</div><div class="ui-stat__meta">live price</div></div>
-      <div class="ui-stat"><div class="ui-stat__label">sats/TH/day</div><div class="ui-stat__value" data-tk="sats">—</div><div class="ui-stat__meta">mining reward</div></div>
-      <div class="ui-stat"><div class="ui-stat__label">Difficulty</div><div class="ui-stat__value" data-tk="diff">—</div><div class="ui-stat__meta">network</div></div>
+      <div class="ui-stat"><div class="ui-stat__label"><span class="lp-live-dot" aria-hidden="true"></span>Bitcoin</div><div class="ui-stat__value" data-tk="btc">—</div><div class="ui-stat__meta" data-chg="btc">live price</div></div>
+      <div class="ui-stat"><div class="ui-stat__label">GMT</div><div class="ui-stat__value" data-tk="gmt">—</div><div class="ui-stat__meta" data-chg="gmt">live price</div></div>
+      <div class="ui-stat"><div class="ui-stat__label">sats/TH/day</div><div class="ui-stat__value" data-tk="sats">—</div><div class="ui-stat__meta" data-chg="sats">mining reward</div></div>
+      <div class="ui-stat"><div class="ui-stat__label">Difficulty</div><div class="ui-stat__value" data-tk="diff">—</div><div class="ui-stat__meta" data-chg="diff">network</div></div>
     </div>
   </div>
 </section>
@@ -193,7 +209,7 @@
     <div class="ui-grid">
       <a class="ui-card ui-card--link" href="/console"><h3 class="ui-card__title">Calculator</h3><p class="ui-card__body">Your farm's live profit, fees, discount and VIP tier, plus a capital planner for new money.</p><span class="ui-card__cta">Open the calculator →</span></a>
       <a class="ui-card ui-card--link" href="/projection"><h3 class="ui-card__title">Growth Projection</h3><p class="ui-card__body">Your farm over 1 to 10 years across thousands of possible Bitcoin futures, reinvesting as you go. Estimates only.</p><span class="ui-card__cta">See the projection →</span></a>
-      <a class="ui-card ui-card--link" href="/claim"><h3 class="ui-card__title">RINGO5 Bonuses</h3><p class="ui-card__body">Three sign-up bonuses from GoMining for new accounts that use code RINGO5.</p><span class="ui-card__cta">See the bonuses →</span></a>
+      <a class="ui-card ui-card--link" href="/claim"><h3 class="ui-card__title">New to GoMining?</h3><p class="ui-card__body">Three sign-up bonuses from GoMining for new accounts that use code RINGO5.</p><span class="ui-card__cta">See the bonuses →</span></a>
       <a class="ui-card ui-card--link" href="/copilot"><h3 class="ui-card__title">Co-pilot</h3><p class="ui-card__body">A guided chat that walks you through the tools, the GMT discount and getting started.</p><span class="ui-card__cta">Ask the co-pilot →</span></a>
       <a class="ui-card ui-card--link" href="/gomining-marketplace-checker"><h3 class="ui-card__title">Marketplace Checker</h3><p class="ui-card__body">Paste a GoMining marketplace listing to see its premium, upgrade costs and how fast a Greedy Machine pays it back.</p><span class="ui-card__cta">Check a miner →</span></a>
       <a class="ui-card ui-card--link" href="/chat"><h3 class="ui-card__title">Community chat</h3><p class="ui-card__body">Talk GoMining with other miners in real time. Reading is open to all; posting needs a free account.</p><span class="ui-card__cta">Join the chat →</span></a>
@@ -288,6 +304,7 @@ window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's 
 <script src="/lib/mining.js?v=2"></script>
 <script src="/assets/roi-embed.js?v=34"></script>
 <script src="/assets/components.js?v=2" defer></script>
+<script src="/assets/market-change.js?v=1" defer></script>
 <script src="/assets/site.js?v=46"></script>
 <script>
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */

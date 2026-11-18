@@ -845,7 +845,11 @@
   "Miner efficiency": "Efficacité du mineur",
   "Total discount shown in your GoMining app (%)": "Remise totale affichée dans votre application GoMining (%)",
   "Miner number": "Numéro du mineur",
-  "<img src=\"/btc36.png\" alt=\"\" style=\"height:20px;width:20px;border-radius:50%\"> New monthly income": "<img src=\"/btc36.png\" alt=\"\" style=\"height:20px;width:20px;border-radius:50%\"> Nouveau revenu mensuel"
+  "<img src=\"/btc36.png\" alt=\"\" style=\"height:20px;width:20px;border-radius:50%\"> New monthly income": "<img src=\"/btc36.png\" alt=\"\" style=\"height:20px;width:20px;border-radius:50%\"> Nouveau revenu mensuel",
+  "<span class=\"lp-v3__tag\">v3</span>New design, now in 4 languages": "<span class=\"lp-v3__tag\">v3</span>Nouveau design, désormais en 4 langues",
+  "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>": "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>",
+  "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>": "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>",
+  "<span class=\"lbl\">sats/TH/day</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>": "<span class=\"lbl\">sats/TH/jour</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "3 à 20 lettres, chiffres ou tirets bas. Affiché dans le chat.",
@@ -1130,7 +1134,11 @@
   "Saved to your profile": "Enregistré dans votre profil",
   "Saved to \"{0}\"": "Enregistré dans « {0} »",
   "Normal Miner": "Mineur normal",
-  "Greedy Machine": "Greedy Machine"
+  "Greedy Machine": "Greedy Machine",
+  "{0} · last adjustment": "{0} · dernier ajustement",
+  "{0} · 24h": "{0} · 24 h",
+  "Change at the last Bitcoin difficulty adjustment (every ~2 weeks)": "Variation au dernier ajustement de difficulté du Bitcoin (toutes les ~2 semaines)",
+  "Price change over the last 24 hours": "Variation du prix sur les dernières 24 heures"
  },
  "dom": {
   "\"Still cheap\" band": "bande « Encore bon marché »",

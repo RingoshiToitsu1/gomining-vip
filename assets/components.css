@@ -273,3 +273,32 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
   .ui-table--stack td[data-label=""] { justify-content: flex-start; font-family: var(--font-ui); font-weight: var(--font-weight-semibold); color: var(--color-text); text-align: left; }
   .ui-table--stack td[data-label=""]::before { content: none; }
 }
+
+/* ---------- live change (assets/market-change.js): green = good for a miner, red = bad ---------- */
+[data-chg]{font-variant-numeric:tabular-nums}
+[data-chg].is-good{color:var(--color-success)}
+[data-chg].is-bad{color:var(--color-error)}
+
+/* ---------- v3 motion: soft page changes and a light text entrance (all pages) ----------
+   Between pages: the browser's cross-document view transition (a short cross-fade); browsers without it just
+   navigate. On arrival: the page's main blocks fade in and rise 8 px, a few at a time. Console tabs and panels
+   replay it when they open (the animation restarts whenever a view is shown). Nothing moves with reduced motion. */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 280ms; animation-timing-function: var(--ease-standard); }
+@media (prefers-reduced-motion: no-preference) {
+  main > *, .content-wrap > *, .wrap > *, .ui-scope > .ui-container > *,
+  .container > .tab-content.active > *, .sp-page > .sp-page-inner > *,
+  .acct-wrap > * {
+    animation: uiEnter .55s var(--ease-standard) both;
+  }
+  main > :nth-child(2), .content-wrap > :nth-child(2), .wrap > :nth-child(2), .container > .tab-content.active > :nth-child(2), .sp-page > .sp-page-inner > :nth-child(2) { animation-delay: 50ms; }
+  main > :nth-child(3), .content-wrap > :nth-child(3), .wrap > :nth-child(3), .container > .tab-content.active > :nth-child(3), .sp-page > .sp-page-inner > :nth-child(3) { animation-delay: 100ms; }
+  main > :nth-child(4), .content-wrap > :nth-child(4), .wrap > :nth-child(4), .container > .tab-content.active > :nth-child(4), .sp-page > .sp-page-inner > :nth-child(4) { animation-delay: 150ms; }
+  main > :nth-child(5), .content-wrap > :nth-child(5), .wrap > :nth-child(5), .container > .tab-content.active > :nth-child(5), .sp-page > .sp-page-inner > :nth-child(5) { animation-delay: 200ms; }
+  main > :nth-child(6), .content-wrap > :nth-child(6), .wrap > :nth-child(6), .container > .tab-content.active > :nth-child(6), .sp-page > .sp-page-inner > :nth-child(6) { animation-delay: 250ms; }
+  main > :nth-child(7), .content-wrap > :nth-child(7), .wrap > :nth-child(7), .container > .tab-content.active > :nth-child(7), .sp-page > .sp-page-inner > :nth-child(7) { animation-delay: 300ms; }
+  main > :nth-child(n+8), .content-wrap > :nth-child(n+8), .wrap > :nth-child(n+8), .container > .tab-content.active > :nth-child(n+8), .sp-page > .sp-page-inner > :nth-child(n+8) { animation-delay: 350ms; }
+}
+@keyframes uiEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+

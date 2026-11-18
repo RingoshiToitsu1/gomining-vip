@@ -1,0 +1,52 @@
+/* GMT-Optimizer: live % changes for the figures strips (landing, console, quote). v3, 2026-11-18.
+   Fills every element marked data-chg="btc|gmt|diff|sats" with an up/down change and its basis:
+     btc, gmt   24-hour price change          (coinpaprika tickers, CoinGecko as fallback)
+     diff       change at the last difficulty adjustment   (mempool.space difficulty-adjustment)
+     sats       sats/TH/day change at that same adjustment: reward per TH moves inversely to
+                difficulty (subsidy-based, the formula the calculator uses), so  1 / (1 + Δdiff) − 1
+   If a source fails the element keeps whatever text it had (e.g. "live price"). Text and numbers follow the page
+   language through GMT_UI (ES/FR/DE); English pages need nothing else. No dependencies. */
+(function () {
+  'use strict';
+  if (window.GMTMarketChange) return;
+  var UI = window.GMT_UI, LANG = (UI && UI.lang) || (document.documentElement.lang || 'en').slice(0, 2);
+  var LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
+  var T = UI ? UI.t : function (s) { var a = arguments; return String(s).replace(/\{(\d)\}/g, function (m, i) { return a[+i + 1] != null ? a[+i + 1] : m; }); };
+  function j(u) { return fetch(u).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
+  function firstNum(fns) {
+    return fns.reduce(function (p, f) { return p.then(function (v) { return isFinite(v) ? v : f().then(Number).catch(function () { return NaN; }); }); }, Promise.resolve(NaN));
+  }
+  var pct24 = function (paprika, gecko) {
+    return firstNum([
+      function () { return j('https://api.coinpaprika.com/v1/tickers/' + paprika).then(function (r) { return r.quotes.USD.percent_change_24h; }); },
+      function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=' + gecko + '&vs_currencies=usd&include_24hr_change=true').then(function (r) { return r[gecko].usd_24h_change; }); }
+    ]);
+  };
+  var data = window.GMTMarketChange = Promise.all([
+    pct24('btc-bitcoin', 'bitcoin'),
+    pct24('gomining-gomining-token', 'gmt-token'),
+    j('https://mempool.space/api/v1/difficulty-adjustment').then(function (r) { return +r.previousRetarget; }).catch(function () { return NaN; })
+  ]).then(function (v) {
+    var d = v[2];
+    return { btc: v[0], gmt: v[1], diff: d, sats: isFinite(d) ? (1 / (1 + d / 100) - 1) * 100 : NaN };
+  });
+  function fmt(x) {
+    var n = new Intl.NumberFormat(LOC, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(x));
+    return (x > 0 ? '▲ ' : x < 0 ? '▼ ' : '') + n + (LANG === 'en' ? '%' : ' %');
+  }
+  function paint(ch) {
+    document.querySelectorAll('[data-chg]').forEach(function (el) {
+      var k = el.getAttribute('data-chg'), x = ch[k];
+      if (!isFinite(x)) return;
+      var basis = (k === 'diff' || k === 'sats') ? T('{0} · last adjustment', fmt(x)) : T('{0} · 24h', fmt(x));
+      el.textContent = basis;
+      // colour = good or bad for a miner: a higher difficulty is bad news, everything else is good when it rises
+      var good = k === 'diff' ? x < 0 : x > 0, bad = k === 'diff' ? x > 0 : x < 0;
+      el.classList.toggle('is-good', good); el.classList.toggle('is-bad', bad);
+      el.title = (k === 'diff' || k === 'sats') ? T('Change at the last Bitcoin difficulty adjustment (every ~2 weeks)') : T('Price change over the last 24 hours');
+    });
+  }
+  function go() { data.then(paint); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+  window.GMTMarketChangeRepaint = go;   // pages that build their strip later can call this
+})();
