@@ -28,7 +28,7 @@
     var tokens = [];
     // Collapse ordinary whitespace only: \s would also eat U+00A0 / U+202F, the no-break spaces inside French
     // numbers ("1\u202f206,58\u00a0$"), and split them into two tokens.
-    var key = String(text).replace(/[ \t\n\r\f\v]+/g, ' ').replace(/^ +| +$/g, '').replace(TOK, function (m) { tokens.push(m); return '{' + (tokens.length - 1) + '}'; });
+    var key = String(text).replace(/[\u00a0\u202f](?!\d)/g, ' ').replace(/[ \t\n\r\f\v]+/g, ' ').replace(/^ +| +$/g, '').replace(TOK, function (m) { tokens.push(m); return '{' + (tokens.length - 1) + '}'; });
     return { key: key, tokens: tokens };
   }
   window.GMTDomI18n = { normalize: normalize };

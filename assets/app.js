@@ -2782,7 +2782,7 @@ function renderProfileSelect(){
   sel.innerHTML='<option value="">Farm</option>'+
     state.profiles.map(p=>{
       // The primary account profile is starred + labelled so it's obviously the main one.
-      const label=p.account?('★ '+p.name+' (your profile)'):p.name;
+      const label=p.account?T('★ {0} (your profile)',p.name):p.name;
       return `<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(label)}</option>`;
     }).join('');
   const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
@@ -2847,7 +2847,7 @@ function saveActiveProfile(){
     GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
   }
   renderProfileSelect();   // reflect the now-active profile (esp. if we just adopted the account one)
-  flashStatus(isAccountProfile(p)?'Saved to your profile':'Saved to "'+p.name+'"');
+  flashStatus(isAccountProfile(p)?T('Saved to your profile'):T('Saved to "{0}"',p.name));
   editLoadClose('Saved to "'+p.name+'"');
 }
 function saveAsNewProfile(){

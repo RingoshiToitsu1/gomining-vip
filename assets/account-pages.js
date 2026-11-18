@@ -283,7 +283,7 @@
       host.innerHTML = '<div class="ui-table-wrap"><table class="ui-table ui-table--stack acct-miners" aria-label="' + T('Your miners') + '">' +
         '<thead><tr><th aria-sort="none">' + T('Miner') + '</th><th class="num" aria-sort="none">' + T('Hashrate') + '</th><th class="num" aria-sort="none">' + T('Efficiency') + '</th></tr></thead><tbody>' +
         rows.map(function (r) {
-          var label = [r.collection, r.code ? '#' + r.code : ''].filter(Boolean).join(' ') || T('Miner');
+          var label = [r.collection ? T(r.collection) : '', r.code ? '#' + r.code : ''].filter(Boolean).join(' ') || T('Miner');
           return '<tr><td data-label="">' + esc(label) + '</td><td class="num" data-label="' + T('Hashrate') + '" data-sort="' + (+r.th || 0) + '">' + fmtN(r.th, (+r.th % 1) ? 2 : 0) + ' TH</td>' +
             '<td class="num" data-label="' + T('Efficiency') + '" data-sort="' + (+r.wth || 0) + '">' + fmtN(r.wth, (+r.wth % 1) ? 1 : 0) + ' W/TH</td></tr>';
         }).join('') + '</tbody><tfoot><tr><td data-label="">' + T(rows.length === 1 ? '{0} miner' : '{0} miners', rows.length) + '</td><td class="num" data-label="' + T('Total') + '">' + fmtN(tot, (tot % 1) ? 2 : 0) + ' TH</td><td></td></tr></tfoot></table></div>';

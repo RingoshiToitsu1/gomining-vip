@@ -1189,7 +1189,14 @@
   ", which is the figure the Capital planner shows as \"after investment\"": ", also die Zahl, die der Kapitalplaner als „nach der Investition“ zeigt",
   "Checking miner #{0}": "Miner Nr. {0} wird geprüft",
   "Couldn’t check this miner.": "Dieser Miner konnte nicht geprüft werden.",
-  "Checking…": "Wird geprüft …"
+  "Checking…": "Wird geprüft …",
+  "<strong>{0}</strong> miner &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg": "<strong>{0}</strong> Miner &middot; <strong>{1}</strong> TH im Mining &middot; Ø <strong>{2}</strong> W/TH",
+  "<strong>{0}</strong> miners &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg": "<strong>{0}</strong> Miner &middot; <strong>{1}</strong> TH im Mining &middot; Ø <strong>{2}</strong> W/TH",
+  "★ {0} (your profile)": "★ {0} (dein Profil)",
+  "Saved to your profile": "In deinem Profil gespeichert",
+  "Saved to \"{0}\"": "In „{0}“ gespeichert",
+  "Normal Miner": "Normaler Miner",
+  "Greedy Machine": "Greedy Machine"
  },
  "dom": {
   "\"Still cheap\" band": "„Noch günstig“-Band",
@@ -1503,6 +1510,7 @@
   "account synced": "Konto synchronisiert",
   "across the {0}σ GMT range ({1}–{2}): {3}–{4}/mo": "über die GMT-Spanne von {0}σ ({1}–{2}): {3}–{4}/Monat",
   "advanced chart TradingView widget": "TradingView-Widget für erweiterte Charts",
+  "an existing miner": "einen vorhandenen Miner",
   "channel": "Kanal",
   "chart ready": "Chart bereit",
   "correlation {0}": "Korrelation {0}",
@@ -1521,6 +1529,7 @@
   "in your wallet · {0}": "in deinem Wallet · {0}",
   "in your wallet · {0} · {1} held back to keep your coverage": "in deinem Wallet · {0} · {1} zurückgehalten, um deine Abdeckung zu halten",
   "into a new {0} W machine": "in eine neue {0}-W-Maschine",
+  "into an existing miner": "in einen vorhandenen Miner",
   "latest close": "letzter Schlusskurs",
   "log price vs log time": "log Kurs vs. log Zeit",
   "mining + staking": "Mining + Staking",

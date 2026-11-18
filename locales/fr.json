@@ -1189,7 +1189,14 @@
   ", which is the figure the Capital planner shows as \"after investment\"": ", soit le chiffre que le planificateur de capital affiche « après investissement »",
   "Checking miner #{0}": "Vérification du mineur n° {0}",
   "Couldn’t check this miner.": "Impossible de vérifier ce mineur.",
-  "Checking…": "Vérification…"
+  "Checking…": "Vérification…",
+  "<strong>{0}</strong> miner &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg": "<strong>{0}</strong> mineur &middot; <strong>{1}</strong> TH en minage &middot; <strong>{2}</strong> W/TH en moyenne",
+  "<strong>{0}</strong> miners &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg": "<strong>{0}</strong> mineurs &middot; <strong>{1}</strong> TH en minage &middot; <strong>{2}</strong> W/TH en moyenne",
+  "★ {0} (your profile)": "★ {0} (votre profil)",
+  "Saved to your profile": "Enregistré dans votre profil",
+  "Saved to \"{0}\"": "Enregistré dans « {0} »",
+  "Normal Miner": "Mineur normal",
+  "Greedy Machine": "Greedy Machine"
  },
  "dom": {
   "\"Still cheap\" band": "bande « Encore bon marché »",
@@ -1503,6 +1510,7 @@
   "account synced": "compte synchronisé",
   "across the {0}σ GMT range ({1}–{2}): {3}–{4}/mo": "sur la fourchette GMT à {0}σ ({1}–{2}) : {3}–{4}/mois",
   "advanced chart TradingView widget": "widget de graphique avancé TradingView",
+  "an existing miner": "un mineur existant",
   "channel": "chaîne",
   "chart ready": "graphique prêt",
   "correlation {0}": "corrélation {0}",
@@ -1521,6 +1529,7 @@
   "in your wallet · {0}": "dans votre portefeuille · {0}",
   "in your wallet · {0} · {1} held back to keep your coverage": "dans votre portefeuille · {0} · {1} gardés pour maintenir votre couverture",
   "into a new {0} W machine": "dans une nouvelle machine de {0} W",
+  "into an existing miner": "dans un mineur existant",
   "latest close": "dernière clôture",
   "log price vs log time": "log du prix vs log du temps",
   "mining + staking": "minage + staking",
