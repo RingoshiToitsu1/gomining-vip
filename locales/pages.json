@@ -22,7 +22,11 @@
     "profile.html",
     "settings.html",
     "dashboard.html",
-    "chat/index.html"
+    "chat/index.html",
+    "console/index.html",
+    "planner/index.html",
+    "projection/index.html",
+    "planner/projection/index.html"
   ],
   "generated": [
     "gomining-1-th-roi.html",
