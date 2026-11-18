@@ -67,6 +67,8 @@ function model({th, bp, diff, disc, wth=EFF_BASE_MAX}){   // default: a new mine
 
 /* ===== live data ===== */
 async function getLive(){
+  // Test hook: GEN_PAGES_FIXED="btcPrice,difficulty" makes a run reproducible (no network).
+  if(process.env.GEN_PAGES_FIXED){const [bp,diff]=process.env.GEN_PAGES_FIXED.split(',').map(Number);return {bp,diff,live:false};}
   const out={bp:FB.btcPrice,diff:FB.difficulty,live:false};
   try{
     const p=await fetch('https://mempool.space/api/v1/prices',{signal:AbortSignal.timeout(15000)});
@@ -332,7 +334,7 @@ function injectLiveBlocks(live,dateStr){
 /* ===== main ===== */
 (async()=>{
   const live=await getLive();
-  const now=new Date();
+  const now=process.env.GEN_PAGES_DATE?new Date(process.env.GEN_PAGES_DATE+'T12:00:00Z'):new Date();   // test hook
   const dateStr={full:now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),
                  year:now.getUTCFullYear(), m:now.getUTCMonth()};
   console.log(`Live: BTC ${usd(live.bp)}, difficulty ${(live.diff/1e12).toFixed(1)}e12, sats/TH/day ${Math.round(satsPerTHDay(live.diff))} (${live.live?'live':'FALLBACK'})`);
