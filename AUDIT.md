@@ -607,6 +607,9 @@ Who reads profile data today (all must keep working after the fix):
 - [ ] Social/OG images rebranded (§13).
 - [ ] Statement and console tables pass (§17).
 - [ ] Offer check = 0 on the built site, all languages.
+- [ ] Logged-in console screenshots, 360 and 1280, all 4 languages: dashboard with real results (no gate), planner
+      results, projection, saved farms, fleet editor with miners (7d-2 covered logged-out views only, per owner).
+- [ ] Native review of the console dictionary (`locales/*.json` "dom" + "ui"), see TRANSLATIONS.md (7d-2 notes).
 
 ## 20. Phase 7a: translation machinery + first pages (ES / FR / DE)
 
@@ -728,3 +731,37 @@ pages don't load it, so English output is unchanged (golden 33/33, including the
 **Remaining: 7d-2, the console app** (`/console`, `/planner`, `/projection` and its views, ~6,000 lines of
 `app.js` with text inline, plus `boot.js`, `loaders.js`, `fleet.js`). Same mechanism, but the console's golden test
 snapshots much of its text, so it goes in carefully, view by view.
+
+## 24. Phase 7d-2: the console in ES / FR / DE
+
+**URLs.** No English URL changed. `/planner`, `/projection`, `/planner/projection` behave exactly as live (301 to the
+trailing slash, then a 200 page that sends you to `/console?view=…`, as on `main`). Their `/es|fr|de/` copies send
+you to the console in the same language. New pages: `/es|fr|de/console` and those three stubs ×3 (hreflang + sitemap).
+
+| Path | Live | Preview (overhaul) | Points to |
+|---|---|---|---|
+| `/planner` → `/planner/` | 301 → 200 | 301 → 200 | `/console?view=planner` |
+| `/projection` → `/projection/` | 301 → 200 | 301 → 200 | `/console?view=projection` |
+| `/planner/projection` → `/planner/projection/` | 301 → 200 | 301 → 200 | `/console?view=planner-projection` |
+
+**How it's translated.** Static HTML through gen-i18n (284 runs). Text the app writes at runtime through
+`assets/i18n-dom.js` (console only; dictionary keyed by normalized English, numbers and months as placeholders).
+Sentences split by markup through `T()` in `app.js`. Canvas text through `TC()`/`T()`. English pages never load the
+translator; golden 33/33 after every step, and a harvest of all English console text (14 views) before and after is
+identical except the language menu, which no longer says "Español · soon" now that the console exists in Spanish.
+
+**Charts.** The console loads `assets/charts.js`; canvas colours come from the tokens (same values, so English pixels
+are unchanged); axis and price labels use the page locale on translated pages.
+
+**Bugs found and fixed on the way.**
+- gen-i18n could misplace text when one element had several translatable runs (only the console triggered it).
+- Three places compared on-screen text with English (planner loading overlays, rainbow error check); now language-proof.
+- French amounts of 1,000+ weren't matched (whitespace collapse ate U+202F); German "1.200" was turned into "1,200".
+
+**Screenshots.** 14 logged-out views × EN/ES/FR/DE × 360/1280 (+ the planner loader at 360), in
+`%TEMP%\gmtshots\cshots`. Each shot checked automatically for horizontal overflow and visible English (list of known
+English strings + an English-word heuristic). Result: 0 overflow anywhere; ES and EN nothing flagged; DE and FR flag
+only words that are correct in those languages (DE "FAQ", "Tools", "Status", "online", "live"; FR "Console",
+"Projection", "Guides", "Contact", "Options"). Logged out, the console and planner results sit behind the sign-up gate;
+logged-in shots are on the Phase 8 checklist.
+
