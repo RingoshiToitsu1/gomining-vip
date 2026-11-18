@@ -38,7 +38,7 @@
       'ROI Calculator': 'Calculadora de ROI', 'Marketplace Checker': 'Comprobador del marketplace', 'Co-pilot': 'Copiloto', Learn: 'Aprender',
       FAQ: 'Preguntas frecuentes', Glossary: 'Glosario', 'How GoMining works': 'Cómo funciona GoMining', Company: 'Empresa', About: 'Sobre GMT-Optimizer',
       Contact: 'Contacto', Legal: 'Legal', 'Privacy Policy': 'Política de privacidad', 'Terms of Use': 'Condiciones de uso', Disclosures: 'Divulgaciones',
-      'Get Started': 'Empezar', 'Skip to content': 'Saltar al contenido', 'GMT-Optimizer home': 'Inicio de GMT-Optimizer', Main: 'Principal',
+      'Get Started': 'Empezar', 'Set up my farm': 'Configurar mi granja', 'Skip to content': 'Saltar al contenido', 'GMT-Optimizer home': 'Inicio de GMT-Optimizer', Main: 'Principal',
       Language: 'Idioma', 'Language: ': 'Idioma: ', Messages: 'Mensajes', 'Open menu': 'Abrir menú', Menu: 'Menú', soon: 'pronto',
       tagline: 'Calculadora, planificador y proyecciones independientes para GoMining, con datos de la red en directo. Sin anuncios.',
       'Support the site:': 'Apoya la web:', 'Copy BTC address': 'Copiar dirección BTC', 'Copy GMT address (ETH/BNB)': 'Copiar dirección GMT (ETH/BNB)',
@@ -49,7 +49,7 @@
       'ROI Calculator': 'Calculateur de ROI', 'Marketplace Checker': 'Vérificateur du marketplace', 'Co-pilot': 'Copilote', Learn: 'Apprendre',
       FAQ: 'FAQ', Glossary: 'Glossaire', 'How GoMining works': 'Comment fonctionne GoMining', Company: 'À propos', About: 'Qui sommes-nous',
       Contact: 'Contact', Legal: 'Mentions', 'Privacy Policy': 'Politique de confidentialité', 'Terms of Use': 'Conditions d\u2019utilisation', Disclosures: 'Transparence',
-      'Get Started': 'Commencer', 'Skip to content': 'Aller au contenu', 'GMT-Optimizer home': 'Accueil GMT-Optimizer', Main: 'Principal',
+      'Get Started': 'Commencer', 'Set up my farm': 'Configurer ma ferme', 'Skip to content': 'Aller au contenu', 'GMT-Optimizer home': 'Accueil GMT-Optimizer', Main: 'Principal',
       Language: 'Langue', 'Language: ': 'Langue : ', Messages: 'Messages', 'Open menu': 'Ouvrir le menu', Menu: 'Menu', soon: 'bientôt',
       tagline: 'Calculateur, planificateur et projections GoMining indépendants, sur les données réseau en direct. Sans publicité.',
       'Support the site:': 'Soutenir le site :', 'Copy BTC address': 'Copier l\u2019adresse BTC', 'Copy GMT address (ETH/BNB)': 'Copier l\u2019adresse GMT (ETH/BNB)',
@@ -60,7 +60,7 @@
       'ROI Calculator': 'ROI-Rechner', 'Marketplace Checker': 'Marketplace-Check', 'Co-pilot': 'Co-Pilot', Learn: 'Lernen',
       FAQ: 'FAQ', Glossary: 'Glossar', 'How GoMining works': 'So funktioniert GoMining', Company: 'Über uns', About: 'Über GMT-Optimizer',
       Contact: 'Kontakt', Legal: 'Rechtliches', 'Privacy Policy': 'Datenschutz', 'Terms of Use': 'Nutzungsbedingungen', Disclosures: 'Offenlegungen',
-      'Get Started': 'Loslegen', 'Skip to content': 'Zum Inhalt springen', 'GMT-Optimizer home': 'GMT-Optimizer Startseite', Main: 'Haupt',
+      'Get Started': 'Loslegen', 'Set up my farm': 'Farm einrichten', 'Skip to content': 'Zum Inhalt springen', 'GMT-Optimizer home': 'GMT-Optimizer Startseite', Main: 'Haupt',
       Language: 'Sprache', 'Language: ': 'Sprache: ', Messages: 'Nachrichten', 'Open menu': 'Menü öffnen', Menu: 'Menü', soon: 'bald',
       tagline: 'Unabhängiger GoMining-Rechner, Planer und Prognosen auf Basis von Live-Netzwerkdaten. Ohne Werbung.',
       'Support the site:': 'Unterstütze die Seite:', 'Copy BTC address': 'BTC-Adresse kopieren', 'Copy GMT address (ETH/BNB)': 'GMT-Adresse kopieren (ETH/BNB)',
@@ -77,6 +77,29 @@
     var m = href.match(/^([^?#]*)(.*)$/), p = m[1].replace(/\/$/, '') || '/';
     return TRANSLATED.indexOf(p) >= 0 ? '/' + LANG + (p === '/' ? '/' : p) + m[2] : href;
   };
+  /* State-aware start button (header, menu, and any page element with data-start):
+       logged out            "Get Started"     -> /signup (sign-up lands on /dashboard)
+       logged in, no farm    "Set up my farm"  -> Edit farm in the console, back to /dashboard after saving
+       logged in, farm saved "Dashboard"       -> /dashboard
+     All three labels sit in one grid cell, so the button is always as wide as the longest one: the swap from the
+     logged-out label (first paint) to the real one never moves the layout. */
+  var START = { out: ['Get Started', '/signup'], setup: ['Set up my farm', null], farm: ['Dashboard', '/dashboard'] };
+  function startHref(k) { return k === 'setup' ? L('/console') + '?view=edit&next=' + encodeURIComponent(L('/dashboard')) : L(START[k][1]); }
+  function startBtn(cls) {
+    return '<a class="' + cls + '" data-start href="' + startHref('out') + '"><span class="ui-start">' +
+      Object.keys(START).map(function (k) { return '<span data-s="' + k + '"' + (k === 'out' ? ' class="is-on"' : ' aria-hidden="true"') + '>' + t(START[k][0]) + '</span>'; }).join('') + '</span></a>';
+  }
+  function renderStart(k) {
+    document.querySelectorAll('[data-start]').forEach(function (a) {
+      a.href = startHref(k);
+      Array.prototype.forEach.call(a.querySelectorAll('[data-s]'), function (sp) {
+        var on = sp.getAttribute('data-s') === k;
+        sp.classList.toggle('is-on', on);
+        if (on) sp.removeAttribute('aria-hidden'); else sp.setAttribute('aria-hidden', 'true');
+      });
+    });
+  }
+
   var path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '').replace(/^\/(es|fr|de)(?=\/|$)/, '') || '/';
 
   var NAV = [
@@ -134,7 +157,7 @@
           '<div class="sc-pop__menu" hidden>' + langMenu() + '</div></div>' +
         '<a class="sc-icon-btn sc-msg" href="/chat" hidden aria-label="' + t('Messages') + '">' + msgIcon + '<span class="ui-count" hidden></span></a>' +
         '<div class="sc-acct"></div>' +
-        '<a class="ui-btn ui-btn--primary ui-btn--sm sc-cta" href="' + L('/claim') + '">' + t('Get Started') + '</a>' +
+        startBtn('ui-btn ui-btn--primary ui-btn--sm sc-cta') +
         '<button type="button" class="sc-icon-btn sc-burger" aria-expanded="false" aria-controls="sc-mobile" aria-label="' + t('Open menu') + '">' + burgerIcon + '</button>' +
       '</div>' +
     '</div>';
@@ -160,7 +183,7 @@
       }).join('') +
     '</div></div>' +
     '<div class="sc-mobile__acct"></div>' +
-    '<a class="ui-btn ui-btn--primary ui-btn--block" href="' + L('/claim') + '">' + t('Get Started') + '</a>';
+    startBtn('ui-btn ui-btn--primary ui-btn--block');
 
   function mount() {
     var body = document.body;
@@ -285,24 +308,37 @@
   }
   function fromAccount(a) {
     var p = a.profile || {};
-    state = { in: a.isLoggedIn(), id: a.user && a.user.id, name: p.display_name || p.username || '', username: p.username || '', avatar: p.avatar_url || '' };
+    state = { in: a.isLoggedIn(), id: a.user && a.user.id, name: p.display_name || p.username || '', username: p.username || '', avatar: p.avatar_url || '',
+      farm: a.profile ? !!(a.profile.setup && +a.profile.setup.inTH > 0) : null };
+    if (a.profile && state.id) { try { sessionStorage.setItem('gm_chrome_profile', JSON.stringify({ id: state.id, username: p.username, display_name: p.display_name, avatar_url: p.avatar_url, hasFarm: state.farm })); } catch (e) {} }
     renderAccount();
   }
   function fromSession() {
     var s = session();
     if (!s) { state = { in: false }; renderAccount(); return; }
     var meta = s.user.user_metadata || {};
-    state = { in: true, id: s.user.id, name: meta.username || 'Account', username: meta.username || '', avatar: '' };
+    state = { in: true, id: s.user.id, name: meta.username || 'Account', username: meta.username || '', avatar: '', farm: null };
     renderAccount();
     var cached = null;
     try { cached = JSON.parse(sessionStorage.getItem('gm_chrome_profile') || 'null'); } catch (e) {}
-    if (cached && cached.id === s.user.id) { apply(cached); return; }
-    fetch(SB_URL + '/rest/v1/profiles?select=id,username,display_name,avatar_url&id=eq.' + encodeURIComponent(s.user.id),
-      { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token } })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .then(function (rows) { if (rows[0]) { try { sessionStorage.setItem('gm_chrome_profile', JSON.stringify(rows[0])); } catch (e) {} apply(rows[0]); } })
-      .catch(function () {});
-    function apply(p) { state.name = p.display_name || p.username || state.name; state.username = p.username || state.username; state.avatar = p.avatar_url || ''; renderAccount(); }
+    if (cached && cached.id === s.user.id && 'hasFarm' in cached) { apply(cached); return; }
+    // own row: get_my_profile() once the exposure fix is applied, the table directly before that (same as account.js)
+    var H = { apikey: SB_KEY, Authorization: 'Bearer ' + s.access_token, 'Content-Type': 'application/json' };
+    fetch(SB_URL + '/rest/v1/rpc/get_my_profile', { method: 'POST', headers: H, body: '{}' })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .catch(function () {
+        return fetch(SB_URL + '/rest/v1/profiles?select=id,username,display_name,avatar_url,setup&id=eq.' + encodeURIComponent(s.user.id), { headers: H })
+          .then(function (r) { return r.ok ? r.json() : []; });
+      })
+      .then(function (rows) {
+        var p = Array.isArray(rows) ? rows[0] : rows;
+        if (!p) throw 0;
+        var c = { id: s.user.id, username: p.username, display_name: p.display_name, avatar_url: p.avatar_url, hasFarm: !!(p.setup && +p.setup.inTH > 0) };
+        try { sessionStorage.setItem('gm_chrome_profile', JSON.stringify(c)); } catch (e) {}
+        apply(c);
+      })
+      .catch(function () { state.farm = undefined; renderAccount(); });   // couldn't tell: the dashboard has its own empty state
+    function apply(p) { state.name = p.display_name || p.username || state.name; state.username = p.username || state.username; state.avatar = p.avatar_url || ''; state.farm = !!p.hasFarm; renderAccount(); }
   }
 
   function avatarHTML(size) {
@@ -312,6 +348,7 @@
     var slot = header.querySelector('.sc-acct'), mslot = mobile.querySelector('.sc-mobile__acct'), msg = header.querySelector('.sc-msg');
     // On the console the icon is the one chat entry point (its in-page chat is open to read logged out too).
     msg.hidden = !state.in && !document.getElementById('gmtOnline');
+    renderStart(!state.in || state.farm === null ? 'out' : state.farm === false ? 'setup' : 'farm');
     if (!state.in) {
       var nx = /^\/(login|signup)$/.test(location.pathname.replace(/\.html$/, '')) ? '' : '?next=' + encodeURIComponent(location.pathname + location.search);
       var barLogin = (STR[LANG] && STR[LANG]['Log in (bar)']) || t('Log in');   // short label: the bar is tight on phones
@@ -380,3 +417,56 @@
 
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 })();
+
+/* ---------- v3 motion (styles in components.css) ----------
+   1. Blocks that start below the fold fade up as they scroll into view. Only off-screen blocks are touched, so the
+      first screen paints exactly as written; if this script never runs, nothing is hidden.
+   2. Console tabs and panels: their content gets a short entrance when the user opens one (never on page load). */
+(function () {
+  'use strict';
+  if (!window.IntersectionObserver || !window.matchMedia || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (/^\/(embed|chat)(\/|$)/.test(location.pathname)) return;
+  var SKIP = '.sp-page-loading, .cb-load, .gb-wrap, script, style, link, [hidden]';
+  function start() {
+    var vh = innerHeight || 800, batch = 0, bt = 0;
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var el = e.target; io.unobserve(el);
+        el.style.transitionDelay = Math.min(batch++, 4) * 60 + 'ms';
+        clearTimeout(bt); bt = setTimeout(function () { batch = 0; }, 120);
+        el.classList.add('ui-in');
+        el.addEventListener('transitionend', function f() { el.removeEventListener('transitionend', f); el.style.transitionDelay = ''; });
+      });
+    }, { rootMargin: '0px 0px -6% 0px' });
+    document.querySelectorAll('main > *, .content-wrap > *, .wrap > *, .ui-scope > .ui-container > *, .acct-wrap > *').forEach(function (el) {
+      if (el.matches(SKIP) || (el.parentElement && el.parentElement.closest('.ui-reveal'))) return;
+      var r = el.getBoundingClientRect();
+      if (r.height && r.top > vh) { el.classList.add('ui-reveal'); io.observe(el); }
+    });
+    function enter(box) {
+      if (!box) return;
+      Array.prototype.forEach.call(box.children, function (c, i) {
+        if (c.matches(SKIP)) return;
+        c.style.animationDelay = Math.min(i, 6) * 45 + 'ms';
+        c.classList.remove('ui-enter'); void c.offsetWidth; c.classList.add('ui-enter');
+        c.addEventListener('animationend', function f(ev) { if (ev.target !== c) return; c.removeEventListener('animationend', f); c.classList.remove('ui-enter'); c.style.animationDelay = ''; });
+      });
+    }
+    var shown = new WeakMap();
+    var vis = function (el) { return el.classList.contains('tab-content') ? el.classList.contains('active') : el.style.display !== 'none' && el.style.display !== ''; };
+    var mo = new MutationObserver(function (ms) {
+      ms.forEach(function (m) {
+        var el = m.target, now = vis(el);
+        if (now && !shown.get(el)) enter(el.classList.contains('tab-content') ? el : el.querySelector(':scope > .sp-page-inner'));
+        shown.set(el, now);
+      });
+    });
+    document.querySelectorAll('.tab-content, .sp-page').forEach(function (el) {
+      shown.set(el, vis(el));
+      mo.observe(el, { attributes: true, attributeFilter: el.classList.contains('tab-content') ? ['class'] : ['style'] });
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+

@@ -280,25 +280,29 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
 [data-chg].is-bad{color:var(--color-error)}
 
 /* ---------- v3 motion: soft page changes and a light text entrance (all pages) ----------
-   Between pages: the browser's cross-document view transition (a short cross-fade); browsers without it just
-   navigate. On arrival: the page's main blocks fade in and rise 8 px, a few at a time. Console tabs and panels
-   replay it when they open (the animation restarts whenever a view is shown). Nothing moves with reduced motion. */
+   Between pages: the browser's cross-document view transition (a short cross-fade); other browsers just navigate.
+   Text: nothing on the first screen is ever hidden (first paint and the largest content are untouched).
+   site-chrome.js marks blocks that start BELOW the fold with .ui-reveal and fades them up as they scroll in;
+   console tabs and panels get .ui-enter only when the user opens them. Without JavaScript nothing is hidden.
+   With reduced motion nothing moves. */
 @view-transition { navigation: auto; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 280ms; animation-timing-function: var(--ease-standard); }
 @media (prefers-reduced-motion: no-preference) {
-  main > *, .content-wrap > *, .wrap > *, .ui-scope > .ui-container > *,
-  .container > .tab-content.active > *, .sp-page > .sp-page-inner > *,
-  .acct-wrap > * {
-    animation: uiEnter .55s var(--ease-standard) both;
-  }
-  main > :nth-child(2), .content-wrap > :nth-child(2), .wrap > :nth-child(2), .container > .tab-content.active > :nth-child(2), .sp-page > .sp-page-inner > :nth-child(2) { animation-delay: 50ms; }
-  main > :nth-child(3), .content-wrap > :nth-child(3), .wrap > :nth-child(3), .container > .tab-content.active > :nth-child(3), .sp-page > .sp-page-inner > :nth-child(3) { animation-delay: 100ms; }
-  main > :nth-child(4), .content-wrap > :nth-child(4), .wrap > :nth-child(4), .container > .tab-content.active > :nth-child(4), .sp-page > .sp-page-inner > :nth-child(4) { animation-delay: 150ms; }
-  main > :nth-child(5), .content-wrap > :nth-child(5), .wrap > :nth-child(5), .container > .tab-content.active > :nth-child(5), .sp-page > .sp-page-inner > :nth-child(5) { animation-delay: 200ms; }
-  main > :nth-child(6), .content-wrap > :nth-child(6), .wrap > :nth-child(6), .container > .tab-content.active > :nth-child(6), .sp-page > .sp-page-inner > :nth-child(6) { animation-delay: 250ms; }
-  main > :nth-child(7), .content-wrap > :nth-child(7), .wrap > :nth-child(7), .container > .tab-content.active > :nth-child(7), .sp-page > .sp-page-inner > :nth-child(7) { animation-delay: 300ms; }
-  main > :nth-child(n+8), .content-wrap > :nth-child(n+8), .wrap > :nth-child(n+8), .container > .tab-content.active > :nth-child(n+8), .sp-page > .sp-page-inner > :nth-child(n+8) { animation-delay: 350ms; }
+  .ui-reveal { opacity: 0; transform: translateY(10px); transition: opacity .6s var(--ease-standard), transform .6s var(--ease-standard); }
+  .ui-reveal.ui-in { opacity: 1; transform: none; }
+  .ui-enter { animation: uiEnter .45s var(--ease-standard) both; }
 }
 @keyframes uiEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+[data-chg][data-tip]{cursor:help;border-radius:var(--radius-sm)}
+[data-chg][data-tip]:focus-visible{outline:2px solid var(--color-gold);outline-offset:2px}
+.ui-tip{position:fixed;z-index:1000;max-width:min(280px,calc(100vw - 16px));padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);
+  background:var(--color-surface-2);border:1px solid var(--color-border);color:var(--color-text);font-family:var(--font-ui);
+  font-size:var(--font-size-xs);line-height:1.45;box-shadow:0 8px 24px rgb(0 0 0 / .35);pointer-events:none}
+.ui-tip[hidden]{display:none}
+
+/* ---------- state-aware start button (site-chrome.js): all labels share one cell, so the width never jumps ---------- */
+.ui-start{display:inline-grid;justify-items:center}
+.ui-start>[data-s]{grid-area:1/1;white-space:nowrap}
+.ui-start>[data-s]:not(.is-on){visibility:hidden}
 

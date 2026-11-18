@@ -849,7 +849,9 @@
   "<span class=\"lp-v3__tag\">v3</span>New design, now in 4 languages": "<span class=\"lp-v3__tag\">v3</span>Nuevo diseño, ahora en 4 idiomas",
   "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>": "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>",
   "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>": "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>",
-  "<span class=\"lbl\">sats/TH/day</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>": "<span class=\"lbl\">sats/TH/día</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>"
+  "<span class=\"lbl\">sats/TH/day</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>": "<span class=\"lbl\">sats/TH/día</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>",
+  "<span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Get Started</span><span data-s=\"setup\" aria-hidden=\"true\">Set up my farm</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span>": "<span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Empezar</span><span data-s=\"setup\" aria-hidden=\"true\">Configurar mi granja</span><span data-s=\"farm\" aria-hidden=\"true\">Panel</span></span>",
+  "<a class=\"ui-btn ui-btn--primary ui-btn--lg\" href=\"/console\">Open Calculator</a> <a class=\"ui-btn ui-btn--secondary ui-btn--lg\" href=\"/signup\" data-start><span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Get Started</span><span data-s=\"setup\" aria-hidden=\"true\">Set up my farm</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span></a>": "<a class=\"ui-btn ui-btn--primary ui-btn--lg\" href=\"/console\">Abrir la calculadora</a> <a class=\"ui-btn ui-btn--secondary ui-btn--lg\" href=\"/signup\" data-start><span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Empezar</span><span data-s=\"setup\" aria-hidden=\"true\">Configurar mi granja</span><span data-s=\"farm\" aria-hidden=\"true\">Panel</span></span></a>"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "De 3 a 20 letras, números o guiones bajos. Se muestra en el chat.",
@@ -1137,8 +1139,14 @@
   "Greedy Machine": "Greedy Machine",
   "{0} · last adjustment": "{0} · último ajuste",
   "{0} · 24h": "{0} · 24 h",
-  "Change at the last Bitcoin difficulty adjustment (every ~2 weeks)": "Cambio en el último ajuste de dificultad de Bitcoin (cada ~2 semanas)",
-  "Price change over the last 24 hours": "Variación del precio en las últimas 24 horas"
+  "Price change over the last 24 hours": "Variación del precio en las últimas 24 horas",
+  "Lower difficulty means more BTC per TH.": "Menor dificultad significa más BTC por TH.",
+  "Change at the last difficulty adjustment (about every 2 weeks).": "Cambio en el último ajuste de dificultad (aproximadamente cada 2 semanas).",
+  "What 1 TH earns per day. It rises when difficulty falls.": "Lo que gana 1 TH al día. Sube cuando baja la dificultad.",
+  "Once your farm is saved, this page shows what it earns today at live prices, your miners and shortcuts to plan ahead.": "Cuando guardes tu granja, esta página mostrará lo que gana hoy a precios en directo, tus mineros y accesos para planificar.",
+  "Already on GoMining? Next you'll add your miners to see your live numbers.": "¿Ya estás en GoMining? Después añadirás tus mineros para ver tus cifras en directo.",
+  "No GoMining account yet?": "¿Aún no tienes cuenta en GoMining?",
+  "New to GoMining? →": "¿Nuevo en GoMining? →"
  },
  "dom": {
   "\"Still cheap\" band": "franja «Todavía barato»",

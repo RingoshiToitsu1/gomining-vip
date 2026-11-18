@@ -27,6 +27,7 @@ const get = p => p.split('.').reduce((o, k) => (o == null ? undefined : o[k]), c
 const num = (p, lo, hi) => { const v = get(p); if (typeof v !== 'number' || !isFinite(v) || v < lo || v > hi) errs.push(`${p} must be a number in ${lo}..${hi} (got ${JSON.stringify(v)})`); };
 const date = p => { const v = get(p); if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v) || isNaN(Date.parse(v))) errs.push(`${p} must be YYYY-MM-DD (got ${JSON.stringify(v)})`); };
 ['meta.updated', 'meta.ratesObserved', 'meta.pricesObserved'].forEach(date);
+date('launch.date'); num('launch.v3BadgeDays', 1, 365);
 num('fees.electricityUsdPerKwh', 0, 1); num('fees.serviceUsdPerThDay', 0, 1); num('fees.btcToGmtConversion', 0, 0.5);
 num('fees.usdToGmt', 0, 0.5); num('fees.nftHolderDiscount', 0, 0.5);
 num('rates.stakingAprPct', 0, 200); num('rates.soloMiningDiscountPct', 0, 30); num('rates.clickStreakPct', 0, 30); num('rates.greedyGrowthWeeklyPct', 0, 10);
@@ -45,7 +46,9 @@ const vip = get('vipTiers');
 if (!Array.isArray(vip) || vip.some((t, i) => typeof t.n !== 'string' || !(t.th >= 0) || !(t.d >= 0) || (i && t.th <= vip[i - 1].th))) errs.push('vipTiers must be ascending by th with n, th, veg, d');
 if (errs.length) { console.error('data/config.json is invalid:\n  - ' + errs.join('\n  - ')); process.exit(1); }
 
-cfg.derived = { fullCoverageDays: cfg.discount.coverageDaysPerPct * cfg.discount.tokenCapPct };
+cfg.derived = { fullCoverageDays: cfg.discount.coverageDaysPerPct * cfg.discount.tokenCapPct,
+  // the v3 badge's last day: launch date + v3BadgeDays (read by the inline check next to the badge)
+  v3BadgeUntil: new Date(Date.parse(cfg.launch.date + 'T00:00:00Z') + cfg.launch.v3BadgeDays * 864e5).toISOString().slice(0, 10) };
 
 // ---------- formatting ----------
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

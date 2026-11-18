@@ -18,9 +18,9 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=7">
+<link rel="stylesheet" href="/assets/components.css?v=8">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=10">
 <link rel="stylesheet" href="/assets/console.css?v=13">
 <style>
@@ -235,7 +235,7 @@ h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--f
 }
 </style>
 <link rel="stylesheet" href="/assets/topbar.css?v=8">
-<script src="/assets/site-chrome.js?v=14" defer data-footer="off"></script>
+<script src="/assets/site-chrome.js?v=15" defer data-footer="off"></script>
 </head>
 <body>
 <!-- console tab row: the same one as /console (assets/console.css) -->
@@ -317,8 +317,8 @@ h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--f
 <!-- Deliberately the ONLY script on this page. /statement handles someone's real
      earnings history: no account.js, no chat.js, no Supabase, no analytics, no
      localStorage. Adding any of those breaks the promise made in the panel above. -->
-<script src="/assets/pricing.js?v=4"></script>
+<script src="/assets/pricing.js?v=5"></script>
 <script src="/assets/statement.js?v=5"></script>
-<script src="/assets/site.js?v=46" data-chrome="bar"></script>
+<script src="/assets/site.js?v=47" data-chrome="bar"></script>
 </body>
 </html>

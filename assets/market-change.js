@@ -43,9 +43,39 @@
       // colour = good or bad for a miner: a higher difficulty is bad news, everything else is good when it rises
       var good = k === 'diff' ? x < 0 : x > 0, bad = k === 'diff' ? x > 0 : x < 0;
       el.classList.toggle('is-good', good); el.classList.toggle('is-bad', bad);
-      el.title = (k === 'diff' || k === 'sats') ? T('Change at the last Bitcoin difficulty adjustment (every ~2 weeks)') : T('Price change over the last 24 hours');
+      var tip = TIPS[k] ? TIPS[k]() : T('Price change over the last 24 hours');
+      el.removeAttribute('title');
+      el.setAttribute('data-tip', tip);
+      el.tabIndex = 0;
+      var sr = document.createElement('span'); sr.className = 'ui-visually-hidden'; sr.textContent = ' (' + tip + ')';
+      el.appendChild(sr);
     });
   }
+  // one floating tooltip for every change line: hover, keyboard focus or tap opens it; leaving, blur, scroll or Esc closes it
+  var TIPS = {
+    diff: function () { return T('Lower difficulty means more BTC per TH.') + ' ' + T('Change at the last difficulty adjustment (about every 2 weeks).'); },
+    sats: function () { return T('What 1 TH earns per day. It rises when difficulty falls.') + ' ' + T('Change at the last difficulty adjustment (about every 2 weeks).'); }
+  };
+  var tipEl = null, tipFor = null;
+  function hideTip() { if (tipEl) tipEl.hidden = true; tipFor = null; }
+  function showTip(el) {
+    if (!tipEl) {
+      tipEl = document.createElement('div'); tipEl.className = 'ui-tip'; tipEl.setAttribute('role', 'tooltip'); tipEl.hidden = true;
+      document.body.appendChild(tipEl);
+    }
+    tipFor = el; tipEl.textContent = el.getAttribute('data-tip'); tipEl.hidden = false;
+    var r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    var x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), y = r.top - h - 8;
+    if (y < 8) y = r.bottom + 8;
+    tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+  }
+  function tgt(e) { return e.target && e.target.closest && e.target.closest('[data-chg][data-tip]'); }
+  document.addEventListener('mouseover', function (e) { var t = tgt(e); if (t && t !== tipFor) showTip(t); else if (!t && tipFor && e.pointerType !== 'touch') hideTip(); });
+  document.addEventListener('focusin', function (e) { var t = tgt(e); if (t) showTip(t); });
+  document.addEventListener('focusout', function (e) { if (tgt(e)) hideTip(); });
+  document.addEventListener('click', function (e) { var t = tgt(e); if (t) { t === tipFor && !tipEl.hidden ? hideTip() : showTip(t); } else hideTip(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
+  addEventListener('scroll', hideTip, { passive: true });
   function go() { data.then(paint); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   window.GMTMarketChangeRepaint = go;   // pages that build their strip later can call this

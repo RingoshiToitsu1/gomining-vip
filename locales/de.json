@@ -849,7 +849,9 @@
   "<span class=\"lp-v3__tag\">v3</span>New design, now in 4 languages": "<span class=\"lp-v3__tag\">v3</span>Neues Design, jetzt in 4 Sprachen",
   "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>": "<span class=\"lbl\"><img src=\"/btc36.png\" alt=\"\" class=\"cx-coin\">Bitcoin</span><span class=\"val\" id=\"btcVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"btc\"></span>",
   "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>": "<span class=\"lbl\"><img src=\"/gmt36.png\" alt=\"\" class=\"cx-coin\">GMT</span><span class=\"val\" id=\"gmtVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"gmt\"></span>",
-  "<span class=\"lbl\">sats/TH/day</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>": "<span class=\"lbl\">Sats/TH/Tag</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>"
+  "<span class=\"lbl\">sats/TH/day</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>": "<span class=\"lbl\">Sats/TH/Tag</span><span class=\"val\" id=\"satsVal\"><span class=\"skel\">&nbsp;&nbsp;&nbsp;</span></span><span class=\"cx-chg\" data-chg=\"sats\"></span>",
+  "<span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Get Started</span><span data-s=\"setup\" aria-hidden=\"true\">Set up my farm</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span>": "<span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Loslegen</span><span data-s=\"setup\" aria-hidden=\"true\">Farm einrichten</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span>",
+  "<a class=\"ui-btn ui-btn--primary ui-btn--lg\" href=\"/console\">Open Calculator</a> <a class=\"ui-btn ui-btn--secondary ui-btn--lg\" href=\"/signup\" data-start><span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Get Started</span><span data-s=\"setup\" aria-hidden=\"true\">Set up my farm</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span></a>": "<a class=\"ui-btn ui-btn--primary ui-btn--lg\" href=\"/console\">Rechner öffnen</a> <a class=\"ui-btn ui-btn--secondary ui-btn--lg\" href=\"/signup\" data-start><span class=\"ui-start\"><span data-s=\"out\" class=\"is-on\">Loslegen</span><span data-s=\"setup\" aria-hidden=\"true\">Farm einrichten</span><span data-s=\"farm\" aria-hidden=\"true\">Dashboard</span></span></a>"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "3 bis 20 Buchstaben, Zahlen oder Unterstriche. Wird im Chat angezeigt.",
@@ -1137,8 +1139,14 @@
   "Greedy Machine": "Greedy Machine",
   "{0} · last adjustment": "{0} · letzte Anpassung",
   "{0} · 24h": "{0} · 24 Std.",
-  "Change at the last Bitcoin difficulty adjustment (every ~2 weeks)": "Änderung bei der letzten Bitcoin-Difficulty-Anpassung (etwa alle 2 Wochen)",
-  "Price change over the last 24 hours": "Kursänderung in den letzten 24 Stunden"
+  "Price change over the last 24 hours": "Kursänderung in den letzten 24 Stunden",
+  "Lower difficulty means more BTC per TH.": "Geringere Difficulty bedeutet mehr BTC pro TH.",
+  "Change at the last difficulty adjustment (about every 2 weeks).": "Änderung bei der letzten Difficulty-Anpassung (etwa alle 2 Wochen).",
+  "What 1 TH earns per day. It rises when difficulty falls.": "Was 1 TH pro Tag verdient. Steigt, wenn die Difficulty sinkt.",
+  "Once your farm is saved, this page shows what it earns today at live prices, your miners and shortcuts to plan ahead.": "Sobald deine Farm gespeichert ist, zeigt diese Seite, was sie heute zu Live-Preisen verdient, deine Miner und Abkürzungen zum Planen.",
+  "Already on GoMining? Next you'll add your miners to see your live numbers.": "Schon bei GoMining? Als Nächstes fügst du deine Miner hinzu und siehst deine Live-Zahlen.",
+  "No GoMining account yet?": "Noch kein GoMining-Konto?",
+  "New to GoMining? →": "Neu bei GoMining? →"
  },
  "dom": {
   "\"Still cheap\" band": "„Noch günstig“-Band",

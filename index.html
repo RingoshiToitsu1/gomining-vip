@@ -115,12 +115,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
-<link rel="stylesheet" href="/assets/components.css?v=7">
+<link rel="stylesheet" href="/assets/components.css?v=8">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=10">
-<link rel="stylesheet" href="/assets/landing.css?v=7">
-<script src="/assets/site-chrome.js?v=14" defer></script>
+<link rel="stylesheet" href="/assets/landing.css?v=8">
+<script src="/assets/site-chrome.js?v=15" defer></script>
 </head>
 <body class="lp ui-scope">
 <main>
@@ -142,13 +142,16 @@
   </svg>
   <div class="ui-container lp-hero__grid">
     <div>
-      <p class="lp-v3"><span class="lp-v3__tag">v3</span>New design, now in 4 languages</p>
+      <p class="lp-v3" id="lpV3"><span class="lp-v3__tag">v3</span>New design, now in 4 languages</p>
+      <span hidden id="lpV3Until" data-cfg="derived.v3BadgeUntil">2027-01-17</span>
+      <script>/* v3 badge: shown until data/config.json launch.date + v3BadgeDays, then removed before it paints */
+      (function(){var u=document.getElementById('lpV3Until'),b=document.getElementById('lpV3');if(u&&b&&Date.now()>Date.parse(u.textContent+'T23:59:59Z'))b.remove();})();</script>
       <p class="ui-eyebrow">Independent GoMining calculator</p>
       <h1 class="ui-h1" id="hero-title">Model your GoMining returns <span class="ui-gold-text">before you buy</span></h1>
       <p class="ui-lead">Live Bitcoin price and network difficulty, every fee counted, and projections that show the downside as well as the upside. Free, with no ads.</p>
       <div class="ui-row lp-hero__ctas">
         <a class="ui-btn ui-btn--primary ui-btn--lg" href="/console">Open Calculator</a>
-        <a class="ui-btn ui-btn--secondary ui-btn--lg" href="/claim">Get Started</a>
+        <a class="ui-btn ui-btn--secondary ui-btn--lg" href="/signup" data-start><span class="ui-start"><span data-s="out" class="is-on">Get Started</span><span data-s="setup" aria-hidden="true">Set up my farm</span><span data-s="farm" aria-hidden="true">Dashboard</span></span></a>
       </div>
       <p class="ui-disclaimer lp-hero__note">Estimates only. Not financial advice.</p>
     </div>
@@ -289,7 +292,7 @@
     <p class="ui-lead">Free, independent and built on live network data. Estimates only, not financial advice.</p>
     <div class="ui-row">
       <a class="ui-btn ui-btn--primary ui-btn--lg" href="/console">Open Calculator</a>
-      <a class="ui-btn ui-btn--secondary ui-btn--lg" href="/claim">Get Started</a>
+      <a class="ui-btn ui-btn--secondary ui-btn--lg" href="/signup" data-start><span class="ui-start"><span data-s="out" class="is-on">Get Started</span><span data-s="setup" aria-hidden="true">Set up my farm</span><span data-s="farm" aria-hidden="true">Dashboard</span></span></a>
     </div>
   </div>
 </section>
@@ -299,12 +302,12 @@
 /* Quick-estimate wording (the shared ROI widget reads overrides from RE_I18N). */
 window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's rates" line (all languages)
 </script>
-<script src="/assets/pricing.js?v=4"></script>
+<script src="/assets/pricing.js?v=5"></script>
 <script src="/lib/mining.js?v=2"></script>
 <script src="/assets/roi-embed.js?v=34"></script>
 <script src="/assets/components.js?v=2" defer></script>
-<script src="/assets/market-change.js?v=1" defer></script>
-<script src="/assets/site.js?v=46"></script>
+<script src="/assets/market-change.js?v=2" defer></script>
+<script src="/assets/site.js?v=47"></script>
 <script>
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */
 (function(){

@@ -2844,7 +2844,10 @@ function saveActiveProfile(){
   // a device where the console hasn't run yet.
   if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn()){
     const td=window._farmShot&&isFinite(window._farmShot.disc)?+(+window._farmShot.disc).toFixed(2):null;
-    GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+    const saved=GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+    let after=null;try{after=sessionStorage.getItem('gm_after_save');}catch(e){}
+    if(after&&saved&&saved.then)saved.then(()=>{try{sessionStorage.removeItem('gm_after_save');}catch(e){}
+      setTimeout(()=>{location.href=after;},700);}).catch(()=>{});   // stay put if the save failed
   }
   renderProfileSelect();   // reflect the now-active profile (esp. if we just adopted the account one)
   flashStatus(isAccountProfile(p)?T('Saved to your profile'):T('Saved to "{0}"',p.name));
@@ -4928,11 +4931,30 @@ function runSetupProjection(){
     // Every run reports back, including the early exits (no farm yet, data still loading), so the
     // page never waits on a result that isn't coming. _spEnd stays null unless the run finished.
     window._spEnd=null;
-    try{computeSetupProjection();animateSetupResults();}
-    finally{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}}
+    // The projection walks every simulated day (3,650 for 10 years). It runs as a generator that pauses after each
+    // day and is driven in ~12 ms slices, so the page keeps painting and responding while it works. Same code, same
+    // order, same numbers: only the pauses are new. A newer run abandons this one mid-way (its result is never shown).
+    const gen=computeSetupProjectionGen();
+    const fin=()=>{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}};
+    const slice=()=>{
+      if(seq!==_spRunSeq)return;
+      const t0=performance.now();
+      try{
+        while(performance.now()-t0<12){
+          if(gen.next().done){try{animateSetupResults();}finally{fin();}return;}
+        }
+      }catch(e){fin();throw e;}
+      _spYield(slice);
+    };
+    slice();
   });
 }
-function computeSetupProjection(){
+// yield to the browser (paint + input) between slices; MessageChannel avoids setTimeout's 4 ms clamp
+const _spYield=(()=>{try{const ch=new MessageChannel(),q=[];ch.port1.onmessage=()=>{const f=q.shift();if(f)f();};
+  return f=>{q.push(f);ch.port2.postMessage(0);};}catch(e){return f=>setTimeout(f,0);}})();
+// Synchronous form (kept for any caller that needs the result at once, e.g. tests).
+function computeSetupProjection(){const g=computeSetupProjectionGen();while(!g.next().done);}
+function* computeSetupProjectionGen(){
   if(!S.loaded)return;
   const out=document.getElementById('spResult');
   if(!out)return;
@@ -5205,6 +5227,7 @@ function computeSetupProjection(){
   // machines are tracked one-by-one in GRD, each priced on its own efficiency curve.
   let vipSizes=existingMinerSizes(false);
   for(let d=1;d<=days;d++){
+    yield;   // pause point between simulated days (see runSetupProjection)
     bpToday=bpForDay(d);
     gp=gpForDay(d);      // dailyNet/gmtDeficit close over gp, so staking value, burn, coverage
                          // and every GMT purchase reprice off the walking token price
@@ -5989,6 +6012,9 @@ function _activateTabById(id){
   if(b)_activateTab(b,false);   // false = don't push history; we own the URL below
 }
 (function routeViewParam(){
+  // ?next=/dashboard (the header's "Set up my farm"): after the farm is saved to the account, go there.
+  try{const nx=new URLSearchParams(location.search).get('next');
+    if(nx&&/^\/[a-z0-9\/_-]*$/i.test(nx)&&nx.indexOf('//')!==0)sessionStorage.setItem('gm_after_save',nx);}catch(e){}
   const view=new URLSearchParams(location.search).get('view');
   if(!view)return;
   // Onboarding covers the page and chooses its own destination — just drop the query.

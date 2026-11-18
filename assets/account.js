@@ -201,7 +201,11 @@
     var th = +(obj && obj.inTH) || 0;
     if (Account.profile) { Account.profile.setup = obj; Account.profile.th_total = th; }
     return sb.from('profiles').update({ setup: obj, th_total: th }).eq('id', Account.user.id)
-      .then(function (r) { if (r.error) throw r.error; });
+      .then(function (r) {
+        if (r.error) throw r.error;
+        // the header's state-aware button reads this cache on pages without account.js
+        try { var c = JSON.parse(sessionStorage.getItem('gm_chrome_profile') || 'null'); if (c) { c.hasFarm = th > 0; sessionStorage.setItem('gm_chrome_profile', JSON.stringify(c)); } } catch (e) {}
+      });
   };
 
   // ---- profile ----
