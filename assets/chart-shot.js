@@ -53,7 +53,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const pc=document.createElement('canvas');pc.width=(PW+80)*SC;pc.height=(PH+80)*SC;
   const p=pc.getContext('2d');p.scale(SC,SC);p.translate(40,40);   // 40px margin for the glow
   // outer glow + glass body
-  p.save();p.shadowColor=gold(0.55);p.shadowBlur=34;
+  p.save();p.shadowColor=gold(0.55);p.shadowBlur=0;
   rr(p,0,0,PW,PH,PR);p.fillStyle='rgba(18,12,6,0.92)';p.fill();p.restore();
   const body=p.createLinearGradient(0,0,PW*0.35,PH);
   body.addColorStop(0,'rgba(255,200,110,0.10)');body.addColorStop(0.45,'rgba(40,26,10,0.25)');body.addColorStop(1,'rgba(0,0,0,0.35)');
@@ -89,8 +89,8 @@ function buildChartShotCanvas(asset,data,imgs,opts){
     p.fillStyle=ag;p.fill();
     // glowing stroke: wide soft pass, then a crisp core
     p.lineJoin='round';p.lineCap='round';
-    line();p.shadowColor=col;p.shadowBlur=16;p.strokeStyle='rgba('+rgb+',0.55)';p.lineWidth=4.5;p.stroke();
-    line();p.shadowBlur=4;p.strokeStyle=col;p.lineWidth=2;p.stroke();
+    line();p.shadowColor=col;p.shadowBlur=0;p.strokeStyle='rgba('+rgb+',0.55)';p.lineWidth=4.5;p.stroke();
+    line();p.shadowBlur=0;p.strokeStyle=col;p.lineWidth=2;p.stroke();
     p.restore();
   };
   side(true);side(false);
@@ -99,7 +99,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   p.beginPath();p.moveTo(L,base);p.lineTo(R,base);p.stroke();p.restore();
   // start + end dots
   const pos=last>=first,chg=first?(last-first)/first*100:0;
-  const dot=(cx,cy,col,r)=>{p.save();p.shadowColor=col;p.shadowBlur=16;p.fillStyle=col;p.beginPath();p.arc(cx,cy,r,0,7);p.fill();
+  const dot=(cx,cy,col,r)=>{p.save();p.shadowColor=col;p.shadowBlur=0;p.fillStyle=col;p.beginPath();p.arc(cx,cy,r,0,7);p.fill();
     p.shadowBlur=0;p.fillStyle='rgba(255,255,255,0.85)';p.beginPath();p.arc(cx,cy,r*0.45,0,7);p.fill();p.restore();};
   dot(pxs(0),base,rows[1]&&rows[1].c<first?DN:UP,4);
   dot(pxs(n-1),py(last),pos?UP:DN,6.5);
@@ -113,16 +113,16 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   p.fillStyle='rgba(255,255,255,0.55)';p.font='18px '+MONO;
   p.fillText(tt('{0}  ·  {1}  ·  last {2} days',asset.pair,data.interval,daysSpan),34,112);
   p.textAlign='right';
-  p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=22;
+  p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=0;
   p.fillStyle=kc('text','#FFFFFF');p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
-  p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=12;
+  p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=0;
   p.fillStyle=pos?UP:DN;p.font='700 38px '+SANS;
   p.fillText(opts.sub||((pos?'▲ ':'▼ ')+(CK_?W_.GMTCharts.pct(Math.abs(chg),2):Math.abs(chg).toFixed(2)+'%')+tt(' ({0}D)',daysSpan)),PW-34,160);p.restore();
 
   // glass rim: bright gold top-left fading round to the bottom-right, plus a thin inner line
   const rim=p.createLinearGradient(0,0,PW,PH);
   rim.addColorStop(0,GHI);rim.addColorStop(0.35,GOLD);rim.addColorStop(0.7,gold(0.55));rim.addColorStop(1,GSOFT);
-  p.save();p.shadowColor=gold(0.9);p.shadowBlur=14;rr(p,0,0,PW,PH,PR);p.strokeStyle=rim;p.lineWidth=2.4;p.stroke();p.restore();
+  p.save();p.shadowColor=gold(0.9);p.shadowBlur=0;rr(p,0,0,PW,PH,PR);p.strokeStyle=rim;p.lineWidth=2.4;p.stroke();p.restore();
   rr(p,5,5,PW-10,PH-10,PR-5);p.strokeStyle='rgba(255,230,180,0.10)';p.lineWidth=1;p.stroke();
 
   // floor reflection: the panel flipped, squashed and faded out

@@ -511,7 +511,7 @@
     x.fillStyle = fl; x.fillRect(0, 575, W, H - 575);
     // glass panel
     const PX = 56, PY = 112, PW = W - 112, PH = 452;
-    x.save(); x.shadowColor = gold(.55); x.shadowBlur = 34; rr(PX, PY, PW, PH, 26); x.fillStyle = 'rgba(18,12,6,0.94)'; x.fill(); x.restore();
+    x.save(); x.shadowColor = gold(.55); x.shadowBlur = 0; rr(PX, PY, PW, PH, 26); x.fillStyle = 'rgba(18,12,6,0.94)'; x.fill(); x.restore();
     const body = x.createLinearGradient(PX, PY, PX + PW * .35, PY + PH);
     body.addColorStop(0, 'rgba(255,200,110,0.10)'); body.addColorStop(.45, 'rgba(40,26,10,0.25)'); body.addColorStop(1, 'rgba(0,0,0,0.35)');
     rr(PX, PY, PW, PH, 26); x.fillStyle = body; x.fill();
@@ -529,11 +529,11 @@
     x.fillText(num(q.th, 1) + ' TH @ 15 W/TH  +  ' + num(q.gmt, 0) + ' GMT locked', L, PY + 136);
     // right: the monthly income, big
     x.textAlign = 'right';
-    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 22; x.fillStyle = '#FFFFFF'; x.font = '700 84px ' + SANS;
+    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 0; x.fillStyle = '#FFFFFF'; x.font = '700 84px ' + SANS;
     const big = money(q.mo, 0); x.fillText(big, R - 70, PY + 104);
     const bw = x.measureText(big).width; x.restore();
     x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
-    x.save(); x.shadowColor = UP; x.shadowBlur = 12; x.fillStyle = UP; x.font = '700 30px ' + SANS;
+    x.save(); x.shadowColor = UP; x.shadowBlur = 0; x.fillStyle = UP; x.font = '700 30px ' + SANS;
     x.fillText('▲ ' + num(q.yieldPct, 1) + '%/yr on capital', R, PY + 148); x.restore();
     // stat chips
     const stats = [
@@ -560,12 +560,12 @@
       path(); for (let i = s.length - 1; i >= 0; i--) x.lineTo(pxs(i), paidAt(i)); x.closePath();
       const ag = x.createLinearGradient(0, T, 0, base); ag.addColorStop(0, 'rgba(46,229,157,0.40)'); ag.addColorStop(1, 'rgba(46,229,157,0.04)');
       x.fillStyle = ag; x.fill();
-      x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 16; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
-      path(); x.shadowBlur = 4; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
+      x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 0; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
+      path(); x.shadowBlur = 0; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
       x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,255,255,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
       x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
       const ex = pxs(s.length - 1), ey = py(s[s.length - 1]);
-      x.save(); x.shadowColor = UP; x.shadowBlur = 16; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
+      x.save(); x.shadowColor = UP; x.shadowBlur = 0; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
       x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.arc(ex, ey, 3, 0, 7); x.fill();
       // end label to the right of the line
       x.textAlign = 'left'; x.fillStyle = '#FFFFFF'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
@@ -578,7 +578,7 @@
     // rim
     const rim = x.createLinearGradient(PX, PY, PX + PW, PY + PH);
     rim.addColorStop(0, GHI); rim.addColorStop(.35, GOLD); rim.addColorStop(.7, gold(.55)); rim.addColorStop(1, GSOFT);
-    x.save(); x.shadowColor = gold(.9); x.shadowBlur = 14; rr(PX, PY, PW, PH, 26); x.strokeStyle = rim; x.lineWidth = 2.4; x.stroke(); x.restore();
+    x.save(); x.shadowColor = gold(.9); x.shadowBlur = 0; rr(PX, PY, PW, PH, 26); x.strokeStyle = rim; x.lineWidth = 2.4; x.stroke(); x.restore();
     // brand + footer
     let bx = PX + 4;
     if (logo) { x.drawImage(logo, bx, 34, 46, 46); bx += 60; }
@@ -802,8 +802,12 @@
     loadMarket().then(() => {
       const d = $('qDot'), l = $('qLive');
       if (d) d.className = 'dot' + (S.live ? '' : ' off');
-      if (l) l.innerHTML = (S.live ? 'Live' : 'Cached') + ' &middot; BTC <b>' + money(S.btc, 0)
-        + '</b> &middot; GMT <b>$' + S.gmt.toFixed(4) + '</b> &middot; <b>' + num(Math.round(S.satsPerTHDay)) + '</b> sats/TH/day';
+      // the console template's live strip (quote/index.html): label over value tiles
+      if (l) l.textContent = S.live ? 'Live' : 'Cached';
+      const b = $('qBtc'), g = $('qGmt'), st2 = $('qSats');
+      if (b) b.textContent = money(S.btc, 0);
+      if (g) g.textContent = '$' + S.gmt.toFixed(4);
+      if (st2) st2.textContent = num(Math.round(S.satsPerTHDay));
       render();
     }).catch(() => { render(); });
   }

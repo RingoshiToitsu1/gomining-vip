@@ -22,24 +22,22 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=6">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=9">
+<link rel="stylesheet" href="/assets/console.css?v=2">
 <style>
-:root{--bg:var(--color-bg);--card:#121316;--card2:#17181c;--bd:#26272c;--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
+:root{--bg:var(--color-bg);--card:var(--color-surface-1);--card2:var(--color-surface-2);--bd:var(--color-border);--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
   --txt:var(--color-text);--t2:var(--color-text-2);--t3:var(--color-text-2);--t4:var(--color-text-3);--green:var(--color-success);--mono:var(--font-body);
   --sans:var(--font-body)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
-  background-image:radial-gradient(ellipse 70% 50% at 15% -10%,rgb(var(--color-gold-rgb) / .10),transparent 60%),
-    radial-gradient(ellipse 60% 45% at 110% 5%,rgb(var(--color-gold-rgb) / .06),transparent 60%);
-  background-attachment:fixed;min-height:100vh}
-.wrap{max-width:1080px;margin:0 auto;padding:1.4rem 1.1rem 4rem}
+body{margin:0;background:var(--color-bg);color:var(--txt);font-family:var(--font-body);min-height:100vh}
+.wrap{max-width:var(--content-max);margin:0 auto;padding:var(--space-6) 20px var(--space-8)}
 .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.6rem}
 .brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1rem;letter-spacing:-.01em;color:var(--txt);text-decoration:none}
 .brand img{height:26px;width:26px}
 .back{color:var(--t3);text-decoration:none;font-size:.82rem;font-weight:600;border:1px solid var(--bd);
   border-radius:999px;padding:.4rem .85rem;transition:.15s}
 .back:hover{color:var(--txt);border-color:var(--t4)}
-h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
-.lede{color:var(--t3);font-size:.9rem;margin:0 0 1.4rem;line-height:1.55;max-width:52rem}
+h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--font-weight-semibold);line-height:var(--line-height-tight);letter-spacing:-.02em;margin:0 0 var(--space-2)}
+.lede{color:var(--color-text-2);font-size:var(--font-size-lg);margin:0 0 var(--space-6);line-height:var(--line-height-body);max-width:var(--prose-max)}
 .live{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.72rem;color:var(--t3);
   background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:.35rem .8rem;margin-bottom:1.2rem}
 .live b{color:var(--gold2);font-weight:400}
@@ -47,7 +45,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .live-row .live{margin-bottom:0}
 .px-cred{color:var(--t4)}
 .px-cred .dot{background:var(--green)}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:none}
 .dot.off{background:var(--t4);box-shadow:none}
 .panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem 1.2rem 1.3rem}
 .modes{display:inline-flex;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:3px;gap:3px;margin-bottom:1rem}
@@ -56,7 +54,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .modes button.on{background:var(--gold);color:var(--color-on-gold)}
 .field{display:flex;align-items:center;gap:.6rem;background:var(--bg);border:1px solid var(--bd);border-radius:12px;
   padding:.7rem .9rem;transition:.15s}
-.field:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgb(var(--color-gold-rgb) / .14)}
+.field:focus-within{border-color:var(--gold);box-shadow:var(--focus-ring)}
 .field .cur{color:var(--t3);font-family:var(--mono);font-size:1.1rem}
 .field input{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--txt);
   font-family:var(--mono);font-size:1.5rem;font-weight:700;padding:0;-moz-appearance:textfield}
@@ -148,15 +146,15 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 <script src="/assets/site-chrome.js?v=13" defer data-footer="off"></script>
 </head>
 <body>
+<!-- console tab row: the same one as /console (assets/console.css) -->
+<div class="topbar"><div class="header"><div class="header-inner"><nav class="nav-links cx-tabs" aria-label="Console sections"><a href="/console">Console</a><a href="/console?view=edit">Edit farm</a><a href="/console?view=planner">Planner</a><a href="/console?view=projection">Projection</a><a href="/quote" class="nav-active" aria-current="page">Quote</a><a href="/statement">Statement</a></nav></div></div>
+<div class="subbar"><div class="live-bar"><div class="live-chip"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="qBtc">&mdash;</span></div><div class="live-chip"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="qGmt">&mdash;</span></div><div class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" id="qSats">&mdash;</span></div><div class="live-chip"><span class="lbl"><span class="dot off" id="qDot"></span>Status</span><span class="val" id="qLive">Loading&hellip;</span></div><div class="px-badge-row px-subbar"><span class="px-cred">15&nbsp;W TH costs updated <b id="qPxDate">30 Oct 2026</b> · fees &amp; rates <b><time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time></b></span></div></div></div>
+</div>
 <div class="wrap">
 
   <h1>Quote a setup</h1>
   <p class="lede">For quoting someone who is starting from zero. Enter what they want to invest, or what they want to earn each month, and this returns the split that holds the token discount at live prices. Nothing here touches your own fleet or saved setups.</p>
 
-  <div class="live-row">
-    <div class="live"><span class="dot off" id="qDot"></span><span id="qLive">Loading live prices&hellip;</span></div>
-    <div class="live px-cred"><span class="dot"></span>15&nbsp;W TH costs updated <b id="qPxDate">30 Oct 2026</b> · fees &amp; rates <b><time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time></b></div>
-  </div>
 
   <div class="panel">
     <div class="modes" id="qModes">
@@ -212,7 +210,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
      localStorage. If you ever need one of those here, gate the feature — never the page. -->
 <script src="/assets/pricing.js?v=4"></script>
 <script src="/assets/charts.js?v=1"></script>
-<script src="/assets/quote.js?v=24"></script>
-<script src="/assets/site.js?v=45" data-chrome="bar"></script>
+<script src="/assets/quote.js?v=25"></script>
+<script src="/assets/site.js?v=46" data-chrome="bar"></script>
 </body>
 </html>

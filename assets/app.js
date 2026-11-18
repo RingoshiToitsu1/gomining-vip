@@ -456,9 +456,9 @@ function _activateTab(b,push){
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
   const activeLink=document.querySelector(`.nav-links a[data-view="${b.dataset.tab}"]`);
   if(activeLink)activeLink.classList.add('nav-active');
-  // The Capital Planner tab relabels to "Adjust Amount" while you're on it (re-clicking adjusts).
+  // The Capital Planner tab relabels to "Adjust amount" while you're on it (re-clicking adjusts).
   const pBtn=document.querySelector('[data-tab="tab-planner"]');
-  if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
+  if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust amount':'Capital planner';
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
   // Reflect the view in the URL so the tabs are real pages (/planner, /console) — unless we're
@@ -468,7 +468,7 @@ function _activateTab(b,push){
     if(u&&location.pathname.replace(/\/+$/,'')!==u){try{history.pushState({tab:t},'',u);}catch(e){}}
   }
   // First visit to the planner auto-opens the full-page form; navigating in from another tab
-  // shows the results. Re-clicking "Capital Planner" while already on it reopens the form to
+  // shows the results. Re-clicking "Capital planner" while already on it reopens the form to
   // adjust (replaces the old "Adjust Investment Amount" button).
   if(b.dataset.tab==='tab-planner'&&(!window._plannerCalcDone||(prev&&prev.id==='tab-planner'))){openPlannerForm();}
   // Switching to My Setup from another tab replays the count-up animation.
@@ -550,7 +550,7 @@ function openPlannerForm(){
   setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
   showPanelView('plannerIntro');
   const cb=document.getElementById('plannerCalcBtn');if(cb)cb.disabled=false;
-  // "Return to Capital Planner" only makes sense once a plan has been calculated to go back to.
+  // "Back to the capital planner" only makes sense once a plan has been calculated to go back to.
   const rr=document.getElementById('piReturnResults');if(rr)rr.style.display=window._plannerCalcDone?'':'none';
 }
 // Dismiss the form back to the already-computed Capital Planner results (no recalculation).
@@ -628,7 +628,7 @@ function setPlannerMode(mode){
   if(goal)goal.hidden=!isGoal;
   if(bA)bA.classList.toggle('active',!isGoal);
   if(bG)bG.classList.toggle('active',isGoal);
-  if(btn)btn.textContent=isGoal?'Find Required Capital':'Calculate Optimal Split';
+  if(btn)btn.textContent=isGoal?'Find required capital':'Calculate optimal split';
   if(unit)unit.textContent=(({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$')+'/mo';
 }
 // Project the farm's total monthly income (mining + staking + ambassador) for a hypothetical
@@ -799,8 +799,8 @@ function closePlannerIntro(){
 // Live price chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
 // Reused for BTC and the GoMining token; the widget is rebuilt when the symbol changes.
 let _chartSym=null;
-function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','/btc36.png',false,true);}
-function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','/gmt36.png',true,false);}
+function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — live chart','/btc36.png',false,true);}
+function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — live chart','/gmt36.png',true,false);}
 // Deep-link: /bitcoin and /gmt (served by the redirect pages as /?chart=…, or hit directly)
 // auto-open the matching chart on first load.
 function maybeOpenChartFromURL(){
@@ -932,7 +932,7 @@ function loadBtcRainbow(){
 }
 // ---- Rainbow chart constants (9 Power-Law bands, red overvalued → blue undervalued) ----
 const RB_COLORS=['#b11717','#e23b25','#ef7b2a','#f3a93a','#ecd24b','#bcd64a','#5fb85a','#2fa39a','#3f7cc4'];
-const RB_LABELS=['Maximum Bubble Territory','Sell. Seriously, SELL!','FOMO intensifies','Is this a bubble?','HODL!','Still cheap','Accumulate','BUY!','Basically a Fire Sale'];
+const RB_LABELS=['Maximum bubble territory','Sell. Seriously, SELL!','FOMO intensifies','Is this a bubble?','HODL!','Still cheap','Accumulate','BUY!','Basically a fire sale'];
 const RB_OFFSETS=[0.45,0.35,0.25,0.15,0.05,-0.05,-0.15,-0.25,-0.35,-0.45]; // 10 boundaries → 9 bands
 const RB_DAY=86400000;
 const RB_GEN=Date.UTC(2009,0,3);                 // genesis-era reference for the log-time axis
@@ -2166,10 +2166,10 @@ function buildFarmShotCanvas(d,imgs){
   // ---- the four headline stats ----
   const neg=d.dailyUSD<0;
   const cards=[
-    {id:'DAILY.NET',  label:TC('Daily Net Profit'),      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:TC(d.dailySub)},
-    {id:'MONTH.YIELD',label:TC('Monthly Earnings'),      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:TC(fU(d.yearlyUSD,0)+' / yr')},
-    {id:'COVERAGE',   label:TC('Total Discount'),        val:fP(d.disc),              accent:GOLD,         sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
-    {id:'VELOCITY',   label:TC('Effective Compounded ROI'), val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:TC(d.velSub)}
+    {id:'DAILY.NET',  label:TC('Daily net profit'),      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:TC(d.dailySub)},
+    {id:'MONTH.YIELD',label:TC('Monthly earnings'),      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:TC(fU(d.yearlyUSD,0)+' / yr')},
+    {id:'COVERAGE',   label:TC('Total discount'),        val:fP(d.disc),              accent:GOLD,         sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
+    {id:'VELOCITY',   label:TC('Effective compounded ROI'), val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:TC(d.velSub)}
   ];
   const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
   cards.forEach((cd,i)=>{
@@ -2179,7 +2179,7 @@ function buildFarmShotCanvas(d,imgs){
     x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.fill();
     x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
     // accent bar along the top edge, like the hero cards on the site
-    x.shadowColor=cd.accent;x.shadowBlur=14;x.strokeStyle=cd.accent;x.lineWidth=3;
+    x.shadowColor=cd.accent;x.shadowBlur=0;x.strokeStyle=cd.accent;x.lineWidth=3;
     x.beginPath();x.moveTo(cx+16,cardY);x.lineTo(cx+cardW-16,cardY);x.stroke();x.shadowBlur=0;
     const ix=cx+22,iw=cardW-44;
     x.textAlign='left';
@@ -2190,7 +2190,7 @@ function buildFarmShotCanvas(d,imgs){
     x.fillText(cd.label,ix,cardY+66);
     const vsz=_fsFit(x,cd.val,iw,'bold',40,MONO);
     x.font='bold '+vsz+'px '+MONO;x.fillStyle=cd.accent;
-    x.shadowColor='rgba(226,178,89,0.45)';x.shadowBlur=18;
+    x.shadowColor='rgba(226,178,89,0.45)';x.shadowBlur=0;
     x.fillText(cd.val,ix,cardY+126);x.shadowBlur=0;
     x.fillStyle='rgba(255,255,255,0.5)';x.font='13px '+MONO;
     _fsWrap(x,cd.sub,iw,4).forEach((ln,k)=>x.fillText(ln,ix,cardY+164+k*20));
@@ -2767,7 +2767,7 @@ function migrateLegacySetup(){
       saveMiningMode();
     }
     const id='p_'+Date.now().toString(36);
-    state.profiles.push({id,name:'My Farm',data:d});
+    state.profiles.push({id,name:'My farm',data:d});
     state.activeId=id;
     saveProfilesState(state);
   }catch(e){}
@@ -2830,9 +2830,9 @@ function saveActiveProfile(){
       if(!p){p={id:pid,name:uname,account:true,data:readInputs()};state.profiles.unshift(p);}
       state.activeId=pid;
     }else{
-      p=state.profiles.find(x=>x.name==='My Farm'||x.name==='My Setup'&&!x.account);
+      p=state.profiles.find(x=>x.name==='My farm'||x.name==='My Setup'&&!x.account);
       const created=!p;
-      if(!p){p={id:'p_'+Date.now().toString(36),name:'My Farm',data:readInputs()};state.profiles.unshift(p);}
+      if(!p){p={id:'p_'+Date.now().toString(36),name:'My farm',data:readInputs()};state.profiles.unshift(p);}
       state.activeId=p.id;
       if(created){saveProfilesState(state);if(window.GMTFleetPersistActive)window.GMTFleetPersistActive();}
     }
@@ -3544,7 +3544,7 @@ function recalc(){
     for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/TOTAL_DISCOUNT_CAP)*100}%">${p.l}</div>`;
     dh+='</div>';
   }
-  dh+=row('Total Discount',fP(m.totD),'cyan');
+  dh+=row('Total discount',fP(m.totD),'cyan');
   dh+=row('Monthly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH)}/mo`,'green');
   dh+=row('Yearly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH*12)}/yr`,'green');
   // Paused hashrate: off the books entirely on both sides — no rewards, no fees — but
@@ -3630,7 +3630,7 @@ function idleGmtPrompt(host,live){
       </div>
       <div class="idle-gmt-bar"><div class="idle-gmt-seg s0" style="width:59%"></div><div class="idle-gmt-seg s1" style="width:41%"></div></div>
       <div class="idle-gmt-legs">
-        ${['Lock GMT','Buy TH','Upgrade Efficiency'].map((k,n)=>`<div class="idle-gmt-leg"><div class="idle-gmt-k"><span class="idle-gmt-dot d${n}"></span>${k}</div><div class="idle-gmt-v">00% &middot; $000</div><div class="idle-gmt-s">&mdash;</div></div>`).join('')}
+        ${['Lock GMT','Buy TH','Upgrade efficiency'].map((k,n)=>`<div class="idle-gmt-leg"><div class="idle-gmt-k"><span class="idle-gmt-dot d${n}"></span>${k}</div><div class="idle-gmt-v">00% &middot; $000</div><div class="idle-gmt-s">&mdash;</div></div>`).join('')}
       </div>
     </div>
     <div class="idle-gmt-ask">
@@ -3676,7 +3676,7 @@ function renderIdleGmt(i,m){
      sub:(P.addTH>0.5&&fs)?`at ${wLbl(fs.wth)} W/TH${fs.mixed?' avg':''}`:'',
      into:(P.addTH>0.5&&fs)?`${fs.name}${fs.more>0?` +${fs.more} more`:''}`:''}
   ];
-  if(P.effRoom)legs.push({k:'Upgrade Efficiency',v:P.effUSD,
+  if(P.effRoom)legs.push({k:'Upgrade efficiency',v:P.effUSD,
     act:P.effTHupg>0.5?fN(P.effTHupg,0)+' TH \u2192 12 W':null,sub:'',
     into:(P.effTHupg>0.5&&P.effIsGreedy&&P.gCode)?P.gCode+' (greedy)':''});
   const pc=v=>Math.max(0,v/P.tot*100);
@@ -3698,7 +3698,7 @@ function renderIdleGmt(i,m){
       +`<div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}${l.sub?' &middot; '+l.sub:''}</div>`
       +`${l.into?`<div class="idle-gmt-leg-into">into ${l.into}</div>`:''}</div></div>`).join('')}</div>
     <div class="idle-gmt-foot">${T('Result: <strong>{0} TH</strong> @ {1} W/TH',fN(P.finTH,0),fN(P.finWth,2))}
-      <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
+      <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in the capital planner &rarr;</button></div>
   </div>`;
   host.innerHTML=h;host.style.display='';
 }
@@ -3717,7 +3717,7 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP,greedyMo
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
 
   let h=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
-  h+=`<label style="font-size:.75rem;color:var(--text3)">BTC Price</label>`;
+  h+=`<label style="font-size:.75rem;color:var(--text3)">BTC price</label>`;
   h+=`<select id="projBtcSelect" onchange="updateProjCell()">`;
   for(const p of opts){
     const lbl=p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
@@ -3763,7 +3763,7 @@ function updateProjCell(){
   let h=`<div class="proj-ba">`;
   h+=`<div class="proj-cell ba-cell"><div class="ba-label">Current</div><div class="pc-monthly">${fU(before.mo,0)}</div><div class="pc-daily">${fU(before.daily)}/day</div></div>`;
   h+=`<div class="ba-arrow"><div class="ba-arrow-ico">&rarr;</div><div class="ba-uplift">${uplift>=0?'+':''}${fN(uplift,0)}%</div></div>`;
-  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After Investment</div><div class="pc-monthly green">${fU(after.mo,0)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
+  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After investment</div><div class="pc-monthly green">${fU(after.mo,0)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
   h+=`</div>`;
   document.getElementById('projSingleCell').innerHTML=h;
 }
@@ -4094,7 +4094,7 @@ function effStateFrom(i,a,gp,bp){
     thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth};
 }
 function effCompareShell(i){
-  const t=hasEffRoom(i)?'Efficiency vs. Hashrate vs. Discount':'Hashrate vs. Discount';
+  const t=hasEffRoom(i)?'Efficiency vs. hashrate vs. discount':'Hashrate vs. Discount';
   return `<div class="sub-title" style="margin-top:1rem">${t}</div><div id="effCompareBody"></div>`;
 }
 // Populate the comparison body (called once after the planner renders).
@@ -4287,7 +4287,7 @@ function renderEfficiencyComparison(st){
   const effExtra=effIsGreedy
     ? `<div class="eff-gauge-lbl" style="margin-top:.55rem">Required first — one efficiency per NFT, so ${gCode} must reach ${fN(EFF_BEST,0)} W before its new (and free weekly) TH can run at ${fN(EFF_BEST,0)} W.</div>`
     : (effThreshBp?effGauge(effThreshBp,bp):'');
-  if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
+  if(effRoom)g+=card('Upgrade efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
     ['Farm avg',effTHupg>0?`${fN(curWth,2)} → ${fN(finWth,2)}`:'—']
   ],effExtra);
@@ -4531,7 +4531,7 @@ function renderPlanner(i,m){
   }
 
   // Resource breakdown
-  ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
+  ah+=`<div class="sub-title" style="margin-top:.8rem">Resource breakdown</div>`;
   if(mpTHraw>0){
     ah+=row(mpIsGreedy?`Marketplace miner (greedy${i.mpCode?' '+escapeHtml('#'+String(i.mpCode).replace(/^#/,'')):''})`:'Marketplace miner',
       `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${mpUpgSteps>0?`${fN(mpWthBought,1)}→${fN(mpWthAfter,1)}`:fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
@@ -4778,7 +4778,7 @@ function openSetupProjection(mode){
   }
 }
 // The planner and the projection are one flow: capital goes in on the Capital Planner, and its
-// split comes back here as "My Plan". Say which is on screen and offer the way round.
+// split comes back here as "My plan". Say which is on screen and offer the way round.
 function renderSpPlanLink(){
   const el=document.getElementById('spPlanLink');if(!el)return;
   if(window._spMode==='planner'){
@@ -4815,8 +4815,8 @@ function renderSpModeSwitch(){
   const planner=window._spMode==='planner';
   const havePlan=plannerHasPlan();
   el.innerHTML=
-     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Farm</button>`
-    +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My Plan</button>`;
+     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My farm</button>`
+    +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My plan</button>`;
   el.style.display='';
 }
 function setSpMode(mode){
@@ -4993,7 +4993,7 @@ function computeSetupProjection(){
   let apr=apr0;
   if(fromPlanner){
     const a=solvePlannerAllocation(i,bpStart,gp0,dbt);   // allocation is a purchase TODAY -> spot GMT
-    if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital Planner</strong> first, then project.</div>';return;}
+    if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital planner</strong> first, then project.</div>';return;}
     MP_TH=a.mpTH||0; MP_WTH=a.mpWth>0?a.mpWth:15;
     GGROW=(a.ggrow||0)/100;
     GINIT=a.gInit||0;
@@ -5336,8 +5336,8 @@ function computeSetupProjection(){
 
   const _endWhen=new Date(targetMs).toLocaleDateString(UI_LOC||'en-US',{month:'short',year:'numeric'});
   const btcModeBadge=spSel.futures
-    ? '<span class="badge" style="background:rgba(226,178,89,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
-    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">STILL CHEAP</span>';
+    ? '<span class="badge" style="background:rgba(226,178,89,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">Typical future</span>'
+    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">Still cheap</span>';
   const _yrsLbl=T(spSel.yrs>1?'{0} years':'{0} year',spSel.yrs);
   const btcRangeLine=spSel.futures
     ? T('BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">{0} today</strong> to <strong style="color:var(--text2)">{1} by {2}</strong> ({3})',fmtBTCPrice(bpStart),fmtBTCPrice(bpEnd),_endWhen,_yrsLbl)
@@ -5455,13 +5455,13 @@ function computeSetupProjection(){
     </div>`;
   }
   h+=`<div class="ri-single-card">
-    <div class="ri-label">Total Hashrate (End of Period)</div>
+    <div class="ri-label">Total hashrate (end of period)</div>
     <div class="ri-headline cyan">${fN(totEndTH,1)} TH</div>
     <div class="ri-usd-value">from ${fN(startTH,1)} TH start</div>
     <div class="ri-gain">+${fN(thGain,1)} TH${startTH>0?` (+${fN(thPct,0)}%)`:''}</div>
   </div>`;
   h+=`<div class="ri-single-card">
-    <div class="ri-label">Locked GMT (End of Period)</div>
+    <div class="ri-label">Locked GMT (end of period)</div>
     <div class="ri-headline green">${fN(gmtLocked,0)} <img src="/gmt36.png" class="gmt-logo" alt="GMT"></div>
     <div class="ri-usd-value">${fU(lockedUSD)} USD value</div>
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
@@ -5516,8 +5516,8 @@ function buildReinvestChart(daily,days,gp){
   let xLabelHtml='';
   for(const td of xTicks){
     const xc=padL+(td/days)*innerW;
-    xLabelHtml+=`<line x1="${xc.toFixed(1)}" y1="${padT+innerH}" x2="${xc.toFixed(1)}" y2="${padT+innerH+3}" stroke="rgba(255,255,255,.18)"/>`;
-    xLabelHtml+=`<text x="${xc.toFixed(1)}" y="${H-10}" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="13" font-family="monospace">D${td}</text>`;
+    xLabelHtml+=`<line x1="${xc.toFixed(1)}" y1="${padT+innerH}" x2="${xc.toFixed(1)}" y2="${padT+innerH+3}" style="stroke:var(--color-border-strong)"/>`;
+    xLabelHtml+=`<text x="${xc.toFixed(1)}" y="${H-10}" text-anchor="middle" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif">D${td}</text>`;
   }
 
   return `<div class="ri-chart-wrap">
@@ -5534,20 +5534,20 @@ function buildReinvestChart(daily,days,gp){
     <svg class="ri-chart-svg" viewBox="0 0 ${W} ${H}" id="riChartSvg" onmousemove="riChartHover(event)" onmouseleave="riChartLeave()">
       <defs>
         <linearGradient id="riChartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#4ecffa" stop-opacity=".35"/>
-          <stop offset="100%" stop-color="#4ecffa" stop-opacity="0"/>
+          <stop offset="0%" style="stop-color:var(--color-gold)" stop-opacity=".35"/>
+          <stop offset="100%" style="stop-color:var(--color-gold)" stop-opacity="0"/>
         </linearGradient>
       </defs>
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
-      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
-      <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" stroke="rgba(255,255,255,.05)" stroke-dasharray="2 4"/>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" style="stroke:var(--color-border)"/>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" style="stroke:var(--color-border)"/>
+      <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" style="stroke:var(--color-border)" stroke-dasharray="2 4"/>
       <path d="${area}" id="riChartArea" fill="url(#riChartGrad)"/>
-      <path d="${line}" id="riChartLine" fill="none" stroke="#4ecffa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#4ecffa" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
-      <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#FFFFFF" stroke-width="1.5" opacity="0"/>
-      <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMax">${fAxisUSD(yMax)}</text>
-      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
-      <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace">0</text>
+      <path d="${line}" id="riChartLine" fill="none" style="stroke:var(--color-gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" style="stroke:var(--color-gold)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+      <circle id="riChartDot" cx="0" cy="0" r="4" style="fill:var(--color-gold);stroke:var(--color-bg)" stroke-width="1.5" opacity="0"/>
+      <text x="${padL-8}" y="${padT+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif" id="riAxisMax">${fAxisUSD(yMax)}</text>
+      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
+      <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif">0</text>
       ${xLabelHtml}
     </svg>
     <div class="ri-tooltip" id="riChartTip"></div>
@@ -5570,14 +5570,14 @@ function riChartUpdateAxis(){
   const aMid=document.getElementById('riAxisMid');
   if(aMax)aMax.textContent=fmt(scaled);
   if(aMid)aMid.textContent=fmt(scaled/2);
-  const color=unit==='gmt'?'#5ad9a8':'#4ecffa';
+  const color=unit==='gmt'?'var(--color-series-4)':'var(--color-gold)';   // chart kit series colours
   const line=document.getElementById('riChartLine');
   const cursor=document.getElementById('riChartCursor');
   const dot=document.getElementById('riChartDot');
-  if(line)line.setAttribute('stroke',color);
-  if(cursor)cursor.setAttribute('stroke',color);
-  if(dot)dot.setAttribute('fill',color);
-  document.querySelectorAll('#riChartGrad stop').forEach(s=>s.setAttribute('stop-color',color));
+  if(line)line.style.stroke=color;
+  if(cursor)cursor.style.stroke=color;
+  if(dot)dot.style.fill=color;
+  document.querySelectorAll('#riChartGrad stop').forEach(s=>s.style.stopColor=color);
   const tipVal=document.querySelector('#riChartTip .ri-tip-val');
   if(tipVal)tipVal.classList.toggle('green',unit==='gmt');
 }
@@ -5659,7 +5659,7 @@ function buildShareCanvas(d){
   for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
   // header
   x.fillStyle=CC('text');x.font='bold 56px Poppins,system-ui,sans-serif';x.textAlign='center';
-  x.shadowColor='rgba(226,178,89,0.55)';x.shadowBlur=28;
+  x.shadowColor='rgba(226,178,89,0.55)';x.shadowBlur=0;
   x.fillText(TC(d.days+'-Day Growth Projection'),W/2,72);x.shadowBlur=0;
   x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Inter",monospace';
   const btcSub=d.btcMode==='live'?'':T('  •  BTC {0} → {1} (typical future)',fmtBTCPrice(d.bpStart),fmtBTCPrice(d.bpAtEnd));
@@ -5675,7 +5675,7 @@ function buildShareCanvas(d){
     cbg.addColorStop(0,'rgba(226,178,89,0.06)');cbg.addColorStop(1,'rgba(226,178,89,0.015)');
     x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
     x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
-    x.shadowColor=accent;x.shadowBlur=16;x.strokeStyle=accent;x.lineWidth=3;
+    x.shadowColor=accent;x.shadowBlur=0;x.strokeStyle=accent;x.lineWidth=3;
     x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();x.shadowBlur=0;
     x.fillStyle=accent;x.font='bold 26px Poppins,system-ui,sans-serif';x.textAlign='left';
     x.fillText(title,cx+30,cy+50);
@@ -5696,7 +5696,7 @@ function buildShareCanvas(d){
     {label:TC('MONTHLY INCOME'),val:fU(d.finalSS*DAYS_PER_MONTH,0)},
     {label:TC('GMT Value'),val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
-  x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=22;
+  x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=0;
   x.font='bold 56px "Poppins",system-ui,sans-serif';x.textAlign='center';
   x.fillText('➤',W/2,cardY+cardH/2+10);x.shadowBlur=0;
   // stat pills (incl. ROI)
@@ -5818,7 +5818,7 @@ function obGoStep(n){
   newBtn.style.display=n===0?'':'none';
   if(n===0){newBtn.classList.remove('ob-reveal');newBtn.style.opacity='1';nextBtn.classList.remove('ob-reveal');nextBtn.style.opacity='1'}
   if(n===0)nextBtn.innerHTML='Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span>';
-  else if(n===OB_LAST_STEP)nextBtn.textContent='Launch Dashboard';
+  else if(n===OB_LAST_STEP)nextBtn.textContent='Launch dashboard';
   else nextBtn.textContent='Next';
   if(n===OB_LAST_STEP)obPreview();
 }

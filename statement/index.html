@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=6">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=9">
+<link rel="stylesheet" href="/assets/console.css?v=2">
 <style>
 /* Palette note: the chart marks below are not chosen by eye. The profit/loss pair
    is validated for colour-vision separation against BOTH surfaces it renders on —
@@ -29,24 +30,21 @@
    #00795a/#b3400f on white for print (deutan ΔE 10.0). Gold is a lone-series mark
    and never shares a chart with the pair, so it is held at the brand value.
    If you retune these, re-run the validator; do not eyeball them. */
-:root{--bg:var(--color-bg);--card:#121316;--card2:#17181c;--bd:#26272c;--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
+:root{--bg:var(--color-bg);--card:var(--color-surface-1);--card2:var(--color-surface-2);--bd:var(--color-border);--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
   --txt:var(--color-text);--t2:var(--color-text-2);--t3:var(--color-text-2);--t4:var(--color-text-3);--green:var(--color-success);--mono:var(--font-body);
   --sans:var(--font-body);
-  --c-pos:#00b076;--c-neg:#b83719;--c-gold:var(--color-gold);--c-grid:#26272c;--c-axis:var(--color-text-2);--c-zero:var(--color-text-3)}
+  --c-pos:#00b076;--c-neg:#b83719;--c-gold:var(--color-gold);--c-grid:var(--color-border);--c-axis:var(--color-text-2);--c-zero:var(--color-text-3)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
-  background-image:radial-gradient(ellipse 70% 50% at 15% -10%,rgb(var(--color-gold-rgb) / .10),transparent 60%),
-    radial-gradient(ellipse 60% 45% at 110% 5%,rgb(var(--color-gold-rgb) / .06),transparent 60%);
-  background-attachment:fixed;min-height:100vh}
-.wrap{max-width:1080px;margin:0 auto;padding:1.4rem 1.1rem 4rem}
+body{margin:0;background:var(--color-bg);color:var(--txt);font-family:var(--font-body);min-height:100vh}
+.wrap{max-width:var(--content-max);margin:0 auto;padding:var(--space-6) 20px var(--space-8)}
 .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.6rem}
 .brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1rem;letter-spacing:-.01em;color:var(--txt);text-decoration:none}
 .brand img{height:26px;width:26px}
 .back{color:var(--t3);text-decoration:none;font-size:.82rem;font-weight:600;border:1px solid var(--bd);
   border-radius:999px;padding:.4rem .85rem;transition:.15s}
 .back:hover{color:var(--txt);border-color:var(--t4)}
-h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
-.lede{color:var(--t3);font-size:.9rem;margin:0 0 1.2rem;line-height:1.55;max-width:54rem}
+h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--font-weight-semibold);line-height:var(--line-height-tight);letter-spacing:-.02em;margin:0 0 var(--space-2)}
+.lede{color:var(--color-text-2);font-size:var(--font-size-lg);margin:0 0 var(--space-6);line-height:var(--line-height-body);max-width:var(--prose-max)}
 .panel{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:1.2rem}
 
 /* ---- drop zone ---- */
@@ -74,7 +72,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .fld label{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-family:var(--mono)}
 .fld input,.fld select{background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--txt);
   font-family:var(--sans);font-size:.86rem;padding:.5rem .7rem;outline:none;transition:.15s;min-width:0}
-.fld input:focus,.fld select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgb(var(--color-gold-rgb) / .14)}
+.fld input:focus,.fld select:focus{border-color:var(--gold);box-shadow:var(--focus-ring)}
 .fld.grow{flex:1 1 15rem}
 .fld.grow input{width:100%}
 .ranges{display:inline-flex;background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:3px;gap:3px;flex-wrap:wrap}
@@ -196,7 +194,7 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 .stake-chk input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer}
 .stake-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));gap:.5rem;max-height:17rem;overflow-y:auto;padding-right:.2rem}
 .stake-item{display:flex;align-items:center;gap:.5rem;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:.42rem .6rem;transition:.15s}
-.stake-item:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgb(var(--color-gold-rgb) / .14)}
+.stake-item:focus-within{border-color:var(--gold);box-shadow:var(--focus-ring)}
 .stake-item .sd{flex:0 0 5.6rem;font-size:.76rem;color:var(--t2);font-family:var(--mono)}
 .stake-item input{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;color:var(--txt);
   font-family:var(--mono);font-size:.86rem;text-align:right;padding:0}
@@ -240,6 +238,9 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
 <script src="/assets/site-chrome.js?v=13" defer data-footer="off"></script>
 </head>
 <body>
+<!-- console tab row: the same one as /console (assets/console.css) -->
+<div class="topbar"><div class="header"><div class="header-inner"><nav class="nav-links cx-tabs" aria-label="Console sections"><a href="/console">Console</a><a href="/console?view=edit">Edit farm</a><a href="/console?view=planner">Planner</a><a href="/console?view=projection">Projection</a><a href="/quote">Quote</a><a href="/statement" class="nav-active" aria-current="page">Statement</a></nav></div></div>
+</div>
 <div class="wrap">
 
   <h1>Mining income statement</h1>
@@ -318,6 +319,6 @@ h1{font-size:clamp(1.5rem,3.4vw,2.1rem);margin:0 0 .3rem;letter-spacing:-.02em}
      localStorage. Adding any of those breaks the promise made in the panel above. -->
 <script src="/assets/pricing.js?v=4"></script>
 <script src="/assets/statement.js?v=5"></script>
-<script src="/assets/site.js?v=45" data-chrome="bar"></script>
+<script src="/assets/site.js?v=46" data-chrome="bar"></script>
 </body>
 </html>

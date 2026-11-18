@@ -65,15 +65,15 @@
         <div class="fx-when" id="fxWhen"></div>
         <div class="hero-grid fx-grid">
           <div class="hero-card green-accent"><span class="corners"></span>
-            <div class="hero-label">Daily Net Profit</div>
+            <div class="hero-label">Daily net profit</div>
             <div class="hero-val-row fx-row"><div class="hero-val green" id="fxDay">--</div><span class="hero-btc" id="fxDayBtc"></span></div>
             <div class="hero-sub" id="fxDaySub">--</div></div>
           <div class="hero-card cyan-accent"><span class="corners"></span>
-            <div class="hero-label">Monthly Earnings</div>
+            <div class="hero-label">Monthly earnings</div>
             <div class="hero-val-row fx-row"><div class="hero-val cyan" id="fxMo">--</div><span class="hero-btc" id="fxMoBtc"></span></div>
             <div class="hero-sub" id="fxMoSub">--</div></div>
           <div class="hero-card purple-accent"><span class="corners"></span>
-            <div class="hero-label">Yearly Earnings</div>
+            <div class="hero-label">Yearly earnings</div>
             <div class="hero-val-row fx-row"><div class="hero-val purple" id="fxYr">--</div><span class="hero-btc" id="fxYrBtc"></span></div>
             <div class="hero-sub" id="fxYrSub">--</div></div>
         </div>
@@ -169,9 +169,8 @@
       if((to-Math.max(0,from))%STEP)ctx.lineTo(X(to),Yv(sim.all[p*W+to]));}   // caller strokes: one stroke per colour per frame
     // glow = a wide, faint stroke under the line (shadowBlur on a moving path is what made this lag)
     function band(arr,col,glow,width,k,dash){const ln=new Path2D();ln.moveTo(x0,y0);for(let w=0;w<=k;w+=STEP)ln.lineTo(X(w),Yv(arr[w]));ln.lineTo(X(k),Yv(arr[k]));
-      g.globalAlpha=.22;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;
       g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);
-      const hx=X(k),hy=Yv(arr[k]);g.fillStyle=glow;g.globalAlpha=.3;g.beginPath();g.arc(hx,hy,width*4,0,7);g.fill();g.globalAlpha=1;
+      const hx=X(k),hy=Yv(arr[k]);
       g.fillStyle=col;g.beginPath();g.arc(hx,hy,width+1.5,0,7);g.fill();}
     function frame(now){
       if(gone||ran!==id||!el.isConnected)return;
@@ -201,7 +200,7 @@
         band(sim.p90,'rgba(127,211,122,.95)','rgba(110,220,110,.9)',1.5,k,[3,3]);
         band(sim.p10,'rgba(239,68,68,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
         band(sim.p50,CC('gold-300'),'rgba(255,190,70,1)',2.6,k);
-        if(lk>=1){g.font='700 12px ui-monospace,monospace';g.textAlign='right';g.textBaseline='bottom';g.fillStyle=CC('gold-300');g.shadowColor=CC('gold-300');g.shadowBlur=10;
+        if(lk>=1){g.font='700 12px Inter,system-ui,sans-serif';g.textAlign='right';g.textBaseline='bottom';g.fillStyle=CC('gold-300');g.shadowColor=CC('gold-300');g.shadowBlur=0;
           g.fillText(fU(at(sim.p50,Wn-1),0),cssW-pad.r,Yv(at(sim.p50,Wn-1))-6);g.shadowBlur=0;g.textAlign='left';}}
       const prog=Math.min(1,t/(T1+T2));bar.style.transform=`scaleX(${0.08+prog*0.8})`;
       if(phase===0){rows[0].classList.add('on');phase=1;}
@@ -267,20 +266,20 @@
     const short=v=>_ck?new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:v>=1e6?1:0}).format(v):v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
     const endYs=[p10,p50,p90].map(a=>Y(a[Wn-1]));
     function axes(){
-      g.font='11px ui-monospace,monospace';g.textBaseline='middle';
+      g.font='11px Inter,system-ui,sans-serif';g.textBaseline='middle';
       for(let e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)for(const m of [1,2,5]){const v=m*Math.pow(10,e);if(v<lo||v>hi)continue;const y=Y(v);
         g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();
         if(endYs.some(z=>Math.abs(z-y)<13))continue;
         g.fillStyle='rgba(255,255,255,.38)';g.fillText(short(v),pad.l+pw+6,y);}
       g.textBaseline='alphabetic';g.fillStyle='rgba(255,255,255,.38)';
-      const now$=fU(sim.bp,0);g.font='600 11px ui-monospace,monospace';const nowW=g.measureText(now$).width;g.font='11px ui-monospace,monospace';
+      const now$=fU(sim.bp,0);g.font='600 11px Inter,system-ui,sans-serif';const nowW=g.measureText(now$).width;g.font='11px Inter,system-ui,sans-serif';
       const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText(_UI?_UI.t('Yr {0}',k):'Yr '+k,x,cssH-6);}
-      g.fillStyle=CC('gold-300');g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
+      g.fillStyle=CC('gold-300');g.font='600 11px Inter,system-ui,sans-serif';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
     }
     // glow: a wide, faint stroke in the line's own colour under it (shadowBlur re-run every frame lagged)
     function line(arr,stroke,width,dash,upto,glow){const ln=new Path2D();ln.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)ln.lineTo(X(w),Y(arr[w]));
-      if(glow){g.globalAlpha=.2;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;}
+      /* no glow under the line (chart kit: flat lines) */
       g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);}
     const PSTEP=Math.max(1,Math.ceil(Wn/150));   // background paths: ~150 points each is plenty at this size
     geo={X,Y,Wn,pad,pw,cssW,x0,y0};hover(null);
@@ -305,7 +304,7 @@
       line(p50,CC('gold-300'),2.6,null,upto,'rgba(255,190,70,.95)');
       g.fillStyle='rgba(255,190,70,.25)';g.beginPath();g.arc(X(upto),Y(p50[upto]),11,0,7);g.fill();
       g.fillStyle=CC('gold-300');g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
-      if(k>=1){g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
+      if(k>=1){g.font='600 11px Inter,system-ui,sans-serif';g.textBaseline='middle';
         [[p90,CC('success')],[p50,CC('gold-300')],[p10,CC('error')]].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
         anim=null;return;}
       anim=requestAnimationFrame(frame);
