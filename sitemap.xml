@@ -80,4 +80,15 @@
   <url><loc>https://gmt-optimizer.com/copilot</loc><lastmod>2026-11-17</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://gmt-optimizer.com/about</loc><lastmod>2026-11-17</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
   <url><loc>https://gmt-optimizer.com/disclosures</loc><lastmod>2026-11-17</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <!-- i18n:urls (scripts/gen-i18n.js) -->
+  <url><loc>https://gmt-optimizer.com/es/</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/es/claim</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/es/copilot</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/fr/</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/fr/claim</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/fr/copilot</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/de/</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/de/claim</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://gmt-optimizer.com/de/copilot</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <!-- /i18n:urls -->
 </urlset>

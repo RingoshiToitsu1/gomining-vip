@@ -1,3 +1,79 @@
-/* GMT-Optimizer co-pilot script: SPANISH. Filled in during Phase 7 (translation).
-   Until then this stays null and the engine uses the English script (assets/copilot/en.js). */
-(window.GMTCopilotScripts = window.GMTCopilotScripts || {}).es = null;
+/* GMT-Optimizer co-pilot script: SPANISH (tú). Same nodes, targets and link kinds as en.js.
+   Machine-translated in Phase 7: needs native review (TRANSLATIONS.md). */
+(window.GMTCopilotScripts = window.GMTCopilotScripts || {}).es = {
+  ui: {
+    name: "Ringo", sub: "Guía de GMT-Optimizer · código {CODE}", fab: "Pregunta a Ringo",
+    tip: "¿Te ayudo con los números? Pregúntame.", tipClose: "Cerrar", restart: "Empezar de nuevo", close: "Cerrar",
+    resume: "Seguimos donde lo dejamos.", send: "Enviar", optional: "(opcional)", copied: "Copiado ✓",
+    reviewIntro: "Esto es lo que tengo. ¿Está bien?", reviewName: "Nombre", reviewUser: "Usuario de GoMining", reviewContact: "Contacto",
+    fine: 'Al enviar, aceptas la <a href="/privacy">Política de privacidad</a> y las <a href="/terms">Condiciones</a>. GMT-Optimizer es una herramienta independiente, no afiliada a GoMining. No es asesoramiento financiero.',
+    sendIt: "Enviar →", sentEcho: "Enviar", fix: "Corregir algo", missing: "Me falta algo. Repasémoslo otra vez.", sending: "Enviando…",
+    tabCopilot: "Copiloto", tabMessages: "Mensajes", msgLoading: "Cargando el chat…", msgFail: "El chat no se ha podido cargar. Ábrelo en su propia página.",
+    msgOpen: "Abrir el chat", fullPage: "Abrir a pantalla completa"
+  },
+  nodes: function (K) {
+    var CODE = K.CODE;
+    return {
+      start: { say: ["¿Qué tal? Soy Ringo, creé GMT-Optimizer.", "¿En qué te ayudo?"],
+        opts: [{ t: "Ayúdame con la calculadora", go: "tools" }, { t: "Soy nuevo en GoMining", go: "signup" }, { t: "¿Cómo funciona el descuento GMT?", go: "disc" }, { t: "Tengo preguntas", go: "faq" }] },
+      tools: { say: ["Claro. ¿Qué quieres averiguar?"],
+        opts: [{ t: "Lo que gana mi granja ahora", go: "t_console" }, { t: "Dónde poner dinero nuevo", go: "t_planner" }, { t: "Cómo estará mi granja en unos años", go: "t_proj" }, { t: "¿Es buena compra este minero del marketplace?", go: "t_market" }, { t: "Convertir mi CSV de GoMining en un estado", go: "t_statement" }] },
+      t_console: { say: ["Eso es la Consola. Pulsa <b>Edit my Farm</b> y añade tus mineros, tus GMT bloqueados y tus GMT líquidos.", "Usa el precio de BTC y la dificultad en directo, así que tus cifras diarias y mensuales son las que verías hoy, con el descuento incluido."],
+        links: [{ t: "Editar mi granja", href: "/console?view=edit", run: "openEditSetup" }, { t: "Abrir la Consola", href: "/console", run: ["consoleView", "tab-current"] }],
+        opts: [{ t: "Otra herramienta", go: "tools" }, { t: "¿Cómo se calcula el descuento?", go: "disc" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      t_planner: { say: ["Eso es el Planificador de capital. Pon la cantidad que quieres invertir.", "Prueba todos los repartos entre comprar TH, mejorar la eficiencia y bloquear GMT, y te da el que más gana manteniendo el descuento máximo."],
+        links: [{ t: "Abrir el Planificador de capital", href: "/planner", run: ["consoleView", "tab-planner"] }],
+        opts: [{ t: "¿Y proyectar ese plan?", go: "t_proj" }, { t: "Otra herramienta", go: "tools" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      t_proj: { say: ["Eso es la Proyección de crecimiento. Elige 1, 2, 3, 4, 5 o 10 años en el gráfico.", "Simula 4.000 futuros posibles de Bitcoin y lleva tu granja por el típico, reinvirtiendo cada semana. Cambia entre <b>My Farm</b> y <b>My Plan</b> para verla con el dinero del Planificador."],
+        links: [{ t: "Abrir la Proyección de crecimiento", href: "/projection", run: "openSetupProjection" }],
+        opts: [{ t: "¿Esas cifras están garantizadas?", go: "f_model" }, { t: "Otra herramienta", go: "tools" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      t_market: { say: ["Pega el enlace del minero en el Comprobador del marketplace.", "Compara el precio pedido, la eficiencia y el coste de mejora con acuñar los mismos TH nuevos, para que sepas si el anuncio de verdad sale mejor."],
+        links: [{ t: "Abrir el Comprobador del marketplace", href: "/gomining-marketplace-checker" }],
+        opts: [{ t: "Otra herramienta", go: "tools" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      t_statement: { say: ["Exporta tu CSV de ingresos desde GoMining y súbelo a la herramienta de estados.", "Lo convierte en un estado de ingresos limpio, con reparto de propiedad si compartes una granja."],
+        links: [{ t: "Abrir la herramienta de estados", href: "/statement" }],
+        opts: [{ t: "Otra herramienta", go: "tools" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      disc: { say: ["Si pagas el mantenimiento en GMT, GoMining te descuenta según cuántos días de comisiones cubren tus GMT.", "Por cada 18 días de cobertura tienes un 1 % de descuento, hasta el 20 % con 360 días. La Consola calcula el tuyo a partir de los GMT que introduces."],
+        links: [{ t: "Leer la explicación completa", href: "/gomining-discount-explained" }],
+        opts: [{ t: "¿Cuántos GMT necesito para el máximo?", go: "disc2" }, { t: "Otra pregunta", go: "faq" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      disc2: { say: ["Depende del tamaño de tu granja y de su eficiencia, porque eso fija tu comisión diaria.", "Añade tu granja en la Consola y verás tu cobertura en días. El Planificador de capital te dice exactamente cuánto bloquear para el máximo."],
+        links: [{ t: "Editar mi granja", href: "/console?view=edit", run: "openEditSetup" }, { t: "Abrir el Planificador de capital", href: "/planner", run: ["consoleView", "tab-planner"] }],
+        opts: [{ t: "Otra pregunta", go: "faq" }, { t: "Eso es todo, gracias", go: "bye" }] },
+      signup: { say: ["Vamos a registrarte con mi código <b>" + CODE + "</b>. Pulsa el botón: abre GoMining en otra pestaña con el código ya puesto, así este chat se queda aquí.", "Crea tu cuenta. Si te pide un código de referido, escribe <b>" + CODE + "</b>."],
+        links: [{ t: "Abrir GoMining ↗", kind: "ref" }, { t: "Copiar " + CODE, kind: "copy" }],
+        opts: [{ t: "Hecho, cuenta creada ✓", go: "buy" }, { t: "Ya tengo cuenta", go: "existing" }, { t: "No me pidió ningún código", go: "nocode" }, { t: "Me he atascado", go: "human" }] },
+      nocode: { say: ["Es normal. El enlace pone el código por ti.", "Si quieres asegurarte, mira tu perfil en GoMining. Las cuentas con menos de 30 días de antigüedad aún pueden añadir <b>" + CODE + "</b> ahí. Hazlo antes de comprar nada."],
+        opts: [{ t: "Entendido, siguiente paso", go: "buy" }, { t: "Me he atascado", go: "human" }] },
+      existing: { say: ["Te soy sincero: el bono de nuevo usuario de GoMining solo funciona en cuentas creadas con <b>" + CODE + "</b>.", "Si tu cuenta tiene menos de 30 días de antigüedad, añade " + CODE + " en tu perfil antes de comprar. ¿Más antigua? Escríbeme antes de comprar y lo vemos."],
+        opts: [{ t: "Añadido ✓", go: "buy" }, { t: "Mi cuenta es más antigua", go: "human" }, { t: "Atrás", go: "start" }] },
+      buy: { say: ["Con mi código, GoMining añade tres bonos de registro: <b>+5 % de TH extra</b> en tu primer minero (hasta 25 TH), <b>1 mes de VIP Platinum+</b> y un <b>bono de cashback con la tarjeta</b> cuando gastas con la GoMining Card en tus primeros 90 días.", "Con cuánto empezar lo decides tú, no yo. Invierte solo lo que puedas permitirte perder. Haz antes tus números en el Planificador de capital."],
+        links: [{ t: "Abrir el Planificador de capital", href: "/planner", run: ["consoleView", "tab-planner"] }],
+        opts: [{ t: "Enviar mi usuario a Ringo", go: "claim" }, { t: "Antes, unas preguntas", go: "faq" }] },
+      claim: { say: ["Mándame tu usuario de GoMining para confirmar que estás con mi código y ayudarte a montar tu granja.", "Tres cosas rápidas. Lo voy rellenando sobre la marcha."],
+        opts: [{ t: "Vamos", go: "q_name" }, { t: "Todavía no", go: "start" }] },
+      q_name: { say: ["¿Cómo te llamo?"], ask: { key: "name", label: "Tu nombre o alias", type: "text", check: /\S{2,}/, bad: "Dame al menos un par de letras.", next: "q_user" } },
+      q_user: { say: ["¿Tu usuario de GoMining? Es el nombre de tu perfil en GoMining."], ask: { key: "user", label: "Usuario de GoMining", type: "text", check: /\S{2,}/, bad: "Ese usuario parece demasiado corto. ¿Lo intentas otra vez?", next: "q_contact" } },
+      q_contact: { say: ["¿Cómo te contacto? Email, Telegram o X, lo que prefieras."], ask: { key: "contact", label: "Email, @telegram o @x", type: "text", check: /\S{3,}/, bad: "Necesito alguna forma de contactarte.", next: "review" } },
+      review: { say: [], review: true },
+      sent: { say: ["Recibido. 🔥", "Compruebo tu usuario en mi lista de referidos y te escribo.", "Bienvenido al equipo."],
+        links: [{ t: "Escríbeme por Telegram", kind: "tg" }],
+        opts: [{ t: "Ayúdame con la calculadora", go: "tools" }, { t: "Tengo una pregunta", go: "faq" }] },
+      sendfail: { say: ["Vaya, no se ha enviado. Revisa tu conexión y vuelve a intentarlo, o mándame tu usuario por Telegram y te lo configuro a mano."],
+        links: [{ t: "Escríbeme por Telegram", kind: "tg" }], opts: [{ t: "Intentar de nuevo", go: "review" }] },
+      faq: { say: ["Pregunta lo que quieras. ¿Qué tienes en mente?"],
+        opts: [{ t: "¿Estas cifras están garantizadas?", go: "f_model" }, { t: "¿GoMining es fiable?", go: "f_legit" }, { t: "¿Cómo paso el dinero a mi banco?", go: "f_bank" }, { t: "¿Y tú qué ganas?", go: "f_you" }, { t: "Hablar con Ringo", go: "human" }] },
+      f_model: { say: ["No. Todo aquí usa el precio de BTC y la dificultad en directo, pero el futuro es un modelo, no una promesa.", "Las proyecciones suponen que Bitcoin sigue su tendencia a largo plazo y que la dificultad sigue subiendo. Úsalas para comparar opciones, no para contar con una cifra. No es asesoramiento financiero."],
+        opts: [{ t: "Otra pregunta", go: "faq" }, { t: "Ayúdame con la calculadora", go: "tools" }] },
+      f_legit: { say: ["Buena pregunta. Es el mismo riesgo que cualquier inversión. Si tienes acciones de una empresa y se hunde, tus acciones caen con ella.", "GoMining existe desde 2017 y ofrece este producto desde 2021. Le confío mi propio dinero. Pero ninguna inversión está libre de riesgo, y esta tampoco.", "GMT-Optimizer es mi herramienta independiente, no de GoMining."],
+        opts: [{ t: "Otra pregunta", go: "faq" }, { t: "Empecemos", go: "signup" }] },
+      f_bank: { say: ["Yo lo hago así: retiro en BNB Smart Chain, cambio a USDC, lo envío a Coinbase y de ahí a mi banco.", "O sáltate todo eso y gástalo con la tarjeta Visa de GoMining a través de Apple Pay."],
+        links: [{ t: "Abrir Coinbase ↗", href: "https://coinbase.com/join/MC6T569" }],
+        opts: [{ t: "Otra pregunta", go: "faq" }, { t: "Empecemos", go: "signup" }] },
+      f_you: { say: ["Transparencia total: GoMining me paga una comisión por referido y recompensas de embajador ligadas a tus comisiones de minería.", "Así es como mantengo GMT-Optimizer gratis y sin anuncios."],
+        opts: [{ t: "Otra pregunta", go: "faq" }, { t: "Empecemos", go: "signup" }] },
+      human: { say: ["Escríbeme directamente. Respondo yo mismo, normalmente bastante rápido."],
+        links: [{ t: "Escríbeme por Telegram", kind: "tg" }, { t: "Mándame un SMS", kind: "sms" }], opts: [{ t: "Volver al inicio", go: "start" }] },
+      bye: { say: ["Cuando quieras. Estoy aquí en la esquina si me necesitas."], opts: [{ t: "Volver al inicio", go: "start" }] }
+    };
+  }
+};

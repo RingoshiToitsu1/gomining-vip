@@ -127,9 +127,9 @@
 
   // ---- render ----
   const $ = id => document.getElementById(id);
-  // Language: the /embed page sets window.RE_LANG and window.RE_I18N from ?lang=. Every
-  // other page that loads this file stays English, exactly as before.
-  const LANG = window.RE_LANG || 'en';
+  // Language: the /embed page sets window.RE_LANG and window.RE_I18N from ?lang=. Other pages follow
+  // <html lang> (the /es/, /fr/, /de/ copies); farm-mode text for those lives in FARM below.
+  const LANG = window.RE_LANG || ({ es: 1, fr: 1, de: 1 }[(document.documentElement.lang || '').slice(0, 2)] ? document.documentElement.lang.slice(0, 2) : 'en');
   const LOCALE = { en: 'en-US', fr: 'fr-FR', es: 'es-ES', de: 'de-DE' }[LANG] || 'en-US';
   const NB = '\u00a0';
   const num = (n, d = 0) => n.toLocaleString(LOCALE, { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -146,13 +146,61 @@
     lock: ' GMT lock', streak: ' click streak', solo: ' solo',
     costSub: 'bonus TH on your first miner',
     yearCap: p => p + '% a year on capital',
+    yearCapEst: p => '\u2248' + p + '% est. yearly at today\u2019s rates',   // the landing quick estimate (window.RE_YEARCAP = 'estimate')
+    // farm mode (landing, /gomining-roi-calculator, /is-gomining-worth-it)
+    fSplit: (a, b) => a + ' mining + ' + b + ' staking',
+    fAfter: 'after fees & discount',
+    fCov: p => p + ' GMT coverage', fStreak: p => p + ' click streak', fMode: p => p + ' mining mode',
+    fNone: 'no GMT locked yet',
+    fDead: o => 'This stops earning — without the GMT discount your mining margin decays to zero as difficulty ' +
+      'rises, because you are exactly the marginal miner the network prices for. Locking ' + o.gmt +
+      ' GMT (~' + o.usd + ') for the full ' + o.cap + '% discount is what makes this setup viable.',
+    fMax: o => 'You are at the ' + o.cap + '% maximum token discount — extra GMT past this only lifts your VIP tier. ' +
+      'The discount is saving you ' + o.save + '/mo at this size.',
+    fLock: o => 'Lock ' + o.need + ' more GMT (~' + o.usd + ') to reach the ' + o.cap + '% maximum electricity discount — worth ' +
+      o.worth + '/mo at this size.',
+    fBasis: s => s + ' sats/TH/day',
+    fCost: (th, p, lock) => th + ' TH @ ' + p + '/TH' + (lock ? ' + GMT lock' : ''),
     hint: o => o.A + ' buys <b>' + o.th + ' TH</b> at ' + o.wth + ' W/TH' +
       (o.lock ? ' plus <b>' + o.gmt + ' GMT</b> locked for the 20% fee discount' : '') +
       ', and RINGO5 adds <b>' + o.bonus + ' bonus TH</b> on top. ' +
       (o.lock ? 'That split earns more than putting it all into hashrate at today\'s prices.'
               : 'At today\'s prices, all hashrate earns more than locking GMT for the discount.')
   };
-  const tx = (k, ...a) => { const v = (window.RE_I18N && window.RE_I18N[k]) || EN[k]; return typeof v === 'function' ? v(...a) : v; };
+  // Farm-mode text for the translated pages (dollar-mode translations come from the /embed page).
+  const FARM = {
+    es: {
+      yearCap: p => p + ' % al año sobre el capital', yearCapEst: p => '\u2248' + p + ' % anual est. a los precios de hoy',
+      fSplit: (a, b) => a + ' minería + ' + b + ' staking', fAfter: 'tras comisiones y descuento',
+      fCov: p => p + ' cobertura GMT', fStreak: p => p + ' racha de clics', fMode: p => p + ' modo de minería',
+      fNone: 'aún no hay GMT bloqueado',
+      fDead: o => 'Esto deja de ganar: sin el descuento GMT tu margen de minería cae a cero a medida que sube la dificultad, porque eres justo el minero marginal que fija el precio de la red. Bloquear ' + o.gmt + ' GMT (~' + o.usd + ') para el descuento completo del ' + o.cap + ' % es lo que hace viable esta configuración.',
+      fMax: o => 'Estás en el descuento máximo por token del ' + o.cap + ' %: más GMT a partir de aquí solo sube tu nivel VIP. El descuento te ahorra ' + o.save + '/mes con este tamaño.',
+      fLock: o => 'Bloquea ' + o.need + ' GMT más (~' + o.usd + ') para llegar al descuento máximo del ' + o.cap + ' % en electricidad: vale ' + o.worth + '/mes con este tamaño.',
+      fBasis: s => s + ' sats/TH/día', fCost: (th, p, lock) => th + ' TH a ' + p + '/TH' + (lock ? ' + bloqueo de GMT' : ''), cached: ' (en caché)'
+    },
+    fr: {
+      yearCap: p => p + ' % par an sur le capital', yearCapEst: p => '\u2248' + p + ' % par an est. aux prix du jour',
+      fSplit: (a, b) => a + ' minage + ' + b + ' staking', fAfter: 'après frais et remise',
+      fCov: p => p + ' couverture GMT', fStreak: p => p + ' série de clics', fMode: p => p + ' mode de minage',
+      fNone: 'aucun GMT bloqué pour l\u2019instant',
+      fDead: o => 'Cette configuration cesse de rapporter : sans la remise GMT, votre marge de minage tombe à zéro à mesure que la difficulté monte, car vous êtes exactement le mineur marginal sur lequel le réseau fixe son prix. Bloquer ' + o.gmt + ' GMT (~' + o.usd + ') pour la remise complète de ' + o.cap + ' % est ce qui la rend viable.',
+      fMax: o => 'Vous êtes à la remise maximale de ' + o.cap + ' % sur les jetons : des GMT en plus ne font que monter votre niveau VIP. La remise vous fait économiser ' + o.save + '/mois à cette taille.',
+      fLock: o => 'Bloquez ' + o.need + ' GMT de plus (~' + o.usd + ') pour atteindre la remise maximale de ' + o.cap + ' % sur l\u2019électricité : elle vaut ' + o.worth + '/mois à cette taille.',
+      fBasis: s => s + ' sats/TH/jour', fCost: (th, p, lock) => th + ' TH à ' + p + '/TH' + (lock ? ' + blocage GMT' : ''), cached: ' (en cache)'
+    },
+    de: {
+      yearCap: p => p + ' % pro Jahr aufs Kapital', yearCapEst: p => '\u2248' + p + ' % pro Jahr geschätzt zu heutigen Kursen',
+      fSplit: (a, b) => a + ' Mining + ' + b + ' Staking', fAfter: 'nach Gebühren und Rabatt',
+      fCov: p => p + ' GMT-Deckung', fStreak: p => p + ' Klick-Serie', fMode: p => p + ' Mining-Modus',
+      fNone: 'noch keine GMT gesperrt',
+      fDead: o => 'Das verdient bald nichts mehr: Ohne den GMT-Rabatt schrumpft deine Mining-Marge mit steigender Difficulty auf null, weil du genau der Grenz-Miner bist, nach dem sich das Netzwerk richtet. ' + o.gmt + ' GMT (~' + o.usd + ') für den vollen Rabatt von ' + o.cap + ' % zu sperren macht dieses Setup tragfähig.',
+      fMax: o => 'Du hast den maximalen Token-Rabatt von ' + o.cap + ' % erreicht: Weitere GMT heben nur noch dein VIP-Level. Der Rabatt spart dir bei dieser Größe ' + o.save + '/Monat.',
+      fLock: o => 'Sperre ' + o.need + ' GMT mehr (~' + o.usd + '), um den maximalen Stromrabatt von ' + o.cap + ' % zu erreichen: Das bringt bei dieser Größe ' + o.worth + '/Monat.',
+      fBasis: s => s + ' Sats/TH/Tag', fCost: (th, p, lock) => th + ' TH zu je ' + p + '/TH' + (lock ? ' + GMT-Sperre' : ''), cached: ' (zwischengespeichert)'
+    }
+  }[LANG] || {};
+  const tx = (k, ...a) => { const v = (window.RE_I18N && window.RE_I18N[k]) || FARM[k] || EN[k]; return typeof v === 'function' ? v(...a) : v; };
 
 
   // ---- dollar mode (/embed only, switched on by a #re-usd input) ----
@@ -238,42 +286,38 @@
 
     const m = model(th, wth, gl, apr, streak);
     $('re-net').textContent = money(m.netToday * M.DAYS_PER_MONTH);
-    $('re-disc').textContent = num(m.totD, 1) + '%';
+    $('re-disc').textContent = pct(m.totD, 1);
     $('re-be').textContent = money(m.netToday);
-    $('re-be-sub').textContent = tx('yearCap', num(m.yieldPct, 1));
+    $('re-be-sub').textContent = tx(window.RE_YEARCAP === 'estimate' ? 'yearCapEst' : 'yearCap', num(m.yieldPct, 1));
     $('re-cost').textContent = money(m.invested);
     $('re-net-sub').textContent = m.stakingToday > 0
-      ? money(m.miningToday * M.DAYS_PER_MONTH) + ' mining + ' + money(m.stakingToday * M.DAYS_PER_MONTH) + ' staking'
-      : 'after fees & discount';
+      ? tx('fSplit', money(m.miningToday * M.DAYS_PER_MONTH), money(m.stakingToday * M.DAYS_PER_MONTH))
+      : tx('fAfter');
 
     const parts = [];
-    if (m.tok > 0) parts.push(m.tok + '% GMT coverage');
-    if (m.vip.d > 0) parts.push(num(m.vip.d, 1) + '% ' + m.vip.n);
-    if (streak) parts.push(CLICK_STREAK + '% click streak');
-    if (MINING_MODE > 0) parts.push(num(MINING_MODE, 2) + '% mining mode');
-    $('re-disc-sub').textContent = parts.length ? parts.join(' + ') : 'no GMT locked yet';
+    if (m.tok > 0) parts.push(tx('fCov', pct(m.tok)));
+    if (m.vip.d > 0) parts.push(pct(m.vip.d, 1) + ' ' + m.vip.n);
+    if (streak) parts.push(tx('fStreak', pct(CLICK_STREAK)));
+    if (MINING_MODE > 0) parts.push(tx('fMode', pct(MINING_MODE, 2)));
+    $('re-disc-sub').textContent = parts.length ? parts.join(' + ') : tx('fNone');
 
     // The lever the site is actually about: what it takes to max the discount.
     // Mining margin reaching zero is the important teaching moment — with no
     // discount you ARE the marginal miner the reward floor is defined by.
     const hint = $('re-hint');
     const need = Math.max(0, m.gmtFor20 - gl);
-    if (m.miningDead && m.tok < 20) {
-      hint.textContent = 'This stops earning — without the GMT discount your mining margin decays to zero as difficulty ' +
-        'rises, because you are exactly the marginal miner the network prices for. Locking ' + num(m.gmtFor20, 0) +
-        ' GMT (~' + money(m.gmtFor20 * m.gp * (1 + USD_GMT_FEE)) + ') for the full 20% discount is what makes this setup viable.';
-    } else if (m.tok >= 20) {
-      hint.textContent = 'You are at the 20% maximum token discount — extra GMT past this only lifts your VIP tier. ' +
-        'The discount is saving you ' + money(m.feesUSD * (m.totD / 100) * M.DAYS_PER_MONTH) + '/mo at this size.';
+    if (m.miningDead && m.tok < TOK_CAP) {
+      hint.textContent = tx('fDead', { gmt: num(m.gmtFor20, 0), usd: money(m.gmtFor20 * m.gp * (1 + USD_GMT_FEE)), cap: num(TOK_CAP) });
+    } else if (m.tok >= TOK_CAP) {
+      hint.textContent = tx('fMax', { cap: num(TOK_CAP), save: money(m.feesUSD * (m.totD / 100) * M.DAYS_PER_MONTH) });
     } else {
-      hint.textContent = 'Lock ' + num(need, 0) + ' more GMT (~' + money(need * m.gp * (1 + USD_GMT_FEE)) +
-        ') to reach the 20% maximum electricity discount — worth ' +
-        money(m.feesUSD * (TOK_CAP / 100) * M.DAYS_PER_MONTH) + '/mo at this size.';
+      hint.textContent = tx('fLock', { need: num(need, 0), usd: money(need * m.gp * (1 + USD_GMT_FEE)), cap: num(TOK_CAP),
+        worth: money(m.feesUSD * (TOK_CAP / 100) * M.DAYS_PER_MONTH) });
     }
 
-    $('re-basis').textContent = 'BTC ' + money(m.bp) + ' · GMT $' + num(m.gp, 3) + ' · ' +
-      num(Math.round(S.satsPerTHDay), 0) + ' sats/TH/day' + (S.live ? '' : ' (cached)');
-    $('re-cost-sub').textContent = num(th, 0) + ' TH @ ' + money(cptAtEff(th, wth)) + '/TH' + (m.lockCost > 0 ? ' + GMT lock' : '');
+    $('re-basis').textContent = 'BTC ' + money(m.bp) + ' · GMT ' + (LANG === 'en' ? '$' + num(m.gp, 3) : num(m.gp, 3) + NB + '$') + ' · ' +
+      tx('fBasis', num(Math.round(S.satsPerTHDay), 0)) + (S.live ? '' : tx('cached'));
+    $('re-cost-sub').textContent = tx('fCost', num(th, 0), money(cptAtEff(th, wth)), m.lockCost > 0);
   }
 
   // Until the visitor touches the GMT field, keep it parked at the amount that

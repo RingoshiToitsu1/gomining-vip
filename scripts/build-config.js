@@ -51,13 +51,18 @@ cfg.derived = { fullCoverageDays: cfg.discount.coverageDaysPerPct * cfg.discount
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmtDate = iso => { const d = new Date(iso + 'T00:00:00Z'); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; };
 const trimNum = n => String(Math.round(n * 1e6) / 1e6);
+const LOCALE = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' };
+const comma = (s, lang) => (LOCALE[lang] ? s.replace('.', ',') : s);   // decimal comma in es/fr/de
 const FMT = {
-  date: v => fmtDate(v),
-  pct: v => trimNum(v * 100),          // a fraction (0.0225) shown as percent digits ("2.25")
+  date: (v, lang) => LOCALE[lang]
+    ? new Intl.DateTimeFormat(LOCALE[lang], { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(v + 'T00:00:00Z'))
+    : fmtDate(v),
+  pct: (v, lang) => comma(trimNum(v * 100), lang),   // a fraction (0.0225) shown as percent digits ("2.25")
   money4: v => '$' + String(v),
   int: v => String(Math.round(v)),
-  '': v => (typeof v === 'number' ? trimNum(v) : String(v))
+  '': (v, lang) => (typeof v === 'number' ? comma(trimNum(v), lang) : String(v))
 };
+const langOf = f => (f.match(/^(es|fr|de)\//) || [])[1] || 'en';
 
 const changed = [];
 const write = (f, s) => { const p = rel(f); if (fs.readFileSync(p, 'utf8') !== s) { changed.push(f); if (!CHECK) fs.writeFileSync(p, s); } };
@@ -77,14 +82,14 @@ const write = (f, s) => { const p = rel(f); if (fs.readFileSync(p, 'utf8') !== s
 const PHRASES = [
   ['referral.bonusThPct', /(?<![\d.])\d+(?=\s?%\s*(?:bonus TH|bonus terahash|de TH en bonus|de TH extra|Bonus-TH))/g],
   ['referral.bonusThCap', /(?<=\b(?:up to|hasta|jusqu'à|jusqu&#39;à|jusqu’à|bis zu)\s)\d+(?=\s?TH\b)/g],
-  ['referral.codeWindowDays', /(?<=\bwithin\s)\d+(?=\s+days of signing up)|(?<=\bless than\s)\d+(?=\s+days old)|(?<=\bdentro de los\s)\d+(?=\s+días)|(?<=\bdans les\s)\d+(?=\s+jours suivant)|(?<=\binnerhalb von\s)\d+(?=\s+Tagen nach)/g],
+  ['referral.codeWindowDays', /(?<=\bwithin\s)\d+(?=\s+days of signing up)|(?<=\bless than\s)\d+(?=\s+days old)|(?<=\bmenos de\s)\d+(?=\s+días de antigüedad)|(?<=\bmoins de\s)\d+(?=\s+jours d'ancienneté)|(?<=\bjünger als\s)\d+(?=\s+Tage)|(?<=\bdentro de los\s)\d+(?=\s+días)|(?<=\bdans les\s)\d+(?=\s+jours suivant)|(?<=\binnerhalb von\s)\d+(?=\s+Tagen nach)/g],
   ['referral.cardWindowDays', /(?<=\bfirst\s)\d+(?=\s+days)|\d+(?=\s+premiers jours)|(?<=\bprimeros\s)\d+(?=\s+días)|(?<=\bersten\s)\d+(?=\s+Tagen)/g],
   ['referral.vipMonths', /(?<![\d.])\d+(?=\s+(?:months? of VIP Platinum|mois de VIP Platinum|mes de VIP Platinum|Monat VIP Platinum))/g],
-  ['discount.coverageDaysPerPct', /(?<=\b[Ee]very (?:<b>)?)\d+(?=(?:<\/b>)?\s+days(?: of (?:fee )?coverage)?(?:<\/b>)?\s+(?:of coverage\s+)?is)/g],
-  ['derived.fullCoverageDays', /(?<=\bup to (?:<b>)?\d+%(?:<\/b>)? at (?:<b>)?)\d+(?= days)/g],
-  ['discount.tokenCapPct', /(?<=\b(?:up to|to) a )\d+(?=% cap)|(?<=\bup to (?:<b>)?)\d+(?=%(?:<\/b>)? at (?:<b>)?\d+ days)|(?<![\d.$+])\d+(?=%\s+(?:discount|fee discount|token discount|GMT discount|coverage discount))/g],
+  ['discount.coverageDaysPerPct', /(?<=\b[Ee]very (?:<b>)?)\d+(?=(?:<\/b>)?\s+days(?: of (?:fee )?coverage)?(?:<\/b>)?\s+(?:of coverage\s+)?is)|(?<=\b[Cc]ada (?:<b>)?)\d+(?=(?:<\/b>)?\s+días de cobertura)|(?<=\b[Cc]haque tranche de (?:<b>)?)\d+(?=(?:<\/b>)?\s+jours de couverture)|(?<=\b[Jj]e (?:<b>)?)\d+(?=(?:<\/b>)?\s+Tage Deckung)/g],
+  ['derived.fullCoverageDays', /(?<=\bup to (?:<b>)?\d+%(?:<\/b>)? at (?:<b>)?)\d+(?= days)|(?<=%(?:<\/b>)? con (?:<b>)?)\d+(?= días)|(?<=%(?:<\/b>)? à (?:<b>)?)\d+(?= jours)|(?<=%(?:<\/b>)? bei (?:<b>)?)\d+(?= Tagen)/g],
+  ['discount.tokenCapPct', /(?<=\b(?:up to|to) a )\d+(?=% cap)|(?<=\bup to (?:<b>)?)\d+(?=%(?:<\/b>)? at (?:<b>)?\d+ days)|(?<![\d.$+])\d+(?=%\s+(?:discount|fee discount|token discount|GMT discount|coverage discount))|(?<=\bhasta el (?:<b>)?)\d+(?=\s?%(?:<\/b>)? con (?:<b>)?\d+ días)|(?<=\bjusqu(?:'|’|&#39;)à (?:<b>)?)\d+(?=\s?%(?:<\/b>)? à (?:<b>)?\d+ jours)|(?<=\bbis zu (?:<b>)?)\d+(?=\s?%(?:<\/b>)? bei (?:<b>)?\d+ Tagen)/g],
 ];
-const PHRASE_FILES = ['assets/copilot/en.js', 'assets/roi-embed.js', 'assets/quote.js', 'assets/market-check.js'];
+const PHRASE_FILES = ['locales/es.json', 'locales/fr.json', 'locales/de.json', 'assets/copilot/en.js', 'assets/copilot/es.js', 'assets/copilot/fr.js', 'assets/copilot/de.js', 'assets/roi-embed.js', 'assets/quote.js', 'assets/market-check.js'];
 const phraseHits = {};
 function applyPhrases(f, s) {
   for (const [p, re] of PHRASES) {
@@ -117,7 +122,7 @@ for (const f of pages) {
     const v = get(p);
     if (v === undefined) { errs.push(`${f}: data-cfg="${p}" is not in config.json`); return m; }
     filled++;
-    return open + (FMT[fmt || ''] || FMT[''])(v) + close;
+    return open + (FMT[fmt || ''] || FMT[''])(v, langOf(f)) + close;
   });
   s = applyPhrases(f, s);
   for (const [id, p] of INPUTS) {

@@ -27,7 +27,7 @@
   var FORM = "https://formspree.io/f/xojokqwe";   // same endpoint as /claim
   var STORE = "gmt_copilot";
   var AVATAR = "/assets/brand/GMT_icon_transparent.svg";
-  var SCRIPTS = { en: "/assets/copilot/en.js?v=1", es: "/assets/copilot/es.js?v=1", fr: "/assets/copilot/fr.js?v=1", de: "/assets/copilot/de.js?v=1" };
+  var SCRIPTS = { en: "/assets/copilot/en.js?v=1", es: "/assets/copilot/es.js?v=2", fr: "/assets/copilot/fr.js?v=2", de: "/assets/copilot/de.js?v=2" };
   var CHAT_DEPS = [   // the Messages tab loads the chat room on first use, only on pages that don't already have it
     ["supabase", "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"],
     ["GMT_SUPABASE", "/assets/supabase-config.js?v=4"],

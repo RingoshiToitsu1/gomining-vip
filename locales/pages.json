@@ -1,0 +1,4 @@
+{
+  "_readme": "English source pages mirrored to /es/, /fr/, /de/ by scripts/gen-i18n.js. Add a page here once its translations are in locales/<lang>.json.",
+  "pages": ["index.html", "claim/index.html", "copilot.html"]
+}

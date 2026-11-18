@@ -7,6 +7,13 @@
 <title>GoMining Calculator: Profit, ROI & Earnings | GMT-Optimizer</title>
 <meta name="description" content="Free GoMining calculator: project mining profit, ROI and GMT earnings on live BTC difficulty and halving decay. New? Code RINGO5 unlocks three GoMining sign-up bonuses.">
 <link rel="canonical" href="https://gmt-optimizer.com/">
+<!-- i18n:alternates (scripts/gen-i18n.js) -->
+<link rel="alternate" hreflang="en" href="https://gmt-optimizer.com/">
+<link rel="alternate" hreflang="es" href="https://gmt-optimizer.com/es/">
+<link rel="alternate" hreflang="fr" href="https://gmt-optimizer.com/fr/">
+<link rel="alternate" hreflang="de" href="https://gmt-optimizer.com/de/">
+<link rel="alternate" hreflang="x-default" href="https://gmt-optimizer.com/">
+<!-- /i18n:alternates -->
 <meta name="robots" content="index,follow,max-image-preview:large">
 <!-- Social link preview (Open Graph + Twitter Card) -->
 <meta property="og:type" content="website">
@@ -113,7 +120,7 @@
 <link rel="stylesheet" href="/assets/components.css?v=6">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=8">
 <link rel="stylesheet" href="/assets/landing.css?v=4">
-<script src="/assets/site-chrome.js?v=6" defer></script>
+<script src="/assets/site-chrome.js?v=7" defer></script>
 </head>
 <body class="lp ui-scope">
 <main>
@@ -275,13 +282,13 @@
 </main>
 <script>
 /* Quick-estimate wording (the shared ROI widget reads overrides from RE_I18N). */
-window.RE_I18N = { yearCap: function (p) { return '\u2248' + p + '% est. yearly at today\u2019s rates'; } };
+window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's rates" line (all languages)
 </script>
 <script src="/assets/pricing.js?v=3"></script>
 <script src="/lib/mining.js?v=2"></script>
-<script src="/assets/roi-embed.js?v=33"></script>
+<script src="/assets/roi-embed.js?v=34"></script>
 <script src="/assets/components.js?v=2" defer></script>
-<script src="/assets/site.js?v=39"></script>
+<script src="/assets/site.js?v=40"></script>
 <script>
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */
 (function(){

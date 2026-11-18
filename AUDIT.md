@@ -597,3 +597,26 @@ Who reads profile data today (all must keep working after the fix):
 - [ ] Social/OG images rebranded (§13).
 - [ ] Statement and console tables pass (§17).
 - [ ] Offer check = 0 on the built site, all languages.
+
+## 20. Phase 7a: translation machinery + first pages (ES / FR / DE)
+
+**How it works.** `scripts/gen-i18n.js` (no dependencies) reads each English page listed in `locales/pages.json`,
+splits it into text runs (text plus inline markup, split at block elements; the parser round-trips every page byte for
+byte), and swaps each run for its translation from `locales/<lang>.json`, keyed by the English text. It also translates
+meta/og/twitter text, `alt`/`title`/`aria-label`/`placeholder` and JSON-LD strings, sets `<html lang>`, canonical and
+og:url, points internal links at the same language when that page exists, and writes the copy at the same shape
+(`/claim/index.html` → `/es/claim/index.html`, `/copilot.html` → `/es/copilot.html`), so the new URLs behave like the
+English ones on GitHub Pages. It keeps an hreflang block (en/es/fr/de + x-default) in the English page and every copy,
+the translated URLs in `sitemap.xml`, and the header's list of translated pages. Untranslated text stays English and is
+listed by `--missing`; `--check` fails when generated files are stale.
+
+**New URLs (additions only; no English URL changed):** `/es/`, `/fr/`, `/de/`, and `/es|fr|de/claim`, `/es|fr|de/copilot`.
+
+**Also:** header/footer/account menu translated (`site-chrome.js`), and the language menu now links to the page's real
+translations (from its hreflang links), with "soon" for the rest. The co-pilot speaks ES/FR/DE (`assets/copilot/*.js`,
+same nodes as English). The quick-estimate widget's farm-mode text is translated and uses the config's discount cap
+instead of literal 20s. `data-cfg` dates and decimals are formatted per page language. Phrase rules cover ES/FR/DE for
+every config number used in the translations, and run over the locale files and co-pilot scripts.
+
+**Review:** all strings are machine translations; `TRANSLATIONS.md` lists where they live and the rules for reviewers.
+**Next stages:** 7b content pages, 7c data pages, 7d console app + account pages + chat UI (TRANSLATIONS.md status table).

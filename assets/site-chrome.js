@@ -28,7 +28,56 @@
   var WORDMARK = '/assets/brand/GMT-Optimizer_white-text_transparent.svg';
   var ICON = '/assets/brand/GMT_icon_transparent.svg';
   var TG = 'https://t.me/RinGoMining';
-  var path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+  // ---------- language (Phase 7): from <html lang>; /es/, /fr/, /de/ copies come from scripts/gen-i18n.js ----------
+  var LANG = ({ es: 1, fr: 1, de: 1 }[(document.documentElement.lang || '').slice(0, 2)]) ? document.documentElement.lang.slice(0, 2) : 'en';
+  // Pages that exist in every language (kept up to date by scripts/gen-i18n.js; don't edit by hand).
+  var TRANSLATED = /* i18n:pages */["/","/claim","/copilot"]/* /i18n:pages */;
+  var STR = {
+    en: {},
+    es: { Calculator: 'Calculadora', 'Growth Projection': 'Proyección', Guides: 'Guías', 'RINGO5 Bonuses': 'Bonos RINGO5', Tools: 'Herramientas',
+      'ROI Calculator': 'Calculadora de ROI', 'Marketplace Checker': 'Comprobador del marketplace', 'Co-pilot': 'Copiloto', Learn: 'Aprender',
+      FAQ: 'Preguntas frecuentes', Glossary: 'Glosario', 'How GoMining works': 'Cómo funciona GoMining', Company: 'Empresa', About: 'Sobre GMT-Optimizer',
+      Contact: 'Contacto', Legal: 'Legal', 'Privacy Policy': 'Política de privacidad', 'Terms of Use': 'Condiciones de uso', Disclosures: 'Divulgaciones',
+      'Get Started': 'Empezar', 'Skip to content': 'Saltar al contenido', 'GMT-Optimizer home': 'Inicio de GMT-Optimizer', Main: 'Principal',
+      Language: 'Idioma', 'Language: ': 'Idioma: ', Messages: 'Mensajes', 'Open menu': 'Abrir menú', Menu: 'Menú', soon: 'pronto',
+      tagline: 'Calculadora, planificador y proyecciones independientes para GoMining, con datos de la red en directo. Sin anuncios.',
+      'Support the site:': 'Apoya la web:', 'Copy BTC address': 'Copiar dirección BTC', 'Copy GMT address (ETH/BNB)': 'Copiar dirección GMT (ETH/BNB)',
+      legal1: 'Herramienta independiente. No afiliada, respaldada ni gestionada por GoMining.', legal2: 'Recibo una recompensa por referido si usas mi código. No es asesoramiento financiero.',
+      'Log in': 'Iniciar sesión', 'Create account': 'Crear cuenta', Account: 'Cuenta', Dashboard: 'Panel', Profile: 'Perfil', Settings: 'Ajustes',
+      'Log out': 'Cerrar sesión', 'Account menu for ': 'Menú de cuenta de ' },
+    fr: { Calculator: 'Calculateur', 'Growth Projection': 'Projection', Guides: 'Guides', 'RINGO5 Bonuses': 'Bonus RINGO5', Tools: 'Outils',
+      'ROI Calculator': 'Calculateur de ROI', 'Marketplace Checker': 'Vérificateur du marketplace', 'Co-pilot': 'Copilote', Learn: 'Apprendre',
+      FAQ: 'FAQ', Glossary: 'Glossaire', 'How GoMining works': 'Comment fonctionne GoMining', Company: 'À propos', About: 'Qui sommes-nous',
+      Contact: 'Contact', Legal: 'Mentions', 'Privacy Policy': 'Politique de confidentialité', 'Terms of Use': 'Conditions d\u2019utilisation', Disclosures: 'Transparence',
+      'Get Started': 'Commencer', 'Skip to content': 'Aller au contenu', 'GMT-Optimizer home': 'Accueil GMT-Optimizer', Main: 'Principal',
+      Language: 'Langue', 'Language: ': 'Langue : ', Messages: 'Messages', 'Open menu': 'Ouvrir le menu', Menu: 'Menu', soon: 'bientôt',
+      tagline: 'Calculateur, planificateur et projections GoMining indépendants, sur les données réseau en direct. Sans publicité.',
+      'Support the site:': 'Soutenir le site :', 'Copy BTC address': 'Copier l\u2019adresse BTC', 'Copy GMT address (ETH/BNB)': 'Copier l\u2019adresse GMT (ETH/BNB)',
+      legal1: 'Outil indépendant. Ni affilié à GoMining, ni approuvé, ni exploité par GoMining.', legal2: 'Je touche une récompense de parrainage si vous utilisez mon code. Pas un conseil financier.',
+      'Log in': 'Se connecter', 'Create account': 'Créer un compte', Account: 'Compte', Dashboard: 'Tableau de bord', Profile: 'Profil', Settings: 'Paramètres',
+      'Log out': 'Se déconnecter', 'Account menu for ': 'Menu du compte de ' },
+    de: { Calculator: 'Rechner', 'Growth Projection': 'Wachstumsprognose', Guides: 'Ratgeber', 'RINGO5 Bonuses': 'RINGO5-Boni', Tools: 'Tools',
+      'ROI Calculator': 'ROI-Rechner', 'Marketplace Checker': 'Marketplace-Check', 'Co-pilot': 'Co-Pilot', Learn: 'Lernen',
+      FAQ: 'FAQ', Glossary: 'Glossar', 'How GoMining works': 'So funktioniert GoMining', Company: 'Über uns', About: 'Über GMT-Optimizer',
+      Contact: 'Kontakt', Legal: 'Rechtliches', 'Privacy Policy': 'Datenschutz', 'Terms of Use': 'Nutzungsbedingungen', Disclosures: 'Offenlegungen',
+      'Get Started': 'Loslegen', 'Skip to content': 'Zum Inhalt springen', 'GMT-Optimizer home': 'GMT-Optimizer Startseite', Main: 'Haupt',
+      Language: 'Sprache', 'Language: ': 'Sprache: ', Messages: 'Nachrichten', 'Open menu': 'Menü öffnen', Menu: 'Menü', soon: 'bald',
+      tagline: 'Unabhängiger GoMining-Rechner, Planer und Prognosen auf Basis von Live-Netzwerkdaten. Ohne Werbung.',
+      'Support the site:': 'Unterstütze die Seite:', 'Copy BTC address': 'BTC-Adresse kopieren', 'Copy GMT address (ETH/BNB)': 'GMT-Adresse kopieren (ETH/BNB)',
+      legal1: 'Unabhängiges Tool. Weder mit GoMining verbunden noch von GoMining unterstützt oder betrieben.', legal2: 'Ich erhalte eine Empfehlungsprämie, wenn du meinen Code nutzt. Keine Finanzberatung.',
+      'Log in': 'Anmelden', 'Create account': 'Konto erstellen', Account: 'Konto', Dashboard: 'Dashboard', Profile: 'Profil', Settings: 'Einstellungen',
+      'Log out': 'Abmelden', 'Account menu for ': 'Kontomenü von ' }
+  };
+  var EN_TEXT = { tagline: 'Independent GoMining calculator, planner and projections, on live network data. No ads.',
+    legal1: 'Independent tool. Not affiliated with, endorsed by, or operated by GoMining.', legal2: 'I earn a referral reward if you use my code. Not financial advice.' };
+  var t = function (k) { return (STR[LANG] && STR[LANG][k]) || EN_TEXT[k] || k; };
+  // A site path in the current language: /claim → /es/claim when that page is translated.
+  var L = function (href) {
+    if (LANG === 'en' || !href || href.charAt(0) !== '/' || href.charAt(1) === '/') return href;
+    var m = href.match(/^([^?#]*)(.*)$/), p = m[1].replace(/\/$/, '') || '/';
+    return TRANSLATED.indexOf(p) >= 0 ? '/' + LANG + (p === '/' ? '/' : p) + m[2] : href;
+  };
+  var path = location.pathname.replace(/\.html$/, '').replace(/\/$/, '').replace(/^\/(es|fr|de)(?=\/|$)/, '') || '/';
 
   var NAV = [
     { href: '/console', label: 'Calculator', on: /^\/(console|planner|edit)(\/|$)/ },
@@ -54,27 +103,39 @@
   var closeIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
   // ---------- markup ----------
+  // Each language links to this page's own translation (its hreflang alternate), or shows "soon" when there isn't one.
+  function altHref(l) {
+    if (l === LANG) return location.pathname + location.search;
+    var a = document.querySelector('link[rel="alternate"][hreflang="' + l + '"]');
+    if (!a) return null;
+    try { return new URL(a.getAttribute('href')).pathname + location.search; } catch (e) { return null; }
+  }
   function langMenu() {
     return LANGS.map(function (l) {
-      return l[0] === 'en'
-        ? '<a href="' + esc(location.pathname + location.search) + '" lang="en" aria-current="true">' + l[1] + '</a>'
-        : '<a lang="' + l[0] + '" aria-disabled="true" tabindex="-1">' + l[1] + ' <span class="sc-soon">soon</span></a>';
+      var h = altHref(l[0]);
+      if (l[0] === LANG) return '<a href="' + esc(h) + '" lang="' + l[0] + '" hreflang="' + l[0] + '" aria-current="true">' + l[1] + '</a>';
+      return h ? '<a href="' + esc(h) + '" lang="' + l[0] + '" hreflang="' + l[0] + '" data-lang="' + l[0] + '">' + l[1] + '</a>'
+        : '<a lang="' + l[0] + '" aria-disabled="true" tabindex="-1">' + l[1] + ' <span class="sc-soon">' + t('soon') + '</span></a>';
     }).join('');
   }
+  document.addEventListener('click', function (e) {   // remember an explicit choice (used by the account preference later)
+    var a = e.target.closest && e.target.closest('[data-lang], .sc-lang [aria-current], .sc-mobile__langs a');
+    if (a) ls.set('gmt_lang', a.getAttribute('lang') || 'en');
+  });
   var header = document.createElement('header');
   header.className = 'sc-header';
   header.innerHTML =
-    '<a class="sc-skip" href="#sc-main">Skip to content</a>' +
+    '<a class="sc-skip" href="#sc-main">' + t('Skip to content') + '</a>' +
     '<div class="sc-bar">' +
-      '<a class="sc-logo" href="/" aria-label="GMT-Optimizer home"><img src="' + WORDMARK + '" alt="GMT-Optimizer" width="138" height="36"></a>' +
-      '<nav class="sc-nav" aria-label="Main">' + NAV.map(function (n) { return '<a href="' + n.href + '"' + cur(n.on) + '>' + n.label + '</a>'; }).join('') + '</nav>' +
+      '<a class="sc-logo" href="' + L('/') + '" aria-label="' + t('GMT-Optimizer home') + '"><img src="' + WORDMARK + '" alt="GMT-Optimizer" width="138" height="36"></a>' +
+      '<nav class="sc-nav" aria-label="' + t('Main') + '">' + NAV.map(function (n) { return '<a href="' + L(n.href) + '"' + cur(n.on) + '>' + t(n.label) + '</a>'; }).join('') + '</nav>' +
       '<div class="sc-actions">' +
-        '<div class="sc-pop sc-lang"><button type="button" class="sc-pop__btn" aria-haspopup="true" aria-expanded="false" aria-label="Language: English">EN ' + chev + '</button>' +
+        '<div class="sc-pop sc-lang"><button type="button" class="sc-pop__btn" aria-haspopup="true" aria-expanded="false" aria-label="' + t('Language: ') + LANGS.filter(function (l) { return l[0] === LANG; })[0][1] + '">' + LANG.toUpperCase() + ' ' + chev + '</button>' +
           '<div class="sc-pop__menu" hidden>' + langMenu() + '</div></div>' +
-        '<a class="sc-icon-btn sc-msg" href="/chat" hidden aria-label="Messages">' + msgIcon + '<span class="ui-count" hidden></span></a>' +
+        '<a class="sc-icon-btn sc-msg" href="/chat" hidden aria-label="' + t('Messages') + '">' + msgIcon + '<span class="ui-count" hidden></span></a>' +
         '<div class="sc-acct"></div>' +
-        '<a class="ui-btn ui-btn--primary ui-btn--sm sc-cta" href="/claim">Get Started</a>' +
-        '<button type="button" class="sc-icon-btn sc-burger" aria-expanded="false" aria-controls="sc-mobile" aria-label="Open menu">' + burgerIcon + '</button>' +
+        '<a class="ui-btn ui-btn--primary ui-btn--sm sc-cta" href="' + L('/claim') + '">' + t('Get Started') + '</a>' +
+        '<button type="button" class="sc-icon-btn sc-burger" aria-expanded="false" aria-controls="sc-mobile" aria-label="' + t('Open menu') + '">' + burgerIcon + '</button>' +
       '</div>' +
     '</div>';
 
@@ -84,18 +145,22 @@
   mobile.hidden = true;
   mobile.setAttribute('role', 'dialog');
   mobile.setAttribute('aria-modal', 'true');
-  mobile.setAttribute('aria-label', 'Menu');
+  mobile.setAttribute('aria-label', t('Menu'));
   mobile.innerHTML =
-    '<nav class="sc-mobile-nav" aria-label="Main">' + NAV.map(function (n) { return '<a href="' + n.href + '"' + cur(n.on) + '>' + n.label + '</a>'; }).join('') + '</nav>' +
+    '<nav class="sc-mobile-nav" aria-label="' + t('Main') + '">' + NAV.map(function (n) { return '<a href="' + L(n.href) + '"' + cur(n.on) + '>' + t(n.label) + '</a>'; }).join('') + '</nav>' +
     FOOT.slice(0, 3).map(function (c) {
-      return '<div class="sc-mobile__group"><h2>' + c[0] + '</h2><div class="sc-mobile__links">' +
-        c[1].map(function (l) { return '<a href="' + l[1] + '"' + ext(l[2]) + '>' + l[0] + '</a>'; }).join('') + '</div></div>';
+      return '<div class="sc-mobile__group"><h2>' + t(c[0]) + '</h2><div class="sc-mobile__links">' +
+        c[1].map(function (l) { return '<a href="' + L(l[1]) + '"' + ext(l[2]) + '>' + t(l[0]) + '</a>'; }).join('') + '</div></div>';
     }).join('') +
-    '<div class="sc-mobile__group"><h2>Language</h2><div class="sc-mobile__langs">' +
-      LANGS.map(function (l) { return l[0] === 'en' ? '<span class="ui-badge ui-badge--gold">' + l[1] + '</span>' : '<span class="ui-badge" aria-disabled="true">' + l[1] + ' · soon</span>'; }).join('') +
+    '<div class="sc-mobile__group"><h2>' + t('Language') + '</h2><div class="sc-mobile__langs">' +
+      LANGS.map(function (l) {
+        var h = altHref(l[0]);
+        if (l[0] === LANG) return '<span class="ui-badge ui-badge--gold">' + l[1] + '</span>';
+        return h ? '<a class="ui-badge" href="' + esc(h) + '" lang="' + l[0] + '" hreflang="' + l[0] + '">' + l[1] + '</a>' : '<span class="ui-badge" aria-disabled="true">' + l[1] + ' · ' + t('soon') + '</span>';
+      }).join('') +
     '</div></div>' +
     '<div class="sc-mobile__acct"></div>' +
-    '<a class="ui-btn ui-btn--primary ui-btn--block" href="/claim">Get Started</a>';
+    '<a class="ui-btn ui-btn--primary ui-btn--block" href="' + L('/claim') + '">' + t('Get Started') + '</a>';
 
   function mount() {
     var body = document.body;
@@ -118,19 +183,19 @@
       '<div class="sc-footer__inner">' +
         '<div class="sc-footer__top">' +
           '<div class="sc-footer__brand"><img src="' + WORDMARK + '" alt="GMT-Optimizer" width="108" height="28" loading="lazy">' +
-            '<p>Independent GoMining calculator, planner and projections, on live network data. No ads.</p></div>' +
+            '<p>' + t('tagline') + '</p></div>' +
           '<div class="sc-footer__cols">' + FOOT.map(function (c) {
-            return '<div><h2>' + c[0] + '</h2><ul>' + c[1].map(function (l) { return '<li><a href="' + l[1] + '"' + ext(l[2]) + '>' + l[0] + '</a></li>'; }).join('') + '</ul></div>';
+            return '<div><h2>' + t(c[0]) + '</h2><ul>' + c[1].map(function (l) { return '<li><a href="' + L(l[1]) + '"' + ext(l[2]) + '>' + t(l[0]) + '</a></li>'; }).join('') + '</ul></div>';
           }).join('') + '</div>' +
         '</div>' +
-        '<div class="sc-footer__support"><span>Support the site:</span>' +
-          '<button type="button" class="sc-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE" title="Copy BTC address"><b>BTC</b><span>3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>' +
-          '<button type="button" class="sc-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1" title="Copy GMT address (ETH/BNB)"><b>GMT</b><span>0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>' +
+        '<div class="sc-footer__support"><span>' + t('Support the site:') + '</span>' +
+          '<button type="button" class="sc-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE" title="' + t('Copy BTC address') + '"><b>BTC</b><span>3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>' +
+          '<button type="button" class="sc-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1" title="' + t('Copy GMT address (ETH/BNB)') + '"><b>GMT</b><span>0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>' +
         '</div>' +
         '<div class="sc-footer__legal">' +
           '<span>&copy; ' + new Date().getFullYear() + ' GMT-Optimizer</span>' +
-          '<span>Independent tool. Not affiliated with, endorsed by, or operated by GoMining.</span>' +
-          '<span>I earn a referral reward if you use my code. Not financial advice.</span>' +
+          '<span>' + t('legal1') + '</span>' +
+          '<span>' + t('legal2') + '</span>' +
         '</div>' +
       '</div>';
     f.addEventListener('click', function (e) {
@@ -248,24 +313,24 @@
     msg.hidden = !state.in;
     if (!state.in) {
       var nx = /^\/(login|signup)$/.test(location.pathname.replace(/\.html$/, '')) ? '' : '?next=' + encodeURIComponent(location.pathname + location.search);
-      slot.innerHTML = '<a class="ui-btn ui-btn--ghost ui-btn--sm" href="/login' + nx + '">Log in</a>';
-      mslot.innerHTML = '<div class="sc-mobile__group"><h2>Account</h2><div class="ui-stack"><a class="ui-btn ui-btn--secondary ui-btn--block" href="/login' + nx + '">Log in</a>' +
-        '<a class="ui-btn ui-btn--ghost ui-btn--block" href="/signup' + nx + '">Create account</a></div></div>';
+      slot.innerHTML = '<a class="ui-btn ui-btn--ghost ui-btn--sm" href="' + L('/login') + nx + '">' + t('Log in') + '</a>';
+      mslot.innerHTML = '<div class="sc-mobile__group"><h2>' + t('Account') + '</h2><div class="ui-stack"><a class="ui-btn ui-btn--secondary ui-btn--block" href="' + L('/login') + nx + '">' + t('Log in') + '</a>' +
+        '<a class="ui-btn ui-btn--ghost ui-btn--block" href="' + L('/signup') + nx + '">' + t('Create account') + '</a></div></div>';
     } else {
       slot.innerHTML = '<div class="sc-pop">' +
-        '<button type="button" class="sc-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu for ' + esc(state.name) + '">' + avatarHTML('sm') + '</button>' +
+        '<button type="button" class="sc-acct-btn" aria-haspopup="true" aria-expanded="false" aria-label="' + t('Account menu for ') + esc(state.name) + '">' + avatarHTML('sm') + '</button>' +
         '<div class="sc-pop__menu" hidden>' +
           '<div class="sc-pop__head">' + avatarHTML('') + '<div><b>' + esc(state.name) + '</b>' + (state.username ? '<span>@' + esc(state.username) + '</span>' : '') + '</div></div>' +
           '<div class="sc-pop__sep"></div>' +
-          '<a href="/dashboard">Dashboard</a>' +
-          '<a href="/profile">Profile</a>' +
-          '<a href="/settings">Settings</a>' +
+          '<a href="' + L('/dashboard') + '">' + t('Dashboard') + '</a>' +
+          '<a href="' + L('/profile') + '">' + t('Profile') + '</a>' +
+          '<a href="' + L('/settings') + '">' + t('Settings') + '</a>' +
           '<div class="sc-pop__sep"></div>' +
-          '<button type="button" class="sc-danger" data-sc="logout">Log out</button>' +
+          '<button type="button" class="sc-danger" data-sc="logout">' + t('Log out') + '</button>' +
         '</div></div>';
-      mslot.innerHTML = '<div class="sc-mobile__group"><h2>Account</h2><div class="sc-mobile__links">' +
-        '<a href="/dashboard">Dashboard</a><a href="/chat">Messages</a><a href="/profile">Profile</a><a href="/settings">Settings</a>' +
-        '<button type="button" class="ui-btn ui-btn--danger ui-btn--sm" data-sc="logout">Log out</button></div></div>';
+      mslot.innerHTML = '<div class="sc-mobile__group"><h2>' + t('Account') + '</h2><div class="sc-mobile__links">' +
+        '<a href="' + L('/dashboard') + '">' + t('Dashboard') + '</a><a href="/chat">' + t('Messages') + '</a><a href="' + L('/profile') + '">' + t('Profile') + '</a><a href="' + L('/settings') + '">' + t('Settings') + '</a>' +
+        '<button type="button" class="ui-btn ui-btn--danger ui-btn--sm" data-sc="logout">' + t('Log out') + '</button></div></div>';
       unread();
     }
   }
