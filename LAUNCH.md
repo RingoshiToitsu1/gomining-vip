@@ -30,6 +30,15 @@ old code is live would break login restores of saved farms.
 | G13 | `/odds` still hidden | not in nav, sitemap or menu; `noindex` | ✔ |
 | G14 | No analytics | `git grep -nIiE "gtag|googletagmanager|plausible|analytics\\.js" overhaul -- '*.html' '*.js'` | no hits |
 | G15 | Native review of ES/FR/DE (optional before launch) | TRANSLATIONS.md | owner's call: machine translations can ship marked as such |
+| **G16** | **Indexable (blocking, before AND after launch)** | `node scripts/url-check.js <preview>` checks the build; after the merge `node scripts/url-check.js https://gmt-optimizer.com` checks the live responses (see below) | no site-wide noindex (meta robots or `X-Robots-Tag`), `robots.txt` has no `Disallow: /`, canonical/hreflang/og:url only on `https://gmt-optimizer.com`, no noindex outside the allowed list |
+
+**G16 allowed noindex list** (anything else noindex fails): `/odds`, `/styleguide`, `/carbon/` (404 anyway), and the
+retired redirect pages (`/gomining-optimizer`, `/gomining-vip-index`, `/neon-miner/…`, `noindex,follow`). Also allowed,
+because they are **noindex on the live site today** and the overhaul keeps them that way: `/quote`, `/statement`,
+`/edit`, `/embed`, `/chat`, `/redesign-prototype`, and the new account pages (`/login`, `/signup`, `/profile`,
+`/settings`, `/dashboard`) with their ES/FR/DE copies. Making any of these indexable is a separate decision.
+The preview host is noindex + `Disallow: /` by design, so against the preview G16 reads the committed build files
+(what production will serve); against gmt-optimizer.com it reads the live responses.
 
 Nice to have the night before: back up the database (step 3a), so launch day is only merges and checks.
 
@@ -57,7 +66,11 @@ Nice to have the night before: back up the database (step 3a), so launch day is 
 2. `.github/workflows/deploy.yml` runs on the push to `main`: applies config, regenerates the data pages,
    builds the ES/FR/DE copies, publishes. About 2–4 minutes, then up to ~10 minutes of Pages CDN cache.
 3. *Claude*, once the deploy is green:
-   - `node scripts/url-check.js https://gmt-optimizer.com` → 0 failures (same check as G6, now on production).
+   - `node scripts/url-check.js https://gmt-optimizer.com` → 0 failures (G6 + G16, now on production). **Blocking:** it
+     fetches `https://gmt-optimizer.com/robots.txt` (200, no `Disallow: /`) and 5 key pages (`/`, `/console`,
+     `/gomining-roi-calculator`, `/is-gomining-worth-it`, `/es/`) and confirms each is indexable (no noindex meta or
+     header) with a canonical and a full hreflang block pointing at `https://gmt-optimizer.com`, never
+     `ringoshitoitsu1.github.io`. Any failure here = roll back (step 2, Undo) before anything else.
    - Offer check on production pages (G5).
    - Spot checks, EN + one other language: `/`, `/console` (logged out: sign-up gate as before), `/planner`,
      `/quote`, `/statement`, `/gomining-marketplace-checker` (check a real miner link), `/chat`, `/login`.
@@ -101,7 +114,41 @@ c. **Apply `supabase/proposals/2026-11-17_account_extras.sql`** (required: the n
 | Week 1 | Weekly rates script still writes `api/rates.json` and ringomining.com reads it | *Claude* |
 | When ready | Native review of ES/FR/DE; legal review notes folded in | **OWNER** |
 
-## 5. Contacts and references
+## 5. SEO baseline: titles and H1s, live vs overhaul (for the 4-week Search Console comparison)
+
+Top 20 pages by impressions from the last Search Console snapshot on file (`~/seo-data/latest.json`, 28 days to
+**2026-08-10**; `/x` and `/x.html` combined). Live = gmt-optimizer.com on 2026-11-18; overhaul = the branch to be merged.
+For four weeks after launch compare clicks, impressions and position per page against this table (take a fresh
+snapshot the day before launch: `python3 scripts/gsc-snapshot.py --days 28`).
+
+| # | Page | Clicks | Impr. | Avg pos | Title (live) | Title (overhaul) | H1 (live) | H1 (overhaul) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | `/gomining-roi-calculator` | 7 | 257 | 8.6 | GoMining ROI Calculator — What Your Setup Earns | = same | GoMining ROI Calculator | = same |
+| 2 | `/gomining-discount-explained` | 2 | 151 | 9.1 | GoMining Discount & GMT Locking Explained (2026) | = same | GoMining Discount & GMT Locking Explained | = same |
+| 3 | `/is-gomining-worth-it` | 2 | 112 | 9.3 | Is GoMining Worth It in 2026? An Honest Breakdown | = same | Is GoMining Worth It in 2026? An Honest Breakdown | = same |
+| 4 | `/` | 16 | 85 | 9.1 | GoMining Calculator: Profit, ROI & Earnings \| GMT Optimizer | GoMining Calculator: Profit, ROI & Earnings \| GMT-Optimizer | Plan your work.Work your plan. | Model your GoMining returns before you buy |
+| 5 | `/gomining-promo-code` | 0 | 56 | 30.3 | GoMining Promo Code 2026: RINGO5 Bonus Explained | = same | GoMining Promo Code 2026: RINGO5 | = same |
+| 6 | `/how-gomining-works` | 0 | 36 | 14.6 | How Does GoMining Work? A Beginner's Guide (2026) | = same | How Does GoMining Work? A Beginner's Guide | = same |
+| 7 | `/terms` | 0 | 32 | 2.2 | Terms of Use — GMT Optimizer | Terms of Use — GMT-Optimizer | Terms of Use | = same |
+| 8 | `/privacy` | 2 | 22 | 5.5 | Privacy Policy — GMT Optimizer | Privacy Policy — GMT-Optimizer | Privacy Policy | = same |
+| 9 | `/gomining-250-th-roi` | 0 | 22 | 5.0 | GoMining 250 TH: What It Actually Earns (2026) | = same | GoMining 250 TH: What It Actually Earns | = same |
+| 10 | `/claim` | 0 | 17 | 6.9 | Your RINGO5 Bonuses — GMT Optimizer | Your RINGO5 Bonuses — GMT-Optimizer | Your RINGO5 bonuses | = same |
+| 11 | `/gmt` | 0 | 11 | 4.6 | GoMining Token (GMT) Live Chart — 1H Candles \| GMT Optimizer | GoMining Token (GMT) Live Chart — 1H Candles \| GMT-Optimizer | — | = same |
+| 12 | `/gomining-profit-btc-250k` | 1 | 7 | 6.1 | Is GoMining Profitable if Bitcoin Hits $250k? (2026) | = same | GoMining Profitability at $250k Bitcoin | = same |
+| 13 | `/gomining-profit-btc-150k` | 0 | 5 | 7.8 | Is GoMining Profitable if Bitcoin Hits $150k? (2026) | = same | GoMining Profitability at $150k Bitcoin | = same |
+| 14 | `/gomining-profit-btc-200k` | 0 | 5 | 4.0 | Is GoMining Profitable if Bitcoin Hits $200k? (2026) | = same | GoMining Profitability at $200k Bitcoin | = same |
+| 15 | `/planner` | 0 | 5 | 5.8 | GoMining Capital Planner — Optimal TH / GMT Split \| GMT Optimizer | GoMining Capital Planner — Optimal TH / GMT Split \| GMT-Optimizer | — | = same |
+| 16 | `/gomining-50-th-roi` | 0 | 4 | 10.0 | GoMining 50 TH: What It Actually Earns (2026) | = same | GoMining 50 TH: What It Actually Earns | = same |
+| 17 | `/gomining-profit-btc-100k` | 0 | 4 | 11.2 | Is GoMining Profitable if Bitcoin Hits $100k? (2026) | = same | GoMining Profitability at $100k Bitcoin | = same |
+| 18 | `/gomining-1-th-roi` | 0 | 3 | 6.7 | GoMining 1 TH: What It Actually Earns (2026) | = same | GoMining 1 TH: What It Actually Earns | = same |
+| 19 | `/gomining-10-th-roi` | 0 | 3 | 6.7 | GoMining 10 TH: What It Actually Earns (2026) | = same | GoMining 10 TH: What It Actually Earns | = same |
+| 20 | `/gomining-500-th-roi` | 0 | 2 | 7.5 | GoMining 500 TH: What It Actually Earns (2026) | = same | GoMining 500 TH: What It Actually Earns | = same |
+
+**What changes:** only the brand in titles ("GMT Optimizer" → "GMT-Optimizer", 6 pages) and the home page H1
+("Plan your work. Work your plan." → "Model your GoMining returns before you buy"). Every other title and H1 is
+identical. New in the overhaul: ES/FR/DE copies with hreflang (33 per language).
+
+## 6. Contacts and references
 
 - URL inventory and rules: `URLS.md`. Audit trail and every decision: `AUDIT.md`. Translations: `TRANSLATIONS.md`.
 - SQL and backups: `supabase/proposals/` (README first).
