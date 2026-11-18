@@ -23,20 +23,21 @@ old code is live would break login restores of saved farms.
 | G6 | Frozen URLs (rule 1) | `node scripts/url-check.js https://ringoshitoitsu1.github.io` (checks every row of URLS.md) | 0 failures |
 | G7 | No horizontal overflow, no leftover English | screenshot pass, 360 + 1280, 4 languages (AUDIT §24, §26a) | 0 overflow; only words valid in the language |
 | G8 | Logged-in views | done 2026-11-18 (AUDIT Phase 8 checklist) | ✔ |
-| G9 | Legal sign-off | **OWNER** (with a lawyer): `/privacy`, `/terms` in EN (binding) and ES/FR/DE | written OK |
+| G9 | Legal sign-off | `/privacy`, `/terms` in EN (binding) and ES/FR/DE | ✔ **owner-accepted, no lawyer review** (2026-11-18) |
 | G10 | Social/OG images rebranded | AUDIT §13 | new images in place |
 | G11 | No secrets in the repo | `git grep -nIE "(service_role|sk_live|-----BEGIN|PRIVATE KEY)" overhaul` | only 2 expected hits: this file (the pattern itself) and the Postgres role name `service_role` in `supabase/schema.sql` (a role, not a key). The Supabase *publishable* key is public by design |
 | G12 | CNAME untouched | `git diff main overhaul -- CNAME` | empty |
 | G13 | `/odds` still hidden | not in nav, sitemap or menu; `noindex` | ✔ |
 | G14 | No analytics | `git grep -nIiE "gtag|googletagmanager|plausible|analytics\\.js" overhaul -- '*.html' '*.js'` | no hits |
-| G15 | Native review of ES/FR/DE (optional before launch) | TRANSLATIONS.md | owner's call: machine translations can ship marked as such |
+| G15 | Native review of ES/FR/DE | TRANSLATIONS.md | **skipped for launch** (owner, 2026-11-18): machine translations ship; TRANSLATIONS.md kept for a later review |
 | **G16** | **Indexable (blocking, before AND after launch)** | `node scripts/url-check.js <preview>` checks the build; after the merge `node scripts/url-check.js https://gmt-optimizer.com` checks the live responses (see below) | no site-wide noindex (meta robots or `X-Robots-Tag`), `robots.txt` has no `Disallow: /`, canonical/hreflang/og:url only on `https://gmt-optimizer.com`, no noindex outside the allowed list |
 
 **G16 allowed noindex list** (anything else noindex fails): `/odds`, `/styleguide`, `/carbon/` (404 anyway), and the
 retired redirect pages (`/gomining-optimizer`, `/gomining-vip-index`, `/neon-miner/…`, `noindex,follow`). Also allowed,
 because they are **noindex on the live site today** and the overhaul keeps them that way: `/quote`, `/statement`,
 `/edit`, `/embed`, `/chat`, `/redesign-prototype`, and the new account pages (`/login`, `/signup`, `/profile`,
-`/settings`, `/dashboard`) with their ES/FR/DE copies. Making any of these indexable is a separate decision.
+`/settings`, `/dashboard`) with their ES/FR/DE copies. **Confirmed by the owner 2026-11-18: all stay noindex.**
+The retired `/redesign-prototype` (redirect to `/`, `noindex,follow`) is on the list too.
 The preview host is noindex + `Disallow: /` by design, so against the preview G16 reads the committed build files
 (what production will serve); against gmt-optimizer.com it reads the live responses.
 
