@@ -31,6 +31,8 @@ old code is live would break login restores of saved farms.
 | G14 | No analytics | `git grep -nIiE "gtag|googletagmanager|plausible|analytics\\.js" overhaul -- '*.html' '*.js'` | no hits |
 | G15 | Native review of ES/FR/DE | TRANSLATIONS.md | **skipped for launch** (owner, 2026-11-18): machine translations ship; TRANSLATIONS.md kept for a later review |
 | **G16** | **Indexable (blocking, before AND after launch)** | `node scripts/url-check.js <preview>` checks the build; after the merge `node scripts/url-check.js https://gmt-optimizer.com` checks the live responses (see below) | no site-wide noindex (meta robots or `X-Robots-Tag`), `robots.txt` has no `Disallow: /`, canonical/hreflang/og:url only on `https://gmt-optimizer.com`, no noindex outside the allowed list |
+| G17 | No broken internal links (EN + ES/FR/DE) | `node scripts/link-check.js` | "no broken internal links" |
+| G18 | Accessibility basics (static) | `node scripts/a11y-check.js` | "no errors" (warnings listed: headings built by script, one h1 per console tab) |
 
 **G16 allowed noindex list** (anything else noindex fails): `/odds`, `/styleguide`, `/carbon/` (404 anyway), and the
 retired redirect pages (`/gomining-optimizer`, `/gomining-vip-index`, `/neon-miner/…`, `noindex,follow`). Also allowed,
@@ -52,7 +54,8 @@ Nice to have the night before: back up the database (step 3a), so launch day is 
    ```bash
    NODE_OPTIONS="" node scripts/build-config.js && node scripts/gen-pages.js && node scripts/gen-i18n.js && node scripts/build-config.js
    NODE_OPTIONS="" node tests/golden.js && node tests/lib.test.js && node scripts/build-config.js --check \
-     && node scripts/gen-i18n.js --check && node scripts/offer-check.js --quiet && node scripts/bump-versions.js
+     && node scripts/gen-i18n.js --check && node scripts/offer-check.js --quiet && node scripts/link-check.js \
+     && node scripts/a11y-check.js && node scripts/bump-versions.js
    ```
 3. Commit, push `overhaul`, rebuild the preview, re-run G6 (`url-check.js`) against the preview.
 4. Open the merge PR `overhaul → main` (title only, no attribution lines). The diff is large; the PR body links
