@@ -611,7 +611,7 @@ function submitPlannerCapital(){
     if(btn)btn.disabled=false;
     if(!txt||isTxt(txt,'Finding your optimal split…'))if(load)load.style.display='none';
    }
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 // The Calculate button runs whichever planner mode is active.
 function submitPlanner(){
@@ -775,14 +775,14 @@ function submitPlannerTarget(){
     if(btn)btn.disabled=false;
     if(!txt||isTxt(txt,'Finding the capital you need…'))if(load)load.style.display='none';
    }
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 // "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
 function returnToSetupFromPlanner(){
   const load=document.getElementById('plannerCalcLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
   if(txt)txt.textContent='Loading your farm…';
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('plannerIntro');
     if(load)load.style.display='none';
@@ -790,7 +790,7 @@ function returnToSetupFromPlanner(){
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();
     refreshMySetupAnimation();
-  },650);
+  },0);
 }
 function closePlannerIntro(){
   hidePanelView('plannerIntro');
@@ -813,14 +813,14 @@ function maybeOpenChartFromURL(){
 function closeBtcChart(){
   try{history.replaceState({},'','/console'+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
   const load=document.getElementById('btcChartLoading');
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('btcChartPage');
     if(load)load.style.display='none';
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();        // return to My Setup
     refreshMySetupAnimation();            // replay the count-up on all the numbers
-  },650);
+  },0);
 }
 function openChart(symbol,title,icon,allowChange,isBtc){
   // remember which asset is on screen so the screenshot button knows what to render
@@ -1877,7 +1877,7 @@ async function createChartShot(){
   const img=document.getElementById('chartShotImg');
   const actions=document.getElementById('chartShotActions');
   document.getElementById('chartShotTitle').textContent=asset.name+' — 1H chart snapshot';
-  document.getElementById('chartShotLoadTxt').textContent='Pulling the latest 1-hour candles…';
+  document.getElementById('chartShotLoadTxt').textContent='Loading the latest 1-hour candles…';
   img.style.display='none';actions.style.display='none';load.style.display='flex';
   modal.style.display='flex';document.body.style.overflow='hidden';
   _chartShotCanvas=null;_chartShotBlob=null;   // clear any prior shot so we never share stale image
@@ -2911,7 +2911,7 @@ function editLoadClose(msg){
     if(txt)txt.textContent='Updating your farm…';
     if(btn)btn.disabled=false;
     closeEditSetup();
-  },750);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function submitEditSetup(){editLoadClose();}
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
@@ -3302,10 +3302,10 @@ function fmtBTCAmt(v){
 function animateMetric(el,to,fmt){
   if(!el)return;
   if(typeof to!=='number'||!isFinite(to)){el.textContent=fmt(to);return;}
-  const from=(typeof el._cur==='number'&&isFinite(el._cur))?el._cur:0;
   el._cur=to;
   if(el._raf)cancelAnimationFrame(el._raf);
-  if(Math.abs(to-from)<1e-9){el.textContent=fmt(to);el._raf=null;return;}
+  // No count-up (redesign 2026-11-18): figures update in place, like the rest of the site.
+  el.textContent=fmt(to);el._raf=null;return;
   const dur=800,t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
   function step(now){
     const p=Math.min(1,(now-t0)/dur);
@@ -4834,6 +4834,7 @@ function refreshMySetupAnimation(){
 // Count an element's leading number up from 0 to its rendered value, preserving
 // any currency prefix / unit suffix (e.g. "$1,234", "9,354 GMT").
 function animateCountText(el,dur){
+  return;   // no count-up (redesign 2026-11-18); the figure is already rendered
   if(!el)return;
   // Use innerHTML so trailing markup (e.g. a GMT logo <img>) survives the animation.
   const m=String(el.innerHTML).match(/^(\D*?)([\d,]+(?:\.\d+)?)([\s\S]*)$/);
@@ -4897,12 +4898,12 @@ function closeSetupProjection(){
   const load=document.getElementById('spPageLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
   if(txt)txt.textContent='Loading your farm…';
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('setupProjModal');
     spShowForm();   // reset for next open
     if(load)load.style.display='none';
-    if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
+    if(txt)txt.textContent='Building your projection…';   // restore default for next run
     document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
     // Return to wherever this projection was launched from: planner-mode → /planner, else /console.
     if(window._spMode==='planner'){
@@ -4913,7 +4914,7 @@ function closeSetupProjection(){
       try{history.replaceState({},'','/console'+location.hash);}catch(e){}
       refreshMySetupAnimation();
     }
-  },650);
+  },0);
 }
 // Compute in place. Re-runs on every horizon / payout / mode change, so no full-page overlay.
 // The GMT elasticity is fitted from daily history and cached for a day: wait for it (bounded)
@@ -5878,7 +5879,7 @@ function obFinish(){
     if(txt)txt.textContent=prev;
     refreshMySetupAnimation();   // reveal My Setup with the numbers counting up from 0
     setTimeout(function(){document.getElementById('donateModal').style.display='';},1200);
-  },850);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function closeDonate(){
   document.getElementById('donateModal').style.display='none';
@@ -5951,7 +5952,7 @@ function submitNewUserBudget(){
     if(btn)btn.disabled=false;
     window.scrollTo(0,0);
     animatePlannerResults();   // load the results with the fresh count-up
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function resetOnboarding(){
   // Nothing gates on the old gm_onboarded flag any more, so clearing it and reloading

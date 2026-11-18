@@ -20,14 +20,14 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let seen = false;
   try { seen = sessionStorage.getItem('gm_boot_seen') === '1'; sessionStorage.setItem('gm_boot_seen', '1'); } catch (e) {}
-  const MIN_MS = reduce ? 500 : seen ? 1100 : 2400;   // long enough to read the first time, brisk after
-  const STEP_MS = reduce ? 60 : seen ? 140 : 330;     // minimum gap between steps ticking off
+  // Shown only while the data loads, plus a short minimum so it doesn't flash (owner rule 2026-11-18: about 1 s at most).
+  const MIN_MS = reduce ? 0 : seen ? 300 : 600;
   const MAX_MS = 8000;                                // never hold the page longer than this
   const SETTLE_MS = 450;                              // numbers must be still this long
   const t0 = performance.now();
 
   const $ = id => document.getElementById(id);
-  const pctEl = $('gbPct'), barEl = $('gbBar'), hashEl = $('gbHash');
+  const barEl = $('gbBar'), meterEl = barEl && barEl.parentElement;
   const rows = Array.from(boot.querySelectorAll('.gb-step'));
 
   // ---- when the numbers have stopped moving ----
@@ -49,7 +49,6 @@
   const usd = (n, d = 0) => LOC_ ? nf(n, d) + '\u00a0$' : '$' + nf(n, d);
 
   const STEPS = [
-    { ready: () => true, detail: () => 'mempool.space' },
     { ready: () => { const s = st(); return s && s.btcPrice > 0 && s.gmtPrice > 0; },
       detail: () => { const s = st(); return 'BTC ' + usd(s.btcPrice) + ' · GMT ' + usd(s.gmtPrice, 3); } },
     { ready: () => { const s = st(); return s && s.satsPerTHDay > 0; },
@@ -61,16 +60,17 @@
         return loggedIn() ? 'account synced' : 'guest session';
       } },
     { ready: () => { const s = st(); return s && s.loaded && performance.now() - lastMut > SETTLE_MS; },
-      detail: () => { const d = $('heroDiscount'); const t = d && d.textContent.trim(); return t && /\d/.test(t) ? t + ' discount' : 'ready'; } }
+      detail: () => { const d = $('heroDiscount'); const t = d && d.textContent.trim(); return t && /\d/.test(t) ? t + ' discount' : ''; } }
   ];
 
-  let done = 0, lastDoneAt = t0, shown = 0, finished = false;
+  let done = 0, finished = false;
   rows[0] && rows[0].classList.add('on');
 
   function tick(now) {
     if (finished) return;
     const forced = now - t0 > MAX_MS;
-    if (done < STEPS.length && now - lastDoneAt >= STEP_MS && (forced || STEPS[done].ready())) {
+    // every step whose data has arrived ticks off in the same frame (no staged delay between steps)
+    while (done < STEPS.length && (forced || STEPS[done].ready())) {
       const r = rows[done];
       if (r) {
         let d = '';
@@ -78,43 +78,23 @@
         r.querySelector('.gb-v').textContent = d || '';
         r.classList.remove('on'); r.classList.add('ok');
       }
-      done++; lastDoneAt = now;
+      done++;
       if (rows[done]) rows[done].classList.add('on');
     }
-    // Progress creeps within the active step so the bar never sits dead while waiting on the network.
-    const creep = done < STEPS.length ? Math.min(0.85, (now - lastDoneAt) / 1600) : 0;
-    const target = Math.min(done === STEPS.length ? 100 : 99, ((done + creep) / STEPS.length) * 100);
-    shown += (target - shown) * (reduce ? 1 : 0.12);
-    const p = Math.max(0, Math.min(100, shown));
-    pctEl.textContent = Math.floor(p);
-    barEl.style.transform = 'scaleX(' + (p / 100) + ')';
-
-    if (done === STEPS.length && now - t0 >= MIN_MS && shown > 99.3) return finish();
+    barEl.style.transform = 'scaleX(' + (done / STEPS.length) + ')';
+    if (meterEl) meterEl.setAttribute('aria-valuenow', Math.round(done / STEPS.length * 100));
+    if (done === STEPS.length && now - t0 >= MIN_MS) return finish();
     requestAnimationFrame(tick);
   }
 
-  // A running hash readout under the steps — the machine visibly working.
-  const HEX = '0123456789abcdef';
-  const hashTimer = reduce ? 0 : setInterval(() => {
-    let h = '0x';
-    for (let i = 0; i < 40; i++) h += HEX[(Math.random() * 16) | 0];
-    hashEl.textContent = h;
-  }, 70);
-
   function finish() {
     finished = true;
-    pctEl.textContent = '100';
     barEl.style.transform = 'scaleX(1)';
-    clearInterval(hashTimer);
-    hashEl.textContent = 'farm synced · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    boot.classList.add('gb-done');
-    setTimeout(() => {
-      boot.classList.add('gb-out');
-      root.classList.remove('gm-booting');
-      mo.disconnect();
-      reveal(!reduce);
-      setTimeout(() => boot.remove(), 700);
-    }, reduce ? 80 : 380);
+    boot.classList.add('gb-out');
+    root.classList.remove('gm-booting');
+    mo.disconnect();
+    reveal(false);
+    setTimeout(() => boot.remove(), reduce ? 0 : 220);
   }
 
   requestAnimationFrame(tick);

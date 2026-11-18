@@ -239,8 +239,9 @@
     const box = $('mc-scan'), rows = Array.from(box.querySelectorAll('.mc-sstep'));
     const img = box.querySelector('.mc-scan-thumb img'), thumb = box.querySelector('.mc-scan-thumb');
     const first = scans++ === 0;
-    const MIN_MS = reduce ? 300 : first ? 1900 : 1200, STEP_MS = reduce ? 40 : first ? 300 : 190;
-    $('mc-scan-title').textContent = T('Scanning miner #{0}', id);
+    // Shown only while the lookup runs, plus a short minimum so it doesn't flash (owner rule 2026-11-18).
+    const MIN_MS = reduce ? 0 : first ? 600 : 300;
+    $('mc-scan-title').textContent = T('Checking miner #{0}', id);
     rows.forEach(r => { r.className = 'mc-sstep'; r.querySelector('.mc-sv').textContent = ''; });
     rows[0].querySelector('span').textContent = T('Locating miner #{0} on GoMining', id);
     img.hidden = true; img.removeAttribute('src'); thumb.classList.remove('has-img', 'bad');
@@ -263,43 +264,33 @@
 
     return new Promise((resolve, reject) => {
       const t0 = performance.now();
-      let done = 0, lastAt = t0, shown = 0;
+      let done = 0;
       rows[0].classList.add('on');
-      const HEX = '0123456789abcdef';
-      const hashT = reduce ? 0 : setInterval(() => {
-        let h = '0x'; for (let i = 0; i < 36; i++) h += HEX[(Math.random() * 16) | 0];
-        $('mc-scan-hash').textContent = h;
-      }, 70);
-      const stop = () => clearInterval(hashT);
+      $('mc-scan-hash').textContent = '';
+      const stop = () => {};
       function tick(now) {
         if (req.error) {
           stop(); box.classList.add('failed');
           if (rows[done]) { rows[done].classList.remove('on'); rows[done].classList.add('bad'); }
-          $('mc-scan-hash').textContent = T('scan stopped');
-          return setTimeout(() => reject(req.error), reduce ? 0 : 650);
+          $('mc-scan-hash').textContent = T('Couldn’t check this miner.');
+          return setTimeout(() => reject(req.error), reduce ? 0 : 300);
         }
         if (d() && d().image && img.hidden) {
           img.onload = () => thumb.classList.add('has-img');
           img.src = d().image; img.hidden = false;
         }
-        if (done < steps.length && now - lastAt >= STEP_MS && steps[done].ok()) {
+        // each step ticks off the moment its data is in (no staged delay between steps)
+        while (done < steps.length && steps[done].ok()) {
           const r = rows[done];
           try { r.querySelector('.mc-sv').textContent = steps[done].v(); } catch (e) {}
           r.classList.remove('on'); r.classList.add('ok');
-          done++; lastAt = now;
+          done++;
           if (rows[done]) rows[done].classList.add('on');
         }
-        const creep = done < steps.length ? Math.min(0.85, (now - lastAt) / 1400) : 0;
-        const target = Math.min(done === steps.length ? 100 : 99, ((done + creep) / steps.length) * 100);
-        shown += (target - shown) * (reduce ? 1 : 0.14);
-        $('mc-scan-pct').textContent = Math.floor(shown);
-        $('mc-scan-bar').style.transform = 'scaleX(' + (shown / 100) + ')';
-        if (done === steps.length && now - t0 >= MIN_MS && shown > 99.3) {
-          stop();
-          $('mc-scan-pct').textContent = '100'; $('mc-scan-bar').style.transform = 'scaleX(1)';
-          $('mc-scan-hash').textContent = T('scan complete');
+        $('mc-scan-bar').style.transform = 'scaleX(' + (done / steps.length) + ')';
+        if (done === steps.length && now - t0 >= MIN_MS) {
           box.classList.add('done');
-          return setTimeout(resolve, reduce ? 0 : 320);
+          return resolve();
         }
         requestAnimationFrame(tick);
       }
@@ -311,7 +302,7 @@
     if (scanning) return;
     showErr('');
     const btn = $('mc-go');
-    btn.disabled = true; btn.textContent = T('Scanning…');
+    btn.disabled = true; btn.textContent = T('Checking…');
     scanning = true;
     const req = { data: null, error: null };
     fetch(LOOKUP + '?id=' + encodeURIComponent(id))
