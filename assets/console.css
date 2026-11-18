@@ -357,6 +357,12 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .container .sp-page-inner{padding-top:0!important}
 }
 
+/* ---------- pass 8 ---------- */
+.container{width:auto!important;max-width:var(--content-max)!important}
+.sp-page.sp-view{margin-left:0!important;margin-right:0!important;width:auto!important}
+.topbar .header{position:relative!important;top:auto!important}
+.modes{flex-wrap:wrap;max-width:100%}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
