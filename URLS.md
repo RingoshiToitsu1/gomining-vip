@@ -117,10 +117,10 @@ Old full-app copies and prototypes. Not linked or in the sitemap, but publicly r
 |---|---|---|---|---|
 | `/gomining-calc/src` | 301 → `/gomining-calc/src/` | `gomining-calc/src/index.html` | (none) | GoMining Reinvestment Calculator |
 | `/gomining-calc/src/` | 200 | `gomining-calc/src/index.html` | (none) | GoMining Reinvestment Calculator |
-| `/gomining-optimizer` | 200 | `gomining-optimizer.html` | (none) | GMT Optimizer |
-| `/gomining-optimizer.html` | 200 | `gomining-optimizer.html` | (none) | GMT Optimizer |
-| `/gomining-vip-index` | 200 | `gomining-vip-index.html` | (none) | GMT Optimizer |
-| `/gomining-vip-index.html` | 200 | `gomining-vip-index.html` | (none) | GMT Optimizer |
+| `/gomining-optimizer` | 200 (redirect page → `/console`, since 2026-11-18) | `gomining-optimizer.html` | noindex,follow | GMT-Optimizer Console |
+| `/gomining-optimizer.html` | 200 (redirect page → `/console`, since 2026-11-18) | `gomining-optimizer.html` | noindex,follow | GMT-Optimizer Console |
+| `/gomining-vip-index` | 200 (redirect page → `/console`, since 2026-11-18) | `gomining-vip-index.html` | noindex,follow | GMT-Optimizer Console |
+| `/gomining-vip-index.html` | 200 (redirect page → `/console`, since 2026-11-18) | `gomining-vip-index.html` | noindex,follow | GMT-Optimizer Console |
 | `/ob_research_dashboard` | 200 | `ob_research_dashboard.html` | (none) | OB Research - Late-Entry Fill Analysis |
 | `/ob_research_dashboard.html` | 200 | `ob_research_dashboard.html` | (none) | OB Research - Late-Entry Fill Analysis |
 | `/redesign-prototype` | 200 | `redesign-prototype.html` | noindex,nofollow | GMT Optimizer — Redesign Prototype |
@@ -167,6 +167,7 @@ path that existed (example: `/neon-miner/frontend/node_modules/tslib/tslib.html`
 |---|---|---|
 | `/gomining-optimizer`, `/gomining-optimizer.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
 | `/gomining-vip-index`, `/gomining-vip-index.html` | now `noindex,nofollow` (still 200, same content) | 2026-11-17 |
+| `/gomining-optimizer`, `/gomining-optimizer.html`, `/gomining-vip-index`, `/gomining-vip-index.html` | **old full-app copies retired**: each is now a redirect page like `/planner` — still **200 at the same URL**, `noindex,follow`, `<link rel="canonical" href="https://gmt-optimizer.com/console">`, meta refresh (+ `location.replace`, keeping query and hash) to `/console`. The URL check expects 200 with a meta refresh to `/console` | 2026-11-18 (owner) |
 | `/claim`, `/claim/` | **content replaced** (rule 8): now the RINGO5 bonuses explainer, claim form removed; title "Your RINGO5 Bonuses". Same status codes | 2026-11-17 hotfix 9d1f29432 |
 | `/gomining-promo-code` | body rewritten around the RINGO5 bonus block (rule 8); title and H1 unchanged | 2026-11-17 hotfix 9d1f29432 |
 
