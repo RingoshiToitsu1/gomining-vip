@@ -45,7 +45,9 @@
   // English month → local; a number the app built by hand (toFixed) gets the local decimal comma.
   function fixTok(t) {
     if (MONTHS && Object.prototype.hasOwnProperty.call(EN_MON, t)) return MONTHS[EN_MON[t]];
-    if (comma && /^[-+−]?[$£€]?\d+\.\d+%?$/.test(t)) t = t.replace('.', ',');
+    // English decimal point → comma. "1.200" (dot + exactly 3 digits) is already German/Spanish thousands,
+    // so leave it, unless the whole part is 0 ("0.358" can only be a decimal).
+    if (comma && /^[-+−]?[$£€]?\d+\.\d+%?$/.test(t) && !/^[-+−]?[$£€]?[1-9]\d{0,2}\.\d{3}%?$/.test(t)) t = t.replace('.', ',');
     if (comma && /^[-+−]?\d+(?:,\d+)?%$/.test(t)) t = t.replace('%', ' %');   // "20%" → "20 %"
     return t;
   }
