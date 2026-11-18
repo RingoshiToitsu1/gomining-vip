@@ -336,6 +336,18 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .sp-loading-txt{font-family:var(--font-ui)!important;font-size:var(--font-size-sm)!important;font-weight:var(--font-weight-medium)!important;
   color:var(--color-text-2)!important;letter-spacing:0!important;text-transform:none!important}
 
+/* ---------- pass 6: phone width ---------- */
+.field label.sp-payout-val{display:flex!important;flex-direction:row!important;align-items:center;margin:0!important;font-family:var(--font-body);font-weight:var(--font-weight-regular)}
+#updatedChip .lbl{display:inline-flex!important}
+@media (max-width:640px){
+  /* stat tiles stack label / value / meta, as on the landing page (app.css put them in one row) */
+  .hero-card,.ri-single-card{display:block!important;padding:var(--space-4)!important}
+  .hero-card .hero-val-row{justify-content:flex-start}
+  .hero-card .disc-override{margin-top:var(--space-2)}
+  .fx-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-2)}
+  .fx-stats .a-val,.fx-stats b{font-size:var(--font-size-lg)}
+}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
