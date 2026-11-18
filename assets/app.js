@@ -4257,7 +4257,7 @@ function renderEfficiencyComparison(st){
   const _spent=lockUSD+effUSD+thUSD;
   const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">${T('Total <strong>{0}</strong> of your {1} — each step is a separate part of the one plan, not extra.',fU(_spent,0),fU(K,0))}</div></div>`:'';
 
-  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
+  const segs=[[lockPct,'Lock GMT','var(--color-series-1)'],[thPct,'Buy TH','var(--color-series-4)']];   // chart kit series
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
   let bar=`<div class="eff-splitbar">`;
   segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
@@ -4518,7 +4518,7 @@ function renderPlanner(i,m){
   const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*DAYS_PER_MONTH;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
 
   // Path to 20%
-  ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
+  ah+=`<div class="sub-title">Path to 20% token discount</div>`;
   ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
   ah+=row('Already locked',`${fN(i.gl,0)} GMT`);
   if(gmtFromPool>0)ah+=row('Lock from GMT pool',`+${fN(gmtFromPool,0)} GMT`);

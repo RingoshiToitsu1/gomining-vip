@@ -370,6 +370,24 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .header-inner{padding:0 16px!important}
 }
 
+/* ---------- pass 10: planner results ---------- */
+.sec-head .sec-lead,.sec-head .cx-lead{flex:1 1 100%;order:2}
+.sec-head .cx-h1{order:1}
+.sec-head>div[style]{order:3}
+.sub-title{font-family:var(--font-ui)!important;font-size:var(--font-size-lg)!important;font-weight:var(--font-weight-semibold)!important;
+  color:var(--color-text)!important;text-align:left!important;letter-spacing:0!important;text-transform:none!important;margin:var(--space-5) 0 var(--space-2)!important}
+.planner-proj-btn,.proj-hero{background:var(--color-surface-1)!important;background-image:none!important;border:1px solid var(--color-border)!important;box-shadow:var(--shadow-card)!important}
+.planner-proj-btn:hover{border-color:var(--color-border-strong)!important}
+.planner-proj-ico{background:var(--color-surface-2)!important;color:var(--color-gold)!important}
+.proj-hero .section-title{color:var(--color-text)!important}
+.proj-cell{background:var(--color-surface-2)!important;border:1px solid var(--color-border)!important;box-shadow:none!important;border-radius:var(--radius-control)!important}
+.proj-hero .proj-cell.current{border-color:rgb(var(--color-gold-rgb) / .45)!important;box-shadow:none!important}
+.proj-hero .pc-monthly.green,.proj-hero .proj-cell.current .pc-monthly{color:var(--color-gold)!important}
+.proj-hero .proj-cell.current .pc-daily{color:var(--color-text-2)!important}
+.pc-tag{background:transparent!important;color:var(--color-gold)!important;border:1px solid rgb(var(--color-gold-rgb) / .45);border-radius:var(--radius-pill);
+  font-family:var(--font-ui);font-size:var(--font-size-xs);letter-spacing:0;text-transform:none;padding:0 var(--space-2)}
+.alloc-split-bar>div{color:var(--color-on-gold)!important;font-weight:var(--font-weight-semibold)}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
