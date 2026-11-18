@@ -29,6 +29,8 @@ jobs:
       - name: Regenerate data pages
         run: node scripts/gen-pages.js
         continue-on-error: true
+      - name: Translate pages (es/fr/de copies follow the freshly generated English)
+        run: node scripts/gen-i18n.js && node scripts/build-config.js
       # Publish only the site: hidden folders (.rustup, .npm, .claude, ...) are tooling that got
       # committed, and shipping 80k of their files made Pages' sync step stall and time out.
       - name: Stage site

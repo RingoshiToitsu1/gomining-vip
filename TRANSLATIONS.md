@@ -26,6 +26,15 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | Stage | Pages | ES | FR | DE |
 |---|---|---|---|---|
 | 7a | landing, /claim, /copilot, header/footer, co-pilot, quick estimate | machine | machine | machine |
-| 7b | guides, FAQ, glossary, about, disclosures, legal, how/worth-it/discount/promo/ROI/checker pages | – | – | – |
+| 7b | guides, FAQ, glossary, about, disclosures, privacy, terms, how-it-works, worth-it, discount, promo code, ROI calculator, marketplace checker (page text) | machine | machine | machine |
 | 7c | 14 generated data pages (via `gen-pages.js`) | – | – | – |
 | 7d | console app (`app.js`), account pages, chat UI | – | – | – |
+
+## Notes for reviewers (7b)
+- **Legal pages** (`/privacy`, `/terms`): the translations add "this translation is for convenience; the English version
+  prevails" to the first line. A lawyer, not a translator, should sign these off.
+- **Live numbers stay English until 7c**: the "This month" card on `/guides` and the three live paragraphs on
+  `/is-gomining-worth-it` are rewritten by `gen-pages.js` on every deploy; they get templated translations in 7c.
+- **Card cashback wording** must keep "Carte" / "Karte" / "tarjeta" next to "cashback" (FR "bonus cashback Carte",
+  DE "Karten-Cashback-Bonus"), or `scripts/offer-check.js` flags it as an ended offer.
+- The marketplace checker's results panel and the quick-estimate dollar mode are JavaScript text: 7d.

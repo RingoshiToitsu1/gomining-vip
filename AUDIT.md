@@ -644,3 +644,23 @@ every config number used in the translations, and run over the locale files and 
   site deletes the user's avatar files before deleting the account. `inspect_readonly.sql` §5 confirms all of this live.
 - **report/block** revised: `reported_user_id`, server-filled `body`/`reported_user_id`/`reporter_id` (trigger from
   `public.messages`), body capped at 500, clients can insert only `message_id` and `reason`.
+
+## 21. Phase 7b: content pages in ES / FR / DE
+
+Translated (machine, listed in TRANSLATIONS.md): `/guides`, `/faq`, `/glossary`, `/about`, `/disclosures`, `/privacy`,
+`/terms`, `/how-gomining-works`, `/is-gomining-worth-it`, `/gomining-discount-explained`, `/gomining-promo-code`,
+`/gomining-roi-calculator`, `/gomining-marketplace-checker` (page text). New URLs only: `/es|fr|de/<same path>`.
+16 pages × 3 languages, all in the sitemap with hreflang. Offer check 0, golden 33/33, no broken links.
+Deploy and preview now run `gen-i18n.js` after `gen-pages.js`, so translated copies always carry the fresh English
+for anything not yet translated. 5 live-number runs (guides "This month", worth-it live paragraphs) stay English until 7c.
+
+**Owner decisions needed (found while translating; translated faithfully, not changed):**
+1. **Rule 8 wording in the legal pages.** `/terms` "Affiliate and referral disclosure": *"Any additional new-user offer
+   we make is discretionary… may require proof of a genuine sign-up… limit the offer to one per person…"*; and
+   "Acceptable use": *"abuse our offers through fraudulent or duplicate claims"*. `/privacy`: *"To prevent abuse of our
+   offers (for example, verifying a genuine sign-up)"* and *"We keep claim-form submissions… administer the offer"*.
+   These describe the ended personal offer. The offer check doesn't catch them (different wording).
+2. **Contact pointer.** `/privacy` and `/terms` say "use the contact form on our homepage"; there is no such form now
+   (contact is Telegram, /about#contact, or the co-pilot's Formspree flow).
+3. `/privacy` "Last updated: June 30, 2026" predates accounts, chat and the co-pilot form; it doesn't mention
+   Supabase (accounts, saved farms, chat). Worth a legal refresh before launch.

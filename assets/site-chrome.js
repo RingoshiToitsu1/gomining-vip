@@ -31,7 +31,7 @@
   // ---------- language (Phase 7): from <html lang>; /es/, /fr/, /de/ copies come from scripts/gen-i18n.js ----------
   var LANG = ({ es: 1, fr: 1, de: 1 }[(document.documentElement.lang || '').slice(0, 2)]) ? document.documentElement.lang.slice(0, 2) : 'en';
   // Pages that exist in every language (kept up to date by scripts/gen-i18n.js; don't edit by hand).
-  var TRANSLATED = /* i18n:pages */["/","/claim","/copilot"]/* /i18n:pages */;
+  var TRANSLATED = /* i18n:pages */["/","/claim","/copilot","/about","/disclosures","/guides","/faq","/glossary","/how-gomining-works","/privacy","/terms","/is-gomining-worth-it","/gomining-discount-explained","/gomining-promo-code","/gomining-roi-calculator","/gomining-marketplace-checker"]/* /i18n:pages */;
   var STR = {
     en: {},
     es: { Calculator: 'Calculadora', 'Growth Projection': 'Proyección', Guides: 'Guías', 'RINGO5 Bonuses': 'Bonos RINGO5', Tools: 'Herramientas',
