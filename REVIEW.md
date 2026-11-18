@@ -16,6 +16,7 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | 6 Chat and co-pilot | community chat (panel, /chat, widget Messages tab), scripted co-pilot (/copilot + widget) |
 | 7 Languages | full ES / FR / DE copies (39 pages each incl. account pages), hreflang + sitemap, runtime dictionary for the console, local number and date formats |
 | Parts 1–3 (pre-8) | site-wide removal of the old visuals (525-row audit); console rebuilt on one template for all six tabs; every loading screen rewritten (real steps only, ≤0.6 s minimum) |
+| v3 polish (walkthrough) | header and tool card say "New to GoMining?" (was "RINGO5 Bonuses"); v3 badge and a self-drawing earnings curve in the hero; ▲/▼ % change on BTC and GMT (24 h) and on difficulty and sats/TH/day (last adjustment), green = good for a miner, on the landing, console and quote strips; soft cross-fade between pages and a light fade-up of each page's text, replayed on console tabs; loaders: continuously moving sheen, bar finishes before closing, overlays fade in. Nothing moves with reduced motion |
 | 8 Quality and launch | URL check, indexability gate, link check, accessibility check, OG images rebranded, tables pass, LAUNCH.md runbook, SEO baseline |
 
 ## 2. Rules: how each was kept
