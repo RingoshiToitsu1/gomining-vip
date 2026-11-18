@@ -363,6 +363,13 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .topbar .header{position:relative!important;top:auto!important}
 .modes{flex-wrap:wrap;max-width:100%}
 
+/* ---------- pass 9: one 16 px gutter on phones for content, strip and Quote/Statement ---------- */
+@media (max-width:640px){
+  .subbar{padding-left:16px!important;padding-right:16px!important}
+  .wrap{padding-left:16px!important;padding-right:16px!important}
+  .header-inner{padding:0 16px!important}
+}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 

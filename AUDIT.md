@@ -1375,3 +1375,52 @@ tables, charts, empty states); only the content changes. Quote and Statement kee
 Rewrite rules (owner): site background and components; skeleton or one gold progress bar; GMT icon only if a mark is needed;
 no glow, particles or spinning rings. Calm, sentence-case copy naming only what the page really does. Shown only while the
 work runs, plus at most ~1 s minimum so it doesn't flash. All loader text in ES/FR/DE through the same dictionary.
+
+### 26a. After the redesign: the same side-by-side set (1280 and 360 px, 2026-11-18)
+
+Shots: `%TEMP%\gmtshots\after6\en-{1280,360}-0{0..6}-*.png`. Console and Planner results were shot with the logged-out
+sign-up gate removed from the screenshot browser only (the gate itself is unchanged on the site, as live).
+
+| # | Item (from §26) | Now, on all six tabs |
+|---|---|---|
+| 1 | Background | flat `--color-bg`; galaxy, orb, grid and stars removed (markup and chrome.js) — gone |
+| 2 | Tab row | one `ui-tabs`-style row on all six tabs, sentence case, gold underline on the active tab — gone |
+| 3 | Chat entry | the pill is folded into the header Messages icon (shown on the console logged out too) — gone |
+| 4 | Live strip | landing-style label-over-value tiles on a surface band, one row; same strip on Quote; Statement has no live data so no strip — gone (Statement noted) |
+| 5 | Page heading | Poppins 600 h1 + lead, left, on every tab — gone |
+| 6 | Page width | `--content-max` container with the 20 px (16 px phone) gutter everywhere — gone |
+| 7 | Back control | "Return to Console" hidden on tab panels (tab row replaces it); kept on chart pages — gone |
+| 8 | Card style | `ui-card` surface everywhere; no gold borders, brackets, inner glow or glass — gone |
+| 9 | Card titles | sentence case, Poppins 600 (60 labels re-cased, translations moved) — gone |
+| 10 | Stat figures | `ui-stat` look, Inter tabular, gold only on each card's key figure — gone |
+| 11 | Buttons | `ui-btn` primary/secondary/ghost, sentence case, no glow — gone |
+| 12 | Inputs | `ui-field`/`ui-input` look, left-aligned — gone |
+| 13 | Segmented controls | `ui-segmented` — gone |
+| 14 | Switches | `ui-switch` look — gone |
+| 15 | Section panels | card + accordion "+/×" control on the same click target and saved state; no CSS-written English "Show/Hide" — gone |
+| 16 | Charts | chart kit colours, Inter labels, no glow; reward chart drawn at its real width — gone |
+| 17 | Tables | `ui-table` look — gone |
+| 18 | Notes | `ui-notice` look — gone |
+| 19 | Fonts | Poppins / Inter only; root font 16 px like the site (was 19.8 px) — gone |
+| 20 | Spacing | token spacing; console 1 rem = site 1 rem — gone |
+| 21 | Video banner | standard dismissible card (same hide-per-video behaviour) — gone |
+| 22 | Stream mode | `ui-btn--secondary` — gone |
+| 23 | Effects | no count-up, reveal, tilt, magnetic or shimmer — gone |
+
+### 27a. Loading screens after the rewrite
+
+| # | Loader | Steps now (all real) | Minimum display | Artificial delay |
+|---|---|---|---|---|
+| L1 | Console boot | prices, network difficulty, your farm, discount & earnings (fake "Connecting to the Bitcoin network" removed) | 0.6 s (0.3 s repeat; was 2.4 / 1.1 s) | none (was ≥330 ms per step + 1.1 s exit) |
+| L2/L3 | Planner | your capital/goal, hashrate prices, comparing splits, monthly income (random counter and "Holding the 20%" removed) | 0.6 s (was 2.1 s) | one frame (was 800 ms) |
+| L4–L6 | Projection, Edit farm, new-user plan | single line ("Building your projection…" etc.) | only while running | one frame (was 650–850 ms) |
+| L7 | Closing a chart / planner / projection | no loader (nothing loads) | — | none (was a fixed 650 ms) |
+| L8/L9 | Live chart, rainbow | library/candles/price; history/fit/today's price (fixed-delay "EMA" and "bands" steps removed) | 0.6 s (0.25 s repeat) | none (was ≥260 ms per step) |
+| L10 | Snapshot | "Loading the latest 1-hour candles…" | only while running | none |
+| L11 | Marketplace checker | locate, hashrate, listing, upgrades, premium | 0.6 s first / 0.3 s (was 1.9 / 1.2 s) | none (was ≥300 ms per step) |
+| L12 | Quote | no loader: the quote is computed instantly, the result just appears | — | none (was ~2.6 s staged) |
+| L13/L14 | ROI widget, chat, accounts | skeletons (unchanged) | — | none |
+
+Look: flat card, GMT-Optimizer mark, one gold bar, dot/check step list; no rings, glow, % counter or hash readout.
+Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots\loaders\{en,de}-{1280,360}-L*.png`.
+
