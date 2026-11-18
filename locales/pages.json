@@ -1,5 +1,5 @@
 {
-  "_readme": "English source pages mirrored to /es/, /fr/, /de/ by scripts/gen-i18n.js. Add a page here once its translations are in locales/<lang>.json.",
+  "_readme": "pages: English source pages mirrored to /es/, /fr/, /de/ by scripts/gen-i18n.js (add one once its translations exist). generated: pages scripts/gen-pages.js writes in every language itself (gen-i18n only links to them and lists them). noSitemap: canonicalised elsewhere.",
   "pages": [
     "index.html",
     "claim/index.html",
@@ -17,5 +17,24 @@
     "gomining-promo-code.html",
     "gomining-roi-calculator.html",
     "gomining-marketplace-checker.html"
+  ],
+  "generated": [
+    "gomining-1-th-roi.html",
+    "gomining-5-th-roi.html",
+    "gomining-10-th-roi.html",
+    "gomining-25-th-roi.html",
+    "gomining-50-th-roi.html",
+    "gomining-100-th-roi.html",
+    "gomining-250-th-roi.html",
+    "gomining-500-th-roi.html",
+    "gomining-profit-btc-75k.html",
+    "gomining-profit-btc-100k.html",
+    "gomining-profit-btc-150k.html",
+    "gomining-profit-btc-200k.html",
+    "gomining-profit-btc-250k.html",
+    "gomining-worth-it-now.html"
+  ],
+  "noSitemap": [
+    "gomining-worth-it-now.html"
   ]
 }

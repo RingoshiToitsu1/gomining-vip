@@ -690,3 +690,23 @@ for anything not yet translated. 5 live-number runs (guides "This month", worth-
 - Report/block SQL: re-verified with the real PostgreSQL parser (pglast 8.8 / libpg_query): every proposal file parses
   and both PL/pgSQL functions compile; a copy of `message_reports_fill` without `begin` is rejected, the file as
   written compiles. Still not built (awaiting approval).
+
+## 22. Phase 7c: data pages in ES / FR / DE
+
+`gen-pages.js` now builds each of the 14 data pages in en/es/fr/de from `scripts/data-pages-text.js` (templates; all
+numbers, RINGO5 terms and the discount cap come in from config/live data, so translations can't go stale) and writes
+`/es|fr|de/<same file>`. Numbers, money and dates are formatted per language. The live paragraphs on
+`/is-gomining-worth-it` are written per language to `locales/live/<lang>/` and swapped into the translated copy by
+`gen-i18n.js`. Every data page (English included) now carries the hreflang block. `locales/pages.json` lists the
+generated pages, so links, the header and the sitemap know them; `/gomining-worth-it-now` stays out of the sitemap in
+every language (canonical points at /is-gomining-worth-it).
+
+**English unchanged, proven:** with fixed inputs (`GEN_PAGES_FIXED=64000,1.5e14 GEN_PAGES_DATE=2026-11-18`) the new
+generator's English output is byte-identical to the old generator's for all 16 files it touches (14 pages,
+is-gomining-worth-it, sitemap), apart from the new hreflang block.
+
+**Also fixed:** the `/guides` "This month" card was static text frozen at "November 2026" (my Phase 2 copy); it's now
+"Is GoMining worth it right now?" with a month-free description, in all languages.
+
+**Noticed, not changed (owner's call):** the data pages' formula line says "× 0.98" for the BTC→GMT conversion, but
+the fee in config is 2.25% (× 0.9775). The figures themselves use the config value; only that printed formula is stale.

@@ -12,6 +12,7 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 | Which pages are translated | `locales/pages.json` | add a page once all its strings exist (`--missing` lists gaps) |
 | Header, footer, account menu | `assets/site-chrome.js` (`STR`) | picks the language from `<html lang>` |
 | Co-pilot | `assets/copilot/es.js`, `fr.js`, `de.js` | same nodes as `en.js` |
+| Data pages (live numbers) | `scripts/data-pages-text.js` | templates; numbers come in through `c`, never typed |
 | Quick-estimate widget (farm mode) | `assets/roi-embed.js` (`FARM`) | `/embed` keeps its own dollar-mode strings |
 
 ## Rules for reviewers
@@ -27,7 +28,7 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
 |---|---|---|---|---|
 | 7a | landing, /claim, /copilot, header/footer, co-pilot, quick estimate | machine | machine | machine |
 | 7b | guides, FAQ, glossary, about, disclosures, privacy, terms, how-it-works, worth-it, discount, promo code, ROI calculator, marketplace checker (page text) | machine | machine | machine |
-| 7c | 14 generated data pages (via `gen-pages.js`) | – | – | – |
+| 7c | 14 generated data pages + live blocks (templates in `scripts/data-pages-text.js`) | machine | machine | machine |
 | 7d | console app (`app.js`), account pages, chat UI | – | – | – |
 
 ## Notes for reviewers (7b)
@@ -35,8 +36,8 @@ Register (matches the existing /embed widget): **ES tú · FR vous · DE du**.
   2026-11-18 and the terms' referral and acceptable-use clauses changed; English is binding and the translations say so
   ("this translation is for convenience; the English version prevails"). A lawyer, not a translator, should sign off
   both the English and the ES/FR/DE versions.
-- **Live numbers stay English until 7c**: the "This month" card on `/guides` and the three live paragraphs on
-  `/is-gomining-worth-it` are rewritten by `gen-pages.js` on every deploy; they get templated translations in 7c.
+- **Live numbers**: the 14 data pages and the live block on `/is-gomining-worth-it` are templates in
+  `scripts/data-pages-text.js` (7c). Keep every `${...}` placeholder; reword around them.
 - **Card cashback wording** must keep "Carte" / "Karte" / "tarjeta" next to "cashback" (FR "bonus cashback Carte",
   DE "Karten-Cashback-Bonus"), or `scripts/offer-check.js` flags it as an ended offer.
 - The marketplace checker's results panel and the quick-estimate dollar mode are JavaScript text: 7d.
