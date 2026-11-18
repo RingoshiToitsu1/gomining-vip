@@ -5497,7 +5497,9 @@ function buildReinvestChart(daily,days,gp){
   const pts=[];
   for(let i=0;i<N;i+=stride)pts.push({d:daily[i].d,v:daily[i].ssNet,gp:daily[i].gp});
   if(pts[pts.length-1].d!==daily[N-1].d)pts.push({d:daily[N-1].d,v:daily[N-1].ssNet,gp:daily[N-1].gp});
-  const W=600,H=232,padL=72,padR=18,padT=20,padB=44;
+  // Drawn at the container's real width so its 12 px labels stay 12 px (a fixed 600 viewBox scaled them to ~23 px on desktop, ~7 px on phones).
+  const _riHost=(typeof document!=='undefined'&&document.getElementById)?document.getElementById('spResult'):null;
+  const W=Math.round(Math.max(320,Math.min(1180,((_riHost&&_riHost.clientWidth)||634)-34))),H=232,padL=72,padR=18,padT=20,padB=44;
   const innerW=W-padL-padR,innerH=H-padT-padB;
 
   // Store geometry + data for hover/toggle handlers

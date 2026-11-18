@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=6">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=9">
-<link rel="stylesheet" href="/assets/console.css?v=2">
+<link rel="stylesheet" href="/assets/console.css?v=3">
 <style>
 :root{--bg:var(--color-bg);--card:var(--color-surface-1);--card2:var(--color-surface-2);--bd:var(--color-border);--gold:var(--color-gold);--gold2:var(--color-gold-300);--pale:var(--color-gold-300);
   --txt:var(--color-text);--t2:var(--color-text-2);--t3:var(--color-text-2);--t4:var(--color-text-3);--green:var(--color-success);--mono:var(--font-body);
@@ -80,25 +80,25 @@ h1{font-family:var(--font-ui);font-size:var(--font-size-4xl);font-weight:var(--f
 .go:hover{filter:brightness(1.06)}
 @media(max-width:600px){.go{margin-left:0;width:100%}}
 .out{margin-top:1.5rem;display:none}
-.headline{background:linear-gradient(150deg,rgb(var(--color-gold-rgb) / .13),rgb(var(--color-gold-rgb) / .02));
+.headline{background:var(--color-surface-1);
   border:1px solid rgb(var(--color-gold-rgb) / .32);border-radius:16px;padding:1.3rem;text-align:center;margin-bottom:1rem}
-.headline .lab{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.headline .lab{font-size:.68rem;color:var(--t3)}
 .headline .big{font-family:var(--mono);font-size:clamp(2rem,6vw,2.9rem);font-weight:700;color:var(--gold);line-height:1.1;margin-top:.25rem}
 .headline .sub{color:var(--t2);font-family:var(--mono);font-size:.95rem;margin-top:.35rem}
 .headline .note{color:var(--t3);font-size:.78rem;margin-top:.5rem;line-height:1.5}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.8rem}
 .cell{background:var(--card2);border:1px solid var(--bd);border-radius:13px;padding:.9rem 1rem}
-.cell .k{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.cell .k{font-size:.66rem;color:var(--t3)}
 .cell .v{font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--txt);margin-top:.25rem;line-height:1.15}
 .cell .s{color:var(--t3);font-size:.74rem;margin-top:.25rem;line-height:1.45}
 .cell.gold .v{color:var(--gold)}
-.cell.green .v{color:var(--green)}
+.cell.green .v{color:var(--color-text)}   /* gold only for the key figure */
 .split{margin-top:1rem;background:var(--card2);border:1px solid var(--bd);border-radius:13px;padding:1rem}
 .split h3{margin:0 0 .7rem;font-size:.86rem;font-weight:700;color:var(--t2)}
 .bar{display:flex;height:11px;border-radius:999px;overflow:hidden;background:var(--bg);margin-bottom:.7rem}
 .bar i{display:block;height:100%}
 .bar .th{background:linear-gradient(90deg,var(--gold),var(--gold2))}
-.bar .gm{background:linear-gradient(90deg,var(--color-series-4),#c4b0ff)}
+.bar .gm{background:var(--color-series-4)}
 .legs{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .leg .lk{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2);font-weight:600}
 .leg .sw{width:9px;height:9px;border-radius:3px;flex:0 0 auto}

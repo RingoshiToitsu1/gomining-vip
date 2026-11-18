@@ -279,6 +279,30 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .field-input.sp-selwrap{padding:0;border:0!important;background:none!important}
 .field-input.sp-selwrap select{width:100%}
 
+/* ---------- pass 3 ---------- */
+/* live strip: one row (live figures, then the quick-edit chips, then the "prices checked" note) inside the content width */
+.subbar{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:var(--space-2);
+  padding:var(--space-3) max(20px, calc((100% - var(--content-max)) / 2 + 20px))!important}
+.subbar .live-bar,.subbar .live-bar.quick-bar{display:contents}
+.subbar .px-badge-row.px-subbar{order:10;flex:1 1 100%;margin:0;justify-content:flex-start}
+@media (min-width:1100px){.subbar .px-badge-row.px-subbar{flex:1 1 auto;justify-content:flex-end;align-self:center}}
+/* every panel uses the full container width, like the console view */
+#secInputs .ed-form{max-width:none!important;margin:0!important}
+.fx-wrap{max-width:none!important;margin:var(--space-5) 0 0!important;background:var(--color-surface-1)!important;background-image:none!important}
+.sp-plan-link{text-align:left!important;margin:var(--space-3) 0 0}
+.ri-single-card{max-width:none!important;margin:0 0 var(--space-3)!important;text-align:left!important;padding:var(--space-4)!important}
+#spResult .ri-headline{color:var(--color-gold)}
+.ri-chart-svg{width:100%;height:auto;display:block}
+/* forms: labels and values left-aligned, one rhythm */
+#plannerIntro .pi-lbl,#plannerIntro label,#plannerIntro .pi-note,#plannerIntro .sp-form,#plannerIntro .cx-form>div{text-align:left!important}
+#plannerIntro input,#secInputs input,#setupProjModal input{text-align:left!important}
+#secInputs .ed-fld input{text-align:right!important}
+#plannerIntro .pi-mode-seg{align-self:flex-start;margin:0}
+#plannerIntro .cx-form>div{display:flex;flex-direction:column;align-items:stretch;gap:var(--space-2)}
+#plannerIntro .toggle-row{justify-content:flex-start!important}
+.sp-payout-val{flex-direction:row!important;gap:var(--space-2)}
+.sp-payout-val .unit{color:var(--color-text-2)!important;font-family:var(--font-body)!important}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
