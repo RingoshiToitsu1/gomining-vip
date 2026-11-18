@@ -1,19 +1,19 @@
 /* GMT-Optimizer co-pilot chat (assets/copilot.js). Self-contained colours: content pages and the
    console use different token sets, so nothing here depends on either. Gold to match the site. */
 .gc-fab{position:fixed;right:18px;bottom:18px;z-index:450;width:60px;height:60px;padding:0;border-radius:50%;
-  border:2px solid var(--color-gold);background:var(--color-surface-1);cursor:pointer;box-shadow:0 10px 30px -6px rgb(var(--color-gold-rgb) / .5);
+  border:2px solid var(--color-gold);background:var(--color-surface-1);cursor:pointer;box-shadow:none;
   transition:transform .15s ease,box-shadow .15s ease}
 .gc-fab img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
 .gc-fab img.gc-fab-mark{width:70%;height:auto;margin:0 auto;border-radius:0;object-fit:contain}
 .gc-fab{display:flex;align-items:center;justify-content:center;background:var(--color-bg)}
-.gc-fab:hover{transform:translateY(-2px);box-shadow:0 14px 36px -6px rgb(var(--color-gold-rgb) / .7)}
+.gc-fab:hover{box-shadow:none}
 .gc-fab:focus-visible{outline:3px solid var(--color-gold-300);outline-offset:3px}
 .gc-dot{position:absolute;right:1px;top:1px;width:14px;height:14px;border-radius:50%;background:var(--color-success);border:2px solid var(--color-bg)}
 .gc-fab.on .gc-dot{display:none}
 /* keep the back-to-top button clear of the bubble */
 html.gc-on #toTop{bottom:90px !important}
 
-.gc-tip{position:fixed;right:18px;bottom:90px;z-index:450;max-width:250px;background:#151515;color:var(--color-text);
+.gc-tip{position:fixed;right:18px;bottom:90px;z-index:450;max-width:250px;background:var(--color-surface-2);color:var(--color-text);
   border:1px solid rgb(var(--color-gold-rgb) / .3);border-radius:14px 14px 4px 14px;padding:12px 34px 12px 14px;font:15px/1.4 Inter,system-ui,sans-serif;
   box-shadow:0 12px 30px -10px rgb(var(--color-black-rgb) / .7);opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s ease}
 .gc-tip.show{opacity:1;transform:none;pointer-events:auto}
@@ -21,15 +21,15 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-tip-x{position:absolute;top:4px;right:6px;background:none;border:0;color:var(--color-text-2);font-size:20px;line-height:1;cursor:pointer;padding:4px}
 
 .gc-panel{position:fixed;right:18px;bottom:90px;z-index:451;margin:0;padding:0;width:380px;max-width:calc(100vw - 32px);
-  height:auto;max-height:min(560px,70vh,calc(100vh - 120px));   /* grows with the conversation, up to the cap */display:flex;flex-direction:column;overflow:hidden;background:#0d0d0d;color:var(--color-text);
-  border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;box-shadow:0 30px 80px -20px rgb(var(--color-black-rgb) / .85),0 0 0 1px rgb(var(--color-gold-rgb) / .06);
-  font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
+  height:auto;max-height:min(560px,70vh,calc(100vh - 120px));   /* grows with the conversation, up to the cap */display:flex;flex-direction:column;overflow:hidden;background:var(--color-surface-1);color:var(--color-text);
+  border:1px solid var(--color-border-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop);
+  font-family:var(--font-body);text-align:left}
 .gc-panel[hidden]{display:none}
-.gc-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;background:linear-gradient(180deg,#181410,#121010);border-bottom:1px solid rgb(var(--color-gold-rgb) / .16)}
+.gc-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;background:linear-gradient(180deg,var(--color-surface-2),var(--color-surface-1));border-bottom:1px solid rgb(var(--color-gold-rgb) / .16)}
 .gc-head img{border-radius:50%;flex:none;object-fit:contain;padding:7px;background:var(--color-bg);border:1px solid rgb(var(--color-gold-rgb) / .5)}
 .gc-head div{flex:1;min-width:0;line-height:1.2}
 .gc-head strong{display:block;font-size:16px;color:var(--color-text)}
-.gc-head small{color:var(--color-text-2);font-family:ui-monospace,"Inter",monospace;font-size:11.5px}
+.gc-head small{color:var(--color-text-2);font-family:var(--font-body);font-size:11.5px}
 .gc-head button{background:none;border:0;color:var(--color-text-2);font-size:22px;line-height:1;width:36px;height:36px;border-radius:8px;cursor:pointer}
 .gc-head button:hover{color:var(--color-text);background:rgb(var(--color-white-rgb) / .05)}
 .gc-head .gc-restart{font-size:19px}
@@ -37,7 +37,7 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-log{flex:0 1 auto;min-height:0;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
 .gc-msg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
 .gc-msg b{color:var(--color-gold-300);font-weight:700}
-.gc-bot{align-self:flex-start;background:#161616;border:1px solid #262321;border-bottom-left-radius:4px}
+.gc-bot{align-self:flex-start;background:var(--color-surface-2);border:1px solid var(--color-border);border-bottom-left-radius:4px}
 .gc-me{align-self:flex-end;background:linear-gradient(135deg,var(--color-gold-300),var(--color-gold));color:var(--color-on-gold);font-weight:600;border-bottom-right-radius:4px}
 .gc-typing{display:inline-flex;gap:4px;padding:13px 14px}
 .gc-typing i{width:6px;height:6px;border-radius:50%;background:var(--color-text-2);animation:gc-blink 1s infinite}
@@ -45,7 +45,7 @@ html.gc-on #toTop{bottom:90px !important}
 @keyframes gc-blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
 .gc-links{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:92%}
-.gc-link{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border-radius:10px;font:700 14.5px Inter,system-ui,sans-serif;
+.gc-link{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border-radius:10px;font:700 14.5px var(--font-body);
   text-decoration:none;cursor:pointer;color:var(--color-text);background:transparent;border:1px solid var(--color-text-3)}
 .gc-link:hover{color:var(--color-gold-300);border-color:var(--color-gold)}
 .gc-link.gc-fire{color:var(--color-on-gold);border:0;background:linear-gradient(135deg,var(--color-gold-300),var(--color-gold))}
@@ -53,25 +53,25 @@ html.gc-on #toTop{bottom:90px !important}
 
 .gc-card{display:grid;gap:7px;min-width:75%}
 .gc-card div{display:grid;gap:1px}
-.gc-card span{font-family:ui-monospace,monospace;font-size:11px;color:var(--color-text-2);text-transform:uppercase;letter-spacing:1px}
-.gc-card b{color:var(--color-text);font-family:ui-monospace,monospace;font-size:13.5px;font-weight:400;word-break:break-all}
+.gc-card span{font-family:var(--font-body);font-size:11px;color:var(--color-text-2);}
+.gc-card b{color:var(--color-text);font-family:var(--font-body);font-size:13.5px;font-weight:400;word-break:break-all}
 .gc-fine{font-size:12px;color:var(--color-text-2);line-height:1.4;max-width:92%}
 .gc-fine a{color:var(--color-gold-300)}
 
 .gc-foot{border-top:1px solid rgb(var(--color-gold-rgb) / .14);padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--color-bg)}
 .gc-foot:empty{display:none}
 .gc-opts{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
-.gc-opt{min-height:40px;padding:8px 13px;border-radius:999px;cursor:pointer;font:600 14.5px Inter,system-ui,sans-serif;color:var(--color-gold-300);
-  background:#1c160b;border:1px solid #5a4217;text-align:left}
+.gc-opt{min-height:40px;padding:8px 13px;border-radius:999px;cursor:pointer;font:600 14.5px var(--font-body);color:var(--color-gold-300);
+  background:rgb(var(--color-gold-rgb) / .08);border:1px solid rgb(var(--color-gold-rgb) / .35);text-align:left}
 .gc-opt:hover{border-color:var(--color-gold)}
 .gc-opt.gc-primary{color:var(--color-on-gold);border:0;background:linear-gradient(135deg,var(--color-gold-300),var(--color-gold));font-weight:700}
 .gc-opt:disabled{opacity:.6;cursor:default}
 .gc-opt:focus-visible,.gc-link:focus-visible,.gc-send:focus-visible{outline:2px solid var(--color-gold-300);outline-offset:2px}
 .gc-ask{display:flex;gap:7px}
-.gc-ask input{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:10px;background:#060606;color:var(--color-text);border:1px solid #2a2622;
+.gc-ask input{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:10px;background:var(--color-bg);color:var(--color-text);border:1px solid var(--color-border-strong);
   font:16px Inter,system-ui,sans-serif}   /* 16px stops iPhone zoom */
 .gc-ask input:focus{outline:none;border-color:var(--color-gold)}
-.gc-send{height:44px;padding:0 14px;border-radius:10px;cursor:pointer;border:0;font:700 15px Inter,system-ui,sans-serif;color:var(--color-on-gold);background:linear-gradient(135deg,var(--color-gold-300),var(--color-gold))}
+.gc-send{height:44px;padding:0 14px;border-radius:10px;cursor:pointer;border:0;font:700 15px var(--font-body);color:var(--color-on-gold);background:linear-gradient(135deg,var(--color-gold-300),var(--color-gold))}
 
 /* phones: full-screen sheet */
 @media (max-width:600px){
@@ -91,14 +91,14 @@ html.gc-on #toTop{bottom:90px !important}
 .gc-head .gc-full{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;color:var(--color-text-2);text-decoration:none;font-size:18px}
 .gc-head .gc-full:hover{color:var(--color-text);background:rgb(var(--color-white-rgb) / .05)}
 .gc-head button[hidden]{display:none}
-.gc-tabs{display:flex;gap:4px;padding:6px 8px 0;border-bottom:1px solid rgb(var(--color-gold-rgb) / .16);background:#121010}
+.gc-tabs{display:flex;gap:4px;padding:6px 8px 0;border-bottom:1px solid rgb(var(--color-gold-rgb) / .16);background:var(--color-surface-1)}
 .gc-tabs[hidden]{display:none}
 .gc-tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--color-text-2);font:600 14px/1 Inter,system-ui,sans-serif;
   padding:10px 8px 11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .gc-tab:hover{color:var(--color-text)}
 .gc-tab[aria-selected="true"]{color:var(--color-gold-300);border-bottom-color:var(--color-gold)}
 .gc-tab:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:6px}
-.gc-tab-n,.gc-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--color-success);color:#04140b;
+.gc-tab-n,.gc-badge{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--color-success);color:var(--color-bg);
   font:700 11px/18px Inter,system-ui,sans-serif;text-align:center}
 .gc-tab-n[hidden],.gc-badge[hidden]{display:none}
 .gc-badge{position:absolute;left:-4px;top:-4px;border:2px solid var(--color-bg);height:22px;line-height:18px}
@@ -112,8 +112,8 @@ html.gc-on #toTop{bottom:90px !important}
 
 /* ---- /copilot: the same conversation, inline on the page ---- */
 .gc-page{display:flex;flex-direction:column;height:clamp(460px,calc(100vh - var(--header-h) - 256px),720px);
-  background:#0d0d0d;border:1px solid rgb(var(--color-gold-rgb) / .22);border-radius:18px;overflow:hidden;
-  box-shadow:0 30px 80px -30px rgb(var(--color-black-rgb) / .85);font-family:Inter,system-ui,-apple-system,sans-serif;text-align:left}
+  background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);overflow:hidden;
+  box-shadow:var(--shadow-card);font-family:var(--font-body);text-align:left}
 .gc-page .gc-log{flex:1 1 auto;padding:20px 20px 10px}
 .gc-page .gc-msg{max-width:min(86%,560px)}
 .gc-page .gc-foot{padding-left:20px;padding-right:20px}

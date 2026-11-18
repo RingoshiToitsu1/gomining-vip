@@ -13,7 +13,7 @@
 .acct-who__txt h1 { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; overflow-wrap: anywhere; }
 .acct-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
 .acct-initial { display: inline-flex; align-items: center; justify-content: center; background: rgb(var(--color-gold-rgb) / .14); color: var(--color-gold-300);
-  font-family: var(--font-display); font-weight: 600; font-size: calc(var(--size) * .42); border: 1px solid rgb(var(--color-gold-rgb) / .35); }
+  font-family: var(--font-ui); font-weight: 600; font-size: calc(var(--size) * .42); border: 1px solid rgb(var(--color-gold-rgb) / .35); }
 .acct-bio { color: var(--color-text); white-space: pre-line; overflow-wrap: anywhere; }
 .acct-fixed { margin: 0; color: var(--color-text); font-weight: 500; }
 .acct-forgot { font-size: var(--font-size-sm, .875rem); color: var(--color-text-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-control);
@@ -37,4 +37,4 @@
 }
 .acct-stats a, .acct-card .ui-stat__meta a { color: var(--color-gold-300); }
 .acct-toggle { display: flex; gap: var(--space-2); align-items: flex-start; }
-.acct-danger { border-color: rgb(239 68 68 / .35); }
+.acct-danger { border-color: rgb(var(--color-error-rgb) / .35); }

@@ -417,7 +417,7 @@
           '<input type="file" accept="image/*" id="gmtProfFile" style="display:none">' +
         '</div>' +
         '<label>Display name</label><input id="gmtProfName" maxlength="40">' +
-        '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
+        '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--color-bg);border:1px solid var(--color-border-strong);color:var(--color-text);border-radius:var(--radius-control);padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
         '<div class="err" id="gmtProfErr"></div><div class="ok" id="gmtProfOk"></div>' +
         '<button class="go" id="gmtProfSave">Save</button>' +
         '<div class="gmt-pw">' +

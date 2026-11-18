@@ -76,8 +76,7 @@
 .gmt-ac-item.sel, .gmt-ac-item:hover { background: rgb(var(--color-gold-rgb) / .16); color: var(--color-gold-300); }
 
 /* the console header chip pulses while a mention waits */
-#gmtOnline.mention-alert { animation: gmtMentionPulse 1s ease-in-out infinite; }
-@keyframes gmtMentionPulse { 0%, 100% { background: var(--color-surface-2); } 50% { background: rgb(var(--color-gold-rgb) / .4); } }
+#gmtOnline.mention-alert { background: rgb(var(--color-gold-rgb) / .16); border-color: var(--color-gold); }   /* steady highlight, no pulse */
 
 /* user card */
 .gmt-uc { position: fixed; width: min(300px, 92vw); z-index: 10060; background: var(--color-surface-1); border: 1px solid var(--color-border-strong);
@@ -92,7 +91,7 @@
 .uc-idwrap { padding-bottom: 2px; min-width: 0; }
 .uc-name { font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
 .uc-user { font-size: var(--font-size-xs); color: var(--color-text-3); }
-.uc-role { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 6px; border-radius: 6px; font-weight: var(--font-weight-semibold);
+.uc-role { font-size: 10px;   padding: 2px 6px; border-radius: 6px; font-weight: var(--font-weight-semibold);
   color: var(--color-on-gold); background: var(--color-gold); }
 .uc-role-mod { color: var(--color-gold-300); background: rgb(var(--color-gold-rgb) / .14); border: 1px solid rgb(var(--color-gold-rgb) / .35); }
 .uc-bio { font-size: var(--font-size-sm); color: var(--color-text-2); line-height: 1.5; margin: var(--space-3) var(--space-4) 0; }

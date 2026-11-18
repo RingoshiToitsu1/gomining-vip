@@ -165,8 +165,8 @@ ${JSON.stringify(faqLd,null,2)}
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=6">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=9">
-<link rel="stylesheet" href="/assets/content.css?v=18">
-<link rel="stylesheet" href="/assets/topbar.css?v=7">
+<link rel="stylesheet" href="/assets/content.css?v=19">
+<link rel="stylesheet" href="/assets/topbar.css?v=8">
 <script src="/assets/site-chrome.js?v=12" defer></script>
 </head>
 <body>
@@ -179,7 +179,7 @@ ${faqHtml}
   </div>
   <div class="related">${T.readNext} ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=44"></script>
+<script src="/assets/site.js?v=45"></script>
 </body>
 </html>
 `;

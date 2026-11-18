@@ -20,7 +20,7 @@
 .gmt-field{
   width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);
   border-radius:10px;padding:.6rem .7rem;font-size:.9rem;font-family:var(--sans)}
-.gmt-field:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-glow)}
+.gmt-field:focus{outline:none;border-color:var(--purple);box-shadow:var(--focus-ring)}
 .gmt-field::placeholder{color:var(--text4)}
 
 /* ---------- header: account slot + online count ---------- */
@@ -55,7 +55,7 @@
 .gmt-acc-caret{color:var(--text3);transition:transform .2s}
 .gmt-acc-trigger[aria-expanded="true"] .gmt-acc-caret{transform:rotate(180deg)}
 .gmt-acc-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:10040;min-width:210px;padding:.35rem;
-  background:#121316;border:1px solid var(--card-border);border-radius:14px;
+  background:var(--color-surface-1);border:1px solid var(--card-border);border-radius:14px;
   box-shadow:0 18px 50px -10px rgb(var(--color-black-rgb) / .7)}
 .gmt-acc-menu[hidden]{display:none}
 .gmt-acc-head{display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem .65rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
@@ -70,14 +70,14 @@
 .gmt-acc-sep{height:1px;background:var(--border);margin:.3rem .2rem}
 #gmtOnline{display:inline-flex;align-items:center;gap:.35rem;
   font-family:var(--mono);font-size:.72rem;color:var(--text3)}
-#gmtOnline .dot{width:7px;height:7px;border-radius:50%;background:var(--color-success);box-shadow:0 0 8px var(--color-success)}
+#gmtOnline .dot{width:7px;height:7px;border-radius:50%;background:var(--color-success)}
 /* the online chip is the chat button */
 #gmtOnline.gmt-chat-btn{cursor:pointer;color:var(--text2);transition:border-color .15s,background .15s,color .15s;user-select:none}
 #gmtOnline.gmt-chat-btn:hover,#gmtOnline.gmt-chat-btn[aria-expanded="true"]{border-color:rgb(var(--color-success-rgb) / .55);background:rgb(var(--color-success-rgb) / .12);color:var(--text)}
 #gmtOnline.gmt-chat-btn:focus-visible{outline:2px solid var(--color-success);outline-offset:2px}
 #gmtOnline .gmt-chat-ic{font-size:.85rem;line-height:1}
 #gmtOnline .gmt-chat-lbl{font-family:var(--sans);font-weight:700;font-size:.78rem;color:var(--text);margin-right:.15rem}
-#gmtOnline .gmt-chat-new{margin-left:.2rem;padding:.05rem .4rem;border-radius:999px;background:var(--color-success);color:#04140b;font-weight:700;font-size:.66rem}
+#gmtOnline .gmt-chat-new{margin-left:.2rem;padding:.05rem .4rem;border-radius:999px;background:var(--color-success);color:var(--color-bg);font-weight:700;font-size:.66rem}
 #gmtOnline .gmt-chat-new.at{background:var(--color-gold);color:var(--color-on-gold)}
 
 /* ---------- modals (login + profile) ---------- */
@@ -89,13 +89,13 @@
   box-shadow:var(--sh,0 26px 64px -18px rgb(var(--color-black-rgb) / .72))}
 .gmt-modal h3{margin:0 0 .25rem;font-size:1.15rem;color:var(--text);font-family:var(--sans)}
 .gmt-modal .sub{font-size:.78rem;color:var(--text3);margin-bottom:1rem}
-.gmt-modal label{display:block;font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;
+.gmt-modal label{display:block;font-size:.66rem;
   color:var(--text3);margin:.7rem 0 .28rem;font-weight:700}
 .gmt-modal input,.gmt-modal textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);
   color:var(--text);border-radius:10px;padding:.6rem .7rem;font-size:.9rem;font-family:var(--sans)}
 .gmt-modal textarea{resize:vertical;font-family:inherit}
 .gmt-modal input:focus,.gmt-modal textarea:focus{outline:none;border-color:var(--purple);
-  box-shadow:0 0 0 3px var(--purple-glow)}
+  box-shadow:var(--focus-ring)}
 .gmt-modal .go{width:100%;margin-top:1rem;background:var(--purple);color:var(--color-bg);border:none;
   border-radius:12px;padding:.72rem;font-weight:700;cursor:pointer;font-size:.9rem;font-family:var(--sans);
   transition:var(--transition)}
@@ -109,7 +109,7 @@
 .gmt-inapp-copy{margin-top:.4rem;background:var(--purple);color:var(--color-bg);border:none;border-radius:8px;
   padding:.35rem .7rem;font-size:.74rem;font-weight:700;font-family:var(--sans);cursor:pointer;display:inline-block}
 .gmt-modal .err{margin-top:.7rem;font-size:.78rem;color:var(--red);min-height:1em}
-.gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:#7bd88f;min-height:1em}
+.gmt-modal .ok{margin-top:.7rem;font-size:.78rem;color:var(--color-success);min-height:1em}
 .gmt-modal .note{margin-top:.7rem;font-size:.7rem;color:var(--text4);line-height:1.45}
 .gmt-modal .x{float:right;background:none;border:none;color:var(--text4);font-size:1.2rem;cursor:pointer;line-height:1}
 .gmt-prof-avwrap{text-align:center}
@@ -123,13 +123,9 @@
    are no hard blur edges — nothing shows behind it. Background matches the Edit
    Setup page for a branded, intentional look. */
 .gmt-resgate{position:fixed;inset:0;z-index:190;display:flex;align-items:flex-start;justify-content:center;
-  padding:clamp(60px,14vh,150px) 1.2rem 2rem;background:var(--color-bg);
-  background-image:radial-gradient(ellipse 80% 60% at 20% -10%,rgb(var(--color-gold-rgb) / .10),transparent 60%),
-    radial-gradient(ellipse 70% 50% at 110% 10%,rgb(var(--color-gold-rgb) / .05),transparent 60%),
-    radial-gradient(ellipse 100% 50% at 50% 110%,rgb(var(--color-gold-rgb) / .04),transparent 60%);
-  background-attachment:fixed}
-.gmt-resgate .card{width:min(440px,94vw);text-align:center;background:var(--bg-card);border:1px solid var(--card-border);
-  border-radius:var(--radius-sm);padding:2.1rem 1.85rem;box-shadow:var(--sh,0 26px 64px -18px rgb(var(--color-black-rgb) / .72))}
+  padding:clamp(60px,14vh,150px) 1.2rem 2rem;background:var(--color-bg)}
+.gmt-resgate .card{width:min(440px,94vw);text-align:center;background:var(--color-surface-1);border:1px solid var(--color-border);
+  border-radius:var(--radius-card);padding:var(--space-6) var(--space-5);box-shadow:var(--shadow-card)}
 .gmt-resgate .card h3{margin:0 0 .5rem;font-family:var(--sans);font-size:1.3rem;color:var(--text)}
 .gmt-resgate .card p{margin:0 0 1.2rem;color:var(--text3);font-size:.86rem;line-height:1.55}
 .gmt-resgate .fleetstat{font-family:var(--mono);color:var(--purple-soft);font-size:1rem;margin:.2rem 0 1rem}
@@ -158,7 +154,7 @@
    The grid template is shared with .fleet-row so the columns actually line up. */
 .fleet-thead{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,.85fr) auto auto;
   gap:.35rem;padding:0 .55rem .3rem .95rem;border-bottom:1px solid var(--card-border)}
-.fleet-thead span{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+.fleet-thead span{font-family:var(--mono);font-size:.58rem;
   color:var(--text4);font-weight:700}
 .fleet-thead .num{text-align:right;padding-right:.4rem}
 
@@ -173,7 +169,7 @@
 .fleet-f{display:flex;align-items:center;gap:.35rem;background:var(--bg-input);
   border:1px solid var(--border);border-radius:8px;padding:.38rem .55rem;cursor:text;
   min-width:0;transition:var(--transition)}
-.fleet-f:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-glow)}
+.fleet-f:focus-within{border-color:var(--purple);box-shadow:var(--focus-ring)}
 @media(min-width:621px){
   /* Sixty boxed pills is what made this look busy. On desktop the fields are plain text that
      only reveals its edit affordance on hover or focus, so the eye follows the columns. */
@@ -185,8 +181,8 @@
   .fleet-col{font-size:.78rem}
   .fleet-in{font-size:.8rem}
 }
-.fleet-lbl{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--text3);font-weight:700;white-space:nowrap}
+.fleet-lbl{flex:0 0 auto;font-family:var(--mono);font-size:.6rem;
+  color:var(--text3);font-weight:700;white-space:nowrap}
 .fleet-in{flex:1 1 auto;min-width:0;width:100%;background:none;border:none;outline:none;padding:0;
   text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text)}
 .fleet-in::placeholder{color:var(--text4)}
@@ -195,7 +191,7 @@
   appearance:none;-webkit-appearance:none;-moz-appearance:none;
   text-align:right;text-align-last:right}
 /* The dropdown paints its own list background in some engines; keep options readable. */
-.fleet-col option{background:var(--bg-card,#12151a);color:var(--text)}
+.fleet-col option{background:var(--bg-card,var(--color-surface-1));color:var(--text)}
 .fleet-del{background:none;border:none;color:var(--text4);font-size:1.1rem;cursor:pointer;padding:0 .2rem;line-height:1}
 .fleet-del:hover{color:var(--red)}
 /* Active / inactive switch. An inactive miner earns nothing but is still billed,
@@ -204,8 +200,7 @@
   border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;
   font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.08em;
   padding:.34rem .42rem;line-height:1;transition:.18s}
-.fleet-pwr-dot{width:6px;height:6px;border-radius:50%;background:var(--green,#3ddc97);
-  box-shadow:0 0 7px var(--green,#3ddc97);flex:0 0 auto}
+.fleet-pwr-dot{width:6px;height:6px;border-radius:50%;background:var(--color-success);flex:0 0 auto}
 .fleet-pwr:hover{border-color:var(--text4);color:var(--text2)}
 .fleet-row.is-off .fleet-pwr{color:var(--orange,var(--color-gold))}
 .fleet-row.is-off .fleet-pwr-dot{background:var(--text4);box-shadow:none}
