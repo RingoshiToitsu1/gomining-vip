@@ -100,10 +100,15 @@
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
     if (!Account.user) { Account.profile = null; return Promise.resolve(null); }
-    // get_my_profile() (supabase/proposals/2026-11-17_account_extras.sql) returns the full own row once the
+    // get_my_profile() (supabase/proposals/2026-11-17_fix_profile_exposure.sql) returns the full own row once the
     // private columns are locked down; until that SQL is applied it doesn't exist and we read the table directly.
     return sb.rpc('get_my_profile').then(function (r) {
-      if (!r.error && r.data) { Account.profile = (Array.isArray(r.data) ? r.data[0] : r.data) || null; Account.features = { privacy: true }; return Account.profile; }
+      if (!r.error && r.data) {
+        Account.profile = (Array.isArray(r.data) ? r.data[0] : r.data) || null;
+        // hide-TH / language / delete need the account_extras SQL; the exposure fix alone doesn't add show_th
+        Account.features = { privacy: !!(Account.profile && 'show_th' in Account.profile) };
+        return Account.profile;
+      }
       return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup,th_total')
         .eq('id', Account.user.id).single()
         .then(function (r2) { Account.profile = r2.data || null; Account.features = { privacy: false }; return Account.profile; });
@@ -149,8 +154,8 @@
       return { profile: res[0].data || {}, msgCount: res[1].count || 0 };
     });
   };
-  // Public profile fields. profile_cards (supabase/proposals/2026-11-17_account_extras.sql) hides TH when the owner
-  // turned it off; until that SQL is applied the view doesn't exist, so fall back to the table. Probed once.
+  // Public profile fields. profile_cards (supabase/proposals/2026-11-17_fix_profile_exposure.sql; account_extras makes
+  // it honour the hide-TH toggle); until that SQL is applied the view doesn't exist, so fall back to the table. Probed once.
   var CARD_COLS = 'id,username,display_name,avatar_url,bio,created_at,th_total,role';
   var _cardsOk = null;
   Account.cardQuery = function (apply) {

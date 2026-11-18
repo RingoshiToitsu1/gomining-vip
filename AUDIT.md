@@ -570,3 +570,30 @@ The user card says "Hashrate hidden" once hide-TH is live. No backend change.
 - Report and block need backend tables: `supabase/proposals/2026-11-17_chat_report_block.sql`.
   Report = a mod-only queue with a snapshot of the message (messages vanish after 24h). Block = hides that user's
   messages for you on every device. A browser-only block (no backend) is possible but wouldn't follow the account.
+
+### 18b. Exposure fix split out (2026-11-17)
+`supabase/proposals/2026-11-17_fix_profile_exposure.sql` now stands alone and only tightens read access:
+public columns readable by all; `setup` readable only by its owner (via `get_my_profile()`); TH stays public through
+`profile_cards`, as shown today. `account_extras.sql` builds on it (hide-TH, prefs, delete). Backups and order:
+`supabase/proposals/README.md`. **Apply the exposure fix only after the overhaul code is live on main**: the current
+live `account.js` reads `setup`/`th_total` straight from `profiles`.
+
+Who reads profile data today (all must keep working after the fix):
+| Where | What it reads | After the fix |
+|---|---|---|
+| Header account menu, every page (`site-chrome.js`) | own id, username, display_name, avatar_url via REST | public columns, unchanged |
+| Login restore of the saved farm, console (`account.js` loadProfile → `app.js` gmtSyncAccountProfile) | own username, display_name, avatar, bio, role, **setup**, th_total | `get_my_profile()` |
+| Console role checks: mod delete/ban in chat (`account.js` role/isMod) | own role | `get_my_profile()` |
+| Chat user card, console + /chat + widget (`account.js` fetchUserCard) | any user's card incl. **th_total** | `profile_cards` |
+| /profile and /profile?u= (`account-pages.js`) | card incl. th_total | `profile_cards` |
+| /dashboard, /settings (`account-pages.js`) | own setup, th_total | `get_my_profile()` |
+| Chat posting (`messages_insert` policy) | poster's own `banned` | stays readable |
+| Writes: save farm / fleet TH / profile edit / mod ban (`account.js`, `chat.js`) | update filtered on `id` | unchanged (updates aren't affected) |
+| Edge function `nft-lookup` | no profile data | unaffected |
+
+## Phase 8 checklist (carried forward)
+- [ ] Logged-in screenshots, 360 and 1280: widget with both tabs, Messages tab, /chat, /copilot (Phase 6; skipped by owner 2026-11-17).
+- [ ] After the owner applies the SQL: re-check every row of the §18b table, and the Settings sections (hide TH, language, delete).
+- [ ] Social/OG images rebranded (§13).
+- [ ] Statement and console tables pass (§17).
+- [ ] Offer check = 0 on the built site, all languages.
