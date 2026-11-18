@@ -30,7 +30,7 @@
 .cb-load.cb-fixed{position:fixed;z-index:10030}
 .cb-load.cb-inline{position:relative;inset:auto;min-height:220px}
 .cb-load.out{opacity:0}
-.cb-core{width:min(380px,100%);background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);
+.cb-core{box-sizing:border-box;width:min(380px,100%);background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);
   box-shadow:var(--shadow-card);padding:var(--space-5);text-align:left;font-family:var(--font-body)}
 .cb-icon{display:block;width:32px;height:32px;margin:0 0 var(--space-3)}
 .cb-kicker{font-family:var(--font-ui);font-size:var(--font-size-xs);font-weight:var(--font-weight-semibold);color:var(--color-gold);margin:0 0 var(--space-1)}
@@ -226,7 +226,7 @@
       const t12 = typeof TH_TIERS !== 'undefined' ? TH_TIERS : null;   // new miners: 15 W only
       let splits = 0, splitT = 0;
       const ctl = run(null, {
-        fixed: true, icon: '/gmt36.png', minMs: 600, maxMs: 15000,
+        fixed: true, icon: '/assets/brand/GMT_icon_transparent.svg', minMs: 600, maxMs: 15000,
         kicker: 'Capital planner', title: target ? 'Finding the capital you need' : 'Finding your optimal split',
         failed: () => failed, failText: 'Something went wrong. Please try again.',
         onDone: () => { clearInterval(watch); clearInterval(splitT); toTop(); if (typeof animatePlannerResults === 'function') setTimeout(animatePlannerResults, 60); },

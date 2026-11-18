@@ -73,7 +73,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   transition:opacity var(--duration-base) var(--ease-standard);animation:gbFailsafe 0s linear 12s forwards}
 #gmBoot.gb-out{opacity:0;pointer-events:none}
 @keyframes gbFailsafe{to{opacity:0;visibility:hidden;pointer-events:none}}
-.gb-core{width:min(380px,100%);background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);
+.gb-core{box-sizing:border-box;width:min(380px,100%);background:var(--color-surface-1);border:1px solid var(--color-border);border-radius:var(--radius-card);
   box-shadow:var(--shadow-card);padding:var(--space-5);text-align:left}
 .gb-icon{display:block;width:32px;height:32px;margin:0 0 var(--space-3)}
 .gb-title{font-family:var(--font-ui);font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);color:var(--color-text);margin:0 0 var(--space-4)}
@@ -111,7 +111,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
      the numbers stop moving. Driven by /assets/boot.js; CSS failsafe removes it after 12 s. -->
 <div id="gmBoot" role="status" aria-live="polite" aria-label="Loading your console">
   <div class="gb-core">
-    <img class="gb-icon" src="/gmt36.png" alt="">
+    <img class="gb-icon" src="/assets/brand/GMT_icon_transparent.svg" alt="">
     <div class="gb-title">Loading your console</div>
     <div class="gb-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="gbBar"></i></div>
     <ul class="gb-steps">
@@ -1146,7 +1146,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <script src="/assets/account.js?v=29"></script>
 <script src="/assets/chat.js?v=21"></script>
 <script src="/assets/boot.js?v=6"></script>
-<script src="/assets/loaders.js?v=8"></script>
+<script src="/assets/loaders.js?v=9"></script>
 <script src="/assets/visualizer.js?v=9"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
