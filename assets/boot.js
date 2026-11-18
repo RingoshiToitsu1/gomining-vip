@@ -43,12 +43,15 @@
   const accountResolved = () => { const a = acc(); return !a || a.ready === false || a.resolved === true; };
   const loggedIn = () => { const a = acc(); return !!(a && a.isLoggedIn && a.isLoggedIn()); };
   const st = () => (typeof S !== 'undefined' ? S : null);   // app.js's global state
-  const nf = (n, d = 0) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  // Page locale on /es/, /fr/, /de/ (window.GMT_UI); English keeps en-US and '$' in front, so it is unchanged.
+  const LOC_ = ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[(window.GMT_UI || {}).lang];
+  const nf = (n, d = 0) => Number(n).toLocaleString(LOC_ || 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const usd = (n, d = 0) => LOC_ ? nf(n, d) + '\u00a0$' : '$' + nf(n, d);
 
   const STEPS = [
     { ready: () => true, detail: () => 'mempool.space' },
     { ready: () => { const s = st(); return s && s.btcPrice > 0 && s.gmtPrice > 0; },
-      detail: () => { const s = st(); return 'BTC $' + nf(s.btcPrice) + ' · GMT $' + nf(s.gmtPrice, 3); } },
+      detail: () => { const s = st(); return 'BTC ' + usd(s.btcPrice) + ' · GMT ' + usd(s.gmtPrice, 3); } },
     { ready: () => { const s = st(); return s && s.satsPerTHDay > 0; },
       detail: () => nf(Math.floor(st().satsPerTHDay)) + ' sats/TH/day' },
     { ready: () => accountResolved() && (!loggedIn() || fleetLoaded || performance.now() - t0 > 4500),

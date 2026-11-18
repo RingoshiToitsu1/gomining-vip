@@ -45,7 +45,9 @@
   // English month → local; a number the app built by hand (toFixed) gets the local decimal comma.
   function fixTok(t) {
     if (MONTHS && Object.prototype.hasOwnProperty.call(EN_MON, t)) return MONTHS[EN_MON[t]];
-    return comma && /^[-+−]?[$£€]?\d+\.\d+%?$/.test(t) ? t.replace('.', ',') : t;
+    if (comma && /^[-+−]?[$£€]?\d+\.\d+%?$/.test(t)) t = t.replace('.', ',');
+    if (comma && /^[-+−]?\d+(?:,\d+)?%$/.test(t)) t = t.replace('%', ' %');   // "20%" → "20 %"
+    return t;
   }
   function tr(text) {
     if (!text || !/[A-Za-z]/.test(text)) return null;

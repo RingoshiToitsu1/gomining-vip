@@ -79,7 +79,10 @@
   style.textContent = CSS;
   document.head.appendChild(style);
 
-  const nf = (n, d = 0) => Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  // Page locale on /es/, /fr/, /de/ (window.GMT_UI); English keeps en-US and '$' in front, so it is unchanged.
+  const LOC_ = ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[(window.GMT_UI || {}).lang];
+  const nf = (n, d = 0) => Number(n).toLocaleString(LOC_ || 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const usd = (n, d = 0) => LOC_ ? nf(n, d) + '\u00a0$' : '$' + nf(n, d);
   const state = () => (typeof S !== 'undefined' ? S : {});
   let active = null;   // one loader at a time
 
@@ -189,7 +192,7 @@
         { label: 'Streaming ' + pair + ' candles', ok: () => frameLoaded, v: () => '1h candles' },
         { label: 'Plotting the 50 EMA', ok: () => frameLoaded && performance.now() - frameAt > 450, v: () => '50-period EMA' },
         { label: 'Syncing the live price', ok: () => { const s = state(); return isBtc ? s.btcPrice > 0 : s.gmtPrice > 0; },
-          v: () => { const s = state(); return isBtc ? '$' + nf(s.btcPrice) : '$' + nf(s.gmtPrice, 4); } }
+          v: () => { const s = state(); return isBtc ? usd(s.btcPrice) : usd(s.gmtPrice, 4); } }
       ]
     });
     setTimeout(() => mo && mo.disconnect(), 10000);
@@ -216,7 +219,7 @@
         { label: 'Downloading BTC price history', ok: () => !!data(), v: () => nf(data().length) + ' days since 2012' },
         { label: 'Fitting the Power-Law regression', ok: () => { const ok = typeof _rbFit !== 'undefined' && !!_rbFit; if (ok && !fitAt) fitAt = performance.now(); return ok; }, v: () => 'log price vs log time' },
         { label: 'Painting the 9 valuation bands', ok: () => fitAt && performance.now() - fitAt > 250, v: () => 'fire sale → bubble' },
-        { label: 'Placing today’s price', ok: () => state().btcPrice > 0 || !!data(), v: () => state().btcPrice > 0 ? '$' + nf(state().btcPrice) : 'latest close' }
+        { label: 'Placing today’s price', ok: () => state().btcPrice > 0 || !!data(), v: () => state().btcPrice > 0 ? usd(state().btcPrice) : 'latest close' }
       ]
     });
     return out;
@@ -241,7 +244,7 @@
   // =================================================================================
   // Capital Planner (amount and target-income modes)
   // =================================================================================
-  const money0 = n => '$' + nf(Math.round(n));
+  const money0 = n => usd(Math.round(n));
   function wrapPlanner(name, target) {
     const orig = window[name];
     if (typeof orig !== 'function') return;
@@ -269,7 +272,7 @@
           { label: target ? 'Reading your income goal' : 'Reading your capital', ok: () => true,
             v: () => { const c = capIn(); return c > 0 ? money0(c) + (target ? '/mo more' : ' to deploy') : 'current farm'; } },
           { label: 'Pricing new hashrate tiers', ok: () => true,
-            v: () => t12 ? '$' + t12[0].cpt.toFixed(2) + ' → $' + t12[t12.length - 1].cpt.toFixed(2) + '/TH' : '12 W & 15 W curves' },
+            v: () => t12 ? usd(t12[0].cpt, 2) + ' → ' + usd(t12[t12.length - 1].cpt, 2) + '/TH' : '12 W & 15 W curves' },
           { label: target ? 'Goal-seeking the capital' : 'Testing every TH / GMT split',
             ok: () => { if (!splitT) splitT = setInterval(() => { splits += 37 + ((Math.random() * 60) | 0); }, 45); return finished; },
             v: () => nf(Math.max(splits, 1200)) + ' combinations' },
