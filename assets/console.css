@@ -388,6 +388,11 @@ html{font-size:16px!important}                         /* app.css scaled the con
   font-family:var(--font-ui);font-size:var(--font-size-xs);letter-spacing:0;text-transform:none;padding:0 var(--space-2)}
 .alloc-split-bar>div{color:var(--color-on-gold)!important;font-weight:var(--font-weight-semibold)}
 
+/* ---------- pass 11 ---------- */
+#tab-planner .sec-head{display:block!important}
+#tab-planner .sec-head .sec-lead{margin:0 0 var(--space-4)!important}
+.sub-title{display:block!important;width:100%!important;align-self:stretch!important;justify-self:stretch!important}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
