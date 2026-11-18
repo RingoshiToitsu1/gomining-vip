@@ -348,6 +348,15 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .fx-stats .a-val,.fx-stats b{font-size:var(--font-size-lg)}
 }
 
+/* ---------- pass 7: one gutter on phones ---------- */
+.container{margin-left:auto!important;margin-right:auto!important}
+.container .sp-page-inner{padding-left:0!important;padding-right:0!important}
+.ed-group{padding:var(--space-4)!important}
+@media (max-width:640px){
+  .sp-page-head{position:static!important;justify-content:flex-start;margin:0 0 var(--space-3)!important}
+  .container .sp-page-inner{padding-top:0!important}
+}
+
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
 
