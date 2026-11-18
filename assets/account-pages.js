@@ -113,7 +113,7 @@
       '<div class="ui-stats acct-stats">' +
         '<div class="ui-stat"><div class="ui-stat__label">Hashrate</div><div class="ui-stat__value">' + (hidden ? 'Hidden' : fmtN(p.th_total, (+p.th_total % 1) ? 1 : 0) + ' TH') + '</div><div class="ui-stat__meta">' + (hidden ? 'kept private by @' + esc(p.username) : (own && p.show_th === false ? 'hidden from others' : 'from their saved farm')) + '</div></div>' +
         '<div class="ui-stat"><div class="ui-stat__label">VIP by hashrate</div><div class="ui-stat__value">' + esc(tier) + '</div><div class="ui-stat__meta">locked GMT can lift it higher</div></div>' +
-        '<div class="ui-stat"><div class="ui-stat__label">Chat messages</div><div class="ui-stat__value">' + fmtN(msgCount) + '</div><div class="ui-stat__meta"><a href="/chat">Open chat</a></div></div>' +
+        '<div class="ui-stat"><div class="ui-stat__label">Chat messages, last 24 h</div><div class="ui-stat__value">' + fmtN(msgCount) + '</div><div class="ui-stat__meta"><a href="/chat">Open chat</a></div></div>' +
       '</div>' +
       (own ? '<div class="ui-row"><a class="ui-btn ui-btn--primary" href="/settings">Edit profile</a><a class="ui-btn ui-btn--secondary" href="/dashboard">Dashboard</a></div>' : '') +
       '</section>';

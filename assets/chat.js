@@ -434,7 +434,7 @@
           (p.bio ? '<div class="uc-bio">' + esc(p.bio) + '</div>' : '') +
           '<div class="uc-info">' +
             '<div><span class="uc-ic">📅</span> Joined <b>' + joined + '</b></div>' +
-            '<div><span class="uc-ic">💬</span> <b>' + d.msgCount + '</b> message' + (d.msgCount === 1 ? '' : 's') + ' sent</div>' +
+            '<div><span class="uc-ic">💬</span> <b>' + d.msgCount + '</b> message' + (d.msgCount === 1 ? '' : 's') + ' in the last 24 h</div>' +
             (p.th_total == null && p.show_th === false ? '<div><span class="uc-ic">⛏️</span> Hashrate hidden</div>' :
               '<div><span class="uc-ic">⛏️</span> <b>' + Math.round(p.th_total || 0).toLocaleString('en-US') + '</b> TH fleet</div>') +
           '</div>' + (modBtn ? '<div class="uc-actions">' + modBtn + '</div>' : '');

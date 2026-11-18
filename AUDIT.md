@@ -592,6 +592,9 @@ Who reads profile data today (all must keep working after the fix):
 | Edge function `nft-lookup` | no profile data | unaffected |
 
 ## Phase 8 checklist (carried forward)
+- [ ] **LAUNCH, REQUIRED:** right after the overhaul is merged to `main` and live, apply
+      `supabase/proposals/2026-11-17_fix_profile_exposure.sql` (back up first: `supabase/proposals/README.md`), then
+      re-check every row of the §18b table on the live site. Until it runs, logged-in users can read every user's `setup`.
 - [ ] Logged-in screenshots, 360 and 1280: widget with both tabs, Messages tab, /chat, /copilot (Phase 6; skipped by owner 2026-11-17).
 - [ ] After the owner applies the SQL: re-check every row of the §18b table, and the Settings sections (hide TH, language, delete).
 - [ ] Social/OG images rebranded (§13).
@@ -620,3 +623,24 @@ every config number used in the translations, and run over the locale files and 
 
 **Review:** all strings are machine translations; `TRANSLATIONS.md` lists where they live and the rules for reviewers.
 **Next stages:** 7b content pages, 7c data pages, 7d console app + account pages + chat UI (TRANSLATIONS.md status table).
+
+### 18c. SQL review answers (2026-11-17)
+- **Anon probe (zero-row requests, no data read):** anon can read `id, username, display_name, avatar_url, role,
+  created_at, bio, banned, th_total, setup` on 477 profiles; `miners` returns 0 rows to anon (RLS works);
+  `messages` is public (139 rows, by design). `message_reports`, `user_blocks`, `conversations` don't exist yet.
+  Columns beyond `schema.sql` can't be listed with the publishable key: `inspect_readonly.sql` lists them live.
+- **Live code read while logged out:** only the chat user card (`username, display_name, avatar_url, bio, created_at,
+  th_total, role` by `id`) and message counts. Nothing reads `setup` logged out → `interim_anon_lockdown.sql`.
+- **No `select('*')`, `profiles(*)` or `profiles!…` embeds** anywhere on `main` or `overhaul` (messages/miners
+  queries name their columns; none join profiles). Nothing to fix.
+- **/profile VIP tier** is computed in the browser from `th_total` (hashrate path only; locked GMT isn't public).
+  **Chat count** = rows in `messages` for that user, and messages are purged after 24 h, so it's labelled
+  "last 24 h" now (profile page and chat card).
+- **profile_cards** covers every column the overhaul's public reads use (`id, username, display_name, avatar_url,
+  bio, created_at, th_total, role` + `show_th`). The live code doesn't use the view; it's replaced at launch.
+- **Foreign keys (schema.sql):** `profiles.id`, `miners.user_id`, `messages.user_id` → `auth.users`, all
+  `ON DELETE CASCADE`; nothing references `profiles`. Proposed tables cascade (`message_reports.message_id` SET NULL).
+  Supabase's own `auth.*` tables cascade by design. `storage.objects.owner` may carry an FK on older projects; the
+  site deletes the user's avatar files before deleting the account. `inspect_readonly.sql` §5 confirms all of this live.
+- **report/block** revised: `reported_user_id`, server-filled `body`/`reported_user_id`/`reporter_id` (trigger from
+  `public.messages`), body capped at 500, clients can insert only `message_id` and `reason`.

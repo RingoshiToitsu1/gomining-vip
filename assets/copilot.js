@@ -32,7 +32,7 @@
     ["supabase", "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"],
     ["GMT_SUPABASE", "/assets/supabase-config.js?v=4"],
     ["GMTAccount", "/assets/account.js?v=26"],
-    ["GMTChat", "/assets/chat.js?v=17"]
+    ["GMTChat", "/assets/chat.js?v=18"]
   ];
   var LANG = (document.documentElement.lang || "en").slice(0, 2).toLowerCase();
 
