@@ -113,10 +113,6 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 .gb-done .gb-orb::before{animation-duration:.5s}
 @media(max-width:420px){.gb-v{font-size:.66rem}.gb-step{font-size:.78rem}}
 @media(prefers-reduced-motion:reduce){#gmBoot *,#gmBoot::before{animation:none!important}}
-/* count-up reveal */
-.gm-counting{text-shadow:0 0 18px rgb(var(--color-gold-rgb) / .55)}
-.gm-counted{animation:gmCounted .9s ease-out}
-@keyframes gmCounted{0%{text-shadow:0 0 22px rgb(var(--color-gold-300-rgb) / .95);filter:brightness(1.35)}100%{text-shadow:none;filter:none}}
 </style>
 
 <link rel="icon" href="/favicon.ico" sizes="32x32">
@@ -127,12 +123,13 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <noscript></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=89">
+<link rel="stylesheet" href="/assets/app.css?v=90">
 <link rel="stylesheet" href="/assets/odds.css?v=7">
-<link rel="stylesheet" href="/assets/futures.css?v=10">
-<link rel="stylesheet" href="/assets/design.css?v=18">
+<link rel="stylesheet" href="/assets/futures.css?v=11">
+<link rel="stylesheet" href="/assets/design.css?v=19">
+<link rel="stylesheet" href="/assets/console.css?v=1">
 <link rel="stylesheet" href="/assets/accounts.css?v=30">
-<script src="/assets/site-chrome.js?v=12" defer></script>
+<script src="/assets/site-chrome.js?v=13" defer></script>
 </head>
 <body>
 <!-- Boot screen: covers the console until prices, difficulty, account + fleet have loaded and
@@ -153,51 +150,9 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     <div class="gb-hash" id="gbHash">0x</div>
   </div>
 </div>
-<!-- ===== GALAXY BACKDROP (scoped .rd; dimmed for the console) ===== -->
-<div class="rd console-bg" aria-hidden="true">
-  <div class="world">
-    <span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>
-    <div class="grid-floor"></div>
-    <span class="beam beam-1"></span><span class="beam beam-2"></span><span class="beam beam-3"></span>
-    <canvas id="stars"></canvas>
-  </div>
-  <div class="vignette"></div>
-  <div class="noise"></div>
-</div>
-
-
-<!-- ===== UTILITY TICKER (live quotron, mirrors the landing page) ===== -->
 <!-- ONBOARDING -->
 <div class="ob-overlay lp-active" id="onboarding">
-<div class="lp-art" aria-hidden="true">
-  <span class="lp-aurora lp-aurora-1"></span>
-  <span class="lp-aurora lp-aurora-2"></span>
-  <span class="lp-aurora lp-aurora-3"></span>
-  <svg class="lp-rings" viewBox="-340 -340 680 680" preserveAspectRatio="xMidYMid slice">
-    <defs>
-      <linearGradient id="lpRingGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#E2B259"/><stop offset="1" stop-color="#F7D88A"/>
-      </linearGradient>
-      <radialGradient id="lpNode" cx="50%" cy="50%" r="50%">
-        <stop offset="0" stop-color="#F7D88A"/><stop offset="1" stop-color="#E2B259" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <g fill="none" stroke="url(#lpRingGrad)" stroke-linecap="round">
-      <circle r="70" stroke-width="1.5" opacity=".9"/>
-      <circle r="130" stroke-width="1.2" opacity=".7"/>
-      <circle r="130" stroke-width="3" stroke-dasharray="6 26" opacity=".6"/>
-      <circle r="200" stroke-width="1" opacity=".5"/>
-      <circle r="275" stroke-width="1" stroke-dasharray="2 22" opacity=".55"/>
-      <circle r="330" stroke-width="1" opacity=".35"/>
-      <path d="M-70 0 A70 70 0 0 1 0 -70" stroke-width="4" opacity=".95"/>
-      <path d="M200 0 A200 200 0 0 1 141 141" stroke-width="3" opacity=".5"/>
-    </g>
-    <circle cx="0" cy="-130" r="26" fill="url(#lpNode)"/>
-    <circle cx="0" cy="-130" r="4.5" fill="#F7D88A"/>
-    <circle cx="194" cy="50" r="20" fill="url(#lpNode)"/>
-    <circle cx="194" cy="50" r="3.5" fill="#F7D88A"/>
-  </svg>
-</div>
+
 <div class="ob-modal">
   <div class="ob-dots">
     <div class="ob-dot active" id="obDot0"></div>
@@ -416,19 +371,18 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <div class="topbar">
 <div class="header">
   <div class="header-inner">
-    <a href="/" class="c-brand" title="GMT-Optimizer home"><img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>
     <div id="gmtOnline"></div>
-    <div class="nav-links">
-      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit my Farm</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a><a href="#" id="navProjection" onclick="openSetupProjection();return false">Projection</a><a href="/quote" title="Quote a setup for someone starting from zero — no fleet, no saved setup">Quote</a><a href="/statement" title="Turn a GoMining income CSV into a partner-ready income statement">Statement</a>
-    </div>
+    <nav class="nav-links cx-tabs" aria-label="Console sections">
+      <a href="#" data-view="tab-current" class="nav-active" onclick="consoleView('tab-current');return false">Console</a><a href="#" id="navEditSetup" onclick="openEditSetup();return false">Edit farm</a><a href="#" data-view="tab-planner" onclick="consoleView('tab-planner');return false">Planner</a><a href="#" id="navProjection" onclick="openSetupProjection();return false">Projection</a><a href="/quote" title="Quote a setup for someone starting from zero — no fleet, no saved setup">Quote</a><a href="/statement" title="Turn a GoMining income CSV into a partner-ready income statement">Statement</a>
+    </nav>
     <div id="gmtAccountSlot"></div>
   </div>
 </div>
 <!-- live data + tools strip (below the identical nav) -->
 <div class="subbar">
     <div class="live-bar" id="liveBar">
-      <div class="live-chip live-chip-btn" title="Open live BTC chart" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><img src="/btc36.png" alt="BTC" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
-      <div class="live-chip live-chip-btn" title="Open live GoMining Token chart" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><img src="/gmt36.png" alt="GMT" style="height:18px;width:18px;vertical-align:middle;margin-right:3px;border-radius:50%"><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip live-chip-btn" title="Open live BTC chart" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
+      <div class="live-chip live-chip-btn" title="Open live GoMining Token chart" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" title="Live sats per TH per day"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span></div>
       <div class="live-chip" id="updatedChip" title="Live data — refreshes every hour"><span class="live-dot" id="liveDot"></span><span class="lbl">Updated</span><span class="val" id="refreshTimer">--</span></div>
       <div class="px-badge-row px-subbar" id="pxBadgeHero"></div>
@@ -444,7 +398,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         <img src="/gmt36.png" alt="GMT"><span class="lbl">Locked</span><span class="val" id="qkLocked">--</span><span class="qk-pen">&#9998;</span></div>
       <div class="live-chip live-chip-btn" role="button" tabindex="0" onclick="openEditSetup()"
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openEditSetup()}"
-        title="Open the full farm editor"><span class="lbl">Edit Farm</span><span class="val">&#8594;</span></div>
+        title="Open the full farm editor"><span class="lbl">Edit farm</span><span class="val">&#8594;</span></div>
     </div>
 
 </div>
@@ -464,8 +418,9 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <div class="tab-content active" id="tab-current">
 
   <!-- HERO SUMMARY -->
-  <div class="sec-head reveal">
-    <h2 class="sec-title">Your farm, <span class="grad">live.</span></h2>
+  <div class="sec-head cx-head">
+    <div class="cx-head__text"><h1 class="cx-h1">Your farm</h1>
+    <p class="cx-lead">Live profit, fees, fee discount and VIP tier for your GoMining farm, on today's network data.</p></div>
   </div>
   <!-- Ringo's latest video. Swap data-vid, href, thumbnail and title for the next one;
        a viewer's "hide" is remembered per video, so a new video shows again. -->
@@ -477,14 +432,14 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
     <button type="button" class="ytp-x" aria-label="Hide this video" title="Hide">&times;</button>
   </aside>
   <div class="hero-grid" id="heroGrid">
-    <div class="hero-card green-accent reveal">
+    <div class="hero-card green-accent">
       <span class="hspot"></span><span class="corners"></span>
       <div class="hero-label">Daily Net Profit</div>
       <div class="hero-val-row"><div class="hero-val green" id="heroDailyNet"><span class="skel"></span></div><span class="hero-btc" id="heroDailyBtcVal"></span></div>
       <button type="button" class="hero-more" id="heroDailyMore" aria-expanded="false" aria-controls="heroDailyBTC" onclick="toggleHeroSub('daily',this)">Breakdown<span class="hero-more-ic">&#9662;</span></button>
       <div class="hero-sub" id="heroDailyBTC" hidden>--</div>
     </div>
-    <div class="hero-card cyan-accent reveal">
+    <div class="hero-card cyan-accent">
       <span class="hspot"></span><span class="corners"></span>
       <div class="hero-label">Monthly Earnings</div>
       <div class="hero-val-row"><div class="hero-val cyan" id="heroMonthly"><span class="skel"></span></div><span class="hero-btc" id="heroMonthlyBtcVal"></span></div>
@@ -492,7 +447,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
       <button type="button" class="hero-more" id="heroMonthlyMore" aria-expanded="false" aria-controls="heroMonthlyBTC" onclick="toggleHeroSub('monthly',this)">Breakdown<span class="hero-more-ic">&#9662;</span></button>
       <div class="hero-sub" id="heroMonthlyBTC" hidden>--</div>
     </div>
-    <div class="hero-card purple-accent reveal">
+    <div class="hero-card purple-accent">
       <span class="hspot"></span><span class="corners"></span>
       <div class="hero-label">Total Discount</div>
       <div class="hero-val purple" id="heroDiscount"><span class="skel"></span></div>
@@ -509,7 +464,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
         </div>
       </div>
     </div>
-    <div class="hero-card orange-accent reveal" title="How fast your farm compounds if you reinvest every dollar you earn back into hashrate — a simulated year of weekly reinvesting at today's prices, not a forecast.">
+    <div class="hero-card orange-accent" title="How fast your farm compounds if you reinvest every dollar you earn back into hashrate — a simulated year of weekly reinvesting at today's prices, not a forecast.">
       <span class="hspot"></span><span class="corners"></span>
       <div class="hero-label">Effective Compounded ROI</div>
       <div class="hero-val orange" id="heroVelocity"><span class="skel"></span></div>
@@ -518,7 +473,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
 
   <!-- FARM SCREENSHOT — branded, shareable card of the four headline stats above -->
-  <div class="reveal hero-shot-row">
+  <div class="hero-shot-row">
     <button class="share-plan-btn chart-shot-btn" onclick="createFarmShot(this)" title="Generate a branded, shareable image of your live farm numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2z"/><circle cx="12" cy="13" r="3.5"/></svg> Create farm screenshot</button>
   </div>
 
@@ -526,11 +481,12 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   <div class="sp-page" id="secInputs" style="display:none">
     <div class="sp-page-inner">
       <div class="sp-page-head">
-        <button class="sp-back-btn" onclick="closeEditSetup()">&larr; Return to Console</button>
+        <button class="sp-back-btn cx-back" onclick="closeEditSetup()">&larr; Return to Console</button>
         <button class="sp-back-btn" onclick="clearInputs()" title="Blank the inputs for a demo (your saved profiles are kept)">Clear inputs</button>
       </div>
       <div class="sp-form ed-form">
-        <div class="pi-title">Edit Your Farm</div>
+        <h1 class="pi-title cx-h1">Edit farm</h1>
+        <p class="cx-lead">Your miners, GMT balances and discount options. Every number on the console comes from here.</p>
 
         <div class="ed-groups">
 
@@ -672,7 +628,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
        screenful of scrolling before the planner. Stacks below 900px. -->
   <div class="section-pair">
   <!-- VIP & DISCOUNTS -->
-  <div class="section reveal section-collapsible" id="secVip">
+  <div class="section section-collapsible" id="secVip">
     <div class="section-header" onclick="toggleSection('secVip')">
       <div class="section-title">VIP Level &amp; Discount Stack</div>
       <div class="section-toggle">&#9662;</div>
@@ -685,7 +641,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
 
   <!-- DAILY OPERATION & REWARDS -->
-  <div class="section reveal section-collapsible" id="secGmt">
+  <div class="section section-collapsible" id="secGmt">
     <div class="section-header" onclick="toggleSection('secGmt')">
       <div class="section-title">Daily Operation &amp; Rewards</div>
       <div class="section-toggle">&#9662;</div>
@@ -701,7 +657,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   <div id="idleGmtCard" style="display:none"></div>
 
   <!-- SHARE THIS SETUP -->
-  <div class="reveal" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
+  <div class="" style="display:flex;justify-content:center;margin:1.6rem 0 .4rem">
     <button class="share-plan-btn" onclick="sharePlan(this)" title="Copy a link to your current setup so anyone can view these numbers"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Share this setup</button>
   </div>
 
@@ -714,16 +670,15 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 
 <div class="tab-content" id="tab-planner">
 
-  <div class="sec-head reveal" style="margin-top:3.4rem">
-    <span class="tag"><span class="dot"></span>Capital Planner</span>
-    <h2 class="sec-title">Deploy new capital, <span class="grad">optimally.</span></h2>
-    <p class="sec-lead">Tests every TH / GMT split to maximise your monthly net income at the 20% discount cap. Adjust the amount you're deploying and recalculate.</p>
+  <div class="sec-head cx-head">
+    <h1 class="cx-h1">Capital planner</h1>
+    <p class="sec-lead cx-lead">Tests every TH / GMT split to maximise your monthly net income at the 20% discount cap. Adjust the amount you're deploying and recalculate.</p>
     <div style="margin-top:1.1rem"><button class="planner-open-btn" onclick="openPlannerForm()">Adjust investment amount &rarr;</button></div>
   </div>
 
   <!-- TOP ROW: New Monthly Income + Growth Projection card -->
   <div class="planner-top-row">
-    <div class="section reveal proj-hero" id="secProj2">
+    <div class="section proj-hero" id="secProj2">
       <div class="section-header" onclick="toggleSection('secProj2')">
         <div class="section-title"><img src="/btc36.png" style="height:20px;width:20px;border-radius:50%"> New Monthly Income</div>
         <div class="section-toggle">&#9662;</div>
@@ -742,7 +697,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
 
   <!-- CAPITAL INPUT — inputs live here (hidden); edited via the full-page form -->
-  <div class="section reveal" id="secCapIn" style="display:none">
+  <div class="section" id="secCapIn" style="display:none">
     <div class="section-header" onclick="toggleSection('secCapIn')">
       <div class="section-title">Investment Amount</div>
       <div class="section-toggle">&#9662;</div>
@@ -822,7 +777,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
 
   <!-- ALLOCATION -->
-  <div class="section reveal" id="secAlloc">
+  <div class="section" id="secAlloc">
     <div class="section-header" onclick="toggleSection('secAlloc')">
       <div class="section-title">Optimal Capital Allocation</div>
       <div class="section-toggle">&#9662;</div>
@@ -835,7 +790,7 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
   </div>
 
   <!-- PROJECTION -->
-  <div class="section reveal" id="secProj">
+  <div class="section" id="secProj">
     <div class="section-header" onclick="toggleSection('secProj')">
       <div class="section-title">Post-Investment Projection</div>
       <div class="section-toggle">&#9662;</div>
@@ -889,11 +844,13 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <div class="sp-page" id="plannerIntro" style="display:none">
   <div class="sp-page-inner">
     <div class="sp-page-head">
-      <button class="sp-back-btn" onclick="returnToSetupFromPlanner()">&larr; Return to Console</button>
-      <button class="sp-back-btn" id="piReturnResults" onclick="returnToPlannerResults()" style="display:none">&larr; Return to Capital Planner</button>
+      <button class="sp-back-btn cx-back" onclick="returnToSetupFromPlanner()">&larr; Return to Console</button>
+      <button class="sp-back-btn cx-back" id="piReturnResults" onclick="returnToPlannerResults()" style="display:none">&larr; Return to Capital Planner</button>
     </div>
+    <h1 class="cx-h1">Capital planner</h1>
+    <p class="cx-lead">Enter what you want to invest, or the income you want to add, and the planner finds the split.</p>
     <div class="sp-form">
-      <div style="margin:0 auto;max-width:340px;display:flex;flex-direction:column;gap:1rem">
+      <div class="cx-form">
         <div>
           <label class="pi-lbl" for="piGMTInput">Total unlocked GMT you have on hand</label>
           <label class="pi-field-box" for="piGMTInput">
@@ -1150,10 +1107,10 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
          below re-runs live on every change (assets/futures.js drives it). -->
     <div id="spFormView">
       <div class="sp-page-head">
-        <button class="sp-back-btn" onclick="closeSetupProjection()">&larr; Return to Console</button>
+        <button class="sp-back-btn cx-back" onclick="closeSetupProjection()">&larr; Return to Console</button>
       </div>
       <div class="sp-form">
-        <div class="pi-title">Growth Projection</div>
+        <h1 class="pi-title cx-h1">Growth projection</h1>
         <div class="sp-mode-switch btc-chart-mode" id="spModeSwitch" style="display:none"></div>
         <div class="pi-subtitle" id="spSubtitle">Project your farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.</div>
         <div class="sp-plan-link" id="spPlanLink"></div>
@@ -1216,10 +1173,9 @@ html.gm-booting,html.gm-booting body{overflow:hidden}
 <script src="/assets/supabase-config.js?v=4"></script>
 <script src="/assets/account.js?v=28"></script>
 <script src="/assets/chat.js?v=21"></script>
-<script src="/assets/chrome.js?v=27"></script>
 <script src="/assets/boot.js?v=5"></script>
 <script src="/assets/loaders.js?v=7"></script>
-<script src="/assets/visualizer.js?v=8"></script>
+<script src="/assets/visualizer.js?v=9"></script>
 <script>/* console: header-nav view switching + route new users / deep-linked views */
 /* Header nav drives the (hidden) tab buttons so Capital Planner keeps its own view.
    Global so the header links' inline onclick can reach it. */

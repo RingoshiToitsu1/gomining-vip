@@ -310,7 +310,8 @@
   }
   function renderAccount() {
     var slot = header.querySelector('.sc-acct'), mslot = mobile.querySelector('.sc-mobile__acct'), msg = header.querySelector('.sc-msg');
-    msg.hidden = !state.in;
+    // On the console the icon is the one chat entry point (its in-page chat is open to read logged out too).
+    msg.hidden = !state.in && !document.getElementById('gmtOnline');
     if (!state.in) {
       var nx = /^\/(login|signup)$/.test(location.pathname.replace(/\.html$/, '')) ? '' : '?next=' + encodeURIComponent(location.pathname + location.search);
       var barLogin = (STR[LANG] && STR[LANG]['Log in (bar)']) || t('Log in');   // short label: the bar is tight on phones

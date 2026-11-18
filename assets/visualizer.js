@@ -45,9 +45,6 @@
 
   /* ---------- styles ---------- */
   var css = [
-    '.viz-launch{display:inline-flex;align-items:center;gap:8px;margin-top:.7rem;padding:.5rem .95rem;border-radius:999px;border:1px solid rgba(226,178,89,.45);background:linear-gradient(135deg,rgba(226,178,89,.14),rgba(169,119,47,.06));color:#F7D88A;font:600 .8rem/1 "Inter",system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}',
-    '.viz-launch:hover{transform:translateY(-1px);border-color:#E2B259;box-shadow:0 0 22px rgba(226,178,89,.28)}',
-    '.viz-launch .viz-dot{width:7px;height:7px;border-radius:50%;background:#E2B259;box-shadow:0 0 10px #E2B259;animation:vizPulse 1.6s ease-in-out infinite}',
     '@keyframes vizPulse{50%{opacity:.35;transform:scale(.7)}}',
     '#vizRoot{position:fixed;inset:0;z-index:2147483000;background:#040508;color:#FFFFFF;font-family:"Inter",system-ui,sans-serif;overflow:hidden;opacity:0;transition:opacity .45s ease}',
     '#vizRoot.on{opacity:1}',
@@ -150,8 +147,8 @@
     var head = document.querySelector('#tab-current .sec-head');
     if (!head || document.getElementById('vizLaunch')) return;
     var b = document.createElement('button');
-    b.type = 'button'; b.id = 'vizLaunch'; b.className = 'viz-launch';
-    b.innerHTML = '<span class="viz-dot"></span>Stream mode';
+    b.type = 'button'; b.id = 'vizLaunch'; b.className = 'viz-launch ui-btn ui-btn--secondary ui-btn--sm';
+    b.textContent = 'Stream mode';
     b.title = 'Full-screen live earnings visualizer for streaming';
     b.onclick = open;
     head.appendChild(b);
