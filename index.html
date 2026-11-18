@@ -119,7 +119,7 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=4">
 <link rel="stylesheet" href="/assets/components.css?v=7">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=10">
-<link rel="stylesheet" href="/assets/landing.css?v=6">
+<link rel="stylesheet" href="/assets/landing.css?v=7">
 <script src="/assets/site-chrome.js?v=14" defer></script>
 </head>
 <body class="lp ui-scope">
@@ -309,7 +309,7 @@ window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's 
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */
 (function(){
   var BS=3.125, LOC={es:'es-ES',fr:'fr-FR',de:'de-DE'}[(document.documentElement.lang||'en').slice(0,2)]||'en-US';
-  function cur(v,d){return new Intl.NumberFormat(LOC,{style:'currency',currency:'USD',minimumFractionDigits:d,maximumFractionDigits:d}).format(v);}
+  function cur(v,d){return new Intl.NumberFormat(LOC,{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',minimumFractionDigits:d,maximumFractionDigits:d}).format(v);}
   function set(k,v){document.querySelectorAll('[data-tk="'+k+'"]').forEach(function(el){el.textContent=v;});}
   function j(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json();});}
   async function first(fns){for(var i=0;i<fns.length;i++){try{var v=await fns[i]();if(v>0)return v;}catch(e){}}return 0;}

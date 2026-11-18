@@ -115,5 +115,5 @@
 @keyframes lpFade { to { opacity: 1; } }
 @keyframes lpDot { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
 @keyframes lpRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@media (max-width: 1023px) { .lp-hero__art { top: 40px; bottom: auto; height: 640px; opacity: .55; } }
+@media (max-width: 1023px) { .lp-hero__art { top: 40px; bottom: auto; height: 640px; opacity: .28; } }
 
