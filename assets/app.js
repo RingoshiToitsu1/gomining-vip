@@ -373,9 +373,14 @@ function autoFillCPT(thId,cptId,wthId){
 
 // ---- FORMAT ----
 const fB=v=>v.toFixed(8)+' BTC';
-const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})};
+// Translated copies of the console (/es/, /fr/, /de/) format numbers the local way; English is unchanged.
+const UI_LOC=window.GMT_UI?({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lang]):undefined;
+// T(english, ...args): sentences whose markup splits them into pieces are translated whole (key = the English
+// HTML with {0}... placeholders). Without GMT_UI (English) it just fills the placeholders, so output is unchanged.
+const T=window.GMT_UI?window.GMT_UI.t:(s,...a)=>s.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:m);
+const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;const n=cv.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});return UI_LOC?n+'\u00a0'+sym:sym+n};
 const fP=v=>v.toFixed(2)+'%';
-const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const fN=(v,d=2)=>v.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
 // Compact formatters for chart axis labels (keep them narrow so monthly values
 // don't overflow the y-axis gutter).
 function fAxisUSD(v){const sym=({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$';const a=Math.abs(v*S.fxRate);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:a>=10?1:2);return (v<0?'-':'')+sym+s;}
@@ -945,7 +950,7 @@ function rbShowTip(t,wx,wy){
   const tip=document.getElementById('btcRainbowTip'),wrap=document.getElementById('btcRainbowWrap');
   if(!tip||!wrap||!_rbFit||!_rainbowData)return;
   const center=_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b;
-  const ds=new Date(t).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  const ds=new Date(t).toLocaleDateString(UI_LOC||'en-US',{year:'numeric',month:'short',day:'numeric'});
   const last=_rainbowData[_rainbowData.length-1];
   const actual=(t<=last.t)?rbPriceAt(_rainbowData,t):null;
   let html=`<div class="rb-tip-date">${ds}</div>`;
@@ -1029,7 +1034,7 @@ function rbPriceAt(series,t){
   const a=series[lo],c=series[hi],f=(t-a.t)/((c.t-a.t)||1);
   return a.v*Math.pow(c.v/a.v,f);
 }
-function rbFmtUSD(v){return '$'+Math.round(v).toLocaleString('en-US');}
+function rbFmtUSD(v){return '$'+Math.round(v).toLocaleString(UI_LOC||'en-US');}
 function renderRainbowLegend(active){
   const el=document.getElementById('btcRainbowLegend');if(!el)return;
   el.innerHTML=RB_LABELS.map((l,i)=>`<span class="rb-pill${i===active?' active':''}" style="border-left-color:${RB_COLORS[i]}">${l}</span>`).join('');
@@ -1509,7 +1514,7 @@ function drawCombined(){
     if(mk!==lastM){lastM=mk;const gx=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
       x.fillStyle='rgba(255,255,255,0.4)';
-      x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+      x.fillText(d.toLocaleDateString(UI_LOC||'en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
 
   const line=(key,col,wd,dash)=>{
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
@@ -1563,7 +1568,7 @@ function drawCombined(){
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
-        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_BTC}"></span><span class="rb-tip-lbl">BTC</span><span class="rb-tip-px">${fmtBTCPrice(p.btc)}</span></div>`
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
           +(function(){
@@ -1641,7 +1646,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
   S.forEach(p=>{const d=new Date(p.t),mk=d.getUTCFullYear()+'-'+d.getUTCMonth();
     if(mk!==lastM){lastM=mk;const gx=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
-      x.fillStyle='rgba(255,255,255,0.4)';x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+      x.fillStyle='rgba(255,255,255,0.4)';x.fillText(d.toLocaleDateString(UI_LOC||'en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
 
   const path=(fn,col,wd,dash)=>{
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
@@ -1666,7 +1671,7 @@ function drawCmbSignal(x,all,want,W,H,sm){
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
-        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-actual">GMT ${'$'+p.gmt.toFixed(4)} &middot; BTC ${fmtBTCPrice(p.btc)}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-lbl">vs 50d avg</span><span class="rb-tip-px">${(rel(p)>=100?'+':'')+(rel(p)-100).toFixed(1)}%</span></div>`
           +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#22C55E':p.z>=1?'#EF4444':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
@@ -2216,7 +2221,7 @@ function buildFarmShotCanvas(d,imgs){
   x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='700 19px '+SANS;
   x.fillText('gmt-optimizer.com',fx,footY-1);
   x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});
   x.fillText(now+'   ·   not financial advice',W/2,footY-1);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px '+MONO;
   x.fillText('use code RINGO5',W-pad,footY-1);
@@ -3681,7 +3686,7 @@ function renderIdleGmt(i,m){
       +(l.act?`<div class="idle-gmt-leg-act"><span>${l.act}</span></div>`:`<div class="idle-gmt-leg-act none">nothing</div>`)
       +`<div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}${l.sub?' &middot; '+l.sub:''}</div>`
       +`${l.into?`<div class="idle-gmt-leg-into">into ${l.into}</div>`:''}</div></div>`).join('')}</div>
-    <div class="idle-gmt-foot">Result: <strong>${fN(P.finTH,0)} TH</strong> @ ${fN(P.finWth,2)} W/TH
+    <div class="idle-gmt-foot">${T('Result: <strong>{0} TH</strong> @ {1} W/TH',fN(P.finTH,0),fN(P.finWth,2))}
       <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
   </div>`;
   host.innerHTML=h;host.style.display='';
@@ -4210,11 +4215,11 @@ function renderEfficiencyComparison(st){
     const hi=Math.max(thresh,now)*1.4||1;
     const tPos=Math.min(100,thresh/hi*100), nPos=Math.max(2,Math.min(98,now/hi*100)), winning=now<=thresh;
     return `<div class="eff-gauge"><div class="eff-gauge-bar"><div class="eff-gauge-win" style="width:${tPos}%"></div><div class="eff-gauge-now" style="left:${nPos}%"><span>now ${fU(now,0)}</span></div></div>`
-      +`<div class="eff-gauge-lbl">${winning?'<b style="color:var(--green)">Worth it now</b> &middot; ':''}upgrade wins under <b>${fU(thresh,0)}</b> BTC</div></div>`;
+      +`<div class="eff-gauge-lbl">${winning?T('<b style="color:var(--green)">Worth it now</b> &middot; '):''}${T('upgrade wins under <b>{0}</b> BTC',fU(thresh,0))}</div></div>`;
   };
 
   let h=`<div class="eff-verdict">`;
-  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-main">${T('Optimal split of your {0}',fU(K,0))} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
   h+=`<div class="eff-verdict-sub">${effRoom
     ?'Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.'
     :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. '+(i.th>0||i.gth>0?'Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.':'New machines mint at 15 W/TH — GoMining no longer sells 12 W. Once you own the hashrate, the planner weighs upgrading it.')}</div>`;
@@ -4230,16 +4235,16 @@ function renderEfficiencyComparison(st){
 
   // Plain-language bottom line — the whole plan as numbered steps, in order.
   const _steps=[];
-  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
+  if(glAdd>0.5)_steps.push(`${T('Lock ~<strong>{0} GMT</strong>',fN(glAdd,0))} <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
   if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
   if(addTH>0.5&&_fs){
     const _why=_fs.onExisting
       ? `top up <strong>${_fs.name}</strong> at ${_wLbl(_fs.first.wth)} W — cheaper per TH than a new NFT${_fs.more>0?`, then ${_fs.more} more below`:''}`
       : `mint a new ${fN(EFF_BEST,0)} W machine — you have no miner with room to top up`;
-    _steps.push(`Put ~<strong>${fN(thUSD,0)}</strong> into hashrate <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
+    _steps.push(`${T('Put ~<strong>{0}</strong> into hashrate',fN(thUSD,0))} <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
   }
   const _spent=lockUSD+effUSD+thUSD;
-  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — each step is a separate part of the one plan, not extra.</div></div>`:'';
+  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">${T('Total <strong>{0}</strong> of your {1} — each step is a separate part of the one plan, not extra.',fU(_spent,0),fU(K,0))}</div></div>`:'';
 
   const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
@@ -4281,7 +4286,7 @@ function renderEfficiencyComparison(st){
   if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
   // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
   if(addTH>0)g+=buyCapHTML(addTH);
-  g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
+  g+=`<div class="eff-foot">${T('Result: <strong>{0} TH</strong> @ {1} W/TH',fN(finTH,0),fN(finWth,2))}${glAdd>0?T(', +{0} GMT locked',fN(glAdd,0)):''}${T(' &rarr; <strong>+{0}/mo</strong> net.',fU(totalMo,0))}</div>`;
   return h+plain+bar+g;
 }
 
@@ -4421,7 +4426,7 @@ function renderPlanner(i,m){
     if(G.res.unreachable){
       ah+=`<div class="goal-banner warn">🎯 Couldn't add <strong>${fU(G.targetUSD)}/mo</strong> even at ${fU(G.res.maxTried)} of capital — try a smaller increase.</div>`;
     }else if(baseMo>0){
-      ah+=`<div class="goal-banner">🎯 To add <strong>${fU(G.targetUSD)}/mo</strong> to the <strong>${fU(baseMo)}/mo</strong> you already earn — taking you to about <strong>${fU(G.res.goal)}/mo</strong> — invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
+      ah+=`<div class="goal-banner">${T('🎯 To add <strong>{0}/mo</strong> to the <strong>{1}/mo</strong> you already earn — taking you to about <strong>{2}/mo</strong> — invest <strong>{3}</strong>. Here\'s how to deploy it:',fU(G.targetUSD),fU(baseMo),fU(G.res.goal),fU(G.cap))}</div>`;
     }else{
       ah+=`<div class="goal-banner">🎯 To earn about <strong>${fU(G.targetUSD)}/mo</strong>, invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
     }
@@ -4740,7 +4745,7 @@ function openSetupProjection(mode){
   ensureRainbowFit();   // the Power-Law fit the futures are built around
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
-    ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
+    ? T('Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.')
     : 'Already invested? Project your current farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   renderSpModeSwitch();
@@ -4767,9 +4772,9 @@ function renderSpPlanLink(){
   const el=document.getElementById('spPlanLink');if(!el)return;
   if(window._spMode==='planner'){
     const c=(()=>{try{return inp().cap||0;}catch(e){return 0;}})();
-    el.innerHTML=`Projecting the Capital Planner's split${c>0?` of <strong>${fU(c,0)}</strong>`:''}. <a href="#" onclick="spEditPlan();return false">Change the amount &rarr;</a>`;
+    el.innerHTML=`${c>0?T('Projecting the Capital Planner\'s split of <strong>{0}</strong>.',fU(c,0)):T('Projecting the Capital Planner\'s split.')} <a href="#" onclick="spEditPlan();return false">Change the amount &rarr;</a>`;
   }else{
-    el.innerHTML=`Adding new capital? <a href="#" onclick="spEditPlan();return false">Plan it in the Capital Planner &rarr;</a> and it projects here as My Plan.`;
+    el.innerHTML=T('Adding new capital? <a href="#" onclick="spEditPlan();return false">Plan it in the Capital Planner &rarr;</a> and it projects here as My Plan.');
   }
 }
 // Open the planner form; once it calculates, come straight back to this projection as My Plan.
@@ -4949,7 +4954,7 @@ function computeSetupProjection(){
   // Convergence: start at today's real price, converge onto the Still-cheap band by the target.
   const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from that band
   const btcSel=customPath
-    ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
+    ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString(UI_LOC||'en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
     : {mode:spSel.futures?'futures':'powerlaw',label:(spSel.futures?'Typical future ':'Still cheap ')+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
@@ -5318,32 +5323,32 @@ function computeSetupProjection(){
   const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*DAYS_PER_MONTH,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
-  const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
+  const _endWhen=new Date(targetMs).toLocaleDateString(UI_LOC||'en-US',{month:'short',year:'numeric'});
   const btcModeBadge=spSel.futures
     ? '<span class="badge" style="background:rgba(226,178,89,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
     : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">STILL CHEAP</span>';
-  const _yrsLbl=spSel.yrs+' year'+(spSel.yrs>1?'s':'');
+  const _yrsLbl=T(spSel.yrs>1?'{0} years':'{0} year',spSel.yrs);
   const btcRangeLine=spSel.futures
-    ? `BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} today</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> (${_yrsLbl})`
-    : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by ${_endWhen} (${_yrsLbl})`;
+    ? T('BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">{0} today</strong> to <strong style="color:var(--text2)">{1} by {2}</strong> ({3})',fmtBTCPrice(bpStart),fmtBTCPrice(bpEnd),_endWhen,_yrsLbl)
+    : T('BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">{0} (today)</strong> to the <strong style="color:var(--text2)">Still-cheap band at {1}</strong> by {2} ({3})',fmtBTCPrice(bpStart),fmtBTCPrice(bpEnd),_endWhen,_yrsLbl);
 
   // Say plainly what the GMT leg is and how little it is worth trusting. The centre is a rough
   // average, not a forecast, and the band is the point of showing it at all.
   const gmtNoteS=(GB!=null&&_gmtBeta)
-    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9878; GMT is modelled at <strong style="color:var(--text2)">&beta; ${fN(GB,2)}</strong> to Bitcoin (measured on ${fN(_gmtBeta.n,0)} days of daily returns): <strong style="color:var(--text2)">$${gp0.toFixed(4)} &rarr; $${gpEnd.toFixed(4)}</strong> by ${_endWhen}, 1&sigma; range <strong style="color:var(--text2)">$${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}</strong>. Bitcoin explains only <strong style="color:var(--text2)">${fN(_gmtBeta.r2*100,0)}%</strong> of GMT's daily movement, so treat this leg as a rough average with a wide band, not a forecast.</div>`
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${T('&#9878; GMT is modelled at <strong style="color:var(--text2)">&beta; {0}</strong> to Bitcoin (measured on {1} days of daily returns): <strong style="color:var(--text2)">{2} &rarr; {3}</strong> by {4}, 1&sigma; range <strong style="color:var(--text2)">{5}&ndash;{6}</strong>. Bitcoin explains only <strong style="color:var(--text2)">{7}%</strong> of GMT\'s daily movement, so treat this leg as a rough average with a wide band, not a forecast.',fN(GB,2),fN(_gmtBeta.n,0),'$'+gp0.toFixed(4),'$'+gpEnd.toFixed(4),_endWhen,'$'+gpLo.toFixed(4),'$'+gpHi.toFixed(4),fN(_gmtBeta.r2*100,0))}</div>`
     : '';
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=applyDiffGrind?Math.round((1-difficultyMultAt(targetMs))*100):0;
   const diffSkippedPct=applyDiffGrind?0:Math.round((1-difficultyMultAt(targetMs))*100);
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
-  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
+  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${T('&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">{0} &rarr; {1} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).',_bwStart.toFixed(1),_bwEnd.toFixed(1))}</div>`:'';
   const halvingNoteS=gmtNoteS+(applyDiffGrind
-    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${hwS.length?T(hwS.length>1?'&#9143; Mining reward halves at the {0} halvings, plus <strong style="color:var(--text2)">−{1}%</strong> from rising network difficulty over the period (both modeled).':'&#9143; Mining reward halves at the {0} halving, plus <strong style="color:var(--text2)">−{1}%</strong> from rising network difficulty over the period (both modeled).',hwS.join(' &amp; '),diffPenaltyPct):T('&#9143; Plus <strong style="color:var(--text2)">−{0}%</strong> from rising network difficulty over the period (both modeled).',diffPenaltyPct)}</div>`
     : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(226,178,89,.06);border-color:rgba(226,178,89,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
-    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${CONTRIB>0?`, adding <strong>${fU(CONTRIB)}${CONTRIB_WEEKLY?' a week':' a month'}</strong>`:''}${(function(){
+    ${T('<strong>{0} TH</strong> hashrate, <strong>{1} GMT</strong> locked',fN(startTH,1),fN(startLocked,0))}${CONTRIB>0?T(CONTRIB_WEEKLY?', adding <strong>{0} a week</strong>':', adding <strong>{0} a month</strong>',fU(CONTRIB)):''}${(function(){
       // State the seed's OWN day-one income and discount. Every "the projection lost money"
       // report so far has been the two screens starting from different farms — a plan with a
       // marketplace miner in it against one without, or the current setup against the plan —
@@ -5351,7 +5356,7 @@ function computeSetupProjection(){
       // is the number to compare against the planner's headline; if they differ, the inputs did.
       // Captured on day 1 of the run. Reading dailyNet() here, after the loop, priced the END state
       // and labelled it day 1 — so the "day 1" figure changed with the horizon.
-      return ` &mdash; earning <strong style="color:var(--text2)">${fU(startSS_capture*DAYS_PER_MONTH)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(startDisc_capture,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
+      return T(' &mdash; earning <strong style="color:var(--text2)">{0}/mo</strong> on day 1 at <strong style="color:var(--text2)">{1}%</strong> discount',fU(startSS_capture*DAYS_PER_MONTH),fN(startDisc_capture,2))+(fromPlanner?T(', which is the figure the Capital Planner shows as "after investment"'):'');
     })()}
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
@@ -5718,7 +5723,7 @@ function buildShareCanvas(d){
   x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "Poppins",system-ui,sans-serif';x.fillText('●',pad,footY);
   x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Poppins,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
   x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Inter",monospace';
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
+  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Inter",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
   x.textAlign='left';
   return c;
