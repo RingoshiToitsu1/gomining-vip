@@ -97,7 +97,6 @@
 .lp-hero { position: relative; overflow: hidden; isolation: isolate; }
 .lp-hero__grid { position: relative; z-index: 1; }
 .lp-hero__art { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 78%; z-index: 0; pointer-events: none; }
-.lp-art-grid line { stroke: var(--color-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .lp-art-dots circle { fill: var(--color-gold-300); }
 .lp-v3 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 4px var(--space-3) 4px 4px;
   border: 1px solid rgb(var(--color-gold-rgb) / .35); border-radius: var(--radius-pill); background: var(--color-surface-1);
@@ -116,5 +115,5 @@
 @keyframes lpFade { to { opacity: 1; } }
 @keyframes lpDot { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
 @keyframes lpRise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@media (max-width: 1023px) { .lp-hero__art { height: 46%; opacity: .7; } }
+@media (max-width: 1023px) { .lp-hero__art { top: 40px; bottom: auto; height: 640px; opacity: .55; } }
 
