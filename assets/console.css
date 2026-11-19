@@ -498,3 +498,6 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .live-chip .cx-chg.is-good,.subbar .live-chip .cx-chg.is-good{color:var(--color-success)!important}
 .live-chip .cx-chg.is-bad,.subbar .live-chip .cx-chg.is-bad{color:var(--color-error)!important}
 
+
+/* a difficulty-driven reward drop inside a note stays red (the note otherwise sets bold text white) */
+.warn strong[style*="--color-error"],.warn b[style*="--color-error"]{color:var(--color-error)!important}
