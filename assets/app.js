@@ -383,7 +383,7 @@ function autoFillCPT(thId,cptId,wthId){
 }
 
 // ---- FORMAT ----
-const fB=v=>v.toFixed(8)+' BTC';
+const fB=v=>(window.GMT_UI?v.toLocaleString({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lang],{minimumFractionDigits:8,maximumFractionDigits:8}):v.toFixed(8))+' BTC';   // translated pages: decimal comma
 // Translated copies of the console (/es/, /fr/, /de/) format numbers the local way; English is unchanged.
 const UI_LOC=window.GMT_UI?({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lang]):undefined;
 // T(english, ...args): sentences whose markup splits them into pieces are translated whole (key = the English
@@ -3309,7 +3309,8 @@ function fmtBTCAmt(v){
   // Capped at 5 decimals down to a milli-BTC. Six made the daily figure one character longer
   // than the monthly, which was enough to wrap it onto its own line while the monthly card kept
   // its BTC inline — the two cards then read as different designs.
-  return v.toFixed(a>=1?3:a>=0.1?4:a>=0.001?5:6);
+  const d=a>=1?3:a>=0.1?4:a>=0.001?5:6;
+  return UI_LOC?fN(v,d):v.toFixed(d);   // translated pages: decimal comma; English unchanged
 }
 function animateMetric(el,to,fmt){
   if(!el)return;
