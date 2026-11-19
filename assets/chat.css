@@ -116,3 +116,9 @@
   .gmt-chat.popout .gmt-chat-body { border-inline: 0; }
 }
 .gmt-chat-av img { width: 20px; height: 20px; object-fit: contain; }
+/* /chat as a normal page: a quiet Back link at the start of the chat header */
+.gmt-chat-back{display:inline-flex;align-items:center;gap:6px;margin-right:var(--space-3);padding:var(--space-2) var(--space-3) var(--space-2) 0;
+  font:var(--font-weight-medium) var(--font-size-sm)/1 var(--font-ui);color:var(--color-text-2);text-decoration:none;white-space:nowrap;
+  border-right:1px solid var(--color-border);transition:color 150ms ease}
+.gmt-chat-back:hover{color:var(--color-text)}
+

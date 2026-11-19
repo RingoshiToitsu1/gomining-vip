@@ -1262,7 +1262,8 @@
   "Prices from {0} h ago": "Prix d’il y a {0} h",
   "&#9143; Mining reward halves at the {0} halving, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La récompense de minage est divisée par deux au halving de {0}, plus <strong style=\"color:var(--color-error)\">−{1} %</strong> dus à la hausse de la difficulté du réseau sur la période (les deux sont modélisés).",
   "&#9143; Mining reward halves at the {0} halvings, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La récompense de minage est divisée par deux aux halvings de {0}, plus <strong style=\"color:var(--color-error)\">−{1} %</strong> dus à la hausse de la difficulté du réseau sur la période (les deux sont modélisés).",
-  "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0} %</strong> dus à la hausse de la difficulté du réseau sur la période (modélisé)."
+  "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0} %</strong> dus à la hausse de la difficulté du réseau sur la période (modélisé).",
+  "Back": "Retour"
  },
  "dom": {
   "\"Still cheap\" band": "bande « Encore bon marché »",

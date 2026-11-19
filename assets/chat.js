@@ -29,7 +29,7 @@
     var LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
     // The room's styles (assets/chat.css) travel with the script, so every place the room appears matches.
     if (!document.querySelector('link[data-gmt-chat-css]')) {
-      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=3'; css.setAttribute('data-gmt-chat-css', '');
+      var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/chat.css?v=4'; css.setAttribute('data-gmt-chat-css', '');
       document.head.appendChild(css);
     }
     var A = window.GMTAccount, sb = A.sb;
@@ -226,6 +226,16 @@
       window.addEventListener('beforeunload', _clr);
     }
 
+    // The /chat page opened as a normal page: Back returns to where you were on the site (or the console).
+    function backHref() {
+      var lang = (window.GMT_UI && GMT_UI.lang) || 'en';
+      return (lang === 'en' ? '' : '/' + lang) + '/console';
+    }
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-chat-back]'); if (!b) return;
+      var r = document.referrer;
+      if (r && r.indexOf(location.origin) === 0 && !/\/chat\/?(\?|$)/.test(r.slice(location.origin.length)) && history.length > 1) { e.preventDefault(); history.back(); }
+    });
     function mount(target) {
       if (mounted) return; mounted = true;
       var EMB = !!target;
@@ -235,7 +245,7 @@
       // pill (which collided with the Ask-Ringo bubble on phones). The detached /chat window
       // fills its viewport instead.
       var head =
-        '<div class="gmt-chat-head">' + (POPOUT ? '<a class="gmt-chat-av" href="/" title="' + T('GMT-Optimizer home') + '" target="_blank" rel="noopener">' : '<span class="gmt-chat-av" aria-hidden="true">') +
+        '<div class="gmt-chat-head">' + (POPOUT && window.GMT_CHAT_PAGE ? '<a class="gmt-chat-back" href="' + backHref() + '" data-chat-back>&larr; ' + T('Back') + '</a>' : '') + (POPOUT ? '<a class="gmt-chat-av" href="/" title="' + T('GMT-Optimizer home') + '" target="_blank" rel="noopener">' : '<span class="gmt-chat-av" aria-hidden="true">') +
           '<img src="/assets/brand/GMT_icon_transparent.svg" alt="GMT-Optimizer" width="22" height="22">' + (POPOUT ? '</a>' : '</span>') +
           '<div class="gmt-chat-ttl"><div class="t">' + T('Community chat') + '</div><div class="o" id="gmtChatOnline">' + T('{0} online', 0) + '</div></div>' +
         '<div class="gmt-chat-ctl">' +
