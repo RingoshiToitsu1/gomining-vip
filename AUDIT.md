@@ -1464,3 +1464,37 @@ Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots
   v3 badge, difficulty/sats tooltips, performance pass to G19 (Lighthouse ≥ 90; console mobile 81 → 99), projection
   time-sliced (bit-identical with a frozen clock). Numbers and tables in REVIEW.md §4a/§4b. Screenshots:
   `%TEMP%\gmtshots\states` (3 states × EN/FR/DE × 360/1280, menu, sign-up, empty dashboard, tooltips), `g7`, `nojs`.
+
+## 29. Hover and focus: no movement (owner rule 2026-11-19)
+
+Rule: hover changes colour and background only, ~150 ms ease; nothing moves, grows or shifts; a border that shows on
+hover is there at rest (same width, other colour); keyboard focus always shows a gold ring.
+
+| Where | What moved | Now |
+|---|---|---|
+| `assets/console-page.js` (console, all tabs) | "magnetic" script pulled every button toward the cursor (translate on pointermove): the wiggle | removed |
+| `assets/chrome.js` | tilt / parallax / magnetic code (not loaded by any page since Phase 2) | file deleted |
+| `components.css` `.ui-btn:active` | pressed buttons dropped 1 px | slightly darker (filter), no movement |
+| `components.css` `.ui-card--link:hover` | cards lifted 2 px | gold border + lighter background |
+| `components.css` `.ui-btn` transition | included `transform` | colour, background, border, filter only, 150 ms |
+| `landing.css` `.lp-tools button.ui-card:hover` | lifted 2 px | gold border + lighter background |
+| `app.css` `.hero-card:hover` (console stat cards) | lifted 3 px | border colour only |
+| `app.css` `.hero-card:active` | `scale(.995)` (invalid CSS, no effect) | removed |
+| `app.css` `.hero-card-action:hover .hero-cta-arrow` | arrow slid 4 px | turns gold |
+| `app.css` `.cshare-app:active .cshare-ic` | share icons shrank to 92 % | darken |
+| `app.css` / `design.css` nav-link underline | underline grew from 0 to full width | full width at rest, fades in |
+| `design.css` `.rd .btn-primary/.btn-alt:hover` | lifted 3 px | lighter / border colour |
+| `design.css` `.rd .btn:hover::after` | sheen swept across the button | removed |
+| `design.css` `.rd .feat:hover`, `.rd .foot-social a:hover` | lifted 7 px / 4 px | border colour |
+| `design.css` `.rd .stat-card.action:hover .go .ar` | arrow slid 4 px | turns gold |
+| `assets/menu.js` `.gm-item:hover .gm-arr`, `.gm-back:hover svg` | arrows slid 2 px | turn gold |
+| `embed/index.html` `.re-foot a.btn:hover` | lifted 1 px + big glow | lighter (ember theme colours untouched) |
+| focus rings | only inside `.ui-scope`; /quote fields and the /statement drop zone had none | gold ring on every focusable control site-wide |
+
+Kept on purpose: the onboarding tutorial screenshot still enlarges on hover (a magnifier for reading the app
+screenshot, not a button); the "skip to content" link still slides in on keyboard focus (that is how a skip link works).
+
+Verified in the browser (`%TEMP%\gmtshots\hovertest.mjs`): every button, button-link, card, tab and nav link on 17 pages
+hovered with a real pointer and measured before/after (position, size, transform, the next element's position): 0 moved
+(the scroll fade-in is excluded by testing with it off); keyboard Tab through the first 25 stops of each page: every
+stop shows a ring.

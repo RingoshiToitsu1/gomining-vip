@@ -310,6 +310,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
    Hover changes colour and background only, in 150 ms: nothing moves, grows or shifts. Borders that show on hover
    exist at rest (same width, just a different colour). Keyboard focus always gets a visible gold ring, on every page
    (not only inside .ui-scope), including the console's own buttons and tabs. */
-:where(button, a, [role="button"], [role="tab"], summary, [tabindex]):focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+:where(button, a, [role="button"], [role="tab"], summary, [tabindex], input, select, textarea, label:has(> input[type="file"])):focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+:where(label:has(> input[type="file"]:focus-visible)) { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 :where(.btn, .tab-btn, .sc-nav a, .cx-tabs a, .nav-links a, .hero-card, .ui-card--link, .ui-btn) { transition-duration: 150ms; transition-timing-function: ease; }
 

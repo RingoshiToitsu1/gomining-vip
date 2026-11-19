@@ -417,3 +417,8 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .px-badge-row.px-subbar{flex-basis:100%;margin-left:0}
   .ytp-thumb img{width:88px}
 }
+
+/* keyboard focus on /quote and /statement fields (their own CSS sets outline:none at rest) */
+.field:focus-within, .stake-item:focus-within { box-shadow: var(--focus-ring); }
+.drop:focus-visible, .wrap input:focus-visible, .wrap select:focus-visible { box-shadow: var(--focus-ring); }
+
