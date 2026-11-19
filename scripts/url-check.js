@@ -77,7 +77,13 @@ async function one(c) {
   const target = BASE + c.url;
   let r, body = '';
   try {
-    r = await fetch(target, { redirect: 'manual', headers: { 'user-agent': 'gmt-optimizer-url-check' } });
+    // a 5xx is the host throttling the burst (GitHub Pages answers some of 200+ quick requests with 503), not an
+    // answer about the URL: retry it up to 3 times, a second apart, before judging
+    for (let k = 0; k < 4; k++) {
+      r = await fetch(target, { redirect: 'manual', headers: { 'user-agent': 'gmt-optimizer-url-check' } });
+      if (r.status < 500) break;
+      await new Promise(res => setTimeout(res, 1000));
+    }
     if (r.status === 200 && /html|text/.test(r.headers.get('content-type') || '')) body = await r.text();
   } catch (e) { return { c, ok: false, why: 'fetch failed: ' + e.message }; }
   const loc = r.headers.get('location') ? new URL(r.headers.get('location'), target).pathname : '';
