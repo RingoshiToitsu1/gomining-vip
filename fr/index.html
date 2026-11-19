@@ -119,26 +119,27 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=5">
 <link rel="stylesheet" href="/assets/components.css?v=8">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=11">
-<link rel="stylesheet" href="/assets/landing.css?v=9">
+<link rel="stylesheet" href="/assets/landing.css?v=10">
 <script src="/assets/site-chrome.js?v=16" defer></script>
 </head>
 <body class="lp ui-scope">
 <main>
 
 <section class="lp-hero" aria-labelledby="hero-title">
-  <!-- v3 hero graphic: a compounding earnings curve that draws itself in (decorative; static with reduced motion) -->
+  <!-- v3 hero graphic (decorative): assets/hero-curve.js rebuilds it in real pixels and puts the dots on the line;
+       without JavaScript this static curve shows as is -->
   <svg class="lp-hero__art" viewBox="0 0 1440 560" preserveAspectRatio="none" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id="lpArea" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#E2B259" stop-opacity=".16"/><stop offset="1" stop-color="#E2B259" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="lpLine" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#A9772F" stop-opacity=".2"/><stop offset=".55" stop-color="#E2B259"/><stop offset="1" stop-color="#F7D88A"/>
+        <stop offset="0" stop-color="#A9772F" stop-opacity=".6"/><stop offset=".5" stop-color="#E2B259"/><stop offset="1" stop-color="#F7D88A"/>
       </linearGradient>
     </defs>
     <path class="lp-art-area" d="M0 520 C 260 512, 470 488, 660 448 S 1010 330, 1180 228 S 1360 110, 1440 64 L 1440 560 L 0 560 Z" fill="url(#lpArea)"/>
     <path class="lp-art-line" pathLength="1" d="M0 520 C 260 512, 470 488, 660 448 S 1010 330, 1180 228 S 1360 110, 1440 64" fill="none" stroke="url(#lpLine)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>
-    <g class="lp-art-dots"><circle cx="660" cy="448" r="5"/><circle cx="1010" cy="330" r="5"/><circle cx="1300" cy="140" r="6"/></g>
+    <g class="lp-art-dots"></g>
   </svg>
   <div class="ui-container lp-hero__grid">
     <div>
@@ -304,6 +305,7 @@ window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's 
 <script src="/lib/mining.js?v=2"></script>
 <script src="/assets/roi-embed.js?v=34"></script>
 <script src="/assets/components.js?v=2" defer></script>
+<script src="/assets/hero-curve.js?v=1" defer></script>
 <script src="/assets/market-change.js?v=4" defer></script>
 <script src="/assets/site.js?v=47"></script>
 <script>
