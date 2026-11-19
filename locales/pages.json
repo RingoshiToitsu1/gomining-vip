@@ -26,7 +26,9 @@
     "console/index.html",
     "planner/index.html",
     "projection/index.html",
-    "planner/projection/index.html"
+    "planner/projection/index.html",
+    "quote/index.html",
+    "statement/index.html"
   ],
   "generated": [
     "gomining-1-th-roi.html",
@@ -51,9 +53,13 @@
     "profile.html",
     "settings.html",
     "dashboard.html",
-    "chat/index.html"
+    "chat/index.html",
+    "quote/index.html",
+    "statement/index.html"
   ],
   "dom": [
-    "console/index.html"
+    "console/index.html",
+    "quote/index.html",
+    "statement/index.html"
   ]
 }
