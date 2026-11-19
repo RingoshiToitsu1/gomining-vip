@@ -55,7 +55,7 @@
     host.innerHTML=`
       <div class="fx-wrap">
         <div class="fx-head">
-          <div><div class="fx-title">${PATHS.toLocaleString()} Bitcoin futures</div>
+          <div><div class="fx-title">${PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} Bitcoin futures</div>
           <div class="fx-sub" id="fxSub">Pick how far ahead to project</div></div>
           <div class="fx-chips" role="tablist" aria-label="Horizon">${YEARS.map(y=>`<button type="button" class="fx-chip${y===yrs?' on':''}" data-y="${y}" role="tab" aria-selected="${y===yrs}">${y}Y</button>`).join('')}</div>
         </div>
@@ -139,11 +139,11 @@
     const Y=yrs,Wn=Y*52,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const el=document.createElement('div');el.className='fx-load';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
     el.innerHTML=`<div class="fx-lk">${Y} Year Forecast</div>
-      <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString()} Bitcoin futures</small></div>
+      <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} Bitcoin futures</small></div>
       <div class="fx-lplot"><canvas class="fx-lcv"></canvas><canvas class="fx-lcv fx-ltop"></canvas></div>
       <div class="fx-lbar"><i></i></div>
       <ul class="fx-lsteps">
-        <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString()} weeks</em></li>
+        <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} weeks</em></li>
         <li><b></b><span>Finding the high, avg and low path</span><em>${fU(sim.p50[Wn-1],0)} avg</em></li>
         <li><b></b><span>Reinvesting your rewards each week</span><em></em></li>
       </ul>`;
@@ -201,7 +201,7 @@
       const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(247,216,138,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
       g.fillStyle=CC('gold-300');g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
       const pk=Math.min(1,t/Math.max(1,T1));
-      num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString();
+      num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US');
       // the three lines sweep in once the paths are out
       const lk=T2?Math.max(0,Math.min(1,(t-T1+250)/T2)):1;
       if(lk>0){const k=Math.max(0,Math.floor((1-Math.pow(1-lk,3))*(Wn-1)));
@@ -214,7 +214,7 @@
       if(phase===0){rows[0].classList.add('on');phase=1;}
       if(phase===1&&t>=T1*0.75){rows[0].className='ok';rows[1].classList.add('on');phase=2;}
       if(phase===2&&t>=T1+T2){rows[1].className='ok';rows[2].classList.add('on');phase=3;
-        num.textContent=PATHS.toLocaleString();
+        num.textContent=PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US');
         if(projDone)finish();   // otherwise gm:proj closes it the moment the run lands
         return;}
       requestAnimationFrame(frame);
@@ -322,7 +322,7 @@
     if(sim){project();return;}
     if(building)return;
     if(!S.loaded||!(S.btcPrice>0)){setTimeout(show,700);return;}
-    building=true;$f('fxWhen').textContent='Simulating '+PATHS.toLocaleString()+' futures…';
+    building=true;$f('fxWhen').textContent='Simulating '+PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')+' futures…';
     ensureRainbowFit(()=>{
       if(!_rbFit||!_rainbowData||_rainbowData.length<100){building=false;$f('fxWhen').textContent='Couldn\'t load Bitcoin\'s price history, which the futures are built on.';return;}
       setTimeout(()=>{try{sim=simulate();project();}catch(e){console.error('[futures]',e);$f('fxWhen').textContent='Something went wrong simulating the futures.';}finally{building=false;}},30);

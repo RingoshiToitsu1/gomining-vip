@@ -259,6 +259,13 @@
       fetchJSON('https://mempool.space/api/v1/mining/hashrate/3d').then(function (h) { return +h.currentDifficulty; }).catch(function () { return 0; })
     ]).then(function (v) { return { btc: v[0] || FB.btc, gmt: v[1] || FB.gmt, diff: v[2] || FB.diff, live: v[0] > 0 && v[1] > 0 && v[2] > 0 }; });
   }
+  // the fees-and-rates date in the page's language (config holds ISO; English keeps "17 Nov 2026")
+  function updatedDate() {
+    var P = window.GMT_PRICING, iso = P && P.CONFIG && P.CONFIG.meta && P.CONFIG.meta.updated;
+    if (!iso) return window.GMT_PRICING ? window.GMT_PRICING.UPDATED : '';
+    if (LANG === 'en') return window.GMT_PRICING ? window.GMT_PRICING.UPDATED : iso;
+    return new Intl.DateTimeFormat(LOC, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z'));
+  }
   function dashboardPage() {
     if (!A.isLoggedIn()) return needLogin(T('Log in to see your dashboard'));
     var p = A.profile || {}, s = p.setup || null;
@@ -269,7 +276,7 @@
         '<div class="ui-row"><a class="ui-btn ' + (th > 0 ? 'ui-btn--primary' : 'ui-btn--secondary') + '" href="' + LH('/console') + '">' + T('Open calculator') + '</a><a class="ui-btn ui-btn--secondary" href="' + LH('/settings') + '">' + T('Settings') + '</a></div></div>' +
       (th > 0 ? '<section class="ui-card acct-card"><div class="acct-card__head"><h2 class="ui-h4">' + T('Your farm today') + '</h2><span class="ui-small ui-text-2" id="dbAsOf">' + T('Loading live prices…') + '</span></div><div class="ui-stats" id="dbStats"></div>' +
         '<p class="ui-small ui-text-2 acct-note">' + T('A quick estimate from your saved farm at today\'s prices. Greedy Machines, inactive hashrate and ambassador rewards are left out here; the <a href="{0}">calculator</a> has the full picture.', LH('/console')) + ' ' +
-        T('Fees and rates as of {0}. They may change.', '<time data-cfg="meta.updated" data-cfg-fmt="date">' + esc(window.GMT_PRICING ? window.GMT_PRICING.UPDATED : '') + '</time>') + '</p></section>'
+        T('Fees and rates as of {0}. They may change.', '<time data-cfg="meta.updated" data-cfg-fmt="date">' + esc(updatedDate()) + '</time>') + '</p></section>'
         : '<section class="ui-card acct-card"><h2 class="ui-h4">' + T('No farm saved yet') + '</h2><p class="ui-text-2">' + T('Once your farm is saved, this page shows what it earns today at live prices, your miners and shortcuts to plan ahead.') + '</p><div><a class="ui-btn ui-btn--primary ui-btn--lg" href="' + LH('/console') + '?view=edit&amp;next=' + encodeURIComponent(LH('/dashboard')) + '">' + T('Build my farm') + '</a></div><p class="ui-small ui-text-2">' + T('Add your miners in the calculator and press Save. Your farm then follows your account to any device and shows up here.') + '</p></section>') +
       '<section class="ui-card acct-card"><div class="acct-card__head"><h2 class="ui-h4">' + T('Your miners') + '</h2><a class="ui-link ui-small" href="' + LH('/console') + '?view=edit">' + T('Edit farm') + '</a></div><div id="dbMiners"><p class="ui-text-2">' + T('Loading…') + '</p></div></section>' +
       '<section class="acct-links ui-grid">' +
