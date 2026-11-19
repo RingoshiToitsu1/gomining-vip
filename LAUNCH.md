@@ -33,6 +33,7 @@ old code is live would break login restores of saved farms.
 | **G16** | **Indexable (blocking, before AND after launch)** | `node scripts/url-check.js <preview>` checks the build; after the merge `node scripts/url-check.js https://gmt-optimizer.com` checks the live responses (see below) | no site-wide noindex (meta robots or `X-Robots-Tag`), `robots.txt` has no `Disallow: /`, canonical/hreflang/og:url only on `https://gmt-optimizer.com`, no noindex outside the allowed list |
 | G17 | No broken internal links (EN + ES/FR/DE) | `node scripts/link-check.js` | "no broken internal links" |
 | G18 | Accessibility basics (static) | `node scripts/a11y-check.js` | "no errors" (warnings listed: headings built by script, one h1 per console tab) |
+| G19 | Performance (blocking) | Lighthouse 12, performance only, 3 runs each, median: `/`, `/console`, `/claim`, `/es/`, mobile and desktop (`%TEMP%\gmtshots\lh.mjs`) | every score ≥ 90; the hero H1 / first screen visible on first paint (nothing at opacity 0 at load) |
 
 **G16 allowed noindex list** (anything else noindex fails): `/odds`, `/styleguide`, `/carbon/` (404 anyway), and the
 retired redirect pages (`/gomining-optimizer`, `/gomining-vip-index`, `/neon-miner/…`, `noindex,follow`). Also allowed,
@@ -50,6 +51,8 @@ Nice to have the night before: back up the database (step 3a), so launch day is 
 ## 1. Launch day: freeze and final build (*Claude*, on your go)
 
 1. Set the privacy date: `data/config.json` → `"legal": { "privacyUpdated": "<launch date YYYY-MM-DD>" }`.
+   Same file, same date: `"launch": { "date": "<launch date YYYY-MM-DD>" }`. The landing page's v3 badge then hides
+   itself 60 days later (`launch.v3BadgeDays`; the build writes the end date as `derived.v3BadgeUntil`).
 2. Rebuild and re-run the gates:
    ```bash
    NODE_OPTIONS="" node scripts/build-config.js && node scripts/gen-pages.js && node scripts/gen-i18n.js && node scripts/build-config.js

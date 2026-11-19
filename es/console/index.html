@@ -63,13 +63,15 @@ try{if(/[?&](setup|new)=1/.test(location.search))document.documentElement.classL
 try{if(!document.documentElement.classList.contains('show-onboarding')){document.documentElement.classList.add('gm-booting');
   setTimeout(function(){document.documentElement.classList.remove('gm-booting')},12000);}}catch(e){}</script>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
-<link rel="stylesheet" href="/assets/tokens.css?v=4">
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
 <link rel="stylesheet" href="/assets/components.css?v=8">
-<link rel="stylesheet" href="/assets/site-chrome.css?v=10">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=11">
 <style id="gmBootCss">
 /* ===== console boot screen (assets/boot.js): the site's card, one gold progress bar, real steps only ===== */
 html.gm-booting,html.gm-booting body{overflow:hidden}
 .show-onboarding #gmBoot{display:none}
+/* only while booting: with JavaScript off (or blocked) the overlay never covers the page */
+html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 #gmBoot{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:24px;
   background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);
   transition:opacity var(--duration-base) var(--ease-standard);animation:gbFailsafe 0s linear 12s forwards}

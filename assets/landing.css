@@ -96,7 +96,9 @@
 /* ---------- v3 hero: badge + self-drawing earnings curve (decorative) ---------- */
 .lp-hero { position: relative; overflow: hidden; isolation: isolate; }
 .lp-hero__grid { position: relative; z-index: 1; }
-.lp-hero__art { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 78%; z-index: 0; pointer-events: none; }
+/* pinned to the top with fixed offsets: when the hero grows (fonts swapping in, the estimate filling) the graphic
+   stretches instead of moving, so it never counts as a layout shift */
+.lp-hero__art { position: absolute; left: 0; right: 0; top: 22%; bottom: 0; width: 100%; height: auto; z-index: 0; pointer-events: none; }
 .lp-art-dots circle { fill: var(--color-gold-300); }
 .lp-v3 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 4px var(--space-3) 4px 4px;
   border: 1px solid rgb(var(--color-gold-rgb) / .35); border-radius: var(--radius-pill); background: var(--color-surface-1);

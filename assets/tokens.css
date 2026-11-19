@@ -1,3 +1,9 @@
+/* Fallback faces sized to Inter and Poppins (metric overrides on Arial), so text barely moves when the web fonts
+   swap in after first paint (they load without blocking it). */
+@font-face { font-family: 'Inter Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans');
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; }
+@font-face { font-family: 'Poppins Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans');
+  size-adjust: 112.10%; ascent-override: 93.62%; descent-override: 31.21%; line-gap-override: 8.92%; }
 /* GMT-Optimizer design tokens: the ONLY place a colour, font, spacing or radius value is written.
    ================================================================================================
    Every other stylesheet (and inline style) refers to these variables. Older sheets keep their own
@@ -58,8 +64,8 @@
   --color-series-5: #EF4444;
 
   /* ---- type ---- */
-  --font-ui:   'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;   /* headings, nav, buttons */
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;     /* copy, tables, figures */
+  --font-ui:   'Poppins', 'Poppins Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;   /* headings, nav, buttons */
+  --font-body: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;     /* copy, tables, figures */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
