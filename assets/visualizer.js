@@ -145,7 +145,10 @@
   /* ---------- launch button ---------- */
   function mountButton() {
     var head = document.querySelector('#tab-current .sec-head');
-    if (!head || document.getElementById('vizLaunch')) return;
+    // the console ships the button in its HTML (so the heading never grows after load); just wire it
+    var pre = document.getElementById('vizLaunch');
+    if (pre) { pre.onclick = open; return; }
+    if (!head) return;
     var b = document.createElement('button');
     b.type = 'button'; b.id = 'vizLaunch'; b.className = 'viz-launch ui-btn ui-btn--secondary ui-btn--sm';
     b.textContent = 'Stream mode';
