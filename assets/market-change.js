@@ -56,14 +56,14 @@
     diff: function () { return T('Lower difficulty means more BTC per TH.') + ' ' + T('Change at the last difficulty adjustment (about every 2 weeks).'); },
     sats: function () { return T('What 1 TH earns per day. It rises when difficulty falls.') + ' ' + T('Change at the last difficulty adjustment (about every 2 weeks).'); }
   };
-  var tipEl = null, tipFor = null, tipAt = 0;
+  var tipEl = null, tipFor = null, tipAt = 0, tipY = 0;
   function hideTip() { if (tipEl) tipEl.hidden = true; tipFor = null; }
   function showTip(el) {
     if (!tipEl) {
       tipEl = document.createElement('div'); tipEl.className = 'ui-tip'; tipEl.setAttribute('role', 'tooltip'); tipEl.hidden = true;
       document.body.appendChild(tipEl);
     }
-    if (tipFor !== el || tipEl.hidden) tipAt = Date.now();
+    if (tipFor !== el || tipEl.hidden) { tipAt = Date.now(); tipY = scrollY; }
     tipFor = el; tipEl.textContent = el.getAttribute('data-tip'); tipEl.hidden = false;
     var r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
     var x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)), y = r.top - h - 8;
@@ -77,7 +77,8 @@
   // a tap fires hover + focus (which open it) and then click: only a later, separate click closes it
   document.addEventListener('click', function (e) { var t = tgt(e); if (t) { t === tipFor && !tipEl.hidden && Date.now() - tipAt > 500 ? hideTip() : showTip(t); } else hideTip(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
-  addEventListener('scroll', hideTip, { passive: true });
+  // close on a real scroll only: focusing the line on a phone nudges the page a few pixels
+  addEventListener('scroll', function () { if (tipFor && Math.abs(scrollY - tipY) > 24) hideTip(); }, { passive: true });
   function go() { data.then(paint); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
   window.GMTMarketChangeRepaint = go;   // pages that build their strip later can call this
