@@ -399,8 +399,10 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .sub-title{display:block!important;width:100%!important;align-self:stretch!important;justify-self:stretch!important}
 
 /* ---------- v3: live change line in the strip tiles (assets/market-change.js) ---------- */
-.live-chip .cx-chg{display:block;font-size:var(--font-size-xs);color:var(--color-text-2);line-height:1.3}
-.live-chip .cx-chg:empty{display:none}
+.live-chip .cx-chg{display:block;font-size:var(--font-size-xs);color:var(--color-text-2);line-height:1.3;min-height:1.3em}
+/* space held before the data arrives, so the strip and everything under it don't drop (layout shift) */
+#pxBadgeHero{min-height:36.4px}
+@media (min-width:600px){#pxBadgeHero{min-height:22.4px}}
 
 /* no decorative motion */
 .gm-counting,.gm-counted,.mc-counting,.mc-counted{text-shadow:none!important;animation:none!important;filter:none!important}
