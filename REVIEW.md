@@ -1,6 +1,6 @@
 # REVIEW.md: gmt-optimizer.com overhaul, final review
 
-Branch `overhaul` (RingoshiToitsu1/gomining-vip), 88 commits ahead of `main`, 352 files changed. Nothing is on `main`;
+Branch `overhaul` (RingoshiToitsu1/gomining-vip), 109 commits ahead of `main`, 355 files changed. Nothing is on `main`;
 the launch is yours to approve (LAUNCH.md). Preview: https://ringoshitoitsu1.github.io (noindex, CNAME stripped).
 Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md. Translations: TRANSLATIONS.md.
 
@@ -17,6 +17,7 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | 7 Languages | full ES / FR / DE copies (39 pages each incl. account pages), hreflang + sitemap, runtime dictionary for the console, local number and date formats |
 | Parts 1–3 (pre-8) | site-wide removal of the old visuals (525-row audit); console rebuilt on one template for all six tabs; every loading screen rewritten (real steps only, ≤0.6 s minimum) |
 | v3 polish (walkthrough) | header and tool card say "New to GoMining?" (was "RINGO5 Bonuses"); v3 badge and a self-drawing earnings curve in the hero; ▲/▼ % change on BTC and GMT (24 h) and on difficulty and sats/TH/day (last adjustment), green = good for a miner, on the landing, console and quote strips; soft cross-fade between pages and a light fade-up of each page's text, replayed on console tabs; loaders: continuously moving sheen, bar finishes before closing, overlays fade in. Nothing moves with reduced motion |
+| Pre-launch round (owner walkthrough 2) | state-aware start button (see §4a); dashboard empty state led by "Build my farm"; sign-up onboarding lines; v3 badge ends by itself 60 days after `launch.date` in `data/config.json`; tooltips on difficulty and sats/TH/day (tap or hover, 4 languages); performance pass (§4b) |
 | 8 Quality and launch | URL check, indexability gate, link check, accessibility check, OG images rebranded, tables pass, LAUNCH.md runbook, SEO baseline |
 
 ## 2. Rules: how each was kept
@@ -50,11 +51,12 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | G11 secrets | clean (2 expected hits) |
 | G12 CNAME | unchanged |
 | G13 /odds | hidden |
-| G14 analytics | none |
+| G14 analytics | none (the pattern matches the word "plausible" in two code comments) |
 | G15 native review | **skipped for launch** (machine translations ship; TRANSLATIONS.md kept) |
 | G16 indexable | build: no noindex outside the allowed list, robots.txt allows crawling, canonicals/hreflang on gmt-optimizer.com. Re-run on production after the merge (blocking) |
 | G17 links | 2,975 internal links across 174 pages, 0 broken |
 | G18 accessibility (static) | 0 errors; 29 warnings (headings built by script; one h1 per console tab) |
+| G19 performance | Lighthouse ≥ 90 everywhere: lowest score 97 (console mobile 99); first screen never hidden at load (table §4b) |
 
 ## 4. What to expect at launch
 
@@ -67,6 +69,49 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 - **Look:** one design across every page and all six console tabs; no glow, particles, cinematic loaders or count-ups.
 - **Speed you will notice:** the console opens up to ~2 s sooner (boot screen min 2.4 s → 0.6 s), the planner answers
   ~2.3 s sooner, the quote appears instantly.
+
+## 4a. Start button (header, menu, landing hero and closing band)
+
+| Visitor | Label | Goes to | After |
+|---|---|---|---|
+| logged out | Get Started / Empezar / Commencer / Loslegen | /signup | sign-up lands on /dashboard |
+| logged in, no saved farm | Set up my farm / Configurar mi granja / Configurer ma ferme / Farm einrichten | Edit farm in the console | Save returns to /dashboard (tested) |
+| logged in, farm saved | Dashboard / Panel / Tableau de bord / Dashboard | /dashboard | |
+
+"New to GoMining?" stays on /claim. First paint shows the logged-out label; all three labels share one cell, so the
+button is always as wide as the longest one and the swap never moves the layout (measured: same width in every state,
+no clipping at 360 px in FR/DE). "Saved farm" = the profile's `setup` has hashrate, read through `get_my_profile()`
+when the SQL is applied and the table before that, so it works on both sides of the launch SQL.
+
+## 4b. Performance (Lighthouse 12, performance only, median of 3, preview build)
+
+| Page | Before v3 mobile | Final mobile | Before v3 desktop | Final desktop |
+|---|---|---|---|---|
+| / | 97 | 100 | 92 | 97 |
+| /console | **81** | **99** | 95 | 100 |
+| /claim | 97 | 100 | 99 | 100 |
+| /es/ | 97 | 100 | 98 | 100 |
+
+The console was already under 90 before v3. What changed: Google Fonts no longer block the first paint (metric-matched
+fallback fonts keep text from jumping when they swap in); the console's scripts start right after its first frame; an
+old fade that started the console at opacity 0 is gone; space is held for the header, the strip's change lines, the
+price badge, the YouTube card and the Stream mode button, so nothing drops when data arrives. The text entrance no
+longer hides anything on the first screen: only blocks below the fold fade in as they scroll into view, and only when
+JavaScript runs (checked: no first-screen element below full opacity at load; every page readable with JavaScript off).
+
+Loaders, measured in the browser on the test farm (main-thread tasks over 50 ms = the page freezing):
+
+| Loader | Before | Now |
+|---|---|---|
+| Console boot screen | 3.5 s, 1.7 s without a frame | 1.3–1.9 s, longest pause 0.1 s |
+| Planner (amount / target) | 0.34 / 0.32 s | 0.35 / 0.34 s (they never froze) |
+| Growth projection 5 years | 2.6 s, froze 132 ms | 1.4 s, no freeze |
+| Growth projection 10 years | 2.9 s, froze 453 ms (≈2 s on a phone) | 1.5 s, no freeze, frames every ≤ 24 ms |
+
+The lag was the projection: it simulates every day (3,650 for 10 years) in one block, and its loader played a fixed
+1.5 s animation before even starting. It now runs in ~20 ms slices next to a ~1 s animation of the real paths. Same
+code in the same order: with the clock frozen, the one-go and sliced runs give bit-identical results for 1, 5 and
+10 years. A price lookup that read a checkbox thousands of times per run now reads it once per slice.
 
 ## 5. Known limits and risks
 

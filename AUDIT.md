@@ -1460,3 +1460,7 @@ Mid-load shots (throttled network so the real wait is visible): `%TEMP%\gmtshots
   delete_my_account don't exist yet; RLS on for all 3 tables; profiles readable by anon (confirms the exposure);
   messages_insert reads profiles.banned (kept readable); every FK to auth.users cascades (Supabase's
   auth.scim_users: SET NULL). **Both launch SQL files fit the live schema unchanged.**
+- **Pre-launch round (owner, 2026-11-18/19):** state-aware start button, dashboard/sign-up onboarding, config-driven
+  v3 badge, difficulty/sats tooltips, performance pass to G19 (Lighthouse ≥ 90; console mobile 81 → 99), projection
+  time-sliced (bit-identical with a frozen clock). Numbers and tables in REVIEW.md §4a/§4b. Screenshots:
+  `%TEMP%\gmtshots\states` (3 states × EN/FR/DE × 360/1280, menu, sign-up, empty dashboard, tooltips), `g7`, `nojs`.
