@@ -1,6 +1,6 @@
 /* GMT-Optimizer: live % changes for the figures strips (landing, console, quote). v3, 2026-11-18.
    Fills every element marked data-chg="btc|gmt|diff|sats" with an up/down change and its basis:
-     btc, gmt   24-hour price change          (coinpaprika tickers, CoinGecko as fallback)
+     btc, gmt   24-hour price change  (CoinGecko, Binance, CoinPaprika at once; last good answer under 3 h if all fail)
      diff       change at the last difficulty adjustment   (mempool.space difficulty-adjustment)
      sats       sats/TH/day change at that same adjustment: reward per TH moves inversely to
                 difficulty (subsidy-based, the formula the calculator uses), so  1 / (1 + Δdiff) − 1
@@ -13,22 +13,42 @@
   var LOC = { es: 'es-ES', fr: 'fr-FR', de: 'de-DE' }[LANG] || 'en-US';
   var T = UI ? UI.t : function (s) { var a = arguments; return String(s).replace(/\{(\d)\}/g, function (m, i) { return a[+i + 1] != null ? a[+i + 1] : m; }); };
   function j(u) { return fetch(u).then(function (r) { if (!r.ok) throw 0; return r.json(); }); }
-  function firstNum(fns) {
-    return fns.reduce(function (p, f) { return p.then(function (v) { return isFinite(v) ? v : f().then(Number).catch(function () { return NaN; }); }); }, Promise.resolve(NaN));
+  // every source at once, first finite answer wins (a slow or blocked API costs nothing)
+  function race(fns) {
+    return new Promise(function (res) {
+      var left = fns.length;
+      fns.forEach(function (f) {
+        Promise.resolve().then(f).then(function (v) { v = +v; if (isFinite(v)) res(v); else throw 0; })
+          .catch(function () { if (--left === 0) res(NaN); });
+      });
+    });
   }
-  var pct24 = function (paprika, gecko) {
-    return firstNum([
-      function () { return j('https://api.coinpaprika.com/v1/tickers/' + paprika).then(function (r) { return r.quotes.USD.percent_change_24h; }); },
-      function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=' + gecko + '&vs_currencies=usd&include_24hr_change=true').then(function (r) { return r[gecko].usd_24h_change; }); }
-    ]);
+  var SRC = {
+    btc: [
+      function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true').then(function (r) { return r.bitcoin.usd_24h_change; }); },
+      function () { return j('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(function (r) { return r.priceChangePercent; }); },
+      function () { return j('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(function (r) { return r.quotes.USD.percent_change_24h; }); }
+    ],
+    gmt: [
+      function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=gmt-token&vs_currencies=usd&include_24hr_change=true').then(function (r) { return r['gmt-token'].usd_24h_change; }); },
+      function () { return j('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token').then(function (r) { return r.quotes.USD.percent_change_24h; }); }
+    ],
+    diff: [
+      function () { return j('https://mempool.space/api/v1/difficulty-adjustment').then(function (r) { return r.previousRetarget; }); }
+    ]
   };
-  var data = window.GMTMarketChange = Promise.all([
-    pct24('btc-bitcoin', 'bitcoin'),
-    pct24('gomining-gomining-token', 'gmt-token'),
-    j('https://mempool.space/api/v1/difficulty-adjustment').then(function (r) { return +r.previousRetarget; }).catch(function () { return NaN; })
-  ]).then(function (v) {
-    var d = v[2];
-    return { btc: v[0], gmt: v[1], diff: d, sats: isFinite(d) ? (1 / (1 + d / 100) - 1) * 100 : NaN };
+  // the last good answers, for when every source is down or rate-limited (shown only if under 3 hours old)
+  var KEY = 'gm_chg_v1', MAX_AGE = 3 * 3600e3;
+  function readCache() { try { var c = JSON.parse(localStorage.getItem(KEY) || 'null'); return c && Date.now() - c.t < MAX_AGE ? c : null; } catch (e) { return null; } }
+  var data = window.GMTMarketChange = Promise.all([race(SRC.btc), race(SRC.gmt), race(SRC.diff)]).then(function (v) {
+    var c = readCache() || {}, out = { btc: v[0], gmt: v[1], diff: v[2] };
+    ['btc', 'gmt', 'diff'].forEach(function (k) { if (!isFinite(out[k]) && c[k] != null && isFinite(c[k])) out[k] = c[k]; });
+    if (isFinite(v[0]) || isFinite(v[1]) || isFinite(v[2])) {
+      try { localStorage.setItem(KEY, JSON.stringify({ btc: isFinite(v[0]) ? v[0] : c.btc, gmt: isFinite(v[1]) ? v[1] : c.gmt, diff: isFinite(v[2]) ? v[2] : c.diff, t: Date.now() })); } catch (e) {}
+    }
+    var d = out.diff;
+    out.sats = isFinite(d) ? (1 / (1 + d / 100) - 1) * 100 : NaN;
+    return out;
   });
   function fmt(x) {
     var n = new Intl.NumberFormat(LOC, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(x));
