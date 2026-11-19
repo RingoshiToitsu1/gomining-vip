@@ -1498,3 +1498,34 @@ Verified in the browser (`%TEMP%\gmtshots\hovertest.mjs`): every button, button-
 hovered with a real pointer and measured before/after (position, size, transform, the next element's position): 0 moved
 (the scroll fade-in is excluded by testing with it off); keyboard Tab through the first 25 stops of each page: every
 stop shows a ring.
+
+## 30. Hero curve fix (owner, 2026-11-19)
+
+Cause: the SVG was stretched (`preserveAspectRatio="none"`) with the dots at fixed coordinates, so they drifted off the
+line and turned oval as the width changed (the right-hand one was never on the line); and the draw-in used a
+`pathLength` dash together with `vector-effect: non-scaling-stroke`, which measures the dash in screen pixels, so the
+stroke stopped short and its right side never drew. Fix: `assets/hero-curve.js` rebuilds the curve in real pixels
+(viewBox = its own box, nothing stretched), takes each dot from the path itself (`getPointAtLength`) and keeps only the
+ones that clear every hero text block, the badge, the buttons and the Quick estimate card (16 px margin); it re-runs on
+resize, font swap and when the estimate fills. The stroke draws its full length, fill under it, left end stronger.
+Without JavaScript the static curve shows (no dots). Checked at 360/768/1280/1536/1920 in EN and DE from the page:
+every dot ≤ 0.34 px from the path (the sampling step), round (10×10 / 12×12), none covered; stroke fully drawn. On
+phones the whole curve runs behind the text, so it carries no dots there. Screenshots `%TEMP%\gmtshots\curve`.
+
+## 31. Live Meter (replaces Stream mode, owner 2026-11-19)
+
+`assets/live-meter.js` replaces `assets/visualizer.js` (deleted). Removed: Nebula, Silk, Hash Rain, starfield and
+particles, the glowing core, the "each spark = $…" caption. Main display: "Earned this session" counting up every frame
+(Inter, tabular figures, gold on that number only), per second/minute/hour/day, USD/sats toggle, "Estimated at today's
+rates. Not a live payout.", BTC price / hashrate / discount small and dim in the corner. Themes: Minimal (black, a thin
+gold line that fills once a second), Flow (slow gold wave, about a minute per cycle), Ledger (faint grid, a cell lights
+per sat earned, capped at 10 a second). Screensaver: full screen, cursor and controls hide after 3 s, Screen Wake Lock,
+layout drifts up to 6 px once a minute, optional clock, optional auto-start after 5/10/15/30 min idle on the console
+(off by default), 30 fps cap, paused while hidden (the gap is credited on return), reduced motion = numbers only.
+Streaming (Twitch chat, TikTok chat via the local helper, joins, QR, TikTok 9:16) kept, in a Streaming drawer, off by
+default; previous settings carried over (same storage keys). Layout is a grid (stats · hero · chat | QR), so the QR and
+its caption share one reserved corner and nothing can overlap. Maths: `window._vizFeed` from app.js, the same figure as
+the console's Daily net profit card (the golden-tested calculation); per second = daily ÷ 86,400; sats at today's BTC
+price. Checked: 3 themes × 1280×800, 1920×1080, 1080×1920 (9:16 with streaming), 360×780, plus streaming at every size
+in EN and DE: no overlaps, QR caption never overflows, the number never clips, counts up ($0.00108/s on the 5,000 TH
+test farm = $92.2/day), cursor and controls hidden after 3 s. Screenshots `%TEMP%\gmtshots\meter`.

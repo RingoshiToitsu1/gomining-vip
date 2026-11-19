@@ -1,6 +1,6 @@
 # REVIEW.md: gmt-optimizer.com overhaul, final review
 
-Branch `overhaul` (RingoshiToitsu1/gomining-vip), 109 commits ahead of `main`, 355 files changed. Nothing is on `main`;
+Branch `overhaul` (RingoshiToitsu1/gomining-vip), 120 commits ahead of `main`, 356 files changed. Nothing is on `main`;
 the launch is yours to approve (LAUNCH.md). Preview: https://ringoshitoitsu1.github.io (noindex, CNAME stripped).
 Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md. Translations: TRANSLATIONS.md.
 
@@ -18,6 +18,7 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | Parts 1–3 (pre-8) | site-wide removal of the old visuals (525-row audit); console rebuilt on one template for all six tabs; every loading screen rewritten (real steps only, ≤0.6 s minimum) |
 | v3 polish (walkthrough) | header and tool card say "New to GoMining?" (was "RINGO5 Bonuses"); v3 badge and a self-drawing earnings curve in the hero; ▲/▼ % change on BTC and GMT (24 h) and on difficulty and sats/TH/day (last adjustment), green = good for a miner, on the landing, console and quote strips; soft cross-fade between pages and a light fade-up of each page's text, replayed on console tabs; loaders: continuously moving sheen, bar finishes before closing, overlays fade in. Nothing moves with reduced motion |
 | Pre-launch round (owner walkthrough 2) | state-aware start button (see §4a); dashboard empty state led by "Build my farm"; sign-up onboarding lines; v3 badge ends by itself 60 days after `launch.date` in `data/config.json`; tooltips on difficulty and sats/TH/day (tap or hover, 4 languages); performance pass (§4b) |
+| Final polish (owner) | hero curve rebuilt (dots on the line at every width, full stroke); hover is colour-only and 150 ms everywhere, nothing moves, focus ring on every control (AUDIT §29); **Live Meter** replaces Stream mode: one calm per-second earnings counter, 3 quiet themes, screensaver behaviour, streaming extras in a drawer (AUDIT §31) |
 | 8 Quality and launch | URL check, indexability gate, link check, accessibility check, OG images rebranded, tables pass, LAUNCH.md runbook, SEO baseline |
 
 ## 2. Rules: how each was kept
@@ -44,7 +45,7 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | G3 config / G4 translations | in sync; 0 missing |
 | G5 offer check | 0 |
 | G6 URL check (preview) | 203 URLs, 0 failures |
-| G7 overflow / leftover English | 0 overflow at 360 and 1280 in all 4 languages; only words valid in the language |
+| G7 overflow / leftover English | 0 overflow at 360 and 1280 in all 4 languages (incl. the Live Meter at 360/1280/1920/1080×1920); only words valid in the language; hover moves nothing (416 elements hovered across 4 languages) |
 | G8 logged-in views | done (test account with a fake farm, your OK) |
 | G9 legal | **owner-accepted, no lawyer review** |
 | G10 OG images | 26 rebranded |
@@ -56,7 +57,7 @@ Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md.
 | G16 indexable | build: no noindex outside the allowed list, robots.txt allows crawling, canonicals/hreflang on gmt-optimizer.com. Re-run on production after the merge (blocking) |
 | G17 links | 2,975 internal links across 174 pages, 0 broken |
 | G18 accessibility (static) | 0 errors; 29 warnings (headings built by script; one h1 per console tab) |
-| G19 performance | Lighthouse ≥ 90 everywhere: lowest score 97 (console mobile 99); first screen never hidden at load (table §4b) |
+| G19 performance | Lighthouse ≥ 90 everywhere: lowest 97 (console mobile), every other page/form factor 97–100; first screen never hidden at load (table §4b) |
 
 ## 4. What to expect at launch
 
