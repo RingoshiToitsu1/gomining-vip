@@ -39,11 +39,12 @@
       var k = el.getAttribute('data-chg'), x = ch[k];
       if (!isFinite(x)) return;
       var basis = (k === 'diff' || k === 'sats') ? T('{0} · last adjustment', fmt(x)) : T('{0} · 24h', fmt(x));
-      el.textContent = basis;
+      el.textContent = el.hasAttribute('data-chg-short') ? fmt(x) : basis;   // compact strips: the tooltip carries the basis
       // colour = good or bad for a miner: a higher difficulty is bad news, everything else is good when it rises
       var good = k === 'diff' ? x < 0 : x > 0, bad = k === 'diff' ? x > 0 : x < 0;
       el.classList.toggle('is-good', good); el.classList.toggle('is-bad', bad);
       var tip = TIPS[k] ? TIPS[k]() : T('Price change over the last 24 hours');
+      if (el.hasAttribute('data-chg-short') && !TIPS[k]) tip = T('Price change over the last 24 hours');
       el.removeAttribute('title');
       el.setAttribute('data-tip', tip);
       el.tabIndex = 0;

@@ -110,7 +110,7 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 <link rel="stylesheet" href="/assets/odds.css?v=7" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/odds.css?v=7"></noscript>
 <link rel="stylesheet" href="/assets/futures.css?v=11" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/futures.css?v=11"></noscript>
 <link rel="stylesheet" href="/assets/design.css?v=20">
-<link rel="stylesheet" href="/assets/console.css?v=16">
+<link rel="stylesheet" href="/assets/console.css?v=17">
 <link rel="stylesheet" href="/assets/accounts.css?v=30" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/accounts.css?v=30"></noscript>
 <script src="/assets/site-chrome.js?v=16" defer></script>
 </head>
@@ -361,9 +361,9 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 <!-- live data + tools strip (below the identical nav) -->
 <div class="subbar">
     <div class="live-bar" id="liveBar">
-      <div class="live-chip live-chip-btn" title="Abrir el gráfico de BTC en directo" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg="btc"></span></div>
-      <div class="live-chip live-chip-btn" title="Abrir el gráfico del token de GoMining en directo" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg="gmt"></span></div>
-      <div class="live-chip" title="Sats por TH al día en directo"><span class="lbl">sats/TH/día</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg="sats"></span></div>
+      <div class="live-chip live-chip-btn" title="Abrir el gráfico de BTC en directo" role="button" tabindex="0" onclick="openBtcChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openBtcChart()}"><span class="lbl"><img src="/btc36.png" alt="" class="cx-coin">Bitcoin</span><span class="val" id="btcVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg-short data-chg="btc"></span></div>
+      <div class="live-chip live-chip-btn" title="Abrir el gráfico del token de GoMining en directo" role="button" tabindex="0" onclick="openGmtChart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openGmtChart()}"><span class="lbl"><img src="/gmt36.png" alt="" class="cx-coin">GMT</span><span class="val" id="gmtVal"><span class="skel">&nbsp;&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg-short data-chg="gmt"></span></div>
+      <div class="live-chip" title="Sats por TH al día en directo"><span class="lbl">sats/TH/day</span><span class="val" id="satsVal"><span class="skel">&nbsp;&nbsp;&nbsp;</span></span><span class="cx-chg" data-chg-short data-chg="sats"></span></div>
       <div class="live-chip" id="updatedChip" title="Datos en directo: se actualizan cada hora"><span class="live-dot" id="liveDot"></span><span class="lbl">Actualizado</span><span class="val" id="refreshTimer">--</span></div>
       <div class="px-badge-row px-subbar" id="pxBadgeHero"></div>
     </div>
@@ -403,14 +403,6 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
     <p class="cx-lead">Beneficio, comisiones, descuento y nivel VIP de tu granja de GoMining en directo, con los datos de red de hoy.</p></div>
     <button type="button" id="lmLaunch" class="viz-launch ui-btn ui-btn--secondary ui-btn--sm" title="Tus ganancias sumando en directo, a pantalla completa">Medidor en vivo</button>
   </div>
-  <!-- Ringo's latest video. Swap data-vid, href, thumbnail and title for the next one;
-       a viewer's "hide" is remembered per video, so a new video shows again. -->
-  <aside class="ytp" id="ytPromo" data-vid="xwOTD1QRvcI" hidden>
-    <a class="ytp-link" href="https://www.youtube.com/watch?v=xwOTD1QRvcI" target="_blank" rel="noopener"> <span class="ytp-thumb"><img src="https://i.ytimg.com/vi/xwOTD1QRvcI/mqdefault.jpg" width="160" height="90" alt="" loading="lazy"><span class="ytp-play" aria-hidden="true"></span></span> <span class="ytp-txt"><span class="ytp-kicker">Apoya la web</span><b>GoMining Review 2026: My Real Results After 18 Months</b><span class="ytp-cta">Verlo y darle like ayuda a que GMT-Optimizer siga siendo gratis &#8599;</span></span> </a>
-    <button type="button" class="ytp-x" aria-label="Ocultar este vídeo" title="Ocultar">&times;</button>
-  </aside>
-  <script>/* show the card before the first paint (no layout shift); console-page.js wires the close button */
-  (function(){var el=document.getElementById('ytPromo'),h=null;try{h=localStorage.getItem('ytPromoHidden');}catch(e){}if(el&&h!==el.getAttribute('data-vid'))el.hidden=false;})();</script>
   <div class="hero-grid" id="heroGrid">
     <div class="hero-card green-accent">
       <span class="hspot"></span><span class="corners"></span>
@@ -640,6 +632,14 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
   <div class="cx-actions">
     <button class="share-plan-btn" onclick="sharePlan(this)" title="Copia un enlace a tu configuración actual para que cualquiera vea estas cifras"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Compartir esta configuración</button>
   </div>
+  <!-- Ringo's latest video. Swap data-vid, href, thumbnail and title for the next one;
+       a viewer's "hide" is remembered per video, so a new video shows again. -->
+  <aside class="ytp" id="ytPromo" data-vid="xwOTD1QRvcI" hidden>
+    <a class="ytp-link" href="https://www.youtube.com/watch?v=xwOTD1QRvcI" target="_blank" rel="noopener"> <span class="ytp-thumb"><img src="https://i.ytimg.com/vi/xwOTD1QRvcI/mqdefault.jpg" width="160" height="90" alt="" loading="lazy"><span class="ytp-play" aria-hidden="true"></span></span> <span class="ytp-txt"><span class="ytp-kicker">Apoya la web</span><b>GoMining Review 2026: My Real Results After 18 Months</b><span class="ytp-cta">Verlo y darle like ayuda a que GMT-Optimizer siga siendo gratis &#8599;</span></span> </a>
+    <button type="button" class="ytp-x" aria-label="Ocultar este vídeo" title="Ocultar">&times;</button>
+  </aside>
+  <script>/* show the card before the first paint (no layout shift); console-page.js wires the close button */
+  (function(){var el=document.getElementById('ytPromo'),h=null;try{h=localStorage.getItem('ytPromoHidden');}catch(e){}if(el&&h!==el.getAttribute('data-vid'))el.hidden=false;})();</script>
 
 
 </div>
@@ -1162,7 +1162,7 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
    passed (they all check document.readyState). site-chrome.js waits for account.js because of __gmtAccountComing.
    Accounts: SDK -> config -> account layer (account.js stays dormant until config holds real values). */
 window.__gmtAccountComing=true;
-(function(){var L=['/assets/chart-shot.js?v=4','/assets/pricing.js?v=5','/assets/charts.js?v=1','/assets/app.js?v=182','/assets/odds.js?v=12','/assets/futures.js?v=17','/assets/fleet.js?v=22','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/assets/supabase-config.js?v=4','/assets/account.js?v=30','/assets/chat.js?v=21','/assets/boot.js?v=6','/assets/loaders.js?v=10','/assets/market-change.js?v=4','/assets/live-meter.js?v=2','/assets/console-page.js?v=2'];
+(function(){var L=['/assets/chart-shot.js?v=4','/assets/pricing.js?v=5','/assets/charts.js?v=1','/assets/app.js?v=182','/assets/odds.js?v=12','/assets/futures.js?v=17','/assets/fleet.js?v=22','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/assets/supabase-config.js?v=4','/assets/account.js?v=30','/assets/chat.js?v=21','/assets/boot.js?v=6','/assets/loaders.js?v=10','/assets/market-change.js?v=5','/assets/live-meter.js?v=2','/assets/console-page.js?v=2'];
   var done=false;function go(){if(done)return;done=true;L.forEach(function(u){var s=document.createElement('script');s.src=u;s.async=false;document.body.appendChild(s);});}
   // after the first frame; at once in a background tab (no frames there); a timer as a backstop
   if(document.hidden||!window.requestAnimationFrame)go();else{requestAnimationFrame(function(){setTimeout(go,0);});setTimeout(go,500);}})();</script>

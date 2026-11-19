@@ -422,3 +422,39 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .field:focus-within, .stake-item:focus-within { box-shadow: var(--focus-ring); }
 .drop:focus-visible, .wrap input:focus-visible, .wrap select:focus-visible { box-shadow: var(--focus-ring); }
 
+/* ---------- v3 calm header (owner, 2026-11-19: "a lot going on") ----------
+   The seven boxed tiles + date line under the tabs become one quiet, unboxed status line: market on the left
+   (price, 24 h change; click BTC/GMT for the chart), your two editable balances on the right. Nothing is removed
+   from the page's logic: the elements and ids stay, only the look changes. The "Edit farm" tile is hidden (it's a
+   tab already) and the price-list date moves out of the strip (the planner and projection still show it). */
+.subbar{display:flex!important;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2) var(--space-5);
+  padding:var(--space-2) 0!important;margin:0!important;background:none!important;border:0!important;border-bottom:1px solid var(--color-border)!important;box-shadow:none!important}
+.subbar .live-bar{display:flex!important;flex-wrap:wrap;align-items:center;gap:0!important;margin:0!important;padding:0!important;background:none!important;border:0!important;width:auto!important;grid-template-columns:none!important}
+.subbar .live-chip{display:inline-flex!important;flex-direction:row!important;align-items:baseline!important;gap:var(--space-2)!important;
+  min-height:0!important;min-width:0!important;padding:var(--space-1) var(--space-4)!important;margin:0!important;
+  background:none!important;border:0!important;border-left:1px solid var(--color-border)!important;border-radius:0!important;box-shadow:none!important;text-align:left!important;width:auto!important;flex:0 0 auto!important}
+.subbar .live-bar > .live-chip:first-child{border-left:0!important;padding-left:0!important}
+.subbar .live-chip .lbl{display:inline-flex!important;align-items:center;gap:6px;margin:0!important;font-family:var(--font-ui);font-size:var(--font-size-xs)!important;font-weight:var(--font-weight-medium);color:var(--color-text-2)!important;text-transform:none;letter-spacing:0}
+.subbar .live-chip .lbl img,.subbar .cx-coin{width:14px!important;height:14px!important;margin:0!important}
+.subbar .live-chip .val{display:inline!important;margin:0!important;font-family:var(--font-body)!important;font-size:var(--font-size-sm)!important;font-weight:var(--font-weight-semibold)!important;color:var(--color-text)!important;font-variant-numeric:tabular-nums}
+.subbar .live-chip .cx-chg{display:inline-block!important;min-width:4.8em;min-height:0!important;font-size:var(--font-size-xs)!important}
+.subbar .live-chip-btn{cursor:pointer;border-radius:0!important}
+.subbar .live-chip-btn:hover .val{color:var(--color-gold-300)!important}
+.subbar .live-chip-btn:hover{background:none!important}
+.subbar #updatedChip .val,.subbar #updatedChip .lbl{color:var(--color-text-3)!important;font-weight:var(--font-weight-medium)!important;font-size:var(--font-size-xs)!important}
+.subbar #pxBadgeHero{display:none!important}
+.subbar .quick-bar [title="Open the full farm editor"]{display:none!important}
+.subbar .quick-bar .live-chip .val{border-bottom:1px dashed var(--color-border-strong);padding-bottom:1px}
+.subbar .quick-bar .live-chip-btn:hover .val{border-bottom-color:var(--color-gold)}
+@media (max-width:767px){
+  .subbar{justify-content:flex-start}
+  .subbar .live-chip{padding:var(--space-1) var(--space-3)!important}
+  .subbar .quick-bar > .live-chip:first-child{border-left:0!important;padding-left:0!important}
+}
+/* the quote's strip has its own date line at the end: keep it, small and muted */
+.subbar .px-subbar{font-size:var(--font-size-xs)!important;color:var(--color-text-3)!important;padding-left:var(--space-4);border:0!important}
+.subbar .px-subbar b{color:var(--color-text-2)!important;font-weight:var(--font-weight-medium)!important}
+
+/* gold marks the one figure that matters on each card row; the rest read in plain text */
+#heroGrid .hero-card:not(:first-child) .hero-val,#heroGrid .hero-yearly{color:var(--color-text)!important}
+
