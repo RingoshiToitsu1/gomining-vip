@@ -1265,7 +1265,10 @@
   "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Dazu <strong style=\"color:var(--color-error)\">−{0} %</strong> durch steigende Netzwerk-Difficulty im Zeitraum (modelliert).",
   "Back": "Zurück",
   "VIP {0} · {1} TH · {2}": "VIP {0} · {1} TH · {2}",
-  "/yr": "/Jahr"
+  "/yr": "/Jahr",
+  "hashrate alone: {0}": "nur Hashrate: {0}",
+  "Whole farm incl. locked GMT": "Ganze Farm inkl. gesperrtem GMT",
+  "This card is the whole farm: hashrate plus the GMT locked for your discount, every reward reinvested weekly at today’s prices. “Hashrate alone” is mining income ÷ what the hashrate costs, the way GoMining quotes its Annual ROI, which leaves the locked GMT out.": "Diese Karte zeigt die ganze Farm: Hashrate plus das für deinen Rabatt gesperrte GMT, jede Belohnung wöchentlich zu heutigen Preisen reinvestiert. „Nur Hashrate“ ist Mining-Einkommen ÷ Kosten der Hashrate, so wie GoMining seinen Annual ROI angibt, der das gesperrte GMT weglässt."
  },
  "dom": {
   "\"Still cheap\" band": "„Noch günstig“-Band",

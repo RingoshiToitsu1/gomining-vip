@@ -3461,9 +3461,17 @@ function recalc(){
     // return on a farm that did not produce it.
     // One short line. The farm-value and end-state figures were four numbers deep on a headline
     // card and read as clutter, not as evidence — the ROI is the point.
+    // The comparison people make is with GoMining's own "Annual ROI", which is mining income divided by what the
+    // hashrate costs and leaves out the GMT locked for the discount. Show that figure too, so the two can be read
+    // side by side: this card is the whole farm (hashrate + locked GMT, reinvested weekly), which is lower whenever
+    // much of the capital sits in GMT earning the staking APR.
+    const thNow=m.totTH||0, thCost=thNow>0?thNow*cptTier(TH_TIERS_NEW,thNow):0;
+    const hashROI=thCost>0?m.net*m.bp*365/thCost*100:null;
+    const hashTxt=hashROI!=null&&isFinite(hashROI)?T('hashrate alone: {0}',fPc(hashROI,0)+T('/yr')):'';
     velSub.textContent=ecr
-      ? (ecr.roiNoAmb!=null?`${fPc(ecr.roiNoAmb,0)} without ambassador rewards`:'reinvesting every reward, weekly')
+      ? (ecr.roiNoAmb!=null?`${fPc(ecr.roiNoAmb,0)} without ambassador rewards`:T('Whole farm incl. locked GMT')+(hashTxt?' · '+hashTxt:''))
       : 'reinvest all earnings into hashrate';
+    velSub.title=T('This card is the whole farm: hashrate plus the GMT locked for your discount, every reward reinvested weekly at today’s prices. “Hashrate alone” is mining income ÷ what the hashrate costs, the way GoMining quotes its Annual ROI, which leaves the locked GMT out.');
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
   // without recomputing anything — same values the hero cards are showing.
