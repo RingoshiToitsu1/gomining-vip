@@ -1053,7 +1053,7 @@ function rbPriceAt(series,t){
 }
 function rbFmtUSD(v){return UI_LOC&&window.GMTCharts?GMTCharts.money(Math.round(v),0):'$'+Math.round(v).toLocaleString('en-US');}
 // Translated pages: axis numbers in the page locale via the chart kit. English keeps its exact legacy strings.
-function ckCompactUSD(v){return new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:1}).format(v);}
+function ckCompactUSD(v){return new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',notation:'compact',maximumSignificantDigits:3}).format(v);}
 function ckSignedPct(n){return UI_LOC&&window.GMTCharts?new Intl.NumberFormat(GMTCharts.locale(),{style:'percent',signDisplay:'always',maximumFractionDigits:0}).format(Math.round(n)/100):(n>=0?'+':'')+Math.round(n)+'%';}
 function renderRainbowLegend(active){
   const el=document.getElementById('btcRainbowLegend');if(!el)return;
@@ -1611,7 +1611,7 @@ function drawCombined(){
   // legend + stats
   const last=S[S.length-1];
   const corr=cmbCorrelation(all.slice(-want));
-  const pct=v=>(v>=100?'+':'')+(v-100).toFixed(1)+'%';
+  const pct=v=>(v>=100?'+':'')+(UI_LOC?fPc(v-100,1):(v-100).toFixed(1)+'%');
   const lg=document.getElementById('cmbLegend');
   const sw=(a,b)=>`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${a};margin-right:2px"></span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${b};margin-right:5px"></span>`;
   const cndl=_cmbStyle==='candle';

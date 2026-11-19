@@ -125,4 +125,4 @@ html.gc-on #toTop{bottom:90px !important}
 /* phones: the sheet is full screen; the desktop height cap must not apply (it cut the sheet to 70vh) */
 @media (max-width:600px){ .gc-panel, .gc-panel.gc-on-msgs { max-height:none; } }
 /* one-line subtitle in the header, whatever buttons sit beside it */
-.gc-head small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc-head small{display:block;white-space:normal;line-height:1.3}

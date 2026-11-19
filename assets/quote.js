@@ -393,7 +393,7 @@
         : '')
       + '<div class="ui-table-wrap comp-tbl-wrap"><table class="ui-table ui-table--stack comp-tbl" aria-label="Your position every three months"><thead><tr><th></th>' + (adds ? '<th class="num">Paid in</th>' : '') + '<th class="num">Hashrate</th><th class="num">Locked GMT</th>'
       + '<th class="num">Net income</th><th class="num">Cash taken</th><th class="num">Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
-      + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT $' + S.gmt.toFixed(4)
+      + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT ' + (QLOC ? num(S.gmt, 4) + '\u00a0$' : '$' + S.gmt.toFixed(4))
       + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + pc(APR, 2) + ' staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
       + 'Reinvestment tops the fee coverage back to ' + COV_DAYS + ' days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
       + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the USD-to-GMT fee (currently ' + pc(USD_GMT_FEE * 100, 0) + ', may change); weekly amounts are averaged into the month.' : '')
@@ -702,7 +702,7 @@
       if (l) l.textContent = S.label || (S.live ? 'Live' : 'Cached');
       const b = $('qBtc'), g = $('qGmt'), st2 = $('qSats');
       if (b) b.textContent = money(S.btc, 0);
-      if (g) g.textContent = '$' + S.gmt.toFixed(4);
+      if (g) g.textContent = QLOC ? num(S.gmt, 4) + '\u00a0$' : '$' + S.gmt.toFixed(4);
       if (st2) st2.textContent = num(Math.round(S.satsPerTHDay));
     };
     const M = window.GMTMarket;

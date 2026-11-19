@@ -37,7 +37,7 @@
   var LANG = (document.documentElement.lang || "en").slice(0, 2).toLowerCase();
 
   var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=11";
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=12";
   document.head.appendChild(css);
 
   function loadScript(src) {

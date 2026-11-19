@@ -355,7 +355,7 @@
     if (M) {
       // shared loader (assets/market.js): newest saved prices at once, live the moment they land, retried until live
       const apply = m => {
-        S.btc = m.btc; S.gmt = m.gmt; S.diff = m.diff; S.live = m.allLive;
+        S.btc = m.btc; S.gmt = m.gmt; S.diff = m.diff; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000);
         S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
         root.classList.remove('re-loading'); autoFillGMT(); render();
       };

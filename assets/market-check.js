@@ -450,7 +450,10 @@
       if (Number.isFinite(v) && v >= 0 && !GREEDY_GROWTH_PAST_DEFAULTS.includes(raw)) gr = v;
     } catch (e) {}
     $('mc-growth').value = String(gr);
-    loadMarket().then(() => {
+    const M = window.GMTMarket;
+    const ready = M ? M.get().then(m => { S.gmt = m.gmt; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000); }) : loadMarket();
+    if (M) M.onUpdate(m => { S.gmt = m.gmt; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000); render(); $('mc-basis').textContent = basisLine(); });
+    ready.then(() => {
       root.classList.remove('re-loading');
       render();
       const q = new URLSearchParams(location.search).get('id');

@@ -181,3 +181,4 @@ path that existed (example: `/neon-miner/frontend/node_modules/tslib/tslib.html`
 | `/favicon.ico`, `/site.webmanifest`, `/assets/brand/*` | static files | Phase 1 |
 | `/neon-miner/` | redirect page to `/` (see §G) | Phase 0 decisions |
 | `/es/…`, `/fr/…`, `/de/…` (33 pages each: content, data and tool pages, `/xx/console`, `/xx/planner`, `/xx/projection`, `/xx/planner/projection`; account pages and chat noindex) | same shapes as their English page (file pages `/xx/x` + `/xx/x.html`; folder pages 301 → slash); listed in `sitemap.xml` with hreflang | Phase 7 |
+| `/es/quote/`, `/fr/quote/`, `/de/quote/`, `/es/statement/`, `/fr/statement/`, `/de/statement/` | folder pages like the English ones (`/xx/quote` 301 → `/xx/quote/`), noindex,follow, not in the sitemap; the translated consoles' Quote and Statement tabs link here | 2026-11-19 |
