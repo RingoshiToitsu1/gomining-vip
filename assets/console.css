@@ -458,3 +458,38 @@ html{font-size:16px!important}                         /* app.css scaled the con
 /* gold marks the one figure that matters on each card row; the rest read in plain text */
 #heroGrid .hero-card:not(:first-child) .hero-val,#heroGrid .hero-yearly{color:var(--color-text)!important}
 
+/* status line lines up with the page content; on phones the market figures scroll in one row, balances below */
+.subbar{padding-inline:max(var(--space-4),calc((100% - var(--content-max)) / 2))!important}
+@media (max-width:767px){
+  .subbar{flex-direction:column;align-items:stretch!important;gap:var(--space-1)!important}
+  .subbar #liveBar{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--space-4) * -1)!important;padding-inline:var(--space-4)!important}
+  .subbar #liveBar::-webkit-scrollbar{display:none}
+  .subbar #updatedChip{display:none!important}
+  .subbar .quick-bar{flex-wrap:nowrap!important}
+}
+
+/* ---------- chart pages (Bitcoin / GMT live chart, rainbow, BTC + GMT): a clean header above the chart ----------
+   back · title on the left; the chart switcher and an icon-sized screenshot button on the right; nothing floats
+   over TradingView's own toolbar. Phones: title row, then the controls row. */
+#btcChartPage .sp-page-head,#rainbowPage .sp-page-head,#cmbPage .sp-page-head{
+  position:static!important;display:flex!important;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:var(--space-3) var(--space-4);
+  padding:var(--space-3) 0 var(--space-4)!important;margin:0!important;top:auto!important;right:auto!important;border:0;background:none!important}
+#btcChartPage .sp-back-btn,#rainbowPage .sp-back-btn,#cmbPage .sp-back-btn{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  font:var(--font-weight-medium) var(--font-size-sm)/1 var(--font-ui);color:var(--color-text-2);padding:var(--space-2) var(--space-2) var(--space-2) 0;transition:color 150ms ease}
+#btcChartPage .sp-back-btn:hover,#rainbowPage .sp-back-btn:hover,#cmbPage .sp-back-btn:hover{color:var(--color-text)}
+#btcChartPage .btc-chart-title,#rainbowPage .btc-chart-title,#cmbPage .btc-chart-title{flex:1 1 auto;min-width:0;font-family:var(--font-ui)!important;font-size:var(--font-size-lg)!important;
+  font-weight:var(--font-weight-semibold)!important;color:var(--color-text)!important;padding-left:var(--space-4);border-left:1px solid var(--color-border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#btcChartPage .btc-chart-mode,#rainbowPage .btc-chart-mode,#cmbPage .btc-chart-mode{background:var(--color-surface-1)!important;border:1px solid var(--color-border)!important;border-radius:var(--radius-pill)!important;padding:3px!important;gap:2px!important}
+#btcChartPage .btc-chart-mode button,#rainbowPage .btc-chart-mode button,#cmbPage .btc-chart-mode button{border-radius:var(--radius-pill)!important;font:var(--font-weight-medium) var(--font-size-xs)/1 var(--font-ui)!important;
+  color:var(--color-text-2)!important;padding:7px 14px!important;background:none!important;transition:background-color 150ms ease,color 150ms ease}
+#btcChartPage .btc-chart-mode button:hover,#rainbowPage .btc-chart-mode button:hover,#cmbPage .btc-chart-mode button:hover{color:var(--color-text)!important;background:var(--color-surface-2)!important}
+#btcChartPage .btc-chart-mode button.active,#rainbowPage .btc-chart-mode button.active,#cmbPage .btc-chart-mode button.active{color:var(--color-on-gold)!important;background:var(--color-gold)!important}
+#btcChartPage .chart-shot-btn,#rainbowPage .chart-shot-btn,#cmbPage .chart-shot-btn{margin:0!important;padding:var(--space-2) var(--space-3)!important;font-size:var(--font-size-xs)!important;min-height:0!important}
+@media (max-width:767px){
+  #btcChartPage .sp-page-head,#rainbowPage .sp-page-head,#cmbPage .sp-page-head{gap:var(--space-2) var(--space-3);padding:var(--space-2) 0 var(--space-3)!important}
+  #btcChartPage .btc-chart-title,#rainbowPage .btc-chart-title,#cmbPage .btc-chart-title{font-size:var(--font-size-base)!important;padding-left:var(--space-3)}
+  #btcChartPage .btc-chart-mode,#rainbowPage .btc-chart-mode,#cmbPage .btc-chart-mode{order:3}
+  #btcChartPage .chart-shot-btn,#rainbowPage .chart-shot-btn,#cmbPage .chart-shot-btn{order:4;margin-left:auto!important}
+  #btcChartPage .sp-page-head > *:nth-child(3),#rainbowPage .sp-page-head > *:nth-child(3),#cmbPage .sp-page-head > *:nth-child(3){margin-left:0}
+}
+
