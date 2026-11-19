@@ -299,9 +299,14 @@
 
   // ---- page ----
   const $ = id => document.getElementById(id);
-  const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US',
-    { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
-  const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  // Translated copies (/es/, /fr/, /de/) use the page's number format, symbol after; English is unchanged.
+  const QLOC = ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[(window.GMT_UI || {}).lang];
+  const money = (n, d) => {
+    const v = Math.abs(n).toLocaleString(QLOC || 'en-US', { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
+    return (n < 0 ? '-' : '') + (QLOC ? v + '\u00a0$' : '$' + v);
+  };
+  const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString(QLOC || 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const pc = (n, d = 0) => num(n, d) + (QLOC ? '\u00a0%' : '%');
   const APR = C.rates.stakingAprPct;   // data/config.json
   // When the tier tables above were last read off the live GoMining app. Mirrors
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
@@ -367,7 +372,7 @@
       + '<div class="comp-top"><h3>Then compound it for a year</h3>'
       + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
       + '<div class="comp-hero">'
-      + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + num(c.cagr, 1) + '%<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
+      + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + pc(c.cagr, 1) + '<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
       + '<div class="s">over the year, on the ' + money(cap, 0)
       + (adds ? ' plus ' + addLabel() + ', each counted from the month it goes in' : '') + '</div></div>'
       + '<div class="cell"><div class="k">Worth after 1 yr</div><div class="v">' + money(L.total, 0) + '</div>'
@@ -389,9 +394,9 @@
       + '<div class="ui-table-wrap comp-tbl-wrap"><table class="ui-table ui-table--stack comp-tbl" aria-label="Your position every three months"><thead><tr><th></th>' + (adds ? '<th class="num">Paid in</th>' : '') + '<th class="num">Hashrate</th><th class="num">Locked GMT</th>'
       + '<th class="num">Net income</th><th class="num">Cash taken</th><th class="num">Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
       + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT $' + S.gmt.toFixed(4)
-      + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + num(APR, 2) + '% staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
+      + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + pc(APR, 2) + ' staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
       + 'Reinvestment tops the fee coverage back to ' + COV_DAYS + ' days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
-      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the USD-to-GMT fee (currently ' + num(USD_GMT_FEE * 100, 0) + '%, may change); weekly amounts are averaged into the month.' : '')
+      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the USD-to-GMT fee (currently ' + pc(USD_GMT_FEE * 100, 0) + ', may change); weekly amounts are averaged into the month.' : '')
       + '</div>'
       + '</div>';
   }
@@ -426,12 +431,12 @@
         <div class="sub">${mode === 'cap'
           ? money(m.netToday) + '/day &middot; ' + money(yr, 0) + '/yr'
           : 'to earn ' + money(mo, 0) + '/mo &middot; ' + money(m.netToday) + '/day'}</div>
-        <div class="note">${num(a.th, 1)} TH at 15 W/TH with ${num(a.ag, 0)} GMT locked &mdash; a ${num(m.totD, 2)}% fee discount and ${num(m.yieldPct, 1)}%/yr on total capital.</div>
+        <div class="note">${num(a.th, 1)} TH at 15 W/TH with ${num(a.ag, 0)} GMT locked &mdash; a ${pc(m.totD, 2)} fee discount and ${pc(m.yieldPct, 1)}/yr on total capital.</div>
       </div>
       <div class="grid">
         <div class="cell gold"><div class="k">Hashrate</div><div class="v">${num(a.th, 1)} TH</div><div class="s">newly minted at 15 W/TH &middot; ${money(thUSD, 0)}</div></div>
-        <div class="cell"><div class="k">Locked GMT</div><div class="v">${num(a.ag, 0)}</div><div class="s">${money(lockUSD, 0)} &middot; holds the fee discount and earns ${num(APR, 2)}% APR</div></div>
-        <div class="cell green"><div class="k">Total discount</div><div class="v">${num(m.totD, 2)}%</div><div class="s">${num(m.tok, 0)}% coverage + ${num(m.nonTok, 2)}% tier, streak &amp; solo bonus</div></div>
+        <div class="cell"><div class="k">Locked GMT</div><div class="v">${num(a.ag, 0)}</div><div class="s">${money(lockUSD, 0)} &middot; holds the fee discount and earns ${pc(APR, 2)} APR</div></div>
+        <div class="cell green"><div class="k">Total discount</div><div class="v">${pc(m.totD, 2)}</div><div class="s">${pc(m.tok, 0)} coverage + ${pc(m.nonTok, 2)} tier, streak &amp; solo bonus</div></div>
         <div class="cell"><div class="k">VIP tier</div><div class="v" style="font-size:1.1rem">${m.vip.n}</div><div class="s">qualifies on hashrate or locked GMT, whichever is higher</div></div>
       </div>
       <div class="split">
@@ -439,16 +444,16 @@
         <div class="bar"><i class="th" style="width:${pct(thUSD)}%"></i><i class="gm" style="width:${pct(lockUSD)}%"></i></div>
         <div class="legs">
           <div class="leg"><div class="lk"><span class="sw" style="background:var(--gold)"></span>Buy hashrate</div>
-            <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${num(pct(thUSD), 0)}%</div>
+            <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${pc(pct(thUSD), 0)}</div>
             <div class="ls">${num(a.th, 1)} TH minted at 15 W/TH</div></div>
           <div class="leg"><div class="lk"><span class="sw" style="background:var(--color-series-4)"></span>Lock GMT</div>
-            <div class="lv" style="color:var(--color-series-4)">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
+            <div class="lv" style="color:var(--color-series-4)">${money(lockUSD, 0)} &middot; ${pc(pct(lockUSD), 0)}</div>
             <div class="ls">${num(a.ag, 0)} GMT &mdash; ${COV_DAYS} days of fee coverage</div></div>
         </div>
       </div>
       <div class="grid" style="margin-top:.8rem">
-        <div class="cell"><div class="k">Mining income</div><div class="v">${money(m.miningToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">after fees and the ${num(m.totD, 2)}% discount</div></div>
-        <div class="cell"><div class="k">Staking income</div><div class="v">${money(m.stakingToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">${num(APR, 2)}% APR on the locked GMT</div></div>
+        <div class="cell"><div class="k">Mining income</div><div class="v">${money(m.miningToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">after fees and the ${pc(m.totD, 2)} discount</div></div>
+        <div class="cell"><div class="k">Staking income</div><div class="v">${money(m.stakingToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">${pc(APR, 2)} APR on the locked GMT</div></div>
         <div class="cell"><div class="k">Payback</div><div class="v">${mo > 0 ? num(a.capUSD / mo, 1) + ' mo' : '&mdash;'}</div><div class="s">at today&rsquo;s rates, income only &mdash; the hashrate and GMT are still owned</div></div>
       </div>
       ${compHTML(a, c, out.clientWidth - 34)}
@@ -469,11 +474,11 @@
     const q = window._quote; if (!q) return;
     const t = `GoMining quote — ${money(q.cap, 0)} invested\n`
       + `• ${num(q.th, 1)} TH at 15 W/TH + ${num(q.gmt, 0)} GMT locked\n`
-      + `• ${num(q.disc, 2)}% fee discount\n`
+      + `• ${pc(q.disc, 2)} fee discount\n`
       + `• ${money(q.mo, 0)}/month net at today's prices\n`
       + (q.add ? `• Adding ${q.add}: ${money(q.paidIn, 0)} paid in over ${q.yrs} year${q.yrs === 1 ? '' : 's'}\n` : '')
       + (q.cagr > 0
-        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo after 1 year — ${num(q.cagr, 1)}% compounded, at today's BTC price and sats/TH/day\n`
+        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo after 1 year — ${pc(q.cagr, 1)} compounded, at today's BTC price and sats/TH/day\n`
         : '')
       + `Modelled at gmt-optimizer.com/quote — sign up with code RINGO5 for +5% bonus TH.`;
     const done = () => { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800); };
@@ -534,11 +539,11 @@
     const bw = x.measureText(big).width; x.restore();
     x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
     x.save(); x.shadowColor = UP; x.shadowBlur = 0; x.fillStyle = UP; x.font = '700 30px ' + SANS;
-    x.fillText('▲ ' + num(q.yieldPct, 1) + '%/yr on capital', R, PY + 148); x.restore();
+    x.fillText('▲ ' + pc(q.yieldPct, 1) + '/yr on capital', R, PY + 148); x.restore();
     // stat chips
     const stats = [
-      ['FEE DISCOUNT', num(q.disc, 2) + '%', UP],
-      ['PER DAY', '$' + q.day.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), '#FFFFFF'],
+      ['FEE DISCOUNT', pc(q.disc, 2) + '', UP],
+      ['PER DAY', money(q.day, 2), '#FFFFFF'],
       ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#FFFFFF'],
       ['VIP TIER', q.vip, GHI],
     ];
@@ -572,7 +577,7 @@
       x.fillStyle = UP; x.font = '700 18px ' + SANS; x.fillText(num(q.mult, 2) + '× in ' + q.yrs + ' yr', CR + 22, T + 62);
       x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO;
       x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
-      x.fillText(num(q.cagr, 1) + '% compounded', CR + 22, T + 110);
+      x.fillText(pc(q.cagr, 1) + ' compounded', CR + 22, T + 110);
       if (q.add) x.fillText(money(q.paidIn, 0) + ' paid in', CR + 22, T + 132);
     }
     // rim
