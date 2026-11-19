@@ -155,7 +155,7 @@
       '<div class="sc-actions">' +
         '<div class="sc-pop sc-lang"><button type="button" class="sc-pop__btn" aria-haspopup="true" aria-expanded="false" aria-label="' + t('Language: ') + LANGS.filter(function (l) { return l[0] === LANG; })[0][1] + '">' + LANG.toUpperCase() + ' ' + chev + '</button>' +
           '<div class="sc-pop__menu" hidden>' + langMenu() + '</div></div>' +
-        '<a class="sc-icon-btn sc-msg" href="/chat" hidden aria-label="' + t('Messages') + '">' + msgIcon + '<span class="ui-count" hidden></span></a>' +
+        '<a class="sc-icon-btn sc-msg" href="' + L('/chat') + '" hidden aria-label="' + t('Messages') + '">' + msgIcon + '<span class="ui-count" hidden></span></a>' +
         '<div class="sc-acct"></div>' +
         startBtn('ui-btn ui-btn--primary ui-btn--sm sc-cta') +
         '<button type="button" class="sc-icon-btn sc-burger" aria-expanded="false" aria-controls="sc-mobile" aria-label="' + t('Open menu') + '">' + burgerIcon + '</button>' +

@@ -167,7 +167,7 @@ ${JSON.stringify(faqLd,null,2)}
 <link rel="stylesheet" href="/assets/site-chrome.css?v=11">
 <link rel="stylesheet" href="/assets/content.css?v=20">
 <link rel="stylesheet" href="/assets/topbar.css?v=8">
-<script src="/assets/site-chrome.js?v=17" defer></script>
+<script src="/assets/site-chrome.js?v=18" defer></script>
 </head>
 <body>
 <main class="content-wrap">
