@@ -77,7 +77,7 @@
       '<p class="acct-forgot">' + FORGOT + '</p>' +
       (signup ? '<p class="ui-small ui-text-2">' + T('There is no email on the account, so save your password somewhere safe.') + '</p>' +
         '<p class="ui-small ui-text-2">' + T('Already on GoMining? Next you\'ll add your miners to see your live numbers.') + '</p>' +
-        '<p class="ui-small ui-text-2">' + T('No GoMining account yet?') + ' <a href="' + LH('/claim') + '">' + T('New to GoMining? →') + '</a></p>' : '') +
+        '<p class="ui-small ui-text-2">' + T('No GoMining account yet?') + ' <a class="ui-link acct-onramp" href="' + LH('/claim') + '">' + T('New to GoMining? →') + '</a></p>' : '') +
       '<p class="acct-swap">' + (signup ? T('Already have an account?') + ' <a href="' + LH('/login') + location.search + '">' + T('Log in') + '</a>' : T('New here?') + ' <a href="' + LH('/signup') + location.search + '">' + T('Create an account') + '</a>') + '</p>' +
       '</section>';
     var copy = $('#acCopy');
