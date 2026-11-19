@@ -494,3 +494,7 @@ html{font-size:16px!important}                         /* app.css scaled the con
   #btcChartPage .sp-page-head > *:nth-child(3),#rainbowPage .sp-page-head > *:nth-child(3),#cmbPage .sp-page-head > *:nth-child(3){margin-left:0}
 }
 
+/* price / difficulty changes in the status lines: green = good for a miner, red = bad (market-change.js sets the class) */
+.live-chip .cx-chg.is-good,.subbar .live-chip .cx-chg.is-good{color:var(--color-success)!important}
+.live-chip .cx-chg.is-bad,.subbar .live-chip .cx-chg.is-bad{color:var(--color-error)!important}
+

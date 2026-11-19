@@ -1611,7 +1611,7 @@ function drawCombined(){
   // legend + stats
   const last=S[S.length-1];
   const corr=cmbCorrelation(all.slice(-want));
-  const pct=v=>(v>=100?'+':'')+(UI_LOC?fPc(v-100,1):(v-100).toFixed(1)+'%');
+  const pct=v=>`<span style="color:var(${v>=100?'--color-success':'--color-error'})">${(v>=100?'+':'')+(UI_LOC?fPc(v-100,1):(v-100).toFixed(1)+'%')}</span>`;   // green up, red down
   const lg=document.getElementById('cmbLegend');
   const sw=(a,b)=>`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${a};margin-right:2px"></span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${b};margin-right:5px"></span>`;
   const cndl=_cmbStyle==='candle';
@@ -5391,7 +5391,7 @@ function* computeSetupProjectionGen(){
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
   const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${T('&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">{0} &rarr; {1} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).',_bwStart.toFixed(1),_bwEnd.toFixed(1))}</div>`:'';
   const halvingNoteS=gmtNoteS+(applyDiffGrind
-    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${hwS.length?T(hwS.length>1?'&#9143; Mining reward halves at the {0} halvings, plus <strong style="color:var(--text2)">−{1}%</strong> from rising network difficulty over the period (both modeled).':'&#9143; Mining reward halves at the {0} halving, plus <strong style="color:var(--text2)">−{1}%</strong> from rising network difficulty over the period (both modeled).',hwS.join(' &amp; '),diffPenaltyPct):T('&#9143; Plus <strong style="color:var(--text2)">−{0}%</strong> from rising network difficulty over the period (both modeled).',diffPenaltyPct)}</div>`
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${hwS.length?T(hwS.length>1?'&#9143; Mining reward halves at the {0} halvings, plus <strong style="color:var(--color-error)">−{1}%</strong> from rising network difficulty over the period (both modeled).':'&#9143; Mining reward halves at the {0} halving, plus <strong style="color:var(--color-error)">−{1}%</strong> from rising network difficulty over the period (both modeled).',hwS.join(' &amp; '),diffPenaltyPct):T('&#9143; Plus <strong style="color:var(--text2)">−{0}%</strong> from rising network difficulty over the period (both modeled).',diffPenaltyPct)}</div>`
     : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
   h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(226,178,89,.06);border-color:rgba(226,178,89,.2);color:var(--text2)">
