@@ -1529,3 +1529,21 @@ the console's Daily net profit card (the golden-tested calculation); per second 
 price. Checked: 3 themes × 1280×800, 1920×1080, 1080×1920 (9:16 with streaming), 360×780, plus streaming at every size
 in EN and DE: no overlaps, QR caption never overflows, the number never clips, counts up ($0.00108/s on the 5,000 TH
 test farm = $92.2/day), cursor and controls hidden after 3 s. Screenshots `%TEMP%\gmtshots\meter`.
+
+## 32. Calmer console header, live prices everywhere, chart pages (owner, 2026-11-19)
+
+- **Prices:** /quote, the ROI widget (landing estimate, /gomining-roi-calculator, /embed) and the dashboard showed
+  months-old built-in prices whenever one source failed (CoinPaprika currently fails from the site). New
+  `assets/market.js`: every source asked at once (BTC: CoinGecko, mempool, Coinbase, Binance, CoinPaprika; GMT:
+  CoinGecko, CoinPaprika; difficulty: mempool, blockchain.info), first valid answer wins, each value shown the moment it
+  lands; only live values are saved (the console's cache key, shared); a missing value falls back to the newest saved
+  one with its age shown ("Prices from 3 min ago"), retried every 30 s until live; built-in constants only on a first
+  visit with every source down. Offline behaviour of the widgets unchanged (golden 33/33).
+- **Header:** the seven boxed tiles + date line under the tabs became one unboxed status line aligned with the content:
+  BTC · GMT · sats/TH/day (each with its change; the basis is in the tooltip) · updated, and your Liquid/Locked
+  balances (still click-to-edit) on the right. The "Edit farm" tile is gone (it is a tab). Phones: one scrolling row of
+  market figures, balances below. Same on /quote.
+- **Console page:** gold only on Daily net profit; the YouTube card moved below the results.
+- **Chart pages** (Bitcoin / GMT live chart, rainbow, BTC + GMT): the header no longer floats over TradingView's toolbar;
+  back · title on the left, one switcher (Live chart · Rainbow · BTC + GMT, current one highlighted) and the screenshot
+  button on the right; two tidy rows on phones.
