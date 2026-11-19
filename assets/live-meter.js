@@ -148,6 +148,12 @@
   function open(opts) {
     if (running) return;
     opts = opts || {};
+    // settings are read on every open, so a change made in another tab (or on another visit) is always picked up
+    theme = Math.max(0, THEMES.findIndex(function (t) { return t.id === load(K.theme, 'minimal'); }));
+    unit = load(K.unit, 'usd') === 'sats' ? 'sats' : 'usd'; clockOn = load(K.clock, '0') === '1';
+    streaming = load(K.stream, '0') === '1'; vert = load(K.layout, '') === 'vert';
+    qrOn = load(K.qr + '_on', '1') === '1'; joinsOn = load(K.joins, '1') === '1';
+    chan = load(K.chan, ''); tt = load(K.tt, '');
     if (!document.getElementById('lmCss')) { var st = document.createElement('style'); st.id = 'lmCss'; st.textContent = CSS; document.head.appendChild(st); }
     root = document.createElement('div');
     root.id = 'lmRoot';
@@ -293,7 +299,7 @@
       for (var k = 0; k < 2; k++) {
         var base = H * (0.62 + k * 0.1), amp = H * (0.07 - k * 0.02), ph = t * (0.1 + k * 0.04) + k * 1.7;
         var g = ctx.createLinearGradient(0, base - amp * 2, 0, H);
-        g.addColorStop(0, 'rgba(226,178,89,' + (0.10 - k * 0.03) + ')'); g.addColorStop(1, 'rgba(226,178,89,0)');
+        g.addColorStop(0, 'rgba(226,178,89,' + (0.2 - k * 0.07) + ')'); g.addColorStop(1, 'rgba(226,178,89,0.02)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, H);
         for (var x = 0; x <= W + 20; x += 20) ctx.lineTo(x, base + Math.sin(x / W * Math.PI * 2 + ph) * amp + Math.sin(x / W * Math.PI * 5 - ph * 0.7) * amp * 0.25);
         ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
