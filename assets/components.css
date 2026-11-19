@@ -55,14 +55,14 @@ body.ui-scope { margin: 0; }
   font-family: var(--font-ui); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold);
   line-height: 1.25; text-align: center; text-decoration: none; white-space: normal; hyphens: manual;
   border: 1px solid transparent; cursor: pointer; user-select: none;
-  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, filter 150ms ease;
 }
-.ui-btn:active { transform: translateY(1px); }
-.ui-btn[disabled], .ui-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; transform: none; }
+.ui-btn:active { filter: brightness(.96); }
+.ui-btn[disabled], .ui-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; filter: none; }
 .ui-btn--primary { background: var(--color-gold-gradient); color: var(--color-on-gold); }
-.ui-btn--primary:hover { filter: brightness(1.06); }
+.ui-btn--primary:hover { filter: brightness(1.08); }
 .ui-btn--secondary { background: var(--color-surface-2); color: var(--color-text); border-color: var(--color-border-strong); }
-.ui-btn--secondary:hover { border-color: rgb(var(--color-gold-rgb) / .6); }
+.ui-btn--secondary:hover { border-color: rgb(var(--color-gold-rgb) / .6); background: color-mix(in srgb, var(--color-surface-2), white 6%); }
 .ui-btn--ghost { background: transparent; color: var(--color-text-2); }
 .ui-btn--ghost:hover { color: var(--color-text); background: var(--color-surface-1); }
 .ui-btn--danger { background: transparent; color: var(--color-error); border-color: rgb(var(--color-error-rgb) / .5); }
@@ -112,8 +112,8 @@ body.ui-scope { margin: 0; }
   padding: var(--space-5); box-shadow: var(--shadow-card); min-width: 0; }
 .ui-card--raised { background: var(--color-surface-2); }
 .ui-card--accent { border-color: rgb(var(--color-gold-rgb) / .45); }
-.ui-card--link { display: block; color: inherit; text-decoration: none; transition: border-color var(--duration-base), transform var(--duration-base); }
-.ui-card--link:hover { border-color: rgb(var(--color-gold-rgb) / .55); transform: translateY(-2px); }
+.ui-card--link { display: block; color: inherit; text-decoration: none; transition: border-color 150ms ease, background-color 150ms ease; }
+.ui-card--link:hover { border-color: rgb(var(--color-gold-rgb) / .55); background: var(--color-surface-2); }
 .ui-card__title { font-family: var(--font-ui); font-weight: var(--font-weight-semibold); font-size: var(--font-size-lg); margin: 0 0 var(--space-2); line-height: var(--line-height-tight); }
 .ui-card__body { color: var(--color-text-2); font-size: var(--font-size-sm); margin: 0; }
 
@@ -305,4 +305,11 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-ui); }
 .ui-start{display:inline-grid;justify-items:center}
 .ui-start>[data-s]{grid-area:1/1;white-space:nowrap}
 .ui-start>[data-s]:not(.is-on){visibility:hidden}
+
+/* ---------- hover and focus, site-wide (owner rule 2026-11-19) ----------
+   Hover changes colour and background only, in 150 ms: nothing moves, grows or shifts. Borders that show on hover
+   exist at rest (same width, just a different colour). Keyboard focus always gets a visible gold ring, on every page
+   (not only inside .ui-scope), including the console's own buttons and tabs. */
+:where(button, a, [role="button"], [role="tab"], summary, [tabindex]):focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+:where(.btn, .tab-btn, .sc-nav a, .cx-tabs a, .nav-links a, .hero-card, .ui-card--link, .ui-btn) { transition-duration: 150ms; transition-timing-function: ease; }
 

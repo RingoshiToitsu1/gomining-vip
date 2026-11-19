@@ -57,7 +57,7 @@
 .lp-tools button.ui-card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: var(--space-2);
   background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-5);
   box-shadow: var(--shadow-card); transition: border-color var(--duration-base), transform var(--duration-base); }
-.lp-tools button.ui-card:hover { border-color: rgb(var(--color-gold-rgb) / .55); transform: translateY(-2px); }
+.lp-tools button.ui-card:hover { border-color: rgb(var(--color-gold-rgb) / .55); background: var(--color-surface-2); }
 .lp-tools button.ui-card:focus-visible { box-shadow: var(--focus-ring); }
 .lp-more { margin-top: var(--space-5); font-size: var(--font-size-sm); color: var(--color-text-2); }
 
@@ -99,6 +99,10 @@
 /* pinned to the top with fixed offsets: when the hero grows (fonts swapping in, the estimate filling) the graphic
    stretches instead of moving, so it never counts as a layout shift */
 .lp-hero__art { position: absolute; left: 0; right: 0; top: 22%; bottom: 0; width: 100%; height: auto; z-index: 0; pointer-events: none; }
+.lp-v3 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 4px var(--space-3) 4px 4px;
+  border: 1px solid rgb(var(--color-gold-rgb) / .35); border-radius: var(--radius-pill); background: var(--color-surface-1);
+  font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-text-2); }
+.lp-v3__tag { padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--color-gold); color: var(--color-on-gold); font-weight: var(--font-weight-semibold); }
 .lp-art-dots circle { fill: var(--color-gold-300); transform-box: fill-box; transform-origin: center; }
 /* The curve is rebuilt in real pixels by assets/hero-curve.js (no stretching: round dots on the line, full-length
    stroke). Without JavaScript the static, stretched curve shows as is (no dots, no animation). With scripting on,

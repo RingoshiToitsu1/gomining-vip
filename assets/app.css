@@ -228,8 +228,8 @@ input[type=number]{-moz-appearance:textfield}
 .hero-card-action .hero-cta{font-size:1.05rem;font-weight:800;color:var(--orange);line-height:1.15;display:flex;align-items:center;justify-content:center;gap:.4rem}
 .hero-cta-ico{flex:0 0 auto}
 .hero-card-action .hero-cta-btn{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;background:linear-gradient(135deg,var(--purple-soft),var(--cyan));color:var(--color-black);font-weight:800;font-size:.72rem;letter-spacing:.02em;padding:.42rem .95rem;border-radius:20px;box-shadow:none}
-.hero-cta-arrow{transition:transform .25s ease}
-.hero-card-action:hover .hero-cta-arrow{transform:translateX(4px)}
+.hero-cta-arrow{transition:color 150ms ease}
+.hero-card-action:hover .hero-cta-arrow{color:var(--color-gold)}
 /* Vertically center the CTA card's content on non-mobile so it doesn't leave a gap at the bottom (mobile uses the compact row layout). */
 @media(min-width:381px){.hero-card-action{display:flex;flex-direction:column;justify-content:center;align-items:center}}
 .hero-label{font-size:.66rem;color:var(--text3);font-weight:600;margin-bottom:.3rem}
@@ -1149,7 +1149,7 @@ html.show-onboarding #onboarding{display:flex}
 .cshare-apps::-webkit-scrollbar{display:none}
 .cshare-app{flex:0 0 auto;width:74px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.45rem;color:rgb(var(--color-white-rgb) / .82);font-size:.72rem;font-family:var(--sans)}
 .cshare-ic{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .12s}
-.cshare-app:active .cshare-ic{transform:scale(.92)}
+.cshare-app:active .cshare-ic{filter:brightness(.92)}
 .cshare-ic svg{width:26px;height:26px}
 .cshare-rows{border-top:1px solid rgb(var(--color-white-rgb) / .1);padding-top:.5rem;display:flex;flex-direction:column}
 .cshare-hint{color:rgb(var(--color-white-rgb) / .55);font-size:.76rem;line-height:1.45;padding:.5rem .3rem 0;border-top:1px solid rgb(var(--color-white-rgb) / .08);margin-top:.4rem}
@@ -1362,9 +1362,9 @@ body{background:transparent}
 /* nav links -> exact copy of the landing .nav-links */
 .header .nav-links{display:flex;gap:30px;align-items:center}
 .header .nav-links a{color:var(--ink2);text-decoration:none;font-size:.86em;position:relative;transition:color .25s;font-family:var(--mono);}
-.header .nav-links a::after{content:'';position:absolute;left:0;bottom:-6px;height:1.5px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft));transition:width .3s var(--ease);border-radius:2px}
+.header .nav-links a::after{content:'';position:absolute;left:0;bottom:-6px;height:1.5px;width:100%;opacity:0;background:linear-gradient(90deg,var(--gold),var(--gold-soft));transition:opacity 150ms ease;border-radius:2px}
 .header .nav-links a:hover{color:var(--warm)}
-.header .nav-links a:hover::after{width:100%}
+.header .nav-links a:hover::after{opacity:1}
 /* current view highlighted in the header nav */
 .header .nav-links a.nav-active{color:var(--warm)}
 .header .nav-links a.nav-active::after{width:100%}
@@ -1456,9 +1456,8 @@ body{background:transparent}
    PHASE 3e — interactions match the landing (hover lift + glow + press)
    ============================================================ */
 .hero-card,.section{transition:transform .4s var(--ease),box-shadow .4s ease,border-color .3s ease}
-.hero-card:hover{transform:translateY(-3px);border-color:var(--line-hi);
+.hero-card:hover{border-color:var(--line-hi);
   box-shadow:var(--sh),0 0 34px rgb(var(--color-gold-rgb) / .16),inset 0 1px 0 rgb(var(--color-white-rgb) / .07)}
-.hero-card:active,.hero-card-action:active{scale(.995)}
 .section:hover{border-color:var(--line-hi);box-shadow:var(--sh),0 0 26px rgb(var(--color-gold-rgb) / .10)}
 .hero-card-action{cursor:pointer}
 

@@ -62,7 +62,7 @@ try{if(!document.documentElement.classList.contains('show-onboarding')){document
   setTimeout(function(){document.documentElement.classList.remove('gm-booting')},12000);}}catch(e){}</script>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/assets/tokens.css?v=5">
-<link rel="stylesheet" href="/assets/components.css?v=8">
+<link rel="stylesheet" href="/assets/components.css?v=9">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=11">
 <style id="gmBootCss">
 /* ===== console boot screen (assets/boot.js): the site's card, one gold progress bar, real steps only ===== */
@@ -104,10 +104,10 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- General Sans is only used for canvas share-image rendering, so load it non-blocking (single weight the canvas needs) -->
 <noscript></noscript>
-<link rel="stylesheet" href="/assets/app.css?v=90">
+<link rel="stylesheet" href="/assets/app.css?v=91">
 <link rel="stylesheet" href="/assets/odds.css?v=7" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/odds.css?v=7"></noscript>
 <link rel="stylesheet" href="/assets/futures.css?v=11" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/futures.css?v=11"></noscript>
-<link rel="stylesheet" href="/assets/design.css?v=19">
+<link rel="stylesheet" href="/assets/design.css?v=20">
 <link rel="stylesheet" href="/assets/console.css?v=15">
 <link rel="stylesheet" href="/assets/accounts.css?v=30" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/accounts.css?v=30"></noscript>
 <script src="/assets/site-chrome.js?v=16" defer></script>
@@ -1165,7 +1165,7 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
    passed (they all check document.readyState). site-chrome.js waits for account.js because of __gmtAccountComing.
    Accounts: SDK -> config -> account layer (account.js stays dormant until config holds real values). */
 window.__gmtAccountComing=true;
-(function(){var L=['/assets/chart-shot.js?v=4','/assets/pricing.js?v=5','/assets/charts.js?v=1','/assets/app.js?v=182','/assets/odds.js?v=12','/assets/futures.js?v=17','/assets/fleet.js?v=22','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/assets/supabase-config.js?v=4','/assets/account.js?v=30','/assets/chat.js?v=21','/assets/boot.js?v=6','/assets/loaders.js?v=10','/assets/market-change.js?v=4','/assets/visualizer.js?v=10','/assets/console-page.js?v=1'];
+(function(){var L=['/assets/chart-shot.js?v=4','/assets/pricing.js?v=5','/assets/charts.js?v=1','/assets/app.js?v=182','/assets/odds.js?v=12','/assets/futures.js?v=17','/assets/fleet.js?v=22','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/assets/supabase-config.js?v=4','/assets/account.js?v=30','/assets/chat.js?v=21','/assets/boot.js?v=6','/assets/loaders.js?v=10','/assets/market-change.js?v=4','/assets/visualizer.js?v=10','/assets/console-page.js?v=2'];
   var done=false;function go(){if(done)return;done=true;L.forEach(function(u){var s=document.createElement('script');s.src=u;s.async=false;document.body.appendChild(s);});}
   // after the first frame; at once in a background tab (no frames there); a timer as a backstop
   if(document.hidden||!window.requestAnimationFrame)go();else{requestAnimationFrame(function(){setTimeout(go,0);});setTimeout(go,500);}})();</script>

@@ -117,7 +117,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-item .gm-d{display:block;font-size:12px;color:var(--color-text-2);margin-top:1px}
 .gm-item .gm-tx{flex:1 1 auto;min-width:0}
 .gm-item .gm-arr{flex:0 0 auto;color:var(--color-text-3);transition:transform .2s,color .2s}
-.gm-item:hover .gm-arr{color:var(--color-gold);transform:translateX(2px)}
+.gm-item:hover .gm-arr{color:var(--color-gold)}
 .gm-compact .gm-item{padding:7px 10px}
 .gm-compact .gm-item .gm-t{font-size:14.5px;font-weight:400;color:var(--color-text-2)}
 .gm-item.gm-on{background:rgb(var(--color-gold-rgb) / .1);color:var(--color-text)}
@@ -144,7 +144,7 @@ html.gm-lock,html.gm-lock body{overflow:hidden!important}
 .gm-back:hover{background:rgb(var(--color-gold-rgb) / .16);border-color:var(--color-gold);color:var(--color-text)}
 .gm-back:focus-visible{outline:2px solid var(--color-gold);outline-offset:2px}
 .gm-back[hidden]{display:none}
-.gm-back svg{transition:transform .2s}.gm-back:hover svg{transform:translateX(-2px)}
+.gm-back svg{transition:transform .2s}.gm-back:hover svg{color:var(--color-gold)}
 @media(max-width:520px){.gm-back{height:36px;padding:0 10px 0 8px;margin-left:6px;font-size:12px}}
 @media(prefers-reduced-motion:reduce){.gm-drawer,.gm-scrim,.gm-burger i,.gm-item,.gm-arr{transition:none!important}}
 `;

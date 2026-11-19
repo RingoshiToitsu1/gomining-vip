@@ -61,24 +61,7 @@ function consoleView(tab){var b=document.querySelector('[data-tab="'+tab+'"]');i
   })();
 })();
 ;
-/* Magnetic hover on every clickable button — same pull/lift math as the landing
-   page's data-magnetic. Delegated so dynamically-rendered buttons are covered too. */
-(function(){
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  var SEL='button, a.nav-cta, a.btn, a.lp-cta, a.ri-btn';
-  var cur=null;
-  function clear(){ if(cur){cur.style.transform='';cur=null;} }
-  document.addEventListener('pointermove',function(e){
-    var b=(e.target&&e.target.closest)?e.target.closest(SEL):null;
-    if(b!==cur)clear();
-    if(!b)return;
-    cur=b;
-    var r=b.getBoundingClientRect();
-    b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';
-  },{passive:true});
-  document.addEventListener('pointerleave',clear,{passive:true});
-  window.addEventListener('blur',clear);
-})();
+/* (the magnetic hover that pulled buttons toward the cursor was removed 2026-11-19: hover never moves anything) */
 ;
 /* Footer donation copy-to-clipboard (delegated — RINGO5 + wallet addresses). */
 document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
