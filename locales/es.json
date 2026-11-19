@@ -1263,7 +1263,9 @@
   "&#9143; Mining reward halves at the {0} halving, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La recompensa de minería se reduce a la mitad en el halving de {0}, más un <strong style=\"color:var(--color-error)\">−{1} %</strong> por el aumento de la dificultad de la red durante el periodo (ambos modelados).",
   "&#9143; Mining reward halves at the {0} halvings, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La recompensa de minería se reduce a la mitad en los halvings de {0}, más un <strong style=\"color:var(--color-error)\">−{1} %</strong> por el aumento de la dificultad de la red durante el periodo (ambos modelados).",
   "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Más un <strong style=\"color:var(--color-error)\">−{0} %</strong> por el aumento de la dificultad de la red durante el periodo (modelado).",
-  "Back": "Volver"
+  "Back": "Volver",
+  "VIP {0} · {1} TH · {2}": "VIP {0} · {1} TH · {2}",
+  "/yr": "/año"
  },
  "dom": {
   "\"Still cheap\" band": "franja «Todavía barato»",
@@ -1791,6 +1793,15 @@
   "{0}/day · {1}/yr": "{0}/día · {1}/año",
   "{0}× the {1} paid in · {2} TH and {3} GMT": "{0}× los {1} aportados · {2} TH y {3} GMT",
   "{0}× the {1} paid in · {2} TH and {3} GMT, plus {4} already taken": "{0}× los {1} aportados · {2} TH y {3} GMT, más {4} ya retirados",
-  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH y {2} GMT"
+  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH y {2} GMT",
+  "My GoMining farm": "Mi granja de GoMining",
+  "Avg efficiency": "Eficiencia media",
+  "GMT locked": "GMT bloqueado",
+  "GMT value": "Valor del GMT",
+  "Hashrate": "Hashrate",
+  "Bitcoin": "Bitcoin",
+  "Independent GoMining calculator — live network data, every fee counted.": "Calculadora independiente de GoMining — datos de red en directo, todas las comisiones incluidas.",
+  "Estimates at today’s rates · not financial advice": "Estimaciones a las tasas de hoy · no es asesoramiento financiero",
+  "Code RINGO5": "Código RINGO5"
  }
 }

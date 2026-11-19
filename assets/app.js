@@ -2132,9 +2132,11 @@ async function createFarmShot(){
   try{
     if(!d)throw new Error('no data');
     const [logoOpt,token,coin]=await Promise.all([
-      _csImg('/gmt-optimizer-logo.svg?v=2'),_csImg('/gmt36.png'),_csImg('/btc36.png')
+      _csImg('/assets/brand/GMT-Optimizer_white-text_transparent.png'),_csImg('/gmt36.png'),_csImg('/btc36.png'),
+      // the card uses the site's fonts: make sure they are loaded before drawing (canvas won't wait)
+      document.fonts?Promise.all(['600 24px Poppins','500 16px Poppins','600 40px Inter','400 15px Inter'].map(f=>document.fonts.load(f).catch(()=>{}))):null
     ]);
-    _chartShotCanvas=buildFarmShotCanvas(d,{logoOpt,token,coin});
+    _chartShotCanvas=buildFarmShotCanvas(d,{wordmark:logoOpt,token,coin});
     img.src=_chartShotCanvas.toDataURL('image/png');
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
     _shotReady();
@@ -2143,108 +2145,80 @@ async function createFarmShot(){
   }
 }
 function buildFarmShotCanvas(d,imgs){
+  // v3 relaunch card (2026-11-19): the site's own look — flat near-black, the wordmark, Poppins headings, Inter
+  // tabular figures, gold only on the headline number, thin hairlines. No glow, no grid, no gradients.
   const SC=2,W=1200,H=675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const MONO='"Inter",monospace',SANS='"Inter",system-ui,sans-serif';
-  const GOLD=CC('gold'),GSOFT=CC('gold-300'),GLT=CC('gold-300'),GPALE=CC('gold-300'),RED=CC('error');
-  // background — the site's gold-on-black
-  const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,CC('bg'));bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,CC('bg'));
-  x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
-  orb(150,60,380,0.17);orb(1070,150,320,0.11);orb(600,780,420,0.07);
-  x.strokeStyle='rgba(226,178,89,0.04)';x.lineWidth=0.5;
-  for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
-  for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
-  const pad=44;
-  // ---- header: brand left, VIP tier right ----
-  let bx=pad;
-  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
-  x.textAlign='left';x.fillStyle=CC('text');x.font='800 26px '+SANS;
-  x.fillText('GMT-Optimizer',bx,48);
-  x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px '+MONO;
-  x.fillText('gmt-optimizer.com',pad,74);
-  x.textAlign='right';x.fillStyle=CC('text');x.font='800 26px '+SANS;
-  x.fillText(TC('My GoMining Farm'),W-pad,46);
-  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px '+MONO;
-  x.fillText(T('VIP {0}   ·   {1} TH   ·   live snapshot',d.vip||'—',fN(d.th,1)),W-pad,70);
-  const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.55)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,100);x.lineTo(W-pad,100);x.stroke();
-  // ---- the four headline stats ----
+  const UI='"Poppins","Poppins Fallback",system-ui,sans-serif',NUM='"Inter","Inter Fallback",system-ui,sans-serif';
+  const BG=CC('bg')||'#0B0B0D',SURF='#121216',LINE='rgba(255,255,255,0.08)',TXT=CC('text')||'#F4F1EA',TXT2='#A1A1AA',TXT3='#71717A';
+  const GOLD=CC('gold')||'#E2B259',RED=CC('error')||'#EF4444';
+  x.fillStyle=BG;x.fillRect(0,0,W,H);
+  const pad=56;
+  const rule=(y,a)=>{x.strokeStyle=a||LINE;x.lineWidth=1;x.beginPath();x.moveTo(pad,y+.5);x.lineTo(W-pad,y+.5);x.stroke();};
+  // ---- header: wordmark left; title + context right ----
+  if(imgs.wordmark){const h=34,w=imgs.wordmark.naturalWidth?h*imgs.wordmark.naturalWidth/imgs.wordmark.naturalHeight:h*3.83;x.drawImage(imgs.wordmark,pad,44,w,h);}
+  else{x.fillStyle=TXT;x.font='600 26px '+UI;x.textAlign='left';x.fillText('GMT-Optimizer',pad,70);}
+  x.textAlign='right';x.fillStyle=TXT;x.font='600 24px '+UI;
+  x.fillText(TC('My GoMining farm'),W-pad,62);
+  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{day:'numeric',month:'short',year:'numeric'});
+  x.fillStyle=TXT2;x.font='500 15px '+NUM;
+  x.fillText(T('VIP {0} · {1} TH · {2}',d.vip||'—',fN(d.th,1),now),W-pad,88);
+  // a single gold hairline under the header — the one brand accent besides the headline number
+  x.fillStyle=GOLD;x.fillRect(pad,118,64,2);rule(119);
+  // ---- headline: daily net profit, large, the only gold figure ----
   const neg=d.dailyUSD<0;
-  const cards=[
-    {id:'DAILY.NET',  label:TC('Daily net profit'),      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:TC(d.dailySub)},
-    {id:'MONTH.YIELD',label:TC('Monthly earnings'),      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:TC(fU(d.yearlyUSD,0)+' / yr')},
-    {id:'COVERAGE',   label:TC('Total discount'),        val:fP(d.disc),              accent:GOLD,         sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
-    {id:'VELOCITY',   label:TC('Effective compounded ROI'), val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:TC(d.velSub)}
+  x.textAlign='left';x.fillStyle=TXT2;x.font='500 16px '+UI;
+  x.fillText(TC('Daily net profit'),pad,168);
+  const hv=fU(d.dailyUSD),hsz=_fsFit(x,hv,520,'600',76,NUM);
+  x.fillStyle=neg?RED:GOLD;x.font='600 '+hsz+'px '+NUM;x.fillText(hv,pad,244);
+  x.fillStyle=TXT2;x.font='400 15px '+NUM;
+  _fsWrap(x,TC(d.dailySub||''),520,2).forEach((ln,k)=>x.fillText(ln,pad,276+k*21));
+  // ---- three supporting figures on the right, plain text ----
+  const side=[
+    {label:TC('Monthly earnings'),val:fU(d.monthlyUSD,0),sub:TC(fU(d.yearlyUSD,0)+' / yr')},
+    {label:TC('Total discount'),val:fP(d.disc),sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
+    {label:TC('Effective compounded ROI'),val:fPc(d.velocity,0)+T('/yr'),sub:TC(d.velSub||'')}
   ];
-  const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
-  cards.forEach((cd,i)=>{
-    const cx=pad+i*(cardW+gap);
-    const cbg=x.createLinearGradient(cx,cardY,cx,cardY+cardH);
-    cbg.addColorStop(0,'rgba(226,178,89,0.07)');cbg.addColorStop(1,'rgba(226,178,89,0.015)');
-    x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.fill();
-    x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
-    // accent bar along the top edge, like the hero cards on the site
-    x.shadowColor=cd.accent;x.shadowBlur=0;x.strokeStyle=cd.accent;x.lineWidth=3;
-    x.beginPath();x.moveTo(cx+16,cardY);x.lineTo(cx+cardW-16,cardY);x.stroke();x.shadowBlur=0;
-    const ix=cx+22,iw=cardW-44;
-    x.textAlign='left';
-    x.fillStyle='rgba(255,255,255,0.32)';x.font='700 12px '+MONO;
-    x.fillText(cd.id,ix,cardY+38);
-    x.fillStyle='rgba(255,255,255,0.62)';
-    const lsz=_fsFit(x,cd.label,iw,'700',17,SANS);x.font='700 '+lsz+'px '+SANS;
-    x.fillText(cd.label,ix,cardY+66);
-    const vsz=_fsFit(x,cd.val,iw,'bold',40,MONO);
-    x.font='bold '+vsz+'px '+MONO;x.fillStyle=cd.accent;
-    x.shadowColor='rgba(226,178,89,0.45)';x.shadowBlur=0;
-    x.fillText(cd.val,ix,cardY+126);x.shadowBlur=0;
-    x.fillStyle='rgba(255,255,255,0.5)';x.font='13px '+MONO;
-    _fsWrap(x,cd.sub,iw,4).forEach((ln,k)=>x.fillText(ln,ix,cardY+164+k*20));
+  const sx=640,sw=W-pad-sx,rowH=74;
+  side.forEach((r,k)=>{
+    const y=146+k*rowH;
+    if(k)x.fillStyle=LINE,x.fillRect(sx,y-12,sw,1);
+    x.textAlign='left';x.fillStyle=TXT2;x.font='500 14px '+UI;x.fillText(r.label,sx,y+10);
+    x.textAlign='right';x.fillStyle=TXT;const vs=_fsFit(x,r.val,230,'600',28,NUM);x.font='600 '+vs+'px '+NUM;x.fillText(r.val,W-pad,y+20);
+    x.textAlign='left';x.fillStyle=TXT3;x.font='400 13px '+NUM;
+    const sub=_fsWrap(x,r.sub,sw-250,1)[0]||'';x.fillText(sub,sx,y+32);
   });
-  // ---- supporting pills ----
-  const pills=[
-    {label:TC('HASHRATE'),   val:fN(d.th,1)+' TH'},
-    // m.bwth — the FLEET-WIDE weighted average, which is what fees are actually charged on, not
-    // the Efficiency field on My Setup (that one rates the main farm only). A greedy machine at a
-    // different rating pulls the two apart, so the label has to say which one this is.
-    {label:TC('AVG EFFICIENCY'), val:fN(d.wth,1)+' W/TH'},
-    {label:TC('GMT LOCKED'), val:fN(d.gmtLocked,0)},
-    {label:TC('GMT VALUE'),  val:fU(d.gmtValueUSD,0)},
-    {label:TC('VIP TIER'),   val:d.vip||'—'},
-    {label:TC('BTC'),        val:fmtBTCPrice(d.btc)}
+  // ---- key figures: one row, label over value, hairline dividers ----
+  const ky=392,kh=96;
+  x.fillStyle=SURF;x.beginPath();x.roundRect(pad,ky,W-pad*2,kh,14);x.fill();
+  x.strokeStyle=LINE;x.lineWidth=1;x.beginPath();x.roundRect(pad+.5,ky+.5,W-pad*2-1,kh-1,14);x.stroke();
+  const keys=[
+    {label:TC('Hashrate'),val:fN(d.th,1)+' TH'},
+    {label:TC('Avg efficiency'),val:fN(d.wth,1)+' W/TH'},
+    {label:TC('GMT locked'),val:fN(d.gmtLocked,0)},
+    {label:TC('GMT value'),val:fU(d.gmtValueUSD,0)},
+    {label:TC('VIP tier'),val:d.vip||'—'},
+    {label:TC('Bitcoin'),val:fmtBTCPrice(d.btc)}
   ];
-  const pillY=cardY+cardH+26,pillH=68,pillPad=18,pillGap=12;
-  const pw=pills.map(p=>{x.font='bold 14px '+MONO;const lw=x.measureText(p.label).width;x.font='bold 22px '+MONO;const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
-  const totalW=pw.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
-  let px=(W-totalW)/2;
-  pills.forEach((p,i)=>{const w=pw[i];
-    x.fillStyle='rgba(226,178,89,0.06)';x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.fill();
-    x.strokeStyle='rgba(226,178,89,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.stroke();
-    x.textAlign='center';
-    x.fillStyle='rgba(255,255,255,0.55)';x.font='bold 14px '+MONO;x.fillText(p.label,px+w/2,pillY+26);
-    x.fillStyle=GSOFT;x.font='bold 22px '+MONO;x.fillText(p.val,px+w/2,pillY+55);
-    px+=w+pillGap;
+  const cw=(W-pad*2)/keys.length;
+  keys.forEach((k,n)=>{
+    const cx=pad+n*cw;
+    if(n){x.fillStyle=LINE;x.fillRect(cx,ky+20,1,kh-40);}
+    x.textAlign='left';x.fillStyle=TXT3;x.font='500 13px '+UI;x.fillText(k.label,cx+24,ky+38);
+    x.fillStyle=TXT;const vs=_fsFit(x,k.val,cw-44,'600',22,NUM);x.font='600 '+vs+'px '+NUM;x.fillText(k.val,cx+24,ky+70);
   });
   // ---- strapline ----
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.6)';x.font='700 18px '+SANS;
-  x.fillText(TC('Free GoMining ROI, discount & compounding optimizer'),W/2,pillY+pillH+46);
+  x.textAlign='left';x.fillStyle=TXT2;x.font='500 17px '+UI;
+  x.fillText(TC('Independent GoMining calculator — live network data, every fee counted.'),pad,546);
   // ---- footer ----
-  const footY=H-34;
-  const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(226,178,89,0.4)');fg.addColorStop(1,'transparent');
-  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-24);x.lineTo(W-pad,footY-24);x.stroke();
-  let fx=pad;
-  if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-8,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-19,22,22);x.restore();fx+=30;}
-  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='700 19px '+SANS;
-  x.fillText('gmt-optimizer.com',fx,footY-1);
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
-  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(T('{0}   ·   not financial advice',now),W/2,footY-1);
-  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px '+MONO;
-  x.fillText(TC('use code RINGO5'),W-pad,footY-1);
+  rule(H-78);
+  const fy=H-42;
+  x.textAlign='left';x.fillStyle=TXT;x.font='600 17px '+UI;x.fillText('gmt-optimizer.com',pad,fy);
+  x.textAlign='center';x.fillStyle=TXT3;x.font='400 13px '+NUM;
+  x.fillText(TC('Estimates at today’s rates · not financial advice'),W/2,fy);
+  x.textAlign='right';x.fillStyle=GOLD;x.font='600 16px '+UI;
+  x.fillText(TC('Code RINGO5'),W-pad,fy);
   x.textAlign='left';
   return c;
 }

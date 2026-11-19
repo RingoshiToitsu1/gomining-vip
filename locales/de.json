@@ -1263,7 +1263,9 @@
   "&#9143; Mining reward halves at the {0} halving, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Die Mining-Belohnung halbiert sich beim Halving {0}, dazu <strong style=\"color:var(--color-error)\">−{1} %</strong> durch steigende Netzwerk-Difficulty im Zeitraum (beides modelliert).",
   "&#9143; Mining reward halves at the {0} halvings, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Die Mining-Belohnung halbiert sich bei den Halvings {0}, dazu <strong style=\"color:var(--color-error)\">−{1} %</strong> durch steigende Netzwerk-Difficulty im Zeitraum (beides modelliert).",
   "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Dazu <strong style=\"color:var(--color-error)\">−{0} %</strong> durch steigende Netzwerk-Difficulty im Zeitraum (modelliert).",
-  "Back": "Zurück"
+  "Back": "Zurück",
+  "VIP {0} · {1} TH · {2}": "VIP {0} · {1} TH · {2}",
+  "/yr": "/Jahr"
  },
  "dom": {
   "\"Still cheap\" band": "„Noch günstig“-Band",
@@ -1791,6 +1793,15 @@
   "{0}/day · {1}/yr": "{0}/Tag · {1}/Jahr",
   "{0}× the {1} paid in · {2} TH and {3} GMT": "{0}× die eingezahlten {1} · {2} TH und {3} GMT",
   "{0}× the {1} paid in · {2} TH and {3} GMT, plus {4} already taken": "{0}× die eingezahlten {1} · {2} TH und {3} GMT, plus {4} bereits entnommen",
-  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH und {2} GMT"
+  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH und {2} GMT",
+  "My GoMining farm": "Meine GoMining-Farm",
+  "Avg efficiency": "Ø Effizienz",
+  "GMT locked": "Gesperrtes GMT",
+  "GMT value": "GMT-Wert",
+  "Hashrate": "Hashrate",
+  "Bitcoin": "Bitcoin",
+  "Independent GoMining calculator — live network data, every fee counted.": "Unabhängiger GoMining-Rechner — Live-Netzwerkdaten, alle Gebühren eingerechnet.",
+  "Estimates at today’s rates · not financial advice": "Schätzungen zu heutigen Kursen · keine Finanzberatung",
+  "Code RINGO5": "Code RINGO5"
  }
 }

@@ -1263,7 +1263,9 @@
   "&#9143; Mining reward halves at the {0} halving, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La récompense de minage est divisée par deux au halving de {0}, plus <strong style=\"color:var(--color-error)\">−{1} %</strong> dus à la hausse de la difficulté du réseau sur la période (les deux sont modélisés).",
   "&#9143; Mining reward halves at the {0} halvings, plus <strong style=\"color:var(--color-error)\">−{1}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; La récompense de minage est divisée par deux aux halvings de {0}, plus <strong style=\"color:var(--color-error)\">−{1} %</strong> dus à la hausse de la difficulté du réseau sur la période (les deux sont modélisés).",
   "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0}%</strong> from rising network difficulty over the period (both modeled).": "&#9143; Plus <strong style=\"color:var(--color-error)\">−{0} %</strong> dus à la hausse de la difficulté du réseau sur la période (modélisé).",
-  "Back": "Retour"
+  "Back": "Retour",
+  "VIP {0} · {1} TH · {2}": "VIP {0} · {1} TH · {2}",
+  "/yr": "/an"
  },
  "dom": {
   "\"Still cheap\" band": "bande « Encore bon marché »",
@@ -1791,6 +1793,15 @@
   "{0}/day · {1}/yr": "{0}/jour · {1}/an",
   "{0}× the {1} paid in · {2} TH and {3} GMT": "{0}× les {1} versés · {2} TH et {3} GMT",
   "{0}× the {1} paid in · {2} TH and {3} GMT, plus {4} already taken": "{0}× les {1} versés · {2} TH et {3} GMT, plus {4} déjà retirés",
-  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH et {2} GMT"
+  "{0}× · {1} TH and {2} GMT": "{0}× · {1} TH et {2} GMT",
+  "My GoMining farm": "Ma ferme GoMining",
+  "Avg efficiency": "Efficacité moyenne",
+  "GMT locked": "GMT bloqué",
+  "GMT value": "Valeur du GMT",
+  "Hashrate": "Hashrate",
+  "Bitcoin": "Bitcoin",
+  "Independent GoMining calculator — live network data, every fee counted.": "Calculateur GoMining indépendant — données réseau en direct, tous les frais comptés.",
+  "Estimates at today’s rates · not financial advice": "Estimations aux taux du jour · pas un conseil financier",
+  "Code RINGO5": "Code RINGO5"
  }
 }
