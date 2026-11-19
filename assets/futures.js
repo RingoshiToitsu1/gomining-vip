@@ -167,7 +167,7 @@
     // so the paths keep moving while it works and the loader closes as soon as both are done.
     const finish=()=>{if(closed||ran!==id)return;closed=true;
       const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
-      bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},220);};
+      bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),250);},120);};
     addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;projDone=true;if(phase===3)finish();});
     setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),300);}},20000);   // never strand it
     setTimeout(runSetupProjection,0);

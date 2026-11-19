@@ -74,7 +74,10 @@ const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver'
 // 15 W/TH is the only machine GoMining mints; tiers are per-miner-size $/TH with any sale applied,
 // stored PRE-avatar-discount (avatarDiscMult() applies the 5% NFT discount separately).
 const TH_TIERS=GMT_PRICING.TH_TIERS_15W;
-function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?1-CONFIG.fees.nftHolderDiscount:1;}
+// _admSlice: set only while a projection time slice runs (runSetupProjection). Nothing can change the checkbox in
+// the middle of a slice, so reading it once per slice gives the same value as reading it on every price lookup.
+let _admSlice=null;
+function avatarDiscMult(){if(_admSlice!==null)return _admSlice;return $('inAvatarDisc')&&$('inAvatarDisc').checked?1-CONFIG.fees.nftHolderDiscount:1;}
 function estimateCPT(th){
   const disc=avatarDiscMult();
   if(th<=0)return TH_TIERS[0].cpt*disc;
@@ -4932,7 +4935,7 @@ function runSetupProjection(){
     // page never waits on a result that isn't coming. _spEnd stays null unless the run finished.
     window._spEnd=null;
     // The projection walks every simulated day (3,650 for 10 years). It runs as a generator that pauses after each
-    // day and is driven in ~12 ms slices, so the page keeps painting and responding while it works. Same code, same
+    // day and is driven in ~20 ms slices, so the page keeps painting and responding while it works. Same code, same
     // order, same numbers: only the pauses are new. A newer run abandons this one mid-way (its result is never shown).
     const gen=computeSetupProjectionGen();
     const fin=()=>{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}};
@@ -4940,10 +4943,12 @@ function runSetupProjection(){
       if(seq!==_spRunSeq)return;
       const t0=performance.now();
       try{
-        while(performance.now()-t0<12){
-          if(gen.next().done){try{animateSetupResults();}finally{fin();}return;}
+        _admSlice=null;_admSlice=avatarDiscMult();
+        while(performance.now()-t0<20){
+          if(gen.next().done){_admSlice=null;try{animateSetupResults();}finally{fin();}return;}
         }
       }catch(e){fin();throw e;}
+      finally{_admSlice=null;}
       _spYield(slice);
     };
     slice();
