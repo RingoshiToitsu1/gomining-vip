@@ -690,20 +690,35 @@
     // Draw immediately on the fallback prices, then redraw when the live ones land. Waiting for
     // the fetch meant up to eight seconds of a blank page — which reads as "it did nothing",
     // especially to someone who just pressed Enter.
-    S.btc = FB.btc; S.gmt = FB.gmt; S.diff = FB.diff;
-    S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
-    render();
-    loadMarket().then(() => {
+    const strip = () => {
       const d = $('qDot'), l = $('qLive');
       if (d) d.className = 'dot' + (S.live ? '' : ' off');
       // the console template's live strip (quote/index.html): label over value tiles
-      if (l) l.textContent = S.live ? 'Live' : 'Cached';
+      if (l) l.textContent = S.label || (S.live ? 'Live' : 'Cached');
       const b = $('qBtc'), g = $('qGmt'), st2 = $('qSats');
       if (b) b.textContent = money(S.btc, 0);
       if (g) g.textContent = '$' + S.gmt.toFixed(4);
       if (st2) st2.textContent = num(Math.round(S.satsPerTHDay));
-      render();
-    }).catch(() => { render(); });
+    };
+    const M = window.GMTMarket;
+    if (M) {
+      // shared loader (assets/market.js): newest saved prices at once, live ones the moment they land, retried
+      // until every value is live; the strip says "Live" or how old the shown prices are
+      const T = (window.GMT_UI && GMT_UI.t) || ((x, a) => String(x).replace('{0}', a));
+      const apply = m => {
+        S.btc = m.btc; S.gmt = m.gmt; S.diff = m.diff; S.live = m.allLive; S.label = M.label(T);
+        S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
+        strip(); render();
+      };
+      apply(M.state);
+      M.onUpdate(apply);
+      setInterval(() => { if (!M.state.allLive) { S.label = M.label(T); strip(); } }, 60000);   // keep the age current
+      return;
+    }
+    S.btc = FB.btc; S.gmt = FB.gmt; S.diff = FB.diff;
+    S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
+    render();
+    loadMarket().then(() => { strip(); render(); }).catch(() => { render(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 });

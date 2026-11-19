@@ -1192,7 +1192,11 @@
   "{0} joined": "{0} ist beigetreten",
   "sent {0}": "hat {0} gesendet",
   "followed": "folgt dir",
-  "TikTok helper not running. Start it on this PC (npm start in tiktok-chat-bridge).": "Das TikTok-Hilfsprogramm läuft nicht. Starte es auf diesem PC (npm start in tiktok-chat-bridge)."
+  "TikTok helper not running. Start it on this PC (npm start in tiktok-chat-bridge).": "Das TikTok-Hilfsprogramm läuft nicht. Starte es auf diesem PC (npm start in tiktok-chat-bridge).",
+  "Live": "Live",
+  "Offline estimate": "Offline-Schätzung",
+  "Prices from {0} min ago": "Preise von vor {0} Min.",
+  "Prices from {0} h ago": "Preise von vor {0} Std."
  },
  "dom": {
   "\"Still cheap\" band": "„Noch günstig“-Band",

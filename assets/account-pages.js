@@ -248,6 +248,8 @@
     return fetch(url, { signal: ctrl.signal }).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error(r.status); return r.json(); });
   }
   function market() {
+    // shared loader (assets/market.js) when the page has it: fastest of many sources, newest saved prices as fallback
+    if (window.GMTMarket) return window.GMTMarket.get().then(function (m) { return { btc: m.btc, gmt: m.gmt, diff: m.diff, live: m.allLive }; });
     var first = function (list) { return list.reduce(function (pr, fn) { return pr.then(function (v) { return v > 0 ? v : fn().catch(function () { return 0; }); }); }, Promise.resolve(0)); };
     return Promise.all([
       first([function () { return fetchJSON('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(function (r) { return +r.quotes.USD.price; }); },

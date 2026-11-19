@@ -351,6 +351,19 @@
     const a = $('re-apr');
     if (a && !a.hasAttribute('data-preset')) a.value = String(STAKE_APR0);
     if (g && g.hasAttribute('data-preset')) gmtTouched = true;
+    const M = window.GMTMarket;
+    if (M) {
+      // shared loader (assets/market.js): newest saved prices at once, live the moment they land, retried until live
+      const apply = m => {
+        S.btc = m.btc; S.gmt = m.gmt; S.diff = m.diff; S.live = m.allLive;
+        S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
+        root.classList.remove('re-loading'); autoFillGMT(); render();
+      };
+      if (M.state.source !== 'builtin') apply(M.state);
+      M.get().then(apply);
+      M.onUpdate(apply);
+      return;
+    }
     loadMarket().then(() => {
       root.classList.remove('re-loading');
       autoFillGMT();
