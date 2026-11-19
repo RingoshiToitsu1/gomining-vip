@@ -443,7 +443,7 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .subbar .live-chip-btn:hover{background:none!important}
 .subbar #updatedChip .val,.subbar #updatedChip .lbl{color:var(--color-text-3)!important;font-weight:var(--font-weight-medium)!important;font-size:var(--font-size-xs)!important}
 .subbar #pxBadgeHero{display:none!important}
-.subbar .quick-bar [title="Open the full farm editor"]{display:none!important}
+.subbar .quick-bar > .live-chip:not(.qk){display:none!important}   /* the "Edit farm" tile (it is a tab already); by structure, so it works in every language */
 .subbar .quick-bar .live-chip .val{border-bottom:1px dashed var(--color-border-strong);padding-bottom:1px}
 .subbar .quick-bar .live-chip-btn:hover .val{border-bottom-color:var(--color-gold)}
 @media (max-width:767px){
