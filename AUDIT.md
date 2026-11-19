@@ -1547,3 +1547,23 @@ test farm = $92.2/day), cursor and controls hidden after 3 s. Screenshots `%TEMP
 - **Chart pages** (Bitcoin / GMT live chart, rainbow, BTC + GMT): the header no longer floats over TradingView's toolbar;
   back · title on the left, one switcher (Live chart · Rainbow · BTC + GMT, current one highlighted) and the screenshot
   button on the right; two tidy rows on phones.
+
+## 33. Four-language formatting pass (owner, 2026-11-19: "make sure all the formatting is fixed in all languages")
+
+Swept every page and panel touched in this round (landing, console + planner/projection/edit farm, the three chart
+pages, Live Meter + streaming drawer, quote, statement, dashboard, settings, claim, FAQ, checker, ROI calculator,
+co-pilot) in EN/ES/FR/DE at 360 and 1280 (152 views; `%TEMP%\gmtshots\langsweep.mjs`, screenshots `sweep2`/`sweep3`):
+overflow, clipped text, leftover English and number formats.
+- **Quote and Statement translated** (they were English-only while the translated consoles linked to them): new
+  `/es|fr|de/quote/` and `/statement/` (noindex like the English pages, URLS.md §I); 60 page strings + 115 runtime
+  strings; the translated consoles' tabs now open them.
+- **Local formats on translated pages** (English output unchanged, golden 33/33): the projection's money, ranges,
+  percentages and "4,000" counts; the BTC + GMT chart legend; axis labels; the idle-GMT card; BTC amounts
+  (`₿0,00147`); the quote's and the statement's money, percentages, dates and months (from the browser's locale data);
+  the dashboard's fees-and-rates date.
+- **Prices:** the marketplace checker now uses the shared price loader (it still showed the old built-in GMT 0.28 with
+  "(cached)"); prices saved in the last 10 minutes no longer carry a "(cached)" label.
+- **Layout:** the console status line hid the Edit farm tile by its English tooltip, so it came back on translated
+  pages; now hidden by structure. Co-pilot subtitle wraps instead of being cut off in Spanish at 360.
+- Remaining checker hits are correct words: "Hashrate (TH)", FR "Contact", "Console", "Guides", DE "Dashboard",
+  "Tools", German standalone month abbreviations (Jun, Jul, Aug, Sep, Nov), "{0} BTC", "{0} sats".
