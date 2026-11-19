@@ -462,8 +462,9 @@ html{font-size:16px!important}                         /* app.css scaled the con
 .subbar{padding-inline:max(var(--space-4),calc((100% - var(--content-max)) / 2))!important}
 @media (max-width:767px){
   .subbar{flex-direction:column;align-items:stretch!important;gap:var(--space-1)!important}
-  .subbar #liveBar{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--space-4) * -1)!important;padding-inline:var(--space-4)!important}
-  .subbar #liveBar::-webkit-scrollbar{display:none}
+  .subbar > .live-bar:first-child{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--space-4) * -1)!important;padding-inline:var(--space-4)!important}
+  .subbar > .live-bar:first-child::-webkit-scrollbar{display:none}
+  .subbar .px-subbar{padding-left:0!important}
   .subbar #updatedChip{display:none!important}
   .subbar .quick-bar{flex-wrap:nowrap!important}
 }

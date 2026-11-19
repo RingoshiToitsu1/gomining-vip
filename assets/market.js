@@ -79,16 +79,17 @@
   }
   settle();
 
-  var subs = [], tries = 0, timer = 0, inflight = null;
+  var subs = [], tries = 0, timer = 0, inflight = null, firstDone = false;
   function emit() { subs.forEach(function (f) { try { f(state); } catch (e) {} }); }
   function fetchMissing() {
     if (inflight) return inflight;
     var keys = ['btc', 'gmt', 'diff'].filter(function (k) { return !state.live[k]; });
     if (!keys.length) return Promise.resolve(state);
     inflight = Promise.all(keys.map(function (k) {
-      return race(SRC[k]).then(function (v) { state[k] = v; state.live[k] = true; }, function () {});
+      // each value reaches the page the moment it lands, not when the slowest one does
+      return race(SRC[k]).then(function (v) { state[k] = v; state.live[k] = true; settle(); emit(); }, function () {});
     })).then(function () {
-      inflight = null; settle(); writeCache(); emit();
+      inflight = null; firstDone = true; settle(); writeCache(); emit();
       clearTimeout(timer);
       if (!state.allLive && ++tries < MAX_RETRIES) timer = setTimeout(fetchMissing, RETRY_MS);
       return state;
@@ -106,6 +107,7 @@
     label: function (T) {
       T = T || function (s, a) { return String(s).replace('{0}', a); };
       if (state.allLive) return T('Live');
+      if (!firstDone) return T('Updating\u2026');
       if (state.at === -1) return T('Offline estimate');
       var m = Math.max(1, Math.round((Date.now() - state.at) / 60000));
       return m < 90 ? T('Prices from {0} min ago', m) : T('Prices from {0} h ago', Math.round(m / 60));
