@@ -303,7 +303,7 @@
       if (a) { a.onChange(fromAccount); fromAccount(a); return; }
       // account.js only runs on some pages; elsewhere read the saved session directly
       if (++tries === 1) fromSession();
-      if (tries < 30 && document.querySelector('script[src*="/assets/account.js"]')) setTimeout(wait, 100);
+      if (tries < 80 && (window.__gmtAccountComing || document.querySelector('script[src*="/assets/account.js"]'))) setTimeout(wait, 100);
     })();
   }
   function fromAccount(a) {

@@ -112,7 +112,7 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 <link rel="stylesheet" href="/assets/design.css?v=19">
 <link rel="stylesheet" href="/assets/console.css?v=13">
 <link rel="stylesheet" href="/assets/accounts.css?v=30" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="/assets/accounts.css?v=30"></noscript>
-<script src="/assets/site-chrome.js?v=15" defer></script>
+<script src="/assets/site-chrome.js?v=16" defer></script>
 </head>
 <body>
 <!-- Boot screen: covers the console until prices, difficulty, account + fleet have loaded and
@@ -1136,22 +1136,6 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 <div class="rd" style="display:contents">
 </div>
 
-<script src="/assets/chart-shot.js?v=4" defer></script>
-<script src="/assets/pricing.js?v=5" defer></script>
-<script src="/assets/charts.js?v=1" defer></script>
-<script src="/assets/app.js?v=182" defer></script>
-<script src="/assets/odds.js?v=12" defer></script>
-<script src="/assets/futures.js?v=17" defer></script>
-<script src="/assets/fleet.js?v=22" defer></script>
-<!-- Accounts (Phase 2): SDK -> config -> account layer. account.js stays dormant until config holds real values. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="/assets/supabase-config.js?v=4" defer></script>
-<script src="/assets/account.js?v=30" defer></script>
-<script src="/assets/chat.js?v=21" defer></script>
-<script src="/assets/boot.js?v=6" defer></script>
-<script src="/assets/loaders.js?v=10" defer></script>
-<script src="/assets/market-change.js?v=2" defer></script>
-<script src="/assets/visualizer.js?v=9" defer></script>
 <style>#toTop{position:fixed;right:1.2rem;bottom:1.2rem;width:44px;height:44px;border:none;border-radius:50%;background:linear-gradient(135deg,var(--color-gold),var(--color-gold-300));color:var(--color-black);font-size:1.3rem;font-weight:700;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .25s;z-index:99999;box-shadow:0 4px 14px rgb(var(--color-black-rgb) / .45)}#toTop.show{opacity:.92;pointer-events:auto}#toTop:hover{opacity:1}</style>
 <style>
 .ytp{position:relative;margin:0 0 1.1rem;border:1px solid var(--card-border);border-radius:var(--radius-sm);background:linear-gradient(180deg,rgb(var(--color-gold-rgb) / .07),transparent),var(--bg-card)}
@@ -1170,6 +1154,13 @@ html:not(.gm-booting) #gmBoot:not(.gb-out){display:none}
 .ytp-x:hover{color:var(--text);background:rgb(var(--color-white-rgb) / .06)}
 @media(max-width:520px){.ytp-thumb{width:96px}.ytp-txt b{font-size:.74rem}}
 </style>
-<script src="/assets/console-page.js?v=1" defer></script>
+<script>/* Console scripts start right after the first frame is painted, in this order (async=false keeps it), so the
+   page's text shows before ~550 KB of script is fetched and run. Each script copes with DOMContentLoaded having
+   passed (they all check document.readyState). site-chrome.js waits for account.js because of __gmtAccountComing.
+   Accounts: SDK -> config -> account layer (account.js stays dormant until config holds real values). */
+window.__gmtAccountComing=true;
+(function(){var L=['/assets/chart-shot.js?v=4','/assets/pricing.js?v=5','/assets/charts.js?v=1','/assets/app.js?v=182','/assets/odds.js?v=12','/assets/futures.js?v=17','/assets/fleet.js?v=22','https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','/assets/supabase-config.js?v=4','/assets/account.js?v=30','/assets/chat.js?v=21','/assets/boot.js?v=6','/assets/loaders.js?v=10','/assets/market-change.js?v=2','/assets/visualizer.js?v=9','/assets/console-page.js?v=1'];
+  function go(){L.forEach(function(u){var s=document.createElement('script');s.src=u;s.async=false;document.body.appendChild(s);});}
+  if(window.requestAnimationFrame)requestAnimationFrame(function(){setTimeout(go,0);});else go();})();</script>
 </body>
 </html>
