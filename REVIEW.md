@@ -1,6 +1,6 @@
 # REVIEW.md: gmt-optimizer.com overhaul, final review
 
-Branch `overhaul` (RingoshiToitsu1/gomining-vip), 120 commits ahead of `main`, 356 files changed. Nothing is on `main`;
+Branch `overhaul` (RingoshiToitsu1/gomining-vip), 116 commits ahead of `main`, 357 files changed. Nothing is on `main`;
 the launch is yours to approve (LAUNCH.md). Preview: https://ringoshitoitsu1.github.io (noindex, CNAME stripped).
 Detailed record of every finding and decision: AUDIT.md. URL inventory: URLS.md. Translations: TRANSLATIONS.md.
 
