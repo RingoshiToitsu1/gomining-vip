@@ -466,6 +466,11 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .subbar > .live-bar:first-child{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--space-4) * -1)!important;padding-inline:var(--space-4)!important}
   .subbar > .live-bar:first-child::-webkit-scrollbar{display:none}
   .subbar .px-subbar{padding-left:0!important}
+  /* the two sideways rows (section tabs, market prices) fade at the right edge so it's clear they swipe; the end padding
+     lets the last item scroll fully clear of the fade */
+  .header .nav-links,.subbar > .live-bar:first-child{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
+  .header .nav-links{padding-right:32px!important}
+  .subbar > .live-bar:first-child{padding-right:40px!important}
   .subbar #updatedChip{display:none!important}
   /* the signed-in balances (Liquid / Locked / TH…) wrap onto a second line: nowrap with no scroll pushed the whole
      page sideways on phones (owner report 2026-11-20) */
