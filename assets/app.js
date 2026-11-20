@@ -2596,7 +2596,7 @@ const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36']
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
-const MINING_MODE_PAST_DEFAULTS=[0.7,0.82,0.83,0.88,0.9,1.06,1.2,1.28,1.32,1.35,1.36];
+const MINING_MODE_PAST_DEFAULTS=[0.7,0.82,0.83,0.88,1.06,1.09,1.2,1.28,1.32,1.35,1.36];
 function saveMiningMode(){
   try{localStorage.setItem(MINING_MODE_KEY,JSON.stringify({v:$('inMiningMode').value,base:MINING_MODE_DEFAULT}))}catch(e){}
 }
