@@ -920,7 +920,8 @@
   "All time": "Todo",
   "Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.": "Ingreso mensual neto tras comisiones, a precios de hoy &mdash; minería más staking del GMT bloqueado.",
   "Our strategy · compounded ROI": "Nuestra estrategia · ROI compuesto",
-  "Last updated: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 Nov 2026</time>": "Última actualización: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 nov 2026</time>. Esta traducción es orientativa; prevalece la versión en inglés."
+  "Last updated: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 Nov 2026</time>": "Última actualización: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 nov 2026</time>. Esta traducción es orientativa; prevalece la versión en inglés.",
+  "<span class=\"lp-live-dot\" aria-hidden=\"true\"></span><span><b data-users></b> miners have joined GMT-Optimizer</span>": "<span class=\"lp-live-dot\" aria-hidden=\"true\"></span><span><b data-users></b> mineros ya se han unido a GMT-Optimizer</span>"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "De 3 a 20 letras, números o guiones bajos. Se muestra en el chat.",
