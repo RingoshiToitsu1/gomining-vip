@@ -188,7 +188,7 @@ function thOnlyCompoundedROI(i,capital){
   if(!(capital>0))return null;
   let th=capital/(TH_TIERS_NEW[0]?TH_TIERS_NEW[0].cpt:10);
   for(let k=0;k<12;k++)th=capital/cptTier(TH_TIERS_NEW,Math.max(1,th));
-  const j=Object.assign({},i,{th:th,gl:0,gw:0,gth:0,gInit:0});
+  const j=Object.assign({},i,{th:th,wth:EFF_NEW,gl:0,gw:0,gth:0,gInit:0});   // new TH is minted at 15 W
   let m2;try{m2=calc(j);}catch(e){return null;}
   const r=effectiveCompoundedROI(j,m2);
   return r?r.roi:null;
