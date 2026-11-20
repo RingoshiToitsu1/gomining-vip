@@ -119,6 +119,9 @@
 
 /* Figures line up everywhere: tabular numerals site-wide (Inter and Poppins both support tnum). */
 html { font-variant-numeric: tabular-nums; }
+/* Pages scroll up and down only. Anything that ever ends up wider than the screen gets clipped instead of letting
+   the page slide sideways on a phone. `clip`, not `hidden`, so sticky headers keep working. */
+html, body { overflow-x: clip; }
 
 @media (prefers-reduced-motion: reduce) {
   :root { --duration-fast: 0ms; --duration-base: 0ms; }
