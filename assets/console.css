@@ -56,7 +56,8 @@ body{font-family:var(--font-body);color:var(--color-text);background-image:none}
   -webkit-backdrop-filter:none!important;box-shadow:none!important;height:auto;padding:0}
 .header-inner{max-width:var(--content-max);margin:0 auto;padding:0 20px;display:flex;align-items:stretch;gap:var(--space-4);min-height:0;height:auto}
 #gmtOnline{display:none!important}       /* chat opens from the header Messages icon (site-chrome.js) */
-.header .nav-links{display:flex;gap:var(--space-1);overflow-x:auto;scrollbar-width:none;margin:0;padding:0;justify-content:flex-start;flex:1 1 auto}
+.header .nav-links{display:flex;gap:var(--space-1);overflow-x:auto;scrollbar-width:none;margin:0;padding:0;justify-content:flex-start;flex:1 1 auto;min-width:0}  /* min-width:0 or the flex item refuses to shrink: the tab row laid out ~611px wide on phones and widened the whole page (owner report 2026-11-20) */
+.header-inner{min-width:0;max-width:min(var(--content-max),100%)}
 .header .nav-links::-webkit-scrollbar{display:none}
 .header .nav-links a{display:inline-flex;align-items:center;padding:var(--space-3) var(--space-4);white-space:nowrap;
   font-family:var(--font-ui);font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);letter-spacing:0;text-transform:none;
