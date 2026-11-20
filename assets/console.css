@@ -56,7 +56,8 @@ body{font-family:var(--font-body);color:var(--color-text);background-image:none}
   -webkit-backdrop-filter:none!important;box-shadow:none!important;height:auto;padding:0}
 .header-inner{max-width:var(--content-max);margin:0 auto;padding:0 20px;display:flex;align-items:stretch;gap:var(--space-4);min-height:0;height:auto}
 #gmtOnline{display:none!important}       /* chat opens from the header Messages icon (site-chrome.js) */
-.header .nav-links{display:flex;gap:var(--space-1);overflow-x:auto;scrollbar-width:none;margin:0;padding:0;justify-content:flex-start;flex:1 1 auto}
+.header .nav-links{display:flex;gap:var(--space-1);overflow-x:auto;scrollbar-width:none;margin:0;padding:0;justify-content:flex-start;flex:1 1 auto;min-width:0}  /* min-width:0 or the flex item refuses to shrink: the tab row laid out ~611px wide on phones and widened the whole page (owner report 2026-11-20) */
+.header-inner{min-width:0;max-width:min(var(--content-max),100%)}
 .header .nav-links::-webkit-scrollbar{display:none}
 .header .nav-links a{display:inline-flex;align-items:center;padding:var(--space-3) var(--space-4);white-space:nowrap;
   font-family:var(--font-ui);font-size:var(--font-size-sm);font-weight:var(--font-weight-medium);letter-spacing:0;text-transform:none;
@@ -465,8 +466,16 @@ html{font-size:16px!important}                         /* app.css scaled the con
   .subbar > .live-bar:first-child{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-inline:calc(var(--space-4) * -1)!important;padding-inline:var(--space-4)!important}
   .subbar > .live-bar:first-child::-webkit-scrollbar{display:none}
   .subbar .px-subbar{padding-left:0!important}
+  /* the two sideways rows (section tabs, market prices) fade at the right edge so it's clear they swipe; the end padding
+     lets the last item scroll fully clear of the fade */
+  .header .nav-links,.subbar > .live-bar:first-child{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
+  .header .nav-links{padding-right:32px!important}
+  .subbar > .live-bar:first-child{padding-right:40px!important}
   .subbar #updatedChip{display:none!important}
-  .subbar .quick-bar{flex-wrap:nowrap!important}
+  /* the signed-in balances (Liquid / Locked / TH…) wrap onto a second line: nowrap with no scroll pushed the whole
+     page sideways on phones (owner report 2026-11-20) */
+  .subbar .quick-bar{flex-wrap:wrap!important;row-gap:var(--space-1)!important;min-width:0;max-width:100%}
+  .subbar .quick-bar > .live-chip.qk{border-left:0!important;padding-left:0!important;padding-right:var(--space-4)!important}
 }
 
 /* ---------- chart pages (Bitcoin / GMT live chart, rainbow, BTC + GMT): a clean header above the chart ----------
