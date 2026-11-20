@@ -160,3 +160,16 @@ identical. New in the overhaul: ES/FR/DE copies with hreflang (33 per language).
 - URL inventory and rules: `URLS.md`. Audit trail and every decision: `AUDIT.md`. Translations: `TRANSLATIONS.md`.
 - SQL and backups: `supabase/proposals/` (README first).
 - Preview: https://ringoshitoitsu1.github.io (rebuild: `gh workflow run preview.yml -R RingoshiToitsu1/ringoshitoitsu1.github.io`).
+
+## 6. Launch log (2026-11-19/20)
+
+| Step | Result |
+|---|---|
+| 1 Freeze | launch + privacy date 2026-11-19 (v3 badge ends 2027-01-18); all gates green on `36ec59b2a`; Lighthouse 97–100 |
+| 2 Merge | PR #9 merged as a merge commit `852a11d` (2026-11-20 00:38 UTC); deploy green |
+| 2 Production checks | URL check 207/208 + G16 (robots.txt and 5 key pages indexable, canonical/hreflang on gmt-optimizer.com) pass; the one failure: GitHub answered every missing address with 503 (no site 404 page) → PR #10 adds `404.html`. Spot checks EN + ES at 360/1280: no overflow; quote "Live" |
+| 2 Logged in | farm restores (5,000 TH / 250,000 GMT), dashboard, settings, chat composer: OK |
+| 3a Backup | schema `backup_20261120` (profiles 486, miners 1,863, messages 147; RLS on, no policies) + `Downloads\gmt-db-backup-2026-11-20\profiles.json`, `miners.json` |
+| 3b Exposure fix | applied (owner asked Claude to run it). Anon: `setup`, `th_total`, `*` on profiles → 42501; public columns and `profile_cards` OK; `get_my_profile` anon → denied. Signed in: own farm restores via `get_my_profile`; other users' `setup` → 42501; cards, chat, dashboard, settings, /profile OK |
+| 3c Account extras | applied. 486 profiles unchanged (show_th true, prefs {}), miners/messages unchanged; `prefs` private, `show_th` public; `delete_my_account` callable only when signed in. Settings shows Privacy and preferences + Delete account. Delete not exercised (needs a throwaway account) |
+| 4 gomining.vip | home forwards to gmt-optimizer.com (refresh + script + canonical); deep links 404 as before launch |
