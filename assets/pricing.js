@@ -25,11 +25,11 @@
     },
     "legal": {
       "_note": "privacyUpdated: set to the launch date (Phase 8 checklist). Shown on /privacy in every language.",
-      "privacyUpdated": "2026-11-18"
+      "privacyUpdated": "2026-11-19"
     },
     "launch": {
       "_note": "date: set to the launch day (LAUNCH.md step 3). The v3 badge on the landing page hides itself v3BadgeDays after it (derived.v3BadgeUntil).",
-      "date": "2026-11-18",
+      "date": "2026-11-19",
       "v3BadgeDays": 60
     },
     "fees": {
@@ -325,7 +325,7 @@
     },
     "derived": {
       "fullCoverageDays": 360,
-      "v3BadgeUntil": "2027-01-17"
+      "v3BadgeUntil": "2027-01-18"
     }
   };
   /* ===== END CONFIG ===== */

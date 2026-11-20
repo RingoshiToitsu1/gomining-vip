@@ -497,7 +497,6 @@
   "https://app.gomining.com/nft/view/10854": "https://app.gomining.com/nft/view/10854",
   "from link": "depuis le lien",
   "Prices a GoMining marketplace miner: the cost to buy it, the cost to upgrade it to 15 W or 12 W, and how big to grow a Greedy Machine so its free growth repays the premium in 1 to 12 months.": "Évalue un mineur du marketplace GoMining : son coût d'achat, le coût de l'amélioration vers 15 W ou 12 W, et jusqu'où faire grandir une Greedy Machine pour que sa croissance gratuite rembourse la prime en 1 à 12 mois.",
-  "Last updated: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">18 Nov 2026</time>": "Dernière mise à jour : <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">18 nov. 2026</time>. Cette traduction est fournie à titre indicatif ; la version anglaise fait foi.",
   "GMT-Optimizer (\"we\", \"us\") is a free, independent set of GoMining calculators at gmt-optimizer.com, run by Ringo. This policy explains what we store, why, who processes it, and how to get it deleted. We collect as little as we can.": "GMT-Optimizer (« nous ») est un ensemble gratuit et indépendant de calculateurs GoMining sur gmt-optimizer.com, géré par Ringo. Cette politique explique ce que nous conservons, pourquoi, qui le traite et comment le faire supprimer. Nous collectons le moins possible.",
   "Using the site without an account": "Utiliser le site sans compte",
   "Every calculator works without an account. We run <strong>no analytics and no ads</strong>, and set no tracking cookies. Your browser's local storage keeps your own settings on your device (for example the farm you entered, display currency, language choice and whether you've dismissed a tip). That data stays on your device and is not sent to us.": "Tous les calculateurs fonctionnent sans compte. Nous n'utilisons <strong>ni outil d'analyse ni publicité</strong>, et ne déposons aucun cookie de suivi. Le stockage local de votre navigateur conserve vos propres réglages sur votre appareil (par exemple la ferme saisie, la devise d'affichage, la langue choisie ou le fait d'avoir fermé une astuce). Ces données restent sur votre appareil et ne nous sont pas envoyées.",
@@ -920,7 +919,8 @@
   "For quoting someone who is starting from zero. Enter what they want to invest, or what they want to earn each month, and this returns the split that holds the token discount at live prices. Nothing here touches your own fleet or saved setups.": "Pour chiffrer une personne qui part de zéro. Saisissez ce qu’elle veut investir ou gagner chaque mois, et vous obtenez la répartition qui conserve la remise token aux prix en direct. Rien ici ne touche à votre flotte ni à vos configurations enregistrées.",
   "All time": "Tout",
   "Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.": "Revenu mensuel net après frais, aux prix du jour &mdash; minage plus staking du GMT bloqué.",
-  "Our strategy · compounded ROI": "Notre stratégie · ROI composé"
+  "Our strategy · compounded ROI": "Notre stratégie · ROI composé",
+  "Last updated: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 Nov 2026</time>": "Dernière mise à jour : <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 nov. 2026</time>. Cette traduction est fournie à titre indicatif ; la version anglaise fait foi."
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "3 à 20 lettres, chiffres ou tirets bas. Affiché dans le chat.",
