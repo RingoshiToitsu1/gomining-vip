@@ -3037,8 +3037,32 @@ function autoSave(){
     if(!p)return;
     p.data=readInputs();
     saveProfilesState(state);
+    cloudSaveActive(false);   // signed in: the account copy follows too, or a reload restores the old values
   }catch(e){}
 }
+// Push the active setup to the signed-in account. A page load restores the farm FROM the account, so a change
+// that only reached this browser's storage snapped back on refresh (owner report 2026-11-20). Field edits are
+// debounced (1.5 s); an explicit Save (quick-edit chips) goes at once; a pending save is sent before the page goes.
+let _cloudSaveT=0,_cloudSavePending=null;
+function cloudSaveActive(now){
+  try{
+    if(!(window.GMTAccount&&GMTAccount.isLoggedIn&&GMTAccount.isLoggedIn()))return;
+    const state=loadProfilesState();
+    const p=state.activeId&&state.profiles.find(x=>x.id===state.activeId);
+    if(!p||!isAccountProfile(p))return;
+    clearTimeout(_cloudSaveT);
+    _cloudSavePending=()=>{
+      _cloudSavePending=null;
+      const td=window._farmShot&&isFinite(window._farmShot.disc)?+(+window._farmShot.disc).toFixed(2):null;
+      const r=GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+      if(r&&r.catch)r.catch(()=>{try{flashStatus(T('Couldn’t save to your account. Check your connection and try again.'));}catch(e){}});
+      return r;
+    };
+    if(now)return _cloudSavePending();
+    _cloudSaveT=setTimeout(()=>{if(_cloudSavePending)_cloudSavePending();},1500);
+  }catch(e){}
+}
+addEventListener('pagehide',()=>{if(_cloudSavePending){clearTimeout(_cloudSaveT);_cloudSavePending();}});
 ['inTH','inWTH','inGMTLocked','inGMTWallet','inCapital','inReferredTH','inRefCapital','inRefBonusPct','inRefReinvest','inMpTH','inMpGMT','inMpWth','inGreedyTH','inGreedyInitial','inGreedyWth','inGreedyGrowth','inMpCode','inRefPriorTH'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',autoSave)});
 // Mining mode persists globally — separate save handler so it doesn't get bundled into per-setup data
 {const mm=$('inMiningMode');if(mm)mm.addEventListener('input',saveMiningMode);}
@@ -3368,7 +3392,8 @@ function openQuickPop(chip){
   const save=()=>{
     const v=parseFloat(inp2.value);
     field.value=(isFinite(v)&&v>=0)?v:0;
-    field.dispatchEvent(new Event('input',{bubbles:true}));   // -> recalc + autoSave + cloud profile
+    field.dispatchEvent(new Event('input',{bubbles:true}));   // -> recalc + autoSave (local)
+    cloudSaveActive(true);                                     // an explicit Save reaches the account at once
     refreshQuickChips();
     closeQuickPop();
     chip.classList.add('saved');setTimeout(()=>chip.classList.remove('saved'),1200);
