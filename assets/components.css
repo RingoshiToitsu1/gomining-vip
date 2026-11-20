@@ -24,7 +24,10 @@ body.ui-scope { margin: 0; }
 .ui-stack > * + * { margin-top: var(--space-4); }
 .ui-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
 .ui-grid { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
-.ui-visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Screen-reader-only text. Pinned to the corner of its positioning container (top/left 0): without that it sat where
+   its chip sat, and inside a sideways-scrolling row (the phone price strip) a label at x≈610 escaped the row and
+   stretched the whole page to 611px on phones (owner report 2026-11-20). */
+.ui-visually-hidden { position: absolute !important; top: 0; left: 0; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 /* ---------- type ---------- */
 .ui-eyebrow { font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold);
