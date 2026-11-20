@@ -1,0 +1,15 @@
+/* /copilot: the co-pilot conversation inline (styles for the conversation itself are in copilot.css). */
+.cp-wrap { max-width: 1120px; margin: 0 auto; padding: var(--space-7) var(--space-4) var(--section-y-lg); }
+.cp-intro { max-width: 680px; margin-bottom: var(--space-5); }
+.cp-intro h1, .cp-intro p { margin: 0 0 var(--space-2); }
+.cp-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--space-5); align-items: start; }
+.cp-aside { display: flex; flex-direction: column; gap: var(--space-4); position: sticky; top: calc(var(--header-h) + var(--space-4)); }
+.cp-aside .ui-card { display: flex; flex-direction: column; gap: var(--space-3); }
+.cp-aside h2, .cp-aside p { margin: 0; }
+.cp-list { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 6px; color: var(--color-text-2); }
+.cp-list a, .cp-aside a:not(.ui-btn) { color: var(--color-gold-300); }
+@media (max-width: 900px) {
+  .cp-grid { grid-template-columns: 1fr; }
+  .cp-aside { position: static; }
+}
+@media (max-width: 640px) { .cp-wrap { padding-top: var(--space-5); } }

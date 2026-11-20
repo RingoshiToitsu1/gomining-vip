@@ -1,0 +1,125 @@
+/* Fallback faces sized to Inter and Poppins (metric overrides on Arial), so text barely moves when the web fonts
+   swap in after first paint (they load without blocking it). */
+@font-face { font-family: 'Inter Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans');
+  size-adjust: 107.12%; ascent-override: 90.44%; descent-override: 22.52%; line-gap-override: 0%; }
+@font-face { font-family: 'Poppins Fallback'; src: local('Arial'), local('Helvetica'), local('Liberation Sans');
+  size-adjust: 112.10%; ascent-override: 93.62%; descent-override: 31.21%; line-gap-override: 8.92%; }
+/* GMT-Optimizer design tokens: the ONLY place a colour, font, spacing or radius value is written.
+   ================================================================================================
+   Every other stylesheet (and inline style) refers to these variables. Older sheets keep their own
+   variable names (--gold, --ink, --border…), but those now point here, so the brand changes in one file.
+
+   Colour with transparency: use the *-rgb triplets, e.g.  background: rgb(var(--color-gold-rgb) / .12)
+
+   Contrast (WCAG AA = 4.5:1 for normal text), on --color-bg / on --color-surface-2:
+     text 19.7 / 17.3 · text-2 7.7 / 6.8 · gold 10.1 / 8.9 · gold-300 14.2 / 12.5
+     success 8.6 / 7.6 · warning 9.2 / 8.1 · error 5.2 / 4.6 · on-gold text on gold 10.1
+     text-3 3.7 / 3.3 and gold-700 5.0 / 4.4: large text (≥ 18 px, or 14 px semibold) or decoration
+     only. Never small body copy or small labels on a raised surface.
+*/
+:root {
+  color-scheme: dark;
+
+  /* ---- brand gold ---- */
+  --color-gold-300: #F7D88A;
+  --color-gold:     #E2B259;          /* solid / accent */
+  --color-gold-700: #A9772F;
+  --color-gold-gradient: linear-gradient(135deg, #F7D88A 0%, #E2B259 50%, #A9772F 100%);
+  --color-gold-rgb: 226 178 89;
+  --color-gold-300-rgb: 247 216 138;
+  --color-gold-700-rgb: 169 119 47;
+  --color-on-gold: #0B0B0D;           /* text on a gold fill */
+
+  /* ---- surfaces ---- */
+  --color-bg:        #0B0B0D;
+  --color-surface-1: #131316;
+  --color-surface-2: #1A1A1F;
+  --color-border:    #26262C;
+  --color-border-strong: #34343C;
+  --color-bg-rgb: 11 11 13;
+  --color-surface-1-rgb: 19 19 22;
+  --color-surface-2-rgb: 26 26 31;
+
+  /* ---- text ---- */
+  --color-text:   #FFFFFF;
+  --color-text-2: #A1A1AA;
+  --color-text-3: #6B6B75;
+  --color-black: #000000;            /* shadows and overlays only */
+  --color-white-rgb: 255 255 255;
+  --color-black-rgb: 0 0 0;
+
+  /* ---- status ---- */
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error:   #EF4444;
+  --color-success-rgb: 34 197 94;
+  --color-warning-rgb: 245 158 11;
+  --color-error-rgb:   239 68 68;
+
+  /* ---- data-viz series (charts only; gold first) ---- */
+  --color-series-1: #E2B259;
+  --color-series-2: #A1A1AA;
+  --color-series-3: #22C55E;
+  --color-series-4: #8B9CF7;
+  --color-series-5: #EF4444;
+
+  /* ---- type ---- */
+  --font-ui:   'Poppins', 'Poppins Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;   /* headings, nav, buttons */
+  --font-body: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;     /* copy, tables, figures */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-size-xs: .75rem;
+  --font-size-sm: .875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --font-size-5xl: clamp(2.4rem, 1.6rem + 3.4vw, 3.5rem);
+  --line-height-tight: 1.2;
+  --line-height-body: 1.6;
+
+  /* ---- spacing (4/8/12/16/24/32/48/64/96) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ---- section rhythm (vertical padding between page sections; ~30% under the old 64/96) ---- */
+  --section-y: 44px;
+  --section-y-lg: 68px;
+
+  /* ---- shape, depth, motion ---- */
+  --radius-control: 8px;
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 0 rgb(var(--color-white-rgb) / .03) inset, 0 12px 32px -16px rgb(var(--color-black-rgb) / .7);
+  --shadow-pop: 0 24px 60px -20px rgb(var(--color-black-rgb) / .8);
+  --focus-ring: 0 0 0 3px rgb(var(--color-gold-rgb) / .45);
+  --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  /* ---- layout ---- */
+  --content-max: 1200px;
+  --prose-max: 72ch;
+  --header-h: 64px;
+  --z-header: 150;    /* above the console tool bar (100), below page dropdowns and every modal */
+  --z-widget: 9000;
+  --z-modal: 10050;   /* above the console's own overlays (10000–10040) */
+  --z-toast: 10100;
+}
+
+/* Figures line up everywhere: tabular numerals site-wide (Inter and Poppins both support tnum). */
+html { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 0ms; --duration-base: 0ms; }
+}

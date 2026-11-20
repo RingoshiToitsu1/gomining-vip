@@ -60,14 +60,14 @@ function earningsAt({ th, bp, diff, disc, wth = C.EFF_BEST, off = C.RB_STILL_CHE
   const rows = {};
   let cum = 0;
   for (let m = 1; m <= 120; m++) {
-    const t = now + m * 30.44 * 86400000;
+    const t = now + m * (365.25 / 12) * 86400000;
     const bp_t = C.rbPriceAt(t, now, bp, off);
     const dbt_t = Math.max(dbt * C.subsidyMultAt(t) * C.difficultyMultAt(t, now), C.rewardFloorBTC(bp_t));
     const mining = Math.max(0, dbt_t * th * bp_t - dfeesUSD) * (1 - C.CONVERSION_FEE);
     const day = mining + stakingUSD;
-    cum += day * 30.44;
+    cum += day * (365.25 / 12);
     if (m % 12 === 0 && YEAR_MARKS.indexOf(m / 12) >= 0)
-      rows[m / 12] = { total: +cum.toFixed(2), daily: +day.toFixed(2), monthly: +(day * 30.44).toFixed(2) };
+      rows[m / 12] = { total: +cum.toFixed(2), daily: +day.toFixed(2), monthly: +(day * (365.25 / 12)).toFixed(2) };
   }
   return rows;
 }
@@ -77,7 +77,7 @@ function monthlyNetUSD({ th, bp, diff, disc, wth = C.EFF_BEST }) {
   const fee = C.feesBTC(th, wth, bp);
   const mining = (dbt * th - fee * (1 - disc / 100)) * (1 - C.CONVERSION_FEE) * bp;
   const staking = (C.COV_DAYS_PER_PCT * disc * fee * bp) * (C.STAKING_APR / 100) / 365.25;
-  return (mining + staking) * 30.44;
+  return (mining + staking) * (365.25 / 12);
 }
 
 const loadState = () => { try { return JSON.parse(fs.readFileSync(STATE, 'utf8')); } catch (e) { return {}; } };

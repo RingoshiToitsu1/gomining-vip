@@ -1,0 +1,119 @@
+/* GMT-Optimizer landing page (/). Tokens only; layout on top of components.css. */
+.lp main { display: block; }
+.lp-section { padding-block: var(--section-y); border-top: 1px solid var(--color-border); }
+.lp-section:first-of-type { border-top: 0; }
+@media (min-width: 1024px) { .lp-section { padding-block: var(--section-y-lg); } }
+.lp-head { max-width: 720px; margin-bottom: var(--space-5); }
+.lp-head .ui-h2 { margin-top: var(--space-2); }
+.lp-head .ui-lead { margin-top: var(--space-3); }
+
+/* hero */
+.lp-hero { padding-block: var(--section-y) var(--section-y); }
+@media (min-width: 1024px) { .lp-hero { padding-block: var(--section-y-lg) var(--section-y-lg); } }
+.lp-hero__grid { display: grid; gap: var(--space-7); align-items: center; }
+@media (min-width: 1024px) { .lp-hero__grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-8); } }
+.lp-hero .ui-h1 { margin-top: var(--space-3); }
+.lp-hero .ui-lead { margin-top: var(--space-4); }
+.lp-hero__ctas { margin-top: var(--space-6); }
+.lp-hero__note { margin-top: var(--space-4); }
+
+/* live mini-calculator (driven by assets/roi-embed.js through its re-* ids) */
+.lp-calc { background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  padding: var(--space-5); box-shadow: var(--shadow-card); min-width: 0; }
+.lp-calc__head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+.lp-calc__head h2 { margin: 0; font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.lp-calc__inputs { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-4); }
+.lp-calc .ui-stats { margin-top: var(--space-4); grid-template-columns: 1fr 1fr; }
+.lp-calc .ui-stat { background: var(--color-bg); }
+.lp-calc .ui-stat--wide { grid-column: 1 / -1; }
+.lp-calc .ui-stat__value--xl { font-size: var(--font-size-3xl); }
+.lp-calc__basis { margin-top: var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-2); }
+.lp-calc__foot { margin-top: var(--space-4); display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.re-loading .ui-stat__value { color: var(--color-text-3); }
+.lp-hidden { display: none !important; }
+
+/* trust strip */
+.lp-trust { padding-block: var(--space-6); border-block: 1px solid var(--color-border); background: var(--color-surface-1); }
+.lp-trust__grid { display: grid; gap: var(--space-5); align-items: center; }
+@media (min-width: 1024px) { .lp-trust__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); } }
+.lp-trust__copy p { margin: 0; color: var(--color-text-2); font-size: var(--font-size-sm); max-width: 46ch; }
+.lp-trust__copy strong { display: block; color: var(--color-text); font-family: var(--font-ui); font-weight: var(--font-weight-semibold); margin-bottom: var(--space-1); }
+.lp-trust .ui-stat { background: var(--color-bg); }
+.lp-live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); margin-right: var(--space-1); vertical-align: 1px; }
+
+/* how it works */
+.lp-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); counter-reset: s; }
+.lp-steps li { counter-increment: s; }
+.lp-steps li::before { content: counter(s); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;
+  border-radius: 50%; border: 1px solid rgb(var(--color-gold-rgb) / .5); color: var(--color-gold); font-family: var(--font-ui);
+  font-weight: var(--font-weight-semibold); margin-bottom: var(--space-3); }
+.lp-steps h3 { margin: 0 0 var(--space-2); font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.lp-steps p { margin: 0; color: var(--color-text-2); font-size: var(--font-size-sm); line-height: var(--line-height-body); }
+
+/* tools */
+.lp .ui-card--link, .lp-tools .ui-card { display: flex; flex-direction: column; gap: var(--space-2); }
+.lp .ui-card__cta { margin-top: auto; padding-top: var(--space-3); font-family: var(--font-ui); font-size: var(--font-size-sm); color: var(--color-gold); }
+.lp-tools .ui-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.lp-tools button.ui-card { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: var(--space-2);
+  background: var(--color-surface-1); border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: var(--space-5);
+  box-shadow: var(--shadow-card); transition: border-color var(--duration-base), transform var(--duration-base); }
+.lp-tools button.ui-card:hover { border-color: rgb(var(--color-gold-rgb) / .55); background: var(--color-surface-2); }
+.lp-tools button.ui-card:focus-visible { box-shadow: var(--focus-ring); }
+.lp-more { margin-top: var(--space-5); font-size: var(--font-size-sm); color: var(--color-text-2); }
+
+/* RINGO5 offer */
+.lp-offer { display: grid; gap: var(--space-6); }
+@media (min-width: 900px) { .lp-offer { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); align-items: start; } }
+.lp-bonuses { display: grid; gap: var(--space-3); }
+.lp-bonus { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-4); background: var(--color-surface-1);
+  border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.lp-bonus b { display: block; font-family: var(--font-ui); font-weight: var(--font-weight-semibold); color: var(--color-text); }
+.lp-bonus span { color: var(--color-text-2); font-size: var(--font-size-sm); }
+.lp-bonus i { flex: 0 0 auto; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: var(--color-gold-gradient); }
+.lp-code { display: inline-flex; align-items: center; gap: var(--space-2); font-family: var(--font-ui); font-weight: var(--font-weight-semibold);
+  letter-spacing: .08em; color: var(--color-gold); border: 1px dashed rgb(var(--color-gold-rgb) / .6); border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-3); background: none; cursor: pointer; font-size: var(--font-size-base); }
+.lp-code:hover { background: rgb(var(--color-gold-rgb) / .08); }
+.lp-code.copied::after { content: '✓ copied'; font-size: var(--font-size-xs); letter-spacing: 0; color: var(--color-success); }
+
+/* explained (SEO prose) */
+.lp-prose { max-width: var(--prose-max); color: var(--color-text-2); }
+.lp-prose h3 { color: var(--color-text); font-family: var(--font-ui); font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); margin: var(--space-6) 0 var(--space-2); }
+.lp-prose p { margin: 0 0 var(--space-3); line-height: var(--line-height-body); }
+.lp-prose a { color: var(--color-gold); }
+.lp-prose ul { padding-left: 1.2rem; margin: 0 0 var(--space-3); line-height: 1.9; }
+
+/* final CTA band */
+.lp-band { padding-block: var(--section-y-lg); text-align: center; border-top: 1px solid var(--color-border);
+  background: radial-gradient(ellipse 60% 120% at 50% 100%, rgb(var(--color-gold-rgb) / .08), transparent 70%); }
+.lp-band .ui-row { justify-content: center; margin-top: var(--space-5); }
+.lp-band .ui-lead { margin: var(--space-3) auto 0; }
+/* even grids at every width: 2×2 live figures until desktop, three steps side by side from tablet up */
+.lp-trust .ui-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1024px) { .lp-trust .ui-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 768px) { .lp-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---------- v3 hero: badge + self-drawing earnings curve (decorative) ---------- */
+.lp-hero { position: relative; overflow: hidden; isolation: isolate; }
+.lp-hero__grid { position: relative; z-index: 1; }
+/* pinned to the top with fixed offsets: when the hero grows (fonts swapping in, the estimate filling) the graphic
+   stretches instead of moving, so it never counts as a layout shift */
+.lp-hero__art { position: absolute; left: 0; right: 0; top: 22%; bottom: 0; width: 100%; height: auto; z-index: 0; pointer-events: none; }
+.lp-v3 { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-4); padding: 4px var(--space-3) 4px 4px;
+  border: 1px solid rgb(var(--color-gold-rgb) / .35); border-radius: var(--radius-pill); background: var(--color-surface-1);
+  font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); color: var(--color-text-2); }
+.lp-v3__tag { padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--color-gold); color: var(--color-on-gold); font-weight: var(--font-weight-semibold); }
+.lp-art-dots circle { fill: var(--color-gold-300); transform-box: fill-box; transform-origin: center; }
+/* The curve is rebuilt in real pixels by assets/hero-curve.js (no stretching: round dots on the line, full-length
+   stroke). Without JavaScript the static, stretched curve shows as is (no dots, no animation). With scripting on,
+   the line waits for the script, then draws in once (linear, so the dots pop in as it reaches them). */
+.lp-art-line { stroke-linecap: round; }
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .lp-hero__art:not(.is-live) .lp-art-line, .lp-hero__art:not(.is-live) .lp-art-area { opacity: 0; }
+  .lp-hero__art.is-live .lp-art-line { stroke-dasharray: 1 1; stroke-dashoffset: 1; animation: lpDraw 2.2s linear .25s forwards; }
+  .lp-hero__art.is-live .lp-art-area { opacity: 0; animation: lpFade 1.4s ease-out 1.24s forwards; }
+}
+@keyframes lpDraw { to { stroke-dashoffset: 0; } }
+@keyframes lpFade { to { opacity: 1; } }
+@media (max-width: 1023px) { .lp-hero__art { top: 40px; bottom: auto; height: 640px; opacity: .28; } }
+

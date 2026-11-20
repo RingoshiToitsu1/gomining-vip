@@ -1,4 +1,4 @@
-/* GMT Optimizer — Fleet builder (Phase 1, no backend).
+/* GMT-Optimizer — Fleet builder (Phase 1, no backend).
    =====================================================
    Lets a user enter their miners one NFT at a time — collection, NFT code, TH,
    W/TH, cost — instead of hand-computing a single blended Total Hashrate and
@@ -85,7 +85,10 @@
   var rows = [];
   var el = {};   // cached DOM refs
 
-  var num = function (n) { return (Math.round(n * 100) / 100).toLocaleString('en-US'); };
+  // Translated copies (/es/, /fr/, /de/): text via GMT_UI.t, numbers in the page locale. English is unchanged.
+  var UI_ = window.GMT_UI, LOC_ = UI_ ? ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[UI_.lang] : 0;
+  var T_ = UI_ ? UI_.t : function (s) { var a = arguments; return String(s).replace(/\{(\d)\}/g, function (m, i) { return a[+i + 1] != null ? a[+i + 1] : m; }); };
+  var num = function (n) { return (Math.round(n * 100) / 100).toLocaleString(LOC_ || 'en-US'); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
 
   // ---- aggregation ----
@@ -228,9 +231,8 @@
     // TH total reads as the MINING total; paused hashrate is called out separately so
     // it never looks like it was silently dropped.
     el.summary.innerHTML =
-      '<strong>' + a.count + '</strong> miner' + (a.count === 1 ? '' : 's') +
-      ' &middot; <strong>' + num(a.th) + '</strong> TH mining' +
-      ' &middot; <strong>' + num(a.wth) + '</strong> W/TH avg' +
+      T_(a.count === 1 ? '<strong>{0}</strong> miner &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg'
+                       : '<strong>{0}</strong> miners &middot; <strong>{1}</strong> TH mining &middot; <strong>{2}</strong> W/TH avg', a.count, num(a.th), num(a.wth)) +
       (a.offCount > 0
         ? ' &middot; <span class="fleet-offnote">' + a.offCount + ' paused (' + num(a.offTH) + ' TH, no fees)</span>'
         : '');

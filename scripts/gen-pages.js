@@ -23,8 +23,11 @@ const {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
   EFF_BEST, EFF_BASE_MAX, MINER_FLOOR_WTH, COV_DAYS_PER_PCT,
   HALVING_DATES, TH_TIERS_12W, FB,
-  cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC
+  cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC, CFG
 } = require('./constants.js');
+const TOKEN_CAP = CFG.discount.tokenCapPct;   // max token (GMT coverage) discount, % — data/config.json
+// 'Fees and rates as of …' (data/config.json meta.updated), filled by scripts/build-config.js on every build
+const ASOF_DATE = require('../assets/pricing.js').UPDATED;
 
 // Per-scenario economics at TODAY's price and difficulty — no forward projection.
 // Total-capital model: the GMT you must LOCK to hold the discount is
@@ -58,12 +61,14 @@ function model({th, bp, diff, disc, wth=EFF_BASE_MAX}){   // default: a new mine
 
   return {dbt,gross,fee,dfees,netBTC,netUSD,miningUSD,stakingUSD,feeUSD,wth,bp0:bp,
           hashCost,gmtLockUSD,totalCapital,cost:totalCapital,
-          monthlyUSD:netUSD*30.44, yearlyUSD:netUSD*365.25,
-          miningMonthlyUSD:miningUSD*30.44, stakingMonthlyUSD:stakingUSD*30.44};
+          monthlyUSD:netUSD*(365.25 / 12), yearlyUSD:netUSD*365.25,
+          miningMonthlyUSD:miningUSD*(365.25 / 12), stakingMonthlyUSD:stakingUSD*(365.25 / 12)};
 }
 
 /* ===== live data ===== */
 async function getLive(){
+  // Test hook: GEN_PAGES_FIXED="btcPrice,difficulty" makes a run reproducible (no network).
+  if(process.env.GEN_PAGES_FIXED){const [bp,diff]=process.env.GEN_PAGES_FIXED.split(',').map(Number);return {bp,diff,live:false};}
   const out={bp:FB.btcPrice,diff:FB.difficulty,live:false};
   try{
     const p=await fetch('https://mempool.space/api/v1/prices',{signal:AbortSignal.timeout(15000)});
@@ -77,149 +82,162 @@ async function getLive(){
 
 /* ===== formatting ===== */
 const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
-const usd2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ===== languages (Phase 7c) =====
+   Every page is built once per language from scripts/data-pages-text.js. English output is unchanged;
+   es/fr/de are written to /es/, /fr/, /de/ at the same file name. */
+const TEXT=require('./data-pages-text.js');
+const LANGS=['en','es','fr','de'];
+const LOCALE={en:'en-US',es:'es-ES',fr:'fr-FR',de:'de-DE'};
+const PAGES_JSON=JSON.parse(fs.readFileSync(path.join(ROOT,'locales/pages.json'),'utf8'));
+const urlOfFile=f=>('/'+f.replace(/(^|\/)index\.html$/,'$1').replace(/\.html$/,'')).replace(/(.)\/$/,'$1');
+const TRANSLATED=new Set([...PAGES_JSON.pages,...(PAGES_JSON.generated||[])].map(urlOfFile));
+const localHref=(lang,href)=>{
+  if(lang==='en'||!href.startsWith('/'))return href;
+  const p=href.replace(/(.)\/$/,'$1')||'/';
+  return TRANSLATED.has(p)?'/'+lang+(p==='/'?'/':p):href;
+};
+function ctx(lang,live,now){
+  const loc=LOCALE[lang], en=lang==='en';
+  const nf=(d)=>new Intl.NumberFormat(loc,{minimumFractionDigits:d,maximumFractionDigits:d});
+  const money=(n,d)=>en?'$'+(d?n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):Math.round(n).toLocaleString('en-US'))
+                        :nf(d).format(d?n:Math.round(n))+' $';
+  return {
+    lang, home:en?'/':'/'+lang+'/', consoleHref:localHref(lang,'/console'),
+    u:n=>money(n,0), u2:n=>money(n,2),
+    p1:x=>en?x.toFixed(1):nf(1).format(x),
+    n:x=>en?Math.round(x).toLocaleString('en-US'):nf(0).format(Math.round(x)),
+    apr:en?String(STAKING_APR):String(STAKING_APR).replace('.',','),
+    conv:en?String(CONVERSION_FEE*100):String(CONVERSION_FEE*100).replace('.',','),
+    cap:TOKEN_CAP, btc:money(live.bp,0), sats:Math.round(satsPerTHDay(live.diff)),
+    year:now.getUTCFullYear(),
+    month:en?['January','February','March','April','May','June','July','August','September','October','November','December'][now.getUTCMonth()]
+            :new Intl.DateTimeFormat(loc,{month:'long',timeZone:'UTC'}).format(now),
+    date:now.toLocaleDateString(loc,{year:'numeric',month:'long',day:'numeric',timeZone:en?undefined:'UTC'}),
+    halving:new Date(HALVING_DATES[0]).getUTCFullYear(),
+    ref:{pct:CFG.referral.bonusThPct,cap:CFG.referral.bonusThCap,months:CFG.referral.vipMonths,card:CFG.referral.cardWindowDays}
+  };
+}
+function alternates(slug){
+  const u='/'+slug.replace(/\.html$/,'');
+  return '<!-- i18n:alternates (scripts/gen-i18n.js) -->\n'+
+    LANGS.map(l=>`<link rel="alternate" hreflang="${l}" href="${SITE}${l==='en'?'':'/'+l}${u}">`).join('\n')+
+    `\n<link rel="alternate" hreflang="x-default" href="${SITE}${u}">\n<!-- /i18n:alternates -->`;
+}
+
 /* ===== shared page shell ===== */
-function shell({slug,title,desc,faq,body,related,canonicalUrl}){
+function shell({c,T,slug,title,desc,faq,body,related,canonicalUrl}){
   // slug is the FILENAME (foo.html); the canonical URL is extensionless. GitHub Pages
   // serves /foo for foo.html, so both resolve — the canonical picks which one Google keeps.
   // canonicalUrl overrides that when this page duplicates a stronger one and should
   // consolidate its signals there instead of competing with it.
-  const canonical=canonicalUrl||`${SITE}/${slug.replace(/\.html$/,'')}`;
+  const pre=c.lang==='en'?'':'/'+c.lang;
+  const canonical=canonicalUrl?canonicalUrl.replace(SITE,SITE+pre):`${SITE}${pre}/${slug.replace(/\.html$/,'')}`;
   const faqLd={"@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))};
   const faqHtml=faq.map(f=>`    <details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('\n');
-  const relHtml=related.map(r=>`<a href="${r.href}">${esc(r.label)}</a>`).join(' &middot; ');
+  const relHtml=related.map(r=>`<a href="${localHref(c.lang,r.href)}">${esc(r.label)}</a>`).join(' &middot; ');
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${c.lang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${canonical}">
+${alternates(slug)}
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta property="og:type" content="article">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${canonical}">
-<meta property="og:image" content="${SITE}/og-image.png?v=4">
+<meta property="og:image" content="${SITE}/og-image.png?v=5">
 <script type="application/ld+json">
 ${JSON.stringify(faqLd,null,2)}
 </script>
-<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/content.css?v=12">
-<link rel="stylesheet" href="/assets/topbar.css?v=5">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
+<link rel="stylesheet" href="/assets/components.css?v=10">
+<link rel="stylesheet" href="/assets/site-chrome.css?v=11">
+<link rel="stylesheet" href="/assets/content.css?v=20">
+<link rel="stylesheet" href="/assets/topbar.css?v=8">
+<script src="/assets/site-chrome.js?v=18" defer></script>
 </head>
 <body>
 <main class="content-wrap">
 ${body}
-  <h2>Frequently asked questions</h2>
+  <p class="cfg-asof">${T.asof(ASOF_DATE)}</p>
+  <h2>${T.faqTitle}</h2>
   <div class="faq">
 ${faqHtml}
   </div>
-  <div class="related">Read next: ${relHtml}</div>
+  <div class="related">${T.readNext} ${relHtml}</div>
 </main>
-<script src="/assets/site.js?v=26"></script>
+<script src="/assets/site.js?v=49"></script>
 </body>
 </html>
 `;
 }
 
-const CTA = `  <div class="cta">
-    <h3>Run your own numbers — free</h3>
-    <p>Plug in your hashrate for live P&amp;L on today's numbers &mdash; then project it forward on assumptions you choose.</p>
-    <p style="margin-top:.6rem">New to GoMining? Use code <span class="code">RINGO5</span> to unlock three bonuses: +5% bonus TH on your first miner (up to 25 TH), 1 month of VIP Platinum+ and a GoMining Card cashback bonus.</p>
-    <a href="/console" class="btn">Open the calculator →</a>
-  </div>`;
-
-
 /* ===== page builders ===== */
-const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const stats=rows=>`  <div class="stats">\n`+rows.map(([k,v,s])=>`    <div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('\n')+`\n  </div>`;
 
-// Outcome-dependent verdict so prose genuinely differs per scenario. Framed as a
-// yield on capital rather than a payback period — same arithmetic underneath, but
-// it answers "what does this pay me" instead of "when do I stop being down".
-function verdict(m){
-  const y=m.yearlyUSD/m.totalCapital*100;
-  const r=`${y.toFixed(1)}% a year on capital at today's price`;
-  if(y>=20)return `that is ${r} — a strong rate for cloud mining, though it assumes you hold the maximum fee discount`;
-  if(y>=12)return `that is ${r}, a solid rate provided you keep the fee discount in place`;
-  if(y>=6)return `that is ${r} — modest, and materially better if Bitcoin outruns the modelled path`;
-  return `that is ${r}, a thin rate, so the case rests largely on Bitcoin outperforming the path modelled here`;
-}
-
-function hashratePage(th, live, dateStr){
+function hashratePage(c, th, live){
+  const T=TEXT[c.lang], S=T.stat, H=T.hash;
   const full=model({th,bp:live.bp,diff:live.diff,disc:20});
   const none=model({th,bp:live.bp,diff:live.diff,disc:0});
+  const cc={...c,th};
   const slug=`gomining-${th}-th-roi.html`;
-  const title=`GoMining ${th} TH: What It Actually Earns (${dateStr.year})`;
-  const desc=`What ${th} TH on GoMining earns at today's price: ${usd(full.monthlyUSD)}/mo on ${usd(full.totalCapital)} of capital — counting mining, staking, and the GMT you lock for the discount.`;
-  const body=`  <h1>GoMining ${th} TH: What It Actually Earns</h1>
-  <p class="lead">Exactly what a ${th} TH GoMining setup costs and pays you at today's price and difficulty — counting the GMT you must lock for the discount and the staking it earns, not just the hashrate.</p>
-  <p class="updated">Live figures &middot; Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
-  <div class="stats">
-    <div class="stat"><div class="k">Total capital</div><div class="v">${usd(full.totalCapital)}</div><div class="s">${usd(full.hashCost)} hashrate + ${usd(full.gmtLockUSD)} GMT lock</div></div>
-    <div class="stat"><div class="k">Net / month</div><div class="v">${usd(full.monthlyUSD)}</div><div class="s">${usd(full.miningMonthlyUSD)} mining + ${usd(full.stakingMonthlyUSD)} staking</div></div>
-    <div class="stat"><div class="k">GMT to lock</div><div class="v">${usd(full.gmtLockUSD)}</div><div class="s">for the 20% discount</div></div>
-    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(full.netUSD)}</div><div class="s">${(full.yearlyUSD/full.totalCapital*100).toFixed(1)}% a year on capital</div></div>
-  </div>
-  <p>Two things get bought here, and most calculators only count the first. You mint ${th} TH for about <strong>${usd(full.hashCost)}</strong>, and to hold the maximum 20% fee discount you must lock roughly <strong>${usd(full.gmtLockUSD)} of GMT</strong> (360 days of fee coverage) — <strong>${usd(full.totalCapital)}</strong> of capital committed in total. On the income side, the hashrate nets about ${usd(full.miningMonthlyUSD)}/month after fees and the ${CONVERSION_FEE*100}% conversion, and the locked GMT earns roughly ${usd(full.stakingMonthlyUSD)}/month staking at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined, ${verdict(full)}.</p>
-  <h2>Why the locked GMT is not a normal cost</h2>
-  <p>Unlike the hashrate, the ${usd(full.gmtLockUSD)} in GMT isn't spent — you still own the tokens and can unlock them later, so it's capital tied up rather than money gone (with GMT price risk while it's locked). It also pulls double duty: it cuts your fee by 20% <em>and</em> earns ${STAKING_APR}% staking. Without any discount, ${th} TH nets only about <strong>${usd(none.monthlyUSD)}/month</strong> and ties up no GMT — but you leave the fee saving and the staking on the table. That trade is the main lever you control.</p>
-  <div class="formula">daily net = mining net + GMT staking = (sats/TH/day × ${th} TH × BTC − fee × (1 − discount)) × 0.98 + locked GMT × APR ÷ 365\ntotal capital = hashrate + GMT locked for the discount</div>
-  <h2>Why there is no multi-year forecast on this page</h2>
-  <p>Every figure above is today's: live Bitcoin price (${usd(live.bp)}), live network difficulty, current fee rates and the ${STAKING_APR}% staking APR. None of it is projected forward, because a multi-year total printed into a static page is a number you did not choose and cannot inspect — and it will be read as a promise no matter how it is labelled. What happens next depends on the Bitcoin price, difficulty growth, the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving and whether you keep the discount funded. Those are your assumptions to set, so set them in the calculator and watch what moves.</p>
-${CTA}`;
-  const faq=[
-    {q:`How much capital do you really need for ${th} TH on GoMining?`,a:`About ${usd(full.totalCapital)} in total: roughly ${usd(full.hashCost)} for ${th} TH at the 15 W/TH new-miner price (~${usd2(cptTier(th))}/TH), plus about ${usd(full.gmtLockUSD)} of GMT locked to hold the maximum 20% fee discount. The GMT is retained, not spent. With promo code RINGO5 you get 5% extra hashrate for the same spend.`},
-    {q:`How much does ${th} TH earn per month?`,a:`At today's Bitcoin price of ${usd(live.bp)} and current difficulty, ${th} TH nets about ${usd(full.miningMonthlyUSD)} per month from mining after fees and the ${CONVERSION_FEE*100}% conversion (with the 20% GMT discount), plus roughly ${usd(full.stakingMonthlyUSD)} from staking the locked GMT at ${STAKING_APR}% APR — about ${usd(full.monthlyUSD)} combined. Without the discount, mining alone is closer to ${usd(none.monthlyUSD)}.`},
-    {q:`What will ${th} TH be earning in a few years?`,a:`Nobody can tell you that, and any page quoting a single number is guessing. It depends on the Bitcoin price, how fast network difficulty grows, whether you keep the fee discount funded, and the ${new Date(HALVING_DATES[0]).getUTCFullYear()} halving cutting the block subsidy in half. What this page gives you is today's figures, computed from live data. If you want a projection, run one in the calculator where you set the assumptions yourself and can see exactly what they are.`}
-  ];
-  const related=[
-    {href:'/gomining-roi-calculator',label:'How ROI is calculated'},
-    {href:'/gomining-discount-explained',label:'The GMT discount explained'},
-    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
-    {href:'/',label:'the calculator'}
-  ];
-  return {slug,html:shell({slug,title,desc,faq,body,related})};
+  const y=full.yearlyUSD/full.totalCapital*100;
+  const body=`  <h1>${H.h1(cc)}</h1>
+  <p class="lead">${H.lead(cc)}</p>
+  <p class="updated">${H.updated(cc)}</p>
+${stats([[S.capital,c.u(full.totalCapital),S.hashPlusLock(c,c.u(full.hashCost),c.u(full.gmtLockUSD))],
+         [S.net,c.u(full.monthlyUSD),S.miningPlusStaking(c,c.u(full.miningMonthlyUSD),c.u(full.stakingMonthlyUSD))],
+         [S.lock,c.u(full.gmtLockUSD),S.forCap(c)],
+         [S.perDay,c.u2(full.netUSD),S.yearOnCap(c,y)]])}
+  <p>${H.p1(cc,full,T.verdict(c,y))}</p>
+  <h2>${H.h2a}</h2>
+  <p>${H.p2(cc,full,none)}</p>
+  <div class="formula">${H.formula(cc)}</div>
+  <h2>${H.h2b}</h2>
+  <p>${H.p3(cc)}</p>
+${T.cta(c)}`;
+  const R=T.related;
+  const related=[{href:'/gomining-roi-calculator',label:R.roi},{href:'/gomining-discount-explained',label:R.disc},{href:'/gomining-promo-code',label:R.promo},{href:'/',label:R.calc}];
+  return {slug,html:shell({c,T,slug,title:H.title(cc),desc:H.desc(cc,full),faq:H.faq(cc,full,none,cptTier(th)),body,related})};
 }
 
-function pricePage(price, live, dateStr){
+function pricePage(c, price, live){
+  const T=TEXT[c.lang], S=T.stat, P=T.price;
   const th=100; // reference farm
   const m=model({th,bp:price,diff:live.diff,disc:20});
-  const pk=Math.round(price/1000);
+  const pk=Math.round(price/1000), cc={...c,pk};
   const slug=`gomining-profit-btc-${pk}k.html`;
-  const title=`Is GoMining Profitable if Bitcoin Hits $${pk}k? (${dateStr.year})`;
-  const desc=`Modeling GoMining returns at a $${pk},000 Bitcoin price: a 100 TH farm (plus the GMT locked for the discount) nets about ${usd(m.monthlyUSD)}/month on ${usd(m.totalCapital)} of capital. Live difficulty.`;
-  const body=`  <h1>GoMining Profitability at $${pk}k Bitcoin</h1>
-  <p class="lead">What a GoMining farm would earn if Bitcoin traded at $${pk},000 — counting the GMT locked for the discount and its staking, on a reference 100 TH setup at live difficulty.</p>
-  <p class="updated">Scenario price $${pk},000 &middot; live difficulty ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
-  <div class="stats">
-    <div class="stat"><div class="k">BTC price</div><div class="v">$${pk}k</div><div class="s">scenario</div></div>
-    <div class="stat"><div class="k">Net / month</div><div class="v">${usd(m.monthlyUSD)}</div><div class="s">${usd(m.miningMonthlyUSD)} mining + ${usd(m.stakingMonthlyUSD)} staking</div></div>
-    <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
-    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
-  </div>
-  <p>Mining rewards are paid in Bitcoin, so a higher price lifts the dollar value of every sat while the electricity and service fees (quoted in dollars) stay fixed. At $${pk},000, the 100 TH hashrate nets about ${usd(m.miningMonthlyUSD)}/month, and the ${usd(m.gmtLockUSD)} of GMT you lock for the 20% discount adds roughly ${usd(m.stakingMonthlyUSD)}/month in staking — about ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, ${verdict(m)}.</p>
-  <p>The reason a higher Bitcoin price helps so much: your fee is a dollar amount, so as price rises it shrinks as a share of your reward. That's the leverage — and the risk works in reverse if price falls. The locked GMT, meanwhile, is retained capital that keeps paying staking regardless of BTC.</p>
-${CTA}`;
-  const faq=[
-    {q:`Is GoMining profitable at $${pk}k Bitcoin?`,a:`At a $${pk},000 price and current difficulty, a 100 TH GoMining farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the 20% discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of capital. Earnings scale with your hashrate.`},
-    {q:`Why does the Bitcoin price matter so much for GoMining?`,a:`Rewards are paid in Bitcoin but fees are charged in dollars, so a higher BTC price raises your revenue while your cost stays fixed — every dollar of price increase lands in your margin. A falling price does the opposite.`},
-    {q:`Does difficulty change these numbers?`,a:`Yes, and this page holds it at today's level rather than guessing where it goes. Rising difficulty steadily reduces the sats each TH earns, so a figure computed at today's difficulty is a snapshot, not a forecast. The calculator lets you project difficulty growth forward and see how much it costs you.`}
-  ];
-  const related=[
-    {href:'/is-gomining-worth-it',label:'Is GoMining worth it?'},
-    {href:'/gomining-roi-calculator',label:'How ROI is calculated'},
-    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
-    {href:'/',label:'the calculator'}
-  ];
-  return {slug,html:shell({slug,title,desc,faq,body,related})};
+  const y=m.yearlyUSD/m.totalCapital*100;
+  const body=`  <h1>${P.h1(cc)}</h1>
+  <p class="lead">${P.lead(cc)}</p>
+  <p class="updated">${P.updated(cc)}</p>
+${stats([[S.btc,P.k(cc),S.scenario],
+         [S.net,c.u(m.monthlyUSD),S.miningPlusStaking(c,c.u(m.miningMonthlyUSD),c.u(m.stakingMonthlyUSD))],
+         [S.capital,c.u(m.totalCapital),S.hashPlusGmt(c,c.u(m.hashCost),c.u(m.gmtLockUSD))],
+         [S.perDay,c.u2(m.netUSD),S.yearOnCap(c,y)]])}
+  <p>${P.p1(cc,m,T.verdict(c,y))}</p>
+  <p>${P.p2(cc)}</p>
+${T.cta(c)}`;
+  const R=T.related;
+  const related=[{href:'/is-gomining-worth-it',label:R.worth},{href:'/gomining-roi-calculator',label:R.roi},{href:'/gomining-promo-code',label:R.promo},{href:'/',label:R.calc}];
+  return {slug,html:shell({c,T,slug,title:P.title(cc),desc:P.desc(cc,m),faq:P.faq(cc,m),body,related})};
 }
 
-function monthlyPage(live, dateStr){
+function monthlyPage(c, live){
+  const T=TEXT[c.lang], S=T.stat, M=T.month;
   const th=100;
   const m=model({th,bp:live.bp,diff:live.diff,disc:20});
   const slug='gomining-worth-it-now.html';   // stable URL, regenerated in place (fresh, no pile-up)
@@ -227,36 +245,24 @@ function monthlyPage(live, dateStr){
   // the impressions. Point the canonical there so the two stop splitting the signal —
   // the page still exists and stays current, it just ranks under its stronger twin.
   const canonicalUrl=`${SITE}/is-gomining-worth-it`;
-  const title=`Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?`;
-  const desc=`A ${MONTHS[dateStr.m]} ${dateStr.year} snapshot: with Bitcoin at ${usd(live.bp)}, a 100 TH GoMining farm plus the GMT locked for the discount nets ~${usd(m.monthlyUSD)}/mo on ${usd(m.totalCapital)} of capital. Live numbers.`;
-  const body=`  <h1>Is GoMining Worth It in ${MONTHS[dateStr.m]} ${dateStr.year}?</h1>
-  <p class="lead">A current-conditions snapshot, computed from live Bitcoin price and network difficulty as of ${dateStr.full} — counting the GMT you lock for the discount and its staking.</p>
-  <p class="updated">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; ${STAKING_APR}% GMT staking APR &middot; updated ${dateStr.full}</p>
-  <div class="stats">
-    <div class="stat"><div class="k">BTC price now</div><div class="v">${usd(live.bp)}</div><div class="s">live</div></div>
-    <div class="stat"><div class="k">Net / month</div><div class="v">${usd(m.monthlyUSD)}</div><div class="s">${usd(m.miningMonthlyUSD)} mining + ${usd(m.stakingMonthlyUSD)} staking</div></div>
-    <div class="stat"><div class="k">Per day</div><div class="v">${usd2(m.netUSD)}</div><div class="s">${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year on capital</div></div>
-    <div class="stat"><div class="k">Total capital</div><div class="v">${usd(m.totalCapital)}</div><div class="s">${usd(m.hashCost)} hashrate + ${usd(m.gmtLockUSD)} GMT</div></div>
-  </div>
-  <p>As of ${dateStr.full}, Bitcoin trades near ${usd(live.bp)} and the network mines about ${Math.round(satsPerTHDay(live.diff))} sats per TH per day. On those numbers a 100 TH GoMining farm nets roughly <strong>${usd(m.miningMonthlyUSD)}/month</strong> from mining, and the ${usd(m.gmtLockUSD)} of GMT locked for the 20% discount adds about ${usd(m.stakingMonthlyUSD)}/month in staking — around <strong>${usd(m.monthlyUSD)} combined</strong> on ${usd(m.totalCapital)} of committed capital. In short, ${verdict(m)}.</p>
-  <h2>What would change this</h2>
-  <p>These figures move constantly. A rising Bitcoin price improves margin (fees are fixed in dollars); rising difficulty erodes sats per TH; and letting your GMT coverage lapse can wipe out the discount and gut your net. That's why it pays to check current numbers rather than trust a static estimate — run yours below.</p>
-${CTA}`;
-  const faq=[
-    {q:`Is GoMining worth it right now?`,a:`As of ${dateStr.full}, with Bitcoin near ${usd(live.bp)}, a 100 TH farm nets about ${usd(m.miningMonthlyUSD)}/month from mining plus ${usd(m.stakingMonthlyUSD)} from staking the GMT locked for the discount — around ${usd(m.monthlyUSD)} combined on ${usd(m.totalCapital)} of committed capital, or ${(m.yearlyUSD/m.totalCapital*100).toFixed(1)}% a year. Whether that's "worth it" depends on your view of Bitcoin's price from here, which is why this page stops at today's numbers.`},
-    {q:`How much can you make with GoMining in ${dateStr.year}?`,a:`Earnings scale with hashrate. At current conditions each 100 TH nets roughly ${usd(m.miningMonthlyUSD)}/month mining plus ${usd(m.stakingMonthlyUSD)} staking the GMT you lock for the discount. More hashrate earns proportionally more; the discount, staking rate and Bitcoin's price are the main swing factors.`},
-    {q:`Is GoMining a scam?`,a:`GoMining is a real service that has paid users for years, though many negative reviews trace to maintenance fees spiking when a user's GMT coverage lapses and the discount is lost — a configuration issue, not a scam. Understanding the fee and discount mechanics is what separates a good outcome from a bad one.`}
-  ];
-  const related=[
-    {href:'/is-gomining-worth-it',label:'Is GoMining worth it? (full guide)'},
-    {href:'/gomining-discount-explained',label:'The GMT discount explained'},
-    {href:'/gomining-promo-code',label:'GoMining promo code (RINGO5)'},
-    {href:'/',label:'the calculator'}
-  ];
-  return {slug,canonicalUrl,html:shell({slug,title,desc,faq,body,related,canonicalUrl})};
+  const y=m.yearlyUSD/m.totalCapital*100;
+  const body=`  <h1>${M.h1(c)}</h1>
+  <p class="lead">${M.lead(c)}</p>
+  <p class="updated">${M.updated(c)}</p>
+${stats([[S.btcNow,c.btc,S.live],
+         [S.net,c.u(m.monthlyUSD),S.miningPlusStaking(c,c.u(m.miningMonthlyUSD),c.u(m.stakingMonthlyUSD))],
+         [S.perDay,c.u2(m.netUSD),S.yearOnCap(c,y)],
+         [S.capital,c.u(m.totalCapital),S.hashPlusGmt(c,c.u(m.hashCost),c.u(m.gmtLockUSD))]])}
+  <p>${M.p1(c,m,T.verdict(c,y))}</p>
+  <h2>${M.h2}</h2>
+  <p>${M.p2(c)}</p>
+${T.cta(c)}`;
+  const R=T.related;
+  const related=[{href:'/is-gomining-worth-it',label:R.worthFull},{href:'/gomining-discount-explained',label:R.disc},{href:'/gomining-promo-code',label:R.promo},{href:'/',label:R.calc}];
+  return {slug,canonicalUrl,html:shell({c,T,slug,title:M.title(c),desc:M.desc(c,m),faq:M.faq(c,m,y),body,related,canonicalUrl})};
 }
 
-/* ===== sitemap ===== */
+/* ===== sitemap (English URLs; translated URLs are listed by scripts/gen-i18n.js) ===== */
 function updateSitemap(pages){
   const smPath=path.join(ROOT,'sitemap.xml');
   let sm=fs.readFileSync(smPath,'utf8');
@@ -281,7 +287,9 @@ function updateSitemap(pages){
    Some pages are hand-maintained prose but still need real, current figures —
    client-side JS numbers do not help ranking, since Google is weighing the HTML.
    These pages carry <!-- LIVE:name --> … <!-- /LIVE:name --> markers and this
-   refills them on every run. Everything outside the markers is left alone. */
+   refills them on every run. Everything outside the markers is left alone.
+   The es/fr/de versions of a block go to locales/live/<lang>/<name>.html; scripts/gen-i18n.js puts them
+   into the translated copy of the page. */
 function injectLiveBlock(file,name,html){
   const p=path.join(ROOT,file);
   if(!fs.existsSync(p))return false;
@@ -295,46 +303,38 @@ function injectLiveBlock(file,name,html){
   return true;
 }
 
-function injectLiveBlocks(live,dateStr){
+function liveBlockHTML(c,live){
   // "Is GoMining worth it" — the query wants a verdict backed by evidence, so give
   // it the real numbers at both the optimised and the do-nothing end of the range.
   const good=model({th:50,bp:live.bp,diff:live.diff,disc:20});
   const bad =model({th:50,bp:live.bp,diff:live.diff,disc:0});
   const yGood=good.yearlyUSD/good.totalCapital*100, yBad=bad.yearlyUSD/bad.totalCapital*100;
-  const html=
-`  <div class="formula">Bitcoin ${usd(live.bp)} &middot; ${Math.round(satsPerTHDay(live.diff))} sats/TH/day &middot; updated ${dateStr.full}</div>
-  <p>Take a 50 TH setup on a new miner (${EFF_BASE_MAX} W/TH, the only efficiency GoMining sells new). Buying the hashrate costs about
-  <strong>${usd(good.hashCost)}</strong>, and holding the maximum 20% fee discount means locking roughly
-  <strong>${usd(good.gmtLockUSD)}</strong> of GMT — <strong>${usd(good.totalCapital)}</strong> of capital in total.
-  That pays about <strong>${usd(good.monthlyUSD)}/month</strong>, or <strong>${yGood.toFixed(1)}% a year</strong>
-  on the capital committed.</p>
-  <p>Run the same 50 TH <em>without</em> the GMT discount and the fee takes most of the margin: the same
-  hashrate nets around <strong>${usd(bad.monthlyUSD)}/month</strong> on ${usd(bad.totalCapital)} of capital,
-  <strong>${yBad.toFixed(1)}% a year</strong>. That gap is the whole answer to "is it worth it": the hardware
-  is not what decides it, the discount is. Both figures are today's, on live price and difficulty — what they
-  become depends on Bitcoin, difficulty growth and the ${dateStr.year < 2028 ? '2028 halving' : 'next halving'},
-  which is your call to model, not ours to assert.</p>`;
-  injectLiveBlock('is-gomining-worth-it.html','worth-it-verdict',html);
+  return TEXT[c.lang].live(c,good,bad,yGood,yBad,EFF_BASE_MAX);
 }
 
 /* ===== main ===== */
 (async()=>{
   const live=await getLive();
-  const now=new Date();
-  const dateStr={full:now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}),
-                 year:now.getUTCFullYear(), m:now.getUTCMonth()};
+  const now=process.env.GEN_PAGES_DATE?new Date(process.env.GEN_PAGES_DATE+'T12:00:00Z'):new Date();   // test hook
   console.log(`Live: BTC ${usd(live.bp)}, difficulty ${(live.diff/1e12).toFixed(1)}e12, sats/TH/day ${Math.round(satsPerTHDay(live.diff))} (${live.live?'live':'FALLBACK'})`);
 
-  const pages=[];
-  [1,5,10,25,50,100,250,500].forEach(th=>pages.push(hashratePage(th,live,dateStr)));
-  [75000,100000,150000,200000,250000].forEach(p=>pages.push(pricePage(p,live,dateStr)));
-  pages.push(monthlyPage(live,dateStr));
-
-  for(const p of pages){
-    fs.writeFileSync(path.join(ROOT,p.slug),p.html);
-    console.log('  wrote',p.slug);
+  let englishPages=[];
+  for(const lang of LANGS){
+    const c=ctx(lang,live,now);
+    const pages=[];
+    [1,5,10,25,50,100,250,500].forEach(th=>pages.push(hashratePage(c,th,live)));
+    [75000,100000,150000,200000,250000].forEach(p=>pages.push(pricePage(c,p,live)));
+    pages.push(monthlyPage(c,live));
+    const dir=lang==='en'?ROOT:path.join(ROOT,lang);
+    fs.mkdirSync(dir,{recursive:true});
+    for(const p of pages)fs.writeFileSync(path.join(dir,p.slug),p.html);
+    console.log(`  wrote ${pages.length} ${lang} page(s)`);
+    if(lang==='en'){englishPages=pages;injectLiveBlock('is-gomining-worth-it.html','worth-it-verdict',liveBlockHTML(c,live));}
+    else{
+      const d=path.join(ROOT,'locales/live',lang);fs.mkdirSync(d,{recursive:true});
+      fs.writeFileSync(path.join(d,'worth-it-verdict.html'),liveBlockHTML(c,live));
+    }
   }
-  updateSitemap(pages);
-  injectLiveBlocks(live,dateStr);
-  console.log(`\nDone: ${pages.length} pages + sitemap updated.`);
+  updateSitemap(englishPages);
+  console.log(`\nDone: ${englishPages.length} pages × ${LANGS.length} languages + sitemap updated.`);
 })();

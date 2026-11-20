@@ -1,4 +1,4 @@
-/* GMT Optimizer — /quote: zero-setup quoting tool for prospective GoMining users.
+/* GMT-Optimizer — /quote: zero-setup quoting tool for prospective GoMining users.
    =========================================================================
    Answers the two questions you actually get asked on a call — "what does $X
    earn me?" and "what do I need to invest for $Y a month?" — for someone with
@@ -31,36 +31,27 @@
 })(function () {
   'use strict';
   const P = window.GMT_PRICING;   // TH tiers (sale applied), efficiency ratings, upgrade steps
+  const C = window.GMT_CONFIG;    // data/config.json: fees, rates, discount rules, VIP tiers, RINGO5 terms
 
-  // ---- CALIBRATION (mirror of assets/app.js) ----
-  const CONVERSION_FEE = 0.0225;  // BTC → GMT skim applied at payout
-  const USD_GMT_FEE    = 0.02;    // fee on USD deployed into GMT (lock + TH mint)
-  const BLOCK_SUBSIDY  = 3.125;   // BTC/block — halve at the 2028 halving
-  const ELEC_RATE      = 0.05;    // $/kWh on (W/TH × TH × 24h)
-  const SERVICE_RATE   = 0.0089;  // $/TH/day platform service fee
+  // ---- calibration: all from data/config.json ----
+  const CONVERSION_FEE = C.fees.btcToGmtConversion;
+  const USD_GMT_FEE    = C.fees.usdToGmt;
+  const BLOCK_SUBSIDY  = C.network.blockSubsidyBtc;
+  const ELEC_RATE      = C.fees.electricityUsdPerKwh;
+  const SERVICE_RATE   = C.fees.serviceUsdPerThDay;
   const EFF_BEST       = P.EFF_BEST;      // best efficiency reachable, by upgrading (W/TH)
   const EFF_BASE_MAX   = P.EFF_BASE_MAX;      // 15 W/TH hashrate curve
   const EFF_NEW        = EFF_BASE_MAX;   // what a new miner mints at: 15 W only since 2026-10-30
-  // % — GMT locked-staking APR (observed 2026-11-06). Kept in step with STAKING_APR in
-  // scripts/constants.js and inLockAPR in console/index.html so the cluster agrees.
-  const STAKE_APR0     = 18.87;
-  const MINING_MODE    = 1.09;    // % — solo mining discount (console inMiningMode, observed 2026-11-06)
-  const CLICK_STREAK   = 3;       // % — daily click streak, binary once the 10-day streak is held
+  const STAKE_APR0     = C.rates.stakingAprPct;          // % GMT locked-staking APR
+  const MINING_MODE    = C.rates.soloMiningDiscountPct;  // % solo mining discount
+  const CLICK_STREAK   = C.rates.clickStreakPct;         // % daily click streak
+  const COV_PER_PCT = C.discount.coverageDaysPerPct, TOK_CAP = C.discount.tokenCapPct, TOT_CAP = C.discount.totalCapPct;
   const FB = { btc: 84000, gmt: 0.28, diff: 113e12 };
 
   const TH_TIERS_12W = P.TH_TIERS_12W;
 
   // VIP tiers — qualify on hashrate OR locked GMT, whichever lifts you higher.
-  const TIERS = [
-    { n: 'Bronze I', th: 0, veg: 0, d: 0 }, { n: 'Bronze II', th: 5, veg: 50, d: .3 },
-    { n: 'Silver I', th: 10, veg: 100, d: .6 }, { n: 'Silver II', th: 25, veg: 250, d: .9 },
-    { n: 'Silver III', th: 50, veg: 500, d: 1.2 }, { n: 'Gold I', th: 100, veg: 1000, d: 1.5 },
-    { n: 'Gold II', th: 200, veg: 2000, d: 1.8 }, { n: 'Platinum I', th: 500, veg: 5000, d: 2.1 },
-    { n: 'Platinum II', th: 1000, veg: 10000, d: 2.4 }, { n: 'Platinum III', th: 2500, veg: 25000, d: 2.7 },
-    { n: 'Diamond I', th: 5000, veg: 50000, d: 3.0 }, { n: 'Diamond II', th: 7000, veg: 70000, d: 3.3 },
-    { n: 'Diamond III', th: 9000, veg: 90000, d: 3.6 }, { n: 'Diamond IV', th: 12000, veg: 120000, d: 3.9 },
-    { n: 'Diamond V', th: 20000, veg: 200000, d: 4.2 }
-  ];
+  const TIERS = C.vipTiers;   // VIP tiers: data/config.json
   const vipOf = (th, veg) => { let t = TIERS[0]; for (const x of TIERS) if (th >= x.th || veg >= x.veg) t = x; return t; };
 
 
@@ -136,12 +127,12 @@
     // nonTokD = min(30, VIP bonus + click streak + mining mode + other).
     const vip = vipOf(th, gmtLocked);
     const cb = streak ? CLICK_STREAK : 0;
-    const nonTok = Math.min(30, vip.d + cb + MINING_MODE);
+    const nonTok = Math.min(TOT_CAP, vip.d + cb + MINING_MODE);
     const feesGMT = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
     const cov = feesGMT > 0 ? gmtLocked / feesGMT : (gmtLocked > 0 ? Infinity : 0);
-    const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
-    const totD = Math.min(30, tok + nonTok);
-    const gmtFor20 = feesGMT * 360;                            // 360 coverage days = the 20% cap
+    const tok = cov < COV_PER_PCT ? 0 : Math.min(TOK_CAP, Math.floor(cov / COV_PER_PCT));
+    const totD = Math.min(TOT_CAP, tok + nonTok);
+    const gmtFor20 = feesGMT * COV_PER_PCT * TOK_CAP;                            // 360 coverage days = the 20% cap
 
     // What this setup costs to build from scratch, at live prices. Total-capital model:
     // the GMT you must lock to hold the discount counts as invested capital. Matches
@@ -188,13 +179,13 @@
   // none. The lock is solved to the SMALLEST amount that still covers 360 days of fees (the 20%
   // token-discount cap): past that point extra GMT buys no more discount, and hashrate pays
   // better than staking. Below it, coverage is what the discount is made of.
-  const COV_DAYS = 360;
+  const COV_DAYS = COV_PER_PCT * TOK_CAP;   // 360: the coverage that holds the full token discount
   // GMT still missing from a 360-day coverage buffer for this farm — what the discount is made
   // of, and the one number both the opening allocation and every reinvestment are solved against.
   function covDeficitGMT(th, locked, streak, gp) {
     const feeUSD = feePerTHDay(EFF_NEW) * Math.max(th, 0.0001);
     const vip = vipOf(th, locked);
-    const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+    const nonTok = Math.min(TOT_CAP, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
     const burn = gp > 0 ? (feeUSD * (1 - nonTok / 100)) / gp : 0;   // GMT/day
     return Math.max(0, burn * COV_DAYS - locked);
   }
@@ -250,18 +241,18 @@
     if (!a || !(a.capUSD > 0) || !(years > 0)) return null;
     const bp = S.btc, gp = S.gmt;
     const dbt = Math.round(S.satsPerTHDay) / 1e8;   // today's BTC per TH per day, held
-    const DPM = 365.25 / 12;
+    const DPM = window.GMTMining ? window.GMTMining.DAYS_PER_MONTH : 365.25 / 12;
     let th = a.th, locked = a.ag, cash = 0, income = 0, paidIn = a.capUSD;
     // series / paid: total value and money paid in at every month end, for the screenshot
     const rows = [], series = [a.capUSD], paid = [a.capUSD];
     for (let k = 1; k <= Math.round(years * 12); k++) {
       const feesUSD = feePerTHDay(EFF_NEW) * th;
       const vip = vipOf(th, locked);
-      const nonTok = Math.min(30, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
+      const nonTok = Math.min(TOT_CAP, vip.d + (streak ? CLICK_STREAK : 0) + MINING_MODE);
       const burn = gp > 0 ? (feesUSD * (1 - nonTok / 100)) / gp : 0;
       const cov = burn > 0 ? locked / burn : (locked > 0 ? Infinity : 0);
-      const tok = cov < 18 ? 0 : Math.min(20, Math.floor(cov / 18));
-      const totD = Math.min(30, tok + nonTok);
+      const tok = cov < COV_PER_PCT ? 0 : Math.min(TOK_CAP, Math.floor(cov / COV_PER_PCT));
+      const totD = Math.min(TOT_CAP, tok + nonTok);
       // Floored at zero: an operator switches a loss-making miner off, they don't pay to run it.
       const miningMo = Math.max(0, dbt * th * bp - feesUSD * (1 - totD / 100)) * (1 - CONVERSION_FEE) * DPM;
       const stakingMo = locked * gp * (apr0 / 100) * DPM / 365.25;
@@ -308,10 +299,15 @@
 
   // ---- page ----
   const $ = id => document.getElementById(id);
-  const money = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US',
-    { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
-  const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
-  const APR = 18.87;   // mirrors inLockAPR in console/index.html and STAKING_APR in scripts/constants.js
+  // Translated copies (/es/, /fr/, /de/) use the page's number format, symbol after; English is unchanged.
+  const QLOC = ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[(window.GMT_UI || {}).lang];
+  const money = (n, d) => {
+    const v = Math.abs(n).toLocaleString(QLOC || 'en-US', { maximumFractionDigits: d != null ? d : (Math.abs(n) < 100 ? 2 : 0) });
+    return (n < 0 ? '-' : '') + (QLOC ? v + '\u00a0$' : '$' + v);
+  };
+  const num = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString(QLOC || 'en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const pc = (n, d = 0) => num(n, d) + (QLOC ? '\u00a0%' : '%');
+  const APR = C.rates.stakingAprPct;   // data/config.json
   // When the tier tables above were last read off the live GoMining app. Mirrors
   // TH_PRICES_ASOF in assets/app.js — update both in the same commit as the prices.
   const TH_PRICES_ASOF = '30 Oct 2026';
@@ -346,7 +342,7 @@
         + '</title><rect x="' + x.toFixed(1) + '" y="' + yPos.toFixed(1) + '" width="' + bw.toFixed(1)
         + '" height="' + hPos.toFixed(1) + '" rx="3" fill="url(#qcGold)"></rect>'
         + (hCash > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + (yPos - 2 - hCash).toFixed(1) + '" width="' + bw.toFixed(1)
-          + '" height="' + hCash.toFixed(1) + '" rx="3" fill="#A78BFA"></rect>' : '')
+          + '" height="' + hCash.toFixed(1) + '" rx="3" style="fill:var(--color-series-4)"></rect>' : '')
         + '</g><text class="qc-x" x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">M' + r.mo + '</text>';
     });
     // Only the final column is labelled — a number on every column is noise, not information.
@@ -354,11 +350,11 @@
     g += '<text class="qc-lab" x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + money(c.last.total, 0) + '</text>';
     return '<svg class="comp-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Total value at each month end">'
       + '<defs><linearGradient id="qcGold" x1="0" y1="0" x2="0" y2="1">'
-      + '<stop offset="0" stop-color="#F7B84E"/><stop offset="1" stop-color="#F5A623"/></linearGradient></defs>'
+      + '<stop offset="0" style="stop-color:var(--color-gold-300)"/><stop offset="1" style="stop-color:var(--color-gold)"/></linearGradient></defs>'
       + '<polyline class="qc-cap" fill="none" points="' + paidPts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '"></polyline>'
       + g
       // drawn over the bars, outlined in the card colour so it reads even where a bar sits behind it
-      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end" stroke="#17181c" stroke-width="3" paint-order="stroke">' + money(c.last.paidIn, 0) + ' in</text>' + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
+      + '<text class="qc-caplab" x="' + (W - 2) + '" y="' + Math.max(9, capY - 5).toFixed(1) + '" text-anchor="end" style="stroke:var(--color-surface-2)" stroke-width="3" paint-order="stroke">' + money(c.last.paidIn, 0) + ' in</text>' + '<line class="qc-base" x1="0" x2="' + W + '" y1="' + base + '" y2="' + base + '"></line></svg>';
   }
 
   // The compounding block: controls, the headline rate, the chart and the year-by-year table.
@@ -368,14 +364,15 @@
     const reChips = REIN_CHIPS.map(o => '<button type="button" data-rein="' + o.v + '"' + (o.v === reinvest ? ' class="on"' : '') + '>' + o.l + '</button>').join('');
     // Quarter ends in the table; the chart carries every month.
     const rowsHTML = c.rows.filter(r => r.mo % 3 === 0).map(r =>
-      '<tr><td>Month ' + r.mo + '</td>' + (adds ? '<td>' + money(r.paidIn, 0) + '</td>' : '') + '<td>' + num(r.th, 0) + ' TH</td><td>' + num(r.locked, 0) + '</td><td>'
-      + money(r.income, 0) + '</td><td>' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td><td>'
-      + money(r.total, 0) + '</td></tr>').join('');
+      '<tr><td data-label="">Month ' + r.mo + '</td>' + (adds ? '<td class="num" data-label="Paid in">' + money(r.paidIn, 0) + '</td>' : '')
+      + '<td class="num" data-label="Hashrate">' + num(r.th, 0) + ' TH</td><td class="num" data-label="Locked GMT">' + num(r.locked, 0) + '</td>'
+      + '<td class="num" data-label="Net income">' + money(r.income, 0) + '</td><td class="num" data-label="Cash taken">' + (r.cash > 0 ? money(r.cash, 0) : '&mdash;') + '</td>'
+      + '<td class="num" data-label="Total value">' + money(r.total, 0) + '</td></tr>').join('');
     return '<div class="comp">'
       + '<div class="comp-top"><h3>Then compound it for a year</h3>'
       + '<div class="chips" data-k="rein">' + reChips + '</div></div>'
       + '<div class="comp-hero">'
-      + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + num(c.cagr, 1) + '%<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
+      + '<div class="cell gold"><div class="k">Compound rate</div><div class="v">' + pc(c.cagr, 1) + '<span style="font-size:.8rem;color:var(--t3)">/yr</span></div>'
       + '<div class="s">over the year, on the ' + money(cap, 0)
       + (adds ? ' plus ' + addLabel() + ', each counted from the month it goes in' : '') + '</div></div>'
       + '<div class="cell"><div class="k">Worth after 1 yr</div><div class="v">' + money(L.total, 0) + '</div>'
@@ -391,15 +388,15 @@
       + (c.rows.length > 1
         ? '<div class="comp-leg"><span><i style="background:var(--gold)"></i>Position value &mdash; hashrate plus locked GMT</span>'
           + '<span><i style="background:none;border-top:1px dashed var(--t3);border-radius:0;height:0;vertical-align:middle"></i>' + (adds ? 'Paid in so far' : 'Capital in') + '</span>'
-          + (tookCash ? '<span><i style="background:#A78BFA"></i>Income taken as cash</span>' : '') + '</div>'
+          + (tookCash ? '<span><i style="background:var(--color-series-4)"></i>Income taken as cash</span>' : '') + '</div>'
           + compChart(c, cap, wpx)
         : '')
-      + '<div class="comp-tbl-wrap"><table class="comp-tbl"><thead><tr><th></th>' + (adds ? '<th>Paid in</th>' : '') + '<th>Hashrate</th><th>Locked GMT</th>'
-      + '<th>Net income</th><th>Cash taken</th><th>Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
-      + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT $' + S.gmt.toFixed(4)
-      + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + num(APR, 2) + '% staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
-      + 'Reinvestment tops the fee coverage back to 360 days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
-      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the ' + num(USD_GMT_FEE * 100, 0) + '% fee on USD into GMT; weekly amounts are averaged into the month.' : '')
+      + '<div class="ui-table-wrap comp-tbl-wrap"><table class="ui-table ui-table--stack comp-tbl" aria-label="Your position every three months"><thead><tr><th></th>' + (adds ? '<th class="num">Paid in</th>' : '') + '<th class="num">Hashrate</th><th class="num">Locked GMT</th>'
+      + '<th class="num">Net income</th><th class="num">Cash taken</th><th class="num">Total value</th></tr></thead><tbody>' + rowsHTML + '</tbody></table></div>'
+      + '<div class="comp-note">Everything is held at today&rsquo;s values for the whole year: BTC ' + money(S.btc, 0) + ', GMT ' + (QLOC ? num(S.gmt, 4) + '\u00a0$' : '$' + S.gmt.toFixed(4))
+      + ', ' + num(Math.round(S.satsPerTHDay)) + ' sats/TH/day and ' + pc(APR, 2) + ' staking APR. There is no difficulty, halving or price forecast in here, so every gain above is reinvested income at today&rsquo;s rates. '
+      + 'Reinvestment tops the fee coverage back to ' + COV_DAYS + ' days first, then mints 15&nbsp;W/TH hashrate; staking rewards always restake. Cash taken out earns nothing here.'
+      + (adds ? ' Each ' + (addPer === 'wk' ? 'week&rsquo;s' : 'month&rsquo;s') + ' top-up is deployed the same way as reinvested income, less the USD-to-GMT fee (currently ' + pc(USD_GMT_FEE * 100, 0) + ', may change); weekly amounts are averaged into the month.' : '')
       + '</div>'
       + '</div>';
   }
@@ -434,12 +431,12 @@
         <div class="sub">${mode === 'cap'
           ? money(m.netToday) + '/day &middot; ' + money(yr, 0) + '/yr'
           : 'to earn ' + money(mo, 0) + '/mo &middot; ' + money(m.netToday) + '/day'}</div>
-        <div class="note">${num(a.th, 1)} TH at 15 W/TH with ${num(a.ag, 0)} GMT locked &mdash; a ${num(m.totD, 2)}% fee discount and ${num(m.yieldPct, 1)}%/yr on total capital.</div>
+        <div class="note">${num(a.th, 1)} TH at 15 W/TH with ${num(a.ag, 0)} GMT locked &mdash; a ${pc(m.totD, 2)} fee discount and ${pc(m.yieldPct, 1)}/yr on total capital.</div>
       </div>
       <div class="grid">
         <div class="cell gold"><div class="k">Hashrate</div><div class="v">${num(a.th, 1)} TH</div><div class="s">newly minted at 15 W/TH &middot; ${money(thUSD, 0)}</div></div>
-        <div class="cell"><div class="k">Locked GMT</div><div class="v">${num(a.ag, 0)}</div><div class="s">${money(lockUSD, 0)} &middot; holds the fee discount and earns ${num(APR, 2)}% APR</div></div>
-        <div class="cell green"><div class="k">Total discount</div><div class="v">${num(m.totD, 2)}%</div><div class="s">${num(m.tok, 0)}% coverage + ${num(m.nonTok, 2)}% tier, streak &amp; solo bonus</div></div>
+        <div class="cell"><div class="k">Locked GMT</div><div class="v">${num(a.ag, 0)}</div><div class="s">${money(lockUSD, 0)} &middot; holds the fee discount and earns ${pc(APR, 2)} APR</div></div>
+        <div class="cell green"><div class="k">Total discount</div><div class="v">${pc(m.totD, 2)}</div><div class="s">${pc(m.tok, 0)} coverage + ${pc(m.nonTok, 2)} tier, streak &amp; solo bonus</div></div>
         <div class="cell"><div class="k">VIP tier</div><div class="v" style="font-size:1.1rem">${m.vip.n}</div><div class="s">qualifies on hashrate or locked GMT, whichever is higher</div></div>
       </div>
       <div class="split">
@@ -447,16 +444,16 @@
         <div class="bar"><i class="th" style="width:${pct(thUSD)}%"></i><i class="gm" style="width:${pct(lockUSD)}%"></i></div>
         <div class="legs">
           <div class="leg"><div class="lk"><span class="sw" style="background:var(--gold)"></span>Buy hashrate</div>
-            <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${num(pct(thUSD), 0)}%</div>
+            <div class="lv" style="color:var(--gold)">${money(thUSD, 0)} &middot; ${pc(pct(thUSD), 0)}</div>
             <div class="ls">${num(a.th, 1)} TH minted at 15 W/TH</div></div>
-          <div class="leg"><div class="lk"><span class="sw" style="background:#A78BFA"></span>Lock GMT</div>
-            <div class="lv" style="color:#A78BFA">${money(lockUSD, 0)} &middot; ${num(pct(lockUSD), 0)}%</div>
-            <div class="ls">${num(a.ag, 0)} GMT &mdash; 360 days of fee coverage</div></div>
+          <div class="leg"><div class="lk"><span class="sw" style="background:var(--color-series-4)"></span>Lock GMT</div>
+            <div class="lv" style="color:var(--color-series-4)">${money(lockUSD, 0)} &middot; ${pc(pct(lockUSD), 0)}</div>
+            <div class="ls">${num(a.ag, 0)} GMT &mdash; ${COV_DAYS} days of fee coverage</div></div>
         </div>
       </div>
       <div class="grid" style="margin-top:.8rem">
-        <div class="cell"><div class="k">Mining income</div><div class="v">${money(m.miningToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">after fees and the ${num(m.totD, 2)}% discount</div></div>
-        <div class="cell"><div class="k">Staking income</div><div class="v">${money(m.stakingToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">${num(APR, 2)}% APR on the locked GMT</div></div>
+        <div class="cell"><div class="k">Mining income</div><div class="v">${money(m.miningToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">after fees and the ${pc(m.totD, 2)} discount</div></div>
+        <div class="cell"><div class="k">Staking income</div><div class="v">${money(m.stakingToday * 30, 0)}<span style="font-size:.8rem;color:var(--t3)">/mo</span></div><div class="s">${pc(APR, 2)} APR on the locked GMT</div></div>
         <div class="cell"><div class="k">Payback</div><div class="v">${mo > 0 ? num(a.capUSD / mo, 1) + ' mo' : '&mdash;'}</div><div class="s">at today&rsquo;s rates, income only &mdash; the hashrate and GMT are still owned</div></div>
       </div>
       ${compHTML(a, c, out.clientWidth - 34)}
@@ -477,11 +474,11 @@
     const q = window._quote; if (!q) return;
     const t = `GoMining quote — ${money(q.cap, 0)} invested\n`
       + `• ${num(q.th, 1)} TH at 15 W/TH + ${num(q.gmt, 0)} GMT locked\n`
-      + `• ${num(q.disc, 2)}% fee discount\n`
+      + `• ${pc(q.disc, 2)} fee discount\n`
       + `• ${money(q.mo, 0)}/month net at today's prices\n`
       + (q.add ? `• Adding ${q.add}: ${money(q.paidIn, 0)} paid in over ${q.yrs} year${q.yrs === 1 ? '' : 's'}\n` : '')
       + (q.cagr > 0
-        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo after 1 year — ${num(q.cagr, 1)}% compounded, at today's BTC price and sats/TH/day\n`
+        ? `• ${q.rein === 1 ? 'Reinvesting it all' : q.rein === 0 ? 'Taking the income' : 'Reinvesting half'}: ${money(q.end, 0)} and ${money(q.endMo, 0)}/mo after 1 year — ${pc(q.cagr, 1)} compounded, at today's BTC price and sats/TH/day\n`
         : '')
       + `Modelled at gmt-optimizer.com/quote — sign up with code RINGO5 for +5% bonus TH.`;
     const done = () => { const o = btn.textContent; btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = o; }, 1800); };
@@ -497,9 +494,11 @@
     const SC = 2, W = 1200, H = 675;
     const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
     const x = c.getContext('2d'); x.scale(SC, SC);
-    const GOLD = '#F5A623', GSOFT = '#F7B84E', GHI = '#FFCF7A', UP = '#2EE59D', PURP = '#A78BFA';
-    const SANS = '"Space Grotesk",system-ui,sans-serif', MONO = '"Share Tech Mono",monospace';
-    const gold = a => 'rgba(245,166,35,' + a + ')';
+    // brand colours from the tokens (assets/charts.js resolves them for canvas); literal fallbacks if the kit is absent
+    const K = window.GMTCharts, tok = (n, f) => (K ? K.color(n) : f);
+    const GOLD = tok('gold', '#E2B259'), GSOFT = tok('gold-300', '#F7D88A'), GHI = GSOFT, UP = tok('success', '#22C55E'), PURP = tok('series-4', '#8B9CF7');
+    const SANS = '"Inter",system-ui,sans-serif', MONO = '"Inter",monospace';
+    const gold = a => 'rgba(226,178,89,' + a + ')';   // --color-gold-rgb
     const rr = (X, Y, w, h, r) => { x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + w, Y, X + w, Y + h, r); x.arcTo(X + w, Y + h, X, Y + h, r); x.arcTo(X, Y + h, X, Y, r); x.arcTo(X, Y, X + w, Y, r); x.closePath(); };
     // backdrop: dark room, amber light columns, floor
     const bg = x.createLinearGradient(0, 0, 0, H);
@@ -517,7 +516,7 @@
     x.fillStyle = fl; x.fillRect(0, 575, W, H - 575);
     // glass panel
     const PX = 56, PY = 112, PW = W - 112, PH = 452;
-    x.save(); x.shadowColor = gold(.55); x.shadowBlur = 34; rr(PX, PY, PW, PH, 26); x.fillStyle = 'rgba(18,12,6,0.94)'; x.fill(); x.restore();
+    x.save(); x.shadowColor = gold(.55); x.shadowBlur = 0; rr(PX, PY, PW, PH, 26); x.fillStyle = 'rgba(18,12,6,0.94)'; x.fill(); x.restore();
     const body = x.createLinearGradient(PX, PY, PX + PW * .35, PY + PH);
     body.addColorStop(0, 'rgba(255,200,110,0.10)'); body.addColorStop(.45, 'rgba(40,26,10,0.25)'); body.addColorStop(1, 'rgba(0,0,0,0.35)');
     rr(PX, PY, PW, PH, 26); x.fillStyle = body; x.fill();
@@ -530,29 +529,29 @@
     // left: what is being quoted
     x.textAlign = 'left'; x.fillStyle = GSOFT; x.font = '18px ' + MONO;
     x.fillText('GOMINING QUOTE', L, PY + 52);
-    x.fillStyle = '#fff'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + (q.add ? ' + ' + q.add : ' invested'), L, PY + 100);
-    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '18px ' + MONO;
+    x.fillStyle = '#FFFFFF'; x.font = '700 40px ' + SANS; x.fillText(money(q.cap, 0) + (q.add ? ' + ' + q.add : ' invested'), L, PY + 100);
+    x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '18px ' + MONO;
     x.fillText(num(q.th, 1) + ' TH @ 15 W/TH  +  ' + num(q.gmt, 0) + ' GMT locked', L, PY + 136);
     // right: the monthly income, big
     x.textAlign = 'right';
-    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 22; x.fillStyle = '#fff'; x.font = '700 84px ' + SANS;
+    x.save(); x.shadowColor = 'rgba(255,220,160,0.45)'; x.shadowBlur = 0; x.fillStyle = '#FFFFFF'; x.font = '700 84px ' + SANS;
     const big = money(q.mo, 0); x.fillText(big, R - 70, PY + 104);
     const bw = x.measureText(big).width; x.restore();
-    x.fillStyle = 'rgba(255,236,205,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
-    x.save(); x.shadowColor = UP; x.shadowBlur = 12; x.fillStyle = UP; x.font = '700 30px ' + SANS;
-    x.fillText('▲ ' + num(q.yieldPct, 1) + '%/yr on capital', R, PY + 148); x.restore();
+    x.fillStyle = 'rgba(255,255,255,0.6)'; x.font = '700 30px ' + SANS; x.fillText('/mo', R, PY + 104);
+    x.save(); x.shadowColor = UP; x.shadowBlur = 0; x.fillStyle = UP; x.font = '700 30px ' + SANS;
+    x.fillText('▲ ' + pc(q.yieldPct, 1) + '/yr on capital', R, PY + 148); x.restore();
     // stat chips
     const stats = [
-      ['FEE DISCOUNT', num(q.disc, 2) + '%', UP],
-      ['PER DAY', '$' + q.day.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), '#fff'],
-      ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#fff'],
+      ['FEE DISCOUNT', pc(q.disc, 2) + '', UP],
+      ['PER DAY', money(q.day, 2), '#FFFFFF'],
+      ['PAYBACK', q.mo > 0 ? num(q.cap / q.mo, 1) + ' mo' : '—', '#FFFFFF'],
       ['VIP TIER', q.vip, GHI],
     ];
     const cw = (R - L - 3 * 14) / 4, cy = PY + 176;
     stats.forEach(([k, v, col], i) => {
       const cx = L + i * (cw + 14);
       rr(cx, cy, cw, 74, 14); x.fillStyle = 'rgba(255,200,110,0.05)'; x.fill(); x.strokeStyle = gold(.22); x.lineWidth = 1; x.stroke();
-      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO; x.fillText(k, cx + 16, cy + 26);
       x.fillStyle = col; x.font = '700 26px ' + SANS; x.fillText(v, cx + 16, cy + 59);
     });
     // growth line: total value month by month, filled down to a dashed line of the money paid
@@ -566,33 +565,33 @@
       path(); for (let i = s.length - 1; i >= 0; i--) x.lineTo(pxs(i), paidAt(i)); x.closePath();
       const ag = x.createLinearGradient(0, T, 0, base); ag.addColorStop(0, 'rgba(46,229,157,0.40)'); ag.addColorStop(1, 'rgba(46,229,157,0.04)');
       x.fillStyle = ag; x.fill();
-      x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 16; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
-      path(); x.shadowBlur = 4; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
-      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,240,215,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
-      x.textAlign = 'left'; x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
+      x.save(); x.lineJoin = 'round'; path(); x.shadowColor = UP; x.shadowBlur = 0; x.strokeStyle = 'rgba(46,229,157,0.55)'; x.lineWidth = 4.5; x.stroke();
+      path(); x.shadowBlur = 0; x.strokeStyle = UP; x.lineWidth = 2; x.stroke(); x.restore();
+      x.save(); x.setLineDash([2, 5]); x.strokeStyle = 'rgba(255,255,255,0.55)'; x.lineWidth = 1.3; x.beginPath(); s.forEach((v, i) => i ? x.lineTo(pxs(i), paidAt(i)) : x.moveTo(pxs(i), paidAt(i))); x.stroke(); x.restore();
+      x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO; x.fillText(money(q.cap, 0) + ' in', CL + 4, base + 20);
       const ex = pxs(s.length - 1), ey = py(s[s.length - 1]);
-      x.save(); x.shadowColor = UP; x.shadowBlur = 16; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
+      x.save(); x.shadowColor = UP; x.shadowBlur = 0; x.fillStyle = UP; x.beginPath(); x.arc(ex, ey, 6.5, 0, 7); x.fill(); x.restore();
       x.fillStyle = 'rgba(255,255,255,0.85)'; x.beginPath(); x.arc(ex, ey, 3, 0, 7); x.fill();
       // end label to the right of the line
-      x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
+      x.textAlign = 'left'; x.fillStyle = '#FFFFFF'; x.font = '700 30px ' + SANS; x.fillText(money(q.end, 0), CR + 22, T + 34);
       x.fillStyle = UP; x.font = '700 18px ' + SANS; x.fillText(num(q.mult, 2) + '× in ' + q.yrs + ' yr', CR + 22, T + 62);
-      x.fillStyle = 'rgba(255,236,205,0.5)'; x.font = '14px ' + MONO;
+      x.fillStyle = 'rgba(255,255,255,0.5)'; x.font = '14px ' + MONO;
       x.fillText(q.rein === 1 ? 'reinvesting it all' : q.rein === 0 ? 'taking the income' : 'reinvesting half', CR + 22, T + 88);
-      x.fillText(num(q.cagr, 1) + '% compounded', CR + 22, T + 110);
+      x.fillText(pc(q.cagr, 1) + ' compounded', CR + 22, T + 110);
       if (q.add) x.fillText(money(q.paidIn, 0) + ' paid in', CR + 22, T + 132);
     }
     // rim
     const rim = x.createLinearGradient(PX, PY, PX + PW, PY + PH);
     rim.addColorStop(0, GHI); rim.addColorStop(.35, GOLD); rim.addColorStop(.7, gold(.55)); rim.addColorStop(1, GSOFT);
-    x.save(); x.shadowColor = gold(.9); x.shadowBlur = 14; rr(PX, PY, PW, PH, 26); x.strokeStyle = rim; x.lineWidth = 2.4; x.stroke(); x.restore();
+    x.save(); x.shadowColor = gold(.9); x.shadowBlur = 0; rr(PX, PY, PW, PH, 26); x.strokeStyle = rim; x.lineWidth = 2.4; x.stroke(); x.restore();
     // brand + footer
     let bx = PX + 4;
     if (logo) { x.drawImage(logo, bx, 34, 46, 46); bx += 60; }
-    x.textAlign = 'left'; x.fillStyle = '#fff'; x.font = '700 34px ' + SANS; x.fillText('GMT Optimizer', bx, 69);
+    x.textAlign = 'left'; x.fillStyle = '#FFFFFF'; x.font = '700 34px ' + SANS; x.fillText('GMT-Optimizer', bx, 69);
     x.textAlign = 'right'; x.fillStyle = GSOFT; x.font = '20px ' + MONO; x.fillText('gmt-optimizer.com/quote', W - PX - 4, 66);
     const fy = H - 30;
     x.textAlign = 'left'; x.fillStyle = GHI; x.font = '700 18px ' + SANS; x.fillText('Start with code RINGO5 — +5% bonus TH', PX + 4, fy);
-    x.textAlign = 'right'; x.fillStyle = 'rgba(255,240,215,0.42)'; x.font = '14px ' + MONO;
+    x.textAlign = 'right'; x.fillStyle = 'rgba(255,255,255,0.42)'; x.font = '14px ' + MONO;
     const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     x.fillText(d + '  ·  today\u2019s BTC & sats/TH held  ·  not financial advice', W - PX - 4, fy);
     return c;
@@ -631,121 +630,15 @@
   // here because /quote is a one-script page. The quote itself is computed instantly and live on
   // every keystroke; this only plays when someone asks for the answer (the button or Enter),
   // with each step showing a number from the quote that was just built, then reveals it.
-  const LOAD_CSS = `
-.ql{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;
-  background:radial-gradient(ellipse 60% 50% at 50% 42%,rgba(245,166,35,.13),transparent 70%),radial-gradient(ellipse 90% 70% at 50% 120%,rgba(255,138,61,.08),transparent 60%),rgba(6,7,9,.97);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
-  transition:opacity .45s cubic-bezier(.16,1,.3,1),filter .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1)}
-.ql::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background-image:linear-gradient(rgba(230,190,120,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(230,190,120,.05) 1px,transparent 1px);
-  background-size:36px 36px;-webkit-mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);mask-image:radial-gradient(ellipse 60% 60% at 50% 45%,#000 25%,transparent 80%);
-  animation:qlGrid 4s linear infinite}
-.ql.out{opacity:0;filter:blur(8px);transform:scale(1.03);pointer-events:none}
-@keyframes qlGrid{to{background-position:0 36px,36px 0}}
-.ql-core{position:relative;width:min(420px,100%);text-align:center;color:#EBE2D2;font-family:var(--sans)}
-.ql-orb{position:relative;width:92px;height:92px;margin:0 auto 14px}
-.ql-orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 55%,rgba(245,166,35,.9) 80%,#FFCF7A 100%);
-  -webkit-mask:radial-gradient(circle,transparent 60%,#000 61%);mask:radial-gradient(circle,transparent 60%,#000 61%);animation:qlSpin 1.05s linear infinite}
-.ql-orb img{position:absolute;inset:25px;width:42px;height:42px;animation:qlBreathe 1.5s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(245,166,35,.6))}
-@keyframes qlSpin{to{transform:rotate(360deg)}}
-@keyframes qlBreathe{50%{transform:scale(1.08)}}
-.ql-kicker{font-family:var(--mono);letter-spacing:.3em;font-size:.66rem;color:#FFCF7A;text-transform:uppercase;margin-bottom:.3rem}
-.ql-title{font-size:1.15rem;font-weight:700;color:#FFF4E0;margin-bottom:.8rem}
-.ql-meter{display:flex;align-items:center;gap:10px;margin-bottom:.85rem}
-.ql-bar{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
-.ql-bar i{display:block;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#F5A623,#FFCF7A);box-shadow:0 0 12px rgba(245,166,35,.8)}
-.ql-pct{font-family:var(--mono);color:#FFF4E0;font-size:.86rem;min-width:3em;text-align:right}
-.ql-steps{list-style:none;margin:0;padding:0;text-align:left;display:grid;gap:6px}
-.ql-step{display:flex;align-items:center;gap:9px;font-size:.8rem;color:#6F6759;transition:color .25s;min-width:0}
-.ql-step b{flex:0 0 14px;height:14px;border-radius:50%;border:1.5px solid currentColor;position:relative;transition:all .25s}
-.ql-step.on{color:#FFF4E0}
-.ql-step.on b{border-color:rgba(245,166,35,.3);border-top-color:#F5A623;animation:qlSpin .7s linear infinite}
-.ql-step.ok{color:#C3B8A6}
-.ql-step.ok b{border-color:#57d9a3;background:#57d9a3;box-shadow:0 0 9px rgba(87,217,163,.6)}
-.ql-step.ok b::after{content:'';position:absolute;left:3.5px;top:1px;width:3.5px;height:7px;border:solid #06140d;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.ql-step span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ql-v{font-style:normal;font-family:var(--mono);font-size:.7rem;color:#FFCF7A;white-space:nowrap;opacity:0;transform:translateX(-5px);transition:opacity .3s,transform .3s}
-.ql-step.ok .ql-v{opacity:1;transform:none}
-.ql-hash{margin-top:.8rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.05em;color:#5A5346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ql.done .ql-hash{color:#57d9a3}
-.q-reveal>*{animation:qReveal .6s cubic-bezier(.16,1,.3,1) both}
-.q-reveal>*:nth-child(2){animation-delay:.06s}.q-reveal>*:nth-child(3){animation-delay:.12s}
-.q-reveal>*:nth-child(4){animation-delay:.18s}.q-reveal>*:nth-child(n+5){animation-delay:.24s}
-@keyframes qReveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@media(max-width:420px){.ql-v{font-size:.62rem}.ql-step{font-size:.74rem}}
-@media(prefers-reduced-motion:reduce){.ql *,.ql::before,.q-reveal>*{animation:none!important}}`;
+  // (The staged "finding the optimal split" screen that used to play here is gone: the quote is computed instantly,
+  // so there is no work to show a loader for. Owner rule 2026-11-18: loaders only while real work runs.)
   let _qlActive = null;
   function quoteRun() {
     render();
-    const out = $('qOut'), q = window._quote;
-    if (!out || out.style.display === 'none' || !q) return;   // nothing to quote
-    if (!document.getElementById('qlCss')) { const st = document.createElement('style'); st.id = 'qlCss'; st.textContent = LOAD_CSS; document.head.appendChild(st); }
-    if (_qlActive) _qlActive();
+    const out = $('qOut');
+    if (!out || out.style.display === 'none' || !window._quote) return;   // nothing to quote
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const t12 = TH_TIERS_15W, splits = 1800 + Math.round(Math.random() * 900);
-    const steps = [
-      [q.mode === 'cap' ? 'Reading the capital' : 'Reading the income goal',
-        q.mode === 'cap' ? money(q.cap, 0) + ' to invest' : money(q.mo, 0) + '/mo goal'],
-      [S.live ? 'Pulling live BTC, GMT & difficulty' : 'Reading BTC, GMT & difficulty', 'BTC ' + money(q.btc, 0) + (S.live ? '' : ' · cached')],
-      ['Pricing new hashrate tiers', '$' + t12[0].cpt.toFixed(2) + ' → $' + t12[t12.length - 1].cpt.toFixed(2) + '/TH'],
-      [q.mode === 'cap' ? 'Testing every TH / GMT split' : 'Goal-seeking the capital',
-        q.mode === 'cap' ? num(splits) + ' combinations' : money(q.cap, 0) + ' needed'],
-      ['Holding the token discount', num(q.disc, 2) + '% total'],
-      ['Compounding ' + q.yrs + ' year' + (q.yrs === 1 ? '' : 's') + ' forward', q.add ? '+ ' + q.add + ' top-ups' : num(q.yrs * 12) + ' months'],
-    ];
-    const el = document.createElement('div');
-    el.className = 'ql'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
-    el.innerHTML = '<div class="ql-core"><div class="ql-orb"><img src="/gmt-optimizer-logo.svg?v=2" alt=""></div>'
-      + '<div class="ql-kicker">Quote a setup</div>'
-      + '<div class="ql-title">' + (q.mode === 'cap' ? 'Finding the optimal split' : 'Finding the capital needed') + '</div>'
-      + '<div class="ql-meter"><div class="ql-bar"><i></i></div><div class="ql-pct"><span>0</span>%</div></div>'
-      + '<ul class="ql-steps">' + steps.map(st => '<li class="ql-step"><b></b><span>' + st[0] + '</span><em class="ql-v">' + st[1] + '</em></li>').join('') + '</ul>'
-      + '<div class="ql-hash">0x</div></div>';
-    document.body.appendChild(el);
-    document.body.style.overflow = 'hidden';
-    const rows = Array.from(el.querySelectorAll('.ql-step'));
-    const pct = el.querySelector('.ql-pct span'), bar = el.querySelector('.ql-bar i'), hash = el.querySelector('.ql-hash');
-    const STEP_MS = reduce ? 30 : 300, t0 = performance.now();
-    const HEX = '0123456789abcdef';
-    const ht = reduce ? 0 : setInterval(() => { let h = '0x'; for (let i = 0; i < 36; i++) h += HEX[(Math.random() * 16) | 0]; hash.textContent = h; }, 70);
-    let done = 0, lastAt = t0, shown = 0, dead = false;
-    const kill = () => { if (dead) return; dead = true; clearInterval(ht); el.remove(); document.body.style.overflow = ''; if (_qlActive === kill) _qlActive = null; };
-    _qlActive = kill;
-    rows[0].classList.add('on');
-    function tick(now) {
-      if (dead) return;
-      if (done < rows.length && now - lastAt >= STEP_MS) {
-        rows[done].classList.remove('on'); rows[done].classList.add('ok');
-        done++; lastAt = now;
-        if (rows[done]) rows[done].classList.add('on');
-      }
-      const creep = done < rows.length ? Math.min(0.85, (now - lastAt) / STEP_MS) : 0;
-      const target = Math.min(done === rows.length ? 100 : 99, ((done + creep) / rows.length) * 100);
-      shown += (target - shown) * (reduce ? 1 : 0.14);
-      pct.textContent = Math.floor(shown);
-      bar.style.transform = 'scaleX(' + (shown / 100) + ')';
-      if (done === rows.length && shown > 99.3) {
-        clearInterval(ht);
-        pct.textContent = '100'; bar.style.transform = 'scaleX(1)';
-        hash.textContent = 'quote ready · ' + money(q.mo, 0) + '/mo';
-        el.classList.add('done');
-        setTimeout(() => {
-          if (dead) return;
-          el.classList.add('out');
-          document.body.style.overflow = '';
-          const o = $('qOut');
-          if (o) {
-            o.classList.remove('q-reveal'); void o.offsetWidth; o.classList.add('q-reveal');
-            setTimeout(() => o.classList.remove('q-reveal'), 1000);
-            o.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-          }
-          setTimeout(kill, 480);
-        }, reduce ? 0 : 320);
-        return;
-      }
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+    out.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
   }
 
   function setMode(m) {
@@ -802,16 +695,35 @@
     // Draw immediately on the fallback prices, then redraw when the live ones land. Waiting for
     // the fetch meant up to eight seconds of a blank page — which reads as "it did nothing",
     // especially to someone who just pressed Enter.
+    const strip = () => {
+      const d = $('qDot'), l = $('qLive');
+      if (d) d.className = 'dot' + (S.live ? '' : ' off');
+      // the console template's live strip (quote/index.html): label over value tiles
+      if (l) l.textContent = S.label || (S.live ? 'Live' : 'Cached');
+      const b = $('qBtc'), g = $('qGmt'), st2 = $('qSats');
+      if (b) b.textContent = money(S.btc, 0);
+      if (g) g.textContent = QLOC ? num(S.gmt, 4) + '\u00a0$' : '$' + S.gmt.toFixed(4);
+      if (st2) st2.textContent = num(Math.round(S.satsPerTHDay));
+    };
+    const M = window.GMTMarket;
+    if (M) {
+      // shared loader (assets/market.js): newest saved prices at once, live ones the moment they land, retried
+      // until every value is live; the strip says "Live" or how old the shown prices are
+      const T = (window.GMT_UI && GMT_UI.t) || ((x, a) => String(x).replace('{0}', a));
+      const apply = m => {
+        S.btc = m.btc; S.gmt = m.gmt; S.diff = m.diff; S.live = m.allLive; S.label = M.label(T);
+        S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
+        strip(); render();
+      };
+      apply(M.state);
+      M.onUpdate(apply);
+      setInterval(() => { if (!M.state.allLive) { S.label = M.label(T); strip(); } }, 60000);   // keep the age current
+      return;
+    }
     S.btc = FB.btc; S.gmt = FB.gmt; S.diff = FB.diff;
     S.satsPerTHDay = ((1e12 * 86400 * BLOCK_SUBSIDY) / (S.diff * 2 ** 32)) * 1e8;
     render();
-    loadMarket().then(() => {
-      const d = $('qDot'), l = $('qLive');
-      if (d) d.className = 'dot' + (S.live ? '' : ' off');
-      if (l) l.innerHTML = (S.live ? 'Live' : 'Cached') + ' &middot; BTC <b>' + money(S.btc, 0)
-        + '</b> &middot; GMT <b>$' + S.gmt.toFixed(4) + '</b> &middot; <b>' + num(Math.round(S.satsPerTHDay)) + '</b> sats/TH/day';
-      render();
-    }).catch(() => { render(); });
+    loadMarket().then(() => { strip(); render(); }).catch(() => { render(); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 });

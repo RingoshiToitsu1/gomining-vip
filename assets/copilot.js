@@ -1,219 +1,266 @@
 /*
-  GMT Optimizer co-pilot: a scripted guide in Ringo's voice. No AI, no API, no backend.
-  Same engine as the ringomining.com co-pilot, tailored to this site: it walks people through the
-  tools (opening them in place when they're already on the console), explains the GMT discount,
-  gets new users signed up with RINGO5, and sends their GoMining username to the same Formspree
-  form /claim uses. Anything off-script goes to Ringo on Telegram or text.
+  GMT-Optimizer co-pilot ENGINE: a scripted guide in Ringo's voice. No AI, no API, no backend.
+  =============================================================================================
+  One engine, two homes:
+    • the widget — the gold launcher in the corner of every page, with two tabs:
+        Co-pilot  (this conversation)  and  Messages  (the global chat room, logged-in visitors only)
+    • the full page at /copilot — any element with [data-copilot-page] gets the conversation inline
+      (the corner launcher stays off on that page).
+  The words live in per-language script files, assets/copilot/<lang>.js (en now; es/fr/de in Phase 7).
+  The page's <html lang> picks the file; anything missing falls back to English.
 
-  Edit the wording in NODES below. Each node has:
-    say:   lines Ringo says (trusted HTML, written here only)
-    links: buttons -> { t, kind: ref|copy|tg|sms } or { t, href, run }  (run = console function to
-           call instead of navigating, when it exists on this page)
-    opts:  reply buttons -> { t: label, go: next node }
-    ask:   collect a value -> { key, label, type, check, bad, next, optional }
-  Loaded on every page by site.js / chrome.js.
+  It sends a visitor's GoMining username to the same Formspree form /claim uses, and opens tools in place
+  when they're already on the console. Anything off-script goes to Ringo on Telegram or text.
+  Loaded on every page by site.js / site-chrome.js.
 */
 (function () {
   if (window.__gmCopilot) return;
   window.__gmCopilot = true;
   if (window.self !== window.top) return;   // not inside embeds / iframes
 
-  var CODE = "RINGO5";
+  var CFG = window.GMT_CONFIG;
+  var CODE = (CFG && CFG.referral && CFG.referral.code) || "RINGO5";
   var REF = "https://gomining.com/?ref=" + CODE;
   var TG = "https://t.me/RinGoMining";
   var PHONE = "906-235-5711";
   var SMS = "sms:+1" + PHONE.replace(/\D/g, "");
   var FORM = "https://formspree.io/f/xojokqwe";   // same endpoint as /claim
   var STORE = "gmt_copilot";
-  var AVATAR = "/assets/brand/ringo.png";
+  var AVATAR = "/assets/brand/GMT_icon_transparent.svg";
+  var SCRIPTS = { en: "/assets/copilot/en.js?v=1", es: "/assets/copilot/es.js?v=2", fr: "/assets/copilot/fr.js?v=2", de: "/assets/copilot/de.js?v=2" };
+  var CHAT_DEPS = [   // the Messages tab loads the chat room on first use, only on pages that don't already have it
+    ["supabase", "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"],
+    ["GMT_SUPABASE", "/assets/supabase-config.js?v=4"],
+    ["GMTAccount", "/assets/account.js?v=30"],
+    ["GMTChat", "/assets/chat.js?v=22"]
+  ];
+  var LANG = (document.documentElement.lang || "en").slice(0, 2).toLowerCase();
 
-  var NODES = {
-    start: {
-      say: ["What's up, Ringo here. I built GMT Optimizer.", "What can I help you with?"],
-      opts: [
-        { t: "Help me use the calculator", go: "tools" },
-        { t: "I'm new to GoMining", go: "signup" },
-        { t: "How does the GMT discount work?", go: "disc" },
-        { t: "I've got questions", go: "faq" }
-      ]
-    },
+  var css = document.createElement("link");
+  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=12";
+  document.head.appendChild(css);
 
-    // ---------- the tools ----------
-    tools: {
-      say: ["Sure. What are you trying to figure out?"],
-      opts: [
-        { t: "What my farm earns right now", go: "t_console" },
-        { t: "Where to put new money", go: "t_planner" },
-        { t: "What my farm looks like in a few years", go: "t_proj" },
-        { t: "Is this marketplace miner a good deal?", go: "t_market" },
-        { t: "Turn my GoMining CSV into a statement", go: "t_statement" }
-      ]
-    },
-    t_console: {
-      say: ["That's the Console. Hit <b>Edit my Farm</b> and add your miners, your locked GMT and your liquid GMT.", "It pulls live BTC price and difficulty, so your daily and monthly numbers are what you'd actually see today, discount included."],
-      links: [{ t: "Edit my Farm", href: "/console?view=edit", run: "openEditSetup" }, { t: "Open the Console", href: "/console", run: ["consoleView", "tab-current"] }],
-      opts: [{ t: "Another tool", go: "tools" }, { t: "How's the discount figured?", go: "disc" }, { t: "That's all, thanks", go: "bye" }]
-    },
-    t_planner: {
-      say: ["That's the Capital Planner. Put in the amount you want to deploy.", "It tests every split between buying TH, upgrading efficiency and locking GMT, and gives you the one that earns the most at the 20% discount cap."],
-      links: [{ t: "Open the Capital Planner", href: "/planner", run: ["consoleView", "tab-planner"] }],
-      opts: [{ t: "Then project that plan?", go: "t_proj" }, { t: "Another tool", go: "tools" }, { t: "That's all, thanks", go: "bye" }]
-    },
-    t_proj: {
-      say: ["That's the Growth Projection. Pick 1, 2, 3, 4, 5 or 10 years on the chart.", "It runs 4,000 possible Bitcoin futures, then walks your farm along the typical one, reinvesting every week. Switch between <b>My Farm</b> and <b>My Plan</b> to see it with your Capital Planner money in."],
-      links: [{ t: "Open the Growth Projection", href: "/projection", run: "openSetupProjection" }],
-      opts: [{ t: "Are those numbers guaranteed?", go: "f_model" }, { t: "Another tool", go: "tools" }, { t: "That's all, thanks", go: "bye" }]
-    },
-    t_market: {
-      say: ["Paste the miner's link into the Marketplace Checker.", "It compares the asking price, the efficiency and the upgrade cost against just minting the same TH new, so you know if the listing actually beats it."],
-      links: [{ t: "Open the Marketplace Checker", href: "/gomining-marketplace-checker" }],
-      opts: [{ t: "Another tool", go: "tools" }, { t: "That's all, thanks", go: "bye" }]
-    },
-    t_statement: {
-      say: ["Export your income CSV from GoMining and drop it into the Statement tool.", "It turns it into a clean income statement, with ownership splits if you share a farm with someone."],
-      links: [{ t: "Open the Statement tool", href: "/statement" }],
-      opts: [{ t: "Another tool", go: "tools" }, { t: "That's all, thanks", go: "bye" }]
-    },
+  function loadScript(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej;
+      (document.head || document.documentElement).appendChild(s);
+    });
+  }
+  var want = ["en"].concat(LANG !== "en" && SCRIPTS[LANG] ? [LANG] : []);
+  var have = window.GMTCopilotScripts || {};
+  Promise.all(want.filter(function (l) { return !(l in have); }).map(function (l) { return loadScript(SCRIPTS[l]).catch(function () {}); }))
+    .then(function () {
+      var all = window.GMTCopilotScripts || {};
+      var en = all.en; if (!en) return;            // no script, no co-pilot
+      var loc = all[LANG] || en;
+      var U = {}; Object.keys(en.ui).forEach(function (k) { U[k] = (loc.ui && loc.ui[k]) || en.ui[k]; });
+      U.sub = U.sub.replace("{CODE}", CODE);
+      var NODES = (loc.nodes || en.nodes)({ CODE: CODE });
+      if (document.body) boot(U, NODES); else document.addEventListener("DOMContentLoaded", function () { boot(U, NODES); });
+    });
 
-    // ---------- the discount ----------
-    disc: {
-      say: ["Pay your maintenance in GMT and GoMining discounts it based on how many days of fees your GMT covers.", "Every <b>18 days</b> of coverage is <b>1%</b> off, up to <b>20%</b> at <b>360 days</b>. The Console figures yours automatically from the GMT you enter."],
-      links: [{ t: "Read the full breakdown", href: "/gomining-discount-explained" }],
-      opts: [{ t: "How much GMT do I need for 20%?", go: "disc2" }, { t: "Another question", go: "faq" }, { t: "That's all, thanks", go: "bye" }]
-    },
-    disc2: {
-      say: ["Depends on your farm size and efficiency, since that sets your daily fee.", "Add your farm in the Console and it shows your coverage in days. The Capital Planner tells you exactly how much to lock to hit 20%."],
-      links: [{ t: "Edit my Farm", href: "/console?view=edit", run: "openEditSetup" }, { t: "Open the Capital Planner", href: "/planner", run: ["consoleView", "tab-planner"] }],
-      opts: [{ t: "Another question", go: "faq" }, { t: "That's all, thanks", go: "bye" }]
-    },
+  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
 
-    // ---------- sign up ----------
-    signup: {
-      say: ["Let's get you set up with my code <b>" + CODE + "</b>. Tap the button. It opens GoMining in a new tab with the code already on, so this chat stays right here.", "Create your account. If it asks for a referral code, type <b>" + CODE + "</b>."],
-      links: [{ t: "Open GoMining ↗", kind: "ref" }, { t: "Copy " + CODE, kind: "copy" }],
-      opts: [
-        { t: "Done, account made ✓", go: "buy" },
-        { t: "I already have an account", go: "existing" },
-        { t: "It never asked for a code", go: "nocode" },
-        { t: "I'm stuck", go: "human" }
-      ]
-    },
-    nocode: {
-      say: ["That's normal. The link puts the code on for you.", "If you want to be sure, check your profile in GoMining. Accounts less than 30 days old can still add <b>" + CODE + "</b> there. Do it before you buy anything."],
-      opts: [{ t: "Got it, next step", go: "buy" }, { t: "I'm stuck", go: "human" }]
-    },
-    existing: {
-      say: ["Real talk: GoMining's new-user bonus only works on accounts created with <b>" + CODE + "</b>.", "If your account is less than 30 days old, add " + CODE + " in your profile before you buy. Older than that? Message me before you buy and we'll figure it out."],
-      opts: [{ t: "Added it ✓", go: "buy" }, { t: "My account is older", go: "human" }, { t: "Back", go: "start" }]
-    },
-    buy: {
-      say: ["With my code, GoMining adds three sign-up bonuses: <b>+5% bonus TH</b> on your first miner (up to 25 TH), <b>1 month of VIP Platinum+</b>, and a <b>Card cashback bonus</b> when you spend with the GoMining Card in your first 90 days.", "How much to start with is your call, not mine. Only put in money you can afford to lose. Run your numbers in the Capital Planner first."],
-      links: [{ t: "Open the Capital Planner", href: "/planner", run: ["consoleView", "tab-planner"] }],
-      opts: [{ t: "Send Ringo my username", go: "claim" }, { t: "Questions first", go: "faq" }]
-    },
-    claim: {
-      say: ["Send me your GoMining username so I can confirm you're under my code and help you get your farm set up.", "Three quick things. I'll fill it in as we go."],
-      opts: [{ t: "Let's do it", go: "q_name" }, { t: "Not yet", go: "start" }]
-    },
-    q_name: {
-      say: ["What should I call you?"],
-      ask: { key: "name", label: "Your name or handle", type: "text", check: /\S{2,}/, bad: "Give me at least a couple letters.", next: "q_user" }
-    },
-    q_user: {
-      say: ["Your GoMining username? It's the name on your GoMining profile."],
-      ask: { key: "user", label: "GoMining username", type: "text", check: /\S{2,}/, bad: "That username looks too short. Try again?", next: "q_contact" }
-    },
-    q_contact: {
-      say: ["Best way to reach you? Email, Telegram or X all work."],
-      ask: { key: "contact", label: "Email, @telegram or @x", type: "text", check: /\S{3,}/, bad: "I need some way to reach you.", next: "review" }
-    },
-    review: { say: [], review: true },
-    sent: {
-      say: ["Got it. 🔥", "I'll check your username against my referral list and reach out.", "Welcome to the team."],
-      links: [{ t: "Message me on Telegram", kind: "tg" }],
-      opts: [{ t: "Help me use the calculator", go: "tools" }, { t: "I've got a question", go: "faq" }]
-    },
-    sendfail: {
-      say: ["Hmm, that didn't send. Check your connection and try again, or send me your username on Telegram and I'll set you up by hand."],
-      links: [{ t: "Message me on Telegram", kind: "tg" }],
-      opts: [{ t: "Try again", go: "review" }]
-    },
-
-    // ---------- questions ----------
-    faq: {
-      say: ["Ask away. What's on your mind?"],
-      opts: [
-        { t: "Are these numbers guaranteed?", go: "f_model" },
-        { t: "Is GoMining legit?", go: "f_legit" },
-        { t: "How do I get money to my bank?", go: "f_bank" },
-        { t: "What's in it for you?", go: "f_you" },
-        { t: "Talk to Ringo", go: "human" }
-      ]
-    },
-    f_model: {
-      say: ["No. Everything here runs on live BTC price and difficulty, but the future is a model, not a promise.", "The projections assume Bitcoin keeps tracking its long-run trend and difficulty keeps grinding up. Use them to compare options, not to bank on a number. Not financial advice."],
-      opts: [{ t: "Another question", go: "faq" }, { t: "Help me use the calculator", go: "tools" }]
-    },
-    f_legit: {
-      say: ["Fair question. It's the same risk as any investment. If you own a company's stock and it falls apart, your shares fall with it.", "GoMining has been around since 2017 and has offered this product since 2021. I trust them with my own money. But no investment is risk-free, and this one isn't either.", "GMT Optimizer is my own independent tool, not GoMining's."],
-      opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
-    },
-    f_bank: {
-      say: ["Here's how I do it. I withdraw on BNB Smart Chain, swap to USDC, send it to Coinbase, then to my bank.", "Or skip all that and spend it with the GoMining Visa card through Apple Pay."],
-      links: [{ t: "Open Coinbase ↗", href: "https://coinbase.com/join/MC6T569" }],
-      opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
-    },
-    f_you: {
-      say: ["Full transparency: GoMining pays me a referral commission plus ongoing ambassador rewards tied to your mining fees.", "That's also how I keep GMT Optimizer free and ad-free."],
-      opts: [{ t: "Another question", go: "faq" }, { t: "Let's get started", go: "signup" }]
-    },
-    human: {
-      say: ["Hit me up directly. I answer myself, usually pretty quick."],
-      links: [{ t: "Message me on Telegram", kind: "tg" }, { t: "Text me", kind: "sms" }],
-      opts: [{ t: "Back to the start", go: "start" }]
-    },
-    bye: {
-      say: ["Anytime. I'm right here in the corner if you need me."],
-      opts: [{ t: "Back to the start", go: "start" }]
-    }
-  };
-
-  // ---------- state ----------
+  // ---------- shared conversation state (one conversation per tab, whichever home shows it) ----------
   var state = load() || { node: null, data: {} };
   function load() { try { return JSON.parse(sessionStorage.getItem(STORE)); } catch (e) { return null; } }
   function save() { try { sessionStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} }
 
-  // ---------- styles ----------
-  var css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/assets/copilot.css?v=1";
-  document.head.appendChild(css);
+  // ---------- the conversation, rendered into any { log, foot } pair ----------
+  function Conversation(U, NODES, log, foot, hooks) {
+    var started = false;
+    function scroll() { log.scrollTop = log.scrollHeight; }
+    function bot(lines, instant, after) {
+      var i = 0;
+      var reduce = instant || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+      (function next() {
+        if (i >= lines.length) { if (after) after(); return; }
+        var b = el("div", "gc-msg gc-bot");
+        if (reduce) { b.innerHTML = lines[i++]; log.appendChild(b); scroll(); next(); }
+        else {
+          b.classList.add("gc-typing"); b.innerHTML = "<i></i><i></i><i></i>";
+          log.appendChild(b); scroll();
+          setTimeout(function () { b.classList.remove("gc-typing"); b.innerHTML = lines[i++]; scroll(); next(); },
+            Math.min(900, 280 + lines[i].length * 6));
+        }
+      })();
+    }
+    function me(text) { var b = el("div", "gc-msg gc-me"); b.textContent = text; log.appendChild(b); scroll(); }   // user text never HTML
 
-  // ---------- shell ----------
-  function el(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }
-  var fab = el("button", "gc-fab");
-  fab.type = "button";
-  fab.setAttribute("aria-label", "Ask Ringo");
-  fab.setAttribute("aria-expanded", "false");
-  fab.innerHTML = '<img src="' + AVATAR + '" alt="" width="56" height="56"><span class="gc-dot"></span>';
+    // A tool link: when the console function it names exists on this page, run it in place; otherwise navigate.
+    function runnable(run) {
+      if (!run) return null;
+      var name = Array.isArray(run) ? run[0] : run;
+      return typeof window[name] === "function" ? function () { window[name].apply(window, Array.isArray(run) ? run.slice(1) : []); } : null;
+    }
+    function linkBtn(l) {
+      if (l.kind === "copy") {
+        var c = el("button", "gc-link"); c.type = "button"; c.textContent = l.t;
+        c.addEventListener("click", function () { copyCode(c); });
+        return c;
+      }
+      var a = el("a", "gc-link" + (l.kind === "ref" ? " gc-fire" : ""));
+      a.textContent = l.t;
+      a.href = l.kind === "ref" ? REF : l.kind === "tg" ? TG : l.kind === "sms" ? SMS : l.href;
+      if (l.kind === "ref" || l.kind === "tg" || /^https?:/.test(l.href || "")) { a.target = "_blank"; a.rel = "noopener"; }
+      var fn = runnable(l.run);
+      if (fn) a.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (hooks.beforeRun) hooks.beforeRun();
+        try { fn(); } catch (err) { location.href = l.href; }
+      });
+      return a;
+    }
+    function copyCode(btn) {
+      var done = function () { var o = btn.textContent; btn.textContent = U.copied; setTimeout(function () { btn.textContent = o; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(CODE).then(done, done); else done();
+    }
+    function go(id, instant) {
+      var n = NODES[id]; if (!n) return;
+      state.node = id; save();
+      foot.innerHTML = "";
+      if (n.review) return review();
+      bot(n.say, instant, function () {
+        if (n.links) { var row = el("div", "gc-links"); n.links.forEach(function (l) { row.appendChild(linkBtn(l)); }); log.appendChild(row); }
+        scroll();
+        if (n.ask) return ask(n.ask);
+        if (n.opts) options(n.opts);
+      });
+    }
+    function options(opts) {
+      foot.innerHTML = "";
+      var wrap = el("div", "gc-opts");
+      opts.forEach(function (o) {
+        var b = el("button", "gc-opt"); b.type = "button"; b.textContent = o.t;
+        b.addEventListener("click", function () { me(o.t); go(o.go); });
+        wrap.appendChild(b);
+      });
+      foot.appendChild(wrap); scroll();
+    }
+    function ask(q) {
+      foot.innerHTML = "";
+      var f = el("form", "gc-ask"); f.noValidate = true;
+      var inp = el("input"); inp.type = "text";
+      inp.setAttribute("aria-label", q.label);
+      inp.placeholder = q.label + (q.optional ? " " + U.optional : "");
+      inp.autocomplete = "off"; inp.spellcheck = false;
+      if (state.data[q.key]) inp.value = state.data[q.key];
+      var send = el("button", "gc-send"); send.type = "submit"; send.textContent = U.send;
+      f.appendChild(inp); f.appendChild(send);
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var v = inp.value.trim();
+        if (q.check && !q.check.test(v)) { bot([q.bad], true); inp.focus(); return; }
+        state.data[q.key] = v; save(); me(v); go(q.next);
+      });
+      foot.appendChild(f); scroll();
+      setTimeout(function () { inp.focus(); }, 30);
+    }
+    function review() {
+      var d = state.data;
+      bot([U.reviewIntro], false, function () {
+        var card = el("div", "gc-msg gc-bot gc-card");
+        [[U.reviewName, d.name], [U.reviewUser, d.user], [U.reviewContact, d.contact]].forEach(function (r) {
+          var row = el("div"), k = el("span"), v = el("b");
+          k.textContent = r[0]; v.textContent = r[1] || "";
+          row.appendChild(k); row.appendChild(v); card.appendChild(row);
+        });
+        log.appendChild(card);
+        var fine = el("div", "gc-fine"); fine.innerHTML = U.fine; log.appendChild(fine);
+        scroll();
+        var wrap = el("div", "gc-opts");
+        var s = el("button", "gc-opt gc-primary"); s.type = "button"; s.textContent = U.sendIt;
+        s.addEventListener("click", function () { submit(s); });
+        var fix = el("button", "gc-opt"); fix.type = "button"; fix.textContent = U.fix;
+        fix.addEventListener("click", function () { me(U.fix); go("q_name"); });
+        wrap.appendChild(s); wrap.appendChild(fix);
+        foot.innerHTML = ""; foot.appendChild(wrap);
+      });
+    }
+    function submit(btn) {
+      var d = state.data;
+      if (!d.name || !d.user || !d.contact) { bot([U.missing], true); return go("q_name"); }
+      btn.disabled = true; btn.textContent = U.sending;
+      fetch(FORM, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ name: d.name, gomining_username: d.user, contact: d.contact,
+          message: "Sent from the GMT-Optimizer co-pilot chat (" + location.pathname + ")", _subject: "GMT-Optimizer co-pilot: " + d.user })
+      }).then(function (r) {
+        if (!r.ok) throw new Error("bad status");
+        me(U.sentEcho); state.data = {}; go("sent");
+      }).catch(function () { me(U.sentEcho); go("sendfail"); });
+    }
+    return {
+      start: function () {
+        if (started) return; started = true;
+        if (state.node && NODES[state.node] && state.node !== "start" && state.node !== "sent" && state.node !== "bye") {
+          bot([U.resume], true); go(state.node, true);
+        } else go("start");
+      },
+      restart: function () { state = { node: null, data: {} }; save(); log.innerHTML = ""; started = true; go("start"); },
+      focus: function () { var f = foot.querySelector("input, button"); if (f) setTimeout(function () { f.focus(); }, 50); },
+      scroll: scroll
+    };
+  }
 
-  var tip = el("div", "gc-tip");
-  tip.innerHTML = '<button type="button" class="gc-tip-x" aria-label="Dismiss">×</button><span>Need a hand with the numbers? Ask me.</span>';
+  function headHTML(U, extra) {
+    return '<img src="' + AVATAR + '" alt="" width="36" height="36">' +
+      '<div><strong>' + U.name + '</strong><small>' + U.sub + '</small></div>' + extra;
+  }
 
-  var panel = el("section", "gc-panel");
-  panel.setAttribute("role", "dialog");
-  panel.setAttribute("aria-label", "Ask Ringo");
-  panel.hidden = true;
-  panel.innerHTML =
-    '<header class="gc-head"><img src="' + AVATAR + '" alt="" width="36" height="36">' +
-    '<div><strong>Ringo</strong><small>GMT Optimizer guide · code ' + CODE + '</small></div>' +
-    '<button type="button" class="gc-restart" title="Start over">↺</button>' +
-    '<button type="button" class="gc-close" aria-label="Close">×</button></header>' +
-    '<div class="gc-log" aria-live="polite"></div>' +
-    '<div class="gc-foot"></div>';
-  var log = panel.querySelector(".gc-log");
-  var foot = panel.querySelector(".gc-foot");
+  function boot(U, NODES) {
+    var host = document.querySelector("[data-copilot-page]");
+    if (host) return bootPage(U, NODES, host);
+    bootWidget(U, NODES);
+  }
 
-  function mount() {
+  // ---------- /copilot: the conversation inline, no corner launcher ----------
+  function bootPage(U, NODES, host) {
+    host.classList.add("gc-page");
+    host.innerHTML =
+      '<header class="gc-head">' + headHTML(U, '<button type="button" class="gc-restart" title="' + U.restart + '" aria-label="' + U.restart + '">↺</button>') + '</header>' +
+      '<div class="gc-log" aria-live="polite"></div><div class="gc-foot"></div>';
+    var convo = Conversation(U, NODES, host.querySelector(".gc-log"), host.querySelector(".gc-foot"), {});
+    host.querySelector(".gc-restart").addEventListener("click", function () { convo.restart(); });
+    document.querySelectorAll("[data-copilot]").forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); host.scrollIntoView({ behavior: "smooth", block: "start" }); convo.focus(); });
+    });
+    convo.start();
+    window.gmCopilot = { open: function () { convo.focus(); }, close: function () {} };
+  }
+
+  // ---------- the widget ----------
+  function bootWidget(U, NODES) {
+    var fab = el("button", "gc-fab");
+    fab.type = "button";
+    fab.setAttribute("aria-label", U.fab);
+    fab.setAttribute("aria-expanded", "false");
+    fab.innerHTML = '<img class="gc-fab-mark" src="' + AVATAR + '" alt="" width="56" height="28"><span class="gc-dot"></span><span class="gc-badge" hidden></span>';
+
+    var tip = el("div", "gc-tip");
+    tip.innerHTML = '<button type="button" class="gc-tip-x" aria-label="' + U.tipClose + '">×</button><span>' + U.tip + '</span>';
+
+    var panel = el("section", "gc-panel");
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", U.fab);
+    panel.hidden = true;
+    panel.innerHTML =
+      '<header class="gc-head">' + headHTML(U,
+        '<a class="gc-full" href="/copilot" title="' + U.fullPage + '" aria-label="' + U.fullPage + '">⤢</a>' +
+        '<button type="button" class="gc-restart" title="' + U.restart + '" aria-label="' + U.restart + '">↺</button>' +
+        '<button type="button" class="gc-close" aria-label="' + U.close + '">×</button>') + '</header>' +
+      '<div class="gc-tabs" role="tablist" hidden>' +
+        '<button type="button" role="tab" class="gc-tab" data-tab="copilot" aria-selected="true">' + U.tabCopilot + '</button>' +
+        '<button type="button" role="tab" class="gc-tab" data-tab="messages" aria-selected="false">' + U.tabMessages + ' <span class="gc-tab-n" hidden></span></button>' +
+      '</div>' +
+      '<div class="gc-pane" data-pane="copilot" role="tabpanel"><div class="gc-log" aria-live="polite"></div><div class="gc-foot"></div></div>' +
+      '<div class="gc-pane gc-pane--msgs" data-pane="messages" role="tabpanel" hidden><div class="gc-msgs"><p class="gc-msgs-note">' + U.msgLoading + '</p></div></div>';
+    var tabs = panel.querySelector(".gc-tabs"), msgsHost = panel.querySelector(".gc-msgs");
+    var convo = Conversation(U, NODES, panel.querySelector(".gc-log"), panel.querySelector(".gc-foot"), {
+      beforeRun: function () { if (window.matchMedia && matchMedia("(max-width: 600px)").matches) close(); }
+    });
+
     document.body.appendChild(panel);
     document.body.appendChild(tip);
     document.body.appendChild(fab);
@@ -221,205 +268,146 @@
     var seenTip = false;
     try { seenTip = !!localStorage.getItem(STORE + "_tip"); } catch (e) {}
     if (!seenTip && !state.node) setTimeout(function () { if (panel.hidden) tip.classList.add("show"); }, 9000);
-    // other elements can open the guide: <a data-copilot href="#">Ask Ringo</a>
-    document.querySelectorAll("[data-copilot]").forEach(function (a) {
+    document.querySelectorAll("[data-copilot]").forEach(function (a) {   // <a data-copilot href="/copilot">Ask Ringo</a>
       a.addEventListener("click", function (e) { e.preventDefault(); open(); });
     });
-  }
-  if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
 
-  function hideTip() { tip.classList.remove("show"); try { localStorage.setItem(STORE + "_tip", "1"); } catch (e) {} }
-  tip.querySelector(".gc-tip-x").addEventListener("click", hideTip);
-  tip.querySelector("span").addEventListener("click", function () { hideTip(); open(); });
-  fab.addEventListener("click", function () { panel.hidden ? open() : close(); });
-  panel.querySelector(".gc-close").addEventListener("click", close);
-  panel.querySelector(".gc-restart").addEventListener("click", function () {
-    state = { node: null, data: {} }; save(); log.innerHTML = ""; go("start");
-  });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) close(); });
+    function hideTip() { tip.classList.remove("show"); try { localStorage.setItem(STORE + "_tip", "1"); } catch (e) {} }
+    tip.querySelector(".gc-tip-x").addEventListener("click", hideTip);
+    tip.querySelector("span").addEventListener("click", function () { hideTip(); open(); });
+    fab.addEventListener("click", function () { panel.hidden ? open() : close(); });
+    panel.querySelector(".gc-close").addEventListener("click", close);
+    panel.querySelector(".gc-restart").addEventListener("click", function () { convo.restart(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) close(); });
 
-  // Phones: fit the sheet to the visible area above the keyboard. iOS keeps the layout viewport
-  // full height and scrolls it when an input is focused, which hides the header.
-  var vv = window.visualViewport;
-  function fit() {
-    if (panel.hidden || !vv || !(window.matchMedia && matchMedia("(max-width: 600px)").matches)) { panel.style.height = ""; panel.style.top = ""; return; }
-    panel.style.height = Math.round(vv.height) + "px";
-    panel.style.top = Math.round(vv.offsetTop) + "px";
-    scroll();
-  }
-  if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); }
-
-  var started = false;
-  function open() {
-    hideTip();
-    panel.hidden = false;
-    fab.classList.add("on");
-    fab.setAttribute("aria-expanded", "true");
-    document.documentElement.classList.add("gc-open");
-    fit();
-    if (!started) {
-      started = true;
-      if (state.node && NODES[state.node] && state.node !== "start" && state.node !== "sent" && state.node !== "bye") {
-        bot(["Picking up where we left off."], true);
-        go(state.node, true);
-      } else go("start");
+    // ----- tabs: Messages only for logged-in visitors -----
+    var tab = "copilot";
+    function loggedIn() {
+      var A = window.GMTAccount;
+      if (A && A.ready && A.resolved) return A.isLoggedIn();
+      try {   // pages without account.js: the Supabase session in localStorage
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (/^sb-[a-z0-9]+-auth-token$/.test(k)) { var s = JSON.parse(localStorage.getItem(k) || "null"); if (s && s.access_token) return true; }
+        }
+      } catch (e) {}
+      return false;
     }
-    var f = foot.querySelector("input, button");
-    if (f) setTimeout(function () { f.focus(); }, 50);
-  }
-  function close() {
-    panel.hidden = true;
-    fab.classList.remove("on");
-    fab.setAttribute("aria-expanded", "false");
-    document.documentElement.classList.remove("gc-open");
-    fit();
-    fab.focus();
-  }
-  window.gmCopilot = { open: open, close: close };
-
-  // ---------- rendering ----------
-  function scroll() { log.scrollTop = log.scrollHeight; }
-  function bot(lines, instant, after) {
-    var i = 0;
-    var reduce = instant || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    (function next() {
-      if (i >= lines.length) { if (after) after(); return; }
-      var b = el("div", "gc-msg gc-bot");
-      if (reduce) {
-        b.innerHTML = lines[i++]; log.appendChild(b); scroll(); next();
-      } else {
-        b.classList.add("gc-typing"); b.innerHTML = "<i></i><i></i><i></i>";
-        log.appendChild(b); scroll();
-        setTimeout(function () { b.classList.remove("gc-typing"); b.innerHTML = lines[i++]; scroll(); next(); },
-          Math.min(900, 280 + lines[i].length * 6));
-      }
-    })();
-  }
-  function me(text) {
-    var b = el("div", "gc-msg gc-me");
-    b.textContent = text;   // user text is never treated as HTML
-    log.appendChild(b); scroll();
-  }
-
-  // A tool link: when the console function it names exists on this page, run it in place
-  // (and get the chat out of the way on phones); otherwise navigate.
-  function runnable(run) {
-    if (!run) return null;
-    var name = Array.isArray(run) ? run[0] : run;
-    return typeof window[name] === "function" ? function () { window[name].apply(window, Array.isArray(run) ? run.slice(1) : []); } : null;
-  }
-  function linkBtn(l) {
-    if (l.kind === "copy") {
-      var c = el("button", "gc-link"); c.type = "button"; c.textContent = l.t;
-      c.addEventListener("click", function () { copyCode(c); });
-      return c;
+    function syncTabs() {
+      var on = loggedIn();
+      tabs.hidden = !on;
+      panel.classList.toggle("gc-has-tabs", on);
+      if (!on && tab === "messages") showTab("copilot");
     }
-    var a = el("a", "gc-link" + (l.kind === "ref" ? " gc-fire" : ""));
-    a.textContent = l.t;
-    a.href = l.kind === "ref" ? REF : l.kind === "tg" ? TG : l.kind === "sms" ? SMS : l.href;
-    if (l.kind === "ref" || l.kind === "tg" || /^https?:/.test(l.href || "")) { a.target = "_blank"; a.rel = "noopener"; }
-    var fn = runnable(l.run);
-    if (fn) a.addEventListener("click", function (e) {
-      e.preventDefault();
-      if (window.matchMedia && matchMedia("(max-width: 600px)").matches) close();
-      try { fn(); } catch (err) { location.href = l.href; }
+    function showTab(t) {
+      // The console has its own chat panel: send Messages there instead of a second copy of the room.
+      if (t === "messages" && document.getElementById("gmtOnline") && window.GMTChat) { close(); document.getElementById("gmtOnline").click(); return; }
+      tab = t;
+      tabs.querySelectorAll(".gc-tab").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-tab") === t ? "true" : "false"); });
+      panel.querySelectorAll(".gc-pane").forEach(function (p) { p.hidden = p.getAttribute("data-pane") !== t; });
+      panel.classList.toggle("gc-on-msgs", t === "messages");
+      panel.querySelector(".gc-restart").hidden = t !== "copilot";
+      if (t === "messages") openMessages(); else { if (window.GMTChat) window.GMTChat.setVisible(false); convo.focus(); }
+    }
+    tabs.addEventListener("click", function (e) { var b = e.target.closest(".gc-tab"); if (b) showTab(b.getAttribute("data-tab")); });
+    tabs.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      var next = tab === "copilot" ? "messages" : "copilot"; showTab(next);
+      var b = tabs.querySelector('[data-tab="' + next + '"]'); if (b) b.focus();
     });
-    return a;
-  }
-  function copyCode(btn) {
-    var done = function () { var o = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = o; }, 1500); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(CODE).then(done, done);
-    else done();
-  }
-
-  function go(id, instant) {
-    var n = NODES[id];
-    if (!n) return;
-    state.node = id; save();
-    foot.innerHTML = "";
-    if (n.review) return review();
-    bot(n.say, instant, function () {
-      if (n.links) {
-        var row = el("div", "gc-links");
-        n.links.forEach(function (l) { row.appendChild(linkBtn(l)); });
-        log.appendChild(row);
+    var msgsMounted = false, msgsLoading = null;
+    function openMessages() {
+      if (msgsMounted) { window.GMTChat.setVisible(true); return; }
+      if (!msgsLoading) {
+        if (!window.GMTChat) window.GMT_CHAT_EMBED = true;
+        msgsLoading = CHAT_DEPS.reduce(function (p, d) { return p.then(function () { return window[d[0]] ? null : loadScript(d[1]); }); }, Promise.resolve())
+          .then(function () {
+            return new Promise(function (res, rej) {   // chat.js starts once account.js is ready
+              var n = 0, t = setInterval(function () { if (window.GMTChat) { clearInterval(t); res(); } else if (++n > 80) { clearInterval(t); rej(new Error("timeout")); } }, 100);
+            });
+          });
       }
-      scroll();
-      if (n.ask) return ask(n.ask);
-      if (n.opts) options(n.opts);
-    });
-  }
-  function options(opts) {
-    foot.innerHTML = "";
-    var wrap = el("div", "gc-opts");
-    opts.forEach(function (o) {
-      var b = el("button", "gc-opt"); b.type = "button"; b.textContent = o.t;
-      b.addEventListener("click", function () { me(o.t); go(o.go); });
-      wrap.appendChild(b);
-    });
-    foot.appendChild(wrap);
-    scroll();
-  }
-  function ask(q) {
-    foot.innerHTML = "";
-    var f = el("form", "gc-ask"); f.noValidate = true;
-    var inp = el("input");
-    inp.type = "text";
-    inp.setAttribute("aria-label", q.label);
-    inp.placeholder = q.label + (q.optional ? " (optional)" : "");
-    inp.autocomplete = "off";
-    inp.spellcheck = false;
-    if (state.data[q.key]) inp.value = state.data[q.key];
-    var send = el("button", "gc-send"); send.type = "submit"; send.textContent = "Send";
-    f.appendChild(inp); f.appendChild(send);
-    f.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var v = inp.value.trim();
-      if (q.check && !q.check.test(v)) { bot([q.bad], true); inp.focus(); return; }
-      state.data[q.key] = v; save();
-      me(v);
-      go(q.next);
-    });
-    foot.appendChild(f);
-    scroll();
-    setTimeout(function () { inp.focus(); }, 30);
-  }
-  function review() {
-    var d = state.data;
-    bot(["Here's what I've got. Look right?"], false, function () {
-      var card = el("div", "gc-msg gc-bot gc-card");
-      [["Name", d.name], ["GoMining username", d.user], ["Reach me at", d.contact]].forEach(function (r) {
-        var row = el("div"); var k = el("span"); var v = el("b");
-        k.textContent = r[0]; v.textContent = r[1] || "";
-        row.appendChild(k); row.appendChild(v); card.appendChild(row);
+      msgsLoading.then(function () {
+        if (msgsMounted) return;
+        msgsMounted = true; msgsHost.innerHTML = "";
+        window.GMTChat.mountInto(msgsHost);
+        if (tab === "messages" && !panel.hidden) window.GMTChat.setVisible(true);
+      }).catch(function () {
+        msgsHost.innerHTML = '<p class="gc-msgs-note">' + U.msgFail + '</p><a class="gc-link" href="/chat/">' + U.msgOpen + '</a>';
+        msgsLoading = null;
       });
-      log.appendChild(card);
-      var fine = el("div", "gc-fine");
-      fine.innerHTML = 'By sending, you agree to the <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms</a>. GMT Optimizer is an independent tool, not affiliated with GoMining. Not financial advice.';
-      log.appendChild(fine);
-      scroll();
-      var wrap = el("div", "gc-opts");
-      var s = el("button", "gc-opt gc-primary"); s.type = "button"; s.textContent = "Send it →";
-      s.addEventListener("click", function () { submit(s); });
-      var fix = el("button", "gc-opt"); fix.type = "button"; fix.textContent = "Fix something";
-      fix.addEventListener("click", function () { me("Fix something"); go("q_name"); });
-      wrap.appendChild(s); wrap.appendChild(fix);
-      foot.innerHTML = ""; foot.appendChild(wrap);
-    });
-  }
-  function submit(btn) {
-    var d = state.data;
-    if (!d.name || !d.user || !d.contact) { bot(["I'm missing something. Let's run through it again."], true); return go("q_name"); }
-    btn.disabled = true; btn.textContent = "Sending…";
-    fetch(FORM, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ name: d.name, gomining_username: d.user, contact: d.contact,
-        message: "Sent from the GMT Optimizer co-pilot chat (" + location.pathname + ")", _subject: "GMT Optimizer co-pilot: " + d.user })
-    }).then(function (r) {
-      if (!r.ok) throw new Error("bad status");
-      me("Send it");
-      state.data = {}; go("sent");
-    }).catch(function () { me("Send it"); go("sendfail"); });
+    }
+    // unread count from the room (or, before it loads, from the header's counter)
+    function setUnread(n) {
+      var tn = tabs.querySelector(".gc-tab-n"), fb = fab.querySelector(".gc-badge");
+      var txt = n > 99 ? "99+" : String(n);
+      tn.hidden = !(n > 0); tn.textContent = txt;
+      fb.hidden = !(n > 0) || !loggedIn(); fb.textContent = txt;
+    }
+    document.addEventListener("gmt-chat-unread", function (e) { setUnread(+(e.detail || 0)); });
+    window.addEventListener("storage", function (e) { if (!e.key || /auth-token$/.test(e.key)) syncTabs(); });
+    var tries = 0, waitAcc = setInterval(function () {   // account.js (where present) settles the login state a beat later
+      if (window.GMTAccount && window.GMTAccount.onChange) { clearInterval(waitAcc); window.GMTAccount.onChange(syncTabs); syncTabs(); }
+      else if (++tries > 50) clearInterval(waitAcc);
+    }, 100);
+    syncTabs();
+
+    // Phones: fit the sheet to the visible area above the keyboard.
+    var vv = window.visualViewport;
+    function fit() {
+      if (panel.hidden || !vv || !(window.matchMedia && matchMedia("(max-width: 600px)").matches)) { panel.style.height = ""; panel.style.top = ""; return; }
+      panel.style.height = Math.round(vv.height) + "px";
+      panel.style.top = Math.round(vv.offsetTop) + "px";
+      convo.scroll();
+    }
+    if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); }
+
+    function open(which) {
+      hideTip();
+      syncTabs();
+      panel.hidden = false;
+      fab.classList.add("on");
+      fab.setAttribute("aria-expanded", "true");
+      document.documentElement.classList.add("gc-open");
+      fit();
+      convo.start();
+      showTab(which === "messages" && loggedIn() ? "messages" : tab);
+    }
+    function close() {
+      panel.hidden = true;
+      fab.classList.remove("on");
+      fab.setAttribute("aria-expanded", "false");
+      document.documentElement.classList.remove("gc-open");
+      if (window.GMTChat && msgsMounted) window.GMTChat.setVisible(false);
+      fit();
+      fab.focus();
+    }
+    window.gmCopilot = { open: open, close: close, messages: function () { open("messages"); } };
+
+    // Keep clear of anything a page marks [data-copilot-clear] (the landing quick estimate): while the panel
+    // would sit over it and there is room to its left, the panel moves beside it on the same bottom line.
+    // It returns to the corner once the marked block scrolls out of view. Phones use the full-screen panel.
+    function dodge() {
+      panel.style.right = "";
+      if (panel.hidden || window.innerWidth <= 640) return;
+      var keep = document.querySelector("[data-copilot-clear]"); if (!keep) return;
+      // Layout box, not getBoundingClientRect: the open animation scales the panel, which would under-measure it.
+      var cs = getComputedStyle(panel), w = panel.offsetWidth, h = panel.offsetHeight;
+      // clientWidth, not innerWidth: fixed `right` is measured from the inside of the scrollbar.
+      var vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
+      var pr = vw - (parseFloat(cs.right) || 0), pb = vh - (parseFloat(cs.bottom) || 0);
+      var k = keep.getBoundingClientRect(), p = { left: pr - w, right: pr, top: pb - h, bottom: pb, width: w };
+      var overlaps = p.left < k.right && p.right > k.left && p.top < k.bottom && p.bottom > k.top;
+      if (!overlaps) return;
+      var right = vw - k.left + 16;
+      if (vw - right - p.width >= 16) panel.style.right = right + "px";
+    }
+    var dodgeRaf = 0;
+    var queueDodge = function () { if (!dodgeRaf) dodgeRaf = requestAnimationFrame(function () { dodgeRaf = 0; dodge(); }); };
+    window.addEventListener("scroll", queueDodge, { passive: true });
+    window.addEventListener("resize", queueDodge);
+    new MutationObserver(queueDodge).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+    // The panel opens short and grows upward as messages arrive, so re-check whenever its size changes.
+    if (window.ResizeObserver) new ResizeObserver(queueDodge).observe(panel);
   }
 })();

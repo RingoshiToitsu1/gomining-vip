@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /carbon/
+Disallow: /styleguide/
 
 Sitemap: https://gmt-optimizer.com/sitemap.xml

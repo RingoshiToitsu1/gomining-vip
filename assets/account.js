@@ -1,4 +1,4 @@
-/* GMT Optimizer — account layer (Phase 2 step 1: auth pipe).
+/* GMT-Optimizer — account layer (Phase 2 step 1: auth pipe).
    ==========================================================
    Username + password only. There is no email: a username maps to a synthetic
    internal address so Supabase's hardened password auth does the real work while
@@ -100,9 +100,19 @@
   // Load the caller's profile row (username, display_name, avatar, role).
   function loadProfile() {
     if (!Account.user) { Account.profile = null; return Promise.resolve(null); }
-    return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup')
-      .eq('id', Account.user.id).single()
-      .then(function (r) { Account.profile = r.data || null; return Account.profile; });
+    // get_my_profile() (supabase/proposals/2026-11-17_fix_profile_exposure.sql) returns the full own row once the
+    // private columns are locked down; until that SQL is applied it doesn't exist and we read the table directly.
+    return sb.rpc('get_my_profile').then(function (r) {
+      if (!r.error && r.data) {
+        Account.profile = (Array.isArray(r.data) ? r.data[0] : r.data) || null;
+        // hide-TH / language / delete need the account_extras SQL; the exposure fix alone doesn't add show_th
+        Account.features = { privacy: !!(Account.profile && 'show_th' in Account.profile) };
+        return Account.profile;
+      }
+      return sb.from('profiles').select('username,display_name,avatar_url,bio,role,setup,th_total')
+        .eq('id', Account.user.id).single()
+        .then(function (r2) { Account.profile = r2.data || null; Account.features = { privacy: false }; return Account.profile; });
+    });
   }
 
   // ---- fleet (cloud store; fleet.js falls back to localStorage when logged out) ----
@@ -138,12 +148,45 @@
   // Public user card: profile fields anyone may read, plus their message count.
   Account.fetchUserCard = function (userId) {
     return Promise.all([
-      sb.from('profiles').select('username,display_name,avatar_url,bio,created_at,th_total,role')
-        .eq('id', userId).single(),
+      Account.cardQuery(function (q) { return q.eq('id', userId).single(); }),
       sb.from('messages').select('id', { count: 'exact', head: true }).eq('user_id', userId)
     ]).then(function (res) {
       return { profile: res[0].data || {}, msgCount: res[1].count || 0 };
     });
+  };
+  // Public profile fields. profile_cards (supabase/proposals/2026-11-17_fix_profile_exposure.sql; account_extras makes
+  // it honour the hide-TH toggle); until that SQL is applied the view doesn't exist, so fall back to the table. Probed once.
+  var CARD_COLS = 'id,username,display_name,avatar_url,bio,created_at,th_total,role';
+  var _cardsOk = null;
+  Account.cardQuery = function (apply) {
+    if (!_cardsOk) _cardsOk = sb.from('profile_cards').select('id').limit(1).then(function (r) { return !r.error; }, function () { return false; });
+    return _cardsOk.then(function (ok) {
+      return apply(ok ? sb.from('profile_cards').select(CARD_COLS + ',show_th') : sb.from('profiles').select(CARD_COLS));
+    });
+  };
+  Account.removeAvatar = function () {
+    if (!Account.user) return Promise.reject(new Error('not logged in'));
+    var dir = Account.user.id;
+    return sb.storage.from('avatars').list(dir).then(function (r) {
+      var files = (r.data || []).map(function (f) { return dir + '/' + f.name; });
+      return files.length ? sb.storage.from('avatars').remove(files) : null;
+    }).then(function () { return Account.updateProfile({ avatar_url: null }); });
+  };
+  // Only once the proposal SQL is applied (Account.features.privacy): hide-TH toggle, saved preferences, delete account.
+  Account.setShowTh = function (on) { return Account.updateProfile({ show_th: !!on }); };
+  Account.setPrefs = function (patch) {
+    var cur = (Account.profile && Account.profile.prefs) || {};
+    return Account.updateProfile({ prefs: Object.assign({}, cur, patch) });
+  };
+  Account.deleteAccount = function (password) {
+    var u = Account.profile && Account.profile.username;
+    if (!Account.user || !u) return Promise.reject(new Error('You are not logged in.'));
+    var dir = Account.user.id;
+    return sb.auth.signInWithPassword({ email: emailFor(u), password: password || '' })
+      .then(function (r) { if (r.error) throw new Error('Your password is not right.'); return sb.storage.from('avatars').list(dir); })
+      .then(function (r) { var f = (r.data || []).map(function (x) { return dir + '/' + x.name; }); return f.length ? sb.storage.from('avatars').remove(f) : null; })
+      .then(function () { return sb.rpc('delete_my_account'); })
+      .then(function (r) { if (r.error) throw r.error; return sb.auth.signOut(); });
   };
   Account.banUser = function (userId) {
     return sb.from('profiles').update({ banned: true }).eq('id', userId)
@@ -158,7 +201,11 @@
     var th = +(obj && obj.inTH) || 0;
     if (Account.profile) { Account.profile.setup = obj; Account.profile.th_total = th; }
     return sb.from('profiles').update({ setup: obj, th_total: th }).eq('id', Account.user.id)
-      .then(function (r) { if (r.error) throw r.error; });
+      .then(function (r) {
+        if (r.error) throw r.error;
+        // the header's state-aware button reads this cache on pages without account.js
+        try { var c = JSON.parse(sessionStorage.getItem('gm_chrome_profile') || 'null'); if (c) { c.hasFarm = th > 0; sessionStorage.setItem('gm_chrome_profile', JSON.stringify(c)); } } catch (e) {}
+      });
   };
 
   // ---- profile ----
@@ -253,14 +300,13 @@
     if (m === 'login') {
       els.title.textContent = 'Log in'; els.sub.textContent = 'Welcome back.';
       els.go.textContent = 'Log in'; els.p.setAttribute('autocomplete', 'current-password');
-      els.note.innerHTML = 'Forgotten your password? Accounts have no email, so it cannot be reset automatically — ' +
-        '<a href="https://t.me/ringoshitoitsu" target="_blank" rel="noopener">message me on Telegram</a> with your username and I will reset it by hand.';
+      els.note.innerHTML = 'Forgot your password? <a href="https://t.me/RinGoMining" target="_blank" rel="noopener">Message @RingoMining on Telegram.</a>';
       els.swap.innerHTML = 'New here? <a data-to="signup">Create an account</a>';
     } else {
       els.title.textContent = 'Create an account'; els.sub.textContent = 'Just a username and password — no email.';
       els.go.textContent = 'Create account'; els.p.setAttribute('autocomplete', 'new-password');
-      els.note.innerHTML = 'There is no email on the account, so a forgotten password cannot be reset automatically — save it somewhere safe. ' +
-        'If you do lose it, <a href="https://t.me/ringoshitoitsu" target="_blank" rel="noopener">message me on Telegram</a> and I will reset it by hand. Minimum 8 characters.';
+      els.note.innerHTML = 'There is no email on the account, so save your password somewhere safe. ' +
+        'Forgot your password? <a href="https://t.me/RinGoMining" target="_blank" rel="noopener">Message @RingoMining on Telegram.</a>';
       els.swap.innerHTML = 'Already have one? <a data-to="login">Log in</a>';
     }
     els.swap.querySelector('a').addEventListener('click', function () { setMode(this.getAttribute('data-to')); });
@@ -305,8 +351,7 @@
     // The nav link is always "Edit Farm" — one name for the place you build your farm and
     // edit your profile. It used to flip to "My Fleet" once logged in, which meant the same link
     // had two names depending on who was looking at it.
-    var navLink = document.getElementById('navEditSetup');
-    if (navLink) navLink.textContent = 'Edit Farm';
+    // (The label itself now lives in the page HTML, translated per language.)
     renderGate();
     var slot = document.getElementById('gmtAccountSlot');
     if (!slot) return;
@@ -375,7 +420,7 @@
           '<input type="file" accept="image/*" id="gmtProfFile" style="display:none">' +
         '</div>' +
         '<label>Display name</label><input id="gmtProfName" maxlength="40">' +
-        '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--glass-1,rgba(255,255,255,.05));border:1px solid var(--line,rgba(255,255,255,.14));color:var(--text1,#e8ecf4);border-radius:9px;padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
+        '<label>Bio</label><textarea id="gmtProfBio" maxlength="200" rows="3" style="width:100%;background:var(--color-bg);border:1px solid var(--color-border-strong);color:var(--color-text);border-radius:var(--radius-control);padding:.6rem .7rem;font-size:.88rem;resize:vertical;font-family:inherit"></textarea>' +
         '<div class="err" id="gmtProfErr"></div><div class="ok" id="gmtProfOk"></div>' +
         '<button class="go" id="gmtProfSave">Save</button>' +
         '<div class="gmt-pw">' +
@@ -459,7 +504,7 @@
       return '<div class="card">' +
         '<h3>Your farm is ready</h3>' +
         '<div class="fleetstat">' + f.count + ' miner' + (f.count === 1 ? '' : 's') +
-          ' &middot; ' + Math.round(f.th).toLocaleString('en-US') + ' TH</div>' +
+          ' &middot; ' + Math.round(f.th).toLocaleString(({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[document.documentElement.lang] || 'en-US') + ' TH</div>' +
         '<p>Create a free account to reveal what it earns — live P&amp;L, your fee discount, and multi-year projections — and save your farm across devices.</p>' +
         '<div class="btns"><button class="gmt-btn-primary" data-g="signup">Create account</button>' +
         '<button class="gmt-btn-ghost" data-g="login">Log in</button></div>' +
@@ -498,6 +543,8 @@
   }
 
   Account.openLogin = function (m) { open(m); };
+  // The global header's Profile / Settings items open the existing profile editor (it holds the password change).
+  Account.openProfile = function () { if (Account.isLoggedIn()) openProfile(); else open('login'); };
 
   function mount() {
     buildModal(); renderHeader();

@@ -14,9 +14,14 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const SC=2,W=1200,H=opts.height||675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const GOLD='#F5A623',GSOFT='#F7B84E',GHI='#FFCF7A',UP='#2EE59D',DN='#FF4D5E';
-  const SANS='"Space Grotesk",system-ui,sans-serif',MONO='"Share Tech Mono",monospace';
-  const price=p=>p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
+  // Browser: token colours, page-language text and number formats (chart kit + translations). Node (the OG
+  // image generator) has neither, so every hook falls back to the original value.
+  const W_=typeof window!=='undefined'?window:{}, UI_=W_.GMT_UI, CK_=UI_&&W_.GMTCharts;
+  const kc=(n,f)=>W_.GMTCharts?W_.GMTCharts.color(n):f;
+  const tt=(s,...a)=>UI_?UI_.t(s,...a):s.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:m);
+  const GOLD=kc('gold','#E2B259'),GSOFT=kc('gold-300','#F7D88A'),GHI=kc('gold-300','#F7D88A'),UP='#2EE59D',DN='#FF4D5E';
+  const SANS='"Inter",system-ui,sans-serif',MONO='"Inter",monospace';
+  const price=p=>CK_?W_.GMTCharts.money(p,p>=1000?0:p>=1?2:4):p>=1000?'$'+p.toLocaleString('en-US',{maximumFractionDigits:0})
     :p>=1?'$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
     :'$'+p.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
   const rr=(g,X,Y,w,h,r)=>{g.beginPath();g.moveTo(X+r,Y);g.arcTo(X+w,Y,X+w,Y+h,r);g.arcTo(X+w,Y+h,X,Y+h,r);g.arcTo(X,Y+h,X,Y,r);g.arcTo(X,Y,X+w,Y,r);g.closePath();};
@@ -40,7 +45,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   // floor horizon
   const FY=575;   // panel bottom (564) + a sliver
   const fl=x.createLinearGradient(0,FY,0,H);
-  fl.addColorStop(0,'rgba(245,166,35,0.10)');fl.addColorStop(0.15,'rgba(20,13,6,0.9)');fl.addColorStop(1,'#040302');
+  fl.addColorStop(0,'rgba(226,178,89,0.10)');fl.addColorStop(0.15,'rgba(20,13,6,0.9)');fl.addColorStop(1,'#040302');
   x.fillStyle=fl;x.fillRect(0,FY,W,H-FY);
 
   // ---- the glass panel, drawn offscreen so it can be reflected in the floor ----
@@ -48,7 +53,7 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const pc=document.createElement('canvas');pc.width=(PW+80)*SC;pc.height=(PH+80)*SC;
   const p=pc.getContext('2d');p.scale(SC,SC);p.translate(40,40);   // 40px margin for the glow
   // outer glow + glass body
-  p.save();p.shadowColor=gold(0.55);p.shadowBlur=34;
+  p.save();p.shadowColor=gold(0.55);p.shadowBlur=0;
   rr(p,0,0,PW,PH,PR);p.fillStyle='rgba(18,12,6,0.92)';p.fill();p.restore();
   const body=p.createLinearGradient(0,0,PW*0.35,PH);
   body.addColorStop(0,'rgba(255,200,110,0.10)');body.addColorStop(0.45,'rgba(40,26,10,0.25)');body.addColorStop(1,'rgba(0,0,0,0.35)');
@@ -84,17 +89,17 @@ function buildChartShotCanvas(asset,data,imgs,opts){
     p.fillStyle=ag;p.fill();
     // glowing stroke: wide soft pass, then a crisp core
     p.lineJoin='round';p.lineCap='round';
-    line();p.shadowColor=col;p.shadowBlur=16;p.strokeStyle='rgba('+rgb+',0.55)';p.lineWidth=4.5;p.stroke();
-    line();p.shadowBlur=4;p.strokeStyle=col;p.lineWidth=2;p.stroke();
+    line();p.shadowColor=col;p.shadowBlur=0;p.strokeStyle='rgba('+rgb+',0.55)';p.lineWidth=4.5;p.stroke();
+    line();p.shadowBlur=0;p.strokeStyle=col;p.lineWidth=2;p.stroke();
     p.restore();
   };
   side(true);side(false);
   // dotted baseline at the starting price
-  p.save();p.setLineDash([2,5]);p.strokeStyle='rgba(255,240,215,0.55)';p.lineWidth=1.3;
+  p.save();p.setLineDash([2,5]);p.strokeStyle='rgba(255,255,255,0.55)';p.lineWidth=1.3;
   p.beginPath();p.moveTo(L,base);p.lineTo(R,base);p.stroke();p.restore();
   // start + end dots
   const pos=last>=first,chg=first?(last-first)/first*100:0;
-  const dot=(cx,cy,col,r)=>{p.save();p.shadowColor=col;p.shadowBlur=16;p.fillStyle=col;p.beginPath();p.arc(cx,cy,r,0,7);p.fill();
+  const dot=(cx,cy,col,r)=>{p.save();p.shadowColor=col;p.shadowBlur=0;p.fillStyle=col;p.beginPath();p.arc(cx,cy,r,0,7);p.fill();
     p.shadowBlur=0;p.fillStyle='rgba(255,255,255,0.85)';p.beginPath();p.arc(cx,cy,r*0.45,0,7);p.fill();p.restore();};
   dot(pxs(0),base,rows[1]&&rows[1].c<first?DN:UP,4);
   dot(pxs(n-1),py(last),pos?UP:DN,6.5);
@@ -104,20 +109,20 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   const daysSpan=Math.max(1,Math.round((rows[n-1].t-rows[0].t)/86400e3));
   let ax=34;
   if(imgs.coin){p.save();p.beginPath();p.arc(ax+21,58,21,0,7);p.closePath();p.clip();p.drawImage(imgs.coin,ax,37,42,42);p.restore();ax+=56;}
-  p.textAlign='left';p.fillStyle='#fff';p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
-  p.fillStyle='rgba(255,236,205,0.55)';p.font='18px '+MONO;
-  p.fillText(asset.pair+'  ·  '+data.interval+'  ·  last '+daysSpan+' days',34,112);
+  p.textAlign='left';p.fillStyle=kc('text','#FFFFFF');p.font='700 32px '+SANS;p.fillText(asset.name,ax,70);
+  p.fillStyle='rgba(255,255,255,0.55)';p.font='18px '+MONO;
+  p.fillText(tt('{0}  ·  {1}  ·  last {2} days',asset.pair,data.interval,daysSpan),34,112);
   p.textAlign='right';
-  p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=22;
-  p.fillStyle='#fff';p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
-  p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=12;
+  p.save();p.shadowColor='rgba(255,220,160,0.45)';p.shadowBlur=0;
+  p.fillStyle=kc('text','#FFFFFF');p.font='700 92px '+SANS;p.fillText(opts.headline||price(last),PW-34,108);p.restore();
+  p.save();p.shadowColor=pos?UP:DN;p.shadowBlur=0;
   p.fillStyle=pos?UP:DN;p.font='700 38px '+SANS;
-  p.fillText(opts.sub||((pos?'▲ ':'▼ ')+Math.abs(chg).toFixed(2)+'% ('+daysSpan+'D)'),PW-34,160);p.restore();
+  p.fillText(opts.sub||((pos?'▲ ':'▼ ')+(CK_?W_.GMTCharts.pct(Math.abs(chg),2):Math.abs(chg).toFixed(2)+'%')+tt(' ({0}D)',daysSpan)),PW-34,160);p.restore();
 
   // glass rim: bright gold top-left fading round to the bottom-right, plus a thin inner line
   const rim=p.createLinearGradient(0,0,PW,PH);
   rim.addColorStop(0,GHI);rim.addColorStop(0.35,GOLD);rim.addColorStop(0.7,gold(0.55));rim.addColorStop(1,GSOFT);
-  p.save();p.shadowColor=gold(0.9);p.shadowBlur=14;rr(p,0,0,PW,PH,PR);p.strokeStyle=rim;p.lineWidth=2.4;p.stroke();p.restore();
+  p.save();p.shadowColor=gold(0.9);p.shadowBlur=0;rr(p,0,0,PW,PH,PR);p.strokeStyle=rim;p.lineWidth=2.4;p.stroke();p.restore();
   rr(p,5,5,PW-10,PH-10,PR-5);p.strokeStyle='rgba(255,230,180,0.10)';p.lineWidth=1;p.stroke();
 
   // floor reflection: the panel flipped, squashed and faded out
@@ -135,18 +140,18 @@ function buildChartShotCanvas(asset,data,imgs,opts){
   // ---- brand: top-left / url top-right ----
   let bx=PX+4;
   if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,34,46,46);bx+=60;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='700 34px '+SANS;x.fillText('GMT Optimizer',bx,69);
+  x.textAlign='left';x.fillStyle=kc('text','#FFFFFF');x.font='700 34px '+SANS;x.fillText('GMT-Optimizer',bx,69);
   x.textAlign='right';x.fillStyle=GSOFT;x.font='20px '+MONO;x.fillText('gmt-optimizer.com',W-PX-4,66);
 
   // ---- footer on the floor ----
   const fy=H-24;
   let fx=PX+4;
   if(imgs.token){x.save();x.beginPath();x.arc(fx+10,fy-6,10,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,fy-16,20,20);x.restore();fx+=28;}
-  x.textAlign='left';x.fillStyle='rgba(255,240,215,0.72)';x.font='600 16px '+SANS;
-  x.fillText('Free GoMining ROI & discount optimizer',fx,fy);
-  x.textAlign='right';x.fillStyle='rgba(255,240,215,0.4)';x.font='14px '+MONO;
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(opts.footRight||now+'   ·   not financial advice',W-PX-4,fy);
+  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='600 16px '+SANS;
+  x.fillText(tt('Free GoMining ROI & discount optimizer'),fx,fy);
+  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
+  const now=new Date().toLocaleDateString(CK_?W_.GMTCharts.locale():'en-US',{month:'short',day:'numeric',year:'numeric'});
+  x.fillText(opts.footRight||tt('{0}   ·   not financial advice',now),W-PX-4,fy);
   x.textAlign='left';
   return c;
 }

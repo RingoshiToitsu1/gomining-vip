@@ -3,15 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoMining ROI Calculator — GMT Optimizer</title>
+<title>GoMining ROI Calculator — GMT-Optimizer</title>
 <!-- The iframe-able calculator for other sites. Not a search landing page: the indexed copy is
      /gomining-roi-calculator, so this one is noindex and canonicalises there. -->
 <meta name="robots" content="noindex,follow">
 <link rel="canonical" href="https://gmt-optimizer.com/gomining-roi-calculator">
-<link rel="icon" type="image/svg+xml" href="/gmt-optimizer-logo.svg?v=2">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/assets/brand/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0B0B0D">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/roi-embed.css?v=1">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="/assets/tokens.css?v=5">
+<link rel="stylesheet" href="/assets/components.css?v=10">
+<link rel="stylesheet" href="/assets/roi-embed.css?v=3">
 <style>
 /* Self-contained: no content.css, no site.js chrome (galaxy backdrop, menu, top bar). Tokens
    mirror the :root block in assets/content.css. Nothing here may use vh units or min-height
@@ -19,13 +25,13 @@
    back into the height it reports and grow forever. */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#060709;--gold:#F5A623;--gold-hi:#FFC65A;--gold-soft:#FFCF7A;--warm:#FFF4E0;
-  --ink:#EBE2D2;--ink2:#A79B89;--ink3:#8C8170;
-  --line:rgba(240,196,120,.14);--line-hi:rgba(245,200,130,.34);--line-soft:rgba(200,210,235,.08);
+  --bg:var(--color-bg);--gold:var(--color-gold);--gold-hi:var(--color-gold-300);--gold-soft:var(--color-gold-300);--warm:var(--color-text);
+  --ink:var(--color-text);--ink2:var(--color-text-2);--ink3:var(--color-text-2);
+  --line:rgb(var(--color-gold-rgb) / .14);--line-hi:rgb(var(--color-gold-rgb) / .34);--line-soft:rgb(var(--color-white-rgb) / .08);
   --glass-1:#14161d;--glass-2:#0b0d12;
-  --r:22px;--r-sm:13px;
-  --sans:'Space Grotesk',system-ui,sans-serif;--mono:'Share Tech Mono',ui-monospace,monospace;
-  --sh:none;
+  --r:var(--radius-card);--r-sm:var(--radius-control);
+  --sans:var(--font-body);--mono:var(--font-body);
+  --sh:var(--shadow-pop);
 }
 html{background:var(--bg);color-scheme:dark}
 html.transparent{background:transparent}
@@ -36,22 +42,22 @@ body{font-family:var(--sans);color:var(--ink);line-height:1.6;-webkit-font-smoot
 .re-foot .note{max-width:24rem}
 .re-btns{display:flex;gap:.55rem;flex-wrap:wrap}
 .re-foot a.btn{display:inline-block;padding:.68rem 1.25rem;border-radius:12px;font-weight:600;font-size:.88rem;
-  text-decoration:none;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:#120a01;
-  box-shadow:0 8px 24px rgba(245,166,35,.32);transition:transform .2s,box-shadow .2s}
-.re-foot a.btn:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(245,166,35,.45)}
+  text-decoration:none;background:linear-gradient(135deg,var(--gold-hi),var(--gold-soft));color:var(--color-on-gold);
+  box-shadow:0 8px 24px rgb(var(--color-gold-rgb) / .32);transition:transform .2s,box-shadow .2s}
+.re-foot a.btn:hover{filter:brightness(1.08)}
 .re-foot a.btn.ghost{background:none;color:var(--gold-soft);border:1px solid var(--line-hi);box-shadow:none}
 .re-promo{margin-top:.9rem;padding-top:.85rem;border-top:1px solid var(--line-soft);display:flex;flex-wrap:wrap;
   align-items:center;justify-content:space-between;gap:.5rem;font-size:.8rem;color:var(--ink2)}
 .re-inputs{grid-template-columns:2fr 1fr}
 .re-hint b{color:var(--gold-soft);font-weight:600}
-.re-offer{margin-top:1rem;padding:.95rem 1rem;border-radius:var(--r-sm);background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.24)}
+.re-offer{margin-top:1rem;padding:.95rem 1rem;border-radius:var(--r-sm);background:rgb(var(--color-gold-rgb) / .06);border:1px solid rgb(var(--color-gold-rgb) / .24)}
 .re-offer-head{font-size:.88rem;color:var(--warm);margin-bottom:.65rem}
 .re-offer-terms{margin:.7rem 0 0;font-size:.72rem;line-height:1.45;color:var(--ink3)}
 .re-offer-terms a{color:inherit}
 .re-offer ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.5rem .9rem}
 .re-offer li{position:relative;padding-left:1.25rem;line-height:1.35}
 .re-offer li::before{content:'';position:absolute;left:0;top:.32rem;width:.62rem;height:.62rem;border-radius:50%;
-  background:var(--gold);box-shadow:0 0 10px rgba(245,166,35,.6)}
+  background:var(--gold);box-shadow:0 0 10px rgb(var(--color-gold-rgb) / .6)}
 .re-offer strong{display:block;font-size:.86rem;font-weight:600;color:var(--gold-soft)}
 .re-offer li span{display:block;font-size:.74rem;color:var(--ink3)}
 .re-offer b,.re-promo b{font-family:var(--mono);font-weight:400;color:var(--gold-hi);letter-spacing:.06em;cursor:pointer;
@@ -153,6 +159,7 @@ html.theme-ember{
   <div class="re-hint" id="re-hint" style="display:none"></div>
 
   <div class="re-foot">
+    <p class="cfg-asof">Fees and rates as of <time data-cfg="meta.updated" data-cfg-fmt="date">17 Nov 2026</time>.</p>
     <p class="note" data-i18n="note">Today's rates on live BTC price and difficulty, not a forecast: rewards move with Bitcoin's price and network difficulty. Not financial advice.</p>
     <div class="re-btns">
       <a class="btn" data-cta="claim" data-href="/claim" href="https://gmt-optimizer.com/claim" target="_blank" rel="noopener" data-i18n="claim">See your RINGO5 bonuses →</a>
@@ -173,7 +180,7 @@ html.theme-ember{
   <div class="re-promo">
     <span data-i18n="promo">Live BTC price &amp; difficulty &middot; no signup to use</span>
     <a class="re-brand" data-cta="brand" data-href="/" href="https://gmt-optimizer.com/" target="_blank" rel="noopener">
-      <img src="/gmt-optimizer-logo.svg?v=2" alt="">GMT Optimizer</a>
+      <img class="ui-wordmark" src="/assets/brand/GMT-Optimizer_white-text_transparent.svg" alt="GMT-Optimizer" width="108" height="28"></a>
   </div>
 </div>
 
@@ -337,7 +344,9 @@ html.theme-ember{
   }
 })();
 </script>
-<script src="/assets/pricing.js?v=1"></script>
-<script src="/assets/roi-embed.js?v=29"></script>
+<script src="/assets/pricing.js?v=6"></script>
+<script src="/lib/mining.js?v=2"></script>
+<script src="/assets/market.js?v=2"></script>
+<script src="/assets/roi-embed.js?v=36"></script>
 </body>
 </html>

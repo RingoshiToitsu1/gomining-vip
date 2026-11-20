@@ -1,4 +1,4 @@
-/* GMT Optimizer — /statement: turn a GoMining income export into a partner-ready statement.
+/* GMT-Optimizer — /statement: turn a GoMining income export into a partner-ready statement.
    ==========================================================================
    Feed it the CSV that GoMining hands you ("<from>-<to>_nft_incomes.csv") and it
    renders a dated income statement — headline figures, four charts and a monthly
@@ -64,36 +64,46 @@
   // ---- assumptions used only to DERIVE display-only metrics (never money) ----
   // Money on this page comes from the file. These two recover fleet efficiency,
   // which the export does not state outright. Mirrors scripts/constants.js.
-  const ELEC_RATE = 0.05;    // $/kWh — GoMining's flat electricity rate
+  const ELEC_RATE = (window.GMT_CONFIG ? window.GMT_CONFIG.fees.electricityUsdPerKwh : 0.05);   // $/kWh (data/config.json)
 
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Translated copies (/es/, /fr/, /de/) format dates, money and percentages the local way; English is unchanged.
+  const LOC = ({ es: 'es-ES', fr: 'fr-FR', de: 'de-DE' })[(window.GMT_UI || {}).lang];
+  const MONTHS = LOC
+    ? Array.from({ length: 12 }, (_, m) => new Intl.DateTimeFormat(LOC, { month: 'short', timeZone: 'UTC' }).format(Date.UTC(2020, m, 15)))
+    : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const SP = ' ';
 
   // ---------------------------------------------------------------- helpers
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (m) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 
-  const usd = (v, dp) => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('en-US',
-    { minimumFractionDigits: dp == null ? 2 : dp, maximumFractionDigits: dp == null ? 2 : dp });
+  const usd = (v, dp) => {
+    const n = Math.abs(v).toLocaleString(LOC || 'en-US', { minimumFractionDigits: dp == null ? 2 : dp, maximumFractionDigits: dp == null ? 2 : dp });
+    return (v < 0 ? '-' : '') + (LOC ? n + SP + '$' : '$' + n);
+  };
   const usd0 = (v) => usd(v, 0);
-  const btc = (v) => (v < 0 ? '-' : '') + Math.abs(v).toFixed(8);
-  const num = (v, dp) => v.toLocaleString('en-US', { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 });
-  const pct = (v, dp) => (v == null || !isFinite(v)) ? '—' : v.toFixed(dp == null ? 1 : dp) + '%';
+  const btc = (v) => (v < 0 ? '-' : '') + (LOC ? Math.abs(v).toLocaleString(LOC, { minimumFractionDigits: 8, maximumFractionDigits: 8 }) : Math.abs(v).toFixed(8));
+  const num = (v, dp) => v.toLocaleString(LOC || 'en-US', { minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0 });
+  const pct = (v, dp) => (v == null || !isFinite(v)) ? '—' : (LOC ? num(v, dp == null ? 1 : dp) + SP + '%' : v.toFixed(dp == null ? 1 : dp) + '%');
 
-  // compact axis money: $1.2k / $14k / $1.1M
+  // compact axis money: $1.2k / $14k / $1.1M (translated pages: the local compact form, symbol after)
   function usdShort(v) {
+    if (LOC) return new Intl.NumberFormat(LOC, { notation: 'compact', maximumFractionDigits: Math.abs(v) >= 1e4 || Math.abs(v) < 1e3 ? 0 : 1 }).format(v) + SP + '$';
     const a = Math.abs(v), s = v < 0 ? '-' : '';
     if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
     if (a >= 1e3) return s + '$' + (a / 1e3).toFixed(a >= 1e4 ? 0 : 1) + 'k';
     return s + '$' + Math.round(a);
   }
   function thShort(v) {
+    if (LOC) return new Intl.NumberFormat(LOC, { notation: 'compact', maximumFractionDigits: Math.abs(v) >= 1e4 || Math.abs(v) < 1e3 ? 0 : 1 }).format(v);
     const a = Math.abs(v);
     if (a >= 1e3) return (v / 1e3).toFixed(a >= 1e4 ? 0 : 1) + 'k';
     return String(Math.round(v));
   }
 
-  const dLabel = (iso) => { const [y, m, d] = iso.split('-'); return +d + ' ' + MONTHS[+m - 1] + ' ' + y; };
+  const dFmt = LOC && new Intl.DateTimeFormat(LOC, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const dLabel = (iso) => { const [y, m, d] = iso.split('-'); return dFmt ? dFmt.format(Date.UTC(+y, +m - 1, +d)) : +d + ' ' + MONTHS[+m - 1] + ' ' + y; };
   const mLabel = (ym) => { const [y, m] = ym.split('-'); return MONTHS[+m - 1] + ' ' + y; };
   const mShort = (ym) => { const [y, m] = ym.split('-'); return MONTHS[+m - 1] + (m === '01' ? " '" + y.slice(2) : ''); };
 
@@ -428,7 +438,7 @@
     if (n > 1) labs += '<text class="ch-val gold" x="' + X(n - 1).toFixed(1) + '" y="' + (Y(l.margin || 0) - 10).toFixed(1) + '" text-anchor="end">' + esc(pct(l.margin, 0)) + '</text>';
 
     const svg = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Net margin by month">' +
-      gridSVG(sc, (v) => Math.round(v) + '%') + xt +
+      gridSVG(sc, (v) => pct(Math.round(v), 0)) + xt +
       '<path class="ch-line gold" d="' + line.trim() + '"/>' + dots + labs + '</svg>';
     const fig = figure(host, 'Net margin by month', 'Share of gross mining revenue kept after electricity and service fees.', svg);
     const tip = fig.querySelector('.ch-tip');
@@ -563,11 +573,11 @@
     const prepared = ($('stFor').value || '').trim();
     const share = S.share;
     // trim a trailing ".0" so a whole percentage does not read as a false precision
-    const shareTxt = (Math.round(share * 10) / 10).toFixed(share % 1 === 0 ? 0 : 1) + '%';
+    const shareTxt = pct(Math.round(share * 10) / 10, share % 1 === 0 ? 0 : 1);
 
     const ST = stakeTotals();
     const issued = new Date();
-    const issuedStr = issued.getDate() + ' ' + MONTHS[issued.getMonth()] + ' ' + issued.getFullYear();
+    const issuedStr = dLabel(issued.getFullYear() + '-' + String(issued.getMonth() + 1).padStart(2, '0') + '-' + String(issued.getDate()).padStart(2, '0'));
 
     out.innerHTML = '';
     out.style.display = 'block';
@@ -580,7 +590,7 @@
     doc.insertAdjacentHTML('beforeend',
       '<header class="doc-head">' +
         '<div class="dh-top">' +
-          '<div class="dh-brand"><img src="/gmt-optimizer-logo.svg?v=2" alt=""><span>GMT Optimizer</span></div>' +
+          '<div class="dh-brand"><img src="/gmt-optimizer-logo.svg?v=2" alt=""><span>GMT-Optimizer</span></div>' +
           '<div class="dh-kind">Mining income statement</div>' +
         '</div>' +
         '<div class="dh-meta">' +
@@ -618,9 +628,9 @@
       ['Net margin', pct(T.margin), 'of gross revenue'],
       ['Hashrate at period end', num(T.thEnd) + ' TH',
         (T.nftsEnd ? (share < 100 ? shareTxt + ' of ' + num(T.nftsEnd) + ' miners' : num(T.nftsEnd) + ' miners') : '—') +
-        (T.wth ? ' · ' + T.wth.toFixed(1) + ' W/TH' : '')],
+        (T.wth ? ' · ' + num(T.wth, 1) + ' W/TH' : '')],
       ['Average hashrate', num(T.thAvg) + ' TH', 'across ' + T.days + ' days'],
-      ['Gross yield', T.satsTH.toFixed(1) + ' sats', 'per TH per day']
+      ['Gross yield', num(T.satsTH, 1) + ' sats', 'per TH per day']
     ];
     if (ST.usd > 0) {
       kpis.splice(3, 0,
@@ -720,7 +730,7 @@
           '<div class="pf"><i>' + esc(s[0]) + '</i><b>' + esc(s[1]) + '</b></div>').join('') +
         '</div>' +
         '<p class="prof-note">These reductions are already reflected in the cost lines above. ' +
-        (T.wth ? 'Implied fleet efficiency at period end is ' + esc(T.wth.toFixed(1)) + ' W/TH, derived from the electricity line at $0.05/kWh. ' : '') +
+        (T.wth ? 'Implied fleet efficiency at period end is ' + esc(num(T.wth, 1)) + ' W/TH, derived from the electricity line at $0.05/kWh. ' : '') +
         'The maintenance discount is the one driven by locked GMT.</p>' +
       '</section>');
 

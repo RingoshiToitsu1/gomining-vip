@@ -1,0 +1,149 @@
+/* GMT-Optimizer global chrome: one header and one footer on every page (rendered by site-chrome.js).
+   Tokens only. Sticky header, 64 px; collapses to a hamburger panel under 1024 px. */
+
+.sc-header, .sc-footer, .sc-mobile { font-family: var(--font-body); color: var(--color-text); -webkit-font-smoothing: antialiased; }
+/* Same size on every page: the console scales its root font (19.8 px), which would enlarge rem-based text. */
+.sc-header, .sc-footer, .sc-mobile { font-size: 16px; --font-size-xs: 12px; --font-size-sm: 14px; --font-size-base: 16px;
+  --font-size-lg: 18px; --font-size-xl: 20px; --font-size-2xl: 24px; }
+.sc-header *, .sc-footer *, .sc-mobile * { box-sizing: border-box; }
+/* Older page stylesheets style bare elements (nav, header, a, img). Neutralise them inside the chrome,
+   with enough specificity (two classes) to win wherever this file loads in the cascade. */
+.sc-header .sc-nav, .sc-mobile .sc-mobile-nav { position: static; inset: auto; transform: none; width: auto; z-index: auto;
+  padding: 0; margin: 0; background: none; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.sc-header .sc-bar img, .sc-footer .sc-footer__brand img { filter: none; opacity: 1; }
+.sc-header [hidden], .sc-mobile [hidden], .sc-footer [hidden] { display: none !important; }
+.sc-skip { position: absolute; left: var(--space-4); top: -100px; z-index: calc(var(--z-header) + 1); padding: var(--space-2) var(--space-4);
+  background: var(--color-gold); color: var(--color-on-gold); border-radius: var(--radius-control); font-family: var(--font-ui); font-weight: var(--font-weight-semibold); text-decoration: none; }
+.sc-skip:focus { top: var(--space-2); }
+
+/* ---------- header ---------- */
+/* Reserve the header's height until site-chrome.js mounts it, so the page doesn't drop by 65 px when it arrives
+   (a layout shift). The header replaces this placeholder in the same frame. */
+html:not(.sc-on) body::before { content: ''; display: block; height: calc(var(--header-h) + 1px); }
+.sc-header { position: sticky; top: 0; z-index: var(--z-header); background: rgb(var(--color-bg-rgb) / .92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--color-border); }
+.sc-header .sc-bar { display: flex; flex-wrap: nowrap; align-items: center; gap: var(--space-5); min-height: var(--header-h);
+  width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 var(--space-4); }
+@media (min-width: 768px) { .sc-header .sc-bar { padding: 0 var(--space-6); } }
+.sc-logo { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.sc-header .sc-logo img { display: block; height: 36px; width: auto; }
+@media (max-width: 600px) { .sc-header .sc-logo img { height: 30px; } }
+.sc-header .sc-nav { display: none; align-items: center; justify-content: center; gap: var(--space-1); min-width: 0; flex: 1 1 auto; }
+.sc-nav a { padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); color: var(--color-text-2); text-decoration: none;
+  font-family: var(--font-ui); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); white-space: nowrap;
+  transition: color var(--duration-fast), background var(--duration-fast); }
+.sc-nav a:hover { color: var(--color-text); background: var(--color-surface-1); }
+.sc-nav a[aria-current="page"] { color: var(--color-text); box-shadow: inset 0 -2px 0 var(--color-gold); border-radius: var(--radius-control) var(--radius-control) 0 0; }
+.sc-actions { display: flex; flex: 0 0 auto; align-items: center; gap: var(--space-2); margin-left: auto; }
+.sc-header .sc-cta { white-space: nowrap; flex: 0 0 auto; min-width: max-content; }
+.sc-icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+  border-radius: var(--radius-control); color: var(--color-text-2); background: transparent; border: 0; cursor: pointer; text-decoration: none; }
+.sc-icon-btn:hover { color: var(--color-text); background: var(--color-surface-1); }
+.sc-icon-btn svg { width: 20px; height: 20px; }
+.sc-icon-btn .ui-count { position: absolute; top: 2px; right: 0; }
+.sc-cta { display: none; }
+@media (min-width: 640px) { .sc-cta { display: inline-flex; } }
+@media (min-width: 1024px) {
+  .sc-header .sc-nav { display: flex; }
+  .sc-actions { margin-left: 0; }
+  .sc-burger { display: none !important; }
+}
+
+/* popover menus (language, account) */
+.sc-pop { position: relative; }
+.sc-pop__btn { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 40px; padding: 0 var(--space-2);
+  border-radius: var(--radius-control); background: transparent; border: 0; color: var(--color-text-2); cursor: pointer;
+  font-family: var(--font-ui); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); }
+.sc-pop__btn:hover, .sc-pop__btn[aria-expanded="true"] { color: var(--color-text); background: var(--color-surface-1); }
+.sc-pop__btn svg { width: 12px; height: 12px; }
+.sc-pop__menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 200px; padding: var(--space-1);
+  background: var(--color-surface-1); border: 1px solid var(--color-border-strong); border-radius: var(--radius-card); box-shadow: var(--shadow-pop); }
+.sc-pop__menu[hidden] { display: none; }
+.sc-pop__menu a, .sc-pop__menu button { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  width: 100%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); cursor: pointer;
+  font-family: var(--font-ui); font-size: var(--font-size-sm); color: var(--color-text); }
+.sc-pop__menu a:hover, .sc-pop__menu button:hover, .sc-pop__menu a:focus-visible, .sc-pop__menu button:focus-visible { background: var(--color-surface-2); }
+.sc-pop__menu [aria-disabled="true"] { color: var(--color-text-3); cursor: default; }
+.sc-pop__menu [aria-disabled="true"]:hover { background: transparent; }
+.sc-pop__menu [aria-current="true"] { color: var(--color-gold); }
+.sc-pop__menu .sc-danger { color: var(--color-error); }
+.sc-pop__sep { height: 1px; margin: var(--space-1) 0; background: var(--color-border); }
+.sc-pop__head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); }
+.sc-pop__head b { display: block; font-family: var(--font-ui); font-weight: var(--font-weight-semibold); font-size: var(--font-size-sm); }
+.sc-pop__head span { display: block; font-size: var(--font-size-xs); color: var(--color-text-2); }
+.sc-soon { font-size: 10px; color: var(--color-text-3); letter-spacing: .04em; text-transform: uppercase; }
+.sc-acct-btn { padding: 2px; border-radius: var(--radius-pill); background: transparent; border: 1px solid var(--color-border-strong); cursor: pointer; }
+.sc-acct-btn:hover, .sc-acct-btn[aria-expanded="true"] { border-color: var(--color-gold); }
+
+/* ---------- mobile panel ---------- */
+.sc-mobile { position: fixed; inset: var(--header-h) 0 0 0; z-index: calc(var(--z-header) + 450);   /* above page panels (up to 500) */
+  overflow-y: auto; background: var(--color-bg);
+  padding: var(--space-5) var(--space-4) var(--space-8); border-top: 1px solid var(--color-border); }
+.sc-mobile[hidden] { display: none; }
+.sc-mobile nav a { display: block; padding: var(--space-3) 0; font-family: var(--font-ui); font-size: var(--font-size-xl); font-weight: var(--font-weight-medium);
+  color: var(--color-text); text-decoration: none; border-bottom: 1px solid var(--color-border); }
+.sc-mobile nav a[aria-current="page"] { color: var(--color-gold); }
+.sc-mobile__group { margin-top: var(--space-6); }
+.sc-mobile__group h2 { margin: 0 0 var(--space-2); font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--color-text-2); }
+.sc-mobile__links { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2) var(--space-4); }
+.sc-mobile__links a { color: var(--color-text-2); text-decoration: none; font-size: var(--font-size-sm); padding: var(--space-1) 0; }
+.sc-mobile__langs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.sc-mobile .ui-btn { margin-top: var(--space-5); }
+html.sc-lock, html.sc-lock body { overflow: hidden; }
+
+/* ---------- footer ---------- */
+.sc-footer { margin-top: var(--section-y-lg); background: var(--color-bg); border-top: 1px solid var(--color-border); }
+/* pages that end on a full-width band butt the footer against it (no empty strip between) */
+body.lp > .sc-footer { margin-top: 0; }
+.sc-footer__inner { max-width: var(--content-max); margin: 0 auto; padding: var(--section-y) var(--space-4) var(--space-6); }
+@media (min-width: 768px) { .sc-footer__inner { padding-inline: var(--space-6); } }
+.sc-footer__top { display: grid; gap: var(--space-7); grid-template-columns: 1fr; }
+@media (min-width: 900px) { .sc-footer__top { grid-template-columns: minmax(220px, 1.2fr) 3fr; } }
+.sc-footer__brand img { height: 28px; width: auto; display: block; }
+.sc-footer__brand p { margin: var(--space-4) 0 0; max-width: 34ch; font-size: var(--font-size-sm); color: var(--color-text-2); line-height: var(--line-height-body); }
+.sc-footer__cols { display: grid; gap: var(--space-6); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px) { .sc-footer__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sc-footer__cols h2 { margin: 0 0 var(--space-3); font-family: var(--font-ui); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold);
+  letter-spacing: .08em; text-transform: uppercase; color: var(--color-text); }
+.sc-footer__cols ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.sc-footer__cols a { color: var(--color-text-2); text-decoration: none; font-size: var(--font-size-sm); overflow-wrap: anywhere; }
+.sc-footer__cols a:hover { color: var(--color-text); }
+.sc-footer__support { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--color-border);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); font-size: var(--font-size-xs); color: var(--color-text-2); }
+.sc-addr { all: unset; cursor: pointer; display: inline-flex; gap: var(--space-2); align-items: center; max-width: 100%;
+  padding: var(--space-1) var(--space-2); border: 1px solid var(--color-border); border-radius: var(--radius-control); }
+.sc-addr:hover, .sc-addr:focus-visible { border-color: var(--color-border-strong); color: var(--color-text); }
+.sc-addr b { color: var(--color-gold); font-weight: var(--font-weight-semibold); }
+.sc-addr { min-width: 0; }
+.sc-addr span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; max-width: 46ch; font-variant-numeric: tabular-nums; }
+.sc-addr.copied::after { content: '✓'; color: var(--color-success); }
+.sc-footer__legal { margin-top: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5);
+  font-size: var(--font-size-xs); color: var(--color-text-2); line-height: 1.6; }
+
+/* ---------- pages that keep their own app bar under the global header ---------- */
+/* console: its tool tabs + live strip dock below the global header */
+/* (the console's tab row and live strip now scroll with the page; they no longer dock under the header) */
+html.sc-on .topbar .header .c-brand, html.sc-on .topbar #gmtAccountSlot { display: none; }
+@media (max-width: 820px) {
+  /* the console's tool tabs scroll sideways on phones instead of widening the page */
+  html.sc-on .topbar .header .nav-links { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  html.sc-on .topbar .header .nav-links::-webkit-scrollbar { display: none; }
+  html.sc-on .topbar .header .nav-links a { flex: 0 0 auto; }
+  html.sc-on .topbar .header-inner { min-width: 0; }
+}
+/* the console's first-visit overlay and sign-in gate sit below the global header, so the site nav stays usable */
+html.sc-on .gmt-resgate, html.sc-on .ob-overlay { top: var(--header-h); }
+
+/* back-to-top (added by site.js): bottom-left, clear of the co-pilot launcher */
+#toTop { position: fixed; left: var(--space-4); bottom: var(--space-4); z-index: 400; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--color-border-strong); background: var(--color-surface-2); color: var(--color-text); font-size: 18px; cursor: pointer;
+  opacity: 0; pointer-events: none; transition: opacity var(--duration-base); }
+#toTop.show { opacity: 1; pointer-events: auto; }
+#toTop:hover { border-color: var(--color-gold); }
+#toTop:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+@media (max-width: 640px) { #toTop { display: none; } }   /* on phones it covered text; a swipe does the same */
+
+/* very narrow phones: the burger menu has Log in, so the bar can drop it rather than overflow */
+@media (max-width: 359px) { .sc-header .sc-acct .ui-btn { display: none; } }

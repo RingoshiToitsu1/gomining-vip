@@ -1,4 +1,12 @@
-/* GMT Optimizer — app engine (extracted verbatim from index.html) */
+// Canvas colours come from the shared chart kit (assets/charts.js → assets/tokens.css); the fallback values are
+// the same tokens, for the headless test harness and any page without the kit.
+const CK_FALLBACK={gold:'#E2B259','gold-300':'#F7D88A',success:'#22C55E',error:'#EF4444',bg:'#0B0B0D',text:'#FFFFFF','series-4':'#8B9CF7'};
+const CC=n=>window.GMTCharts?window.GMTCharts.color(n):CK_FALLBACK[n];
+// TC(text): canvas text through the console's translation dictionary (assets/i18n-dom.js); English: unchanged.
+const TC=s=>{const t=window.GMTDomI18n&&window.GMTDomI18n.t&&window.GMTDomI18n.t(s);return t||s;};
+// isTxt(el, english): does el show this text? On translated pages the DOM translator has replaced it.
+const isTxt=(el,s)=>el.textContent===s||el.textContent===TC(s);
+/* GMT-Optimizer — app engine (extracted verbatim from index.html) */
 // Always load at the top — don't let the browser restore a stale scroll position.
 if('scrollRestoration' in history){history.scrollRestoration='manual';}
 window.scrollTo(0,0);
@@ -9,8 +17,9 @@ const FB = { btcPrice:84000, gmtPrice:0.28, difficulty:113e12, avgTxFees:0.15 };
 // ---- GOMINING-SET RATES (calibrate against the MCP server / app periodically) ----
 // Source: https://docs.gomining.com/en/product/ai/mcp-server (Wallet → conversion
 // quotes, Miners → reward stats, VIP → benefits). Last calibrated: 2026-05-17.
-const CONVERSION_FEE  = 0.0225;  // BTC → GMT conversion skim (reinvesting rewards into GMT), applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
-const USD_GMT_FEE     = 0.02;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
+const CONFIG=GMT_CONFIG;   // data/config.json (via assets/pricing.js): every fee, rate, cap and tier below comes from it
+const CONVERSION_FEE  = CONFIG.fees.btcToGmtConversion;  // BTC → GMT conversion skim (reinvesting rewards into GMT), applied to (PR - fees) at payout (PR shown by GoMining is pre-skim)
+const USD_GMT_FEE     = CONFIG.fees.usdToGmt;    // Capital Planner: fee when deploying USD capital into GMT (to lock OR to mint TH, since TH is paid in GMT). Existing GMT on hand is unaffected.
 // GMT tracks BTC. Calibration anchor from observed history: BTC $120k ↔ GMT $0.52.
 // The New Monthly Income sim fits a line through (live BTC, live GMT) and this anchor.
 const GMT_ANCHOR_BTC  = 120000;
@@ -19,10 +28,16 @@ const GMT_ANCHOR_GMT  = 0.52;
 // mempool tx fees overshot the app (~50 vs 45 sats during a fee spike). Verified 2026-06-13:
 // subsidy-only at current difficulty ≈ 45, matching the GoMining app. The app rounds to the
 // nearest whole sat (not floor) — see dailyBTCperTH. Bump at each halving.
-const BLOCK_SUBSIDY   = 3.125;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
-const ELECTRICITY_RATE= 0.05;    // $/kWh charged on (W/TH × TH × 24h)
-const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
-const GREEDY_CAP      = 5000;    // max TH per miner via manual upgrades; passive growth compounds past this
+const BLOCK_SUBSIDY   = CONFIG.network.blockSubsidyBtc;   // BTC per block (post-2024 halving; → 1.5625 at the 2028 halving)
+const ELECTRICITY_RATE= CONFIG.fees.electricityUsdPerKwh;    // $/kWh charged on (W/TH × TH × 24h)
+const SERVICE_RATE    = CONFIG.fees.serviceUsdPerThDay;
+const CLICK_STREAK_PCT     = CONFIG.rates.clickStreakPct;      // daily click streak, %
+const COV_DAYS_PER_PCT     = CONFIG.discount.coverageDaysPerPct;  // days of fee coverage per 1% token discount
+const TOKEN_DISCOUNT_CAP   = CONFIG.discount.tokenCapPct;      // max token (coverage) discount, %
+const TOTAL_DISCOUNT_CAP   = CONFIG.discount.totalCapPct;      // max total fee discount, %
+const DAYS_PER_MONTH       = 365.25/12;                          // 30.4375: one month everywhere on the site (lib/mining.js DAYS_PER_MONTH)
+const ELEC_USD_PER_W_DAY   = ELECTRICITY_RATE*24/1000;           // $ per W/TH per TH per day (0.0012 at $0.05/kWh)  // $/TH/day platform service fee
+const GREEDY_CAP      = CONFIG.pricing.minerCapTh;    // max TH per miner via manual upgrades; passive growth compounds past this
 
 // ---- AMBASSADOR (referral) COMMISSION ----
 // GoMining pays an ambassador $0.005 per kWh their referrals' miners consume, so the stream is
@@ -35,19 +50,7 @@ const AMB_DEFAULT_WTH  = 15;
 function ambDailyUSD(th,wth){return Math.max(0,+th||0)*((wth>0?wth:AMB_DEFAULT_WTH)*24/1000)*AMB_RATE_PER_KWH;}
 
 // ---- VIP TIERS ----
-const TIERS=[
-  {n:'Bronze I',th:0,veg:0,d:0,rb:0},{n:'Bronze II',th:5,veg:50,d:.3,rb:0},
-  {n:'Silver I',th:10,veg:100,d:.6,rb:5},{n:'Silver II',th:25,veg:250,d:.9,rb:0},
-  {n:'Silver III',th:50,veg:500,d:1.2,rb:0},{n:'Gold I',th:100,veg:1000,d:1.5,rb:0},
-  {n:'Gold II',th:200,veg:2000,d:1.8,rb:0},{n:'Platinum I',th:500,veg:5000,d:2.1,rb:0},
-  {n:'Platinum II',th:1000,veg:10000,d:2.4,rb:0},{n:'Platinum III',th:2500,veg:25000,d:2.7,rb:0},
-  {n:'Diamond I',th:5000,veg:50000,d:3.0,rb:10},{n:'Diamond II',th:7000,veg:70000,d:3.3,rb:0},
-  {n:'Diamond III',th:9000,veg:90000,d:3.6,rb:0},{n:'Diamond IV',th:12000,veg:120000,d:3.9,rb:0},
-  {n:'Diamond V',th:20000,veg:200000,d:4.2,rb:0},
-  {n:'Legend I',th:50000,veg:500000,d:4.5,rb:0},{n:'Legend II',th:100000,veg:1000000,d:4.8,rb:0},
-  {n:'Legend III',th:250000,veg:2500000,d:5.1,rb:0},{n:'Legend IV',th:400000,veg:4000000,d:5.4,rb:0},
-  {n:'Legend V',th:750000,veg:7500000,d:5.7,rb:0},{n:'Elite',th:1000000,veg:10000000,d:6.0,rb:0}
-];
+const TIERS=CONFIG.vipTiers;   // VIP tiers live in data/config.json
 // VIP tier qualifies via locked GMT OR hashrate — whichever lifts you higher. GMT is the cheaper
 // path per discount %, but TH still climbs your VIP level (matters once you're at the max token
 // discount and keep growing the farm).
@@ -71,7 +74,10 @@ const tierCls=n=>n.startsWith('Bronze')?'bronze':n.startsWith('Silver')?'silver'
 // 15 W/TH is the only machine GoMining mints; tiers are per-miner-size $/TH with any sale applied,
 // stored PRE-avatar-discount (avatarDiscMult() applies the 5% NFT discount separately).
 const TH_TIERS=GMT_PRICING.TH_TIERS_15W;
-function avatarDiscMult(){return $('inAvatarDisc')&&$('inAvatarDisc').checked?0.95:1;}
+// _admSlice: set only while a projection time slice runs (runSetupProjection). Nothing can change the checkbox in
+// the middle of a slice, so reading it once per slice gives the same value as reading it on every price lookup.
+let _admSlice=null;
+function avatarDiscMult(){if(_admSlice!==null)return _admSlice;return $('inAvatarDisc')&&$('inAvatarDisc').checked?1-CONFIG.fees.nftHolderDiscount:1;}
 function estimateCPT(th){
   const disc=avatarDiscMult();
   if(th<=0)return TH_TIERS[0].cpt*disc;
@@ -144,11 +150,11 @@ document.addEventListener('click',function(e){
 function thPriceBadge(extraClass){
   return `<button type="button" class="px-badge${extraClass?' '+extraClass:''}" onclick="openPriceInfo()"
     title="See what these prices are and when they were last checked">
-    <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span></button>`;
+    <span class="px-dot"></span>15&nbsp;W TH costs updated <span class="px-when">${TH_PRICES_ASOF}</span> · fees &amp; rates ${GMT_PRICING.UPDATED}</button>`;
 }
 const EFF_BEST=GMT_PRICING.EFF_BEST;            // best efficiency available now (assets/pricing.js)
 const EFF_BASE_MAX=GMT_PRICING.EFF_BASE_MAX;    // the 15 W/TH hashrate curve; also the marketplace-machine baseline
-const MINER_CAP=5000;         // TH per machine via upgrades before a new machine is required
+const MINER_CAP=CONFIG.pricing.minerCapTh;         // TH per machine via upgrades before a new machine is required
 // What a freshly minted machine gets. GoMining mints 15 W/TH only since 2026-10-30, so every "buy new
 // hashrate" path prices off TH_TIERS at this rating; reaching 12 W is a separate upgrade decision.
 const EFF_NEW=EFF_BASE_MAX;
@@ -176,6 +182,17 @@ function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
 // this farm returning right now, compounded", which is a property of the setup. Halvings,
 // difficulty grind and price paths are forecasting — that belongs to the projection page,
 // and mixing the two would make a headline metric move for reasons the user did not change.
+// The same capital spent only on TH: no GMT locked (so no token discount and no staking), reinvested weekly the same
+// way, at the same prices. The TH count is found at its own size tier (bigger miners pay less per TH).
+function thOnlyCompoundedROI(i,capital){
+  if(!(capital>0))return null;
+  let th=capital/(TH_TIERS_NEW[0]?TH_TIERS_NEW[0].cpt:10);
+  for(let k=0;k<12;k++)th=capital/cptTier(TH_TIERS_NEW,Math.max(1,th));
+  const j=Object.assign({},i,{th:th,wth:EFF_NEW,gl:0,gw:0,gth:0,gInit:0});   // new TH is minted at 15 W
+  let m2;try{m2=calc(j);}catch(e){return null;}
+  const r=effectiveCompoundedROI(j,m2);
+  return r?r.roi:null;
+}
 function effectiveCompoundedROI(i,m){
   const bp=m.bp, gp=m.gp, dbt=dailyBTCperTH();
   if(!(bp>0&&gp>0&&dbt>0))return null;
@@ -202,11 +219,11 @@ function effectiveCompoundedROI(i,m){
       const bw=tot>0?(th*wth+gTH*gwth0)/tot:wth;
       const f=fees(Math.max(tot,1e-9),bw,bp);
       const v=vipFor(th+Math.max(0,gTH-gInit),locked,i);
-      const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+      const nonTok=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0)+(i.od||0));
       const burnGMT=(f.t*(1-nonTok/100)*bp)/gp;                     // GMT/day at full fee
       const cov=burnGMT>0?(locked+wallet)/burnGMT:Infinity;
-      const tokD=i.payG?Math.min(20,Math.floor(cov/18)):0;
-      const totD=Math.min(30,tokD+nonTok);
+      const tokD=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+      const totD=Math.min(TOTAL_DISCOUNT_CAP,tokD+nonTok);
       const mineWk=Math.max(0,(dbt*tot-f.t*(1-totD/100))*bp*(1-CONVERSION_FEE))*7;
       const stakeWk=locked*(i.apr/100)/52*gp;
       let budget=mineWk+stakeWk+(withAmb?ambWk:0);
@@ -216,7 +233,7 @@ function effectiveCompoundedROI(i,m){
       // Coverage first, exactly as the planner prioritises it: hashrate bought without the
       // coverage to match simply moves the fee discount down and can net less than it costs.
       if(i.payG){
-        const need=Math.max(0,burnGMT*360-(locked+wallet))*gp;
+        const need=Math.max(0,burnGMT*COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP-(locked+wallet))*gp;
         const toLock=Math.min(budget,need);
         if(toLock>0){locked+=toLock*(1-USD_GMT_FEE)/gp;budget-=toLock;}
       }
@@ -355,7 +372,7 @@ function effWthAfterSpend(curW,usdPerTH){
 function netMonthlyAt(i,bpOverride){
   const save=S.btcPrice;
   if(bpOverride!=null&&isFinite(bpOverride))S.btcPrice=bpOverride;
-  let mo=0;try{const c=calc(i);mo=c.net*c.bp*30;}finally{S.btcPrice=save;}
+  let mo=0;try{const c=calc(i);mo=c.net*c.bp*DAYS_PER_MONTH;}finally{S.btcPrice=save;}
   return mo;
 }
 
@@ -377,13 +394,24 @@ function autoFillCPT(thId,cptId,wthId){
 }
 
 // ---- FORMAT ----
-const fB=v=>v.toFixed(8)+' BTC';
-const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;return sym+cv.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d})};
-const fP=v=>v.toFixed(2)+'%';
-const fN=(v,d=2)=>v.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const fB=v=>(window.GMT_UI?v.toLocaleString({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lang],{minimumFractionDigits:8,maximumFractionDigits:8}):v.toFixed(8))+' BTC';   // translated pages: decimal comma
+// Translated copies of the console (/es/, /fr/, /de/) format numbers the local way; English is unchanged.
+const UI_LOC=window.GMT_UI?({es:'es-ES',fr:'fr-FR',de:'de-DE'}[window.GMT_UI.lang]):undefined;
+// T(english, ...args): sentences whose markup splits them into pieces are translated whole (key = the English
+// HTML with {0}... placeholders). Without GMT_UI (English) it just fills the placeholders, so output is unchanged.
+const T=window.GMT_UI?window.GMT_UI.t:(s,...a)=>s.replace(/\{(\d)\}/g,(m,i)=>a[i]!=null?a[i]:m);
+const fU=(v,d=2)=>{const syms={USD:'$',GBP:'\u00a3',EUR:'\u20ac'};const sym=syms[S.currency]||'$';const cv=v*S.fxRate;const n=cv.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});return UI_LOC?n+'\u00a0'+sym:sym+n};
+const fP=v=>UI_LOC?v.toLocaleString(UI_LOC,{minimumFractionDigits:2,maximumFractionDigits:2})+'\u00a0%':v.toFixed(2)+'%';
+const fN=(v,d=2)=>v.toLocaleString(UI_LOC,{minimumFractionDigits:d,maximumFractionDigits:d});
+// Percent and plain-USD amounts (GMT prices are always USD) in the page's format; English output is unchanged.
+const fPc=(v,d=0)=>UI_LOC?fN(v,d)+'\u00a0%':fN(v,d)+'%';
+const fUsdN=(v,d=2)=>UI_LOC?fN(v,d)+'\u00a0$':'$'+v.toFixed(d);
 // Compact formatters for chart axis labels (keep them narrow so monthly values
 // don't overflow the y-axis gutter).
-function fAxisUSD(v){const sym=({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$';const a=Math.abs(v*S.fxRate);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:a>=10?1:2);return (v<0?'-':'')+sym+s;}
+function fAxisUSD(v){const sym=({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$';const a=Math.abs(v*S.fxRate);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:a>=10?1:2);
+  // translated pages: the page's compact format with the symbol after ("460 $", "1,2 k $"); English unchanged
+  if(UI_LOC){const c=new Intl.NumberFormat(UI_LOC,{notation:'compact',maximumFractionDigits:a>=1e4||a<1e3&&a>=100?0:1}).format(a);return (v<0?'-':'')+c+' '+sym;}
+  return (v<0?'-':'')+sym+s;}
 function fAxisGMT(v){const a=Math.abs(v);let s;if(a>=1e6)s=(a/1e6).toFixed(a>=1e7?0:1)+'M';else if(a>=1e3)s=(a/1e3).toFixed(a>=1e4?0:1)+'K';else s=a.toFixed(a>=100?0:2);return s+' GMT';}
 
 // ---- SECTIONS ----
@@ -448,9 +476,9 @@ function _activateTab(b,push){
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
   const activeLink=document.querySelector(`.nav-links a[data-view="${b.dataset.tab}"]`);
   if(activeLink)activeLink.classList.add('nav-active');
-  // The Capital Planner tab relabels to "Adjust Amount" while you're on it (re-clicking adjusts).
+  // The Capital Planner tab relabels to "Adjust amount" while you're on it (re-clicking adjusts).
   const pBtn=document.querySelector('[data-tab="tab-planner"]');
-  if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust Amount':'Capital Planner';
+  if(pBtn)pBtn.textContent=(b.dataset.tab==='tab-planner')?'Adjust amount':'Capital planner';
   // Re-observe reveals in newly visible tab
   document.getElementById(b.dataset.tab).querySelectorAll('.reveal:not(.visible)').forEach(el=>revealObs.observe(el));
   // Reflect the view in the URL so the tabs are real pages (/planner, /console) — unless we're
@@ -460,7 +488,7 @@ function _activateTab(b,push){
     if(u&&location.pathname.replace(/\/+$/,'')!==u){try{history.pushState({tab:t},'',u);}catch(e){}}
   }
   // First visit to the planner auto-opens the full-page form; navigating in from another tab
-  // shows the results. Re-clicking "Capital Planner" while already on it reopens the form to
+  // shows the results. Re-clicking "Capital planner" while already on it reopens the form to
   // adjust (replaces the old "Adjust Investment Amount" button).
   if(b.dataset.tab==='tab-planner'&&(!window._plannerCalcDone||(prev&&prev.id==='tab-planner'))){openPlannerForm();}
   // Switching to My Setup from another tab replays the count-up animation.
@@ -542,7 +570,7 @@ function openPlannerForm(){
   setPlannerMode(window._plannerMode||'amount');   // restore the chosen mode + button label + unit
   showPanelView('plannerIntro');
   const cb=document.getElementById('plannerCalcBtn');if(cb)cb.disabled=false;
-  // "Return to Capital Planner" only makes sense once a plan has been calculated to go back to.
+  // "Back to the capital planner" only makes sense once a plan has been calculated to go back to.
   const rr=document.getElementById('piReturnResults');if(rr)rr.style.display=window._plannerCalcDone?'':'none';
 }
 // Dismiss the form back to the already-computed Capital Planner results (no recalculation).
@@ -601,9 +629,9 @@ function submitPlannerCapital(){
     throw e;                    // still surfaces in the console for diagnosis
    }finally{
     if(btn)btn.disabled=false;
-    if(!txt||txt.textContent==='Finding your optimal split…')if(load)load.style.display='none';
+    if(!txt||isTxt(txt,'Finding your optimal split…'))if(load)load.style.display='none';
    }
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 // The Calculate button runs whichever planner mode is active.
 function submitPlanner(){
@@ -620,7 +648,7 @@ function setPlannerMode(mode){
   if(goal)goal.hidden=!isGoal;
   if(bA)bA.classList.toggle('active',!isGoal);
   if(bG)bG.classList.toggle('active',isGoal);
-  if(btn)btn.textContent=isGoal?'Find Required Capital':'Calculate Optimal Split';
+  if(btn)btn.textContent=isGoal?'Find required capital':'Calculate optimal split';
   if(unit)unit.textContent=(({USD:'$',GBP:'£',EUR:'€'})[S.currency]||'$')+'/mo';
 }
 // Project the farm's total monthly income (mining + staking + ambassador) for a hypothetical
@@ -645,7 +673,7 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
   const othW=othTH>0?Math.max(EFF_BEST,(finTH*finW-gTH*gW)/othTH):finW;
   const gGrow=Math.max(0,+(i.ggrow||0))/100;
   const WK=52/12;
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_NEW))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(a.ref?a.ref.at:0,EFF_NEW))*DAYS_PER_MONTH;
   const gmtW=Math.max(0,a.gmtReserve||0);
   const out=[];
   for(let mo=1;mo<=months;mo++){
@@ -654,12 +682,12 @@ function plannerMonthlyPath(a,ep,i,bp,gp,dbt,months){
     const tot=othTH+gTH, bw=tot>0?(othTH*othW+gTH*gW)/tot:othW;
     const f=fees(tot,bw,bp);
     const v=vipFor(othTH+Math.max(0,gTH-(a.gInit||0)),locked,i);
-    const nonTok=Math.min(30,v.d+(i.click?3:0)+(i.mm||0)+(i.od||0));
+    const nonTok=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0)+(i.od||0));
     const burn=(f.t*(1-nonTok/100)*bp)/gp;
     const cov=burn>0?(locked+gmtW)/burn:Infinity;
-    const tok=i.payG?Math.min(20,Math.floor(cov/18)):0;
-    const fd=Math.min(30,tok+nonTok);
-    const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*30;
+    const tok=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,tok+nonTok);
+    const mineMo=Math.max(0,dbt*tot-f.t*(1-fd/100))*bp*(1-CONVERSION_FEE)*DAYS_PER_MONTH;
     const stakeMo=locked*(i.apr/100)/52*gp*4.33;
     const greedyMo=(gTH>0&&gGrow>0)?(gTH*gGrow)*4.33*cptAtEff(gTH,gW):0;
     out.push(mineMo+stakeMo+ambMo+greedyMo);
@@ -677,18 +705,18 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
     // price the efficiency-inclusive total (finTH) and value the greedy's free weekly growth.
     const ep=computeEffPlan(effStateFrom(i,a,gp,bp));
     const projTH=(ep&&ep.finTH>0)?ep.finTH:a.nt, projWth=(ep&&ep.finWth>0)?ep.finWth:a.bwth;
-    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee
+    mineMo=(dbt*projTH-fees(projTH,projWth,bp).t*(1-a.td2/100))*(1-CONVERSION_FEE)*bp*DAYS_PER_MONTH;   // incl. 2% BTC→GMT fee
     locked=a.newLocked;refInitTH=a.ref?a.ref.at:0;
     gTHf=(ep&&ep.gTHf>0)?ep.gTHf:(a.greedyTot||0);gWf=(ep&&ep.gWthf>0)?ep.gWthf:(a.gwthAfter||15);
   }else{
     // Nothing to allocate (e.g. zero capital on a blank/empty setup): the farm just
     // earns its current income — a $0 baseline on a blank setup, not an error.
-    mineMo=m.net*m.bp*30;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
+    mineMo=m.net*m.bp*DAYS_PER_MONTH;locked=i.gl;refInitTH=0;gTHf=m.gth||0;gWf=m.gwth||15;
   }
   const stakingMo=locked*(i.apr/100)/52*gp*4.33;
   // NOT refPriorTH: that hashrate is already inside the Ambassador "referred TH" figure, so
   // counting it here would pay the user twice for the same miners.
-  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW))*30;
+  const ambMo=(ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW))*DAYS_PER_MONTH;
   const gGrow=+(i.ggrow||0);
   const greedyMo=(gTHf>0&&gGrow>0)?(gTHf*gGrow/100)*4.33*cptAtEff(gTHf,gWf):0;   // free weekly TH as income
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -699,9 +727,9 @@ function projectedMonthlyFor(i,m,bp,gp,dbt){
 // solve routes through a different discount path and drifts a few dollars.
 function currentMonthlyIncomeUSD(){
   const i=inp(),m=calc(i),gp=m.gp;
-  const mineMo=m.net*m.bp*30;                                   // includes discount + 2.25% conversion fee
+  const mineMo=m.net*m.bp*DAYS_PER_MONTH;                                   // includes discount + 2.25% conversion fee
   const stakingMo=m.wkGMT*gp*4.33;
-  const ambMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
+  const ambMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*DAYS_PER_MONTH;
   const gGrow=+(i.ggrow||0);
   const greedyMo=((m.gth||0)>0&&gGrow>0)?(m.gth*gGrow/100)*4.33*cptAtEff(m.gth,m.gwth||15):0;
   return mineMo+stakingMo+ambMo+greedyMo;
@@ -765,16 +793,16 @@ function submitPlannerTarget(){
     throw e;
    }finally{
     if(btn)btn.disabled=false;
-    if(!txt||txt.textContent==='Finding the capital you need…')if(load)load.style.display='none';
+    if(!txt||isTxt(txt,'Finding the capital you need…'))if(load)load.style.display='none';
    }
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 // "Return to My Setup" from the planner form: brief load, switch tabs, fresh animation.
 function returnToSetupFromPlanner(){
   const load=document.getElementById('plannerCalcLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
   if(txt)txt.textContent='Loading your farm…';
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('plannerIntro');
     if(load)load.style.display='none';
@@ -782,7 +810,7 @@ function returnToSetupFromPlanner(){
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();
     refreshMySetupAnimation();
-  },650);
+  },0);
 }
 function closePlannerIntro(){
   hidePanelView('plannerIntro');
@@ -791,8 +819,8 @@ function closePlannerIntro(){
 // Live price chart (TradingView advanced chart — real-time, with the drawing/TA toolbar).
 // Reused for BTC and the GoMining token; the widget is rebuilt when the symbol changes.
 let _chartSym=null;
-function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — Live Chart','/btc36.png',false,true);}
-function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — Live Chart','/gmt36.png',true,false);}
+function openBtcChart(){openChart('COINBASE:BTCUSD','Bitcoin — live chart','/btc36.png',false,true);}
+function openGmtChart(){openChart('CRYPTO:GOMININGUSD','GoMining Token — live chart','/gmt36.png',true,false);}
 // Deep-link: /bitcoin and /gmt (served by the redirect pages as /?chart=…, or hit directly)
 // auto-open the matching chart on first load.
 function maybeOpenChartFromURL(){
@@ -805,14 +833,14 @@ function maybeOpenChartFromURL(){
 function closeBtcChart(){
   try{history.replaceState({},'','/console'+location.hash);}catch(e){}   // drop /bitcoin|/gmt from the URL
   const load=document.getElementById('btcChartLoading');
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('btcChartPage');
     if(load)load.style.display='none';
     const setupBtn=document.querySelector('[data-tab="tab-current"]');
     if(setupBtn)setupBtn.click();        // return to My Setup
     refreshMySetupAnimation();            // replay the count-up on all the numbers
-  },650);
+  },0);
 }
 function openChart(symbol,title,icon,allowChange,isBtc){
   // remember which asset is on screen so the screenshot button knows what to render
@@ -905,7 +933,7 @@ function loadBtcRainbow(){
   if(_rainbowData||_rainbowLoading)return;
   _rainbowLoading=true;
   const msg=document.getElementById('btcRainbowMsg');
-  if(msg){msg.textContent='Loading price history…';msg.style.display='';}
+  if(msg){msg.dataset.err='';msg.textContent='Loading price history…';msg.style.display='';}
   fetchRainbowHistory()
     .then(data=>{
       // Trim to 2012+ so the Power-Law fit matches the canonical "since 2012" rainbow.
@@ -918,13 +946,13 @@ function loadBtcRainbow(){
     })
     .catch(()=>{
       _rainbowLoading=false;
-      if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
+      if(msg){msg.dataset.err='1';msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
       drawBtcRainbow();
     });
 }
 // ---- Rainbow chart constants (9 Power-Law bands, red overvalued → blue undervalued) ----
 const RB_COLORS=['#b11717','#e23b25','#ef7b2a','#f3a93a','#ecd24b','#bcd64a','#5fb85a','#2fa39a','#3f7cc4'];
-const RB_LABELS=['Maximum Bubble Territory','Sell. Seriously, SELL!','FOMO intensifies','Is this a bubble?','HODL!','Still cheap','Accumulate','BUY!','Basically a Fire Sale'];
+const RB_LABELS=['Maximum bubble territory','Sell. Seriously, SELL!','FOMO intensifies','Is this a bubble?','HODL!','Still cheap','Accumulate','BUY!','Basically a fire sale'];
 const RB_OFFSETS=[0.45,0.35,0.25,0.15,0.05,-0.05,-0.15,-0.25,-0.35,-0.45]; // 10 boundaries → 9 bands
 const RB_DAY=86400000;
 const RB_GEN=Date.UTC(2009,0,3);                 // genesis-era reference for the log-time axis
@@ -941,7 +969,7 @@ const RB_HALVINGS=[
 ];
 // Plot padding adapts to width so the axis/labels stay readable on phones.
 function rbPads(W){return W<480?{l:6,r:52,t:10,b:44}:{l:8,r:74,t:12,b:46};}
-function rbAxisLabel(val,sm){if(!sm)return rbFmtUSD(val);return val>=1e6?'$'+(val/1e6)+'M':val>=1e3?'$'+(val/1e3)+'K':'$'+val;}
+function rbAxisLabel(val,sm){if(!sm)return rbFmtUSD(val);if(UI_LOC&&window.GMTCharts)return ckCompactUSD(val);return val>=1e6?'$'+(val/1e6)+'M':val>=1e3?'$'+(val/1e3)+'K':'$'+val;}
 let _rbView=null, _rbDrag=null, _rbPinch=null, _rbBound=false, _rbFit=null, _rbHover=null, _rbRaf=null;
 function rbRequestDraw(){if(_rbRaf)return;_rbRaf=requestAnimationFrame(()=>{_rbRaf=null;drawBtcRainbow();});}
 function rbHideTip(){const t=document.getElementById('btcRainbowTip');if(t)t.style.display='none';}
@@ -950,7 +978,7 @@ function rbShowTip(t,wx,wy){
   const tip=document.getElementById('btcRainbowTip'),wrap=document.getElementById('btcRainbowWrap');
   if(!tip||!wrap||!_rbFit||!_rainbowData)return;
   const center=_rbFit.m*Math.log(rbDayOf(t))+_rbFit.b;
-  const ds=new Date(t).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  const ds=new Date(t).toLocaleDateString(UI_LOC||'en-US',{year:'numeric',month:'short',day:'numeric'});
   const last=_rainbowData[_rainbowData.length-1];
   const actual=(t<=last.t)?rbPriceAt(_rainbowData,t):null;
   let html=`<div class="rb-tip-date">${ds}</div>`;
@@ -1034,7 +1062,10 @@ function rbPriceAt(series,t){
   const a=series[lo],c=series[hi],f=(t-a.t)/((c.t-a.t)||1);
   return a.v*Math.pow(c.v/a.v,f);
 }
-function rbFmtUSD(v){return '$'+Math.round(v).toLocaleString('en-US');}
+function rbFmtUSD(v){return UI_LOC&&window.GMTCharts?GMTCharts.money(Math.round(v),0):'$'+Math.round(v).toLocaleString('en-US');}
+// Translated pages: axis numbers in the page locale via the chart kit. English keeps its exact legacy strings.
+function ckCompactUSD(v){return new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',currencyDisplay:'narrowSymbol',notation:'compact',maximumSignificantDigits:3}).format(v);}
+function ckSignedPct(n){return UI_LOC&&window.GMTCharts?new Intl.NumberFormat(GMTCharts.locale(),{style:'percent',signDisplay:'always',maximumFractionDigits:0}).format(Math.round(n)/100):(n>=0?'+':'')+Math.round(n)+'%';}
 function renderRainbowLegend(active){
   const el=document.getElementById('btcRainbowLegend');if(!el)return;
   el.innerHTML=RB_LABELS.map((l,i)=>`<span class="rb-pill${i===active?' active':''}" style="border-left-color:${RB_COLORS[i]}">${l}</span>`).join('');
@@ -1099,7 +1130,7 @@ function drawBtcRainbow(){
   const cur=S.btcPrice||series[series.length-1].v;
   let curBand=8;
   if(cur>0){const tNow=Math.min(Date.now(),dataT1);const xx=X(tNow),yy=Y(Math.log10(cur));
-    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle='#fff';x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle='#0a0a0a';x.lineWidth=1.6;x.stroke();}
+    if(tNow>=v.t0&&tNow<=v.t1){x.fillStyle=CC('text');x.beginPath();x.arc(xx,yy,4.5,0,7);x.fill();x.strokeStyle=CC('bg');x.lineWidth=1.6;x.stroke();}
     const cl=Math.log10(cur)-centerAt(tNow);
     if(cl>=RB_OFFSETS[0])curBand=0;else{curBand=8;for(let bi=0;bi<RB_OFFSETS.length-1;bi++){if(cl<RB_OFFSETS[bi]&&cl>=RB_OFFSETS[bi+1]){curBand=bi;break;}}}
   }
@@ -1211,10 +1242,10 @@ function buildChart(symbol,allowChange){
       studies:['MAExp@tv-basicstudies'],
       studies_overrides:{
         'moving average exponential.length':50,
-        'moving average exponential.plot.color':'#F5A623',
+        'moving average exponential.plot.color':'#E2B259',
         'moving average exponential.plot.linewidth':2
       },
-      backgroundColor:'rgba(10,10,10,1)', gridColor:'rgba(245,166,35,0.06)'
+      backgroundColor:'rgba(11,11,13,1)', gridColor:'rgba(226,178,89,0.06)'
     });
   };
   if(window.TradingView){make();return;}
@@ -1239,14 +1270,14 @@ let _cmbData=null, _cmbLoading=false, _cmbDays=180, _cmbHover=null, _cmbMode='co
 // Line or candle for BOTH series; candles pair inside each day rather than overlapping.
 let _cmbStyle='line';
 const CMB_EMA_N=50;
-const CMB_BTC='#F5A623', CMB_GMT='#A78BFA', CMB_EMA='#16c784';
+const CMB_BTC=CC('gold'), CMB_GMT=CC('series-4'), CMB_EMA=CC('success');
 // Two candle series need two palettes, or you cannot tell whose day was up. Each asset keeps its
 // brand colour for up days and goes near-white for down days. The two whites are TINTED — warm
 // for Bitcoin, cool for GMT — because a shared pure white would make a down day on one
 // indistinguishable from a down day on the other, which is the one thing the pairing exists to
 // show. They still read as white next to a saturated orange or purple.
-const CMB_BTC_UP='#F5A623', CMB_BTC_DN='#FFEFD2';
-const CMB_GMT_UP='#A78BFA', CMB_GMT_DN='#EAE4FF';
+const CMB_BTC_UP=CC('gold'), CMB_BTC_DN='#FFEFD2';
+const CMB_GMT_UP=CC('series-4'), CMB_GMT_DN='#EAE4FF';
 
 // Daily closes for one asset, newest last, as {t(ms),v}. Every source here is CORS-open.
 async function cmbFetchBTC(){
@@ -1308,7 +1339,7 @@ function loadCombined(force){
     drawCombined();
   }).catch(()=>{
     _cmbLoading=false;
-    if(msg){msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
+    if(msg){msg.dataset.err='1';msg.textContent='Couldn’t load price history right now — try again shortly.';msg.style.display='';}
   });
 }
 // Pearson correlation of DAILY LOG RETURNS — the honest measure of "do they move together".
@@ -1500,13 +1531,13 @@ function drawCombined(){
   const Y=v=>T+ph*(1-((v-lo)/((hi-lo)||1)));
 
   // grid + right axis, labelled as % change since the left edge
-  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  x.font=(sm?'10px':'11px')+' "Inter",monospace';x.textAlign='left';
   for(let k=0;k<=4;k++){
     const v=lo+(hi-lo)*k/4, gy=Y(v);
-    x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(245,166,35,0.07)';
+    x.strokeStyle=(Math.abs(v-100)<(hi-lo)/80)?'rgba(255,255,255,0.22)':'rgba(226,178,89,0.07)';
     x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(R,gy);x.stroke();
     x.fillStyle='rgba(255,255,255,0.45)';
-    x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',R+6,gy+4);
+    x.fillText(ckSignedPct(v-100),R+6,gy+4);
   }
   // month gridlines
   x.textAlign='center';let lastM=null;
@@ -1514,7 +1545,7 @@ function drawCombined(){
     if(mk!==lastM){lastM=mk;const gx=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
       x.fillStyle='rgba(255,255,255,0.4)';
-      x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+      x.fillText(d.toLocaleDateString(UI_LOC||'en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
 
   const line=(key,col,wd,dash)=>{
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
@@ -1568,13 +1599,13 @@ function drawCombined(){
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
-        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_BTC}"></span><span class="rb-tip-lbl">BTC</span><span class="rb-tip-px">${fmtBTCPrice(p.btc)}</span></div>`
-          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">$${p.gmt.toFixed(4)}</span></div>`
+          +`<div class="rb-tip-row"><span class="rb-tip-sw" style="background:${CMB_GMT}"></span><span class="rb-tip-lbl">GMT</span><span class="rb-tip-px">${fUsdN(p.gmt,4)}</span></div>`
           +(function(){
             if(_cmbStyle!=='candle')return '';
             let out='';
-            [['BTC',p.btcC,v=>fmtBTCPrice(v)],['GMT',p.gmtC,v=>'$'+v.toFixed(4)]].forEach(([nm,k,q],ix)=>{
+            [['BTC',p.btcC,v=>fmtBTCPrice(v)],['GMT',p.gmtC,v=>fUsdN(v,4)]].forEach(([nm,k,q],ix)=>{
               if(!k)return;
               out+=`<div class="rb-tip-row"${ix===0?' style="margin-top:.2rem;border-top:1px solid var(--border);padding-top:.25rem"':''}><span class="rb-tip-lbl">${nm} O/C</span><span class="rb-tip-px">${q(k.o)} / ${q(k.c)}</span></div>`
                  +`<div class="rb-tip-row"><span class="rb-tip-lbl">&nbsp;&nbsp;H/L</span><span class="rb-tip-px">${q(k.h)} / ${q(k.l)}</span></div>`;
@@ -1591,14 +1622,14 @@ function drawCombined(){
   // legend + stats
   const last=S[S.length-1];
   const corr=cmbCorrelation(all.slice(-want));
-  const pct=v=>(v>=100?'+':'')+(v-100).toFixed(1)+'%';
+  const pct=v=>`<span style="color:var(${v>=100?'--color-success':'--color-error'})">${(v>=100?'+':'')+(UI_LOC?fPc(v-100,1):(v-100).toFixed(1)+'%')}</span>`;   // green up, red down
   const lg=document.getElementById('cmbLegend');
   const sw=(a,b)=>`<span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${a};margin-right:2px"></span><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:${b};margin-right:5px"></span>`;
   const cndl=_cmbStyle==='candle';
   if(lg)lg.innerHTML=
      `<span class="rb-pill" style="border-left-color:${CMB_BTC}">${cndl?sw(CMB_BTC_UP,CMB_BTC_DN):''}BTC ${pct(last.biR)} &middot; ${fmtBTCPrice(last.btc)}</span>`
-    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">${cndl?sw(CMB_GMT_UP,CMB_GMT_DN):''}GMT ${pct(last.giR)} &middot; $${last.gmt.toFixed(4)}</span>`
-    +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#16c784':corr>=0.2?'#f3a93a':'#ea3943'}">correlation ${corr.toFixed(2)}</span>`:'');
+    +`<span class="rb-pill" style="border-left-color:${CMB_GMT}">${cndl?sw(CMB_GMT_UP,CMB_GMT_DN):''}GMT ${pct(last.giR)} &middot; ${fUsdN(last.gmt,4)}</span>`
+    +(corr!=null?`<span class="rb-pill" style="border-left-color:${corr>=0.5?'#22C55E':corr>=0.2?'#f3a93a':'#EF4444'}">correlation ${corr.toFixed(2)}</span>`:'');
   const note=document.getElementById('cmbCorrNote');
   if(note)note.textContent=corr==null?''
     :corr>=0.7?'They move together closely — GMT is largely riding Bitcoin day to day.'
@@ -1633,20 +1664,20 @@ function drawCmbSignal(x,all,want,W,H,sm){
     x.closePath();x.fillStyle=fill;x.fill();x.restore();
   };
   zone(2,1,'rgba(234,57,67,0.10)');      // rich
-  zone(-1,-2,'rgba(22,199,132,0.10)');   // cheap
+  zone(-1,-2,'rgba(34,197,94,0.10)');   // cheap
   zone(1,-1,'rgba(255,255,255,0.03)');   // fair
 
-  x.font=(sm?'10px':'11px')+' "Share Tech Mono",monospace';x.textAlign='left';
+  x.font=(sm?'10px':'11px')+' "Inter",monospace';x.textAlign='left';
   for(let k=0;k<=4;k++){
     const v=lo+(hi-lo)*k/4,gy=Y(v);
-    x.strokeStyle='rgba(245,166,35,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.45)';x.fillText((v>=100?'+':'')+Math.round(v-100)+'%',Rr+6,gy+4);
+    x.strokeStyle='rgba(226,178,89,0.06)';x.lineWidth=1;x.beginPath();x.moveTo(L,gy);x.lineTo(Rr,gy);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.45)';x.fillText(ckSignedPct(v-100),Rr+6,gy+4);
   }
   x.textAlign='center';let lastM=null;
   S.forEach(p=>{const d=new Date(p.t),mk=d.getUTCFullYear()+'-'+d.getUTCMonth();
     if(mk!==lastM){lastM=mk;const gx=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.05)';x.beginPath();x.moveTo(gx,T);x.lineTo(gx,B);x.stroke();
-      x.fillStyle='rgba(255,255,255,0.4)';x.fillText(d.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
+      x.fillStyle='rgba(255,255,255,0.4)';x.fillText(d.toLocaleDateString(UI_LOC||'en-US',{month:'short',timeZone:'UTC'}),gx,B+16);}});
 
   const path=(fn,col,wd,dash)=>{
     x.save();x.beginPath();x.rect(L,T,pw,ph);x.clip();
@@ -1656,8 +1687,8 @@ function drawCmbSignal(x,all,want,W,H,sm){
   };
   path(()=>100,'rgba(255,255,255,0.45)',1.4,[5,4]);   // the 50-day EMA itself
   path(p=>band(p,1),'rgba(234,57,67,0.5)',1);
-  path(p=>band(p,-1),'rgba(22,199,132,0.5)',1);
-  path(rel,'#FFCF7A',2.4);                            // GMT priced in BTC
+  path(p=>band(p,-1),'rgba(34,197,94,0.5)',1);
+  path(rel,CC('gold-300'),2.4);                            // GMT priced in BTC
 
   const last=S[S.length-1];
   if(_cmbHover!=null){
@@ -1667,14 +1698,14 @@ function drawCmbSignal(x,all,want,W,H,sm){
       const px=X(p.t);
       x.strokeStyle='rgba(255,255,255,0.3)';x.lineWidth=1;x.setLineDash([3,3]);
       x.beginPath();x.moveTo(px,T);x.lineTo(px,B);x.stroke();x.setLineDash([]);
-      x.fillStyle='#FFCF7A';x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
+      x.fillStyle=CC('gold-300');x.beginPath();x.arc(px,Y(rel(p)),3.4,0,7);x.fill();
       const tip=document.getElementById('cmbTip');
       if(tip){
         tip.style.display='';
-        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
-          +`<div class="rb-tip-actual">GMT ${'$'+p.gmt.toFixed(4)} &middot; BTC ${fmtBTCPrice(p.btc)}</div>`
+        tip.innerHTML=`<div class="rb-tip-date">${new Date(p.t).toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'})}</div>`
+          +`<div class="rb-tip-actual">GMT ${fUsdN(p.gmt,4)} &middot; BTC ${fmtBTCPrice(p.btc)}</div>`
           +`<div class="rb-tip-row"><span class="rb-tip-lbl">vs 50d avg</span><span class="rb-tip-px">${(rel(p)>=100?'+':'')+(rel(p)-100).toFixed(1)}%</span></div>`
-          +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#16c784':p.z>=1?'#ea3943':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
+          +`<div class="rb-tip-row"><span class="rb-tip-lbl">z-score</span><span class="rb-tip-px" style="color:${p.z<=-1?'#22C55E':p.z>=1?'#EF4444':'var(--text)'}">${p.z!=null?p.z.toFixed(2):'—'}</span></div>`;
         const tw=tip.offsetWidth||150;
         tip.style.left=Math.max(4,Math.min(W-tw-4,px+12))+'px';tip.style.top=(T+6)+'px';
       }
@@ -1684,11 +1715,11 @@ function drawCmbSignal(x,all,want,W,H,sm){
   const slope=cmbRatioSlope(R), v=cmbVerdict(last.z,slope);
   const lg=document.getElementById('cmbLegend');
   if(lg)lg.innerHTML=
-     `<span class="rb-pill" style="border-left-color:#FFCF7A">GMT/BTC ${(rel(last)>=100?'+':'')+(rel(last)-100).toFixed(1)}% vs 50d</span>`
-    +`<span class="rb-pill" style="border-left-color:${last.z<=-1?'#16c784':last.z>=1?'#ea3943':'rgba(255,255,255,.4)'}">z ${last.z!=null?last.z.toFixed(2):'—'}</span>`
-    +`<span class="rb-pill" style="border-left-color:${slope>0.02?'#16c784':slope<-0.02?'#ea3943':'rgba(255,255,255,.4)'}">30d trend ${(slope>=0?'+':'')+(slope*100).toFixed(1)}%</span>`;
+     `<span class="rb-pill" style="border-left-color:#F7D88A">GMT/BTC ${(rel(last)>=100?'+':'')+(rel(last)-100).toFixed(1)}% vs 50d</span>`
+    +`<span class="rb-pill" style="border-left-color:${last.z<=-1?'#22C55E':last.z>=1?'#EF4444':'rgba(255,255,255,.4)'}">z ${last.z!=null?last.z.toFixed(2):'—'}</span>`
+    +`<span class="rb-pill" style="border-left-color:${slope>0.02?'#22C55E':slope<-0.02?'#EF4444':'rgba(255,255,255,.4)'}">30d trend ${(slope>=0?'+':'')+(slope*100).toFixed(1)}%</span>`;
   const note=document.getElementById('cmbCorrNote');
-  if(note&&v)note.innerHTML=`<strong style="color:${v.tone==='buy'?'#16c784':v.tone==='sell'?'#ea3943':'var(--text2)'}">${v.label}.</strong> ${v.body}`;
+  if(note&&v)note.innerHTML=`<strong style="color:${v.tone==='buy'?'#22C55E':v.tone==='sell'?'#EF4444':'var(--text2)'}">${v.label}.</strong> ${v.body}`;
 }
 function renderCmbVerdict(){
   const el=document.getElementById('cmbVerdict');
@@ -1705,10 +1736,10 @@ function renderCmbVerdict(){
   el.innerHTML=
      `<div class="cmb-verdict-head">${sig.hold?'HOLD GMT':'CONVERT TO STABLECOIN'}</div>`
     +`<div class="cmb-verdict-why">GMT is <strong>${sig.gap>=0?'+':''}${sig.gap.toFixed(1)}%</strong> ${sig.gap>=0?'above':'below'} its 50-day average `
-    +`($${sig.price.toFixed(4)} vs $${sig.ema.toFixed(4)}) &mdash; ${sig.flat?'sitting right on it, so there is no trend either way and nothing to act on.':(sig.hold?'the trend is up.':'the trend is down.')}${rel}</div>`
+    +`(${fUsdN(sig.price,4)} vs ${fUsdN(sig.ema,4)}) &mdash; ${sig.flat?'sitting right on it, so there is no trend either way and nothing to act on.':(sig.hold?'the trend is up.':'the trend is down.')}${rel}</div>`
     +`<div class="cmb-verdict-level">${sig.hold
-        ? `Converts if GMT closes below <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> below today's price.`
-        : `Back to hold once GMT closes above <strong>$${sig.trigger.toFixed(4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> above today's price.`}
+        ? `Converts if GMT closes below <strong>${fUsdN(sig.trigger,4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> below today's price.`
+        : `Back to hold once GMT closes above <strong>${fUsdN(sig.trigger,4)}</strong> &mdash; <strong>${Math.abs(sig.away).toFixed(1)}%</strong> above today's price.`}
         <span style="color:var(--text3)">The average moves daily, so this level drifts with it.</span></div>`
     +cmbSwapBlock()
     +`<div class="cmb-verdict-sub">${sig.fresh?`Signal flipped <strong>${sig.days} day${sig.days===1?'':'s'}</strong> ago &mdash; fresh flips are where this rule whipsaws most, so treat it as early rather than confirmed.`:`Held for <strong>${sig.days} days</strong>.`} `
@@ -1719,7 +1750,7 @@ function cmbSwapBlock(){
   const last=B.length?B[B.length-1]:null;
   if(!last||last.sell==null)return '';
   const bt=cmbSwapBacktest(B);
-  const px=v=>'$'+v.toFixed(4);
+  const px=v=>fUsdN(v,4);
   const now=last.v;
   const stretched=last.z>=K_SWAP?'sell':last.z<=-K_SWAP?'buy':'';
   // The two rules on this card can disagree, and often do at exactly the moments that matter:
@@ -1737,7 +1768,7 @@ function cmbSwapBlock(){
       <span class="cmb-swap-leg ${stretched==='sell'?'hit':''}"><b>Swap to stablecoin above</b> ${px(last.sell)} <i>${((last.sell/now-1)*100>=0?'+':'')+((last.sell/now-1)*100).toFixed(1)}%</i></span>
       <span class="cmb-swap-leg ${stretched==='buy'?'hit':''}"><b>Swap back to GMT below</b> ${px(last.buy)} <i>${((last.buy/now-1)*100).toFixed(1)}%</i></span>
     </div>
-    ${bt?`<div class="cmb-swap-bt">On the last <strong>${bt.days}</strong> days this rule made <strong>${bt.trips}</strong> swap${bt.trips===1?'':'s'} and ended with <strong style="color:${bt.edge>=0?'#16c784':'#ea3943'}">${(bt.edge>=0?'+':'')+bt.edge.toFixed(1)}%</strong> ${bt.edge>=0?'more':'less'} GMT than never moving.
+    ${bt?`<div class="cmb-swap-bt">On the last <strong>${bt.days}</strong> days this rule made <strong>${bt.trips}</strong> swap${bt.trips===1?'':'s'} and ended with <strong style="color:${bt.edge>=0?'#22C55E':'#EF4444'}">${(bt.edge>=0?'+':'')+bt.edge.toFixed(1)}%</strong> ${bt.edge>=0?'more':'less'} GMT than never moving.
       ${bt.trips<8?`That is only ${bt.trips} trade${bt.trips===1?'':'s'} &mdash; far too few to call it an edge rather than luck.`:''}</div>`:''}
     ${clash?`<div class="cmb-swap-clash">${clash}</div>`:''}
   </div>`;
@@ -1866,7 +1897,7 @@ async function createChartShot(){
   const img=document.getElementById('chartShotImg');
   const actions=document.getElementById('chartShotActions');
   document.getElementById('chartShotTitle').textContent=asset.name+' — 1H chart snapshot';
-  document.getElementById('chartShotLoadTxt').textContent='Pulling the latest 1-hour candles…';
+  document.getElementById('chartShotLoadTxt').textContent='Loading the latest 1-hour candles…';
   img.style.display='none';actions.style.display='none';load.style.display='flex';
   modal.style.display='flex';document.body.style.overflow='hidden';
   _chartShotCanvas=null;_chartShotBlob=null;   // clear any prior shot so we never share stale image
@@ -2112,9 +2143,11 @@ async function createFarmShot(){
   try{
     if(!d)throw new Error('no data');
     const [logoOpt,token,coin]=await Promise.all([
-      _csImg('/gmt-optimizer-logo.svg?v=2'),_csImg('/gmt36.png'),_csImg('/btc36.png')
+      _csImg('/assets/brand/GMT-Optimizer_white-text_transparent.png'),_csImg('/gmt36.png'),_csImg('/btc36.png'),
+      // the card uses the site's fonts: make sure they are loaded before drawing (canvas won't wait)
+      document.fonts?Promise.all(['600 24px Poppins','500 16px Poppins','600 40px Inter','400 15px Inter'].map(f=>document.fonts.load(f).catch(()=>{}))):null
     ]);
-    _chartShotCanvas=buildFarmShotCanvas(d,{logoOpt,token,coin});
+    _chartShotCanvas=buildFarmShotCanvas(d,{wordmark:logoOpt,token,coin});
     img.src=_chartShotCanvas.toDataURL('image/png');
     _chartShotBlob=await canvasToBlob(_chartShotCanvas);  // cached so Share fires inside the click gesture
     _shotReady();
@@ -2123,108 +2156,80 @@ async function createFarmShot(){
   }
 }
 function buildFarmShotCanvas(d,imgs){
+  // v3 relaunch card (2026-11-19): the site's own look — flat near-black, the wordmark, Poppins headings, Inter
+  // tabular figures, gold only on the headline number, thin hairlines. No glow, no grid, no gradients.
   const SC=2,W=1200,H=675;
   const c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;
   const x=c.getContext('2d');x.scale(SC,SC);
-  const MONO='"Share Tech Mono",monospace',SANS='"Space Grotesk",system-ui,sans-serif';
-  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A',GPALE='#FFE0A8',RED='#FF4D4D';
-  // background — the site's gold-on-black
-  const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
-  x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
-  orb(150,60,380,0.17);orb(1070,150,320,0.11);orb(600,780,420,0.07);
-  x.strokeStyle='rgba(245,166,35,0.04)';x.lineWidth=0.5;
-  for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
-  for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
-  const pad=44;
-  // ---- header: brand left, VIP tier right ----
-  let bx=pad;
-  if(imgs.logoOpt){x.drawImage(imgs.logoOpt,bx,24,30,30);bx+=38;}
-  x.textAlign='left';x.fillStyle='#fff';x.font='800 26px '+SANS;
-  x.fillText('GMT Optimizer',bx,48);
-  x.fillStyle='rgba(247,184,78,0.92)';x.font='700 16px '+MONO;
-  x.fillText('gmt-optimizer.com',pad,74);
-  x.textAlign='right';x.fillStyle='#fff';x.font='800 26px '+SANS;
-  x.fillText('My GoMining Farm',W-pad,46);
-  x.fillStyle='rgba(255,255,255,0.45)';x.font='700 14px '+MONO;
-  x.fillText('VIP '+(d.vip||'—')+'   ·   '+fN(d.th,1)+' TH   ·   live snapshot',W-pad,70);
-  const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.55)');lg.addColorStop(1,'transparent');
-  x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,100);x.lineTo(W-pad,100);x.stroke();
-  // ---- the four headline stats ----
+  const UI='"Poppins","Poppins Fallback",system-ui,sans-serif',NUM='"Inter","Inter Fallback",system-ui,sans-serif';
+  const BG=CC('bg')||'#0B0B0D',SURF='#121216',LINE='rgba(255,255,255,0.08)',TXT=CC('text')||'#F4F1EA',TXT2='#A1A1AA',TXT3='#71717A';
+  const GOLD=CC('gold')||'#E2B259',RED=CC('error')||'#EF4444';
+  x.fillStyle=BG;x.fillRect(0,0,W,H);
+  const pad=56;
+  const rule=(y,a)=>{x.strokeStyle=a||LINE;x.lineWidth=1;x.beginPath();x.moveTo(pad,y+.5);x.lineTo(W-pad,y+.5);x.stroke();};
+  // ---- header: wordmark left; title + context right ----
+  if(imgs.wordmark){const h=34,w=imgs.wordmark.naturalWidth?h*imgs.wordmark.naturalWidth/imgs.wordmark.naturalHeight:h*3.83;x.drawImage(imgs.wordmark,pad,44,w,h);}
+  else{x.fillStyle=TXT;x.font='600 26px '+UI;x.textAlign='left';x.fillText('GMT-Optimizer',pad,70);}
+  x.textAlign='right';x.fillStyle=TXT;x.font='600 24px '+UI;
+  x.fillText(TC('My GoMining farm'),W-pad,62);
+  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{day:'numeric',month:'short',year:'numeric'});
+  x.fillStyle=TXT2;x.font='500 15px '+NUM;
+  x.fillText(T('VIP {0} · {1} TH · {2}',d.vip||'—',fN(d.th,1),now),W-pad,88);
+  // a single gold hairline under the header — the one brand accent besides the headline number
+  x.fillStyle=GOLD;x.fillRect(pad,118,64,2);rule(119);
+  // ---- headline: daily net profit, large, the only gold figure ----
   const neg=d.dailyUSD<0;
-  const cards=[
-    {id:'DAILY.NET',  label:'Daily Net Profit',      val:fU(d.dailyUSD),          accent:neg?RED:GLT,  sub:d.dailySub},
-    {id:'MONTH.YIELD',label:'Monthly Earnings',      val:fU(d.monthlyUSD,0),      accent:GSOFT,        sub:fU(d.yearlyUSD,0)+' / yr'},
-    {id:'COVERAGE',   label:'Total Discount',        val:fP(d.disc),              accent:GOLD,         sub:'Saving '+fU(d.saveMoUSD)+'/mo on fees'},
-    {id:'VELOCITY',   label:'Effective Compounded ROI', val:fN(d.velocity,0)+'%/yr', accent:GPALE,        sub:d.velSub}
+  x.textAlign='left';x.fillStyle=TXT2;x.font='500 16px '+UI;
+  x.fillText(TC('Daily net profit'),pad,168);
+  const hv=fU(d.dailyUSD),hsz=_fsFit(x,hv,520,'600',76,NUM);
+  x.fillStyle=neg?RED:GOLD;x.font='600 '+hsz+'px '+NUM;x.fillText(hv,pad,244);
+  x.fillStyle=TXT2;x.font='400 15px '+NUM;
+  _fsWrap(x,TC(d.dailySub||''),520,2).forEach((ln,k)=>x.fillText(ln,pad,276+k*21));
+  // ---- three supporting figures on the right, plain text ----
+  const side=[
+    {label:TC('Monthly earnings'),val:fU(d.monthlyUSD,0),sub:TC(fU(d.yearlyUSD,0)+' / yr')},
+    {label:TC('Total discount'),val:fP(d.disc),sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
+    {label:TC('Our strategy · compounded ROI'),val:fPc(d.velocity,0)+T('/yr'),sub:TC(d.velSub||'')}
   ];
-  const gap=18,cardW=(W-pad*2-gap*3)/4,cardY=132,cardH=248;
-  cards.forEach((cd,i)=>{
-    const cx=pad+i*(cardW+gap);
-    const cbg=x.createLinearGradient(cx,cardY,cx,cardY+cardH);
-    cbg.addColorStop(0,'rgba(245,166,35,0.07)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
-    x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.4;x.beginPath();x.roundRect(cx,cardY,cardW,cardH,16);x.stroke();
-    // accent bar along the top edge, like the hero cards on the site
-    x.shadowColor=cd.accent;x.shadowBlur=14;x.strokeStyle=cd.accent;x.lineWidth=3;
-    x.beginPath();x.moveTo(cx+16,cardY);x.lineTo(cx+cardW-16,cardY);x.stroke();x.shadowBlur=0;
-    const ix=cx+22,iw=cardW-44;
-    x.textAlign='left';
-    x.fillStyle='rgba(255,255,255,0.32)';x.font='700 12px '+MONO;
-    x.fillText(cd.id,ix,cardY+38);
-    x.fillStyle='rgba(255,255,255,0.62)';
-    const lsz=_fsFit(x,cd.label,iw,'700',17,SANS);x.font='700 '+lsz+'px '+SANS;
-    x.fillText(cd.label,ix,cardY+66);
-    const vsz=_fsFit(x,cd.val,iw,'bold',40,MONO);
-    x.font='bold '+vsz+'px '+MONO;x.fillStyle=cd.accent;
-    x.shadowColor='rgba(245,166,35,0.45)';x.shadowBlur=18;
-    x.fillText(cd.val,ix,cardY+126);x.shadowBlur=0;
-    x.fillStyle='rgba(255,255,255,0.5)';x.font='13px '+MONO;
-    _fsWrap(x,cd.sub,iw,4).forEach((ln,k)=>x.fillText(ln,ix,cardY+164+k*20));
+  const sx=640,sw=W-pad-sx,rowH=74;
+  side.forEach((r,k)=>{
+    const y=146+k*rowH;
+    if(k)x.fillStyle=LINE,x.fillRect(sx,y-12,sw,1);
+    x.textAlign='left';x.fillStyle=TXT2;x.font='500 14px '+UI;x.fillText(r.label,sx,y+10);
+    x.textAlign='right';x.fillStyle=TXT;const vs=_fsFit(x,r.val,230,'600',28,NUM);x.font='600 '+vs+'px '+NUM;x.fillText(r.val,W-pad,y+20);
+    x.textAlign='left';x.fillStyle=TXT3;x.font='400 13px '+NUM;
+    const sub=_fsWrap(x,r.sub,sw-250,1)[0]||'';x.fillText(sub,sx,y+32);
   });
-  // ---- supporting pills ----
-  const pills=[
-    {label:'HASHRATE',   val:fN(d.th,1)+' TH'},
-    // m.bwth — the FLEET-WIDE weighted average, which is what fees are actually charged on, not
-    // the Efficiency field on My Setup (that one rates the main farm only). A greedy machine at a
-    // different rating pulls the two apart, so the label has to say which one this is.
-    {label:'AVG EFFICIENCY', val:fN(d.wth,1)+' W/TH'},
-    {label:'GMT LOCKED', val:fN(d.gmtLocked,0)},
-    {label:'GMT VALUE',  val:fU(d.gmtValueUSD,0)},
-    {label:'VIP TIER',   val:d.vip||'—'},
-    {label:'BTC',        val:fmtBTCPrice(d.btc)}
+  // ---- key figures: one row, label over value, hairline dividers ----
+  const ky=392,kh=96;
+  x.fillStyle=SURF;x.beginPath();x.roundRect(pad,ky,W-pad*2,kh,14);x.fill();
+  x.strokeStyle=LINE;x.lineWidth=1;x.beginPath();x.roundRect(pad+.5,ky+.5,W-pad*2-1,kh-1,14);x.stroke();
+  const keys=[
+    {label:TC('Hashrate'),val:fN(d.th,1)+' TH'},
+    {label:TC('Avg efficiency'),val:fN(d.wth,1)+' W/TH'},
+    {label:TC('GMT locked'),val:fN(d.gmtLocked,0)},
+    {label:TC('GMT value'),val:fU(d.gmtValueUSD,0)},
+    {label:TC('VIP tier'),val:d.vip||'—'},
+    {label:TC('Bitcoin'),val:fmtBTCPrice(d.btc)}
   ];
-  const pillY=cardY+cardH+26,pillH=68,pillPad=18,pillGap=12;
-  const pw=pills.map(p=>{x.font='bold 14px '+MONO;const lw=x.measureText(p.label).width;x.font='bold 22px '+MONO;const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
-  const totalW=pw.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
-  let px=(W-totalW)/2;
-  pills.forEach((p,i)=>{const w=pw[i];
-    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(px,pillY,w,pillH,12);x.stroke();
-    x.textAlign='center';
-    x.fillStyle='rgba(255,255,255,0.55)';x.font='bold 14px '+MONO;x.fillText(p.label,px+w/2,pillY+26);
-    x.fillStyle=GSOFT;x.font='bold 22px '+MONO;x.fillText(p.val,px+w/2,pillY+55);
-    px+=w+pillGap;
+  const cw=(W-pad*2)/keys.length;
+  keys.forEach((k,n)=>{
+    const cx=pad+n*cw;
+    if(n){x.fillStyle=LINE;x.fillRect(cx,ky+20,1,kh-40);}
+    x.textAlign='left';x.fillStyle=TXT3;x.font='500 13px '+UI;x.fillText(k.label,cx+24,ky+38);
+    x.fillStyle=TXT;const vs=_fsFit(x,k.val,cw-44,'600',22,NUM);x.font='600 '+vs+'px '+NUM;x.fillText(k.val,cx+24,ky+70);
   });
   // ---- strapline ----
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.6)';x.font='700 18px '+SANS;
-  x.fillText('Free GoMining ROI, discount & compounding optimizer',W/2,pillY+pillH+46);
+  x.textAlign='left';x.fillStyle=TXT2;x.font='500 17px '+UI;
+  x.fillText(TC('Independent GoMining calculator — live network data, every fee counted.'),pad,546);
   // ---- footer ----
-  const footY=H-34;
-  const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
-  x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-24);x.lineTo(W-pad,footY-24);x.stroke();
-  let fx=pad;
-  if(imgs.token){x.save();x.beginPath();x.arc(fx+11,footY-8,11,0,7);x.closePath();x.clip();x.drawImage(imgs.token,fx,footY-19,22,22);x.restore();fx+=30;}
-  x.textAlign='left';x.fillStyle='rgba(255,255,255,0.72)';x.font='700 19px '+SANS;
-  x.fillText('gmt-optimizer.com',fx,footY-1);
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='14px '+MONO;
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  x.fillText(now+'   ·   not financial advice',W/2,footY-1);
-  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px '+MONO;
-  x.fillText('use code RINGO5',W-pad,footY-1);
+  rule(H-78);
+  const fy=H-42;
+  x.textAlign='left';x.fillStyle=TXT;x.font='600 17px '+UI;x.fillText('gmt-optimizer.com',pad,fy);
+  x.textAlign='center';x.fillStyle=TXT3;x.font='400 13px '+NUM;
+  x.fillText(TC('Estimates at today’s rates · not financial advice'),W/2,fy);
+  x.textAlign='right';x.fillStyle=GOLD;x.font='600 16px '+UI;
+  x.fillText(TC('Code RINGO5'),W-pad,fy);
   x.textAlign='left';
   return c;
 }
@@ -2580,13 +2585,13 @@ const DISCOUNT_OVERRIDE_KEY='gmtopt_discount_override_v1';
 // Keep this in sync with the HTML default on the inMiningMode input. When the DAO
 // bumps the rate, update both and saved values that were tracking the old default
 // will auto-pick up the new one on next load.
-const MINING_MODE_DEFAULT=1.09;   // observed 2026-11-06
+const MINING_MODE_DEFAULT=CONFIG.rates.soloMiningDiscountPct;   // observed 2026-11-06
 // Greedy Machine free weekly growth. A platform rate, not a preference, so a saved setup still
 // carrying a previous default has to pick up the new one — but the field also invites the user
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
 // mining mode above: a value matching any rate this input has ever shipped with is a stale
 // default; anything else is the user's number and is left alone.
-const GREEDY_GROWTH_DEFAULT='0.3347';   // observed 2026-10-07: 4,805.30 → 4,837.52 TH over two weeks
+const GREEDY_GROWTH_DEFAULT=String(CONFIG.rates.greedyGrowthWeeklyPct);   // observed 2026-10-07: 4,805.30 → 4,837.52 TH over two weeks
 const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
@@ -2619,7 +2624,7 @@ function loadDiscountOverride(){
     const raw=localStorage.getItem(DISCOUNT_OVERRIDE_KEY);
     if(raw===null)return;
     const v=Number(raw);
-    if(isFinite(v))S.discountOverride=Math.max(0,Math.min(30,v));
+    if(isFinite(v))S.discountOverride=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,v));
   }catch(e){}
 }
 function toggleDiscountOverride(){
@@ -2637,7 +2642,7 @@ function toggleDiscountOverride(){
 function applyDiscountOverride(){
   let v=parseFloat($('inDiscOverride').value);
   if(!isFinite(v)){resetDiscountOverride();return;}
-  v=Math.max(0,Math.min(30,v));
+  v=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,v));
   S.discountOverride=v;
   try{localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v))}catch(e){}
   autoSave();   // persist the override into the active setup so it stays tied to THIS setup
@@ -2698,7 +2703,7 @@ function readInputs(){
 // in sync so a page reload of the same setup restores the same override.
 function applyDiscountOverrideFor(d){
   const raw=d?d.discountOverride:undefined;
-  const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(30,Number(raw))):null;
+  const v=(raw!=null&&isFinite(Number(raw)))?Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,Number(raw))):null;
   S.discountOverride=v;
   S.vipOverride=(d&&TIERS.some(t=>t.n===d.vipOverride))?d.vipOverride:null;   // VIP override is per-setup too
   try{v!=null?localStorage.setItem(DISCOUNT_OVERRIDE_KEY,String(v)):localStorage.removeItem(DISCOUNT_OVERRIDE_KEY)}catch(e){}
@@ -2756,7 +2761,7 @@ function migrateLegacySetup(){
       saveMiningMode();
     }
     const id='p_'+Date.now().toString(36);
-    state.profiles.push({id,name:'My Farm',data:d});
+    state.profiles.push({id,name:'My farm',data:d});
     state.activeId=id;
     saveProfilesState(state);
   }catch(e){}
@@ -2771,7 +2776,7 @@ function renderProfileSelect(){
   sel.innerHTML='<option value="">Farm</option>'+
     state.profiles.map(p=>{
       // The primary account profile is starred + labelled so it's obviously the main one.
-      const label=p.account?('★ '+p.name+' (your profile)'):p.name;
+      const label=p.account?T('★ {0} (your profile)',p.name):p.name;
       return `<option value="${escapeHtml(p.id)}"${p.id===cur?' selected':''}>${escapeHtml(label)}</option>`;
     }).join('');
   const del=$('btnDeleteProfile');if(del){del.disabled=!cur;del.style.opacity=cur?'1':'.4';del.style.cursor=cur?'pointer':'not-allowed';}
@@ -2819,9 +2824,9 @@ function saveActiveProfile(){
       if(!p){p={id:pid,name:uname,account:true,data:readInputs()};state.profiles.unshift(p);}
       state.activeId=pid;
     }else{
-      p=state.profiles.find(x=>x.name==='My Farm'||x.name==='My Setup'&&!x.account);
+      p=state.profiles.find(x=>x.name==='My farm'||x.name==='My Setup'&&!x.account);
       const created=!p;
-      if(!p){p={id:'p_'+Date.now().toString(36),name:'My Farm',data:readInputs()};state.profiles.unshift(p);}
+      if(!p){p={id:'p_'+Date.now().toString(36),name:'My farm',data:readInputs()};state.profiles.unshift(p);}
       state.activeId=p.id;
       if(created){saveProfilesState(state);if(window.GMTFleetPersistActive)window.GMTFleetPersistActive();}
     }
@@ -2833,10 +2838,13 @@ function saveActiveProfile(){
   // a device where the console hasn't run yet.
   if(isAccountProfile(p)&&window.GMTAccount&&GMTAccount.isLoggedIn()){
     const td=window._farmShot&&isFinite(window._farmShot.disc)?+(+window._farmShot.disc).toFixed(2):null;
-    GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+    const saved=GMTAccount.saveSetup(td!=null?Object.assign({},p.data,{totalDiscount:td}):p.data);
+    let after=null;try{after=sessionStorage.getItem('gm_after_save');}catch(e){}
+    if(after&&saved&&saved.then)saved.then(()=>{try{sessionStorage.removeItem('gm_after_save');}catch(e){}
+      setTimeout(()=>{location.href=after;},700);}).catch(()=>{});   // stay put if the save failed
   }
   renderProfileSelect();   // reflect the now-active profile (esp. if we just adopted the account one)
-  flashStatus(isAccountProfile(p)?'Saved to your profile':'Saved to "'+p.name+'"');
+  flashStatus(isAccountProfile(p)?T('Saved to your profile'):T('Saved to "{0}"',p.name));
   editLoadClose('Saved to "'+p.name+'"');
 }
 function saveAsNewProfile(){
@@ -2900,7 +2908,7 @@ function editLoadClose(msg){
     if(txt)txt.textContent='Updating your farm…';
     if(btn)btn.disabled=false;
     closeEditSetup();
-  },750);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function submitEditSetup(){editLoadClose();}
 // "I own a Greedy Machine" checkbox reveals the greedy inputs; unchecking zeroes them.
@@ -3183,7 +3191,7 @@ function difficultyMultAt(t){
 // uses the undiscounted 12 W cost, so a GoMining user keeps a thin margin via their GMT discount.
 // MINER_FLOOR_WTH is tunable: lower it if you think the marginal global miner is more efficient/cheaper.
 const MINER_FLOOR_WTH=EFF_BEST;   // efficiency (W/TH) of the price-setting marginal network miner
-function rewardFloorBTC(price){return price>0?(0.0012*MINER_FLOOR_WTH+0.0089)/price:0;}  // BTC/TH/day
+function rewardFloorBTC(price){return price>0?(ELEC_USD_PER_W_DAY*MINER_FLOOR_WTH+SERVICE_RATE)/price:0;}  // BTC/TH/day
 // Halving years that fall within [now, now+days] — for projection notes.
 function halvingsInWindow(days){const end=Date.now()+days*86400000;return HALVING_DATES.filter(h=>h>=Date.now()&&h<=end).map(h=>new Date(h).getUTCFullYear());}
 
@@ -3209,23 +3217,23 @@ function calc(i){
   const gross=dbt*earnTH,f=fees(earnTH,bwth,bp);
   const vip=vipFor(vipTH,i.gl,i);
   const nxt=vip.ovr?(TIERS[TIERS.findIndex(x=>x.n===vip.n)+1]||null):nextVip(vipTH,i.gl);
-  const vd=vip.d,cb=i.click?3:0;
-  const nonTokD=Math.min(30,vd+cb+i.mm+i.od);
+  const vd=vip.d,cb=i.click?CLICK_STREAK_PCT:0;
+  const nonTokD=Math.min(TOTAL_DISCOUNT_CAP,vd+cb+i.mm+i.od);
   // Token discount auto-calculated from GMT holdings
   const feesGMT=(f.t*(1-nonTokD/100)*bp)/gp; // daily fees in GMT after non-token discounts
   // Wallet (liquid) GMT counts toward coverage alongside locked.
   const tg=i.gl+i.gw,cov=feesGMT>0?tg/feesGMT:Infinity;
   // GoMining grants the token discount in 1% steps based on coverage days.
   // GoMining uses 18 days per 1% step (360 days = 20% max), not 18.9.
-  const eTok=cov<18?0:Math.min(20,Math.floor(cov/18));
+  const eTok=cov<COV_DAYS_PER_PCT?0:Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT));
   let tok=i.payG?eTok:0;
-  let totD=Math.min(30,tok+nonTokD);
+  let totD=Math.min(TOTAL_DISCOUNT_CAP,tok+nonTokD);
   // Manual override: user enters the real discount they see in the GoMining app.
   // The delta from the auto-calc is attributed to the token (coverage) discount so
   // the breakdown still sums to the displayed total.
   let ovr=false;
   if(S.discountOverride!=null&&isFinite(S.discountOverride)){
-    totD=Math.max(0,Math.min(30,S.discountOverride));
+    totD=Math.max(0,Math.min(TOTAL_DISCOUNT_CAP,S.discountOverride));
     tok=Math.max(0,totD-nonTokD);
     ovr=true;
   }
@@ -3286,15 +3294,16 @@ function fmtBTCAmt(v){
   // Capped at 5 decimals down to a milli-BTC. Six made the daily figure one character longer
   // than the monthly, which was enough to wrap it onto its own line while the monthly card kept
   // its BTC inline — the two cards then read as different designs.
-  return v.toFixed(a>=1?3:a>=0.1?4:a>=0.001?5:6);
+  const d=a>=1?3:a>=0.1?4:a>=0.001?5:6;
+  return UI_LOC?fN(v,d):v.toFixed(d);   // translated pages: decimal comma; English unchanged
 }
 function animateMetric(el,to,fmt){
   if(!el)return;
   if(typeof to!=='number'||!isFinite(to)){el.textContent=fmt(to);return;}
-  const from=(typeof el._cur==='number'&&isFinite(el._cur))?el._cur:0;
   el._cur=to;
   if(el._raf)cancelAnimationFrame(el._raf);
-  if(Math.abs(to-from)<1e-9){el.textContent=fmt(to);el._raf=null;return;}
+  // No count-up (redesign 2026-11-18): figures update in place, like the rest of the site.
+  el.textContent=fmt(to);el._raf=null;return;
   const dur=800,t0=performance.now(),ease=p=>1-Math.pow(1-p,3);
   function step(now){
     const p=Math.min(1,(now-t0)/dur);
@@ -3414,7 +3423,7 @@ function recalc(){
   // Monthly must equal the "Total monthly income" breakdown below, which uses
   // 4.33 weeks/month for staking (52/12), not daily×30/7. Compose it the same way.
   const stakingMonthlyUSD=m.wkGMT*m.gp*4.33;
-  const cashMoUSD=netUSD*30+stakingMonthlyUSD+heroAmbDaily*30;   // reinvestable cash income
+  const cashMoUSD=netUSD*DAYS_PER_MONTH+stakingMonthlyUSD+heroAmbDaily*DAYS_PER_MONTH;   // reinvestable cash income
   const moUSD=cashMoUSD+greedyMonthlyUSD;                        // + greedy TH-credit value
   animateMetric($('heroDailyNet'),totalDailyUSD,fU);$('heroDailyNet').className='hero-val '+(totalDailyUSD>=0?'green':'red');
   // Always converted from the USD figure at the live BTC price — fU() renders whatever display
@@ -3429,8 +3438,8 @@ function recalc(){
   animateMetric($('heroMonthly'),moUSD,v=>fU(v,0));$('heroMonthly').className='hero-val '+(moUSD>=0?'cyan':'red');
   if(_bp>0)animateMetric($('heroMonthlyBtcVal'),moUSD/_bp,v=>'(\u20BF'+fmtBTCAmt(v)+')');
   else if($('heroMonthlyBtcVal'))$('heroMonthlyBtcVal').textContent='';
-  let heroMoSub=fU(netUSD*30)+' mining + '+fU(stakingMonthlyUSD)+' staking';
-  if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*30)+' ambassador';
+  let heroMoSub=fU(netUSD*DAYS_PER_MONTH)+' mining + '+fU(stakingMonthlyUSD)+' staking';
+  if(heroAmbDaily>0)heroMoSub+=' + '+fU(heroAmbDaily*DAYS_PER_MONTH)+' ambassador';
   if(greedyMonthlyUSD>0)heroMoSub+=' + '+fU(greedyMonthlyUSD)+' greedy growth';
   $('heroMonthlyBTC').textContent=heroMoSub;
   // Stream-mode visualizer (visualizer.js) reads the same composed income the hero shows, so the
@@ -3445,7 +3454,7 @@ function recalc(){
   // Shared with the marketplace checker (same origin) so it prices listings at THIS farm's total
   // discount instead of a guess. Only once a farm exists — an empty console has no discount to share.
   if((m.totTH||0)>0){try{localStorage.setItem(TOTAL_DISCOUNT_KEY,JSON.stringify({pct:+(+m.totD).toFixed(2),at:Date.now()}));}catch(e){}}
-  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*30)+'/mo';
+  $('heroDiscountSub').textContent='Saving '+fU(m.save*m.bp*DAYS_PER_MONTH)+'/mo';
   // Effective compounded ROI: a simulated year of weekly reinvestment at today's prices,
   // reported as the growth in what the farm is worth. The old figure here divided income by
   // capital, which understated the answer — it credited none of the compounding, and a farm
@@ -3463,16 +3472,28 @@ function recalc(){
     // return on a farm that did not produce it.
     // One short line. The farm-value and end-state figures were four numbers deep on a headline
     // card and read as clutter, not as evidence — the ROI is the point.
-    velSub.textContent=ecr
-      ? (ecr.roiNoAmb!=null?`${fN(ecr.roiNoAmb,0)}% without ambassador rewards`:'reinvesting every reward, weekly')
-      : 'reinvest all earnings into hashrate';
+    // Our strategy vs just buying TH. The big number is the whole farm (hashrate + GMT locked for the discount,
+    // staking included, every reward reinvested weekly). The comparison spends the SAME money only on TH: no GMT
+    // locked, so no token discount and no staking, reinvested the same way. Same simulation, same prices, so the gap
+    // is the strategy and nothing else. It is computed live, not asserted: at high BTC prices buying TH can win, and
+    // then the line says so in red.
+    const alt=ecr?thOnlyCompoundedROI(i,ecr.start):null;
+    let html='';
+    if(ecr&&alt!=null&&isFinite(alt)){
+      const gap=velocity-alt, up=gap>=0;
+      html=T('vs {0} just buying TH',fPc(alt,0)+T('/yr'))+' · <span style="color:var('+(up?'--color-success':'--color-error')+')">'+(up?'+':'−')+fN(Math.abs(gap),0)+' '+T('pts')+'</span>';
+    }else if(ecr){html=T('reinvesting every reward, weekly');}
+    else html='reinvest all earnings into hashrate';
+    if(ecr&&ecr.roiNoAmb!=null)html+=' · '+T('{0} without ambassador rewards',fPc(ecr.roiNoAmb,0));
+    velSub.innerHTML=html;
+    velSub.title=T('Our strategy: hashrate plus GMT locked for the fee discount, staking included, every reward reinvested weekly at today’s prices. “Just buying TH” spends the same money on hashrate only (no GMT locked, so no token discount and no staking), reinvested the same way. At high BTC prices buying TH can come out ahead; the line turns red when it does.');
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
   // without recomputing anything — same values the hero cards are showing.
   window._farmShot={
     dailyUSD:totalDailyUSD, dailySub:heroSub,
     monthlyUSD:moUSD, yearlyUSD:moUSD*12, monthlySub:heroMoSub,
-    disc:m.totD, saveMoUSD:m.save*m.bp*30,
+    disc:m.totD, saveMoUSD:m.save*m.bp*DAYS_PER_MONTH,
     velocity, velSub:velSub?velSub.textContent:'',
     th:m.totTH||0, wth:m.bwth||0,
     gmtLocked:Math.max(0,i.gl||0), gmtValueUSD:Math.max(0,i.gl||0)*m.gp,
@@ -3530,18 +3551,18 @@ function recalc(){
   if(i.od>0)pts.push({l:'Other '+fP(i.od),p:i.od,c:'ds-other'});
   if(pts.length){
     dh+='<div class="discount-visual">';
-    for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/30)*100}%">${p.l}</div>`;
+    for(const p of pts)dh+=`<div class="${p.c}" style="width:${(p.p/TOTAL_DISCOUNT_CAP)*100}%">${p.l}</div>`;
     dh+='</div>';
   }
-  dh+=row('Total Discount',fP(m.totD),'cyan');
-  dh+=row('Monthly savings',`${fU(m.save*m.bp*30)}/mo`,'green');
-  dh+=row('Yearly savings',`${fU(m.save*m.bp*30*12)}/yr`,'green');
+  dh+=row('Total discount',fP(m.totD),'cyan');
+  dh+=row('Monthly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH)}/mo`,'green');
+  dh+=row('Yearly savings',`${fU(m.save*m.bp*DAYS_PER_MONTH*12)}/yr`,'green');
   // Paused hashrate: off the books entirely on both sides — no rewards, no fees — but
   // still owned, so it still counts toward the VIP tier. Show the fee it would incur if
   // switched back on, since that's the number that decides whether it's worth running.
   if(m.offTH>0){
-    const wouldCostMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*30;
-    const wouldEarnMo=m.dbt*m.offTH*m.bp*30;
+    const wouldCostMo=fees(m.offTH,m.offWth,m.bp).t*(1-m.totD/100)*m.bp*DAYS_PER_MONTH;
+    const wouldEarnMo=m.dbt*m.offTH*m.bp*DAYS_PER_MONTH;
     dh+=row('Paused hashrate',`${fN(m.offTH,2)} TH @ ${fN(m.offWth,1)} W/TH`,'orange');
     dh+=row('↳ If switched on',`${fU(wouldEarnMo-wouldCostMo)}/mo<span class="sub">${fU(wouldEarnMo)} mined − ${fU(wouldCostMo)} fees · counts toward VIP either way</span>`,
       (wouldEarnMo-wouldCostMo)>0?'green':'red');
@@ -3554,11 +3575,11 @@ function recalc(){
   g+=row('Total GMT held',`${fN(tg,0)} GMT<span class="sub">${fU(tg*m.gp)}</span>`);
 
   const stakingMonthly=m.wkGMT*m.gp*4.33;
-  const miningMonthly=m.net*m.bp*30;
+  const miningMonthly=m.net*m.bp*DAYS_PER_MONTH;
   const isAmb=$('inAmbassador').checked;
   const refTH=isAmb?(+$('inReferredTH').value||0):0;
   const ambDaily=ambDailyUSD(refTH,AMB_DEFAULT_WTH);
-  const ambMonthly=ambDaily*30;
+  const ambMonthly=ambDaily*DAYS_PER_MONTH;
   // Greedy Machine free weekly growth, valued as TH credits (see hero card) — free TH
   // accrued × the cost of that TH at the greedy's efficiency. Real income, in hashrate.
   const ggrowB=+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0;
@@ -3619,7 +3640,7 @@ function idleGmtPrompt(host,live){
       </div>
       <div class="idle-gmt-bar"><div class="idle-gmt-seg s0" style="width:59%"></div><div class="idle-gmt-seg s1" style="width:41%"></div></div>
       <div class="idle-gmt-legs">
-        ${['Lock GMT','Buy TH','Upgrade Efficiency'].map((k,n)=>`<div class="idle-gmt-leg"><div class="idle-gmt-k"><span class="idle-gmt-dot d${n}"></span>${k}</div><div class="idle-gmt-v">00% &middot; $000</div><div class="idle-gmt-s">&mdash;</div></div>`).join('')}
+        ${['Lock GMT','Buy TH','Upgrade efficiency'].map((k,n)=>`<div class="idle-gmt-leg"><div class="idle-gmt-k"><span class="idle-gmt-dot d${n}"></span>${k}</div><div class="idle-gmt-v">00% &middot; $000</div><div class="idle-gmt-s">&mdash;</div></div>`).join('')}
       </div>
     </div>
     <div class="idle-gmt-ask">
@@ -3665,7 +3686,7 @@ function renderIdleGmt(i,m){
      sub:(P.addTH>0.5&&fs)?`at ${wLbl(fs.wth)} W/TH${fs.mixed?' avg':''}`:'',
      into:(P.addTH>0.5&&fs)?`${fs.name}${fs.more>0?` +${fs.more} more`:''}`:''}
   ];
-  if(P.effRoom)legs.push({k:'Upgrade Efficiency',v:P.effUSD,
+  if(P.effRoom)legs.push({k:'Upgrade efficiency',v:P.effUSD,
     act:P.effTHupg>0.5?fN(P.effTHupg,0)+' TH \u2192 12 W':null,sub:'',
     into:(P.effTHupg>0.5&&P.effIsGreedy&&P.gCode)?P.gCode+' (greedy)':''});
   const pc=v=>Math.max(0,v/P.tot*100);
@@ -3679,15 +3700,15 @@ function renderIdleGmt(i,m){
           onfocus="this.select()" onchange="applyIdleGmt(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></span> in your wallet &middot; ${fU(usd,0)}${held>1?` &middot; ${fN(held,0)} held back to keep your coverage`:''}</div>
         ${(i.cap||0)>0?`<div class="idle-gmt-note">Your Capital Planner is already deploying this GMT alongside ${fU(i.cap,0)} of new capital — open it for the combined plan. This card is the GMT on its own.</div>`:''}
       </div>
-      <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fN(P.roiB,0)}%/yr</div></div>
+      <div class="idle-gmt-gain">+${fU(P.totalMo,0)}<span>/mo</span><div class="idle-gmt-roi">${fPc(P.roiB,0)}/yr</div></div>
     </div>
     <div class="idle-gmt-bar">${legs.map((l,n)=>`<div class="idle-gmt-seg s${n}" style="width:${pc(l.v)}%"></div>`).join('')}</div>
     <div class="idle-gmt-legs">${legs.map((l,n)=>`<div class="idle-gmt-leg${l.act?'':' is-none'}${l.act?' has-pulse':''}"><span class="idle-gmt-dot s${n}"></span><div><div class="idle-gmt-leg-k">${l.k}</div>`
       +(l.act?`<div class="idle-gmt-leg-act"><span>${l.act}</span></div>`:`<div class="idle-gmt-leg-act none">nothing</div>`)
-      +`<div class="idle-gmt-leg-v">${fN(pc(l.v),0)}% &middot; ${fU(l.v,0)}${l.sub?' &middot; '+l.sub:''}</div>`
+      +`<div class="idle-gmt-leg-v">${fPc(pc(l.v),0)} &middot; ${fU(l.v,0)}${l.sub?' &middot; '+l.sub:''}</div>`
       +`${l.into?`<div class="idle-gmt-leg-into">into ${l.into}</div>`:''}</div></div>`).join('')}</div>
-    <div class="idle-gmt-foot">Result: <strong>${fN(P.finTH,0)} TH</strong> @ ${fN(P.finWth,2)} W/TH
-      <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in Capital Planner &rarr;</button></div>
+    <div class="idle-gmt-foot">${T('Result: <strong>{0} TH</strong> @ {1} W/TH',fN(P.finTH,0),fN(P.finWth,2))}
+      <button class="idle-gmt-btn" onclick="openPlannerForm()">Open in the capital planner &rarr;</button></div>
   </div>`;
   host.innerHTML=h;host.style.display='';
 }
@@ -3706,10 +3727,10 @@ function renderProjections(th,wth,totD,label,moStakingUSD,moAmbUSD,curP,greedyMo
   const opts=[cur,...prices.filter(p=>Math.abs(p-cur)>5000)].sort((a,b)=>a-b);
 
   let h=`<div style="display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1rem">`;
-  h+=`<label style="font-size:.75rem;color:var(--text3)">BTC Price</label>`;
+  h+=`<label style="font-size:.75rem;color:var(--text3)">BTC price</label>`;
   h+=`<select id="projBtcSelect" onchange="updateProjCell()">`;
   for(const p of opts){
-    const lbl=p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
+    const lbl=UI_LOC&&window.GMTCharts?ckCompactUSD(p)+(p===cur?' ('+T('Live')+')':''):p===cur?'$'+(p/1000).toFixed(1)+'K (Live)':p>=1000?'$'+(p/1000).toFixed(0)+'K':'$'+p;
     h+=`<option value="${p}"${p===cur?' selected':''}>${lbl}</option>`;
   }
   h+=`</select></div>`;
@@ -3724,8 +3745,8 @@ function moAtBTC(P,bp,gmtScale){
   const dfees=f.t*(1-(P.totD||0)/100);
   const netBTC=((P.grossBTC||0)-dfees)*(1-CONVERSION_FEE);
   // Greedy free-growth income is a USD TH-credit value (BTC-independent) — add it flat.
-  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/30+(P.ambMo||0)/30+(P.greedyMo||0)/30;
-  return{daily,mo:daily*30};
+  const daily=Math.max(0,netBTC*bp)+(P.stakingMo||0)*(gmtScale||1)/DAYS_PER_MONTH+(P.ambMo||0)/DAYS_PER_MONTH+(P.greedyMo||0)/DAYS_PER_MONTH;
+  return{daily,mo:daily*DAYS_PER_MONTH};
 }
 function updateProjCell(){
   const p=window._projParams;
@@ -3751,8 +3772,8 @@ function updateProjCell(){
   const tagCol=isLive?'var(--green)':'var(--orange)';
   let h=`<div class="proj-ba">`;
   h+=`<div class="proj-cell ba-cell"><div class="ba-label">Current</div><div class="pc-monthly">${fU(before.mo,0)}</div><div class="pc-daily">${fU(before.daily)}/day</div></div>`;
-  h+=`<div class="ba-arrow"><div class="ba-arrow-ico">&rarr;</div><div class="ba-uplift">${uplift>=0?'+':''}${fN(uplift,0)}%</div></div>`;
-  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After Investment</div><div class="pc-monthly green">${fU(after.mo,0)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
+  h+=`<div class="ba-arrow"><div class="ba-arrow-ico">&rarr;</div><div class="ba-uplift">${uplift>=0?'+':''}${fPc(uplift,0)}</div></div>`;
+  h+=`<div class="proj-cell current ba-cell"><span class="pc-tag" style="background:${tagCol}">${tag}</span><div class="ba-label">After investment</div><div class="pc-monthly green">${fU(after.mo,0)}</div><div class="pc-daily">${fU(after.daily)}/day</div></div>`;
   h+=`</div>`;
   document.getElementById('projSingleCell').innerHTML=h;
 }
@@ -3884,7 +3905,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const at=thUSD>0?thForBudgetTiers(thUSD*(1-USD_GMT_FEE),TH_TIERS_NEW):0;
       const fT=fees(at||1,EFF_NEW,bp);   // a referral's capital mints a new machine ⇒ 15 W/TH
       const vT=vipOf(at,ag);
-      const ntd=Math.min(30,vT.d+(i.click?3:0)+(i.mm||0));
+      const ntd=Math.min(TOTAL_DISCOUNT_CAP,vT.d+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0));
       const burn=(fT.t*(1-ntd/100)*bp)/gp;
       return{deficit:Math.max(0,burn*COV-ag),at,ag,thUSD};
     }
@@ -3923,7 +3944,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const totalValue=usdCap+(gmtAvail*gp);
   if(totalValue<=0&&mpTHraw<=0)return null;
 
-  const covNeeded=360; // 20 steps * 18 days/step (GoMining's actual)
+  const covNeeded=COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP; // 20 steps * 18 days/step (GoMining's actual)
 
   // VIP-only blended efficiency (existing farm + freshly minted TH, which is 15 W/TH only).
   function vipBlendWTH(addTH){return(i.th>0||addTH>0)?(i.th*i.wth+addTH*EFF_NEW)/(i.th+addTH):i.wth}
@@ -3945,7 +3966,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
     const newMinted=Math.max(0,totFeeTH-i.th-gth0-mpTH);
     const bw=blendWTH(newMinted);
     const rf=fees(totFeeTH||1,bw||15,bp);
-    const rd=Math.min(30,(vipFor(vipBasis,lockedGMT,i).d)+(i.click?3:0)+(i.mm||0));
+    const rd=Math.min(TOTAL_DISCOUNT_CAP,(vipFor(vipBasis,lockedGMT,i).d)+(i.click?CLICK_STREAK_PCT:0)+(i.mm||0));
     const dailyFeeGMT=(rf.t*(1-rd/100)*bp)/gp;
     reserveNeeded=dailyFeeGMT*2;
     return Math.min(reserveNeeded,gmtAvail);
@@ -3987,7 +4008,7 @@ function solvePlannerAllocation(i, bp, gp, dbt){
       const bwth=blendWTH(addVip,addGreedy,addGreedyWatts);
       const fTest=fees(feeTH,bwth,bp);
       const vTest=vipFor(vipTH,totalLocked,i);
-      const ntkD=Math.min(30,vTest.d+(i.click?3:0)+i.mm+i.od);
+      const ntkD=Math.min(TOTAL_DISCOUNT_CAP,vTest.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
       const burnGMT=(fTest.t*(1-ntkD/100)*bp)/gp;
       const needed=burnGMT*covNeeded;
       return{needed,have:totalLocked,deficit:Math.max(0,needed-totalLocked),at:atTest,nt:feeTH,
@@ -4040,12 +4061,12 @@ function solvePlannerAllocation(i, bp, gp, dbt){
   const vipWth=vipBlendWTH(addVip);    // VIP-only blend (standalone), for the reinvest sim
   const newF=fees(nt,bwth,bp);
   const nv=vipFor(vipTH,newLocked,i);     // tier from VIP-eligible TH only
-  const newNonTokD=Math.min(30,nv.d+(i.click?3:0)+i.mm+i.od);
+  const newNonTokD=Math.min(TOTAL_DISCOUNT_CAP,nv.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
   const newDailyBurnGMT=(newF.t*(1-newNonTokD/100)*bp)/gp;
   const gmtNeededNew=newDailyBurnGMT*covNeeded;
   const covAfter=newDailyBurnGMT>0?newLocked/newDailyBurnGMT:Infinity;
-  const ntd=i.payG?Math.min(20,Math.floor(covAfter/18)):0;
-  const td2=Math.min(30,ntd+newNonTokD);
+  const ntd=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(covAfter/COV_DAYS_PER_PCT)):0;
+  const td2=Math.min(TOTAL_DISCOUNT_CAP,ntd+newNonTokD);
   const canCover20=ntd>=20;
   const gmtShortfall=Math.max(0,gmtNeededNew-newLocked);
 
@@ -4083,7 +4104,7 @@ function effStateFrom(i,a,gp,bp){
     thUSD:usdToTH+a.sol.sell*gp, addTH:a.sol.addTH, mpTH:a.mpTH, mpWth:a.mpWth};
 }
 function effCompareShell(i){
-  const t=hasEffRoom(i)?'Efficiency vs. Hashrate vs. Discount':'Hashrate vs. Discount';
+  const t=hasEffRoom(i)?'Efficiency vs. hashrate vs. discount':'Hashrate vs. Discount';
   return `<div class="sub-title" style="margin-top:1rem">${t}</div><div id="effCompareBody"></div>`;
 }
 // Populate the comparison body (called once after the planner renders).
@@ -4111,7 +4132,7 @@ function computeEffPlan(st){
   // GMT-lock capital freed per TH by upgrading to 12 W/TH. The lock for max discount is
   // 20×18 = 360 days of fee coverage; a lower fee (from better efficiency) needs less
   // coverage, so upgrading returns real capital — worth ~$1.24/TH at 15→12 W.
-  const lockFreedPerTH=(i.wth>EFF_BEST)?(18*20)*(0.0012*(i.wth-EFF_BEST))*(1-nonTokD):0;
+  const lockFreedPerTH=(i.wth>EFF_BEST)?(COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP)*(ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST))*(1-nonTokD):0;
 
   // Efficiency overlay: if the existing farm is above 12 W/TH and upgrading it yields more per
   // dollar than buying new TH, divert that slice of the TH budget into the upgrade (whole farm).
@@ -4122,10 +4143,10 @@ function computeEffPlan(st){
     const cptUnet=Math.max(0.01,cptU-lockFreedPerTH);   // net of the freed GMT-lock capital
     const cap=i.th;   // the whole existing farm is upgradeable (per-machine cap doesn't limit the total)
     if(cptU>0 && cap>0){
-      const savedMo=cap*0.0012*(i.wth-EFF_BEST)*(1-d)*(1-cf)*30;   // $/TH/day electricity saving is already USD — no ×bp
+      const savedMo=cap*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)*(1-cf)*DAYS_PER_MONTH;   // $/TH/day electricity saving is already USD — no ×bp
       upgradeROI=savedMo*12/(cap*cptUnet);   // ROI on the NET cost (saves fees AND frees GMT-lock capital)
       const cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);   // alternative is MINTING new 15 W TH
-      const thNetMo=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
+      const thNetMo=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*DAYS_PER_MONTH;
       newThROI=cptTH>0?thNetMo*12/cptTH:0;
       if(upgradeROI>newThROI){
         const upgradeCost=cap*cptU;
@@ -4150,12 +4171,12 @@ function computeEffPlan(st){
         const gGrow=(+($('inGreedyGrowth')?$('inGreedyGrowth').value:0)||0)/100;   // free growth, fraction/wk
         // Mean TH across the next year at weekly compounding — the base the saving really lands on.
         const grownAvg=gGrow>0?gth*((Math.pow(1+gGrow,52)-1)/(52*gGrow)):gth;
-        const gLockFreed=(18*20)*(0.0012*(gwth-EFF_BEST))*(1-nonTokD);
+        const gLockFreed=(COV_DAYS_PER_PCT*TOKEN_DISCOUNT_CAP)*(ELEC_USD_PER_W_DAY*(gwth-EFF_BEST))*(1-nonTokD);
         const gCptUnet=Math.max(0.01,gCptU-gLockFreed);
-        const gSavedYrPerTH=0.0012*(gwth-EFF_BEST)*(1-d)*(1-cf)*30*12;
+        const gSavedYrPerTH=ELEC_USD_PER_W_DAY*(gwth-EFF_BEST)*(1-d)*(1-cf)*DAYS_PER_MONTH*12;
         const gROI=(gSavedYrPerTH*grownAvg)/(gth*gCptUnet);
         const cptTHg=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
-        const thNetMoG=(dbt*bp-(0.0012*EFF_NEW+0.0089)*(1-d))*(1-cf)*30;
+        const thNetMoG=(dbt*bp-(ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE)*(1-d))*(1-cf)*DAYS_PER_MONTH;
         const thROIg=cptTHg>0?thNetMoG*12/cptTHg:0;
         if(gROI>thROIg){
           const gEff=Math.min(thUSD,gth*gCptU);
@@ -4187,8 +4208,8 @@ function computeEffPlan(st){
   const curTH=i.th+gthv, curWth=curTH>0?(i.th*i.wth+gthv*gwthv)/curTH:i.wth;
   const finTH=curTH+addTH+mpTH, finWth=finTH>0?(ngWatts+gWatts+mpTH*mpWth)/finTH:curWth;
 
-  const baseMo=calc(i).net*bp*30;
-  const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*30 + glAdd*(i.apr||0)/100/12*gp;
+  const baseMo=calc(i).net*bp*DAYS_PER_MONTH;
+  const newMo=calc({...i,th:ngTHf,wth:ngWthf,gth:gTHf,gwth:gWthf,gl:i.gl+glAdd}).net*bp*DAYS_PER_MONTH + glAdd*(i.apr||0)/100/12*gp;
   const totalMo=newMo-baseMo, roiB=totalMo>0?totalMo*12/K*100:0;
 
   // BTC-price threshold below which upgrading the WHOLE FARM out-yields buying TH.
@@ -4196,8 +4217,8 @@ function computeEffPlan(st){
   if(i.th>0 && i.wth>EFF_BEST){
     const cptU=Math.max(0.01,effUpgradeCostPerTH(i.wth)-lockFreedPerTH);
     if(cptU>0){
-      const M=0.0012*EFF_NEW+0.0089, cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
-      const bpStar=(M*(1-d)+cptTH*0.0012*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
+      const M=ELEC_USD_PER_W_DAY*EFF_NEW+SERVICE_RATE, cptTH=cptTier(TH_TIERS_NEW,(i.th+addTH)||1);
+      const bpStar=(M*(1-d)+cptTH*ELEC_USD_PER_W_DAY*(i.wth-EFF_BEST)*(1-d)/cptU)/dbt;
       if(isFinite(bpStar)&&bpStar>0)effThreshBp=bpStar;
     }
   }
@@ -4215,11 +4236,11 @@ function renderEfficiencyComparison(st){
     const hi=Math.max(thresh,now)*1.4||1;
     const tPos=Math.min(100,thresh/hi*100), nPos=Math.max(2,Math.min(98,now/hi*100)), winning=now<=thresh;
     return `<div class="eff-gauge"><div class="eff-gauge-bar"><div class="eff-gauge-win" style="width:${tPos}%"></div><div class="eff-gauge-now" style="left:${nPos}%"><span>now ${fU(now,0)}</span></div></div>`
-      +`<div class="eff-gauge-lbl">${winning?'<b style="color:var(--green)">Worth it now</b> &middot; ':''}upgrade wins under <b>${fU(thresh,0)}</b> BTC</div></div>`;
+      +`<div class="eff-gauge-lbl">${winning?T('<b style="color:var(--green)">Worth it now</b> &middot; '):''}${T('upgrade wins under <b>{0}</b> BTC',fU(thresh,0))}</div></div>`;
   };
 
   let h=`<div class="eff-verdict">`;
-  h+=`<div class="eff-verdict-main">Optimal split of your ${fU(K,0)} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fN(roiB,0)}%/yr</span></div>`;
+  h+=`<div class="eff-verdict-main">${T('Optimal split of your {0}',fU(K,0))} <span class="eff-verdict-roi">+${fU(totalMo,0)}/mo · ${fPc(roiB,0)}/yr</span></div>`;
   h+=`<div class="eff-verdict-sub">${effRoom
     ?'Balances locking GMT (to hold your 20% discount), buying hashrate, and efficiency upgrades — adding TH without locking would drop your coverage, so the two are balanced.'
     :'Balances locking GMT (to hold your 20% discount) against buying hashrate — adding TH without locking would drop your coverage, so the two are balanced. '+(i.th>0||i.gth>0?'Your miners are already at 12 W/TH, the best efficiency available, so there is nothing to upgrade.':'New machines mint at 15 W/TH — GoMining no longer sells 12 W. Once you own the hashrate, the planner weighs upgrading it.')}</div>`;
@@ -4235,26 +4256,26 @@ function renderEfficiencyComparison(st){
 
   // Plain-language bottom line — the whole plan as numbered steps, in order.
   const _steps=[];
-  if(glAdd>0.5)_steps.push(`Lock ~<strong>${fN(glAdd,0)} GMT</strong> <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
+  if(glAdd>0.5)_steps.push(`${T('Lock ~<strong>{0} GMT</strong>',fN(glAdd,0))} <span class="eff-plainplan-cost">${fU(lockUSD,0)}</span><span class="eff-plainplan-why">holds your 20% fee discount</span>`);
   if(effTHupg>0.5)_steps.push(`Upgrade ~<strong>${fN(effTHupg,0)} TH</strong> to ${fN(EFF_BEST,0)} W/TH <span class="eff-plainplan-cost">${fU(effUSD,0)}</span><span class="eff-plainplan-why">the miners named below</span>`);
   if(addTH>0.5&&_fs){
     const _why=_fs.onExisting
       ? `top up <strong>${_fs.name}</strong> at ${_wLbl(_fs.first.wth)} W — cheaper per TH than a new NFT${_fs.more>0?`, then ${_fs.more} more below`:''}`
       : `mint a new ${fN(EFF_BEST,0)} W machine — you have no miner with room to top up`;
-    _steps.push(`Put ~<strong>${fN(thUSD,0)}</strong> into hashrate <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
+    _steps.push(`${T('Put ~<strong>{0}</strong> into hashrate',fN(thUSD,0))} <span class="eff-plainplan-cost">${fU(thUSD,0)}</span><span class="eff-plainplan-why">${_why}</span>`);
   }
   const _spent=lockUSD+effUSD+thUSD;
-  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">Total <strong>${fU(_spent,0)}</strong> of your ${fU(K,0)} — each step is a separate part of the one plan, not extra.</div></div>`:'';
+  const plain=_steps.length?`<div class="eff-plainplan"><span class="eff-plainplan-lbl">Do this &rarr;</span><ol>${_steps.map(s=>`<li>${s}</li>`).join('')}</ol><div class="eff-plainplan-foot">${T('Total <strong>{0}</strong> of your {1} — each step is a separate part of the one plan, not extra.',fU(_spent,0),fU(K,0))}</div></div>`:'';
 
-  const segs=[[lockPct,'Lock GMT','var(--purple)'],[thPct,'Buy TH','var(--cyan)']];
+  const segs=[[lockPct,'Lock GMT','var(--color-series-1)'],[thPct,'Buy TH','var(--color-series-4)']];   // chart kit series
   if(effRoom)segs.push([effPct,'Upgrade Eff','var(--green)']);
   let bar=`<div class="eff-splitbar">`;
-  segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fN(p,0)}%">${p>=12?fN(p,0)+'%':''}</div>`;});
+  segs.forEach(([p,l,c])=>{if(p>0.5)bar+=`<div style="width:${p}%;background:${c}" title="${l} ${fPc(p,0)}">${p>=12?fN(p,0)+'%':''}</div>`;});
   bar+=`</div>`;
 
   const card=(label,p,amt,rows,extra)=>{
     let s=`<div class="eff-card${(p<0.5&&!extra)?' eff-card-dim':''}"><div class="eff-card-h">${label}</div>`;
-    s+=`<div class="eff-card-mo">${fN(p,0)}%</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
+    s+=`<div class="eff-card-mo">${fPc(p,0)}</div><div class="eff-card-sub2">${fU(amt,0)}</div><div class="eff-card-rows">`;
     rows.forEach(r=>{s+=`<div class="eff-row"><span>${r[0]}</span><span>${r[1]}</span></div>`;});
     s+=`</div>`;
     if(extra)s+=extra;
@@ -4276,7 +4297,7 @@ function renderEfficiencyComparison(st){
   const effExtra=effIsGreedy
     ? `<div class="eff-gauge-lbl" style="margin-top:.55rem">Required first — one efficiency per NFT, so ${gCode} must reach ${fN(EFF_BEST,0)} W before its new (and free weekly) TH can run at ${fN(EFF_BEST,0)} W.</div>`
     : (effThreshBp?effGauge(effThreshBp,bp):'');
-  if(effRoom)g+=card('Upgrade Efficiency',effPct,effUSD,[
+  if(effRoom)g+=card('Upgrade efficiency',effPct,effUSD,[
     ['Upgrades',effTHupg>0?`${fN(effTHupg,0)} TH → 12 W`:'—'],
     ['Farm avg',effTHupg>0?`${fN(curWth,2)} → ${fN(finWth,2)}`:'—']
   ],effExtra);
@@ -4286,7 +4307,7 @@ function renderEfficiencyComparison(st){
   if(effRoom&&effTHupg>0)g+=upgradeOrderHTML(effTHupg);
   // 5,000 TH cap advisory on Buy TH: a single NFT can't exceed 5,000 TH.
   if(addTH>0)g+=buyCapHTML(addTH);
-  g+=`<div class="eff-foot">Result: <strong>${fN(finTH,0)} TH</strong> @ ${fN(finWth,2)} W/TH${glAdd>0?`, +${fN(glAdd,0)} GMT locked`:''} &rarr; <strong>+${fU(totalMo,0)}/mo</strong> net.</div>`;
+  g+=`<div class="eff-foot">${T('Result: <strong>{0} TH</strong> @ {1} W/TH',fN(finTH,0),fN(finWth,2))}${glAdd>0?T(', +{0} GMT locked',fN(glAdd,0)):''}${T(' &rarr; <strong>+{0}/mo</strong> net.',fU(totalMo,0))}</div>`;
   return h+plain+bar+g;
 }
 
@@ -4413,7 +4434,7 @@ function renderPlanner(i,m){
   const cap=totalValue;
 
   const gr=dbt*nt;
-  const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*30;
+  const df=newF.t*(1-td2/100),net=gr-df,mo=net*bp*DAYS_PER_MONTH;
 
   // --- Display ---
   let ah='';
@@ -4426,7 +4447,7 @@ function renderPlanner(i,m){
     if(G.res.unreachable){
       ah+=`<div class="goal-banner warn">🎯 Couldn't add <strong>${fU(G.targetUSD)}/mo</strong> even at ${fU(G.res.maxTried)} of capital — try a smaller increase.</div>`;
     }else if(baseMo>0){
-      ah+=`<div class="goal-banner">🎯 To add <strong>${fU(G.targetUSD)}/mo</strong> to the <strong>${fU(baseMo)}/mo</strong> you already earn — taking you to about <strong>${fU(G.res.goal)}/mo</strong> — invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
+      ah+=`<div class="goal-banner">${T('🎯 To add <strong>{0}/mo</strong> to the <strong>{1}/mo</strong> you already earn — taking you to about <strong>{2}/mo</strong> — invest <strong>{3}</strong>. Here\'s how to deploy it:',fU(G.targetUSD),fU(baseMo),fU(G.res.goal),fU(G.cap))}</div>`;
     }else{
       ah+=`<div class="goal-banner">🎯 To earn about <strong>${fU(G.targetUSD)}/mo</strong>, invest <strong>${fU(G.cap)}</strong>. Here's how to deploy it:</div>`;
     }
@@ -4449,7 +4470,7 @@ function renderPlanner(i,m){
       if(usdForMiner>0)src.push(fU(usdForMiner)+' capital');
       if(src.length)exp+=` (paid with ${src.join(' + ')})`;
     }
-    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fN(i.ggrow||0,2)}%/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
+    exp+=`. <span style="color:var(--text3)">Doesn't count toward VIP tier.</span>${mpIsGreedy?` <span style="color:var(--text3)">Grows ${fPc(i.ggrow||0,2)}/wk for free and reinvestment fills it first, up to its own ${fN(GREEDY_CAP,0)} TH cap.</span>`:''} Remaining balance optimized below.<br>`;
     if(minerShortfallUSD>0)exp+=`<strong style="color:var(--orange)">You're ${fU(minerShortfallUSD)} short of affording this miner — figures assume the rest is funded.</strong><br>`;
     if(mpUpgSteps>0){
       exp+=`<strong style="color:var(--cyan)">Upgraded first:</strong> at ${fN(mpWthBought,1)} W/TH this miner is worse than the ${fN(EFF_BASE_MAX,0)} W baseline, and a greedy machine's free weekly TH inherits its rating &mdash; so <strong>${fU(mpUpgUSD)}</strong> takes it to <strong>${fN(EFF_BASE_MAX,0)} W/TH</strong> before anything else is allocated. <span style="color:var(--text3)">Everything below is planned with the remaining balance.</span><br>`;
@@ -4461,7 +4482,7 @@ function renderPlanner(i,m){
   // the reader to find it below the split and wonder why it isn't in the pot.
   if(ref&&i.refCap>0){
     exp+=`<strong style="color:var(--green)">Referral:</strong> their ${fU(i.refCap)} buys <strong>${fN(ref.at,1)} TH</strong> and locks <strong>${fN(ref.ag,0)} GMT</strong>`;
-    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_NEW)*30)}/mo</strong> in ambassador rewards`;
+    exp+=` — paying you <strong style="color:var(--text2)">${fU(ambDailyUSD(ref.at,EFF_NEW)*DAYS_PER_MONTH)}/mo</strong> in ambassador rewards`;
     if(refBonusGMT>0)exp+=` plus a one-off <strong style="color:var(--text2)">${fN(refBonusGMT,0)} GMT</strong> bonus (${fU(refBonusUSD)}), which IS in the pot below`;
     exp+=`. <span style="color:var(--text3)">Their ${fU(i.refCap)} is their capital, not yours — it never enters the split.</span><br>`;
   }
@@ -4475,7 +4496,7 @@ function renderPlanner(i,m){
     exp+=`<strong style="color:var(--cyan)">All to TH.</strong> You already have enough locked GMT for 20% token discount. All resources go to hashrate growth.`;
   }
   if(sol.bonusActive){
-    exp+=` <span style="color:var(--gold,#ffd700);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
+    exp+=` <span style="color:var(--gold,#F7D88A);font-weight:600">VIP 10% bonus active</span> — base ${fN(sol.baseTH,1)} TH +${fN(sol.bonusTH,1)} TH bonus on ${fU(sol.thUSD)} deposit.`;
   }else if(vipBonus&&sol.thUSD>0&&sol.thUSD<VIP_BONUS_MIN){
     exp+=` <span style="color:var(--text3)">(VIP bonus needs ${fU(VIP_BONUS_MIN)}+ on TH — currently ${fU(sol.thUSD)}, ${fU(VIP_BONUS_MIN-sol.thUSD)} short.)</span>`;
   }
@@ -4504,10 +4525,10 @@ function renderPlanner(i,m){
   const projWth=(_ep&&_ep.finWth>0)?_ep.finWth:bwth;
   // Mining monthly for THAT total (same formula as the solver's `mo`, but on the efficiency-
   // inclusive TH/efficiency) so the "Projected monthly" headline matches the projection table.
-  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*30;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
+  const projMoMining=(dbt*projTH-fees(projTH,projWth,bp).t*(1-td2/100))*(1-CONVERSION_FEE)*bp*DAYS_PER_MONTH;   // incl. 2% BTC→GMT fee, like calc() and the After-Investment card
 
   // Path to 20%
-  ah+=`<div class="sub-title">Path to 20% Token Discount</div>`;
+  ah+=`<div class="sub-title">Path to 20% token discount</div>`;
   ah+=row('GMT needed for 20% (at '+fN(nt,1)+' TH)',`${fN(gmtNeededNew,0)} GMT<span class="sub">${fU(gmtNeededNew*gp)}</span>`);
   ah+=row('Already locked',`${fN(i.gl,0)} GMT`);
   if(gmtFromPool>0)ah+=row('Lock from GMT pool',`+${fN(gmtFromPool,0)} GMT`);
@@ -4520,10 +4541,10 @@ function renderPlanner(i,m){
   }
 
   // Resource breakdown
-  ah+=`<div class="sub-title" style="margin-top:.8rem">Resource Breakdown</div>`;
+  ah+=`<div class="sub-title" style="margin-top:.8rem">Resource breakdown</div>`;
   if(mpTHraw>0){
     ah+=row(mpIsGreedy?`Marketplace miner (greedy${i.mpCode?' '+escapeHtml('#'+String(i.mpCode).replace(/^#/,'')):''})`:'Marketplace miner',
-      `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${mpUpgSteps>0?`${fN(mpWthBought,1)}→${fN(mpWthAfter,1)}`:fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fN(i.ggrow||0,2)}%/wk free`:''}</span>`,'purple');
+      `+${fN(mpTHraw,0)} TH<span class="sub">${fN(mpGmtCost,0)} GMT @ ${mpUpgSteps>0?`${fN(mpWthBought,1)}→${fN(mpWthAfter,1)}`:fN(mpWthRaw,1)} W/TH · non-VIP${mpIsGreedy?` · +${fPc(i.ggrow||0,2)}/wk free`:''}</span>`,'purple');
     if(mpUpgSteps>0){
       const src=[];
       if(mpUpgFromGMT>0)src.push(`${fN(mpUpgFromGMT,0)} GMT`);
@@ -4533,7 +4554,7 @@ function renderPlanner(i,m){
   }
   if(hasGMT){
     if(baseGmtAvail>0)ah+=row('GMT on hand',`${fN(baseGmtAvail,0)} GMT<span class="sub">${fU(baseGmtAvail*gp)}</span>`);
-    if(refBonusGMT>0)ah+=row(`+ Referral ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% of ${fU(ref.thUSD)} TH spend)</span>`,'green');
+    if(refBonusGMT>0)ah+=row(`+ Referral ${fPc(i.refBonusPct>0?i.refBonusPct:5,0)} GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} (${fPc(i.refBonusPct>0?i.refBonusPct:5,0)} of ${fU(ref.thUSD)} TH spend)</span>`,'green');
     if(gmtForMiner>0)ah+=row('→ Marketplace miner',`${fN(gmtForMiner,0)} GMT<span class="sub">${fU(gmtForMiner*gp)}${minerFromBonus>0&&minerFromWallet>0?` · ${fN(minerFromWallet,0)} on hand + ${fN(minerFromBonus,0)} referral bonus`:(minerFromBonus>0?' · from the referral bonus':'')}</span>`,'purple');
     if(gmtFromPool>0)ah+=row('→ Lock',`${fN(gmtFromPool,0)} GMT`,'purple');
     if(gmtSell>0)ah+=row('→ Upgrade TH',`${fN(gmtSell,0)} GMT<span class="sub">${fU(gmtSell*gp)}</span>`,'cyan');
@@ -4552,7 +4573,7 @@ function renderPlanner(i,m){
 
   // --- Post-investment projections ---
   const ov=m.vip,tc=nv.n!==ov.n;
-  const curMo=m.net*m.bp*30,imp=projMoMining-curMo;
+  const curMo=m.net*m.bp*DAYS_PER_MONTH,imp=projMoMining-curMo;
   const svBTC=newF.t*(td2/100),rec=imp>0?cap/imp:Infinity;
 
   let ph='<div style="display:flex;align-items:center;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem">';
@@ -4576,7 +4597,7 @@ function renderPlanner(i,m){
   // fleet so it COMPOUNDS. Adding it to the ambassador basis here would bill it twice.
   const projTotalRefTH=(i.amb?i.refTH:0)+refInitTH;
   const projAmbDaily=ambDailyUSD(i.amb?i.refTH:0,AMB_DEFAULT_WTH)+ambDailyUSD(refInitTH,EFF_NEW);
-  const projAmbMo=projAmbDaily*30;
+  const projAmbMo=projAmbDaily*DAYS_PER_MONTH;
   // Greedy Machine free weekly growth, valued as income in TH credits (matches the console hero
   // + the Total monthly income breakdown). POST-PLAN greedy size, so growing the greedy raises it.
   const gGrow=+(i.ggrow||0);
@@ -4618,14 +4639,14 @@ function renderPlanner(i,m){
         : `<div style="margin-top:.45rem;color:var(--text2)">Even with its free weekly growth compounding, it does not overtake within ${fN(HORIZON/12,0)} years at today's prices.</div>`;
       if(delta<-0.5){
         const worth=(mPaid&&mPaid<=36);
-        ph+=`<div class="warn" style="margin:.5rem 0;background:${worth?'rgba(245,166,35,.07)':'rgba(239,68,68,.07)'};border-color:${worth?'rgba(245,166,35,.3)':'rgba(239,68,68,.28)'};color:var(--text2);font-size:.8rem;line-height:1.55">
+        ph+=`<div class="warn" style="margin:.5rem 0;background:${worth?'rgba(226,178,89,.07)':'rgba(239,68,68,.07)'};border-color:${worth?'rgba(226,178,89,.3)':'rgba(239,68,68,.28)'};color:var(--text2);font-size:.8rem;line-height:1.55">
           <strong style="color:${worth?'var(--gold-soft)':'#fca5a5'}">Starts ${fU(-delta)}/mo behind${worth?', pays for itself later':''}.</strong>
           The same plan without this miner projects <strong>${fU(moNoMiner)}/mo</strong> today.
-          Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fN(aNo.ntd,0)}%</strong> instead of <strong>${fN(ntd,0)}%</strong>`:''} — and that discount applies to your whole farm, not just the new hashrate.
+          Its ${cost} would otherwise be locked${dTok>0?`, holding your token discount at <strong>${fPc(aNo.ntd,0)}</strong> instead of <strong>${fPc(ntd,0)}</strong>`:''} — and that discount applies to your whole farm, not just the new hashrate.
           ${mpIsGreedy?catchUp:'<div style="margin-top:.45rem;color:var(--text3)">A plain marketplace miner does not grow on its own, so nothing recovers this gap except a higher BTC price.</div>'}
         </div>`;
       }else if(delta>0.5){
-        ph+=row('↳ This miner adds',`+${fU(delta)}/mo<span class="sub">vs ${fU(moNoMiner)}/mo without it${dTok>0?` · token discount ${fN(ntd,0)}% vs ${fN(aNo.ntd,0)}%`:''}</span>`,'green');
+        ph+=row('↳ This miner adds',`+${fU(delta)}/mo<span class="sub">vs ${fU(moNoMiner)}/mo without it${dTok>0?` · token discount ${fPc(ntd,0)} vs ${fPc(aNo.ntd,0)}`:''}</span>`,'green');
       }
     }
   }
@@ -4645,7 +4666,7 @@ function renderPlanner(i,m){
   const curStakingMo=m.wkGMT*m.gp*4.33;
   const totalImp=imp+(newStakingMo-curStakingMo)+(greedyMoAfter-greedyMoBefore);
   ph+=row('Monthly improvement',`${totalImp>=0?'+':''}${fU(totalImp)}<span class="sub">mining + staking</span>`,totalImp>=0?'green':'red');
-  ph+=row('Monthly maintenance saved',fU(svBTC*bp*30),'green');
+  ph+=row('Monthly maintenance saved',fU(svBTC*bp*DAYS_PER_MONTH),'green');
   ph+=`<div class="divider"></div>`;
   const recAdj=totalImp>0?cap/totalImp:Infinity;
   ph+=row('New locked GMT',`${fU(newLocked*gp)}`+(gmtReserve>0?`<span class="sub">+${fU(gmtReserve*gp)} reserve</span>`:''));
@@ -4658,8 +4679,8 @@ function renderPlanner(i,m){
     // the old line under-counted and the split didn't sum to the capital they invested.
     ph+=row('Referral TH',`${fN(refInitTH,1)} TH<span class="sub">${fU(ref.thUSD)} invested${refPriorTH>0?` &middot; on top of ${fN(refPriorTH,0)} TH they already own`:''}</span>`,'cyan');
     ph+=row('Referral locked <img src="/gmt36.png" class="gmt-logo" alt="GMT">',`${fN(refInitLocked,0)} GMT<span class="sub">${fU(Math.max(0,i.refCap-ref.thUSD))} invested</span>`,'cyan');
-    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_NEW)*30)}/mo`,'green');
-    if(refBonusGMT>0)ph+=row(`Your ${fN(i.refBonusPct>0?i.refBonusPct:5,0)}% GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
+    ph+=row('Adds to your ambassador',`${fU(ambDailyUSD(refInitTH,EFF_NEW)*DAYS_PER_MONTH)}/mo`,'green');
+    if(refBonusGMT>0)ph+=row(`Your ${fPc(i.refBonusPct>0?i.refBonusPct:5,0)} GMT bonus`,`+${fN(refBonusGMT,0)} GMT<span class="sub">${fU(refBonusUSD)} on their ${fU(ref.thUSD)} TH spend (allocated above)</span>`,'green');
   }
   $('projDisplay').innerHTML=ph;
 
@@ -4667,7 +4688,7 @@ function renderPlanner(i,m){
   const moStakingUSD=newWkStake*gp*4.33;
   const projLabel=`Projected monthly income at ${fN(projTH,1)} TH with ${fP(td2)} total discount (mining + staking${projAmbMo>0?' + ambassador':''}${greedyMoAfter>0?' + greedy growth':''})`;
   // Current (pre-investment) state, for the before/after comparison.
-  const curAmbMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*30;
+  const curAmbMo=ambDailyUSD(i.amb?(+i.refTH||0):0,AMB_DEFAULT_WTH)*DAYS_PER_MONTH;
   // earnTH, not totTH: switched-off miners must not be credited with rewards in the
   // "before" baseline, or the projection would show income they can't produce.
   const curP={th:m.earnTH,wth:m.bwth,totD:m.totD,grossBTC:dbt*m.earnTH,stakingMo:curStakingMo,ambMo:curAmbMo,greedyMo:greedyMoBefore};
@@ -4684,6 +4705,7 @@ const BTC_FIRM_FORECASTS={
   'bernstein':    {firm:'Bernstein',price:1000000,year:2033},
 };
 function fmtBTCPrice(p){
+  if(UI_LOC&&window.GMTCharts)return ckCompactUSD(p);   // translated pages: local compact money
   if(p>=1e9)return '$'+(p/1e9).toFixed(p%1e9===0?0:1)+'B';
   if(p>=1e6)return '$'+(p/1e6).toFixed(p%1e6===0?0:1)+'M';
   return '$'+(p/1000).toFixed(0)+'K';
@@ -4745,7 +4767,7 @@ function openSetupProjection(mode){
   ensureRainbowFit();   // the Power-Law fit the futures are built around
   const sub=document.getElementById('spSubtitle');
   if(sub)sub.innerHTML=(mode==='planner')
-    ? 'Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.'
+    ? T('Project your <strong>planned investment</strong> forward &mdash; the recommended allocation reinvesting mining &amp; staking rewards into more TH and locked GMT each week.')
     : 'Already invested? Project your current farm forward &mdash; reinvesting mining &amp; staking rewards into more TH and locked GMT each week, keeping your 20% token discount.';
   spShowForm();
   renderSpModeSwitch();
@@ -4767,14 +4789,14 @@ function openSetupProjection(mode){
   }
 }
 // The planner and the projection are one flow: capital goes in on the Capital Planner, and its
-// split comes back here as "My Plan". Say which is on screen and offer the way round.
+// split comes back here as "My plan". Say which is on screen and offer the way round.
 function renderSpPlanLink(){
   const el=document.getElementById('spPlanLink');if(!el)return;
   if(window._spMode==='planner'){
     const c=(()=>{try{return inp().cap||0;}catch(e){return 0;}})();
-    el.innerHTML=`Projecting the Capital Planner's split${c>0?` of <strong>${fU(c,0)}</strong>`:''}. <a href="#" onclick="spEditPlan();return false">Change the amount &rarr;</a>`;
+    el.innerHTML=`${c>0?T('Projecting the Capital Planner\'s split of <strong>{0}</strong>.',fU(c,0)):T('Projecting the Capital Planner\'s split.')} <a href="#" onclick="spEditPlan();return false">Change the amount &rarr;</a>`;
   }else{
-    el.innerHTML=`Adding new capital? <a href="#" onclick="spEditPlan();return false">Plan it in the Capital Planner &rarr;</a> and it projects here as My Plan.`;
+    el.innerHTML=T('Adding new capital? <a href="#" onclick="spEditPlan();return false">Plan it in the Capital Planner &rarr;</a> and it projects here as My Plan.');
   }
 }
 // Open the planner form; once it calculates, come straight back to this projection as My Plan.
@@ -4804,8 +4826,8 @@ function renderSpModeSwitch(){
   const planner=window._spMode==='planner';
   const havePlan=plannerHasPlan();
   el.innerHTML=
-     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My Farm</button>`
-    +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My Plan</button>`;
+     `<button class="${planner?'':'active'}" onclick="setSpMode('setup')">My farm</button>`
+    +`<button class="${planner?'active':''}" ${havePlan?'':'disabled title="Calculate a plan in the Capital Planner first"'} onclick="setSpMode('planner')">My plan</button>`;
   el.style.display='';
 }
 function setSpMode(mode){
@@ -4823,6 +4845,7 @@ function refreshMySetupAnimation(){
 // Count an element's leading number up from 0 to its rendered value, preserving
 // any currency prefix / unit suffix (e.g. "$1,234", "9,354 GMT").
 function animateCountText(el,dur){
+  return;   // no count-up (redesign 2026-11-18); the figure is already rendered
   if(!el)return;
   // Use innerHTML so trailing markup (e.g. a GMT logo <img>) survives the animation.
   const m=String(el.innerHTML).match(/^(\D*?)([\d,]+(?:\.\d+)?)([\s\S]*)$/);
@@ -4886,12 +4909,12 @@ function closeSetupProjection(){
   const load=document.getElementById('spPageLoading');
   const txt=load?load.querySelector('.sp-loading-txt'):null;
   if(txt)txt.textContent='Loading your farm…';
-  if(load)load.style.display='flex';
+  // no loading screen: switching back to the console is instant (it was a fixed 650 ms)
   setTimeout(function(){
     hidePanelView('setupProjModal');
     spShowForm();   // reset for next open
     if(load)load.style.display='none';
-    if(txt)txt.textContent='Crunching your projection…';   // restore default for next run
+    if(txt)txt.textContent='Building your projection…';   // restore default for next run
     document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('nav-active'));
     // Return to wherever this projection was launched from: planner-mode → /planner, else /console.
     if(window._spMode==='planner'){
@@ -4902,7 +4925,7 @@ function closeSetupProjection(){
       try{history.replaceState({},'','/console'+location.hash);}catch(e){}
       refreshMySetupAnimation();
     }
-  },650);
+  },0);
 }
 // Compute in place. Re-runs on every horizon / payout / mode change, so no full-page overlay.
 // The GMT elasticity is fitted from daily history and cached for a day: wait for it (bounded)
@@ -4916,11 +4939,32 @@ function runSetupProjection(){
     // Every run reports back, including the early exits (no farm yet, data still loading), so the
     // page never waits on a result that isn't coming. _spEnd stays null unless the run finished.
     window._spEnd=null;
-    try{computeSetupProjection();animateSetupResults();}
-    finally{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}}
+    // The projection walks every simulated day (3,650 for 10 years). It runs as a generator that pauses after each
+    // day and is driven in ~20 ms slices, so the page keeps painting and responding while it works. Same code, same
+    // order, same numbers: only the pauses are new. A newer run abandons this one mid-way (its result is never shown).
+    const gen=computeSetupProjectionGen();
+    const fin=()=>{try{window.dispatchEvent(new Event('gm:proj'));}catch(e){}};
+    const slice=()=>{
+      if(seq!==_spRunSeq)return;
+      const t0=performance.now();
+      try{
+        _admSlice=null;_admSlice=avatarDiscMult();
+        while(performance.now()-t0<20){
+          if(gen.next().done){_admSlice=null;try{animateSetupResults();}finally{fin();}return;}
+        }
+      }catch(e){fin();throw e;}
+      finally{_admSlice=null;}
+      _spYield(slice);
+    };
+    slice();
   });
 }
-function computeSetupProjection(){
+// yield to the browser (paint + input) between slices; MessageChannel avoids setTimeout's 4 ms clamp
+const _spYield=(()=>{try{const ch=new MessageChannel(),q=[];ch.port1.onmessage=()=>{const f=q.shift();if(f)f();};
+  return f=>{q.push(f);ch.port2.postMessage(0);};}catch(e){return f=>setTimeout(f,0);}})();
+// Synchronous form (kept for any caller that needs the result at once, e.g. tests).
+function computeSetupProjection(){const g=computeSetupProjectionGen();while(!g.next().done);}
+function* computeSetupProjectionGen(){
   if(!S.loaded)return;
   const out=document.getElementById('spResult');
   if(!out)return;
@@ -4954,7 +4998,7 @@ function computeSetupProjection(){
   // Convergence: start at today's real price, converge onto the Still-cheap band by the target.
   const offset0=Math.log(bpStart/centerNow);   // today's log-deviation from that band
   const btcSel=customPath
-    ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
+    ? {mode:'manual',label:fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).toLocaleDateString(UI_LOC||'en-US',{month:'short',year:'numeric'})+' (your figure)',price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()}
     : {mode:spSel.futures?'futures':'powerlaw',label:(spSel.futures?'Typical future ':'Still cheap ')+fmtBTCPrice(bpEnd)+' by '+new Date(targetMs).getUTCFullYear(),price:bpEnd,targetYear:new Date(targetMs).getUTCFullYear()};
 
   // ---- Seed: post-investment allocation when launched from the Capital Planner,
@@ -4982,7 +5026,7 @@ function computeSetupProjection(){
   let apr=apr0;
   if(fromPlanner){
     const a=solvePlannerAllocation(i,bpStart,gp0,dbt);   // allocation is a purchase TODAY -> spot GMT
-    if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital Planner</strong> first, then project.</div>';return;}
+    if(!a){out.innerHTML='<div style="color:var(--text4);padding:.5rem">Enter capital in the <strong>Capital planner</strong> first, then project.</div>';return;}
     MP_TH=a.mpTH||0; MP_WTH=a.mpWth>0?a.mpWth:15;
     GGROW=(a.ggrow||0)/100;
     GINIT=a.gInit||0;
@@ -5016,7 +5060,7 @@ function computeSetupProjection(){
     if(refFleetTH>0){
       const f0=fees(refFleetTH,EFF_BEST,bpStart);
       const v0=vipOf(refFleetTH,0);
-      refFleetLocked=(f0.t*(1-Math.min(30,v0.d)/100)*bpStart)/gp0*360;
+      refFleetLocked=(f0.t*(1-Math.min(TOTAL_DISCOUNT_CAP,v0.d)/100)*bpStart)/gp0*360;
       REF_AMB_EXCL=refFleetTH;
     }
     GGROW=(i.ggrow||0)/100;
@@ -5111,22 +5155,22 @@ function computeSetupProjection(){
     const bw=totTH>0?(curTH*cW+MP_TH*MP_WTH+gTH*gW)/totTH:cW;
     const g=dbtToday*totTH,f=fees(totTH,bw,bpToday);
     const v=vipFor(curTH+Math.max(0,gTH-GINIT),curLocked,i);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
     const tg2=curLocked+gmtW;
     const fc2=(f.t*(1-ntd/100)*bpToday)/gp;
     const cv=fc2>0?tg2/fc2:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cv/18)):0;
-    const fd=Math.min(30,td+ntd);
+    const td=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cv/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,td+ntd);
     const miningUSD=Math.max(0,(g-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE)); // floor at 0: an unprofitable miner earns nothing, not a negative reward
-    const stakingUSD=(curLocked*(apr/100)/52)*4.33/30*gp;
+    const stakingUSD=(curLocked*(apr/100)/52)*4.33/DAYS_PER_MONTH*gp;
     // The greedy machine's free weekly TH, valued as income — the same treatment the console
     // hero and the Capital Planner give it, so all three headline numbers now mean one thing.
     // It is NOT double counting: this is income received in the form of hashrate, exactly like
     // mined BTC that gets reinvested, and the resulting TH earns on top from then on. It is
     // deliberately kept OUT of `reinvest` — the value arrived already deployed as TH, so it must
     // never be handed to the allocator to spend a second time.
-    // 4.33/30 (not /7) so a day x30 lands on the planner's weekly x 4.33 monthly figure exactly.
-    const greedyUSD=(gTH>0&&GGROW>0)?(gTH*GGROW)*4.33/30*cptAtEff(gTH,gW):0;
+    // 4.33/DAYS_PER_MONTH (not /7) so a day x30 lands on the planner's weekly x 4.33 monthly figure exactly.
+    const greedyUSD=(gTH>0&&GGROW>0)?(gTH*GGROW)*4.33/DAYS_PER_MONTH*cptAtEff(gTH,gW):0;
     return{net:miningUSD+stakingUSD+ambDaily+greedyUSD,reinvest:miningUSD+ambDaily,
       mining:miningUSD,staking:stakingUSD,amb:ambDaily,greedy:greedyUSD,disc:fd,tokD:td,vip:v.n};
   }
@@ -5140,11 +5184,11 @@ function computeSetupProjection(){
     refFleetLocked+=refFleetLocked*(apr/100)/52;              // their locked GMT stakes too
     const f=fees(refFleetTH,EFF_NEW,bpToday);
     const v=vipOf(refFleetTH,refFleetLocked);
-    const ntd=Math.min(30,v.d);                                // VIP only — their streak/mode is unknown
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d);                                // VIP only — their streak/mode is unknown
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;                   // their daily GMT fee burn
     const cov=burn>0?refFleetLocked/burn:Infinity;
-    const td=i.payG?Math.min(20,Math.floor(cov/18)):0;
-    const fd=Math.min(30,td+ntd);
+    const td=i.payG?Math.min(TOKEN_DISCOUNT_CAP,Math.floor(cov/COV_DAYS_PER_PCT)):0;
+    const fd=Math.min(TOTAL_DISCOUNT_CAP,td+ntd);
     const netWk=Math.max(0,(dbtToday*refFleetTH-f.t*(1-fd/100))*bpToday*(1-CONVERSION_FEE))*7;
     const spend=netWk*refReinvest;
     if(!(spend>0))return 0;
@@ -5162,7 +5206,7 @@ function computeSetupProjection(){
     const bw=totTH>0?(curTH*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totTH:curWTH;
     const f=fees(totTH,bw,bpToday);
     const v=vipFor(curTH+Math.max(0,greedyTH-GINIT),curLocked,i);
-    const ntd=Math.min(30,v.d+(i.click?3:0)+i.mm+i.od);
+    const ntd=Math.min(TOTAL_DISCOUNT_CAP,v.d+(i.click?CLICK_STREAK_PCT:0)+i.mm+i.od);
     const burn=(f.t*(1-ntd/100)*bpToday)/gp;
     return Math.max(0,burn*360-(curLocked+gmtW));
   }
@@ -5182,7 +5226,7 @@ function computeSetupProjection(){
   function contributionDue(d){
     if(!(CONTRIB>0))return 0;
     if(CONTRIB_WEEKLY)return CONTRIB;
-    const monthsDue=Math.floor(d/30.4375);
+    const monthsDue=Math.floor(d/DAYS_PER_MONTH);
     if(monthsDue<=contribMonthsPaid)return 0;
     const owed=(monthsDue-contribMonthsPaid)*CONTRIB;
     contribMonthsPaid=monthsDue;
@@ -5193,6 +5237,7 @@ function computeSetupProjection(){
   // machines are tracked one-by-one in GRD, each priced on its own efficiency curve.
   let vipSizes=existingMinerSizes(false);
   for(let d=1;d<=days;d++){
+    yield;   // pause point between simulated days (see runSetupProjection)
     bpToday=bpForDay(d);
     gp=gpForDay(d);      // dailyNet/gmtDeficit close over gp, so staking value, burn, coverage
                          // and every GMT purchase reprice off the walking token price
@@ -5320,35 +5365,35 @@ function computeSetupProjection(){
   const ssPct=startSS>0?((finalSS-startSS)/startSS*100):0;
   const gmtGain=gmtLocked-startLocked;
   const bpAtEnd=bpForDay(days);
-  const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*30,finalYearly=finalSS*365;
+  const finalDailyGMT=finalSS/gp,finalMonthly=finalSS*DAYS_PER_MONTH,finalYearly=finalSS*365;
   const lockedUSD=gmtLocked*gp;
 
-  const _endWhen=new Date(targetMs).toLocaleDateString('en-US',{month:'short',year:'numeric'});
+  const _endWhen=new Date(targetMs).toLocaleDateString(UI_LOC||'en-US',{month:'short',year:'numeric'});
   const btcModeBadge=spSel.futures
-    ? '<span class="badge" style="background:rgba(245,166,35,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">TYPICAL FUTURE</span>'
-    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">STILL CHEAP</span>';
-  const _yrsLbl=spSel.yrs+' year'+(spSel.yrs>1?'s':'');
+    ? '<span class="badge" style="background:rgba(226,178,89,.18);color:var(--gold-soft);font-size:.65rem;margin-left:.4rem">Typical future</span>'
+    : '<span class="badge" style="background:rgba(63,124,196,.22);color:#7fb0ff;font-size:.65rem;margin-left:.4rem">Still cheap</span>';
+  const _yrsLbl=T(spSel.yrs>1?'{0} years':'{0} year',spSel.yrs);
   const btcRangeLine=spSel.futures
-    ? `BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} today</strong> to <strong style="color:var(--text2)">${fmtBTCPrice(bpEnd)} by ${_endWhen}</strong> (${_yrsLbl})`
-    : `BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">${fmtBTCPrice(bpStart)} (today)</strong> to the <strong style="color:var(--text2)">Still-cheap band at ${fmtBTCPrice(bpEnd)}</strong> by ${_endWhen} (${_yrsLbl})`;
+    ? T('BTC follows the <strong style="color:var(--text2)">typical path of 4,000 simulated futures</strong>: <strong style="color:var(--text2)">{0} today</strong> to <strong style="color:var(--text2)">{1} by {2}</strong> ({3})',fmtBTCPrice(bpStart),fmtBTCPrice(bpEnd),_endWhen,_yrsLbl)
+    : T('BTC follows the rainbow Power-Law curve from <strong style="color:var(--text2)">{0} (today)</strong> to the <strong style="color:var(--text2)">Still-cheap band at {1}</strong> by {2} ({3})',fmtBTCPrice(bpStart),fmtBTCPrice(bpEnd),_endWhen,_yrsLbl);
 
   // Say plainly what the GMT leg is and how little it is worth trusting. The centre is a rough
   // average, not a forecast, and the band is the point of showing it at all.
   const gmtNoteS=(GB!=null&&_gmtBeta)
-    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9878; GMT is modelled at <strong style="color:var(--text2)">&beta; ${fN(GB,2)}</strong> to Bitcoin (measured on ${fN(_gmtBeta.n,0)} days of daily returns): <strong style="color:var(--text2)">$${gp0.toFixed(4)} &rarr; $${gpEnd.toFixed(4)}</strong> by ${_endWhen}, 1&sigma; range <strong style="color:var(--text2)">$${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}</strong>. Bitcoin explains only <strong style="color:var(--text2)">${fN(_gmtBeta.r2*100,0)}%</strong> of GMT's daily movement, so treat this leg as a rough average with a wide band, not a forecast.</div>`
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${T('&#9878; GMT is modelled at <strong style="color:var(--text2)">&beta; {0}</strong> to Bitcoin (measured on {1} days of daily returns): <strong style="color:var(--text2)">{2} &rarr; {3}</strong> by {4}, 1&sigma; range <strong style="color:var(--text2)">{5}&ndash;{6}</strong>. Bitcoin explains only <strong style="color:var(--text2)">{7}%</strong> of GMT\'s daily movement, so treat this leg as a rough average with a wide band, not a forecast.',fN(GB,2),fN(_gmtBeta.n,0),fUsdN(gp0,4),fUsdN(gpEnd,4),_endWhen,fUsdN(gpLo,4),fUsdN(gpHi,4),fN(_gmtBeta.r2*100,0))}</div>`
     : '';
   const hwS=halvingsInWindow(days);
   const diffPenaltyPct=applyDiffGrind?Math.round((1-difficultyMultAt(targetMs))*100):0;
   const diffSkippedPct=applyDiffGrind?0:Math.round((1-difficultyMultAt(targetMs))*100);
   const _bwEnd=totEndTH>0?(th*curWTH+MP_TH*MP_WTH+greedyTH*greedyWTH)/totEndTH:curWTH;
-  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">${_bwStart.toFixed(1)} &rarr; ${_bwEnd.toFixed(1)} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).</div>`:'';
+  const effNoteS=(_bwStart-_bwEnd>0.05)?`<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${T('&#9889; Reinvestment upgraded efficiency <strong style="color:var(--text2)">{0} &rarr; {1} W/TH</strong> to keep mining above break-even (capital is never spent on hashrate that nets $0).',_bwStart.toFixed(1),_bwEnd.toFixed(1))}</div>`:'';
   const halvingNoteS=gmtNoteS+(applyDiffGrind
-    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}, plus ` : 'Plus '}<strong style="color:var(--text2)">−${diffPenaltyPct}%</strong> from rising network difficulty over the period (both modeled).</div>`
-    : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--text2)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
+    ? `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">${hwS.length?T(hwS.length>1?'&#9143; Mining reward halves at the {0} halvings, plus <strong style="color:var(--color-error)">−{1}%</strong> from rising network difficulty over the period (both modeled).':'&#9143; Mining reward halves at the {0} halving, plus <strong style="color:var(--color-error)">−{1}%</strong> from rising network difficulty over the period (both modeled).',hwS.join(' &amp; '),diffPenaltyPct):T('&#9143; Plus <strong style="color:var(--color-error)">−{0}%</strong> from rising network difficulty over the period (both modeled).',diffPenaltyPct)}</div>`
+    : `<div style="margin-top:.35rem;font-size:.72rem;color:var(--text3)">&#9143; ${hwS.length?`Mining reward halves at the ${hwS.join(' &amp; ')} halving${hwS.length>1?'s':''}. ` : ''}<strong style="color:var(--text2)">Network difficulty growth is OFF</strong> for a hand-set price — that curve is calibrated to pair with the fair-value path, not yours. The model would otherwise have taken a further <strong style="color:var(--color-error)">−${diffSkippedPct}%</strong> off reward per TH over this period, so read this as your price scenario at today's difficulty, not a forecast.</div>`)+effNoteS;
   let h='';
-  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);color:var(--text2)">
+  h+=`<div class="warn" style="margin-bottom:.8rem;background:rgba(226,178,89,.06);border-color:rgba(226,178,89,.2);color:var(--text2)">
     <strong style="color:var(--purple-soft)">Starting from ${fromPlanner?'your planned investment':'your current setup'}:</strong>
-    <strong>${fN(startTH,1)} TH</strong> hashrate, <strong>${fN(startLocked,0)} GMT</strong> locked${CONTRIB>0?`, adding <strong>${fU(CONTRIB)}${CONTRIB_WEEKLY?' a week':' a month'}</strong>`:''}${(function(){
+    ${T('<strong>{0} TH</strong> hashrate, <strong>{1} GMT</strong> locked',fN(startTH,1),fN(startLocked,0))}${CONTRIB>0?T(CONTRIB_WEEKLY?', adding <strong>{0} a week</strong>':', adding <strong>{0} a month</strong>',fU(CONTRIB)):''}${(function(){
       // State the seed's OWN day-one income and discount. Every "the projection lost money"
       // report so far has been the two screens starting from different farms — a plan with a
       // marketplace miner in it against one without, or the current setup against the plan —
@@ -5356,7 +5401,7 @@ function computeSetupProjection(){
       // is the number to compare against the planner's headline; if they differ, the inputs did.
       // Captured on day 1 of the run. Reading dailyNet() here, after the loop, priced the END state
       // and labelled it day 1 — so the "day 1" figure changed with the horizon.
-      return ` &mdash; earning <strong style="color:var(--text2)">${fU(startSS_capture*30)}/mo</strong> on day 1 at <strong style="color:var(--text2)">${fN(startDisc_capture,2)}%</strong> discount${fromPlanner?', which is the figure the Capital Planner shows as "after investment"':''}`;
+      return T(' &mdash; earning <strong style="color:var(--text2)">{0}/mo</strong> on day 1 at <strong style="color:var(--text2)">{1}%</strong> discount',fU(startSS_capture*DAYS_PER_MONTH),fN(startDisc_capture,2))+(fromPlanner?T(', which is the figure the Capital Planner shows as "after investment"'):'');
     })()}
     <div style="margin-top:.5rem;font-size:.75rem;color:var(--text3)">${btcRangeLine}${btcModeBadge}</div>${halvingNoteS}</div>`;
   h+=buildReinvestChart(daily,days,gp);
@@ -5367,11 +5412,11 @@ function computeSetupProjection(){
   let gmtRangeNote='';
   if(gpSigma>0){
     const _gpSave=gp;
-    gp=gpLo; const loMo=dailyNet(th,gmtLocked).net*30;
-    gp=gpHi; const hiMo=dailyNet(th,gmtLocked).net*30;
+    gp=gpLo; const loMo=dailyNet(th,gmtLocked).net*DAYS_PER_MONTH;
+    gp=gpHi; const hiMo=dailyNet(th,gmtLocked).net*DAYS_PER_MONTH;
     gp=_gpSave;
     const a=Math.min(loMo,hiMo), b=Math.max(loMo,hiMo);
-    gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range ($${gpLo.toFixed(4)}&ndash;$${gpHi.toFixed(4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
+    gmtRangeNote=`<div class="ri-breakdown" style="margin-top:.35rem">across the 1&sigma; GMT range (${fUsdN(gpLo,4)}&ndash;${fUsdN(gpHi,4)}): ${fU(a)}&ndash;${fU(b)}/mo</div>`;
   }
   // The end-of-period daily / monthly / yearly figures are shown in the hero cards on the futures
   // chart (assets/futures.js), so they are published here instead of drawn as a second card.
@@ -5383,8 +5428,8 @@ function computeSetupProjection(){
     const roiYr=yrs>0?ssPct/yrs:0;
     h+=`<div class="ri-single-card">
       <div class="ri-label">Projected ROI</div>
-      <div class="ri-headline green">${roiYr>=0?'+':''}${fN(roiYr,1)}%<span style="font-size:.95rem;color:var(--text3);font-weight:600"> / yr</span></div>
-      <div class="ri-breakdown">${ssPct>=0?'+':''}${fN(ssPct,1)}% reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
+      <div class="ri-headline green">${roiYr>=0?'+':''}${fPc(roiYr,1)}<span style="font-size:.95rem;color:var(--text3);font-weight:600"> / yr</span></div>
+      <div class="ri-breakdown">${ssPct>=0?'+':''}${fPc(ssPct,1)} reward growth over ${fN(yrs,1)} yr${Math.round(yrs)===1?'':'s'}</div>
       ${contribGrossUSD>0?`<div class="ri-gain">part of it bought, not earned: ${fU(contribGrossUSD)} of it is money you added</div>`:''}
     </div>`;
   }
@@ -5394,7 +5439,7 @@ function computeSetupProjection(){
       <div class="ri-label">Money You Added (over period)</div>
       <div class="ri-headline cyan">${fU(contribGrossUSD)}</div>
       <div class="ri-mo-yr">${fU(CONTRIB)}${CONTRIB_WEEKLY?'/wk':'/mo'}<span class="ri-sep">&bull;</span>${fN(payments,0)} payment${payments===1?'':'s'}</div>
-      <div class="ri-breakdown">deployed on schedule and split like any other cash: hashrate, efficiency or locked GMT, whichever earns most at the time &mdash; ${fU(contribGrossUSD*USD_GMT_FEE)} of it went on the ${fN(USD_GMT_FEE*100,0)}% USD&rarr;GMT fee</div>
+      <div class="ri-breakdown">deployed on schedule and split like any other cash: hashrate, efficiency or locked GMT, whichever earns most at the time &mdash; ${fU(contribGrossUSD*USD_GMT_FEE)} of it went on the ${fPc(USD_GMT_FEE*100,0)} USD&rarr;GMT fee</div>
       <div class="ri-gain">on top of the ${fromPlanner?'planned investment':'farm'} this run started from</div>
     </div>`;
   }
@@ -5403,14 +5448,14 @@ function computeSetupProjection(){
     h+=`<div class="ri-single-card">
       <div class="ri-label">Your Referral's Fleet (End of Period)</div>
       <div class="ri-headline cyan">${fN(refFleetTH,1)} TH</div>
-      <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 15 W/TH${refReinvest>0?` &middot; reinvesting ${fN(refReinvest*100,0)}% of their rewards`:' &middot; static (no reinvest rate set)'}</div>
-      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_NEW)*30)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
+      <div class="ri-usd-value">from ${fN(refFleetStartTH,1)} TH at 15 W/TH${refReinvest>0?` &middot; reinvesting ${fPc(refReinvest*100,0)} of their rewards`:' &middot; static (no reinvest rate set)'}</div>
+      <div class="ri-gain">pays you ${fU(ambDailyUSD(refFleetTH,EFF_NEW)*DAYS_PER_MONTH)}/mo in ambassador rewards${grew>0.05?` &middot; +${fN(grew,1)} TH grown`:''}</div>
     </div>`;
     if(totalRefBonusUSD>0){
       h+=`<div class="ri-single-card">
         <div class="ri-label">Referral Commission (over period)</div>
         <div class="ri-headline green">${fU(totalRefBonusUSD)}</div>
-        <div class="ri-usd-value">${fN(refBonusRate*100,0)}% of every TH purchase they make, paid in GMT</div>
+        <div class="ri-usd-value">${fPc(refBonusRate*100,0)} of every TH purchase they make, paid in GMT</div>
         <div class="ri-gain">reinvested alongside your own rewards</div>
       </div>`;
     }
@@ -5420,7 +5465,7 @@ function computeSetupProjection(){
     h+=`<div class="ri-single-card">
       <div class="ri-label">Income Paid Out (over period)</div>
       <div class="ri-headline green">${fU(totalDistributionUSD)}</div>
-      <div class="ri-mo-yr">${fU(totalDistributionUSD/(days/30))}/mo avg<span class="ri-sep">&bull;</span>${payRate}</div>
+      <div class="ri-mo-yr">${fU(totalDistributionUSD/(days/DAYS_PER_MONTH))}/mo avg<span class="ri-sep">&bull;</span>${payRate}</div>
       <div class="ri-gain">taken as income instead of reinvested</div>
     </div>`;
   }
@@ -5444,13 +5489,13 @@ function computeSetupProjection(){
     </div>`;
   }
   h+=`<div class="ri-single-card">
-    <div class="ri-label">Total Hashrate (End of Period)</div>
+    <div class="ri-label">Total hashrate (end of period)</div>
     <div class="ri-headline cyan">${fN(totEndTH,1)} TH</div>
     <div class="ri-usd-value">from ${fN(startTH,1)} TH start</div>
-    <div class="ri-gain">+${fN(thGain,1)} TH${startTH>0?` (+${fN(thPct,0)}%)`:''}</div>
+    <div class="ri-gain">+${fN(thGain,1)} TH${startTH>0?` (+${fPc(thPct,0)})`:''}</div>
   </div>`;
   h+=`<div class="ri-single-card">
-    <div class="ri-label">Locked GMT (End of Period)</div>
+    <div class="ri-label">Locked GMT (end of period)</div>
     <div class="ri-headline green">${fN(gmtLocked,0)} <img src="/gmt36.png" class="gmt-logo" alt="GMT"></div>
     <div class="ri-usd-value">${fU(lockedUSD)} USD value</div>
     <div class="ri-gain">+${fN(gmtGain,0)} GMT gained</div>
@@ -5486,7 +5531,9 @@ function buildReinvestChart(daily,days,gp){
   const pts=[];
   for(let i=0;i<N;i+=stride)pts.push({d:daily[i].d,v:daily[i].ssNet,gp:daily[i].gp});
   if(pts[pts.length-1].d!==daily[N-1].d)pts.push({d:daily[N-1].d,v:daily[N-1].ssNet,gp:daily[N-1].gp});
-  const W=600,H=232,padL=72,padR=18,padT=20,padB=44;
+  // Drawn at the container's real width so its 12 px labels stay 12 px (a fixed 600 viewBox scaled them to ~23 px on desktop, ~7 px on phones).
+  const _riHost=(typeof document!=='undefined'&&document.getElementById)?document.getElementById('spResult'):null;
+  const W=Math.round(Math.max(320,Math.min(1180,((_riHost&&_riHost.clientWidth)||634)-34))),H=232,padL=72,padR=18,padT=20,padB=44;
   const innerW=W-padL-padR,innerH=H-padT-padB;
 
   // Store geometry + data for hover/toggle handlers
@@ -5505,8 +5552,8 @@ function buildReinvestChart(daily,days,gp){
   let xLabelHtml='';
   for(const td of xTicks){
     const xc=padL+(td/days)*innerW;
-    xLabelHtml+=`<line x1="${xc.toFixed(1)}" y1="${padT+innerH}" x2="${xc.toFixed(1)}" y2="${padT+innerH+3}" stroke="rgba(255,255,255,.18)"/>`;
-    xLabelHtml+=`<text x="${xc.toFixed(1)}" y="${H-10}" text-anchor="middle" fill="rgba(255,255,255,.55)" font-size="13" font-family="monospace">D${td}</text>`;
+    xLabelHtml+=`<line x1="${xc.toFixed(1)}" y1="${padT+innerH}" x2="${xc.toFixed(1)}" y2="${padT+innerH+3}" style="stroke:var(--color-border-strong)"/>`;
+    xLabelHtml+=`<text x="${xc.toFixed(1)}" y="${H-10}" text-anchor="middle" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif">D${td}</text>`;
   }
 
   return `<div class="ri-chart-wrap">
@@ -5523,20 +5570,20 @@ function buildReinvestChart(daily,days,gp){
     <svg class="ri-chart-svg" viewBox="0 0 ${W} ${H}" id="riChartSvg" onmousemove="riChartHover(event)" onmouseleave="riChartLeave()">
       <defs>
         <linearGradient id="riChartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#4ecffa" stop-opacity=".35"/>
-          <stop offset="100%" stop-color="#4ecffa" stop-opacity="0"/>
+          <stop offset="0%" style="stop-color:var(--color-gold)" stop-opacity=".35"/>
+          <stop offset="100%" style="stop-color:var(--color-gold)" stop-opacity="0"/>
         </linearGradient>
       </defs>
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
-      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" stroke="rgba(255,255,255,.08)"/>
-      <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" stroke="rgba(255,255,255,.05)" stroke-dasharray="2 4"/>
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+innerH}" style="stroke:var(--color-border)"/>
+      <line x1="${padL}" y1="${padT+innerH}" x2="${padL+innerW}" y2="${padT+innerH}" style="stroke:var(--color-border)"/>
+      <line x1="${padL}" y1="${padT+innerH/2}" x2="${padL+innerW}" y2="${padT+innerH/2}" style="stroke:var(--color-border)" stroke-dasharray="2 4"/>
       <path d="${area}" id="riChartArea" fill="url(#riChartGrad)"/>
-      <path d="${line}" id="riChartLine" fill="none" stroke="#4ecffa" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" stroke="#4ecffa" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
-      <circle id="riChartDot" cx="0" cy="0" r="4" fill="#4ecffa" stroke="#fff" stroke-width="1.5" opacity="0"/>
-      <text x="${padL-8}" y="${padT+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMax">${fAxisUSD(yMax)}</text>
-      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
-      <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" fill="rgba(255,255,255,.55)" font-size="14" font-family="monospace">0</text>
+      <path d="${line}" id="riChartLine" fill="none" style="stroke:var(--color-gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <line id="riChartCursor" x1="0" y1="${padT}" x2="0" y2="${padT+innerH}" style="stroke:var(--color-gold)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+      <circle id="riChartDot" cx="0" cy="0" r="4" style="fill:var(--color-gold);stroke:var(--color-bg)" stroke-width="1.5" opacity="0"/>
+      <text x="${padL-8}" y="${padT+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif" id="riAxisMax">${fAxisUSD(yMax)}</text>
+      <text x="${padL-8}" y="${padT+innerH/2+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif" id="riAxisMid">${fAxisUSD(yMax/2)}</text>
+      <text x="${padL-8}" y="${padT+innerH+4}" text-anchor="end" style="fill:var(--color-text-2)" font-size="12" font-family="Inter, system-ui, sans-serif">0</text>
       ${xLabelHtml}
     </svg>
     <div class="ri-tooltip" id="riChartTip"></div>
@@ -5549,7 +5596,7 @@ window._reinvestPeriod='day';
 function riChartUpdateAxis(){
   const c=window._reinvestChart;if(!c)return;
   const unit=window._reinvestUnit,period=window._reinvestPeriod;
-  const mult=period==='month'?30:1;
+  const mult=period==='month'?DAYS_PER_MONTH:1;
   const ys=c.pts.map(p=>p.v);
   const yMax=Math.max(...ys,1e-9);
   // GMT price moves across the run, so convert point-wise rather than at one rate.
@@ -5559,14 +5606,14 @@ function riChartUpdateAxis(){
   const aMid=document.getElementById('riAxisMid');
   if(aMax)aMax.textContent=fmt(scaled);
   if(aMid)aMid.textContent=fmt(scaled/2);
-  const color=unit==='gmt'?'#5ad9a8':'#4ecffa';
+  const color=unit==='gmt'?'var(--color-series-4)':'var(--color-gold)';   // chart kit series colours
   const line=document.getElementById('riChartLine');
   const cursor=document.getElementById('riChartCursor');
   const dot=document.getElementById('riChartDot');
-  if(line)line.setAttribute('stroke',color);
-  if(cursor)cursor.setAttribute('stroke',color);
-  if(dot)dot.setAttribute('fill',color);
-  document.querySelectorAll('#riChartGrad stop').forEach(s=>s.setAttribute('stop-color',color));
+  if(line)line.style.stroke=color;
+  if(cursor)cursor.style.stroke=color;
+  if(dot)dot.style.fill=color;
+  document.querySelectorAll('#riChartGrad stop').forEach(s=>s.style.stopColor=color);
   const tipVal=document.querySelector('#riChartTip .ri-tip-val');
   if(tipVal)tipVal.classList.toggle('green',unit==='gmt');
 }
@@ -5605,7 +5652,7 @@ function riChartHover(e){
   dot.setAttribute('cx',ptX);dot.setAttribute('cy',ptY);dot.style.opacity='1';
 
   const unit=window._reinvestUnit,period=window._reinvestPeriod;
-  const mult=period==='month'?30:1;
+  const mult=period==='month'?DAYS_PER_MONTH:1;
   const val=unit==='gmt'?(pt.v/(pt.gp||c.gp))*mult:pt.v*mult;
   const valStr=unit==='gmt'?fN(val,val>=1000?0:2)+' GMT':fU(val);
   const suffix=period==='month'?'/mo':'/day';
@@ -5636,57 +5683,57 @@ function buildShareCanvas(d){
   c.width=W*S;c.height=H*S;
   const x=c.getContext('2d');x.scale(S,S);
   const pad=50;
-  const GOLD='#F5A623',GSOFT='#F7B84E',GLT='#FFCF7A';
+  const GOLD=CC('gold'),GSOFT=CC('gold-300'),GLT=CC('gold-300');
   // background — site gold-on-black
   const bgG=x.createLinearGradient(0,0,W,H);
-  bgG.addColorStop(0,'#0a0a0a');bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,'#0a0a0a');
+  bgG.addColorStop(0,CC('bg'));bgG.addColorStop(0.5,'#100c06');bgG.addColorStop(1,CC('bg'));
   x.fillStyle=bgG;x.fillRect(0,0,W,H);
-  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(245,166,35,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
+  const orb=(cx,cy,r,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,'rgba(245,166,35,'+a+')');g.addColorStop(0.5,'rgba(245,166,35,'+(a*0.4)+')');g.addColorStop(1,'rgba(226,178,89,0)');x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2);};
   orb(140,90,380,0.18);orb(1060,230,320,0.12);orb(600,770,380,0.07);orb(W/2,-40,460,0.10);
-  x.strokeStyle='rgba(245,166,35,0.05)';x.lineWidth=0.5;
+  x.strokeStyle='rgba(226,178,89,0.05)';x.lineWidth=0.5;
   for(let gy=0;gy<H;gy+=50){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
   for(let gx=0;gx<W;gx+=50){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
   // header
-  x.fillStyle='#ffffff';x.font='bold 56px Space Grotesk,system-ui,sans-serif';x.textAlign='center';
-  x.shadowColor='rgba(245,166,35,0.55)';x.shadowBlur=28;
-  x.fillText(d.days+'-Day Growth Projection',W/2,72);x.shadowBlur=0;
-  x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Share Tech Mono",monospace';
-  const btcSub=d.btcMode==='live'?'':'  •  BTC '+fmtBTCPrice(d.bpStart)+' → '+fmtBTCPrice(d.bpAtEnd)+' (typical future)';
-  x.fillText('Auto-Reinvest Compound Strategy'+btcSub+'  •  powered by gmt-optimizer.com',W/2,108);
+  x.fillStyle=CC('text');x.font='bold 56px Poppins,system-ui,sans-serif';x.textAlign='center';
+  x.shadowColor='rgba(226,178,89,0.55)';x.shadowBlur=0;
+  x.fillText(TC(d.days+'-Day Growth Projection'),W/2,72);x.shadowBlur=0;
+  x.fillStyle='rgba(247,184,78,0.92)';x.font='22px "Inter",monospace';
+  const btcSub=d.btcMode==='live'?'':T('  •  BTC {0} → {1} (typical future)',fmtBTCPrice(d.bpStart),fmtBTCPrice(d.bpAtEnd));
+  x.fillText(T('Auto-Reinvest Compound Strategy{0}  •  powered by gmt-optimizer.com',btcSub),W/2,108);
   const lg=x.createLinearGradient(pad,0,W-pad,0);
-  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(245,166,35,0.6)');lg.addColorStop(1,'transparent');
+  lg.addColorStop(0,'transparent');lg.addColorStop(0.5,'rgba(226,178,89,0.6)');lg.addColorStop(1,'transparent');
   x.strokeStyle=lg;x.lineWidth=2;x.beginPath();x.moveTo(pad,128);x.lineTo(W-pad,128);x.stroke();
   // comparison cards
   const cardW=510,cardH=350,cardY=150,gap=80;
   const leftX=(W-cardW*2-gap)/2,rightX=leftX+cardW+gap;
   const drawCard=(cx,cy,title,accent,items)=>{
     const cbg=x.createLinearGradient(cx,cy,cx,cy+cardH);
-    cbg.addColorStop(0,'rgba(245,166,35,0.06)');cbg.addColorStop(1,'rgba(245,166,35,0.015)');
+    cbg.addColorStop(0,'rgba(226,178,89,0.06)');cbg.addColorStop(1,'rgba(226,178,89,0.015)');
     x.fillStyle=cbg;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
-    x.shadowColor=accent;x.shadowBlur=16;x.strokeStyle=accent;x.lineWidth=3;
+    x.strokeStyle='rgba(226,178,89,0.2)';x.lineWidth=1.5;x.beginPath();x.roundRect(cx,cy,cardW,cardH,18);x.stroke();
+    x.shadowColor=accent;x.shadowBlur=0;x.strokeStyle=accent;x.lineWidth=3;
     x.beginPath();x.moveTo(cx+18,cy);x.lineTo(cx+cardW-18,cy);x.stroke();x.shadowBlur=0;
-    x.fillStyle=accent;x.font='bold 26px Space Grotesk,system-ui,sans-serif';x.textAlign='left';
+    x.fillStyle=accent;x.font='bold 26px Poppins,system-ui,sans-serif';x.textAlign='left';
     x.fillText(title,cx+30,cy+50);
     items.forEach((it,i)=>{const iy=cy+105+i*68;
-      x.fillStyle='rgba(255,255,255,0.55)';x.font='20px "Share Tech Mono",monospace';x.textAlign='left';x.fillText(it.label,cx+30,iy);
-      x.fillStyle=accent;x.font='bold 38px "Share Tech Mono",monospace';x.fillText(it.val,cx+30,iy+38);
+      x.fillStyle='rgba(255,255,255,0.55)';x.font='20px "Inter",monospace';x.textAlign='left';x.fillText(it.label,cx+30,iy);
+      x.fillStyle=accent;x.font='bold 38px "Inter",monospace';x.fillText(it.val,cx+30,iy+38);
     });
   };
-  drawCard(leftX,cardY,'STARTING POSITION',GLT,[
-    {label:'HASHRATE',val:fN(d.startTH,0)+' TH'},
-    {label:'DAILY REWARD',val:fU(d.startSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.startSS*30,0)},
-    {label:'GMT Value',val:fU((d.startLocked||0)*d.gp,0)},
+  drawCard(leftX,cardY,TC('STARTING POSITION'),GLT,[
+    {label:TC('HASHRATE'),val:fN(d.startTH,0)+' TH'},
+    {label:TC('DAILY REWARD'),val:fU(d.startSS,0)},
+    {label:TC('MONTHLY INCOME'),val:fU(d.startSS*DAYS_PER_MONTH,0)},
+    {label:TC('GMT Value'),val:fU((d.startLocked||0)*d.gp,0)},
   ]);
-  drawCard(rightX,cardY,'AFTER '+d.days+' DAYS',GSOFT,[
-    {label:'HASHRATE',val:fN(d.th,0)+' TH'},
-    {label:'DAILY REWARD',val:fU(d.finalSS,0)},
-    {label:'MONTHLY INCOME',val:fU(d.finalSS*30,0)},
-    {label:'GMT Value',val:fU((d.gmtLocked||0)*d.gp,0)},
+  drawCard(rightX,cardY,TC('AFTER '+d.days+' DAYS'),GSOFT,[
+    {label:TC('HASHRATE'),val:fN(d.th,0)+' TH'},
+    {label:TC('DAILY REWARD'),val:fU(d.finalSS,0)},
+    {label:TC('MONTHLY INCOME'),val:fU(d.finalSS*DAYS_PER_MONTH,0)},
+    {label:TC('GMT Value'),val:fU((d.gmtLocked||0)*d.gp,0)},
   ]);
-  x.fillStyle=GSOFT;x.shadowColor='rgba(245,166,35,0.7)';x.shadowBlur=22;
-  x.font='bold 56px "General Sans",system-ui,sans-serif';x.textAlign='center';
+  x.fillStyle=GSOFT;x.shadowColor='rgba(226,178,89,0.7)';x.shadowBlur=0;
+  x.font='bold 56px "Poppins",system-ui,sans-serif';x.textAlign='center';
   x.fillText('➤',W/2,cardY+cardH/2+10);x.shadowBlur=0;
   // stat pills (incl. ROI)
   const pillY=cardY+cardH+25;
@@ -5695,36 +5742,36 @@ function buildShareCanvas(d){
   // INVESTED + ROI are capital-deployment metrics — only show them when capital was actually
   // deployed (a Capital Planner projection). A My Setup projection invests nothing, so omit them.
   if(d.cap>0){
-    pills.push({label:'INVESTED',val:fU(d.cap,0)});
-    pills.push({label:'ROI',val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'});
+    pills.push({label:TC('INVESTED'),val:fU(d.cap,0)});
+    pills.push({label:TC('ROI'),val:(d.roiYr>=0?'+':'')+fN(d.roiYr,0)+'%'});
   }
   pills.push(
-    {label:'TH GROWTH',val:'+'+fN(d.thPct,0)+'%'},
-    {label:'REWARD GROWTH',val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
-    {label:'DISCOUNT',val:fN(d.disc,0)+'%'},
-    {label:'VIP',val:vip}
+    {label:TC('TH GROWTH'),val:'+'+fN(d.thPct,0)+'%'},
+    {label:TC('REWARD GROWTH'),val:(d.ssPct>=0?'+':'')+fN(d.ssPct,0)+'%'},
+    {label:TC('DISCOUNT'),val:fN(d.disc,0)+'%'},
+    {label:TC('VIP'),val:vip}
   );
   const pillPad=20,pillGap=12,pillH=70;
-  const pwArr=pills.map(p=>{x.font='bold 15px "Share Tech Mono",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Share Tech Mono",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
+  const pwArr=pills.map(p=>{x.font='bold 15px "Inter",monospace';const lw=x.measureText(p.label).width;x.font='bold 26px "Inter",monospace';const vw=x.measureText(p.val).width;return Math.max(lw,vw)+pillPad*2;});
   const totalW=pwArr.reduce((a,b)=>a+b,0)+pillGap*(pills.length-1);
   let pxp=(W-totalW)/2;
   pills.forEach((p,i)=>{const w=pwArr[i];
-    x.fillStyle='rgba(245,166,35,0.06)';x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.fill();
-    x.strokeStyle='rgba(245,166,35,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.stroke();
-    x.fillStyle='rgba(255,255,255,0.6)';x.font='bold 15px "Share Tech Mono",monospace';x.textAlign='center';x.fillText(p.label,pxp+w/2,pillY+26);
-    x.fillStyle=GSOFT;x.font='bold 26px "Share Tech Mono",monospace';x.fillText(p.val,pxp+w/2,pillY+58);
+    x.fillStyle='rgba(226,178,89,0.06)';x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.fill();
+    x.strokeStyle='rgba(226,178,89,0.22)';x.lineWidth=1;x.beginPath();x.roundRect(pxp,pillY,w,pillH,12);x.stroke();
+    x.fillStyle='rgba(255,255,255,0.6)';x.font='bold 15px "Inter",monospace';x.textAlign='center';x.fillText(p.label,pxp+w/2,pillY+26);
+    x.fillStyle=GSOFT;x.font='bold 26px "Inter",monospace';x.fillText(p.val,pxp+w/2,pillY+58);
     pxp+=w+pillGap;
   });
   // footer
   const footY=H-38;
   const fg=x.createLinearGradient(pad,0,W-pad,0);
-  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(245,166,35,0.4)');fg.addColorStop(1,'transparent');
+  fg.addColorStop(0,'transparent');fg.addColorStop(0.5,'rgba(226,178,89,0.4)');fg.addColorStop(1,'transparent');
   x.strokeStyle=fg;x.lineWidth=1.2;x.beginPath();x.moveTo(pad,footY-22);x.lineTo(W-pad,footY-22);x.stroke();
-  x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "General Sans",system-ui,sans-serif';x.fillText('●',pad,footY);
-  x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Space Grotesk,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
-  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Share Tech Mono",monospace';
-  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
-  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Share Tech Mono",monospace';x.fillText('use code RINGO5',W-pad,footY+1);
+  x.textAlign='left';x.fillStyle=GOLD;x.font='bold 14px "Poppins",system-ui,sans-serif';x.fillText('●',pad,footY);
+  x.fillStyle='rgba(255,255,255,0.7)';x.font='bold 20px Poppins,system-ui,sans-serif';x.fillText('gmt-optimizer.com',pad+18,footY+1);
+  x.textAlign='center';x.fillStyle='rgba(255,255,255,0.4)';x.font='15px "Inter",monospace';
+  const now=new Date().toLocaleDateString(UI_LOC||'en-US',{month:'short',day:'numeric',year:'numeric'});x.fillText(now,W/2,footY+1);
+  x.textAlign='right';x.fillStyle=GSOFT;x.font='bold 17px "Inter",monospace';x.fillText(TC('use code RINGO5'),W-pad,footY+1);
   x.textAlign='left';
   return c;
 }
@@ -5807,7 +5854,7 @@ function obGoStep(n){
   newBtn.style.display=n===0?'':'none';
   if(n===0){newBtn.classList.remove('ob-reveal');newBtn.style.opacity='1';nextBtn.classList.remove('ob-reveal');nextBtn.style.opacity='1'}
   if(n===0)nextBtn.innerHTML='Get Started<br><span style="font-size:.6rem;font-weight:400;opacity:.7">(existing setup)</span>';
-  else if(n===OB_LAST_STEP)nextBtn.textContent='Launch Dashboard';
+  else if(n===OB_LAST_STEP)nextBtn.textContent='Launch dashboard';
   else nextBtn.textContent='Next';
   if(n===OB_LAST_STEP)obPreview();
 }
@@ -5846,7 +5893,7 @@ function obPreview(){
     const gDaily=gWk/7*cptAtEff(m.gth||1,gwp);
     const totalDailyUSD=netUSD+dailyStakeUSD+ambDaily+gDaily;
     document.getElementById('obPrevDaily').textContent=fU(totalDailyUSD);
-    document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*30);
+    document.getElementById('obPrevMonthly').textContent=fU(totalDailyUSD*DAYS_PER_MONTH);
     document.getElementById('obPrevDiscount').textContent=fP(m.totD);
     document.getElementById('obPrevVip').textContent=m.vip.n;
   }
@@ -5865,7 +5912,7 @@ function obFinish(){
     if(txt)txt.textContent=prev;
     refreshMySetupAnimation();   // reveal My Setup with the numbers counting up from 0
     setTimeout(function(){document.getElementById('donateModal').style.display='';},1200);
-  },850);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function closeDonate(){
   document.getElementById('donateModal').style.display='none';
@@ -5938,7 +5985,7 @@ function submitNewUserBudget(){
     if(btn)btn.disabled=false;
     window.scrollTo(0,0);
     animatePlannerResults();   // load the results with the fresh count-up
-  },800);
+  },30);   // one frame to paint the loader; the work itself is synchronous
 }
 function resetOnboarding(){
   // Nothing gates on the old gm_onboarded flag any more, so clearing it and reloading
@@ -5975,6 +6022,9 @@ function _activateTabById(id){
   if(b)_activateTab(b,false);   // false = don't push history; we own the URL below
 }
 (function routeViewParam(){
+  // ?next=/dashboard (the header's "Set up my farm"): after the farm is saved to the account, go there.
+  try{const nx=new URLSearchParams(location.search).get('next');
+    if(nx&&/^\/[a-z0-9\/_-]*$/i.test(nx)&&nx.indexOf('//')!==0)sessionStorage.setItem('gm_after_save',nx);}catch(e){}
   const view=new URLSearchParams(location.search).get('view');
   if(!view)return;
   // Onboarding covers the page and chooses its own destination — just drop the query.
@@ -5985,6 +6035,14 @@ function _activateTabById(id){
   // Panel views each write their own pretty URL when opened, and need the right tab
   // underneath so that closing them returns where the stub implied.
   switch(view){
+    case 'login': case 'signup': case 'profile': case 'settings': {
+      // From the global header on pages that don't load account.js. Wait for it to mount, then open.
+      let n=0;(function go(){const A=window.GMTAccount;
+        if(A&&A.openLogin){ if(view==='profile'||view==='settings'){A.openProfile();} else A.openLogin(view); }
+        else if(++n<50)setTimeout(go,100);})();
+      try{history.replaceState({},'',location.pathname+location.hash);}catch(e){}
+      return;
+    }
     case 'edit':               openEditSetup(); return;
     case 'rainbow':            openRainbow();   return;
     case 'combined':           openCombined();  return;

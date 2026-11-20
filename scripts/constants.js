@@ -12,18 +12,19 @@
 */
 'use strict';
 
-// ---- calibration (recalibrate against the GoMining MCP / app periodically) ----
-const BLOCK_SUBSIDY   = 3.125;   // BTC/block (→ 1.5625 at 2028 halving)
-const ELECTRICITY_RATE= 0.05;    // $/kWh on (W/TH × TH × 24h)
-const SERVICE_RATE    = 0.0089;  // $/TH/day platform service fee
-const CONVERSION_FEE  = 0.0225;  // BTC→GMT payout skim (calibrated 2026-07-07)
-const STAKING_APR     = 18.87;   // % — GMT locked-staking APR (observed 2026-11-06)
-const MINING_MODE     = 1.09;    // % — solo mining discount (observed 2026-11-06)
-const CLICK_STREAK    = 3;       // % — daily click streak, binary once held 10 days
-const EFF_BEST        = require('../assets/pricing.js').EFF_BEST;      // W/TH — best reachable (assets/pricing.js)
-const EFF_BASE_MAX    = require('../assets/pricing.js').EFF_BASE_MAX;  // W/TH — what GoMining mints (assets/pricing.js)
+// ---- calibration: every value comes from data/config.json (via assets/pricing.js) ----
+const CFG=require('../assets/pricing.js').CONFIG;
+const BLOCK_SUBSIDY   = CFG.network.blockSubsidyBtc;
+const ELECTRICITY_RATE= CFG.fees.electricityUsdPerKwh;
+const SERVICE_RATE    = CFG.fees.serviceUsdPerThDay;
+const CONVERSION_FEE  = CFG.fees.btcToGmtConversion;
+const STAKING_APR     = CFG.rates.stakingAprPct;
+const MINING_MODE     = CFG.rates.soloMiningDiscountPct;
+const CLICK_STREAK    = CFG.rates.clickStreakPct;
+const EFF_BEST        = CFG.pricing.effBest;
+const EFF_BASE_MAX    = CFG.pricing.effBaseMax;
 const MINER_FLOOR_WTH = EFF_BEST;// network marginal miner for the no-arbitrage floor
-const COV_DAYS_PER_PCT= 18;      // 18 days of fee coverage per 1% token discount (360d = 20% cap)
+const COV_DAYS_PER_PCT= CFG.discount.coverageDaysPerPct;   // days of fee coverage per 1% token discount
 
 const HALVING_DATES   = [Date.UTC(2028,3,15),Date.UTC(2032,3,15),Date.UTC(2036,3,15),Date.UTC(2040,3,15)];
 // Difficulty grind. Paired with the RAINBOW price path below — price and difficulty are
@@ -117,7 +118,7 @@ function difficultyMultAt(t,now){
   const integral=DIFF_FLOOR*yrs+(DIFF_G0-DIFF_FLOOR)*DIFF_TAU*(1-Math.exp(-yrs/DIFF_TAU));
   return 1/Math.exp(integral);
 }
-function rewardFloorBTC(price){return price>0?(0.0012*MINER_FLOOR_WTH+0.0089)/price:0;}
+function rewardFloorBTC(price){return price>0?(ELECTRICITY_RATE*24/1000*MINER_FLOOR_WTH+SERVICE_RATE)/price:0;}
 
 module.exports = {
   BLOCK_SUBSIDY, ELECTRICITY_RATE, SERVICE_RATE, CONVERSION_FEE, STAKING_APR,
@@ -125,6 +126,6 @@ module.exports = {
   COV_DAYS_PER_PCT, HALVING_DATES, DIFF_G0, DIFF_FLOOR, DIFF_TAU,
   TH_TIERS_12W, TH_TIERS_15W, BTC_ANCHORS, FB,
   RB_FIT, RB_GEN, RB_STILL_CHEAP_OFF, RB_ACCUMULATE_OFF, rbDayOf, rbBandPrice, rbPriceAt,
-  priceAt, cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
+  CFG, priceAt, cptTier, cptAtEff, feePerTHDay, satsPerTHDay, dailyBTCperTH, feesBTC,
   subsidyMultAt, difficultyMultAt, rewardFloorBTC
 };

@@ -43,7 +43,8 @@ const BANNED = [
 
 const files = execSync('git ls-files', { cwd: ROOT, encoding: 'utf8' }).trim().split('\n')
   .filter(f => !f.startsWith('.') && /\.(html|js|json|xml|txt|md|webmanifest|css|yml|yaml)$/i.test(f))
-  .filter(f => !/^(AUDIT|URLS|SETUP|TRANSLATIONS|REVIEW|README)\.md$/i.test(f) && f !== 'scripts/offer-check.js');
+  .filter(f => !/^(AUDIT|URLS|SETUP|TRANSLATIONS|REVIEW|README)\.md$/i.test(f) && f !== 'scripts/offer-check.js'
+    && !f.startsWith('tests/golden/'));   // recorded tool output for the golden test (user-typed amounts), never served
 
 let total = 0;
 const per = {};

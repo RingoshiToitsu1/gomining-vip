@@ -1,0 +1,124 @@
+/* GMT-Optimizer global chat room, on the design tokens. Loaded by assets/chat.js wherever the room appears:
+   .gmt-dock  = console side panel (full screen on phones)
+   .popout    = the /chat window
+   .embed     = the Messages tab inside the co-pilot widget                                          */
+
+.gmt-chat { box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; color: var(--color-text);
+  font-family: var(--font-body); background: var(--color-bg); }
+.gmt-chat *, .gmt-chat *::before, .gmt-chat *::after { box-sizing: border-box; }
+.gmt-chat.gmt-dock { position: fixed; top: 0; right: 0; height: 100vh; height: 100dvh; width: 380px; max-width: 100vw; z-index: 500;
+  background: var(--color-surface-1); border-left: 1px solid var(--color-border); box-shadow: var(--shadow-pop);
+  animation: gmtChatIn var(--duration-base) var(--ease-standard); }
+@keyframes gmtChatIn { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.gmt-chat.popout { position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; }
+.gmt-chat.embed { position: relative; flex: 1; min-height: 0; height: 100%; background: transparent; }
+
+.gmt-chat-body { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.gmt-chat.popout .gmt-chat-body { max-width: 760px; width: 100%; margin: 0 auto; border-inline: 1px solid var(--color-border); }
+
+/* head */
+.gmt-chat-head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border); background: var(--color-surface-1); }
+.gmt-chat.embed .gmt-chat-head { display: none; }   /* the widget's tab bar is the header */
+.gmt-chat-av { flex: none; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 15px; background: rgb(var(--color-gold-rgb) / .12); border: 1px solid rgb(var(--color-gold-rgb) / .35); }
+.gmt-chat-ttl { flex: 1; min-width: 0; }
+.gmt-chat-head .t { font-family: var(--font-ui); font-weight: var(--font-weight-semibold); font-size: var(--font-size-base); color: var(--color-text); }
+.gmt-chat-head .o { font-size: var(--font-size-xs); color: var(--color-success); font-variant-numeric: tabular-nums; }
+.gmt-chat-head .o::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 6px; vertical-align: 1px; }
+.gmt-chat-ctl { display: flex; align-items: center; gap: var(--space-1); }
+.gmt-chat-ctl .ci { background: none; border: 0; color: var(--color-text-2); font-size: 18px; line-height: 1; cursor: pointer;
+  width: 34px; height: 34px; border-radius: var(--radius-control); display: inline-flex; align-items: center; justify-content: center; }
+.gmt-chat-ctl .ci:hover { color: var(--color-text); background: var(--color-surface-2); }
+.gmt-chat-ctl .ci:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* messages */
+.gmt-chat-list { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2);
+  scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+.gmt-chat-list:empty::after { content: attr(data-empty); margin: auto; color: var(--color-text-3); font-size: var(--font-size-sm); text-align: center; }
+.gmt-msg { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--font-size-sm); line-height: 1.45; color: var(--color-text-2);
+  overflow-wrap: anywhere; padding: 4px 6px; border-radius: 8px; }
+.gmt-msg:hover { background: rgb(var(--color-white-rgb) / .03); }
+.gmt-msg-txt { min-width: 0; }
+.gmt-msg-av { width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; margin-top: 1px; }
+.gmt-msg-mono { display: inline-flex; align-items: center; justify-content: center; color: var(--color-bg); font-family: var(--font-ui);
+  font-size: 12px; font-weight: var(--font-weight-semibold); }
+.gmt-msg .u { font-family: var(--font-ui); font-weight: var(--font-weight-semibold); cursor: pointer; margin-right: 2px; }
+.gmt-msg .u:hover { text-decoration: underline; }
+.gmt-msg .mod { opacity: 0; margin-left: 6px; font-size: 12px; cursor: pointer; }
+.gmt-msg:hover .mod, .gmt-msg .mod:focus { opacity: .85; }
+.gmt-mention { color: var(--color-gold-300); font-weight: var(--font-weight-semibold); }
+.gmt-mention-me { background: rgb(var(--color-gold-rgb) / .2); border-radius: 4px; padding: 0 3px; }
+.gmt-msg.mentioned { background: rgb(var(--color-gold-rgb) / .08); box-shadow: inset 2px 0 0 var(--color-gold); }
+
+/* composer */
+.gmt-chat-foot { position: relative; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); background: var(--color-surface-1); }
+.gmt-chat.embed .gmt-chat-foot { background: transparent; }
+.gmt-chat-row { display: flex; gap: var(--space-2); align-items: stretch; }
+.gmt-chat-foot textarea { flex: 1; min-width: 0; width: 100%; resize: none; height: 42px; padding: 10px 12px; font: inherit; font-size: var(--font-size-sm);
+  color: var(--color-text); background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-control); }
+.gmt-chat-foot textarea:focus { outline: none; border-color: rgb(var(--color-gold-rgb) / .6); box-shadow: var(--focus-ring); }
+.gmt-chat-send { flex: none; padding: 0 var(--space-4); border: 0; border-radius: var(--radius-control); cursor: pointer;
+  font: var(--font-weight-semibold) var(--font-size-sm) var(--font-ui); color: var(--color-on-gold); background: var(--color-gold-gradient); }
+.gmt-chat-send:hover { filter: brightness(1.06); }
+.gmt-chat-send:focus-visible, .gmt-chat-login:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.gmt-chat-login { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 42px; border-radius: var(--radius-control);
+  font: var(--font-weight-semibold) var(--font-size-sm) var(--font-ui); color: var(--color-text); text-decoration: none;
+  background: var(--color-surface-2); border: 1px solid var(--color-border-strong); }
+.gmt-chat-login:hover { border-color: rgb(var(--color-gold-rgb) / .55); color: var(--color-gold-300); }
+.gmt-flash { font-size: var(--font-size-xs); color: var(--color-warning); min-height: 1em; margin-top: 4px; }
+.gmt-flash:empty { min-height: 0; margin: 0; }
+
+/* @mention autocomplete */
+.gmt-mention-ac { position: absolute; left: var(--space-3); right: var(--space-3); bottom: calc(100% - 6px); background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong); border-radius: var(--radius-control); box-shadow: var(--shadow-pop); overflow: hidden; z-index: 3; }
+.gmt-ac-item { padding: 8px 12px; font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--color-text); cursor: pointer; white-space: nowrap; }
+.gmt-ac-item.sel, .gmt-ac-item:hover { background: rgb(var(--color-gold-rgb) / .16); color: var(--color-gold-300); }
+
+/* the console header chip pulses while a mention waits */
+#gmtOnline.mention-alert { background: rgb(var(--color-gold-rgb) / .16); border-color: var(--color-gold); }   /* steady highlight, no pulse */
+
+/* user card */
+.gmt-uc { position: fixed; width: min(300px, 92vw); z-index: 10060; background: var(--color-surface-1); border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-pop); overflow: hidden; display: none; color: var(--color-text); font-family: var(--font-body); }
+.gmt-uc .uc-x { position: absolute; top: 8px; right: 8px; z-index: 2; width: 26px; height: 26px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgb(var(--color-black-rgb) / .45); color: var(--color-text); font-size: 16px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.uc-loading { color: var(--color-text-3); font-size: var(--font-size-sm); text-align: center; padding: var(--space-5); }
+.uc-banner { height: 56px; }
+.uc-head { display: flex; align-items: flex-end; gap: var(--space-3); padding: 0 var(--space-4); margin-top: -26px; }
+.uc-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; border: 3px solid var(--color-surface-1); background: var(--color-surface-2); }
+.uc-mono { display: inline-flex; align-items: center; justify-content: center; color: var(--color-bg); font-family: var(--font-ui); font-size: 22px; font-weight: var(--font-weight-semibold); }
+.uc-idwrap { padding-bottom: 2px; min-width: 0; }
+.uc-name { font-family: var(--font-ui); font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.uc-user { font-size: var(--font-size-xs); color: var(--color-text-3); }
+.uc-role { font-size: 10px;   padding: 2px 6px; border-radius: 6px; font-weight: var(--font-weight-semibold);
+  color: var(--color-on-gold); background: var(--color-gold); }
+.uc-role-mod { color: var(--color-gold-300); background: rgb(var(--color-gold-rgb) / .14); border: 1px solid rgb(var(--color-gold-rgb) / .35); }
+.uc-bio { font-size: var(--font-size-sm); color: var(--color-text-2); line-height: 1.5; margin: var(--space-3) var(--space-4) 0; }
+.uc-info { padding: var(--space-3) var(--space-4) var(--space-4); font-size: var(--font-size-sm); color: var(--color-text-2); display: flex; flex-direction: column; gap: 6px; }
+.uc-info b { color: var(--color-text); font-variant-numeric: tabular-nums; }
+.uc-ic { display: inline-block; width: 1.3em; text-align: center; }
+.uc-actions { padding: 0 var(--space-4) var(--space-4); text-align: center; }
+.gmt-uc .uc-ban { background: none; cursor: pointer; color: var(--color-error); border: 1px solid rgb(var(--color-error-rgb) / .45);
+  border-radius: var(--radius-control); padding: 8px 14px; font: var(--font-weight-semibold) var(--font-size-sm) var(--font-ui); }
+
+/* phones: the console dock opens full screen (chat.js fits it above the keyboard) */
+@media (max-width: 700px) {
+  .gmt-chat.gmt-dock { left: 0; width: 100%; border-left: 0; box-shadow: none; animation: gmtChatUp var(--duration-base) var(--ease-standard); }
+  @keyframes gmtChatUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  html.gmt-chat-open, html.gmt-chat-open body { overflow: hidden; }
+  html.gmt-chat-open .gc-fab { display: none; }
+  .gmt-chat-ctl [data-pop] { display: none; }
+  .gmt-chat-ctl .ci { width: 42px; height: 42px; font-size: 22px; }
+  .gmt-chat-foot textarea { font-size: 16px; height: 46px; }   /* 16px stops iOS zooming in */
+  .gmt-chat-send, .gmt-chat-login { min-height: 46px; }
+  .gmt-chat.gmt-dock .gmt-chat-foot, .gmt-chat.popout .gmt-chat-foot { padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom)); }
+  .gmt-chat.popout .gmt-chat-body { border-inline: 0; }
+}
+.gmt-chat-av img { width: 20px; height: 20px; object-fit: contain; }
+/* /chat as a normal page: a quiet Back link at the start of the chat header */
+.gmt-chat-back{display:inline-flex;align-items:center;gap:6px;margin-right:var(--space-3);padding:var(--space-2) var(--space-3) var(--space-2) 0;
+  font:var(--font-weight-medium) var(--font-size-sm)/1 var(--font-ui);color:var(--color-text-2);text-decoration:none;white-space:nowrap;
+  border-right:1px solid var(--color-border);transition:color 150ms ease}
+.gmt-chat-back:hover{color:var(--color-text)}
+

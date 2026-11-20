@@ -1,4 +1,4 @@
-/* GMT Optimizer — "4,000 Bitcoin futures" inside the Growth Projection.
+/* GMT-Optimizer — "4,000 Bitcoin futures" inside the Growth Projection.
    BTC price paths that wander around the Power-Law fit the way BTC has since 2010: weekly
    deviations from the fit follow an AR(1) whose speed (phi) and shocks (bootstrapped residuals)
    are measured from history, reverting toward RB_PROJ_BAND ("Still cheap") — the same band the
@@ -55,7 +55,7 @@
     host.innerHTML=`
       <div class="fx-wrap">
         <div class="fx-head">
-          <div><div class="fx-title">${PATHS.toLocaleString()} Bitcoin futures</div>
+          <div><div class="fx-title">${PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} Bitcoin futures</div>
           <div class="fx-sub" id="fxSub">Pick how far ahead to project</div></div>
           <div class="fx-chips" role="tablist" aria-label="Horizon">${YEARS.map(y=>`<button type="button" class="fx-chip${y===yrs?' on':''}" data-y="${y}" role="tab" aria-selected="${y===yrs}">${y}Y</button>`).join('')}</div>
         </div>
@@ -65,15 +65,15 @@
         <div class="fx-when" id="fxWhen"></div>
         <div class="hero-grid fx-grid">
           <div class="hero-card green-accent"><span class="corners"></span>
-            <div class="hero-label">Daily Net Profit</div>
+            <div class="hero-label">Daily net profit</div>
             <div class="hero-val-row fx-row"><div class="hero-val green" id="fxDay">--</div><span class="hero-btc" id="fxDayBtc"></span></div>
             <div class="hero-sub" id="fxDaySub">--</div></div>
           <div class="hero-card cyan-accent"><span class="corners"></span>
-            <div class="hero-label">Monthly Earnings</div>
+            <div class="hero-label">Monthly earnings</div>
             <div class="hero-val-row fx-row"><div class="hero-val cyan" id="fxMo">--</div><span class="hero-btc" id="fxMoBtc"></span></div>
             <div class="hero-sub" id="fxMoSub">--</div></div>
           <div class="hero-card purple-accent"><span class="corners"></span>
-            <div class="hero-label">Yearly Earnings</div>
+            <div class="hero-label">Yearly earnings</div>
             <div class="hero-val-row fx-row"><div class="hero-val purple" id="fxYr">--</div><span class="hero-btc" id="fxYrBtc"></span></div>
             <div class="hero-sub" id="fxYrSub">--</div></div>
         </div>
@@ -131,19 +131,19 @@
   }
 
   // ---- futures loader: the real simulated paths for this horizon streak out of today's price,
-  // a counter races to 4,000, then the high / low / avg lines sweep across. Only after that does
-  // the (synchronous, multi-second for 10Y) reinvesting run start, so the animation never stalls
-  // mid-flight; its last step ticks off when the run lands ('gm:proj').
+  // a counter races to 4,000, then the high / low / avg lines sweep across (~1 s). The reinvesting run
+  // starts at the same moment and works in time slices, so neither waits for the other; the last step
+  // ticks off when the run lands ('gm:proj').
   function loader(host,id){
     const old=host.querySelector('.fx-load');if(old)old.remove();
     const Y=yrs,Wn=Y*52,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const el=document.createElement('div');el.className='fx-load';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
     el.innerHTML=`<div class="fx-lk">${Y} Year Forecast</div>
-      <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString()} Bitcoin futures</small></div>
+      <div class="fx-lc"><span id="fxLN">0</span><small>/ ${PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} Bitcoin futures</small></div>
       <div class="fx-lplot"><canvas class="fx-lcv"></canvas><canvas class="fx-lcv fx-ltop"></canvas></div>
       <div class="fx-lbar"><i></i></div>
       <ul class="fx-lsteps">
-        <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString()} weeks</em></li>
+        <li><b></b><span>Simulating every week of ${Y} year${Y>1?'s':''}</span><em>${Wn.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')} weeks</em></li>
         <li><b></b><span>Finding the high, avg and low path</span><em>${fU(sim.p50[Wn-1],0)} avg</em></li>
         <li><b></b><span>Reinvesting your rewards each week</span><em></em></li>
       </ul>`;
@@ -161,17 +161,24 @@
     const N=Math.min(PATHS,cssW<500?140:240),STEP=Math.max(1,Math.ceil(Wn/120)),W=sim.W,med=sim.p50[Wn-1];
     // each drawn path: start time and speed, staggered so they burst out in waves
     const P=[];for(let k=0;k<N;k++){const p=(k*9973)%PATHS;P.push({p,s:Math.pow(k/N,1.35)*650,d:280+((k*37)%200),f:0,b:-1,up:sim.all[p*W+Wn-1]>=med});}
-    const T1=reduce?0:1000, T2=reduce?0:500, t0=performance.now();   // paths, then the three lines
-    let phase=0,gone=false;
+    const T1=reduce?0:700, T2=reduce?0:350, t0=performance.now();   // paths, then the three lines (~1 s)
+    let phase=0,gone=false,projDone=false,closed=false;
+    // The reinvesting run starts now, alongside the animation: it runs in time slices (app.js runSetupProjection),
+    // so the paths keep moving while it works and the loader closes as soon as both are done.
+    const finish=()=>{if(closed||ran!==id)return;closed=true;
+      const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
+      bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),250);},120);};
+    addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;projDone=true;if(phase===3)finish();});
+    setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),300);}},20000);   // never strand it
+    setTimeout(runSetupProjection,0);
     const at=(arr,k)=>arr[Math.min(Wn-1,k)];
     function path(ctx,p,from,to){ctx.moveTo(from<0?x0:X(from),from<0?y0:Yv(sim.all[p*W+from]));
       for(let w=Math.max(0,from)+STEP;w<=to;w+=STEP)ctx.lineTo(X(w),Yv(sim.all[p*W+w]));
       if((to-Math.max(0,from))%STEP)ctx.lineTo(X(to),Yv(sim.all[p*W+to]));}   // caller strokes: one stroke per colour per frame
     // glow = a wide, faint stroke under the line (shadowBlur on a moving path is what made this lag)
     function band(arr,col,glow,width,k,dash){const ln=new Path2D();ln.moveTo(x0,y0);for(let w=0;w<=k;w+=STEP)ln.lineTo(X(w),Yv(arr[w]));ln.lineTo(X(k),Yv(arr[k]));
-      g.globalAlpha=.22;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;
       g.strokeStyle=col;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);
-      const hx=X(k),hy=Yv(arr[k]);g.fillStyle=glow;g.globalAlpha=.3;g.beginPath();g.arc(hx,hy,width*4,0,7);g.fill();g.globalAlpha=1;
+      const hx=X(k),hy=Yv(arr[k]);
       g.fillStyle=col;g.beginPath();g.arc(hx,hy,width+1.5,0,7);g.fill();}
     function frame(now){
       if(gone||ran!==id||!el.isConnected)return;
@@ -191,29 +198,25 @@
       tg.strokeStyle='rgba(255,190,80,.16)';tg.stroke(segUp);tg.strokeStyle='rgba(255,110,70,.14)';tg.stroke(segDn);
       g.fillStyle='rgba(255,225,150,.95)';g.fill(spUp);g.fillStyle='rgba(255,155,115,.9)';g.fill(spDn);
       // origin pulse
-      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(255,198,90,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
+      const pr=3+Math.sin(t/140)*1.2;g.fillStyle='rgba(247,216,138,.25)';g.beginPath();g.arc(x0,y0,pr*3,0,7);g.fill();
+      g.fillStyle=CC('gold-300');g.beginPath();g.arc(x0,y0,pr,0,7);g.fill();
       const pk=Math.min(1,t/Math.max(1,T1));
-      num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString();
+      num.textContent=Math.round(PATHS*(1-Math.pow(1-pk,2))).toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US');
       // the three lines sweep in once the paths are out
       const lk=T2?Math.max(0,Math.min(1,(t-T1+250)/T2)):1;
       if(lk>0){const k=Math.max(0,Math.floor((1-Math.pow(1-lk,3))*(Wn-1)));
         band(sim.p90,'rgba(127,211,122,.95)','rgba(110,220,110,.9)',1.5,k,[3,3]);
-        band(sim.p10,'rgba(255,128,128,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
-        band(sim.p50,'#FFC65A','rgba(255,190,70,1)',2.6,k);
-        if(lk>=1){g.font='700 12px ui-monospace,monospace';g.textAlign='right';g.textBaseline='bottom';g.fillStyle='#FFC65A';g.shadowColor='#FFC65A';g.shadowBlur=10;
+        band(sim.p10,'rgba(239,68,68,.95)','rgba(255,110,110,.9)',1.5,k,[3,3]);
+        band(sim.p50,CC('gold-300'),'rgba(255,190,70,1)',2.6,k);
+        if(lk>=1){g.font='700 12px Inter,system-ui,sans-serif';g.textAlign='right';g.textBaseline='bottom';g.fillStyle=CC('gold-300');g.shadowColor=CC('gold-300');g.shadowBlur=0;
           g.fillText(fU(at(sim.p50,Wn-1),0),cssW-pad.r,Yv(at(sim.p50,Wn-1))-6);g.shadowBlur=0;g.textAlign='left';}}
       const prog=Math.min(1,t/(T1+T2));bar.style.transform=`scaleX(${0.08+prog*0.8})`;
       if(phase===0){rows[0].classList.add('on');phase=1;}
       if(phase===1&&t>=T1*0.75){rows[0].className='ok';rows[1].classList.add('on');phase=2;}
       if(phase===2&&t>=T1+T2){rows[1].className='ok';rows[2].classList.add('on');phase=3;
-        num.textContent=PATHS.toLocaleString();
-        // now the heavy, synchronous run — the finished frame holds still while it works
-        addEventListener('gm:proj',function f(){removeEventListener('gm:proj',f);if(ran!==id)return;
-          const E=window._spEnd;rows[2].querySelector('em').textContent=E?fN(E.th,E.th<100?1:0)+' TH':'done';rows[2].className='ok';
-          bar.style.transform='scaleX(1)';setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),500);},380);});
-        setTimeout(()=>{if(el.isConnected){el.classList.add('out');setTimeout(()=>el.remove(),500);}},20000);   // never strand it
-        setTimeout(runSetupProjection,60);return;}
+        num.textContent=PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US');
+        if(projDone)finish();   // otherwise gm:proj closes it the moment the run lands
+        return;}
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
@@ -262,23 +265,25 @@
     const X=w=>pad.l+(w+1)/Wn*pw, L0=Math.log(lo),L1=Math.log(hi);
     const Y=v=>pad.t+(1-(Math.log(Math.min(hi,Math.max(lo,v)))-L0)/(L1-L0))*ph;
     const x0=pad.l, y0=Y(sim.bp);
-    const short=v=>v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
+    // Translated pages: compact money in the page locale via the chart kit; English keeps its exact labels.
+    const _UI=window.GMT_UI, _ck=_UI&&window.GMTCharts;
+    const short=v=>_ck?new Intl.NumberFormat(GMTCharts.locale(),{style:'currency',currency:'USD',notation:'compact',maximumFractionDigits:v>=1e6?1:0}).format(v):v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
     const endYs=[p10,p50,p90].map(a=>Y(a[Wn-1]));
     function axes(){
-      g.font='11px ui-monospace,monospace';g.textBaseline='middle';
+      g.font='11px Inter,system-ui,sans-serif';g.textBaseline='middle';
       for(let e=Math.floor(Math.log10(lo));e<=Math.ceil(Math.log10(hi));e++)for(const m of [1,2,5]){const v=m*Math.pow(10,e);if(v<lo||v>hi)continue;const y=Y(v);
         g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;g.beginPath();g.moveTo(pad.l,y);g.lineTo(pad.l+pw,y);g.stroke();
         if(endYs.some(z=>Math.abs(z-y)<13))continue;
-        g.fillStyle='rgba(235,226,210,.38)';g.fillText(short(v),pad.l+pw+6,y);}
-      g.textBaseline='alphabetic';g.fillStyle='rgba(235,226,210,.38)';
-      const now$=fU(sim.bp,0);g.font='600 11px ui-monospace,monospace';const nowW=g.measureText(now$).width;g.font='11px ui-monospace,monospace';
-      const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText('Yr '+k,x,cssH-6);}
-      g.fillStyle='#FFC65A';g.font='600 11px ui-monospace,monospace';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
+        g.fillStyle='rgba(255,255,255,.38)';g.fillText(short(v),pad.l+pw+6,y);}
+      g.textBaseline='alphabetic';g.fillStyle='rgba(255,255,255,.38)';
+      const now$=fU(sim.bp,0);g.font='600 11px Inter,system-ui,sans-serif';const nowW=g.measureText(now$).width;g.font='11px Inter,system-ui,sans-serif';
+      const step=yrs>5?2:1;for(let k=step;k<=yrs;k+=step){const x=Math.min(X(k*52-1)-12,pad.l+pw-30);if(x<pad.l+nowW+8)continue;g.fillText(_UI?_UI.t('Yr {0}',k):'Yr '+k,x,cssH-6);}
+      g.fillStyle=CC('gold-300');g.font='600 11px Inter,system-ui,sans-serif';g.fillText(now$,pad.l,cssH-6);   // today's price, where the paths start
     }
     // glow: a wide, faint stroke in the line's own colour under it (shadowBlur re-run every frame lagged)
     function line(arr,stroke,width,dash,upto,glow){const ln=new Path2D();ln.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)ln.lineTo(X(w),Y(arr[w]));
-      if(glow){g.globalAlpha=.2;g.strokeStyle=glow;g.lineWidth=width*5;g.stroke(ln);g.globalAlpha=1;}
+      /* no glow under the line (chart kit: flat lines) */
       g.strokeStyle=stroke;g.lineWidth=width;g.setLineDash(dash||[]);g.stroke(ln);g.setLineDash([]);}
     const PSTEP=Math.max(1,Math.ceil(Wn/150));   // background paths: ~150 points each is plenty at this size
     geo={X,Y,Wn,pad,pw,cssW,x0,y0};hover(null);
@@ -288,7 +293,7 @@
     function frame(now){
       const k=DUR?Math.min(1,(now-t0)/DUR):1, ease=1-Math.pow(1-k,3), upto=Math.max(0,Math.min(Wn-1,Math.floor(ease*(Wn-1))));
       g.clearRect(0,0,cssW,cssH);axes();
-      g.fillStyle='rgba(245,166,35,.10)';g.beginPath();g.moveTo(x0,y0);
+      g.fillStyle='rgba(226,178,89,.10)';g.beginPath();g.moveTo(x0,y0);
       for(let w=0;w<=upto;w++)g.lineTo(X(w),Y(p90[w]));for(let w=upto;w>=0;w--)g.lineTo(X(w),Y(p10[w]));g.lineTo(x0,y0);g.fill();
       g.lineWidth=1;
       const pUp=new Path2D(),pDn=new Path2D();   // batched by colour: two strokes, not 260
@@ -296,15 +301,15 @@
         const pp=all[p*W+Wn-1]>=p50[Wn-1]?pUp:pDn;
         pp.moveTo(x0,y0);for(let w=0;w<=upto;w+=PSTEP)pp.lineTo(X(w),Y(all[p*W+w]));pp.lineTo(X(upto),Y(all[p*W+upto]));
       }
-      g.strokeStyle='rgba(255,198,90,.085)';g.stroke(pUp);g.strokeStyle='rgba(255,120,80,.07)';g.stroke(pDn);
-      line(lane,'rgba(235,226,210,.55)',1.2,[4,4],upto);
-      line(p10,'rgba(255,128,128,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
+      g.strokeStyle='rgba(247,216,138,.085)';g.stroke(pUp);g.strokeStyle='rgba(255,120,80,.07)';g.stroke(pDn);
+      line(lane,'rgba(255,255,255,.55)',1.2,[4,4],upto);
+      line(p10,'rgba(239,68,68,.95)',1.6,[2,3],upto,'rgba(255,110,110,.8)');
       line(p90,'rgba(127,211,122,.95)',1.6,[2,3],upto,'rgba(110,220,110,.8)');
-      line(p50,'#FFC65A',2.6,null,upto,'rgba(255,190,70,.95)');
+      line(p50,CC('gold-300'),2.6,null,upto,'rgba(255,190,70,.95)');
       g.fillStyle='rgba(255,190,70,.25)';g.beginPath();g.arc(X(upto),Y(p50[upto]),11,0,7);g.fill();
-      g.fillStyle='#FFC65A';g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
-      if(k>=1){g.font='600 11px ui-monospace,monospace';g.textBaseline='middle';
-        [[p90,'#7fd37a'],[p50,'#FFC65A'],[p10,'#ff8080']].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
+      g.fillStyle=CC('gold-300');g.beginPath();g.arc(X(upto),Y(p50[upto]),4,0,7);g.fill();g.beginPath();g.arc(x0,y0,3.5,0,7);g.fill();
+      if(k>=1){g.font='600 11px Inter,system-ui,sans-serif';g.textBaseline='middle';
+        [[p90,CC('success')],[p50,CC('gold-300')],[p10,CC('error')]].forEach(([a,c])=>{g.fillStyle=c;g.fillText(short(a[Wn-1]),pad.l+pw+6,Math.max(pad.t+6,Math.min(cssH-pad.b,Y(a[Wn-1]))));});
         anim=null;return;}
       anim=requestAnimationFrame(frame);
     }
@@ -317,7 +322,7 @@
     if(sim){project();return;}
     if(building)return;
     if(!S.loaded||!(S.btcPrice>0)){setTimeout(show,700);return;}
-    building=true;$f('fxWhen').textContent='Simulating '+PATHS.toLocaleString()+' futures…';
+    building=true;$f('fxWhen').textContent='Simulating '+PATHS.toLocaleString(typeof UI_LOC!=='undefined'&&UI_LOC?UI_LOC:'en-US')+' futures…';
     ensureRainbowFit(()=>{
       if(!_rbFit||!_rainbowData||_rainbowData.length<100){building=false;$f('fxWhen').textContent='Couldn\'t load Bitcoin\'s price history, which the futures are built on.';return;}
       setTimeout(()=>{try{sim=simulate();project();}catch(e){console.error('[futures]',e);$f('fxWhen').textContent='Something went wrong simulating the futures.';}finally{building=false;}},30);

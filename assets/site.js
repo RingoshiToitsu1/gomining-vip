@@ -1,207 +1,21 @@
-/* GMT Optimizer — shared site chrome for content pages.
-   Injects the galaxy backdrop, fixed nav, footer, and back-to-top, then runs
-   the galaxy + nav-shrink. Content pages only need content.css + this file. */
+/* GMT-Optimizer — content-page extras.
+   The header and footer come from the global chrome (assets/site-chrome.js, linked in each page's <head>).
+   This file only adds the back-to-top button and loads the co-pilot.
+   data-chrome="bar" (the standalone tools, e.g. /quote, /statement) still means: no extras that would
+   fight the tool's own layout or print view. */
 (function(){
+  var me=document.currentScript;
+  var BAR=!!(me&&me.getAttribute('data-chrome')==='bar');
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var LOGO='/gmt-optimizer-logo.svg?v=2';
-  /* data-chrome="bar" (the standalone tools, with assets/topbar.css): ticker + nav + menu only —
-     no backdrop, footer or page effects, which would fight the tool's own styling and its print view. */
-  var BAR=!!(document.currentScript&&document.currentScript.getAttribute('data-chrome')==='bar');
-  if(BAR)document.body.classList.add('has-bar');
-
-  /* ---- backdrop ---- */
-  if(!BAR){
-  var bg=document.createElement('div');
-  bg.innerHTML='<div class="world" aria-hidden="true"><span class="orb orb-1"></span><span class="orb orb-2"></span><span class="orb orb-3"></span>'+
-    '<div class="grid-floor"></div><span class="beam beam-1"></span><span class="beam beam-2"></span><span class="beam beam-3"></span><canvas id="stars"></canvas></div><div class="vignette" aria-hidden="true"></div>';
-  while(bg.firstChild) document.body.insertBefore(bg.firstChild, document.body.firstChild);
-  }
-
-  /* ---- top bar: the console's own chrome, so every tool and guide wears the same head ----
-     A header row (brand, the page's name via menu.js, Launch Console, the menu button) over a
-     live strip of the same chips the console shows: BTC, GMT, sats/TH/day and when they last
-     refreshed. .header-inner is what menu.js hooks, and the chip values are filled by the same
-     fetch that used to drive the ticker. */
-  var nav=document.createElement('div');
-  nav.className='gmbar';
-  nav.innerHTML=
-    '<div class="gmbar-head"><div class="header-inner gmbar-inner">'+
-      '<a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer<span class="v">v2</span></a>'+
-      '<span class="gmbar-gap"></span>'+
-      '<a href="/console" class="nav-cta">Launch Console</a>'+
-    '</div></div>'+
-    '<div class="gmbar-sub"><div class="live-bar">'+
-      '<a class="live-chip live-chip-btn" href="/bitcoin" title="Open the live Bitcoin chart"><img src="/btc36.png" alt="BTC"><span class="val" data-tk="btc">--</span></a>'+
-      '<a class="live-chip live-chip-btn" href="/gmt" title="Open the live GoMining Token chart"><img src="/gmt36.png" alt="GMT"><span class="val" data-tk="gmt">--</span></a>'+
-      '<span class="live-chip"><span class="lbl">sats/TH/day</span><span class="val" data-tk="sats">--</span></span>'+
-      '<span class="live-chip"><span class="live-dot"></span><span class="lbl">Updated</span><span class="val" id="gmbUpdated">--</span></span>'+
-    '</div></div>';
-  document.body.insertBefore(nav, document.body.firstChild);
-  document.body.classList.add('has-bar');
-  // The bar is fixed, so the page needs exactly its height free at the top. A fixed padding
-  // (100px on phones) let the two-line live strip cover page titles. Measured at full size only —
-  // the scrolled "shrunk" bar is shorter, and re-measuring then would make the page jump.
-  (function(){
-    function pad(){ if(!nav.classList.contains('shrunk')&&nav.offsetHeight>0) document.body.style.paddingTop=nav.offsetHeight+'px'; }
-    pad(); addEventListener('load',pad); addEventListener('resize',pad);
-    if(window.ResizeObserver) new ResizeObserver(pad).observe(nav);
-  })();
-  /* ---- hamburger menu (shared with the landing, console, statement and quote) ---- */
-  var menuJs=document.createElement('script');menuJs.src='/assets/menu.js?v=14';document.body.appendChild(menuJs);
-
-  /* ---- live values for the strip above (same sources the ticker used) ---- */
-  (function(){
-    var BS=3.125;
-    function set(k,v){document.querySelectorAll('[data-tk="'+k+'"]').forEach(function(el){el.textContent=v;});}
-    function j(u){return fetch(u).then(function(r){if(!r.ok)throw 0;return r.json();});}
-    async function btcPrice(){
-      try{var r=await j('https://api.coinpaprika.com/v1/tickers/btc-bitcoin');var p=+r.quotes.USD.price;if(p>0)return p;}catch(e){}
-      try{var r=await j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');var p=+r.bitcoin.usd;if(p>0)return p;}catch(e){}
-      try{var r=await j('https://mempool.space/api/v1/prices');var p=+r.USD;if(p>0)return p;}catch(e){}
-      return 0;
-    }
-    async function gmtPrice(){
-      try{var r=await j('https://api.coinpaprika.com/v1/tickers/gomining-gomining-token');var p=+r.quotes.USD.price;if(p>0)return p;}catch(e){}
-      try{var r=await j('https://api.coingecko.com/api/v3/simple/price?ids=gmt-token&vs_currencies=usd');var p=+r['gmt-token'].usd;if(p>0)return p;}catch(e){}
-      return 0;
-    }
-    (async function(){
-      try{
-        var res=await Promise.all([btcPrice(),gmtPrice(),j('https://mempool.space/api/v1/mining/hashrate/3d').catch(function(){return null;})]);
-        var btc=res[0],gmt=res[1],h=res[2];
-        if(btc>0)set('btc','$'+Math.round(btc).toLocaleString());
-        if(gmt>0)set('gmt','$'+gmt.toFixed(3));
-        if(h&&h.currentDifficulty){
-          var diff=h.currentDifficulty;set('diff',(diff/1e12).toFixed(2)+' T');
-          var sats=((1e12*86400*BS)/(diff*Math.pow(2,32)))*1e8;set('sats',Math.round(sats));
-          if(btc>0)set('hp','$'+((sats/1e8)*1000*btc).toFixed(1)+' / PH/day');
-        }
-        // "Updated 12s ago", ticking like the console's clock
-        var at=Date.now(), el=document.getElementById('gmbUpdated');
-        if(el){
-          (function tick(){
-            var s=Math.round((Date.now()-at)/1000);
-            el.textContent=s<60?s+'s ago':(s<3600?Math.round(s/60)+'m ago':Math.round(s/3600)+'h ago');
-            setTimeout(tick,s<60?5000:30000);
-          })();
-        }
-      }catch(e){}
-    })();
-  })();
-
-  if(BAR){
-    addEventListener('scroll',function(){nav.classList.toggle('shrunk',(scrollY||document.documentElement.scrollTop)>40);},{passive:true});
-    return;
-  }
-  addEventListener('scroll',function(){nav.classList.toggle('shrunk',(scrollY||document.documentElement.scrollTop)>40);},{passive:true});
-
-  /* ---- footer ---- */
-  var foot=document.createElement('footer');
-  foot.className='site-foot';
-  foot.innerHTML='<div class="fwrap"><div class="fbrand"><a href="/" class="brand"><img src="'+LOGO+'" alt="">GMT Optimizer</a>'+
-    '<p>The free, ad-free GoMining profit optimizer. Live network data, honest projections, no ads &mdash; ever.</p></div>'+
-    '<div class="fcols">'+
-      '<div><h4>Tool</h4><a href="/console">Console</a><a href="/planner">Capital Planner</a><a href="/projection">Growth Projection</a><a href="/gomining-marketplace-checker">Marketplace checker</a></div>'+
-      '<div><h4>Learn</h4><a href="/how-gomining-works.html">How GoMining works</a><a href="/is-gomining-worth-it.html">Is it worth it?</a><a href="/gomining-roi-calculator.html">ROI calculator</a><a href="/gomining-discount-explained.html">Discount explained</a></div>'+
-      '<div><h4>Legal</h4><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a></div>'+
-    '</div></div>'+
-    '<div class="foot-donate">'+
-      '<div class="fd-offer"><span class="fd-new">New to GoMining?</span> Use code <b class="fd-code" data-copy="RINGO5" role="button" tabindex="0" title="Click to copy">RINGO5</b> to unlock three sign-up bonuses &mdash; <a href="/claim">see your RINGO5 bonuses&nbsp;&rarr;</a></div>'+
-      '<div class="fd-tip">GMT Optimizer is free and ad-free forever. If it helps, consider donating:</div>'+
-      '<div class="fd-addrs">'+
-        '<button type="button" class="fd-addr" data-copy="3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE"><span class="fd-tag">BTC</span><span class="fd-val">3QfKwNdXmeXAYNZ8ndKGYSzfGmbqfxxzmE</span></button>'+
-        '<button type="button" class="fd-addr" data-copy="0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1"><span class="fd-tag">GMT · ETH/BNB</span><span class="fd-val">0xFa15fBf74E106629c7E1D57e604aE1d5C5FEABd1</span></button>'+
-      '</div></div>'+
-    '<div class="fbase">&copy; 2026 GMT Optimizer &middot; Independent community tool, not affiliated with GoMining. Informational only, not financial advice.</div>';
-  document.body.appendChild(foot);
-
-  /* ---- footer donation copy-to-clipboard (delegated) ---- */
-  document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-copy]');if(!el)return;try{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));}catch(_){}el.classList.add('copied');setTimeout(function(){el.classList.remove('copied');},1200);});
+  if(BAR) return;
 
   /* ---- back to top ---- */
   var top=document.createElement('button');
-  top.id='toTop';top.setAttribute('aria-label','Back to top');top.innerHTML='&uarr;';
+  top.id='toTop';top.type='button';top.setAttribute('aria-label','Back to top');top.innerHTML='&uarr;';
   document.body.appendChild(top);
   top.onclick=function(){scrollTo({top:0,behavior:reduce?'auto':'smooth'});};
-
-  /* ---- scroll: nav shrink + toTop ---- */
-  addEventListener('scroll',function(){
-    var y=scrollY||document.documentElement.scrollTop;
-    nav.classList.toggle('shrunk',y>40);
-    top.classList.toggle('show',y>320);
-  },{passive:true});
-
-  /* Pointer-only effects: nothing for a touch device to do, and they're the
-     continuous motion reduced-motion is asking to be spared. Everything AFTER
-     this block — scroll reveals and the galaxy backdrop — runs everywhere, so a
-     content page looks the same on a phone as on a desktop. */
-  if(!reduce){
-    /* ---- cursor spotlight (sets --mx/--my for the ::after glow) ---- */
-    document.querySelectorAll('.stat,.scenario,.cta,.claim-card').forEach(function(el){
-      el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect();
-        el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
-        el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');});
-    });
-
-    /* ---- magnetic hover on every clickable button (mirrors the landing page) ---- */
-    (function(){
-      var SEL='button, a.nav-cta, a.btn, a.ri-btn', cur=null;
-      function clr(){ if(cur){cur.style.transform='';cur=null;} }
-      document.addEventListener('pointermove',function(e){
-        var b=(e.target&&e.target.closest)?e.target.closest(SEL):null;
-        if(b!==cur)clr();
-        if(!b)return;
-        cur=b;var r=b.getBoundingClientRect();
-        b.style.transform='translate('+((e.clientX-r.left-r.width/2)*.16)+'px,'+((e.clientY-r.top-r.height/2)*.26-2)+'px)';
-      },{passive:true});
-      document.addEventListener('pointerleave',clr,{passive:true});
-      addEventListener('blur',clr);
-    })();
-  }
-
-  /* ---- reveal-on-scroll (matches landing; flash-free — only pre-hides blocks below the fold) ---- */
-  (function(){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.14,rootMargin:'0px 0px -6% 0px'});
-    var vh=innerHeight||800,i=0;
-    document.querySelectorAll('.content-wrap h2, .content-wrap .stats, .content-wrap .scenario, .content-wrap .formula, .content-wrap .cta, .content-wrap .faq, .content-wrap .related').forEach(function(el){
-      if(el.getBoundingClientRect().top>vh*0.88){el.classList.add('reveal');if(i%3===1)el.classList.add('d1');else if(i%3===2)el.classList.add('d2');io.observe(el);i++;}
-    });
-  })();
-
-  /* ---- spiral galaxy ---- */
-  var cvs=document.getElementById('stars');if(!cvs)return;
-  var ctx=cvs.getContext('2d');
-  var W,H,dpr=Math.min(devicePixelRatio||1,2),gal=[],bg2=[],rot=0,ARMS=2,TURNS=1.45,maxR,cx0,cy0;
-  function tint(t){return t<.28?'255,240,205':t<.62?'255,207,122':'245,166,35';}
-  function build(){
-    W=cvs.width=innerWidth*dpr;H=cvs.height=innerHeight*dpr;cvs.style.width=innerWidth+'px';cvs.style.height=innerHeight+'px';
-    var narrow=innerWidth<900;cx0=W*(narrow?.5:.64);cy0=H*(narrow?.3:.4);maxR=Math.min(W,H)*(narrow?.7:.58);
-    var n=Math.min(440,Math.round(innerWidth*.28));gal=[];
-    for(var i=0;i<n;i++){var arm=i%ARMS,t=Math.pow(Math.random(),.62);
-      gal.push({r:maxR*t+(Math.random()-.5)*maxR*.05,ang:arm*(6.2832/ARMS)+t*TURNS*6.2832+(Math.random()-.5)*(.42*(1-t*.5)),
-        t:t,sz:(Math.random()*1.4+.5)*dpr,tw:Math.random()*6.28,tws:Math.random()*.05+.012,w:.85+.55*(1-t)});}
-    var m=Math.min(90,Math.round(innerWidth/15));bg2=[];
-    for(var k=0;k<m;k++)bg2.push({x:Math.random()*W,y:Math.random()*H,sz:(Math.random()*1.1+.3)*dpr,tw:Math.random()*6.28,tws:Math.random()*.03+.006});
-  }
-  build();addEventListener('resize',build);
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    for(var k=0;k<bg2.length;k++){var s=bg2[k];s.tw+=s.tws;var o=(Math.sin(s.tw)*.5+.5)*.4;
-      ctx.beginPath();ctx.arc(s.x,s.y,s.sz,0,6.28);ctx.fillStyle='rgba(255,225,175,'+o+')';ctx.fill();}
-    ctx.globalCompositeOperation='lighter';
-    var core=ctx.createRadialGradient(cx0,cy0,0,cx0,cy0,maxR*.34);
-    core.addColorStop(0,'rgba(255,246,222,.85)');core.addColorStop(.18,'rgba(255,207,122,.45)');
-    core.addColorStop(.5,'rgba(245,166,35,.12)');core.addColorStop(1,'rgba(245,166,35,0)');
-    ctx.fillStyle=core;ctx.beginPath();ctx.arc(cx0,cy0,maxR*.34,0,6.28);ctx.fill();
-    rot+=.0014;
-    for(var i=0;i<gal.length;i++){var p=gal[i];p.tw+=p.tws;var a=p.ang+rot*p.w;
-      var x=cx0+Math.cos(a)*p.r,y=cy0+Math.sin(a)*p.r*.86,o=(Math.sin(p.tw)*.35+.65)*(1-p.t*.35);
-      ctx.beginPath();ctx.arc(x,y,p.sz,0,6.28);ctx.fillStyle='rgba('+tint(p.t)+','+o+')';ctx.fill();}
-    ctx.globalCompositeOperation='source-over';
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
+  addEventListener('scroll',function(){top.classList.toggle('show',(scrollY||document.documentElement.scrollTop)>320);},{passive:true});
 })();
 
 // Ask-Ringo co-pilot (assets/copilot.js): loaded here so every page that uses this script gets it.
-;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=3";s.defer=true;(document.head||document.documentElement).appendChild(s);})();
+;(function(){if(window.__gmCopilot||document.getElementById("gmCopilotJs"))return;var s=document.createElement("script");s.id="gmCopilotJs";s.src="/assets/copilot.js?v=26";s.defer=true;(document.head||document.documentElement).appendChild(s);})();
