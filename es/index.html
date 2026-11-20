@@ -119,7 +119,7 @@
 <link rel="stylesheet" href="/assets/tokens.css?v=6">
 <link rel="stylesheet" href="/assets/components.css?v=11">
 <link rel="stylesheet" href="/assets/site-chrome.css?v=11">
-<link rel="stylesheet" href="/assets/landing.css?v=11">
+<link rel="stylesheet" href="/assets/landing.css?v=12">
 <script src="/assets/site-chrome.js?v=18" defer></script>
 </head>
 <body class="lp ui-scope">
@@ -153,6 +153,7 @@
       <div class="ui-row lp-hero__ctas">
         <a class="ui-btn ui-btn--primary ui-btn--lg" href="/es/console">Abrir la calculadora</a> <a class="ui-btn ui-btn--secondary ui-btn--lg" href="/es/signup" data-start><span class="ui-start"><span data-s="out" class="is-on">Empezar</span><span data-s="setup" aria-hidden="true">Configurar mi granja</span><span data-s="farm" aria-hidden="true">Panel</span></span></a>
       </div>
+      <p class="lp-users" id="lpUsers" hidden><span class="lp-live-dot" aria-hidden="true"></span><span><b data-users></b> mineros ya se han unido a GMT-Optimizer</span></p>
       <p class="ui-disclaimer lp-hero__note">Solo estimaciones. No es asesoramiento financiero.</p>
     </div>
 
@@ -309,6 +310,21 @@ window.RE_YEARCAP = 'estimate';   // the widget's "≈X% est. yearly at today's 
 <script src="/assets/hero-curve.js?v=1" defer></script>
 <script src="/assets/market-change.js?v=6" defer></script>
 <script src="/assets/site.js?v=49"></script>
+<script>
+/* Live member count under the hero buttons: a count-only request on the public profile cards (no rows are read).
+   The line stays hidden if the request fails, so the page never shows a dash or a zero. */
+(function(){
+  var el=document.getElementById('lpUsers'),c=window.GMT_SUPABASE;if(!el)return;
+  var url=(c&&c.url||'https://cbatlxqlmeyuhwqpczpv.supabase.co')+'/rest/v1/profile_cards?select=id',key=c&&c.anonKey||'sb_publishable_yFupMYjhcAlgl3cJunUfLw_X5DLY__A';
+  var LOC={es:'es-ES',fr:'fr-FR',de:'de-DE'}[(document.documentElement.lang||'en').slice(0,2)]||'en-US';
+  fetch(url,{method:'HEAD',headers:{apikey:key,Prefer:'count=exact',Range:'0-0'}}).then(function(r){
+    var n=+((r.headers.get('content-range')||'').split('/')[1]);
+    if(!(n>0))return;
+    el.querySelector('[data-users]').textContent=new Intl.NumberFormat(LOC).format(n);
+    el.hidden=false;
+  }).catch(function(){});
+})();
+</script>
 <script>
 /* Live network figures for the trust strip (same sources and sats/TH/day formula as the calculator). */
 (function(){
