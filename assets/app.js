@@ -182,6 +182,17 @@ function estimateCPT12(th){return cptTier(TH_TIERS_12W,th);}
 // this farm returning right now, compounded", which is a property of the setup. Halvings,
 // difficulty grind and price paths are forecasting — that belongs to the projection page,
 // and mixing the two would make a headline metric move for reasons the user did not change.
+// The same capital spent only on TH: no GMT locked (so no token discount and no staking), reinvested weekly the same
+// way, at the same prices. The TH count is found at its own size tier (bigger miners pay less per TH).
+function thOnlyCompoundedROI(i,capital){
+  if(!(capital>0))return null;
+  let th=capital/(TH_TIERS_NEW[0]?TH_TIERS_NEW[0].cpt:10);
+  for(let k=0;k<12;k++)th=capital/cptTier(TH_TIERS_NEW,Math.max(1,th));
+  const j=Object.assign({},i,{th:th,gl:0,gw:0,gth:0,gInit:0});
+  let m2;try{m2=calc(j);}catch(e){return null;}
+  const r=effectiveCompoundedROI(j,m2);
+  return r?r.roi:null;
+}
 function effectiveCompoundedROI(i,m){
   const bp=m.bp, gp=m.gp, dbt=dailyBTCperTH();
   if(!(bp>0&&gp>0&&dbt>0))return null;
@@ -2178,7 +2189,7 @@ function buildFarmShotCanvas(d,imgs){
   const side=[
     {label:TC('Monthly earnings'),val:fU(d.monthlyUSD,0),sub:TC(fU(d.yearlyUSD,0)+' / yr')},
     {label:TC('Total discount'),val:fP(d.disc),sub:TC('Saving '+fU(d.saveMoUSD)+'/mo on fees')},
-    {label:TC('Effective compounded ROI'),val:fPc(d.velocity,0)+T('/yr'),sub:TC(d.velSub||'')}
+    {label:TC('Our strategy · compounded ROI'),val:fPc(d.velocity,0)+T('/yr'),sub:TC(d.velSub||'')}
   ];
   const sx=640,sw=W-pad-sx,rowH=74;
   side.forEach((r,k)=>{
@@ -3461,17 +3472,21 @@ function recalc(){
     // return on a farm that did not produce it.
     // One short line. The farm-value and end-state figures were four numbers deep on a headline
     // card and read as clutter, not as evidence — the ROI is the point.
-    // The comparison people make is with GoMining's own "Annual ROI", which is mining income divided by what the
-    // hashrate costs and leaves out the GMT locked for the discount. Show that figure too, so the two can be read
-    // side by side: this card is the whole farm (hashrate + locked GMT, reinvested weekly), which is lower whenever
-    // much of the capital sits in GMT earning the staking APR.
-    const thNow=m.totTH||0, thCost=thNow>0?thNow*cptTier(TH_TIERS_NEW,thNow):0;
-    const hashROI=thCost>0?m.net*m.bp*365/thCost*100:null;
-    const hashTxt=hashROI!=null&&isFinite(hashROI)?T('hashrate alone: {0}',fPc(hashROI,0)+T('/yr')):'';
-    velSub.textContent=ecr
-      ? (ecr.roiNoAmb!=null?`${fPc(ecr.roiNoAmb,0)} without ambassador rewards`:T('Whole farm incl. locked GMT')+(hashTxt?' · '+hashTxt:''))
-      : 'reinvest all earnings into hashrate';
-    velSub.title=T('This card is the whole farm: hashrate plus the GMT locked for your discount, every reward reinvested weekly at today’s prices. “Hashrate alone” is mining income ÷ what the hashrate costs, the way GoMining quotes its Annual ROI, which leaves the locked GMT out.');
+    // Our strategy vs just buying TH. The big number is the whole farm (hashrate + GMT locked for the discount,
+    // staking included, every reward reinvested weekly). The comparison spends the SAME money only on TH: no GMT
+    // locked, so no token discount and no staking, reinvested the same way. Same simulation, same prices, so the gap
+    // is the strategy and nothing else. It is computed live, not asserted: at high BTC prices buying TH can win, and
+    // then the line says so in red.
+    const alt=ecr?thOnlyCompoundedROI(i,ecr.start):null;
+    let html='';
+    if(ecr&&alt!=null&&isFinite(alt)){
+      const gap=velocity-alt, up=gap>=0;
+      html=T('vs {0} just buying TH',fPc(alt,0)+T('/yr'))+' · <span style="color:var('+(up?'--color-success':'--color-error')+')">'+(up?'+':'−')+fN(Math.abs(gap),0)+' '+T('pts')+'</span>';
+    }else if(ecr){html=T('reinvesting every reward, weekly');}
+    else html='reinvest all earnings into hashrate';
+    if(ecr&&ecr.roiNoAmb!=null)html+=' · '+T('{0} without ambassador rewards',fPc(ecr.roiNoAmb,0));
+    velSub.innerHTML=html;
+    velSub.title=T('Our strategy: hashrate plus GMT locked for the fee discount, staking included, every reward reinvested weekly at today’s prices. “Just buying TH” spends the same money on hashrate only (no GMT locked, so no token discount and no staking), reinvested the same way. At high BTC prices buying TH can come out ahead; the line turns red when it does.');
   }
   // Stash the headline numbers so "Create farm screenshot" can render a shareable card
   // without recomputing anything — same values the hero cards are showing.

@@ -919,7 +919,8 @@
   "Optional. Keep saving into the farm: each top-up is deployed like reinvested income and shows up in the compounding view below. The day-one numbers stay what the starting amount earns.": "Opcional. Sigue invirtiendo en la granja: cada aportación se despliega como ingreso reinvertido y aparece en la vista de capitalización de abajo. Las cifras del primer día siguen siendo lo que gana el importe inicial.",
   "For quoting someone who is starting from zero. Enter what they want to invest, or what they want to earn each month, and this returns the split that holds the token discount at live prices. Nothing here touches your own fleet or saved setups.": "Para presupuestar a alguien que empieza de cero. Introduce lo que quiere invertir o lo que quiere ganar al mes, y obtendrás el reparto que mantiene el descuento por token a precios en directo. Nada de aquí toca tu flota ni tus configuraciones guardadas.",
   "All time": "Todo",
-  "Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.": "Ingreso mensual neto tras comisiones, a precios de hoy &mdash; minería más staking del GMT bloqueado."
+  "Net monthly income after fees, at today&rsquo;s prices &mdash; mining plus staking on the locked GMT.": "Ingreso mensual neto tras comisiones, a precios de hoy &mdash; minería más staking del GMT bloqueado.",
+  "Our strategy · compounded ROI": "Nuestra estrategia · ROI compuesto"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "De 3 a 20 letras, números o guiones bajos. Se muestra en el chat.",
@@ -1268,7 +1269,12 @@
   "/yr": "/año",
   "hashrate alone: {0}": "solo hashrate: {0}",
   "Whole farm incl. locked GMT": "Granja completa con GMT bloqueado",
-  "This card is the whole farm: hashrate plus the GMT locked for your discount, every reward reinvested weekly at today’s prices. “Hashrate alone” is mining income ÷ what the hashrate costs, the way GoMining quotes its Annual ROI, which leaves the locked GMT out.": "Esta tarjeta es la granja completa: hashrate más el GMT bloqueado para tu descuento, con cada recompensa reinvertida semanalmente a los precios de hoy. «Solo hashrate» es el ingreso de minería ÷ lo que cuesta el hashrate, como GoMining calcula su ROI anual, que deja fuera el GMT bloqueado."
+  "This card is the whole farm: hashrate plus the GMT locked for your discount, every reward reinvested weekly at today’s prices. “Hashrate alone” is mining income ÷ what the hashrate costs, the way GoMining quotes its Annual ROI, which leaves the locked GMT out.": "Esta tarjeta es la granja completa: hashrate más el GMT bloqueado para tu descuento, con cada recompensa reinvertida semanalmente a los precios de hoy. «Solo hashrate» es el ingreso de minería ÷ lo que cuesta el hashrate, como GoMining calcula su ROI anual, que deja fuera el GMT bloqueado.",
+  "vs {0} just buying TH": "frente a {0} solo comprando TH",
+  "pts": "pts",
+  "{0} without ambassador rewards": "{0} sin recompensas de embajador",
+  "reinvesting every reward, weekly": "reinvirtiendo cada recompensa, semanalmente",
+  "Our strategy: hashrate plus GMT locked for the fee discount, staking included, every reward reinvested weekly at today’s prices. “Just buying TH” spends the same money on hashrate only (no GMT locked, so no token discount and no staking), reinvested the same way. At high BTC prices buying TH can come out ahead; the line turns red when it does.": "Nuestra estrategia: hashrate más GMT bloqueado para el descuento en comisiones, staking incluido, cada recompensa reinvertida semanalmente a los precios de hoy. «Solo comprando TH» invierte el mismo dinero solo en hashrate (sin GMT bloqueado, así que sin descuento por token ni staking), reinvertido igual. Con precios de BTC altos, comprar TH puede salir mejor; la línea se pone roja cuando ocurre."
  },
  "dom": {
   "\"Still cheap\" band": "franja «Todavía barato»",
@@ -1805,6 +1811,7 @@
   "Bitcoin": "Bitcoin",
   "Independent GoMining calculator — live network data, every fee counted.": "Calculadora independiente de GoMining — datos de red en directo, todas las comisiones incluidas.",
   "Estimates at today’s rates · not financial advice": "Estimaciones a las tasas de hoy · no es asesoramiento financiero",
-  "Code RINGO5": "Código RINGO5"
+  "Code RINGO5": "Código RINGO5",
+  "Our strategy · compounded ROI": "Nuestra estrategia · ROI compuesto"
  }
 }
