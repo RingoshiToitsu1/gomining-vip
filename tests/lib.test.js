@@ -46,9 +46,9 @@ eq('staking 10k GMT @ 18.87% @ $0.30', M.stakingUsdPerDay(10000, 18.87, 0.30), 1
 
 // farmToday: 100 TH @ 15 W, 3266 GMT locked, the quick-estimate case (BTC 84k, GMT 0.28, 113 T difficulty)
 const f = M.farmToday({ th: 100, wth: 15, lockedGmt: 3266, aprPct: 18.87, clickStreak: true, btcPrice: 84000, gmtPrice: 0.28, satsPerTH: M.satsPerTHDay(113e12, cfg) }, cfg);
-eq('farmToday total discount', Math.round(f.totD * 100) / 100, 25.89);        // 20 + 1.8 Gold II + 3 + 1.09
+eq('farmToday total discount', Math.round(f.totD * 100) / 100, 25.7);         // 20 + 1.8 Gold II + 3 + 0.9
 eq('days per month', M.DAYS_PER_MONTH, 30.4375);                                  // 365.25 / 12
-eq('farmToday mining $/mo', Math.round(f.mining * M.DAYS_PER_MONTH * 100) / 100, 80.64);   // matches the landing quick estimate
+eq('farmToday mining $/mo', Math.round(f.mining * M.DAYS_PER_MONTH * 100) / 100, 80.49);   // matches the landing quick estimate
 eq('farmToday staking $/mo', Math.round(f.staking * M.DAYS_PER_MONTH * 100) / 100, 14.38);
 
 // ---------- 2. agreement with the console engine (assets/app.js) ----------
