@@ -475,7 +475,12 @@ html{font-size:16px!important}                         /* app.css scaled the con
   /* the signed-in balances (Liquid / Locked / TH…) wrap onto a second line: nowrap with no scroll pushed the whole
      page sideways on phones (owner report 2026-11-20) */
   .subbar .quick-bar{flex-wrap:wrap!important;row-gap:var(--space-1)!important;min-width:0;max-width:100%}
-  .subbar .quick-bar > .live-chip.qk,.subbar .quick-bar > .live-chip.th-chip{border-left:0!important;padding-left:0!important;padding-right:var(--space-4)!important}
+  .subbar .quick-bar > .live-chip.qk,.subbar .quick-bar > .live-chip.th-chip{border-left:0!important;padding-left:0!important;padding-right:10px!important;min-width:0}
+  /* Liquid / Locked / Hashrate share one row; they only wrap on a phone too narrow for all three */
+  .subbar .quick-bar > .live-chip.th-chip{padding-right:0!important}
+  .subbar .quick-bar > .live-chip.qk,.subbar .quick-bar > .live-chip.th-chip{column-gap:5px!important}
+  .subbar .quick-bar .live-chip .lbl{white-space:nowrap}
+  .subbar .quick-bar .live-chip .val{white-space:nowrap}
 }
 
 /* ---------- chart pages (Bitcoin / GMT live chart, rainbow, BTC + GMT): a clean header above the chart ----------
