@@ -3362,6 +3362,18 @@ function refreshQuickChips(){
   const set=(id,src)=>{const el=$(id),f=$(src);if(el&&f)el.textContent=fN(Math.max(0,parseFloat(f.value)||0),2);};
   set('qkWallet','inGMTWallet');
   set('qkLocked','inGMTLocked');
+  const thEl=$('qkTH'),thF=$('inTH');
+  if(thEl&&thF){const th=Math.max(0,parseFloat(thF.value)||0);thEl.textContent=fN(th,th%1?2:0)+' TH';}
+}
+// The "Hashrate" chip opens a visual of what the farm's TH actually does (1 TH = 1 trillion calculations a second).
+// The visualizer is only needed on a tap, so it loads then.
+function openHashViz(){
+  const go=()=>{if(window.GMTHashViz)window.GMTHashViz.open({th:Math.max(0,parseFloat(($('inTH')||{}).value)||0),diff:S.difficulty||FB.difficulty});};
+  if(window.GMTHashViz)return go();
+  if(openHashViz._loading)return;openHashViz._loading=true;
+  const s=document.createElement('script');s.src='/assets/hash-viz.js?v=1';
+  s.onload=()=>{openHashViz._loading=false;go();};s.onerror=()=>{openHashViz._loading=false;};
+  document.head.appendChild(s);
 }
 function closeQuickPop(){const p=document.getElementById('qkPop');if(p)p.remove();}
 function openQuickPop(chip){
