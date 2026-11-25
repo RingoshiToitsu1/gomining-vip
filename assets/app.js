@@ -2591,8 +2591,8 @@ const MINING_MODE_DEFAULT=CONFIG.rates.soloMiningDiscountPct;   // observed 2026
 // to enter their OWN observed growth, and that must never be overwritten. Same treatment as the
 // mining mode above: a value matching any rate this input has ever shipped with is a stale
 // default; anything else is the user's number and is left alone.
-const GREEDY_GROWTH_DEFAULT=String(CONFIG.rates.greedyGrowthWeeklyPct);   // observed 2026-10-07: 4,805.30 → 4,837.52 TH over two weeks
-const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36'];
+const GREEDY_GROWTH_DEFAULT=String(CONFIG.rates.greedyGrowthWeeklyPct);   // observed 2026-11-25: 5,042.73 → 5,056.68 TH over one week
+const GREEDY_GROWTH_PAST_DEFAULTS=['0.3','0.30','0.35','0.3718','0.3462','0.36','0.3347'];
 // Every rate this input has ever shipped with. `base` was written from
 // MINING_MODE_DEFAULT even in builds where that had drifted from the HTML default, so a
 // saved value matching any past rate is a stale default, not a user's own number.
