@@ -3359,11 +3359,13 @@ function updateCapInVisibility(){
 // editor instead of the whole setup panel. Saving writes to the real input and fires its `input`
 // event, so recalc + autosave + the cloud profile all behave exactly as if it had been typed there.
 function refreshQuickChips(){
-  const set=(id,src)=>{const el=$(id),f=$(src);if(el&&f)el.textContent=fN(Math.max(0,parseFloat(f.value)||0),2);};
+  // Big balances drop their decimals so Liquid / Locked / Hashrate fit one row on a phone (owner report 2026-11-25).
+  const dp=v=>v>=1000?0:(v%1?2:0);
+  const set=(id,src)=>{const el=$(id),f=$(src);if(el&&f){const v=Math.max(0,parseFloat(f.value)||0);el.textContent=fN(v,dp(v));}};
   set('qkWallet','inGMTWallet');
   set('qkLocked','inGMTLocked');
   const thEl=$('qkTH'),thF=$('inTH');
-  if(thEl&&thF){const th=Math.max(0,parseFloat(thF.value)||0);thEl.textContent=fN(th,th%1?2:0)+' TH';}
+  if(thEl&&thF){const th=Math.max(0,parseFloat(thF.value)||0);thEl.textContent=fN(th,dp(th))+' TH';}
 }
 // The "Hashrate" chip opens a visual of what the farm's TH actually does (1 TH = 1 trillion calculations a second).
 // The visualizer is only needed on a tap, so it loads then.
