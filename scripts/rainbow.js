@@ -39,7 +39,7 @@ async function fetchHistory() {
     }
   } catch (e) {}
   try {
-    const r = await get('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000');
+    const r = await get('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000');
     if (Array.isArray(r) && r.length > 20) return r.map(c => ({ t: c[0], v: +c[4] })).filter(p => p.v > 0);
   } catch (e) {}
   throw new Error('no rainbow price-history source reachable');

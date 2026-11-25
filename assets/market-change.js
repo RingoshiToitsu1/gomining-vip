@@ -26,7 +26,7 @@
   var SRC = {
     btc: [
       function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true').then(function (r) { return r.bitcoin.usd_24h_change; }); },
-      function () { return j('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT').then(function (r) { return r.priceChangePercent; }); },
+      function () { return j('https://data-api.binance.vision/api/v3/ticker/24hr?symbol=BTCUSDT').then(function (r) { return r.priceChangePercent; }); },
       function () { return j('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(function (r) { return r.quotes.USD.percent_change_24h; }); }
     ],
     gmt: [

@@ -915,9 +915,9 @@ async function fetchRainbowHistory(){
     if(res){const key=Object.keys(res).find(k=>k!=='last');const arr=res[key];
       if(arr&&arr.length>20)return arr.map(c=>({t:c[0]*1000,v:+c[4]})).filter(p=>p.v>0);}
   }catch(e){}
-  // 3. Binance weekly klines — long history, CORS ok (may be geo-blocked in some regions)
+  // 3. Binance weekly klines via the public market-data mirror (api.binance.com is geo-blocked: 451, no CORS)
   try{
-    const r=await fetchTO('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000',15000);
+    const r=await fetchTO('https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1w&limit=1000',15000);
     if(Array.isArray(r)&&r.length>20)return r.map(c=>({t:c[0],v:+c[4]})).filter(p=>p.v>0);
   }catch(e){}
   // 4. CoinGecko market_chart — may require a key / rate-limit, kept as last resort

@@ -39,7 +39,7 @@
       function () { return j('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd').then(function (r) { return r.bitcoin.usd; }); },
       function () { return j('https://mempool.space/api/v1/prices').then(function (r) { return r.USD; }); },
       function () { return j('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(function (r) { return r.data.amount; }); },
-      function () { return j('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(function (r) { return r.price; }); },
+      function () { return j('https://data-api.binance.vision/api/v3/ticker/price?symbol=BTCUSDT').then(function (r) { return r.price; }); },
       function () { return j('https://api.coinpaprika.com/v1/tickers/btc-bitcoin').then(function (r) { return r.quotes.USD.price; }); }
     ],
     gmt: [
