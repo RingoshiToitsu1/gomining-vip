@@ -33,7 +33,7 @@
   const FB = { gmt: 0.28 };
   const PROFILES_KEY = 'gm_profiles_v1';                             // console saved setups (inGreedyGrowth lives here)
   const GREEDY_GROWTH_DEFAULT = C.rates.greedyGrowthWeeklyPct;   // %/wk default (data/config.json); observed, not a constant
-  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36']; // mirror of app.js: a saved old default is not the user's own number
+  const GREEDY_GROWTH_PAST_DEFAULTS = ['0.3', '0.30', '0.35', '0.3718', '0.3462', '0.36', '0.3347']; // mirror of app.js: a saved old default is not the user's own number
   const SB_URL = 'https://cbatlxqlmeyuhwqpczpv.supabase.co';
   const LOOKUP = SB_URL + '/functions/v1/nft-lookup';
 

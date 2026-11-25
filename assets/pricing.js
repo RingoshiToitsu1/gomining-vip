@@ -19,8 +19,8 @@
   /* ===== CONFIG: generated from data/config.json by scripts/build-config.js. Do not edit by hand. ===== */
   const CONFIG = {
     "meta": {
-      "updated": "2026-11-19",
-      "ratesObserved": "2026-11-19",
+      "updated": "2026-11-25",
+      "ratesObserved": "2026-11-25",
       "pricesObserved": "2026-10-30"
     },
     "legal": {
@@ -40,10 +40,10 @@
       "nftHolderDiscount": 0.05
     },
     "rates": {
-      "stakingAprPct": 17.26,
+      "stakingAprPct": 16.14,
       "soloMiningDiscountPct": 0.9,
       "clickStreakPct": 3,
-      "greedyGrowthWeeklyPct": 0.3347
+      "greedyGrowthWeeklyPct": 0.2766
     },
     "discount": {
       "coverageDaysPerPct": 18,
