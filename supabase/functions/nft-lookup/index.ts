@@ -68,6 +68,10 @@ Deno.serve(async (req) => {
     efficiency: Number(d.energyEfficiency) || 0,
     price: d.price == null ? null : Number(d.price),
     priceUsdt: d.priceUsdt == null ? null : Number(d.priceUsdt),
+    // Since 2026-11 marketplace listings are priced in BTC: `price` is then BTC, not GMT.
+    currency: d.marketplaceOrderCurrency ?? null,
+    priceSat: d.priceSat == null ? null : Number(d.priceSat),
+    priceUsd: d.priceUsd == null ? null : Number(d.priceUsd),
     status: d.status ?? null,
     marketplace: d.marketplace ?? null,
     saleType: d.marketplaceOrderSaleType ?? null,
