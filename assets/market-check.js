@@ -96,6 +96,24 @@
     S.ready = true;
   }
 
+  // A listing's ask in GMT (the checker's unit). Since 2026-11 GoMining's marketplace sells in BTC:
+  // `price` is then BTC, so go through its USD price. Older GMT listings keep `price` in GMT.
+  const isBtcListing = d => d && d.currency === 'BTC';
+  function askGMT(d) {
+    if (!d) return 0;
+    if (d.priceUsd > 0) return S.gmt > 0 ? d.priceUsd / S.gmt : 0;
+    if (isBtcListing(d)) return 0;                     // BTC ask with no USD price: can't convert
+    // legacy GMT listing. No miner sells for under 1 GMT, so a tiny unlabelled price is a BTC ask
+    // from a lookup that doesn't report the currency yet: treat it as unknown, never as GMT.
+    if (d.price >= 1) return d.price;
+    if (d.price > 0) return 0;
+    return d.priceUsdt > 0 && S.gmt > 0 ? d.priceUsdt / S.gmt : 0;
+  }
+  function askLabel(d) {
+    if (isBtcListing(d) || (d && d.currency == null && d.price > 0 && d.price < 1)) return trimN(d.priceSat > 0 ? d.priceSat / 1e8 : d.price, 8) + ' BTC' + (d.priceUsd > 0 ? ' (' + money(d.priceUsd, 0) + ')' : '');
+    return num(askGMT(d), 0) + ' GMT';
+  }
+
   // ---- the model ----
   const WK_PER_MO = 52 / 12;
   // Grow the machine to T TH so that T · ((1+g)^weeks − 1) · worth(T, r) = premium. Worth/TH falls a
@@ -253,11 +271,12 @@
     const steps = [
       { ok: () => !!d(), v: () => d().name || T('miner #{0}', id) },
       { ok: () => !!d(), v: () => trimN(d().power, 2) + ' TH · ' + trimN(d().efficiency, 2) + ' W/TH' },
-      { ok: () => !!d(), v: () => listed() ? num(d().price || 0, 0) + ' GMT · ' + T(d().saleType === 'auction' ? 'auction' : 'fixed price') : T('not for sale right now') },
+      { ok: () => !!d(), v: () => listed() ? askLabel(d()) + ' · ' + T(d().saleType === 'auction' ? 'auction' : 'fixed price') : T('not for sale right now') },
       { ok: () => !!d() && S.ready, v: () => { const u = upgPerTH(d().efficiency); return u > 0 ? T('{0}/TH to reach 12 W', money(u)) : T('already at 12 W/TH'); } },
       { ok: () => !!d() && S.ready, v: () => {
-          if (!listed() || !(d().price > 0)) return T('enter a price to size it');
-          const b = basics(d().power, Math.max(EFF_BEST, d().efficiency), d().price);
+          const ask = listed() ? askGMT(d()) : 0;
+          if (!(ask > 0)) return T('enter a price to size it');
+          const b = basics(d().power, Math.max(EFF_BEST, d().efficiency), ask);
           return b.prem > 0 ? T('{0} premium', money(b.prem)) : T('no premium');
         } }
     ];
@@ -405,7 +424,7 @@
     // Only a secondary-market listing has a real asking price. Other miners carry GoMining's
     // internal reference price, which nobody can buy at — never present it as the ask.
     const listed = d.marketplace === 'gmt-secondary' && d.status === 'available';
-    const priceGMT = listed ? (d.price > 0 ? d.price : (d.priceUsdt > 0 && S.gmt > 0 ? d.priceUsdt / S.gmt : 0)) : 0;
+    const priceGMT = listed ? askGMT(d) : 0;
     $('mc-th').value = d.power > 0 ? String(+d.power.toFixed(4)) : '';
     $('mc-wth').value = d.efficiency > 0 ? String(+d.efficiency.toFixed(2)) : '';
     $('mc-price').value = priceGMT > 0 ? String(Math.round(priceGMT * 100) / 100) : '';
@@ -413,7 +432,7 @@
     const card = $('mc-card');
     let status;
     if (listed && d.saleType === 'auction') status = '<span class="mc-pill warn">' + T('Auction · price is the current bid') + '</span>';
-    else if (listed) status = '<span class="mc-pill ok">' + T('Listed for sale') + '</span>';
+    else if (listed) status = '<span class="mc-pill ok">' + T('Listed for sale') + (isBtcListing(d) ? ' · ' + esc(askLabel(d)) : '') + '</span>';
     else status = '<span class="mc-pill off">' + T('Not listed right now · enter a price to test one') + '</span>';
     card.innerHTML =
       (d.image ? '<img src="' + esc(d.image) + '" alt="" loading="lazy" width="72" height="72">' : '') +
@@ -451,7 +470,7 @@
     } catch (e) {}
     $('mc-growth').value = String(gr);
     const M = window.GMTMarket;
-    const ready = M ? M.get().then(m => { S.gmt = m.gmt; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000); }) : loadMarket();
+    const ready = M ? M.get().then(m => { S.gmt = m.gmt; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000); S.ready = true; }) : loadMarket();
     if (M) M.onUpdate(m => { S.gmt = m.gmt; S.live = m.allLive || (m.source === 'cache' && Date.now() - m.at < 600000); render(); $('mc-basis').textContent = basisLine(); });
     ready.then(() => {
       root.classList.remove('re-loading');
