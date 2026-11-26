@@ -100,7 +100,8 @@ function consoleSuite() {
   const set = (id, v) => { const el = dom.get(id); if (typeof v === 'boolean') el.checked = v; else el.value = String(v); };
   const base = { inTH: 0, inWTH: 15, inGMTLocked: 0, inGMTWallet: 0, inLockAPR: 18.87, inClickStreak: true, inPayGMT: true,
     inMiningMode: 1.09, inCostPerTH: 0, inCapital: 0, inGreedyTH: 0, inGreedyWth: 0, inInactiveTH: 0, inInactiveWth: 0,
-    inContribAmt: 0, inContribFreq: 'monthly', inMpTH: 0, inMpGMT: 0, inMpWth: 0, inMpGreedy: false };
+    inContribAmt: 0, inContribFreq: 'monthly', inMpTH: 0, inMpGMT: 0, inMpWth: 0, inMpGreedy: false,
+    inAmbassador: false, inReferredTH: 0, inReferredNewTH: 0 };
   const cases = [
     { name: 'new user, $1k', inCapital: 1000 },
     { name: 'new user, $10k', inCapital: 10000 },
@@ -112,7 +113,10 @@ function consoleSuite() {
     { name: 'greedy 2400 of 3000 TH', inTH: 3000, inWTH: 15.2, inGreedyTH: 2400, inGreedyWth: 15, inGMTLocked: 300000, inCapital: 5000 },
     { name: 'no click, no payGMT', inTH: 250, inWTH: 18, inClickStreak: false, inPayGMT: false, inGMTLocked: 20000 },
     { name: 'inactive hashrate', inTH: 400, inInactiveTH: 100, inInactiveWth: 25, inGMTLocked: 60000 },
-    { name: 'marketplace miner in plan', inTH: 50, inCapital: 3000, inMpTH: 200, inMpGMT: 7000, inMpWth: 20 }
+    { name: 'marketplace miner in plan', inTH: 50, inCapital: 3000, inMpTH: 200, inMpGMT: 7000, inMpWth: 20 },
+    // referral royalty (2026-11-26): 60 TH of older friends at 5%, 40 TH of post-15-Nov friends at the tier rate
+    { name: 'referral royalty, Platinum III', inTH: 2500, inGMTLocked: 300000, inAmbassador: true, inReferredTH: 100, inReferredNewTH: 40 },
+    { name: 'referral royalty, Bronze', inTH: 3, inAmbassador: true, inReferredTH: 100, inReferredNewTH: 40 }
   ];
   const out = {};
   for (const c of cases) {
@@ -121,6 +125,7 @@ function consoleSuite() {
     try { const i = vm.runInContext('inp()', ctx); r.inp = i; r.calc = vm.runInContext('calc(inp())', ctx); } catch (e) { r.calcError = e.message; }
     try { r.planner = vm.runInContext('solvePlannerAllocation(inp(), S.btcPrice, S.gmtPrice, dailyBTCperTH())', ctx); } catch (e) { r.plannerError = e.message; }
     try { r.monthlyFor10k = vm.runInContext('projectedMonthlyForCapital(10000)', ctx); } catch (e) { r.monthlyError = e.message; }
+    if (c.inAmbassador) try { r.referralDailyUSD = vm.runInContext('refManualDaily(inp())', ctx); } catch (e) { r.referralError = e.message; }
     out[c.name] = norm(r);
   }
   return out;

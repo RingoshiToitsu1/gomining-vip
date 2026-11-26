@@ -160,6 +160,14 @@ function putAlternates(src, f) {
 }
 
 // ---------------------------------------------------------------- build one page in one language
+const CFG_EL = /(<(\w+)\b[^>]*\sdata-cfg="[^"]*"[^>]*>)[^<]*(<\/\2>)/g;
+const cfgNorm = k => k.replace(CFG_EL, '$1$3');
+const CFG_IDX = new WeakMap();
+function cfgIndex(dict) {   // normalised key -> dictionary key, for runs that hold data-cfg values
+  let m = CFG_IDX.get(dict);
+  if (!m) { m = new Map(); for (const k of Object.keys(dict)) if (k.includes('data-cfg=')) m.set(cfgNorm(k), k); CFG_IDX.set(dict, m); }
+  return m;
+}
 function build(f, lang, dict, missing) {
   let src = read(f);
   // <!-- LIVE:name --> blocks hold numbers gen-pages.js rewrites on every run; its es/fr/de versions live in
@@ -175,9 +183,12 @@ function build(f, lang, dict, missing) {
   if (ser(tree) !== src) throw new Error('parser did not round-trip ' + f);
   const tr = s => {
     const k = keyOf(s);
-    USED.add(k);
-    if (Object.prototype.hasOwnProperty.call(dict, k)) return dict[k];
-    missing.add(k); return s;
+    if (Object.prototype.hasOwnProperty.call(dict, k)) { USED.add(k); return dict[k]; }
+    // A data-cfg element's text (a date, a rate) is rewritten by build-config.js on every page, including
+    // these copies, so it must not be part of the match: otherwise each rates update orphans the run.
+    const hit = cfgIndex(dict).get(cfgNorm(k));
+    if (hit != null) { USED.add(hit); return dict[hit]; }
+    USED.add(k); missing.add(k); return s;
   };
   const rs = []; runs(tree, rs);
   // Last to first: replacing a run collapses its nodes into one, which would shift the indices of any later

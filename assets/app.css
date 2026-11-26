@@ -1042,6 +1042,8 @@ html.show-onboarding #onboarding{display:flex}
 #secInputs .ed-toggle-note{color:var(--text4);font-size:.67rem;font-weight:400}
 #secInputs .ed-amb-inline{margin-left:auto;display:inline-flex;align-items:center;gap:.25rem;background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:.2rem .5rem}
 #secInputs .ed-amb-inline input{width:60px;background:none;border:none;outline:none;text-align:right;font-family:var(--mono);font-size:.82rem;color:var(--text);field-sizing:normal}
+#secInputs .toggle-row.ed-amb-row{flex-wrap:wrap}
+#secInputs .ed-amb-inline .ed-amb-sep{color:var(--text4);margin:0 .15rem}
 #secInputs .ed-amb-inline .unit{color:var(--purple-soft);font-size:.72rem;font-weight:700;font-family:var(--mono)}
 #secInputs .ed-saved-btns{display:flex;gap:.5rem;margin-top:.55rem;justify-content:center}
 #secInputs .ed-sbtn{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--sans);font-size:.74rem;font-weight:700;padding:.5rem .85rem;cursor:pointer;transition:var(--transition);white-space:nowrap}

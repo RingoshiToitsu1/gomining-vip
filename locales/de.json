@@ -923,7 +923,10 @@
   "Last updated: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19 Nov 2026</time>": "Zuletzt aktualisiert: <time data-cfg=\"legal.privacyUpdated\" data-cfg-fmt=\"date\">19. Nov. 2026</time>. Diese Übersetzung dient der Orientierung; maßgeblich ist die englische Fassung.",
   "<span class=\"lp-live-dot\" aria-hidden=\"true\"></span><span><b data-users></b> miners have joined GMT-Optimizer</span>": "<span class=\"lp-live-dot\" aria-hidden=\"true\"></span><span><b data-users></b> Miner sind schon dabei</span>",
   "See what your hashrate does: 1 TH is 1 trillion calculations a second": "Sieh, was deine Hashrate leistet: 1 TH sind 1 Billion Berechnungen pro Sekunde",
-  "<span class=\"lbl\">Hashrate</span><span class=\"val\" id=\"qkTH\">--</span>": "<span class=\"lbl\">Hashrate</span><span class=\"val\" id=\"qkTH\">--</span>"
+  "<span class=\"lbl\">Hashrate</span><span class=\"val\" id=\"qkTH\">--</span>": "<span class=\"lbl\">Hashrate</span><span class=\"val\" id=\"qkTH\">--</span>",
+  "<span class=\"unit\">since 15 Nov</span>": "<span class=\"unit\">seit 15. Nov</span>",
+  "<span class=\"unit\">TH</span><span class=\"ed-amb-sep\">·</span>": "<span class=\"unit\">TH</span><span class=\"ed-amb-sep\">·</span>",
+  "Of those, TH from friends who joined on or after 15 Nov 2026 — they pay your VIP tier's royalty (5–15%) instead of 5%": "Davon TH von Freunden, die am oder nach dem 15. Nov 2026 beigetreten sind: sie zahlen die Tantieme deiner VIP-Stufe (5–15 %) statt 5 %"
  },
  "ui": {
   "3 to 20 letters, numbers or underscores. Shown in chat.": "3 bis 20 Buchstaben, Zahlen oder Unterstriche. Wird im Chat angezeigt.",
