@@ -19,7 +19,7 @@
   /* ===== CONFIG: generated from data/config.json by scripts/build-config.js. Do not edit by hand. ===== */
   const CONFIG = {
     "meta": {
-      "updated": "2026-11-25",
+      "updated": "2026-11-26",
       "ratesObserved": "2026-11-25",
       "pricesObserved": "2026-10-30"
     },
@@ -169,147 +169,168 @@
         "th": 0,
         "veg": 0,
         "d": 0,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 5
       },
       {
         "n": "Bronze II",
         "th": 5,
         "veg": 50,
         "d": 0.3,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 5
       },
       {
         "n": "Silver I",
         "th": 10,
         "veg": 100,
         "d": 0.6,
-        "rb": 5
+        "rb": 5,
+        "royaltyPct": 7
       },
       {
         "n": "Silver II",
         "th": 25,
         "veg": 250,
         "d": 0.9,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 7
       },
       {
         "n": "Silver III",
         "th": 50,
         "veg": 500,
         "d": 1.2,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 7
       },
       {
         "n": "Gold I",
         "th": 100,
         "veg": 1000,
         "d": 1.5,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 9
       },
       {
         "n": "Gold II",
         "th": 200,
         "veg": 2000,
         "d": 1.8,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 9
       },
       {
         "n": "Platinum I",
         "th": 500,
         "veg": 5000,
         "d": 2.1,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 12
       },
       {
         "n": "Platinum II",
         "th": 1000,
         "veg": 10000,
         "d": 2.4,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 12
       },
       {
         "n": "Platinum III",
         "th": 2500,
         "veg": 25000,
         "d": 2.7,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Diamond I",
         "th": 5000,
         "veg": 50000,
         "d": 3,
-        "rb": 10
+        "rb": 10,
+        "royaltyPct": 15
       },
       {
         "n": "Diamond II",
         "th": 7000,
         "veg": 70000,
         "d": 3.3,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Diamond III",
         "th": 9000,
         "veg": 90000,
         "d": 3.6,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Diamond IV",
         "th": 12000,
         "veg": 120000,
         "d": 3.9,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Diamond V",
         "th": 20000,
         "veg": 200000,
         "d": 4.2,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Legend I",
         "th": 50000,
         "veg": 500000,
         "d": 4.5,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Legend II",
         "th": 100000,
         "veg": 1000000,
         "d": 4.8,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Legend III",
         "th": 250000,
         "veg": 2500000,
         "d": 5.1,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Legend IV",
         "th": 400000,
         "veg": 4000000,
         "d": 5.4,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Legend V",
         "th": 750000,
         "veg": 7500000,
         "d": 5.7,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       },
       {
         "n": "Elite",
         "th": 1000000,
         "veg": 10000000,
         "d": 6,
-        "rb": 0
+        "rb": 0,
+        "royaltyPct": 15
       }
     ],
     "referral": {
@@ -321,7 +342,13 @@
       "vipMonths": 1,
       "cardWindowDays": 90,
       "newAccountsOnly": true,
-      "docsUrl": "https://docs.gomining.com/en/product/promos/referral-program"
+      "docsUrl": "https://docs.gomining.com/en/product/promos/referral-program",
+      "royalty": {
+        "basePct": 5,
+        "tierFriendsJoinedFrom": "2026-11-15",
+        "since": "2026-11-26",
+        "note": "Referrer royalty = % of a friend's maintenance (electricity + service). basePct for every friend; friends who joined on/after tierFriendsJoinedFrom pay the referrer's VIP-tier royaltyPct instead."
+      }
     },
     "derived": {
       "fullCoverageDays": 360,
